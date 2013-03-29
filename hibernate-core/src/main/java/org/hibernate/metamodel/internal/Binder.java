@@ -2101,12 +2101,8 @@ public class Binder {
 				)
 		);
 		if ( elementSource.isUnique() ) {
-<<<<<<< HEAD
 			UniqueKey uk = collectionTable.getOrCreateUniqueKey( StringHelper.randomFixedLengthHex(
 					UniqueKey.GENERATED_NAME_PREFIX ) );
-=======
-			// TODO: this should create a unique constrraint instead of marking each individual column unique.
->>>>>>> HHH-7843 : Add support for one-to-one to new metamodel
 			for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
 				if ( ! relationalValueBinding.isDerived() )  {
 					uk.addColumn( (Column) relationalValueBinding.getValue() );

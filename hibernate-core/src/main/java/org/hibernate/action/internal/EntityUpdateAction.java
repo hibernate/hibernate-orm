@@ -306,4 +306,3 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 }
-

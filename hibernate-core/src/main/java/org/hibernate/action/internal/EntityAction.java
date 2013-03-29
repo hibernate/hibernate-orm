@@ -202,4 +202,3 @@ public abstract class EntityAction
 		return (EventSource) getSession();
 	}
 }
-

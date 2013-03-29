@@ -150,6 +150,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		addAll( props, sessionFactory.getProperties() );
 		addAll( props, cfg.getProperties() );
 		addAll( props, configurationValues );
+		maskOutSensitiveInformation( props );
 		this.properties = Collections.unmodifiableMap( props );
 		String entityManagerFactoryName = (String)this.properties.get( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME);
 		if (entityManagerFactoryName == null) {
@@ -204,6 +205,17 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			if ( String.class.isInstance( entry.getKey() ) ) {
 				destination.put( (String) entry.getKey(), entry.getValue() );
 			}
+		}
+	}
+
+	private void maskOutSensitiveInformation(HashMap<String, Object> props) {
+		maskOutIfSet( props, AvailableSettings.JDBC_PASSWORD );
+		maskOutIfSet( props, org.hibernate.cfg.AvailableSettings.PASS );
+	}
+
+	private void maskOutIfSet(HashMap<String, Object> props, String setting) {
+		if ( props.containsKey( setting ) ) {
+			props.put( setting, "****" );
 		}
 	}
 

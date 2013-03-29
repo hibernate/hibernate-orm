@@ -34,6 +34,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.junit.Test;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.ejb.test.Cat;
@@ -42,6 +43,7 @@ import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Kitten;
 import org.hibernate.ejb.test.Wallet;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -127,6 +129,14 @@ public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunc
 				entityManagerFactory2 == entityManagerFactory);
 	}
 
+	@Test
+	public void testEntityManagerFactoryProperties() {
+		EntityManagerFactory entityManagerFactory = entityManagerFactory();
+		assertTrue( entityManagerFactory.getProperties().containsKey( AvailableSettings.USER ) );
+		if ( entityManagerFactory.getProperties().containsKey( AvailableSettings.PASS ) ) {
+			assertEquals( "****",  entityManagerFactory.getProperties().get( AvailableSettings.PASS ) );
+		}
+	}
 
 	@Override
 	public Class[] getAnnotatedClasses() {

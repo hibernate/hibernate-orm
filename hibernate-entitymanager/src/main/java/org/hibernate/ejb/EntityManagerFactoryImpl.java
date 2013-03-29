@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -113,6 +115,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		HashMap<String,Object> props = new HashMap<String, Object>();
 		addAll( props, ( (SessionFactoryImplementor) sessionFactory ).getProperties() );
 		addAll( props, cfg.getProperties() );
+		maskOutSensitiveInformation( props );
 		this.properties = Collections.unmodifiableMap( props );
 		String entityManagerFactoryName = (String)this.properties.get(AvailableSettings.ENTITY_MANAGER_FACTORY_NAME);
 		if (entityManagerFactoryName == null) {
@@ -167,6 +170,17 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			if ( String.class.isInstance( entry.getKey() ) ) {
 				propertyMap.put( (String)entry.getKey(), entry.getValue() );
 			}
+		}
+	}
+
+	private void maskOutSensitiveInformation(HashMap<String, Object> props) {
+		maskOutIfSet( props, AvailableSettings.JDBC_PASSWORD );
+		maskOutIfSet( props, org.hibernate.cfg.AvailableSettings.PASS );
+	}
+
+	private void maskOutIfSet(HashMap<String, Object> props, String setting) {
+		if ( props.containsKey( setting ) ) {
+			props.put( setting, "****" );
 		}
 	}
 
@@ -238,7 +252,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 
 		public void evict(Class entityClass, Object identifier) {
-			sessionFactory.getCache().evictEntity( entityClass, ( Serializable ) identifier );
+			sessionFactory.getCache().evictEntity( entityClass, (Serializable) identifier );
 		}
 
 		public void evict(Class entityClass) {

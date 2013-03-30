@@ -6,7 +6,7 @@
 		<id name="id" unsaved-value="null" column="user_id" >
 			<generator class="native"/>
 		</id>
-		<property name="username" type="string" column="user_name" />
+		<property name="username" type="string" column="user_name" not-null="true" />
 		<set name="memberships" inverse="false" table="T_MEMBERSHIP" cascade="none">
 			<key column="user_id"/>
 			<many-to-many class="Group" column="group_id"/>

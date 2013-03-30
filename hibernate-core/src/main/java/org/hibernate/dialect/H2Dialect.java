@@ -30,6 +30,7 @@ import org.hibernate.dialect.function.AvgWithArgumentCastFunction;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
@@ -312,6 +313,12 @@ public class H2Dialect extends Dialect {
                     if (50200 == errorCode) { // LOCK NOT AVAILABLE
                         exception = new PessimisticLockException(message, sqlException, sql);
                     }
+
+					if ( 90006 == errorCode ) {
+						// NULL not allowed for column [90006-145]
+						final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
+						exception = new ConstraintViolationException( message, sqlException, sql, constraintName );
+					}
 
 					return exception;
 				}

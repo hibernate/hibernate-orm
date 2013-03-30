@@ -31,6 +31,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -104,8 +105,14 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 				if("JZ0TO".equals( sqlState ) || "JZ006".equals( sqlState )){
 					throw new LockTimeoutException( message, sqlException, sql );
+				}
+				if ( 515 == errorCode && "ZZZZZ".equals( sqlState ) ) {
+					// Attempt to insert NULL value into column; column does not allow nulls.
+					final String constraintName = getViolatedConstraintNameExtracter().extractConstraintName( sqlException );
+					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}
 				return null;
 			}

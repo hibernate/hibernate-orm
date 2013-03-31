@@ -27,7 +27,6 @@ import javax.persistence.EntityGraph;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.SynchronizationType;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.util.List;
 import java.util.Map;
@@ -97,17 +96,27 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	}
 
 	@Override
-    public Session getSession() {
-		if ( !open ) {
+	protected void checkOpen() {
+		if( !isOpen() ) {
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
-		return getRawSession();
+	}
+
+	@Override
+    public Session getSession() {
+		checkOpen();
+		return internalGetSession();
 	}
 
 	@Override
     protected Session getRawSession() {
+		return internalGetSession();
+	}
+
+	@Override
+	protected Session internalGetSession() {
 		if ( session == null ) {
-			SessionBuilderImplementor sessionBuilder = getEntityManagerFactory().getSessionFactory().withOptions();
+			SessionBuilderImplementor sessionBuilder = internalGetEntityManagerFactory().getSessionFactory().withOptions();
 			sessionBuilder.owner( this );
 			if (sessionInterceptorClass != null) {
 				try {
@@ -135,9 +144,8 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 
 	public void close() {
 		checkEntityManagerFactory();
-		if ( !open ) {
-			throw new IllegalStateException( "EntityManager is closed" );
-		}
+		checkOpen();
+
 		if ( discardOnClose || !isTransactionInProgress() ) {
 			//close right now
 			if ( session != null ) {
@@ -153,7 +161,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 		checkEntityManagerFactory();
 		try {
 			if ( open ) {
-				getSession().isOpen(); //to force enlistment in tx
+				internalGetSession().isOpen(); //to force enlistment in tx
 			}
 			return open;
 		}
@@ -165,11 +173,13 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 
 	@Override
 	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+		checkOpen();
 		return new EntityGraphImpl<T>( null, getMetamodel().entity( rootType ), getEntityManagerFactory() );
 	}
 
 	@Override
 	public EntityGraph<?> createEntityGraph(String graphName) {
+		checkOpen();
 		final EntityGraphImpl named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			return null;
@@ -180,6 +190,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> EntityGraph<T> getEntityGraph(String graphName) {
+		checkOpen();
 		final EntityGraphImpl named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {
 			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
@@ -189,6 +200,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 
 	@Override
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		checkOpen();
 		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
 	}
 
@@ -198,7 +210,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	}
 
 	private void checkEntityManagerFactory() {
-		if (! getEntityManagerFactory().isOpen()) {
+		if ( ! internalGetEntityManagerFactory().isOpen() ) {
 			open = false;
 		}
 	}

@@ -47,6 +47,8 @@ import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
+import org.hibernate.property.Getter;
+import org.hibernate.property.MapAccessor;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
@@ -580,9 +582,14 @@ public class AttributeFactory {
 			this.ownerType = ownerType;
 			this.member = member;
 			this.persistentAttributeType = persistentAttributeType;
+
 			final Class declaredType;
-			// we can support method or field members here.  Is there really any other valid type?
-			if ( Field.class.isInstance( member ) ) {
+
+			if ( member == null ) {
+				// assume we have a MAP entity-mode "class"
+				declaredType = propertyMapping.getType().getReturnedClass();
+			}
+			else if ( Field.class.isInstance( member ) ) {
 				declaredType = ( (Field) member ).getType();
 			}
 			else if ( Method.class.isInstance( member ) ) {
@@ -896,24 +903,23 @@ public class AttributeFactory {
     }
 
 	private final MemberResolver EMBEDDED_MEMBER_RESOLVER = new MemberResolver() {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl<?> ) attributeContext.getOwnerType();
 			final String attributeName = attributeContext.getPropertyMapping().getName();
-			return embeddableType.getHibernateType()
+
+			final Getter getter = embeddableType.getHibernateType()
 					.getComponentTuplizer()
-					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) )
-					.getMember();
+					.getGetter( embeddableType.getHibernateType().getPropertyIndex( attributeName ) );
+			return MapAccessor.MapGetter.class.isInstance( getter )
+					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+					: getter.getMember();
 		}
 	};
 
 
 	private final MemberResolver VIRTUAL_IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
             final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
@@ -927,9 +933,13 @@ public class AttributeFactory {
 
 			final EmbeddedComponentType componentType = (EmbeddedComponentType) type;
 			final String attributeName = attributeContext.getPropertyMapping().getName();
-			return componentType.getComponentTuplizer()
-					.getGetter( componentType.getPropertyIndex( attributeName ) )
-					.getMember();
+
+			final Getter getter = componentType.getComponentTuplizer()
+					.getGetter( componentType.getPropertyIndex( attributeName ) );
+
+			return MapAccessor.MapGetter.class.isInstance( getter )
+					? new MapMember( attributeName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+					: getter.getMember();
 		}
 	};
 
@@ -937,9 +947,7 @@ public class AttributeFactory {
 	 * A {@link Member} resolver for normal attributes.
 	 */
 	private final MemberResolver NORMAL_MEMBER_RESOLVER = new MemberResolver() {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractManagedType ownerType = attributeContext.getOwnerType();
 			final Property property = attributeContext.getPropertyMapping();
@@ -958,9 +966,10 @@ public class AttributeFactory {
 					return VIRTUAL_IDENTIFIER_MEMBER_RESOLVER.resolveMember( attributeContext );
 				}
 				else {
-					return entityMetamodel.getTuplizer()
-							.getGetter( index )
-							.getMember();
+					final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
+					return MapAccessor.MapGetter.class.isInstance( getter )
+							? new MapMember( propertyName, property.getType().getReturnedClass() )
+							: getter.getMember();
 				}
 			}
 			else {
@@ -970,6 +979,7 @@ public class AttributeFactory {
 	};
 
 	private final MemberResolver IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
             final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
@@ -978,11 +988,18 @@ public class AttributeFactory {
 				// this *should* indicate processing part of an IdClass...
 				return VIRTUAL_IDENTIFIER_MEMBER_RESOLVER.resolveMember( attributeContext );
 			}
-			return entityMetamodel.getTuplizer().getIdentifierGetter().getMember();
+			final Getter getter = entityMetamodel.getTuplizer().getIdentifierGetter();
+			return MapAccessor.MapGetter.class.isInstance( getter )
+					? new MapMember(
+							entityMetamodel.getIdentifierProperty().getName(),
+							entityMetamodel.getIdentifierProperty().getType().getReturnedClass()
+					)
+					: getter.getMember();
 		}
 	};
 
 	private final MemberResolver VERSION_MEMBER_RESOLVER = new MemberResolver() {
+		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
             final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
 			final EntityMetamodel entityMetamodel = getDeclarerEntityMetamodel( identifiableType );
@@ -991,7 +1008,11 @@ public class AttributeFactory {
 				// this should never happen, but to be safe...
 				throw new IllegalArgumentException( "Given property did not match declared version property" );
 			}
-			return entityMetamodel.getTuplizer().getVersionGetter().getMember();
+
+			final Getter getter = entityMetamodel.getTuplizer().getVersionGetter();
+			return MapAccessor.MapGetter.class.isInstance( getter )
+					? new MapMember( versionPropertyName, attributeContext.getPropertyMapping().getType().getReturnedClass() )
+					: getter.getMember();
 		}
 	};
 }

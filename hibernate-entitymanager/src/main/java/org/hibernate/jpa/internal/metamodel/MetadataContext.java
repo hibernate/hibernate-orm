@@ -350,6 +350,10 @@ class MetadataContext {
 
 	private <X> void populateStaticMetamodel(AbstractManagedType<X> managedType) {
 		final Class<X> managedTypeClass = managedType.getJavaType();
+		if ( managedTypeClass == null ) {
+			// should indicate MAP entity mode, skip...
+			return;
+		}
 		final String metamodelClassName = managedTypeClass.getName() + "_";
 		try {
 			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );

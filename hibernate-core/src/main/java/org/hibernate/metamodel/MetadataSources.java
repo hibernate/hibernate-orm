@@ -26,8 +26,10 @@ package org.hibernate.metamodel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -38,19 +40,14 @@ import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
-import org.jboss.logging.Logger;
-import org.w3c.dom.Document;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.jaxb.internal.JaxbMappingProcessor;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
@@ -61,9 +58,17 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.EntityMappingsMocker;
+import org.hibernate.metamodel.spi.source.InvalidMappingException;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.SerializationException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.IndexView;
+import org.jboss.jandex.Indexer;
+import org.jboss.logging.Logger;
+import org.w3c.dom.Document;
 
 /**
  * Entry point into working with sources of metadata information ({@code hbm.xml}, annotations).   Tell Hibernate
@@ -73,11 +78,16 @@ import org.hibernate.service.ServiceRegistry;
  * @author Brett Meyer
  */
 public class MetadataSources {
-	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
+	public static final String UNKOWN_FILE_PATH = "<unknown>";
+	
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, MetadataSources.class.getName());
+	
 	/**
 	 * temporary option
 	 */
 	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
+
 	private final ServiceRegistry serviceRegistry;
 	private final JaxbMappingProcessor jaxbProcessor;
 	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
@@ -244,6 +254,9 @@ public class MetadataSources {
 			addJaxbRoot( jaxbRoot );
 			return jaxbRoot;
 		}
+		catch ( Exception e ) {
+			throw new InvalidMappingException( origin );
+		}
 		finally {
 			if ( close ) {
 				try {
@@ -317,7 +330,7 @@ public class MetadataSources {
 	 * @see #addCacheableFile(java.io.File)
 	 */
 	public MetadataSources addCacheableFile(String path) {
-		return this; // todo : implement method body
+		return addCacheableFile( new File( path ) );
 	}
 
 	/**
@@ -334,7 +347,72 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addCacheableFile(File file) {
-		return this; // todo : implement method body
+		Origin origin = new Origin( SourceType.FILE, file.getAbsolutePath() );
+		File cachedFile = determineCachedDomFile( file );
+
+		try {
+			return addCacheableFileStrictly( file );
+		}
+		catch ( SerializationException e ) {
+			LOG.unableToDeserializeCache( cachedFile.getName(), e );
+		}
+		catch ( FileNotFoundException e ) {
+			LOG.cachedFileNotFound( cachedFile.getName(), e );
+		}
+		
+		final FileInputStream inputStream;
+		try {
+			inputStream = new FileInputStream( file );
+		}
+		catch ( FileNotFoundException e ) {
+			throw new MappingNotFoundException( origin );
+		}
+
+		LOG.readingMappingsFromFile( file.getPath() );
+		JaxbRoot metadataXml = add( inputStream, origin, true );
+
+		try {
+			LOG.debugf( "Writing cache file for: %s to: %s", file, cachedFile );
+			SerializationHelper.serialize( ( Serializable ) metadataXml, new FileOutputStream( cachedFile ) );
+		}
+		catch ( Exception e ) {
+			LOG.unableToWriteCachedFile( cachedFile.getName(), e.getMessage() );
+		}
+
+		return this;
+	}
+
+	/**
+	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
+	 * <p/>
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
+	 * the cache version cannot be found or used for whatever reason
+	 *
+	 * @param xmlFile The xml file, not the bin!
+	 *
+	 * @return The dom "deserialized" from the cached file.
+	 *
+	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 */
+	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException, FileNotFoundException {
+		File cachedFile = determineCachedDomFile( file );
+		
+		final boolean useCachedFile = file.exists()
+				&& cachedFile.exists()
+				&& file.lastModified() < cachedFile.lastModified();
+
+		if ( ! useCachedFile ) {
+			throw new FileNotFoundException( "Cached file could not be found or could not be used" );
+		}
+
+		LOG.readingCachedMappings( cachedFile );
+		addJaxbRoot( ( JaxbRoot ) SerializationHelper.deserialize( new FileInputStream( cachedFile ) ) );
+		return this;
+	}
+
+	private File determineCachedDomFile(File xmlFile) {
+		return new File( xmlFile.getAbsolutePath() + ".bin" );
 	}
 
 	/**
@@ -345,7 +423,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
-		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, "<unknown>" ), false );
+		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, UNKOWN_FILE_PATH ), false );
 		return this;
 	}
 
@@ -378,7 +456,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addDocument(Document document) {
-		final Origin origin = new Origin( SourceType.DOM, "<unknown>" );
+		final Origin origin = new Origin( SourceType.DOM, UNKOWN_FILE_PATH );
 		JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( document, origin );
 		addJaxbRoot( jaxbRoot );
 		return this;

@@ -21,40 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jaxb.spi;
 
-import java.io.Serializable;
+package org.hibernate.metamodel.spi.source;
+
+import org.hibernate.jaxb.spi.Origin;
 
 /**
- * Holds information about a JAXB-unmarshalled XML document.
- *
- * @author Hardy Ferentschik
- * @author Steve Ebersole
+ * @author Brett Meyer
  */
-public class JaxbRoot<T> implements Serializable {
-	private final T root;
-	private final Origin origin;
-
-	public JaxbRoot(T root, Origin origin) {
-		this.root = root;
-		this.origin = origin;
+public class InvalidMappingException extends MappingException {
+	public InvalidMappingException(String message, Origin origin) {
+		super( message, origin );
 	}
 
-	/**
-	 * Obtain the root JAXB bound object
-	 *
-	 * @return The JAXB root object
-	 */
-	public T getRoot() {
-		return root;
+	public InvalidMappingException(Origin origin) {
+		super( String.format( "Could not parse mapping document: %s (%s)", origin.getName(), origin.getType() ), origin );
 	}
 
-	/**
-	 * Obtain the metadata about the document's origin
-	 *
-	 * @return The origin
-	 */
-	public Origin getOrigin() {
-		return origin;
+	public InvalidMappingException(String message, Throwable root, Origin origin) {
+		super( message, root, origin );
+	}
+
+	public InvalidMappingException(Throwable root, Origin origin) {
+		super( String.format( "Could not parse mapping document: %s (%s)", origin.getName(), origin.getType() ), root, origin );
 	}
 }

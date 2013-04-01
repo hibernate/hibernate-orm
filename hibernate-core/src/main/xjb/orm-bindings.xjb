@@ -102,4 +102,9 @@
         </jaxb:bindings>
     </jaxb:bindings>
 
+    <!-- All bindings need to be serializable for cached metadata sources. -->
+	<jaxb:globalBindings>
+		<jaxb:serializable />
+	</jaxb:globalBindings>
+
 </jaxb:bindings>

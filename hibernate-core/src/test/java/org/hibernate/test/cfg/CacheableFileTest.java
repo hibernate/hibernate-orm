@@ -23,18 +23,19 @@
  */
 package org.hibernate.test.cfg;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.jaxb.spi.JaxbRoot;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.SerializationHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests using of cacheable configuration files.
@@ -72,11 +73,15 @@ public class CacheableFileTest extends BaseUnitTestCase {
 	@Test
 	public void testCachedFiles() throws Exception {
 		assertFalse( mappingBinFile.exists() );
+		MetadataSources sources1 = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		// This call should create the cached file
-		new Configuration().addCacheableFile( mappingFile );
+		sources1.addCacheableFile( mappingFile );
 		assertTrue( mappingBinFile.exists() );
 
-		Configuration cfg = new Configuration().addCacheableFileStrictly( mappingFile );
-		SerializationHelper.clone( cfg );
+		MetadataSources sources2 = new MetadataSources( new StandardServiceRegistryBuilder().build() );
+		sources1.addCacheableFileStrictly( mappingFile );
+		for ( JaxbRoot jaxbSource : sources2.getJaxbRootList() ) {
+			SerializationHelper.clone( jaxbSource );
+		}
 	}
 }

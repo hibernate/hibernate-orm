@@ -1,5 +1,10 @@
 // $Id: SQLExceptionConversionTest.java 6847 2005-05-21 15:46:41Z oneovthafew $
 package org.hibernate.test.mappingexception;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -9,130 +14,125 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.junit.Test;
-
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
-import org.hibernate.InvalidMappingException;
-import org.hibernate.MappingException;
-import org.hibernate.MappingNotFoundException;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.jaxb.spi.SourceType;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.metamodel.spi.source.InvalidMappingException;
+import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.MappingNotFoundException;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Test for various mapping exceptions thrown when mappings are not found or invalid.
  *
  * @author Max Rydahl Andersen
+ * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
 public class MappingExceptionTest extends BaseUnitTestCase {
 	@Test
 	public void testNotFound() throws MappingException, MalformedURLException {
-		Configuration cfg = new Configuration();
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 
 		try {
-			cfg.addCacheableFile( "completelybogus.hbm.xml" );
+			sources.addCacheableFile( "completelybogus.hbm.xml" );
 			fail();
 		}
 		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
+			assertTrue( e.getOrigin().getName().contains( "completelybogus.hbm.xml" ) );
 		}
 
 		try {
-			cfg.addCacheableFile( new File( "completelybogus.hbm.xml" ) );
+			sources.addCacheableFile( new File( "completelybogus.hbm.xml" ) );
 			fail();
 		}
 		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
+			assertTrue( e.getOrigin().getName().contains( "completelybogus.hbm.xml" ) );
 		}
 
 		try {
-			cfg.addClass( Hibernate.class ); // TODO: String.class result in npe, because no classloader exists for it
-			fail();
-		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "org/hibernate/Hibernate.hbm.xml" );
-		}
-
-		try {
-			cfg.addFile( "completelybogus.hbm.xml" );
+			sources.addClass( Hibernate.class ); // TODO: String.class result in npe, because no classloader exists for it
 			fail();
 		}
 		catch ( MappingNotFoundException e ) {
-			assertEquals( e.getType(), "file" );
-			assertEquals( e.getPath(), "completelybogus.hbm.xml" );
+			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
+			assertTrue( e.getOrigin().getName().contains( "org/hibernate/Hibernate.hbm.xml" ) );
 		}
 
 		try {
-			cfg.addFile( new File( "completelybogus.hbm.xml" ) );
+			sources.addFile( "completelybogus.hbm.xml" );
 			fail();
 		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), "completelybogus.hbm.xml" );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
+			assertTrue( e.getOrigin().getName().contains( "completelybogus.hbm.xml" ) );
 		}
 
 		try {
-			cfg.addInputStream( new ByteArrayInputStream( new byte[0] ) );
+			sources.addFile( new File( "completelybogus.hbm.xml" ) );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "input stream" );
-			assertEquals( inv.getPath(), null );
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.FILE );
+			assertTrue( e.getOrigin().getName().contains( "completelybogus.hbm.xml" ) );
 		}
 
 		try {
-			cfg.addResource( "nothere" );
-			fail();
-		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "nothere" );
-		}
-
-		try {
-			cfg.addResource( "nothere", getClass().getClassLoader() );
-			fail();
-		}
-		catch ( MappingNotFoundException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "nothere" );
-		}
-
-		try {
-			cfg.addURL( new URL( "file://nothere" ) );
-			fail();
-		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "URL" );
-			assertEquals( inv.getPath(), "file://nothere" );
-		}
-	}
-
-	public void testDuplicateMapping() {
-		String resourceName = "org/hibernate/test/mappingexception/User.hbm.xml";
-		Configuration cfg = new Configuration();
-		cfg.addResource( resourceName );
-		cfg.buildMappings();
-		try {
-			cfg.addResource( resourceName );
-			cfg.buildMappings();
+			sources.addInputStream( new ByteArrayInputStream( new byte[0] ) );
 			fail();
 		}
 		catch ( InvalidMappingException e ) {
-			assertEquals( e.getType(), "resource" );
-			assertEquals( e.getPath(), resourceName );
-			assertClassAssignability( DuplicateMappingException.class, e.getCause().getClass() );
+			assertEquals( e.getOrigin().getType(), SourceType.INPUT_STREAM );
+			assertEquals( e.getOrigin().getName(), MetadataSources.UNKOWN_FILE_PATH );
+		}
+
+		try {
+			sources.addResource( "nothere" );
+			fail();
+		}
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
+			assertTrue( e.getOrigin().getName().contains( "nothere" ) );
+		}
+
+		try {
+			sources.addResource( "nothere" );
+			fail();
+		}
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
+			assertTrue( e.getOrigin().getName().contains( "nothere" ) );
+		}
+
+		try {
+			sources.addURL( new URL( "file://nothere" ) );
+			fail();
+		}
+		catch ( MappingNotFoundException e ) {
+			assertEquals( e.getOrigin().getType(), SourceType.URL );
+			assertTrue( e.getOrigin().getName().contains( "file://nothere" ) );
+		}
+	}
+
+	@Test
+	public void testDuplicateMapping() {
+		String resourceName = "org/hibernate/test/mappingexception/User.hbm.xml";
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
+		sources.addResource( resourceName );
+		sources.buildMetadata();
+		try {
+			sources.addResource( resourceName );
+			sources.buildMetadata();
+			fail();
+		}
+		catch ( DuplicateMappingException e ) {
+			assertEquals( e.getType(), DuplicateMappingException.Type.ENTITY.name() );
+			assertNotNull( e.getName() );
 		}
 	}
 
@@ -142,108 +142,115 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		}
 	}
 
+	@Test
 	public void testInvalidMapping() throws MappingException, IOException {
 		String resourceName = "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml";
 		File file = File.createTempFile( "TempInvalidMapping", ".hbm.xml" );
 		file.deleteOnExit();
 		copy( ConfigHelper.getConfigStream( resourceName ), file );
 
-		Configuration cfg = new Configuration();
+		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		try {
-			cfg.addCacheableFile( file.getAbsolutePath() );
+			sources.addCacheableFile( file.getAbsolutePath() );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertNotNull( inv.getPath() );
-			assertTrue( inv.getPath().endsWith( ".hbm.xml" ) );
+			assertEquals( inv.getOrigin().getType(), SourceType.FILE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertTrue( inv.getOrigin().getName().endsWith( ".hbm.xml" ) );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addCacheableFile( file );
+			sources.addCacheableFile( file );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertNotNull( inv.getPath() );
-			assertTrue( inv.getPath().endsWith( ".hbm.xml" ) );
+			assertEquals( inv.getOrigin().getType(), SourceType.FILE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertTrue( inv.getOrigin().getName().endsWith( ".hbm.xml" ) );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addClass( InvalidMapping.class );
+			sources.addClass( InvalidMapping.class );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml" );
+			assertEquals( inv.getOrigin().getType(), SourceType.RESOURCE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertTrue( inv.getOrigin().getName().contains( "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml" ) );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addFile( file.getAbsolutePath() );
+			sources.addFile( file.getAbsolutePath() );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), file.getPath() );
+			assertEquals( inv.getOrigin().getType(), SourceType.FILE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertEquals( inv.getOrigin().getName(), file.getPath() );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addFile( file );
+			sources.addFile( file );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), file.getPath() );
+			assertEquals( inv.getOrigin().getType(), SourceType.FILE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertEquals( inv.getOrigin().getName(), file.getPath() );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 
 		try {
-			cfg.addInputStream( ConfigHelper.getResourceAsStream( resourceName ) );
+			sources.addInputStream( ConfigHelper.getResourceAsStream( resourceName ) );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "input stream" );
-			assertEquals( inv.getPath(), null );
+			assertEquals( inv.getOrigin().getType(), SourceType.INPUT_STREAM );
+			assertEquals( inv.getOrigin().getName(), MetadataSources.UNKOWN_FILE_PATH );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addResource( resourceName );
+			sources.addResource( resourceName );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), resourceName );
+			assertEquals( inv.getOrigin().getType(), SourceType.RESOURCE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertEquals( inv.getOrigin().getName(), resourceName );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addResource( resourceName, getClass().getClassLoader() );
+			sources.addResource( resourceName );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), resourceName );
+			assertEquals( inv.getOrigin().getType(), SourceType.RESOURCE );
+			assertNotNull( inv.getOrigin().getName() );
+			assertEquals( inv.getOrigin().getName(), resourceName );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 
 		try {
-			cfg.addURL( ConfigHelper.findAsResource( resourceName ) );
+			sources.addURL( ConfigHelper.findAsResource( resourceName ) );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "URL" );
-			assertTrue( inv.getPath().endsWith( "InvalidMapping.hbm.xml" ) );
+			assertEquals( inv.getOrigin().getType(), SourceType.URL );
+			assertNotNull( inv.getOrigin().getName() );
+			assertTrue( inv.getOrigin().getName().endsWith( "InvalidMapping.hbm.xml" ) );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 	}
 
-	void copy(InputStream in, File dst) throws IOException {
+	private void copy(InputStream in, File dst) throws IOException {
 		OutputStream out = new FileOutputStream( dst );
 
 		// Transfer bytes from in to out

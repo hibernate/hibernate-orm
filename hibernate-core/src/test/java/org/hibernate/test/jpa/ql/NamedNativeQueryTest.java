@@ -20,29 +20,26 @@
  */
 package org.hibernate.test.jpa.ql;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.junit.Test;
 
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Janario Oliveira
  */
-@FailureExpectedWithNewMetamodel
 public class NamedNativeQueryTest extends BaseCoreFunctionalTestCase {
 
 	private FromEntity createFrom(String name, String lastName) {

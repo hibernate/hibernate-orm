@@ -25,15 +25,12 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 
 import java.util.Collection;
 import java.util.HashMap;
+
 import javax.persistence.LockModeType;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -45,7 +42,6 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -58,6 +54,9 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.logging.Logger;
 
 /**
  * Binds {@link NamedQuery}, {@link NamedQueries}, {@link NamedNativeQuery}, {@link NamedNativeQueries},
@@ -348,17 +347,21 @@ public class QueryProcessor {
 		}
 		else {
 			AnnotationValue annotationValue = annotation.value( "resultClass" );
+			NativeSQLQueryRootReturn[] queryRoots;
 			if ( annotationValue == null ) {
-				throw new NotYetImplementedException( "Pure native scalar queries are not yet supported" );
+				// pure native scalar query
+				queryRoots = new NativeSQLQueryRootReturn[0];
 			}
-			NativeSQLQueryRootReturn queryRoots[] = new NativeSQLQueryRootReturn[] {
-					new NativeSQLQueryRootReturn(
-							"alias1",
-							annotationValue.asString(),
-							new HashMap<String, String[]>(),
-							LockMode.READ
-					)
-			};
+			else {
+				queryRoots = new NativeSQLQueryRootReturn[] {
+						new NativeSQLQueryRootReturn(
+								"alias1",
+								annotationValue.asString(),
+								new HashMap<String, String[]>(),
+								LockMode.READ
+						)
+				};
+			}
 			def = new NamedSQLQueryDefinitionBuilder().setName( name )
 					.setQuery( query )
 					.setQueryReturns( queryRoots )

@@ -23,18 +23,15 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
-import javax.persistence.NamedNativeQuery;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
+import static junit.framework.Assert.assertTrue;
 
-import org.jboss.jandex.Index;
-import org.jboss.jandex.IndexView;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import javax.persistence.NamedNativeQuery;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -43,10 +40,10 @@ import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContextImpl;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertTrue;
+import org.jboss.jandex.IndexView;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
@@ -68,7 +65,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		serviceRegistry.destroy();
 	}
 
-	@Test(expected = NotYetImplementedException.class)
+	@Test
 	public void testNoResultClass() {
 		@NamedNativeQuery(name = "fubar", query = "SELECT * FROM FOO")
 		class Foo {

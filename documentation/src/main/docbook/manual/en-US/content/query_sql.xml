@@ -9,7 +9,7 @@
   also provides a clean migration path from a direct SQL/JDBC based
   application to Hibernate.</para>
 
-  <para>Hibernate3 allows you to specify handwritten SQL, including stored
+  <para>Hibernate allows you to specify handwritten SQL, including stored
   procedures, for all create, update, delete, and load operations.</para>
 
   <section xml:id="querysql-creating" revision="4">
@@ -800,7 +800,7 @@ public class SpaceShip {</programlisting>
     <section xml:id="sp_query" revision="1">
       <title>Using stored procedures for querying</title>
 
-      <para>Hibernate3 provides support for queries via stored procedures and
+      <para>Hibernate provides support for queries via stored procedures and
       functions. Most of the following documentation is equivalent for both.
       The stored procedure/function must return a resultset as the first
       out-parameter to be able to work with Hibernate. An example of such a
@@ -898,7 +898,7 @@ BEGIN
   <section xml:id="querysql-cud">
     <title>Custom SQL for create, update and delete</title>
 
-    <para>Hibernate3 can use custom SQL for create, update, and delete
+    <para>Hibernate can use custom SQL for create, update, and delete
     operations. The SQL can be overridden at the statement level or
     inidividual column level. This section describes statement overrides. For
     columns, see <xref linkend="mapping-column-read-and-write" />. <xref

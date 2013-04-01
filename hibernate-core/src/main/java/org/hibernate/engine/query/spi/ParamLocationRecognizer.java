@@ -41,7 +41,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 
 	public static class NamedParameterDescription {
 		private final boolean jpaStyle;
-		private final List positions = new ArrayList();
+		private final List<Integer> positions = new ArrayList<Integer>();
 
 		public NamedParameterDescription(boolean jpaStyle) {
 			this.jpaStyle = jpaStyle;
@@ -60,8 +60,8 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 		}
 	}
 
-	private Map namedParameterDescriptions = new HashMap();
-	private List ordinalParameterLocationList = new ArrayList();
+	private Map<String, NamedParameterDescription> namedParameterDescriptions = new HashMap<String, NamedParameterDescription>();
+	private List<Integer> ordinalParameterLocationList = new ArrayList<Integer>();
 
 	/**
 	 * Convenience method for creating a param location recognizer and
@@ -82,7 +82,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	 *
 	 * @return The map of named parameter locations.
 	 */
-	public Map getNamedParameterDescriptionMap() {
+	public Map<String, NamedParameterDescription> getNamedParameterDescriptionMap() {
 		return namedParameterDescriptions;
 	}
 
@@ -94,38 +94,38 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	 *
 	 * @return The list of ordinal parameter locations.
 	 */
-	public List getOrdinalParameterLocationList() {
+	public List<Integer> getOrdinalParameterLocationList() {
 		return ordinalParameterLocationList;
 	}
 
 
 	// Recognition code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Override
 	public void ordinalParameter(int position) {
 		ordinalParameterLocationList.add( position );
 	}
-
+	@Override
 	public void namedParameter(String name, int position) {
 		getOrBuildNamedParameterDescription( name, false ).add( position );
 	}
-
+	@Override
 	public void jpaPositionalParameter(String name, int position) {
 		getOrBuildNamedParameterDescription( name, true ).add( position );
 	}
 
 	private NamedParameterDescription getOrBuildNamedParameterDescription(String name, boolean jpa) {
-		NamedParameterDescription desc = ( NamedParameterDescription ) namedParameterDescriptions.get( name );
+		NamedParameterDescription desc = namedParameterDescriptions.get( name );
 		if ( desc == null ) {
 			desc = new NamedParameterDescription( jpa );
 			namedParameterDescriptions.put( name, desc );
 		}
 		return desc;
 	}
-
+	@Override
 	public void other(char character) {
 		// don't care...
 	}
-
+	@Override
 	public void outParameter(int position) {
 		// don't care...
 	}

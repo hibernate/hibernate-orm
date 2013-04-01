@@ -23,74 +23,68 @@
  */
 package org.hibernate.osgi;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.persistence.spi.PersistenceProvider;
 
-import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.BundleListener;
+import org.osgi.framework.FrameworkUtil;
 
 /**
+ * This BundleActivator provides three different uses of Hibernate in OSGi
+ * environments:
+ * 
+ * 1.) Enterprise OSGi JPA: The OSGi container/runtime is in charge of managing
+ *     all of the client bundles' persistence units.  The container/runtime is
+ *     also in charge of creating and managing the EntityManagerFactory through a
+ *     registered PersistenceProvider (this).
+ * 2.) Un-managed OSGI JPA: Same as #1, but the container does not manage
+ *     the persistence units.  Client bundles identify a typical
+ *     PersistenceProvider, registered by this activator.
+ * 3.) Client bundles create and manage their own SessionFactory.  A
+ *     SessionFactory is registered as an OSGi ServiceFactory -- each requesting
+ *     bundle gets its own instance of a SessionFactory.  The use of services,
+ *     rather than direct use of Configuration, is necessary to shield users
+ *     from ClassLoader issues.  See {@link #OsgiSessionFactoryService} for more
+ *     information.
+ * 
  * @author Brett Meyer
- * @author Martin Neimeier
+ * @author Tim Ward
  */
-public class HibernateBundleActivator
-		implements BundleActivator, /*ServiceListener,*/ BundleListener {
-	
+public class HibernateBundleActivator implements BundleActivator {
+
 	private OsgiClassLoader osgiClassLoader;
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-    	
-    	// register this instance as a bundle listener to get informed about all
-        // bundle live cycle events
-        context.addBundleListener(this);
-        
-    	osgiClassLoader = new OsgiClassLoader();
-    	
-    	ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
+	private OsgiJtaPlatform osgiJtaPlatform;
 
-        for ( Bundle bundle : context.getBundles() ) {
-        	handleBundleChange( bundle );
-        }
-        
-        HibernatePersistenceProvider hpp = new HibernatePersistenceProvider();
-        Map map = new HashMap();
-        map.put( AvailableSettings.JTA_PLATFORM, new OsgiJtaPlatform( context ) );
-        hpp.setEnvironmentProperties( map );
-    	
-        Properties properties = new Properties();
-        properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
-        context.registerService( PersistenceProvider.class.getName(), hpp, properties );
-    }
+	@Override
+	public void start(BundleContext context) throws Exception {
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        context.removeBundleListener(this);
-        
-        // Nothing else to do.  When re-activated, this Activator will be
-        // re-started and the EMF re-created.
-    }
+		osgiClassLoader = new OsgiClassLoader();
+		osgiClassLoader.addBundle( FrameworkUtil.getBundle( Session.class ) );
+		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernatePersistenceProvider.class ) );
+		ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
 
-    @Override
-    public void bundleChanged(BundleEvent event) {
-    	handleBundleChange( event.getBundle() );
+		osgiJtaPlatform = new OsgiJtaPlatform( context );
 
-    }
-    
-    private void handleBundleChange( Bundle bundle ) {
-    	if ( bundle.getState() == Bundle.ACTIVE ) {
-    		osgiClassLoader.registerBundle(bundle);
-    	} else {
-    		osgiClassLoader.unregisterBundle(bundle);
-    	}
-    }
+		Properties properties = new Properties();
+		// In order to support existing persistence.xml files, register
+		// using the legacy provider name.
+		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
+		context.registerService( PersistenceProvider.class.getName(), 
+				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform ), properties );
+		
+		context.registerService( SessionFactory.class.getName(),
+				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform ), new Properties());
+	}
+
+	@Override
+	public void stop(BundleContext context) throws Exception {
+		// Nothing else to do?
+	}
 }

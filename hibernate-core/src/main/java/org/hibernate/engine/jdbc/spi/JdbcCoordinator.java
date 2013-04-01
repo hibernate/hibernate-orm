@@ -170,17 +170,23 @@ public interface JdbcCoordinator extends Serializable {
 
 	/**
 	 * Register a JDBC result set.
+	 * <p/>
+	 * Implementation note: Second parameter has been introduced to prevent
+	 * multiple registrations of the same statement in case {@link ResultSet#getStatement()}
+	 * does not return original {@link Statement} object.
 	 *
 	 * @param resultSet The result set to register.
+	 * @param statement Statement from which {@link ResultSet} has been generated.
 	 */
-	public void register(ResultSet resultSet);
+	public void register(ResultSet resultSet, Statement statement);
 
 	/**
 	 * Release a previously registered result set.
 	 *
 	 * @param resultSet The result set to release.
+	 * @param statement Statement from which {@link ResultSet} has been generated.
 	 */
-	public void release(ResultSet resultSet);
+	public void release(ResultSet resultSet, Statement statement);
 
 	/**
 	 * Does this registry currently have any registered resources?

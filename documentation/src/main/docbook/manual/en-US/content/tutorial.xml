@@ -100,7 +100,6 @@
             <artifactId>slf4j-simple</artifactId>
         </dependency>
 
-        <!-- Hibernate gives you a choice of bytecode providers between cglib and javassist -->
         <dependency>
             <groupId>javassist</groupId>
             <artifactId>javassist</artifactId>

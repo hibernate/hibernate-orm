@@ -176,4 +176,9 @@ public final class CollectionHelper {
 //		}
 		return false;
 	}
+	public static <X,Y> Map<X, Y> makeCopy(Map<X, Y> map) {
+		final Map<X,Y> copy = mapOfSize( map.size() + 1 );
+		copy.putAll( map );
+		return copy;
+	}
 }

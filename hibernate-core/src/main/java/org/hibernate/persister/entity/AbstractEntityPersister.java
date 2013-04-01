@@ -1346,7 +1346,7 @@ public abstract class AbstractEntityPersister
 				}
 				finally {
 					if ( rs != null ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );
 					}
 				}
 			}
@@ -1604,7 +1604,7 @@ public abstract class AbstractEntityPersister
 					return values;
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );
 				}
 			}
 			finally {
@@ -1655,7 +1655,7 @@ public abstract class AbstractEntityPersister
 					return (Serializable) getIdentifierType().nullSafeGet( rs, getIdentifierAliases(), session, null );
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );
 				}
 			}
 			finally {
@@ -1963,7 +1963,7 @@ public abstract class AbstractEntityPersister
 					return getVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, st );
 				}
 			}
 			finally {
@@ -3034,7 +3034,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			if ( sequentialResultSet != null ) {
-				session.getTransactionCoordinator().getJdbcCoordinator().release( sequentialResultSet );
+				session.getTransactionCoordinator().getJdbcCoordinator().release( sequentialResultSet, sequentialSelect );
 			}
 
 			return values;
@@ -4806,7 +4806,7 @@ public abstract class AbstractEntityPersister
 				}
 				finally {
 					if ( rs != null ) {
-						session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+						session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );
 					}
 				}
 			}
@@ -4905,7 +4905,7 @@ public abstract class AbstractEntityPersister
 					return snapshot;
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );
 				}
 			}
 			finally {
@@ -4963,7 +4963,7 @@ public abstract class AbstractEntityPersister
 					return (Serializable) getIdentifierType().hydrate( rs, getIdentifierAliases(), session, null );
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, ps );
 				}
 			}
 			finally {

@@ -136,7 +136,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 					}
 				}
 				finally {
-					session.getTransactionCoordinator().getJdbcCoordinator().release( rs );
+					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, st );
 				}
 			}
 			finally {

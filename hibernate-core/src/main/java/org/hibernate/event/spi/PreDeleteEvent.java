@@ -26,6 +26,8 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.secure.spi.PermissionCheckEntityInformation;
+
 
 /**
  * Represents a <tt>pre-delete</tt> event, which occurs just prior to
@@ -34,7 +36,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
+public class PreDeleteEvent
+		extends AbstractPreDatabaseOperationEvent
+		implements PermissionCheckEntityInformation{
+
 	private Object[] deletedState;
 
 	/**

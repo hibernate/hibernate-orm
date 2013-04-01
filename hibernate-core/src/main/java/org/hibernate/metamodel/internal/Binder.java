@@ -1389,7 +1389,8 @@ public class Binder {
 						attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 						attributeSource.isUnWrapProxy(),
 						!attributeSource.isNotFoundAnException(),
-						attributeSource.isUnique()
+						attributeSource.isUnique(),
+						referencedEntityBinding.getEntity().getClassReference()
 				);
 			}
 		};
@@ -1495,7 +1496,8 @@ public class Binder {
 							attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 							attributeSource.isUnWrapProxy(),
 							attributeBindingContainer.seekEntityBinding().getEntityName(),
-							actualAttribute.getName()
+							actualAttribute.getName(),
+							referencedEntityBinding.getEntity().getClassReference()
 					);
 				}
 				else {
@@ -1506,7 +1508,8 @@ public class Binder {
 							attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 							attributeSource.isUnWrapProxy(),
 							attributeBindingContainer.seekEntityBinding().getEntityName(),
-							actualAttribute.getName()
+							actualAttribute.getName(),
+							referencedEntityBinding.getEntity().getClassReference()
 					);
 				}
 			}
@@ -2049,7 +2052,8 @@ public class Binder {
 				false,
 				false,
 				!elementSource.isNotFoundAnException(), //TODO: should be attributeBinding.isIgnoreNotFound(),
-				false
+				false,
+				referencedEntityBinding.getEntity().getClassReference()
 		);
 		final HibernateTypeDescriptor hibernateTypeDescriptor = elementBinding.getHibernateTypeDescriptor();
 		typeHelper.bindHibernateTypeDescriptor(

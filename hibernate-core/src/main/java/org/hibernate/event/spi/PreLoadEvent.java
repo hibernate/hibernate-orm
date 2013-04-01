@@ -26,14 +26,14 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
- * Called before injecting property values into a newly 
- * loaded entity instance.
+ * Called before injecting property values into a newly loaded entity instance.
  *
  * @author Gavin King
  */
-public class PreLoadEvent extends AbstractEvent {
+public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntityInformation {
 	private Object entity;
 	private Object[] state;
 	private Serializable id;
@@ -43,6 +43,7 @@ public class PreLoadEvent extends AbstractEvent {
 		super(session);
 	}
 
+	@Override
 	public Object getEntity() {
 		return entity;
 	}
@@ -78,5 +79,14 @@ public class PreLoadEvent extends AbstractEvent {
 		this.state = state;
 		return this;
 	}
-	
+
+	@Override
+	public String getEntityName() {
+		return persister.getEntityName();
+	}
+
+	@Override
+	public Serializable getIdentifier() {
+		return id;
+	}
 }

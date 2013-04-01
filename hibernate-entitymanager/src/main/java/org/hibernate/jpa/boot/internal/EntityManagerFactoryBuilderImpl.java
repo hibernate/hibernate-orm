@@ -88,7 +88,6 @@ import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
-import org.hibernate.jpa.boot.spi.JpaUnifiedSettingsBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
@@ -111,7 +110,8 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.secure.internal.JACCConfiguration;
+import org.hibernate.secure.spi.GrantedPermission;
+import org.hibernate.secure.spi.JaccService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -153,7 +153,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final StandardServiceRegistryBuilder serviceRegistryBuilder;
 	private final Map configurationValues;
 
-	private final List<JaccDefinition> jaccDefinitions = new ArrayList<JaccDefinition>();
+	private final List<GrantedPermission> grantedJaccPermissions = new ArrayList<GrantedPermission>();
 	private final List<CacheRegionDefinition> cacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
 	// todo : would much prefer this as a local variable...
 	private final List<JaxbMapping> cfgXmlNamedMappings = new ArrayList<JaxbMapping>();
@@ -625,11 +625,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		if ( configurationElement.getSecurity() != null ) {
-			final String contextId = configurationElement.getSecurity().getContext();
 			for ( JaxbHibernateConfiguration.JaxbSecurity.JaxbGrant grant : configurationElement.getSecurity().getGrant() ) {
-				jaccDefinitions.add(
-						new JaccDefinition(
-								contextId,
+				grantedJaccPermissions.add(
+						new GrantedPermission(
 								grant.getRole(),
 								grant.getEntityName(),
 								grant.getActions()
@@ -690,10 +688,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			final int classStart = roleStart + role.length() + 1;
 			final String clazz = key.substring( classStart, key.length() );
 
-			final JaccDefinition def = new JaccDefinition( jaccContextId, role, clazz, (String) value );
-
-			jaccDefinitions.add( def );
-
+			grantedJaccPermissions.add( new GrantedPermission( role, clazz, (String) value ) );
 		}
 		catch ( IndexOutOfBoundsException e ) {
 			throw persistenceException( "Illegal usage of " + AvailableSettings.JACC_PREFIX + ": " + key );
@@ -1054,15 +1049,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				identifierGeneratorFactory.register( entry.getKey(), entry.getValue() );
 			}
 		}
-
-		if ( jaccDefinitions != null ) {
-			for ( JaccDefinition jaccDefinition : jaccDefinitions ) {
-				JACCConfiguration jaccCfg = new JACCConfiguration( jaccDefinition.contextId );
-				jaccCfg.addPermission(
-						jaccDefinition.role,
-						jaccDefinition.clazz,
-						jaccDefinition.actions
-				);
+		if ( grantedJaccPermissions != null ) {
+			final JaccService jaccService = serviceRegistry.getService( JaccService.class );
+			for ( GrantedPermission grantedPermission : grantedJaccPermissions ) {
+				jaccService.addPermission( grantedPermission );
 			}
 		}
 

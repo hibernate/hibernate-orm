@@ -510,8 +510,9 @@ public class QueryLoader extends BasicLoader {
 			if ( queryParameters.isCallable() ) {
 				throw new QueryException("iterate() not supported for callable statements");
 			}
-			final ResultSet rs = executeQueryStatement( queryParameters, false, Collections.<AfterLoadAction>emptyList(), session );
-			final PreparedStatement st = (PreparedStatement) rs.getStatement();
+			final SqlStatementWrapper wrapper = executeQueryStatement( queryParameters, false, Collections.<AfterLoadAction>emptyList(), session );
+			final ResultSet rs = wrapper.getResultSet();
+			final PreparedStatement st = (PreparedStatement) wrapper.getStatement();
 			final Iterator result = new IteratorImpl(
 					rs,
 			        st,

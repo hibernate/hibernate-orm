@@ -34,11 +34,7 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.*;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -78,12 +74,25 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
+		this(scope, entityName, uniqueKeyPropertyName, eager, unwrapProxy, null);
+	}
+
+	protected EntityType(
+			TypeFactory.TypeScope scope,
+			String entityName,
+			String uniqueKeyPropertyName,
+			boolean eager,
+			boolean unwrapProxy,
+			Class returnedClass) {
 		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
+		this.returnedClass = returnedClass;
 	}
+
+
 
 	protected TypeFactory.TypeScope scope() {
 		return scope;
@@ -199,14 +208,16 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return returnedClass;
 	}
 
-	private Class determineAssociatedEntityClass() {
-		try {
-			return ReflectHelper.classForName( getAssociatedEntityName() );
-		}
-		catch ( ClassNotFoundException cnfe ) {
-			return java.util.Map.class;
-		}
-	}
+    private Class determineAssociatedEntityClass() {
+        final String entityName = getAssociatedEntityName();
+        try {
+            return ReflectHelper.classForName(entityName);
+        }
+        catch ( ClassNotFoundException cnfe ) {
+            return this.scope.resolveFactory().getEntityPersister(entityName).
+                getEntityTuplizer().getMappedClass();
+        }
+    }
 
 	/**
 	 * {@inheritDoc}

@@ -23,31 +23,22 @@
  */
 package org.hibernate.secure.internal;
 
-import javax.security.jacc.EJBMethodPermission;
-
-import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.secure.spi.PermissibleAction;
 
 /**
- * Check security before an insertion
+ * Check security before any update
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public class JACCPreInsertEventListener implements PreInsertEventListener, JACCSecurityListener {
-	private final String contextId;
-
-	public JACCPreInsertEventListener(String contextId) {
-		this.contextId = contextId;
+public class JaccPreUpdateEventListener extends AbstractJaccSecurableEventListener implements PreUpdateEventListener {
+	public JaccPreUpdateEventListener() {
 	}
 
-	public boolean onPreInsert(PreInsertEvent event) {
-		final EJBMethodPermission insertPermission = new EJBMethodPermission(
-				event.getPersister().getEntityName(),
-				HibernatePermission.INSERT,
-				null,
-				null
-		);
-		JACCPermissions.checkPermission( event.getEntity().getClass(), contextId, insertPermission );
+	public boolean onPreUpdate(PreUpdateEvent event) {
+		performSecurityCheck( event, PermissibleAction.UPDATE );
 		return false;
 	}
 }

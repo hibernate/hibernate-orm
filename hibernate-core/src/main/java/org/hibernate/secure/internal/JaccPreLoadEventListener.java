@@ -23,32 +23,21 @@
  */
 package org.hibernate.secure.internal;
 
-import javax.security.jacc.EJBMethodPermission;
-
-import org.hibernate.event.spi.PreDeleteEvent;
-import org.hibernate.event.spi.PreDeleteEventListener;
+import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.event.spi.PreLoadEventListener;
+import org.hibernate.secure.spi.PermissibleAction;
 
 /**
- * Check security before any deletion
+ * Check security before any load
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
+ * @author Steve Ebersole
  */
-public class JACCPreDeleteEventListener implements PreDeleteEventListener, JACCSecurityListener {
-	private final String contextId;
-
-	public JACCPreDeleteEventListener(String contextId) {
-		this.contextId = contextId;
+public class JaccPreLoadEventListener extends AbstractJaccSecurableEventListener implements PreLoadEventListener {
+	public JaccPreLoadEventListener() {
 	}
 
-	public boolean onPreDelete(PreDeleteEvent event) {
-		final EJBMethodPermission deletePermission = new EJBMethodPermission(
-				event.getPersister().getEntityName(),
-				HibernatePermission.DELETE,
-				null,
-				null
-		);
-		JACCPermissions.checkPermission( event.getEntity().getClass(), contextId, deletePermission );
-		return false;
+	public void onPreLoad(PreLoadEvent event) {
+		performSecurityCheck( event.getSession(), event, PermissibleAction.READ );
 	}
-
 }

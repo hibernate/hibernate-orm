@@ -61,7 +61,7 @@
              <literal>hibernate-mapping</literal>. This allows you to extend a class hierarchy by adding
              a new mapping file. You must specify an <literal>extends</literal> attribute in the subclass mapping,
              naming a previously mapped superclass. Previously this feature made the ordering of the mapping
-             documents important. Since Hibernate3, the ordering of mapping files is irrelevant when using the
+             documents important. Since Hibernate, the ordering of mapping files is irrelevant when using the
              extends keyword. The ordering inside a single mapping file still needs to be defined as superclasses
              before subclasses.
          </para>

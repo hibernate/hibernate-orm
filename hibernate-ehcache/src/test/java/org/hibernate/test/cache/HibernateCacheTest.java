@@ -33,7 +33,7 @@ import org.junit.Test;
  * @author Chris Dennis
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 
 	private static final String REGION_PREFIX = "hibernate.test.";
@@ -191,6 +191,7 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testGeneralUsage() {
 		EventManager mgr = new EventManager( sessionFactory() );
 		Statistics stats = sessionFactory().getStatistics();

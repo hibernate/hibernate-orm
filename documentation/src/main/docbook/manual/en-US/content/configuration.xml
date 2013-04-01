@@ -670,7 +670,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
 
             <entry>Optimizes second-level cache operation to minimize writes,
             at the cost of more frequent reads. This setting is most useful
-            for clustered caches and, in Hibernate3, is enabled by default for
+            for clustered caches and, in Hibernate, is enabled by default for
             clustered cache implementations. <para> <emphasis
             role="strong">e.g.</emphasis> <literal>true|false</literal>
             </para></entry>
@@ -911,7 +911,7 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
             runtime reflection. This is a System-level property and cannot be
             set in <literal>hibernate.cfg.xml</literal>. Reflection can
             sometimes be useful when troubleshooting. Hibernate always
-            requires either CGLIB or javassist even if you turn off the
+            requires javassist even if you turn off the
             optimizer.</para><para> <emphasis role="strong">e.g.</emphasis>
             <literal>true</literal> | <literal>false</literal> </para></entry>
           </row>
@@ -919,11 +919,8 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
           <row>
             <entry><literal>hibernate.bytecode.provider</literal></entry>
 
-            <entry><para>Both javassist or cglib can be used as byte
-            manipulation engines; the default is
-            <literal>javassist</literal>.</para><para> <emphasis
-            role="strong">e.g.</emphasis> <literal>javassist</literal> |
-            <literal>cglib</literal> </para></entry>
+            <entry><para>At the moment, <literal>javassist</literal> is the only supported bytecode provider.</para><para> <emphasis
+            role="strong">e.g.</emphasis> <literal>javassist</literal></para></entry>
           </row>
         </tbody>
       </tgroup>

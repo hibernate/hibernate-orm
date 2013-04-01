@@ -232,6 +232,32 @@ public final class TypeFactory implements Serializable {
 				lazy, unwrapProxy, entityName, propertyName );
 	}
 
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName,
+			Class returnedClass) {
+		return new OneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
+				lazy, unwrapProxy, entityName, propertyName, returnedClass );
+	}
+
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName,
+			Class returnedClass) {
+		return new SpecialOneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
+				lazy, unwrapProxy, entityName, propertyName, returnedClass );
+	}
+
 
 	// many-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -258,6 +284,26 @@ public final class TypeFactory implements Serializable {
 				unwrapProxy,
 				ignoreNotFound,
 				isLogicalOneToOne
+		);
+	}
+
+	public EntityType manyToOne(
+			String persistentClass,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne,
+			Class returnedClass) {
+		return new ManyToOneType(
+				typeScope,
+				persistentClass,
+				uniqueKeyPropertyName,
+				lazy,
+				unwrapProxy,
+				ignoreNotFound,
+				isLogicalOneToOne ,
+				returnedClass
 		);
 	}
 

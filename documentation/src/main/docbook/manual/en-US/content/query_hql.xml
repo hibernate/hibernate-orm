@@ -768,7 +768,7 @@ where p.name = some elements(list.names)]]></programlisting>
             Note that these constructs - <literal>size</literal>, <literal>elements</literal>,
             <literal>indices</literal>, <literal>minindex</literal>, <literal>maxindex</literal>,
             <literal>minelement</literal>, <literal>maxelement</literal> - can only be used in
-            the where clause in Hibernate3.
+            the where clause in Hibernate.
         </para>
 
         <para>

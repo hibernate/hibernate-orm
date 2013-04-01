@@ -54,10 +54,11 @@ public abstract class AbstractIdentifiableType<X>
 
 	public AbstractIdentifiableType(
 			Class<X> javaType,
+			String typeName,
 			AbstractIdentifiableType<? super X> superType,
 			boolean hasIdentifierProperty,
 			boolean versioned) {
-		super( javaType, superType );
+		super( javaType, typeName, superType );
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		isVersioned = versioned;
 	}

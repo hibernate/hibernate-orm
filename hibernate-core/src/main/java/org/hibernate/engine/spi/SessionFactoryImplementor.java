@@ -50,6 +50,7 @@ import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.internal.NamedQueryRepository;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.EntityNotFoundDelegate;
@@ -154,9 +155,9 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	/**
 	 * Get the connection provider
 	 *
-	 * @deprecated Access to connections via {@link org.hibernate.engine.jdbc.spi.JdbcConnectionAccess} should
+	 * @deprecated Access to connections via {@link org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess} should
 	 * be preferred over access via {@link ConnectionProvider}, whenever possible.
-	 * {@link org.hibernate.engine.jdbc.spi.JdbcConnectionAccess} is tied to the Hibernate Session to
+	 * {@link org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess} is tied to the Hibernate Session to
 	 * properly account for contextual information.  See {@link SessionImplementor#getJdbcConnectionAccess()}
 	 */
 	@Deprecated
@@ -301,4 +302,10 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @since 5.0
 	 */
 	public Metamodel getJpaMetamodel();
+	/**
+	 * Provides access to the named query repository
+	 *
+	 * @return
+	 */
+	public NamedQueryRepository getNamedQueryRepository();
 }

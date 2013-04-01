@@ -256,7 +256,7 @@ session.flush();]]></programlisting>
              database. We will also assume that both <literal>Parent</literal> and <literal>Child</literal> have generated
              identifier properties of type <literal>Long</literal>. Hibernate will use the identifier and 
              version/timestamp property value to determine which of the children are new. (See
-             <xref linkend="objectstate-saveorupdate"/>.) <emphasis>In Hibernate3, it is no longer necessary to specify
+             <xref linkend="objectstate-saveorupdate"/>.) <emphasis>In Hibernate, it is no longer necessary to specify
              an <literal>unsaved-value</literal> explicitly.</emphasis>
          </para>
 

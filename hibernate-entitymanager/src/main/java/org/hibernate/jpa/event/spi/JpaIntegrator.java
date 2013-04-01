@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.CascadingAction;
@@ -59,22 +60,11 @@ import org.hibernate.jpa.event.internal.jpa.CallbackProcessorImpl;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryImpl;
 import org.hibernate.jpa.event.internal.jpa.LegacyCallbackProcessor;
-import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.jpa.event.internal.jpa.StandardListenerFactory;
+import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.mapping.PersistentClass;
-<<<<<<< HEAD
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.secure.internal.JACCPreDeleteEventListener;
-import org.hibernate.secure.internal.JACCPreInsertEventListener;
-import org.hibernate.secure.internal.JACCPreLoadEventListener;
-import org.hibernate.secure.internal.JACCPreUpdateEventListener;
-import org.hibernate.secure.internal.JACCSecurityListener;
-=======
-import org.hibernate.metamodel.binding.EntityBinding;
-import org.hibernate.metamodel.source.MetadataImplementor;
->>>>>>> master
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 

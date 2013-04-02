@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 import java.util.Iterator;
 
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,7 +76,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		})
 		class Foo {
 		}
-		Index index = JandexHelper.indexForClass( service, Foo.class );
+		IndexView index = JandexHelper.indexForClass( service, Foo.class );
 
 		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 
@@ -90,7 +91,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 
 	@Test
 	public void testFetchProfiles() {
-		Index index = JandexHelper.indexForClass( service, FooBar.class );
+		IndexView index = JandexHelper.indexForClass( service, FooBar.class );
 		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		Iterator<org.hibernate.metamodel.spi.binding.FetchProfile> mappedFetchProfiles = meta.getFetchProfiles().iterator();
@@ -126,7 +127,7 @@ public class FetchProfileBinderTest extends BaseUnitTestCase {
 		})
 		class Foo {
 		}
-		Index index = JandexHelper.indexForClass( service, Foo.class );
+		IndexView index = JandexHelper.indexForClass( service, Foo.class );
 
 		FetchProfileProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 	}

@@ -33,6 +33,7 @@ import org.hibernate.jpa.AvailableSettings;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -42,12 +43,13 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-5024" )
+@FailureExpectedWithNewMetamodel(message = "jpa metamodel generation")
 public class MappedSuperclassWithAttributesTest extends BaseUnitTestCase {
 	@Test
 	public void testStaticMetamodel() {
 		EntityManagerFactory emf = TestingEntityManagerFactoryGenerator.generateEntityManagerFactory(
 				AvailableSettings.LOADED_CLASSES,
-				Arrays.asList( Product.class )
+				Arrays.asList( Product.class,AbstractNameable.class )
 		);
 
 		assertNotNull( "'Product_.id' should not be null)", Product_.id );

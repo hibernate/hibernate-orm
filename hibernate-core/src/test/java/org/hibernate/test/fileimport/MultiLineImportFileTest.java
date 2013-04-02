@@ -58,11 +58,6 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	public String[] getMappings() {
-		return NO_MAPPINGS;
-	}
-
 	@Test
 	public void testImportFile() throws Exception {
 		Session s = openSession();

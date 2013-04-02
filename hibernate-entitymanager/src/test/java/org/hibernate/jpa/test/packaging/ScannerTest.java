@@ -42,6 +42,7 @@ import org.hibernate.jpa.boot.scan.spi.ScanResult;
 import org.hibernate.jpa.boot.scan.spi.Scanner;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.jpa.test.pack.defaultpar.Version;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -94,6 +95,7 @@ public class ScannerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCustomScanner() throws Exception {
 		File defaultPar = buildDefaultPar();
 		File explicitPar = buildExplicitPar();

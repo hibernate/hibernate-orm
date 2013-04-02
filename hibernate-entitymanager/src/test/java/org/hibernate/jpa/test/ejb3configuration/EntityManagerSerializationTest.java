@@ -42,11 +42,13 @@ import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
 import org.hibernate.jpa.test.NotSerializableClass;
 import org.hibernate.jpa.test.Wallet;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Emmanuel Bernard
  * @author Scott Marlow
  */
+@FailureExpectedWithNewMetamodel
 public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testSerialization() throws Exception {
@@ -102,10 +104,8 @@ public class EntityManagerSerializationTest extends BaseEntityManagerFunctionalT
 	 * @return
 	 */
 	@Override
-	protected Map getConfig() {
-		Map result = super.getConfig();
-		result.put( "BaseEntityManagerFunctionalTestCase.getConfig_addedNotSerializableObject", new NotSerializableClass());
-		return result;
+	protected void addConfigOptions(Map options) {
+		options.put( "BaseEntityManagerFunctionalTestCase.getConfig_addedNotSerializableObject", new NotSerializableClass());
 	}
 
 	@Override

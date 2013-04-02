@@ -58,7 +58,7 @@ public class InsertedDataTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_PREFIX, "" );
 		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}

@@ -51,12 +51,14 @@ import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {

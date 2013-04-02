@@ -38,6 +38,7 @@ import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.FetchMode;
@@ -494,7 +495,7 @@ public class AssociationAttribute extends MappedAttribute {
 		// with the owning side.
 		if ( isJpaInverse ) {
 			// TODO: Pull some of this into JandexHelper.
-			Index index = JandexHelper.indexForClass(
+			IndexView index = JandexHelper.indexForClass(
 					getContext().getServiceRegistry().getService(
 							ClassLoaderService.class ), referencedAttributeType );
 			ClassInfo classInfo = index.getClassByName( DotName.createSimple(

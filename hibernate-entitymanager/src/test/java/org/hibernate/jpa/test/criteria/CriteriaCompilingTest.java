@@ -40,6 +40,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.jpa.test.callbacks.CommunicationSystem;
 import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Alias;
 import org.hibernate.jpa.test.metamodel.Country;
@@ -60,11 +61,13 @@ import org.hibernate.jpa.test.inheritance.Fruit;
 import org.hibernate.jpa.test.inheritance.Strawberry;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
@@ -81,6 +84,7 @@ public class CriteriaCompilingTest extends BaseEntityManagerFunctionalTestCase {
 				Order.class,
 				Product.class,
 				ShelfLife.class,
+				CommunicationSystem.class,
 				// @Inheritance
 				Fruit.class,
 				Strawberry.class,

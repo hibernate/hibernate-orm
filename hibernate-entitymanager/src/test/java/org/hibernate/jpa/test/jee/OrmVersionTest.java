@@ -42,19 +42,27 @@ import org.junit.Test;
 
 import org.hibernate.InvalidMappingException;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.jpa.test.pack.defaultpar.Lighter;
+import org.hibernate.jpa.test.pack.defaultpar_1_0.ApplicationServer1;
+import org.hibernate.jpa.test.pack.defaultpar_1_0.IncrementListener1;
 import org.hibernate.jpa.test.pack.defaultpar_1_0.Lighter1;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * "smoke" tests for JEE bootstrapping of HEM via a {@link PersistenceUnitInfo}
  *
  * @author Steve Ebersole
  */
-public class OrmVersionTest {
+@FailureExpectedWithNewMetamodel
+public class OrmVersionTest extends BaseUnitTestCase{
     @Test
 	public void testOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-1.xml" );
+		pui.getManagedClassNames().add( IncrementListener1.class.getName() );
+		pui.getManagedClassNames().add( ApplicationServer1.class.getName() );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		emf.getMetamodel().entity( Lighter1.class ); // exception if not entity
@@ -63,6 +71,8 @@ public class OrmVersionTest {
 	public void testOrm2() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-2.xml" );
+		pui.getManagedClassNames().add( org.hibernate.jpa.test.pack.defaultpar.IncrementListener.class.getName() );
+		pui.getManagedClassNames().add( ApplicationServer.class.getName() );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
 		emf.getMetamodel().entity( Lighter.class ); // exception if not entity
@@ -71,6 +81,8 @@ public class OrmVersionTest {
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/invalid-orm-1.xml" );
+		pui.getManagedClassNames().add( IncrementListener1.class.getName() );
+		pui.getManagedClassNames().add( ApplicationServer1.class.getName() );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
 		try {
 			hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );

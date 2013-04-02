@@ -44,6 +44,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.jpa.metamodel.internal.legacy.MetamodelImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -56,6 +57,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBaseOfService() throws Exception {
@@ -408,12 +410,15 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 				Dog.class,
 				Cat.class,
 				Cattish.class,
+				Animal.class,
 				Feline.class,
 				Garden.class,
 				Flower.class,
 				JoinedManyToOneOwner.class,
 				Parent.class,
-				Child.class
+				Child.class,
+				SubThing.class,
+				Thing.class
 		};
 	}
 

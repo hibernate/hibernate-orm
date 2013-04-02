@@ -47,7 +47,9 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Widget.class,
-				Tool.class
+				Tool.class,
+				Helper.class,
+				HelperId.class
 		};
 	}
 

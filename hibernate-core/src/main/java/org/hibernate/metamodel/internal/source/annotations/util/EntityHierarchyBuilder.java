@@ -41,6 +41,7 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyImpl;
@@ -52,6 +53,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClas
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
 /**
@@ -87,8 +89,7 @@ public class EntityHierarchyBuilder {
 			if ( processedEntities.contains( classInfo.name() ) ) {
 				continue;
 			}
-
-			ClassInfo rootClassInfo = findRootEntityClassInfo( index, classInfo );
+			ClassInfo rootClassInfo = findRootEntityClassInfo( index, classInfo, bindingContext );
 			List<ClassInfo> rootClassWithAllSubclasses = new ArrayList<ClassInfo>();
 
 			// collect the current root entity and all its subclasses
@@ -181,7 +182,7 @@ public class EntityHierarchyBuilder {
 	 *
 	 * @return Finds the root entity starting at the entity given by {@code info}
 	 */
-	private static ClassInfo findRootEntityClassInfo(IndexView index, ClassInfo info) {
+	private static ClassInfo findRootEntityClassInfo(IndexView index, ClassInfo info, AnnotationBindingContext bindingContext) {
 		ClassInfo rootEntity = info;
 
 		DotName superName = info.superName();
@@ -189,6 +190,20 @@ public class EntityHierarchyBuilder {
 		// walk up the hierarchy until java.lang.Object
 		while ( !OBJECT.equals( superName ) ) {
 			tmpInfo = index.getClassByName( superName );
+			if ( tmpInfo == null && superName != null ) {
+				Class clazz = bindingContext.locateClassByName( superName.toString() );
+				if ( clazz != null ) {
+					throw new AnnotationException(
+							info.name()
+									.toString() + "'s parent class [" + clazz.getName() + "] is not added into Jandex repository"
+					);
+				}else {
+					throw new AnnotationException(
+							info.name()
+									.toString() + "'s parent class [" + superName.toString() + "] doesn't exist in classpath"
+					);
+				}
+			}
 			if ( isEntityClass( tmpInfo ) ) {
 				rootEntity = tmpInfo;
 			}

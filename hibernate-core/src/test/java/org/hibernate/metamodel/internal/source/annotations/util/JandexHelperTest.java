@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.AttributeOverride;
@@ -36,6 +37,7 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -81,7 +83,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 			private String bar;
 			private String fubar;
 		}
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
 
 		ClassInfo classInfo = index.getClassByName( DotName.createSimple( Foo.class.getName() ) );
 		Map<DotName, List<AnnotationInstance>> memberAnnotations = JandexHelper.getMemberAnnotations(
@@ -106,10 +108,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ATTRIBUTE_OVERRIDE );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ATTRIBUTE_OVERRIDE );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		// try to retrieve the name
 		String name = JandexHelper.getValue( annotationInstance, "name", String.class );
@@ -135,10 +137,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ATTRIBUTE_OVERRIDE );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ATTRIBUTE_OVERRIDE );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		JandexHelper.getValue( annotationInstance, "name", Float.class );
 	}
@@ -149,10 +151,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.NAMED_QUERY );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.NAMED_QUERY );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class );
 		assertEquals( "Wrong lock mode", LockModeType.NONE, lockMode );
@@ -164,10 +166,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.NAMED_QUERY );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.NAMED_QUERY );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class );
 		assertEquals( "Wrong lock mode", LockModeType.OPTIMISTIC, lockMode );
@@ -180,10 +182,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 			private String foo;
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.INDEX );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.INDEX );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		String[] columnNames = JandexHelper.getValue( annotationInstance, "columnNames", String[].class );
 		Assert.assertTrue( columnNames.length == 3 );
@@ -195,10 +197,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		JandexHelper.getValue( annotationInstance, "resultClass", Class.class );
 	}
@@ -209,10 +211,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( HibernateDotNames.NAMED_NATIVE_QUERY );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		String fqcn = JandexHelper.getValue( annotationInstance, "resultClass", String.class );
 		assertEquals( "Wrong class names", Foo.class.getName(), fqcn );
@@ -224,10 +226,10 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		class Foo {
 		}
 
-		Index index = JandexHelper.indexForClass( classLoaderService, Foo.class );
-		List<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ENTITY );
+		IndexView index = JandexHelper.indexForClass( classLoaderService, Foo.class );
+		Collection<AnnotationInstance> annotationInstances = index.getAnnotations( JPADotNames.ENTITY );
 		assertTrue( annotationInstances.size() == 1 );
-		AnnotationInstance annotationInstance = annotationInstances.get( 0 );
+		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		try {
 			JandexHelper.getValue( annotationInstance, "foo", String.class );

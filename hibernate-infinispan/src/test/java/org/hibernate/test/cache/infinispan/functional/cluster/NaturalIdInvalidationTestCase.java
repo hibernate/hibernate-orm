@@ -18,15 +18,12 @@ import org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.jboss.util.collection.ConcurrentSet;
-import org.junit.After;
 import org.junit.Test;
 
 import javax.transaction.TransactionManager;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import static org.infinispan.test.TestingUtil.tmpDirectory;
 import static org.infinispan.test.TestingUtil.withTx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

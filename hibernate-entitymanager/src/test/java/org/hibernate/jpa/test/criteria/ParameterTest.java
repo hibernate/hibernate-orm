@@ -33,10 +33,12 @@ import javax.persistence.criteria.Root;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test

@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.persistence.AccessType;
 
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.junit.After;
 import org.junit.Before;
 
@@ -58,7 +59,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 	}
 
 	public Set<EntityHierarchy> createEntityHierarchies(Class<?>... clazz) {
-		Index index = JandexHelper.indexForClass(
+		IndexView index = JandexHelper.indexForClass(
 				meta.getServiceRegistry().getService( ClassLoaderService.class ),
 				clazz
 		);
@@ -67,7 +68,7 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 	}
 
 	public EmbeddableHierarchy createEmbeddableHierarchy(AccessType accessType,SingularAttributeBinding.NaturalIdMutability naturalIdMutability, Class<?>... configuredClasses) {
-		Index index = JandexHelper.indexForClass(
+		IndexView index = JandexHelper.indexForClass(
 				meta.getServiceRegistry().getService( ClassLoaderService.class ),
 				configuredClasses
 		);

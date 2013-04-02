@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -221,16 +222,27 @@ public class IndexBuilder {
 		return serviceRegistry;
 	}
 
-	ClassInfo createClassInfo(String className) {
+	ClassInfo createClassInfo(String className, String optionalPerfix){
 		if ( StringHelper.isEmpty( className ) ) {
 			throw new AssertionFailure( "Class Name used to create ClassInfo is empty." );
+		}
+		Class clazz = null;
+		try {
+			clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
+		}
+		catch ( ClassLoadingException e ) {
+			if ( StringHelper.isNotEmpty( optionalPerfix ) ) {
+				className = StringHelper.qualify( optionalPerfix, className );
+				clazz = serviceRegistry.getService( ClassLoaderService.class )
+						.classForName( className );
+			}
 		}
 		DotName classDotName = DotName.createSimple( className );
 		if ( classes.containsKey( classDotName ) ) {
 			//classInfoAnnotationsMap.put( classDotName, new HashMap<DotName, List<AnnotationInstance>>(classes.get( classDotName ).annotations()) );
 			return classes.get( classDotName );
 		}
-		Class clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
+
 		DotName superName = null;
 		DotName[] interfaces = null;
 		short access_flag;
@@ -263,6 +275,10 @@ public class IndexBuilder {
 		addSubClasses( superName, classInfo );
 		addImplementors( interfaces, classInfo );
 		return classInfo;
+	}
+
+	ClassInfo createClassInfo(String className) {
+		return createClassInfo( className, null );
 	}
 
 	private void addSubClasses(DotName superClassDotName, ClassInfo classInfo) {

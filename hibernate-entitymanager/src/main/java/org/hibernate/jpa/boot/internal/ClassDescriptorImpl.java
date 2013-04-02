@@ -23,6 +23,8 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import java.net.URL;
+
 import org.hibernate.jpa.boot.spi.ClassDescriptor;
 import org.hibernate.jpa.boot.spi.InputStreamAccess;
 
@@ -36,6 +38,12 @@ public class ClassDescriptorImpl implements ClassDescriptor {
 	public ClassDescriptorImpl(String name, InputStreamAccess streamAccess) {
 		this.name = name;
 		this.streamAccess = streamAccess;
+	}
+
+	public ClassDescriptorImpl(final Class clazz){
+		this.name = clazz.getName();
+		final URL url = clazz.getClassLoader().getResource( name.replace( '.', '/' ) + ".class" );
+		this.streamAccess = new UrlInputStreamAccess( url );
 	}
 
 	@Override

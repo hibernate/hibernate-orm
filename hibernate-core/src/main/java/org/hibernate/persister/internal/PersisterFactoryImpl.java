@@ -134,11 +134,12 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
-	public EntityPersister createEntityPersister(EntityBinding metadata,
-												 EntityRegionAccessStrategy cacheAccessStrategy,
-												 NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-												 SessionFactoryImplementor factory,
-												 Mapping cfg) {
+	public EntityPersister createEntityPersister(
+			EntityBinding metadata,
+			EntityRegionAccessStrategy cacheAccessStrategy,
+			NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+			SessionFactoryImplementor factory,
+			Mapping cfg) {
 		Class<? extends EntityPersister> persisterClass = metadata.getCustomEntityPersisterClass();
 		if ( persisterClass == null ) {
 			persisterClass = serviceRegistry.getService( PersisterClassResolver.class ).getEntityPersisterClass( metadata );

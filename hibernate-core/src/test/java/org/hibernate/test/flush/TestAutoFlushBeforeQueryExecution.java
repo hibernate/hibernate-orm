@@ -225,8 +225,8 @@ public class TestAutoFlushBeforeQueryExecution extends BaseCoreFunctionalTestCas
 	}
 
 	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-		super.prepareBootstrapRegistryBuilder( builder );
+	protected void prepareBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+		super.prepareBootstrapServiceRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {
 

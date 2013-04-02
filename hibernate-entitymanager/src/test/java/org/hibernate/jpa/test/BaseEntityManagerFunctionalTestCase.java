@@ -31,6 +31,7 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,9 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -51,6 +54,7 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.junit.After;
 import org.junit.Before;
 
+import org.hibernate.testing.junit4.BaseFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
@@ -59,23 +63,18 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
-public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCase {
+public abstract class BaseEntityManagerFunctionalTestCase extends BaseFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( BaseEntityManagerFunctionalTestCase.class );
 
 	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in
 	// BaseCoreFunctionalTestCase) because the old HEM test methodology was to create an EMF for each test method.
 
-	private static final Dialect dialect = Dialect.getDialect();
 
 	private StandardServiceRegistryImpl serviceRegistry;
 	private EntityManagerFactoryImpl entityManagerFactory;
-
 	private EntityManager em;
 	private ArrayList<EntityManager> isolatedEms = new ArrayList<EntityManager>();
 
-	protected Dialect getDialect() {
-		return dialect;
-	}
 
 	protected EntityManagerFactory entityManagerFactory() {
 		return entityManagerFactory;
@@ -86,19 +85,19 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	}
 
 	@Before
-	@SuppressWarnings( {"UnusedDeclaration"})
+	@SuppressWarnings({ "UnusedDeclaration" })
 	public void buildEntityManagerFactory() throws Exception {
 		log.trace( "Building EntityManagerFactory" );
-
-		entityManagerFactory = (EntityManagerFactoryImpl) Bootstrap.getEntityManagerFactoryBuilder(
+		EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				buildSettings()
-		).build();
+		);
+		entityManagerFactory = (EntityManagerFactoryImpl) entityManagerFactoryBuilder.build();
 
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
 				.getServiceRegistry()
 				.getParentServiceRegistry();
-
+		configuration = entityManagerFactoryBuilder.getHibernateConfiguration();
 		afterEntityManagerFactoryBuilt();
 	}
 
@@ -195,7 +194,9 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 	@SuppressWarnings("unchecked")
 	protected Map buildSettings() {
-		Map settings = getConfig();
+
+		Map settings = Environment.getProperties();
+		addConfigOptions( settings );
 		addMappings( settings );
 
 		if ( createSchema() ) {
@@ -209,65 +210,51 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	@SuppressWarnings("unchecked")
 	protected void addMappings(Map settings) {
 		String[] mappings = getMappings();
-		if ( mappings != null ) {
+		if ( mappings != null && mappings.length > 0 ) {
 			settings.put( AvailableSettings.HBXML_FILES, StringHelper.join( ",", mappings ) );
 		}
-	}
-
-	protected static final String[] NO_MAPPINGS = new String[0];
-
-	protected String[] getMappings() {
-		return NO_MAPPINGS;
-	}
-
-	protected Map getConfig() {
-		Map<Object, Object> config = Environment.getProperties();
-		ArrayList<Class> classes = new ArrayList<Class>();
-
-		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
-		config.put( AvailableSettings.LOADED_CLASSES, classes );
-		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
-			config.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
-		}
-		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
-			config.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
-		}
-		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<String>();
-			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( AvailableSettings.XML_FILE_NAMES, dds );
+		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		if ( annotatedClasses != null && annotatedClasses.length > 0 ) {
+			List<Class<?>> classes = Arrays.asList( annotatedClasses );
+			settings.put( AvailableSettings.LOADED_CLASSES, classes );
 		}
 
-		addConfigOptions( config );
-		return config;
+		Map<Class, String> cachedClasses = getCachedClasses();
+		if ( CollectionHelper.isNotEmpty( cachedClasses ) ) {
+			for ( Map.Entry<Class, String> entry : cachedClasses.entrySet() ) {
+				settings.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
+			}
+		}
+		Map<String, String> cachedCollections = getCachedCollections();
+		if ( CollectionHelper.isNotEmpty( cachedCollections ) ) {
+			for ( Map.Entry<String, String> entry : cachedCollections.entrySet() ) {
+				settings.put( AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(), entry.getValue() );
+			}
+		}
+
+		String[] dds = getEjb3DD();
+		if ( dds != null && dds.length > 0 ) {
+			List<String> list = Arrays.asList( dds );
+			settings.put( AvailableSettings.XML_FILE_NAMES, list );
+		}
 	}
 
 	protected void addConfigOptions(Map options) {
 	}
 
-	protected static final Class<?>[] NO_CLASSES = new Class[0];
-
-	protected Class<?>[] getAnnotatedClasses() {
-		return NO_CLASSES;
-	}
-
 	public Map<Class, String> getCachedClasses() {
-		return new HashMap<Class, String>();
+		return Collections.emptyMap();
 	}
 
 	public Map<String, String> getCachedCollections() {
-		return new HashMap<String, String>();
+		return Collections.emptyMap();
 	}
 
 	public String[] getEjb3DD() {
-		return new String[] { };
+		return NO_MAPPINGS;
 	}
 
 	protected void afterEntityManagerFactoryBuilt() {
-	}
-
-	protected boolean createSchema() {
-		return true;
 	}
 
 

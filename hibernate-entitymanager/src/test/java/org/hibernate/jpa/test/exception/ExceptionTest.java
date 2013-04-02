@@ -36,6 +36,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.exception.ConstraintViolationException;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -46,6 +47,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ExceptionTest.class );
 

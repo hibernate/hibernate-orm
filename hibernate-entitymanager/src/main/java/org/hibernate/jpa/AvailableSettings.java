@@ -24,8 +24,6 @@
 package org.hibernate.jpa;
 
 
-import org.hibernate.internal.util.StringHelper;
-
 /**
  * Defines the available HEM settings, both JPA-defined as well as Hibernate-specific
  * <p/>

@@ -33,6 +33,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.orm.JaxbEntityListener;
 import org.hibernate.jaxb.spi.orm.JaxbEntityListeners;
 
@@ -57,15 +58,20 @@ class ListenerMocker extends AbstractMocker {
 		List<String> clazzNameList = new ArrayList<String>( entityListeners.getEntityListener().size() );
 		for ( JaxbEntityListener listener : entityListeners.getEntityListener() ) {
 			MockHelper.addToCollectionIfNotNull( clazzNameList, listener.getClazz() );
-			parserEntityListener( listener );
+			parserEntityListener( listener, clazzNameList );
 		}
 		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, indexBuilder.getServiceRegistry() );
 		return create( ENTITY_LISTENERS, classInfo, annotationValueList );
 	}
 
-	private void parserEntityListener(JaxbEntityListener listener) {
+	private void parserEntityListener(JaxbEntityListener listener, List<String> clazzNameList) {
 		String clazz = listener.getClazz();
-		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz );
+		String defaultPackageName = classInfo!=null ?  StringHelper.qualifier(classInfo.name().toString()) : null;
+		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz,defaultPackageName );
+		if ( !clazz.equals( tempClassInfo.name().toString() ) ) {
+			clazzNameList.remove( clazz );
+			clazzNameList.add( tempClassInfo.name().toString() );
+		}
 		ListenerMocker mocker = createListenerMocker( indexBuilder, tempClassInfo );
 		mocker.parser( listener.getPostLoad(), POST_LOAD );
 		mocker.parser( listener.getPostPersist(), POST_PERSIST );

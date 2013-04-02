@@ -35,6 +35,7 @@ import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -43,7 +44,7 @@ import org.hibernate.testing.TestForIssue;
 public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] { Client.class };
+		return new Class[] { Client.class, Name.class };
 	}
 
 	@Test
@@ -86,6 +87,7 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-4586" )
+	@FailureExpectedWithNewMetamodel
 	public void testParameterizedFunctions() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -47,8 +47,8 @@ public class CommandExtractorServiceTest extends MultiLineImportFileTest {
 	}
 
 	@Override
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		super.prepareBasicRegistryBuilder( serviceRegistryBuilder );
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		super.prepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
 		serviceRegistryBuilder.addService( ImportSqlCommandExtractor.class, new MultipleLinesSqlCommandExtractor() );
 	}
 }

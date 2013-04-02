@@ -54,6 +54,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -113,12 +114,21 @@ public class PersisterClassProviderTest {
 			return null;
 		}
 	}
-
+	@SuppressWarnings( {"UnusedParameters"})
 	public static class GoofyProvider implements EntityPersister {
 
-		@SuppressWarnings( {"UnusedParameters"})
+
 		public GoofyProvider(
 				org.hibernate.mapping.PersistentClass persistentClass,
+				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
+				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				SessionFactoryImplementor sf,
+				Mapping mapping) {
+			throw new GoofyException();
+		}
+
+		public GoofyProvider(
+				EntityBinding persistentClass,
 				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
 				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 				SessionFactoryImplementor sf,

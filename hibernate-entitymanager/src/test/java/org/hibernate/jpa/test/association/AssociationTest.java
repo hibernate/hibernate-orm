@@ -5,10 +5,12 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class AssociationTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBidirOneToOne() throws Exception {

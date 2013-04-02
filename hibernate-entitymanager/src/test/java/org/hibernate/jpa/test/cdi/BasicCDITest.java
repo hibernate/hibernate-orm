@@ -39,11 +39,14 @@ import java.util.List;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class BasicCDITest extends BaseCDIIntegrationTest {
 	private static int count;
 

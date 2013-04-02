@@ -33,6 +33,7 @@ import javax.persistence.metamodel.Type;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testInjections() throws Exception {
@@ -143,7 +145,11 @@ public class StaticMetadataTest extends BaseEntityManagerFunctionalTestCase {
 				Cattish.class,
 				Feline.class,
 				Garden.class,
-				Flower.class
+				Flower.class,
+				Animal.class,
+				SubThing.class,
+				Thing.class ,
+				Cattish.class
 		};
 	}
 }

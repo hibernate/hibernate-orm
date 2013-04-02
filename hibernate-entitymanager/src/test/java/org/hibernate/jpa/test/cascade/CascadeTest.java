@@ -29,10 +29,12 @@ import javax.persistence.EntityTransaction;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Max Rydahl Andersen
  */
+@FailureExpectedWithNewMetamodel
 public class CascadeTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testCascade() throws Exception {

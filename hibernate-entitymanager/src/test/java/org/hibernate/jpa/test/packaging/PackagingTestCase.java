@@ -93,6 +93,9 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		} else {
 			// if running in some IDEs, may be in /bin instead
 			index = myUrl.getFile().lastIndexOf( "bin" );
+			if(index == -1){
+				index = myUrl.getFile().lastIndexOf( "out" );
+			}
 		}
 		
 		if ( index == -1 ) {

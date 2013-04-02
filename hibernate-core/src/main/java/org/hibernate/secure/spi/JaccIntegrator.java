@@ -35,6 +35,7 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.secure.internal.DisabledJaccServiceImpl;
 import org.hibernate.secure.internal.JaccPreDeleteEventListener;
@@ -51,7 +52,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  *
  * @author Steve Ebersole
  */
-public class JaccIntegrator implements ServiceContributor, Integrator {
+public class JaccIntegrator implements ServiceContributingIntegrator {
 	private static final Logger log = Logger.getLogger( JaccIntegrator.class );
 
 	private static final DuplicationStrategy DUPLICATION_STRATEGY = new DuplicationStrategy() {
@@ -69,7 +70,7 @@ public class JaccIntegrator implements ServiceContributor, Integrator {
 
 
 	@Override
-	public void contribute(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		boolean isSecurityEnabled = serviceRegistryBuilder.getSettings().containsKey( AvailableSettings.JACC_ENABLED );
 		final JaccService jaccService = isSecurityEnabled ? new StandardJaccServiceImpl() : new DisabledJaccServiceImpl();
 		serviceRegistryBuilder.addService( JaccService.class, jaccService );

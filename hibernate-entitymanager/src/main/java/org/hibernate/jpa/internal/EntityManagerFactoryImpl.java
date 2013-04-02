@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
@@ -121,6 +122,15 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			SettingsImpl settings,
 			Map<?, ?> configurationValues,
 			Configuration cfg) {
+		this(persistenceUnitName, sessionFactory, settings, configurationValues, cfg.getProperties() );
+	}
+
+	public EntityManagerFactoryImpl(
+			String persistenceUnitName,
+			SessionFactoryImplementor sessionFactory,
+			SettingsImpl settings,
+			Map configurationValues,
+			Map<?,?> cfg) {
 		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
@@ -131,7 +141,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 		HashMap<String,Object> props = new HashMap<String, Object>();
 		addAll( props, sessionFactory.getProperties() );
-		addAll( props, cfg.getProperties() );
+		addAll( props, cfg );
 		addAll( props, configurationValues );
 		maskOutSensitiveInformation( props );
 		this.properties = Collections.unmodifiableMap( props );

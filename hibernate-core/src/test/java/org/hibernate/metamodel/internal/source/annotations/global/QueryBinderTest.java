@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 import javax.persistence.NamedNativeQuery;
 
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +73,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		@NamedNativeQuery(name = "fubar", query = "SELECT * FROM FOO")
 		class Foo {
 		}
-		Index index = JandexHelper.indexForClass( service, Foo.class );
+		IndexView index = JandexHelper.indexForClass( service, Foo.class );
 		QueryProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 	}
 
@@ -81,7 +82,7 @@ public class QueryBinderTest extends BaseUnitTestCase {
 		@NamedNativeQuery(name = "fubar", query = "SELECT * FROM FOO", resultClass = Foo.class)
 		class Foo {
 		}
-		Index index = JandexHelper.indexForClass( service, Foo.class );
+		IndexView index = JandexHelper.indexForClass( service, Foo.class );
 		QueryProcessor.bind( new AnnotationBindingContextImpl( meta, index ) );
 
 		NamedSQLQueryDefinition namedQuery = meta.getNamedNativeQuery( "fubar" );

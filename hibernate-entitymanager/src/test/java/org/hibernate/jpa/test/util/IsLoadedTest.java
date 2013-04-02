@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class IsLoadedTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testIsLoadedOnPrivateSuperclassProperty() {
 		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();

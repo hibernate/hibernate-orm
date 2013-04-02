@@ -34,10 +34,12 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testXmlMappingCorrectness() throws Exception {
@@ -53,11 +55,6 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 		Assert.assertTrue(entityPersister.hasCache());
 	}
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[0];
-	}
-
 	protected void addConfigOptions(Map options) {
 		options.put(  AvailableSettings.SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 	}
@@ -68,5 +65,10 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 				"org/hibernate/jpa/test/xml/orm.xml",
 				"org/hibernate/jpa/test/xml/orm2.xml",
 		};
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{Article.class};
 	}
 }

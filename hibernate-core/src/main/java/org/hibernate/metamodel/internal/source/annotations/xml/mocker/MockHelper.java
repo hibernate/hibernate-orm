@@ -392,9 +392,9 @@ public class MockHelper {
 		Method.setAccessible( methods, true );
 		for ( Method method : methods ) {
 			// if the method has parameters, skip it
-			if ( method.getParameterTypes().length != 0 ) {
-				continue;
-			}
+//			if ( method.getParameterTypes().length != 0 ) {
+//				continue;
+//			}
 			// if the method is a "bridge", skip it
 			if ( method.isBridge() ) {
 				continue;

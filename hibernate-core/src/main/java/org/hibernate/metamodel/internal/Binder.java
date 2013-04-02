@@ -299,6 +299,7 @@ public class Binder {
 		entityHierarchyHelper.applyToAllEntityHierarchies( entityHierarchiesByRootEntityName.values(), rootExecutor, subExecutor );
 	}
 
+
 	private void bindEntityHierarchiesExcludingNonIdAttributeBindings() {
 		LocalBindingContextExecutor rootEntityCallback = new LocalBindingContextExecutor() {
 			@Override

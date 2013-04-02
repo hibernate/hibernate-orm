@@ -6,11 +6,11 @@
              version="2.0">
     <persistence-unit name="space par">
         <properties>
-            <property name="hibernate.dialect" value="@db.dialect@"/>
-            <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>
-            <property name="hibernate.connection.username" value="@jdbc.user@"/>
-            <property name="hibernate.connection.password" value="@jdbc.pass@"/>
-            <property name="hibernate.connection.url" value="@jdbc.url@"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="hibernate.connection.username" value="sa"/>
+            <property name="hibernate.connection.password" value=""/>
+            <property name="hibernate.connection.url" value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
 			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
         </properties>

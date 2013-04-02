@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 
@@ -55,6 +56,7 @@ public class XmlAttributeOverrideTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultEventListener() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -97,5 +99,10 @@ public class XmlAttributeOverrideTest extends BaseEntityManagerFunctionalTestCas
 		return new String[] {
 				"org/hibernate/jpa/test/xml/orm3.xml"
 		};
+	}
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{CounterListener.class};
 	}
 }

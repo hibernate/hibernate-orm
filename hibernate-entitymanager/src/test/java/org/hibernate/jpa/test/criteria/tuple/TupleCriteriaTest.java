@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 	@Test
 	public void testArray() {

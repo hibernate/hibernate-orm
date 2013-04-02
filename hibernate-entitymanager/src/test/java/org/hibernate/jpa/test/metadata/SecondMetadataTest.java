@@ -28,12 +28,14 @@ import javax.persistence.EntityManagerFactory;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class SecondMetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testBaseOfService() throws Exception {

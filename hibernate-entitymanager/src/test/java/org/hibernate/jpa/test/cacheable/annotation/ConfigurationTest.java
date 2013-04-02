@@ -125,6 +125,7 @@ public class ConfigurationTest extends BaseUnitTestCase {
 	private Configuration buildConfiguration(SharedCacheMode mode) {
 		Map settings = new HashMap();
 		settings.put( AvailableSettings.SHARED_CACHE_MODE, mode );
+		settings.put( org.hibernate.metamodel.MetadataSources.USE_NEW_METADATA_MAPPINGS, "false" );
 		settings.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
 		settings.put(
 				AvailableSettings.LOADED_CLASSES,

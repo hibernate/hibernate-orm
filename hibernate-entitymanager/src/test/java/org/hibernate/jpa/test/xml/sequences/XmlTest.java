@@ -29,13 +29,16 @@ import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.jpa.test.xml.*;
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * @author Emmanuel Bernard
  */
 @RequiresDialectFeature( DialectChecks.SupportsSequences.class )
+@FailureExpectedWithNewMetamodel
 public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testXmlMappingCorrectness() throws Exception {
@@ -49,5 +52,9 @@ public class XmlTest extends BaseEntityManagerFunctionalTestCase {
 				"org/hibernate/jpa/test/xml/sequences/orm.xml",
 				"org/hibernate/jpa/test/xml/sequences/orm2.xml",
 		};
+	}
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{ Article.class};
 	}
 }

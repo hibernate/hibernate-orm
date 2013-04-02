@@ -46,6 +46,7 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -56,6 +57,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
+@FailureExpectedWithNewMetamodel
 public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 

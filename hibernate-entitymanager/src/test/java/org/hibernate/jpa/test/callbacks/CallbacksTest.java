@@ -12,6 +12,7 @@ import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Kitten;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -23,6 +24,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
+@FailureExpectedWithNewMetamodel
 public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testCallbackMethod() throws Exception {

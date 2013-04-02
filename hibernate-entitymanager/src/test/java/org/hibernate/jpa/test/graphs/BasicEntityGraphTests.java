@@ -35,6 +35,7 @@ import javax.persistence.Subgraph;
 import java.util.Set;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -61,6 +62,7 @@ public class BasicEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBasicSubgraphBuilding() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph<Entity1> graphRoot = em.createEntityGraph( Entity1.class );
@@ -80,6 +82,7 @@ public class BasicEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testBasicGraphImmutability() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph<Entity1> graphRoot = em.createEntityGraph( Entity1.class );

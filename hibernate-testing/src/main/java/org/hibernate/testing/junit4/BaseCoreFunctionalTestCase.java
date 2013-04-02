@@ -25,7 +25,6 @@ package org.hibernate.testing.junit4;
 
 import static org.junit.Assert.fail;
 
-import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
@@ -34,15 +33,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -56,7 +52,6 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.mapping.Collection;
@@ -71,7 +66,6 @@ import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
-import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
@@ -87,47 +81,16 @@ import org.junit.Before;
  *
  * @author Steve Ebersole
  */
-public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
-	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
-	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
+public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase {
 
-	public static final Dialect DIALECT = Dialect.getDialect();
-
-	protected boolean isMetadataUsed;
-	private Configuration configuration;
-	private MetadataImplementor metadataImplementor;
-	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
 	protected Session session;
 
-	protected static Dialect getDialect() {
-		return DIALECT;
-	}
 
-	protected Configuration configuration() {
-		return configuration;
-	}
 
-	protected MetadataImplementor metadata() {
-		return metadataImplementor;
-	}
 
-	protected EntityBinding getEntityBinding(Class<?> clazz) {
-		return metadataImplementor.getEntityBinding( clazz.getName() );
-	}
 
-	protected EntityBinding getRootEntityBinding(Class<?> clazz) {
-		return metadataImplementor.getRootEntityBinding( clazz.getName() );
-	}
-	
-	protected Iterator<PluralAttributeBinding> getCollectionBindings() {
-		return metadataImplementor.getCollectionBindings().iterator();
-	}
-
-	protected StandardServiceRegistryImpl serviceRegistry() {
-		return serviceRegistry;
-	}
 
 	protected SessionFactoryImplementor sessionFactory() {
 		return sessionFactory;
@@ -166,10 +129,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( isMetadataUsed ) {
 			MetadataBuilder metadataBuilder = getMetadataBuilder( bootRegistry, serviceRegistry );
 			configMetadataBuilder(metadataBuilder, configuration);
-			metadataImplementor = (MetadataImplementor)metadataBuilder.build();
-			afterConstructAndConfigureMetadata( metadataImplementor );
-			applyCacheSettings(metadataImplementor);
-			SessionFactoryBuilder sessionFactoryBuilder = metadataImplementor.getSessionFactoryBuilder();
+			metadata = (MetadataImplementor)metadataBuilder.build();
+			afterConstructAndConfigureMetadata( metadata );
+			applyCacheSettings( metadata );
+			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
 			configSessionFactoryBuilder(sessionFactoryBuilder, configuration);
 			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
 		}
@@ -181,9 +144,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterSessionFactoryBuilt();
 	}
 
-	protected boolean isMetadataUsed() {
-		return isMetadataUsed;
-	}
+
 	protected void rebuildSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;
@@ -194,14 +155,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
 
-	}
-
-	private MetadataImplementor buildMetadata(
-			BootstrapServiceRegistry bootRegistry,
-			StandardServiceRegistryImpl serviceRegistry) {
-		MetadataSources sources = new MetadataSources( bootRegistry );
-		addMappings( sources );
-		return (MetadataImplementor) sources.getMetadataBuilder( serviceRegistry ).build();
 	}
 
 	protected void configMetadataBuilder(MetadataBuilder metadataBuilder, Configuration configuration) {
@@ -263,92 +216,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void configure(Configuration configuration) {
-	}
-
-	protected void addMappings(Configuration configuration) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				configuration.addResource(
-						getBaseForMappings() + mapping,
-						getClass().getClassLoader()
-				);
-			}
-		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				configuration.addAnnotatedClass( annotatedClass );
-			}
-		}
-		String[] annotatedPackages = getAnnotatedPackages();
-		if ( annotatedPackages != null ) {
-			for ( String annotatedPackage : annotatedPackages ) {
-				configuration.addPackage( annotatedPackage );
-			}
-		}
-		String[] xmlFiles = getXmlFiles();
-		if ( xmlFiles != null ) {
-			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				configuration.addInputStream( is );
-			}
-		}
-	}
-
-	protected void addMappings(MetadataSources sources) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				sources.addResource(
-						getBaseForMappings() + mapping
-				);
-			}
-		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				sources.addAnnotatedClass( annotatedClass );
-			}
-		}
-		String[] annotatedPackages = getAnnotatedPackages();
-		if ( annotatedPackages != null ) {
-			for ( String annotatedPackage : annotatedPackages ) {
-				sources.addPackage( annotatedPackage );
-			}
-		}
-		String[] xmlFiles = getXmlFiles();
-		if ( xmlFiles != null ) {
-			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				sources.addInputStream( is );
-			}
-		}
-	}
-
-	protected static final String[] NO_MAPPINGS = new String[0];
-
-	protected String[] getMappings() {
-		return NO_MAPPINGS;
-	}
-
-	protected String getBaseForMappings() {
-		return "org/hibernate/test/";
-	}
-
-	protected static final Class<?>[] NO_CLASSES = new Class[0];
-
-	protected Class<?>[] getAnnotatedClasses() {
-		return NO_CLASSES;
-	}
-
-	protected String[] getAnnotatedPackages() {
-		return NO_MAPPINGS;
-	}
-
-	protected String[] getXmlFiles() {
-		// todo : rename to getOrmXmlFiles()
-		return NO_MAPPINGS;
 	}
 
 	protected void applyCacheSettings(MetadataImplementor metadataImplementor){
@@ -441,34 +308,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 	}
 
-	protected BootstrapServiceRegistry buildBootstrapServiceRegistry() {
-		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
-		prepareBootstrapRegistryBuilder( builder );
-		return builder.build();
-	}
 
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
-	}
-
-	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
-		Properties properties = new Properties();
-		properties.putAll( configuration.getProperties() );
-		Environment.verifyProperties( properties );
-		ConfigurationHelper.resolvePlaceHolders( properties );
-
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry ).applySettings( properties );
-		prepareBasicRegistryBuilder( registryBuilder );
-		return (StandardServiceRegistryImpl) registryBuilder.build();
-	}
-
-	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-	}
 
 	protected void afterSessionFactoryBuilt() {
-	}
-
-	protected boolean createSchema() {
-		return true;
 	}
 
 	/**

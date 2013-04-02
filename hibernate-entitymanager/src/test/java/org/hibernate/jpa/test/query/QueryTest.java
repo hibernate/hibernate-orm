@@ -40,6 +40,7 @@ import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Wallet;
 
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -308,6 +309,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNativeQueryByResultSet() {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 
@@ -581,6 +583,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTypedNamedNativeQuery() {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 

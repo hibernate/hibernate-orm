@@ -43,6 +43,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.Index;
+import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
@@ -304,7 +305,7 @@ public class JandexHelper {
 	 *
 	 * @return an annotation repository w/ all the annotation discovered in the specified classes
 	 */
-	public static Index indexForClass(ClassLoaderService classLoaderService, Class<?>... classes) {
+	public static IndexView indexForClass(ClassLoaderService classLoaderService, Class<?>... classes) {
 		Indexer indexer = new Indexer();
 		for ( Class<?> clazz : classes ) {
 			InputStream stream = classLoaderService.locateResourceStream(

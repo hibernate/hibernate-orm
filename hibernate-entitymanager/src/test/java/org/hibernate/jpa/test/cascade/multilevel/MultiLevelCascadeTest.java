@@ -29,12 +29,14 @@ import javax.persistence.EntityTransaction;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
+@FailureExpectedWithNewMetamodel
 public class MultiLevelCascadeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@TestForIssue( jiraKey = "HHH-5299" )

@@ -69,7 +69,7 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void prepareBootstrapRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+	protected void prepareBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		builder.with(
 				new Integrator() {
 

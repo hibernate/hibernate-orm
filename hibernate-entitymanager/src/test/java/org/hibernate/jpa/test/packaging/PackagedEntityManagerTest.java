@@ -61,6 +61,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.stat.Statistics;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -80,6 +81,7 @@ import static org.junit.Assert.fail;
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -115,6 +117,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultParForPersistence_1_0() throws Exception {
 		File testPackage = buildDefaultPar_1_0();
 		addPackageToClasspath( testPackage );
@@ -149,6 +152,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testListenersDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -189,6 +193,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );
@@ -248,6 +253,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCfgXmlPar() throws Exception {
 		File testPackage = buildCfgXmlPar();
 		addPackageToClasspath( testPackage );
@@ -320,6 +326,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testListeners() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
@@ -340,6 +347,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExtendedEntityManager() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
@@ -390,6 +398,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testConfiguration() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );
@@ -443,6 +452,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testExternalJar() throws Exception {
 		File externalJar = buildExternalJar();
 		File testPackage = buildExplicitPar();
@@ -468,6 +478,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testORMFileOnMainAndExplicitJars() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );

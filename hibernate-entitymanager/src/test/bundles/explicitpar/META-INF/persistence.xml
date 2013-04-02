@@ -14,11 +14,11 @@
             <!-- custom scanner test -->
             <property name="hibernate.ejb.resource_scanner" value="org.hibernate.jpa.test.packaging.CustomScanner"/>
 
-            <property name="hibernate.dialect" value="@db.dialect@"/>
-            <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>
-            <property name="hibernate.connection.username" value="@jdbc.user@"/>
-            <property name="hibernate.connection.password" value="@jdbc.pass@"/>
-            <property name="hibernate.connection.url" value="@jdbc.url@"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
+            <property name="hibernate.connection.username" value="sa"/>
+            <property name="hibernate.connection.password" value=""/>
+            <property name="hibernate.connection.url" value="jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE"/>
             <property name="hibernate.cache.use_query_cache" value="true"/>
             <property name="hibernate.cache.region_prefix" value="hibernate.test"/>
             <property name="hibernate.jdbc.use_streams_for_binary" value="true"/>

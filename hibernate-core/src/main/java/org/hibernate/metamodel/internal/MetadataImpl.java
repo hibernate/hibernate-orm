@@ -24,6 +24,8 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +41,7 @@ import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -66,8 +69,10 @@ import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
+import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
+import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
@@ -249,7 +254,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		binder.addEntityHierarchies( processor.extractEntityHierarchies() );
 		binder.bindEntityHierarchies();
 
-		secondPass();
+		secondPass(metadataSources);
 	}
 
 
@@ -271,7 +276,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		}
 	}
 	
-	private void secondPass() {
+	private void secondPass(MetadataSources metadataSources) {
 		// This must be done outside of Table, rather than statically, to ensure
 		// deterministic alias names.  See HHH-2448.
 		int uniqueInteger = 0;
@@ -280,6 +285,44 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				table.setTableNumber( uniqueInteger++ );
 			}
 		}
+
+		if ( metadataSources.getExternalCacheRegionDefinitions().isEmpty() ) {
+			return;
+		}
+		for ( CacheRegionDefinition cacheRegionDefinition : metadataSources.getExternalCacheRegionDefinitions() ) {
+			final String role = cacheRegionDefinition.getRole();
+			if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.ENTITY ) {
+				EntityBinding entityBinding = entityBindingMap.get( role );
+				if ( entityBinding != null ) {
+					entityBinding.getHierarchyDetails()
+							.setCaching(
+									new Caching(
+											cacheRegionDefinition.getRegion(),
+											AccessType.fromExternalName( cacheRegionDefinition.getUsage() ),
+											cacheRegionDefinition.isCacheLazy()
+									)
+							);
+				}else{
+					//logging?
+					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
+				}
+
+			}
+			else if ( cacheRegionDefinition.getRegionType() == CacheRegionDefinition.CacheRegionType.COLLECTION ) {
+				PluralAttributeBinding pluralAttributeBinding = collectionBindingMap.get( role );
+				if(pluralAttributeBinding!=null){
+					AbstractPluralAttributeBinding.class.cast( pluralAttributeBinding ).setCaching( new Caching(
+							cacheRegionDefinition.getRegion(),
+							AccessType.fromExternalName( cacheRegionDefinition.getUsage() ),
+							cacheRegionDefinition.isCacheLazy()
+					) );
+				}  else {
+					//logging?
+					throw new MappingException( "Can't find entitybinding for role " + role +" to apply cache configuration" );
+				}
+			}
+		}
+
 	}
 
 	@Override

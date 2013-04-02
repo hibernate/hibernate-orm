@@ -40,7 +40,6 @@ import java.util.zip.ZipEntry;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 import org.jboss.logging.Logger;
@@ -75,7 +74,10 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class MetadataSources {
 	private static final Logger LOG = Logger.getLogger( MetadataSources.class );
-
+	/**
+	 * temporary option
+	 */
+	public static final String USE_NEW_METADATA_MAPPINGS = "hibernate.test.new_metadata_mappings";
 	private final ServiceRegistry serviceRegistry;
 	private final JaxbMappingProcessor jaxbProcessor;
 	private final List<CacheRegionDefinition> externalCacheRegionDefinitions = new ArrayList<CacheRegionDefinition>();
@@ -444,12 +446,14 @@ public class MetadataSources {
 	 */
 	public MetadataSources addDirectory(File dir) {
 		File[] files = dir.listFiles();
-		for ( File file : files ) {
-			if ( file.isDirectory() ) {
-				addDirectory( file );
-			}
-			else if ( file.getName().endsWith( ".hbm.xml" ) ) {
-				addFile( file );
+		if ( files != null && files.length > 0 ) {
+			for ( File file : files ) {
+				if ( file.isDirectory() ) {
+					addDirectory( file );
+				}
+				else if ( file.getName().endsWith( ".hbm.xml" ) ) {
+					addFile( file );
+				}
 			}
 		}
 		return this;
@@ -526,7 +530,7 @@ public class MetadataSources {
 		for ( Class<?> fieldType : ReflectHelper.getFieldTypes( clazz ) ) {		
 			if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
 				try {
-					Index fieldIndex = JandexHelper.indexForClass(
+					IndexView fieldIndex = JandexHelper.indexForClass(
 							serviceRegistry.getService( ClassLoaderService.class ),
 							fieldType );
 					if ( !fieldIndex.getAnnotations(

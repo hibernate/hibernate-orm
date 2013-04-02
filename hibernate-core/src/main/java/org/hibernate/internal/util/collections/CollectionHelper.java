@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -180,5 +181,18 @@ public final class CollectionHelper {
 		final Map<X,Y> copy = mapOfSize( map.size() + 1 );
 		copy.putAll( map );
 		return copy;
+	}
+
+	public static void cleanUpNullValue(Map map) {
+		if ( isEmpty( map ) ) {
+			return;
+		}
+		Iterator itr = map.entrySet().iterator();
+		while ( itr.hasNext() ) {
+			final Map.Entry entry = (Map.Entry) itr.next();
+			if ( entry.getValue() == null ) {
+				itr.remove();
+			}
+		}
 	}
 }

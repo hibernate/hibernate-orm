@@ -29,7 +29,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -38,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testFkCreationOrdering() throws Exception {

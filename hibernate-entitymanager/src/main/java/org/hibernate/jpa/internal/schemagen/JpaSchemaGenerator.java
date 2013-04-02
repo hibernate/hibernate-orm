@@ -116,6 +116,18 @@ public class JpaSchemaGenerator {
 			final List<GenerationTarget> targets = Arrays.asList( databaseTarget, scriptsTarget );
 
 
+			// See if native Hibernate schema generation has also been requested and warn the user if so...
+
+			final String hbm2ddl = hibernateConfiguration.getProperty( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO );
+			if ( StringHelper.isNotEmpty( hbm2ddl ) ) {
+				log.warnf(
+						"Hibernate hbm2ddl-auto setting was specified [%s] in combination with JPA schema-generation; " +
+								"combination will likely cause trouble",
+						hbm2ddl
+				);
+			}
+
+
 			// finally, do the generation
 
 			try {

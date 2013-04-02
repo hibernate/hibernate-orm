@@ -816,6 +816,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					@Override
 					public EntityManagerFactoryImpl perform() {
 						hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
+						JpaSchemaGenerator.performGeneration( hibernateConfiguration, serviceRegistry );
 
 						SessionFactoryImplementor sessionFactory;
 						try {

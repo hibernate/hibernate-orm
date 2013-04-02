@@ -97,7 +97,15 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 
 	@Override
 	protected void checkOpen() {
-		if( !isOpen() ) {
+		checkOpen( true );
+	}
+
+	@Override
+	public void checkOpen(boolean markForRollbackIfClosed) {
+		if( ! isOpen() ) {
+			if ( markForRollbackIfClosed ) {
+				markAsRollback();
+			}
 			throw new IllegalStateException( "EntityManager is closed" );
 		}
 	}

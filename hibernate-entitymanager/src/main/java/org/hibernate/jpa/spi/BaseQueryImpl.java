@@ -98,6 +98,8 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public BaseQueryImpl setFirstResult(int firstResult) {
+		entityManager().checkOpen( true );
+
 		if ( firstResult < 0 ) {
 			throw new IllegalArgumentException(
 					"Negative value (" + firstResult + ") passed to setFirstResult"
@@ -110,6 +112,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public int getFirstResult() {
+		entityManager().checkOpen( false ); // technically should rollback
 		return firstResult;
 	}
 
@@ -122,6 +125,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public BaseQueryImpl setMaxResults(int maxResult) {
+		entityManager().checkOpen( true );
 		if ( maxResult < 0 ) {
 			throw new IllegalArgumentException(
 					"Negative value (" + maxResult + ") passed to setMaxResults"
@@ -138,6 +142,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public int getMaxResults() {
+		entityManager().checkOpen( false ); // technically should rollback
 		return maxResults == -1
 				? Integer.MAX_VALUE // stupid spec... MAX_VALUE??
 				: maxResults;
@@ -153,6 +158,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public Map<String, Object> getHints() {
+		entityManager().checkOpen( false ); // technically should rollback
 		return hints;
 	}
 
@@ -256,6 +262,7 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings( {"deprecation"})
 	public BaseQueryImpl setHint(String hintName, Object value) {
+		entityManager().checkOpen( true );
 		boolean applied = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
@@ -360,6 +367,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public BaseQueryImpl setFlushMode(FlushModeType jpaFlushMode) {
+		entityManager().checkOpen( true );
 		this.jpaFlushMode = jpaFlushMode;
 		// TODO : treat as hint?
 		if ( jpaFlushMode == FlushModeType.AUTO ) {
@@ -378,6 +386,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public FlushModeType getFlushMode() {
+		entityManager().checkOpen( false );
 		return jpaFlushMode != null
 				? jpaFlushMode
 				: entityManager.getFlushMode();
@@ -478,54 +487,63 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public <T> BaseQueryImpl setParameter(Parameter<T> param, T value) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( param, makeBindValue( value ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( param, makeBindValue( value, temporalType ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( param, makeBindValue( value, temporalType ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(String name, Object value) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( getParameter( name ), makeBindValue( value ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(String name, Calendar value, TemporalType temporalType) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( getParameter( name ), makeBindValue( value, temporalType ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(String name, Date value, TemporalType temporalType) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( getParameter( name ), makeBindValue( value, temporalType ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(int position, Object value) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( getParameter( position ), makeBindValue( value ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(int position, Calendar value, TemporalType temporalType) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( getParameter( position ), makeBindValue( value, temporalType ) );
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(int position, Date value, TemporalType temporalType) {
+		entityManager().checkOpen( true );
 		registerParameterBinding( getParameter( position ), makeBindValue( value, temporalType ) );
 		return this;
 	}
@@ -533,11 +551,13 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set getParameters() {
+		entityManager().checkOpen( false );
 		return parameterBindingMap().keySet();
 	}
 
 	@Override
 	public Parameter<?> getParameter(String name) {
+		entityManager().checkOpen( false );
 		if ( parameterBindingMap() != null ) {
 			for ( ParameterImplementor<?> param : parameterBindingMap.keySet() ) {
 				if ( name.equals( param.getName() ) ) {
@@ -551,11 +571,13 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+		entityManager().checkOpen( false );
 		return (Parameter<T>) getParameter( name );
 	}
 
 	@Override
 	public Parameter<?> getParameter(int position) {
+		entityManager().checkOpen( false );
 		if ( parameterBindingMap() != null ) {
 			for ( ParameterImplementor<?> param : parameterBindingMap.keySet() ) {
 				if ( position == param.getPosition() ) {
@@ -569,11 +591,13 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
+		entityManager().checkOpen( false );
 		return (Parameter<T>) getParameter( position );
 	}
 
 	@Override
 	public boolean isBound(Parameter<?> param) {
+		entityManager().checkOpen( false );
 		return parameterBindingMap() != null
 				&& parameterBindingMap.get( (ParameterImplementor) param ) != null;
 	}
@@ -581,6 +605,7 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getParameterValue(Parameter<T> param) {
+		entityManager().checkOpen( false );
 		if ( parameterBindingMap != null ) {
 			final ParameterValue boundValue = parameterBindingMap.get( (ParameterImplementor) param );
 			if ( boundValue != null ) {
@@ -592,11 +617,13 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public Object getParameterValue(String name) {
+		entityManager().checkOpen( false );
 		return getParameterValue( getParameter( name ) );
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
+		entityManager().checkOpen( false );
 		return getParameterValue( getParameter( position ) );
 	}
 }

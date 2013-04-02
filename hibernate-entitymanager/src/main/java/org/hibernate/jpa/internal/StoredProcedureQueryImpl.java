@@ -96,6 +96,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@Override
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
+		entityManager().checkOpen( true );
 		procedureCall.registerParameter( position, type, mode );
 		return this;
 	}
@@ -103,6 +104,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@Override
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
+		entityManager().checkOpen( true );
 		procedureCall.registerParameter( parameterName, type, mode );
 		return this;
 	}

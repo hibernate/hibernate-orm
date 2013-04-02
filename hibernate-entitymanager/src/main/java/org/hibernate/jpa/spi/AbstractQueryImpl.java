@@ -27,6 +27,7 @@ import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
+import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import java.util.Collection;
@@ -93,6 +94,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	@Override
 	@SuppressWarnings({ "ThrowableInstanceNeverThrown" })
 	public int executeUpdate() {
+		entityManager.checkOpen( true );
 		try {
 			if ( ! entityManager.isTransactionInProgress() ) {
 				entityManager.throwPersistenceException( new TransactionRequiredException( "Executing an update/delete query" ) );
@@ -123,6 +125,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public TypedQuery<X> setMaxResults(int maxResult) {
+		entityManager.checkOpen( true );
 		if ( maxResult < 0 ) {
 			throw new IllegalArgumentException(
 					"Negative value (" + maxResult + ") passed to setMaxResults"
@@ -139,6 +142,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public int getMaxResults() {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return maxResults == -1
 				? Integer.MAX_VALUE // stupid spec... MAX_VALUE??
 				: maxResults;
@@ -155,6 +159,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public TypedQuery<X> setFirstResult(int firstResult) {
+		entityManager.checkOpen( true );
 		if ( firstResult < 0 ) {
 			throw new IllegalArgumentException(
 					"Negative value (" + firstResult + ") passed to setFirstResult"
@@ -167,6 +172,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public int getFirstResult() {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return firstResult;
 	}
 
@@ -174,6 +180,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public Map<String, Object> getHints() {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return hints;
 	}
 
@@ -202,6 +209,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 	@Override
 	@SuppressWarnings( {"deprecation"})
 	public TypedQuery<X> setHint(String hintName, Object value) {
+		entityManager.checkOpen( true );
 		boolean skipped = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
@@ -316,6 +324,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public TypedQuery<X> setFlushMode(FlushModeType jpaFlushMode) {
+		entityManager.checkOpen( true );
 		this.jpaFlushMode = jpaFlushMode;
 		// TODO : treat as hint?
 		if ( jpaFlushMode == FlushModeType.AUTO ) {
@@ -334,20 +343,26 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public FlushModeType getFlushMode() {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return jpaFlushMode != null
 				? jpaFlushMode
 				: entityManager.getFlushMode();
 	}
 
+
 	private Map parameterBindings;
 
+	protected static interface ParameterImplementor<T> extends Parameter<T> {
+		public void validateBinding(Object bind, TemporalType temporalType);
+	}
+
 	@SuppressWarnings( {"unchecked"})
-	protected void registerParameterBinding(Parameter parameter, Object value) {
+	protected void registerParameterBinding(Parameter parameter, Object value, TemporalType temporalType) {
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "parameter cannot be null" );
 		}
 
-		validateParameterBinding( parameter, value );
+		( (ParameterImplementor) parameter ).validateBinding( value, temporalType );
 
 		if ( parameterBindings == null ) {
 			parameterBindings = new HashMap();
@@ -355,52 +370,7 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		parameterBindings.put( parameter, value );
 	}
 
-	private void validateParameterBinding(Parameter parameter, Object value) {
-		if ( value == null || parameter.getParameterType() == null ) {
-			// nothing we can check
-			return;
-		}
-
-		if ( Collection.class.isInstance( value )
-				&& ! Collection.class.isAssignableFrom( parameter.getParameterType() ) ) {
-			// we have a collection passed in where we are expecting a non-collection.
-			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
-			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
-			//			will fall through to the main check.
-			validateCollectionValuedParameterMultiBinding( parameter, (Collection) value );
-		}
-		else if ( value.getClass().isArray() ) {
-			validateArrayValuedParameterBinding( parameter, value );
-		}
-		else {
-			if ( ! parameter.getParameterType().isInstance( value ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value [%s] did not match expected type [%s]",
-								value,
-								parameter.getParameterType().getName()
-						)
-				);
-			}
-		}
-	}
-
-	private void validateCollectionValuedParameterMultiBinding(Parameter parameter, Collection value) {
-		// validate the elements...
-		for ( Object element : value ) {
-			if ( ! parameter.getParameterType().isInstance( element ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value element [%s] did not match expected type [%s]",
-								element,
-								parameter.getParameterType().getName()
-						)
-				);
-			}
-		}
-	}
-
-	private void validateArrayValuedParameterBinding(Parameter parameter, Object value) {
+	private void validateArrayValuedParameterBinding(ParameterImplementor parameter, Object value) {
 		if ( ! parameter.getParameterType().isArray() ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -443,12 +413,14 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
     public boolean isBound(Parameter<?> param) {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return parameterBindings != null && parameterBindings.containsKey( param );
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T> T getParameterValue(Parameter<T> param) {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		if ( parameterBindings == null ) {
 			throw new IllegalStateException( "No parameters have been bound" );
 		}
@@ -466,11 +438,13 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@Override
 	public Object getParameterValue(String name) {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return getParameterValue( getParameter( name ) );
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
+		entityManager.checkOpen( false ); // technically this should rollback the txn
 		return getParameterValue( getParameter( position ) );
 	}
 }

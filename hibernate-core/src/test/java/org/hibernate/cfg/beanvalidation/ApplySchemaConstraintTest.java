@@ -33,9 +33,12 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -60,66 +63,77 @@ import static junit.framework.Assert.assertEquals;
 public class ApplySchemaConstraintTest {
 	private StandardServiceRegistryImpl serviceRegistry;
 
-	@Before
+	@BeforeClass
 	public void setUp() {
 		serviceRegistry = createServiceRegistry();
+	}
+	@AfterClass
+	public void tearDown(){
+		serviceRegistry.destroy();
+		serviceRegistry = null;
 	}
 
 	@Test
 	public void testLengthConstraintApplied() throws Exception {
 		MetadataImplementor metadata = buildMetadata( serviceRegistry, Foo.class );
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Foo.class.getName() ), "s" );
 		assertEquals( "@Length constraint should have been applied", 10, column.getSize().getLength() );
+		sf.close();
 	}
 
 	@Test
 	public void testDigitsConstraintApplied() throws Exception {
 		MetadataImplementor metadata = buildMetadata( serviceRegistry, Fubar.class );
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Fubar.class.getName() ), "f" );
 		Size size = column.getSize();
 		assertEquals( "@Digits should have been applied", 1, size.getScale() );
 		assertEquals( "@Digits should have been applied", 2, size.getPrecision() );
+		sf.close();
 	}
 
 	@Test
 	public void testMinConstraintApplied() throws Exception {
 		MetadataImplementor metadata = buildMetadata( serviceRegistry, Foobar.class );
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Foobar.class.getName() ), "i" );
 		assertEquals( "@Min constraint should have been applied", "i>=42", column.getCheckCondition() );
+		sf.close();
 	}
 
 	@Test
 	public void testMaxConstraintApplied() throws Exception {
 		MetadataImplementor metadata = buildMetadata( serviceRegistry, Snafu.class );
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Snafu.class.getName() ), "i" );
 		assertEquals( "@Max constraint should have been applied", "i<=42", column.getCheckCondition() );
+		sf.close();
 	}
 
 	@Test
 	public void testSizeConstraintApplied() throws Exception {
 		MetadataImplementor metadata = buildMetadata( serviceRegistry, Tarfu.class );
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Tarfu.class.getName() ), "s" );
 		Size size = column.getSize();
 		assertEquals( "@Size constraint should have been applied", 42, size.getLength() );
+		sf.close();
 	}
 
 	@Test
 	public void testNotNullConstraintApplied() throws Exception {
 		MetadataImplementor metadata = buildMetadata( serviceRegistry, Bohica.class );
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( Bohica.class.getName() ), "s" );
 		assertEquals( "@NotNull constraint should have been applied", false, column.isNullable() );
+		sf.close();
 	}
 
 	@Test
@@ -129,10 +143,11 @@ public class ApplySchemaConstraintTest {
 				BaseClassSingleTable.class,
 				SubClassSingleTable.class
 		);
-		metadata.buildSessionFactory();
+		SessionFactory sf= metadata.buildSessionFactory();
 
 		Column column = getColumnForAttribute( metadata.getEntityBinding( SubClassSingleTable.class.getName() ), "s" );
 		assertEquals( "@NotNull constraint should not have been applied", true, column.isNullable() );
+		sf.close();
 	}
 
 	// TODO - Requires JoinedSubclassEntityPersister to be wired up"

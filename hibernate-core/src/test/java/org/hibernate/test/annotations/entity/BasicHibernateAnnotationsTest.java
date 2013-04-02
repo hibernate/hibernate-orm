@@ -37,6 +37,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
@@ -654,16 +655,21 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
+		SessionFactory sf=null;
 		try {
 			Configuration config = new Configuration();
 			config.addAnnotatedClass(LocalContactDetails.class);
-			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
+			sf = config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
 			fail("Did not throw expected exception");
 		}
 		catch( AnnotationException ex ) {
 			assertEquals(
 					"Either name or defaultForType (or both) attribute should be set in TypeDefinition having typeClass org.hibernate.test.annotations.entity.PhoneNumberType",
 					ex.getMessage());
+		} finally {
+			if( sf != null){
+				sf.close();
+			}
 		}
 	}
 

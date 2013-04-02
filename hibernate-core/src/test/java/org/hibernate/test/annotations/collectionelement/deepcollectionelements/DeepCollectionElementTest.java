@@ -41,6 +41,6 @@ public class DeepCollectionElementTest extends BaseUnitTestCase {
 		configuration.addAnnotatedClass( A.class );
 		configuration.addAnnotatedClass( B.class );
 		configuration.addAnnotatedClass( C.class );
-		configuration.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( configuration.getProperties() ) );
+		configuration.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( configuration.getProperties() ) ).close();
 	}
 }

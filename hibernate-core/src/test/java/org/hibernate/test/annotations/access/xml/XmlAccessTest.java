@@ -56,12 +56,13 @@ public class XmlAccessTest extends BaseUnitTestCase {
 
 		// without any xml configuration we have field access
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
-
+		factory.close();
 		// now with an additional xml configuration file changing the default access type for Tourist using basic
 		configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Tourist.xml" );
 		factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	@Test
@@ -74,12 +75,13 @@ public class XmlAccessTest extends BaseUnitTestCase {
 
 		// without any xml configuration we have field access
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
-
+		factory.close();
 		// now with an additional xml configuration file changing the default access type for Tourist using persitence unit defaults
 		configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Tourist2.xml" );
 		factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	@Test
@@ -92,12 +94,13 @@ public class XmlAccessTest extends BaseUnitTestCase {
 
 		// without any xml configuration we have field access
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
-
+		factory.close();
 		// now with an additional xml configuration file changing the default access type for Tourist using default in entity-mappings
 		configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Tourist3.xml" );
 		factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	@Test
@@ -110,12 +113,13 @@ public class XmlAccessTest extends BaseUnitTestCase {
 
 		// without any xml configuration we have field access
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
-
+		factory.close();
 		// now with an additional xml configuration file changing the default access type for Tourist using entity level config
 		configFiles = new ArrayList<String>();
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Tourist4.xml" );
 		factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	@Test
@@ -128,6 +132,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Crew.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.FIELD );
+		factory.close();
 	}
 
 	@Test
@@ -140,6 +145,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 		configFiles.add( "org/hibernate/test/annotations/access/xml/RentalCar.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	@Test
@@ -152,6 +158,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Cook.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	@Test
@@ -163,6 +170,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 		configFiles.add( "org/hibernate/test/annotations/access/xml/Boy.xml" );
 		SessionFactoryImplementor factory = buildSessionFactory( classes, configFiles );
 		assertAccessType( factory, classUnderTest, AccessType.PROPERTY );
+		factory.close();
 	}
 
 	private SessionFactoryImplementor buildSessionFactory(List<Class<?>> classesUnderTest, List<String> configFiles) {

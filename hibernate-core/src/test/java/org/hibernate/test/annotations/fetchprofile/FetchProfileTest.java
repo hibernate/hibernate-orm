@@ -83,6 +83,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 				"package info should not be parsed",
 				sessionImpl.containsFetchProfileDefinition( "package-profile-1" )
 		);
+		sessionImpl.close();
 	}
 
 	@Test
@@ -93,7 +94,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -109,7 +110,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -125,7 +126,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Country.class );
 
 		try {
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -151,6 +152,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 				"fetch profile not parsed properly",
 				sessionImpl.containsFetchProfileDefinition( "orders-profile" )
 		);
+		sessionImpl.close();
 
 		// now the same with no xml
 		config = new Configuration();
@@ -158,7 +160,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Order.class );
 		config.addAnnotatedClass( Country.class );
 		try {
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings();
 			fail();
 		}
 		catch ( MappingException e ) {
@@ -186,5 +188,6 @@ public class FetchProfileTest extends BaseUnitTestCase {
 				"fetch profile not parsed properly",
 				sessionImpl.containsFetchProfileDefinition( "package-profile-2" )
 		);
+		sessionImpl.close();
 	}
 }

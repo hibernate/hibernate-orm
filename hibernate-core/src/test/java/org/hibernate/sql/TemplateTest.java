@@ -120,6 +120,7 @@ public class TemplateTest extends BaseUnitTestCase {
 	public static void closeSessionFactory() {
 		if ( SESSION_FACTORY != null ) {
 			SESSION_FACTORY.close();
+			SESSION_FACTORY = null;
 		}
 	}
 

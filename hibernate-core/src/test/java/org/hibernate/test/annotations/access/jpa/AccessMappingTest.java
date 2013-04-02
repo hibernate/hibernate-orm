@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.MappingException;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -68,13 +69,18 @@ public class AccessMappingTest {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course1.class );
         cfg.addAnnotatedClass( Student.class );
+		SessionFactory sf = null;
         try {
-            cfg.buildSessionFactory( serviceRegistry );
+           sf= cfg.buildSessionFactory( serviceRegistry );
             fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
         }
         catch ( MappingException e ) {
             // success
-        }
+        } finally {
+			if(sf!=null){
+				sf.close();
+			}
+		}
     }
 
     @Test
@@ -91,6 +97,7 @@ public class AccessMappingTest {
                 "Field access should be used.",
                 tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
         );
+		factory.close();
     }
 
     @Test
@@ -107,6 +114,7 @@ public class AccessMappingTest {
                 "Property access should be used.",
                 tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
         );
+		factory.close();
     }
 
     @Test
@@ -123,6 +131,7 @@ public class AccessMappingTest {
                 "Property access should be used.",
                 tuplizer.getIdentifierGetter() instanceof BasicPropertyAccessor.BasicGetter
         );
+		factory.close();
     }
 
     @Test
@@ -130,13 +139,18 @@ public class AccessMappingTest {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course4.class );
         cfg.addAnnotatedClass( Student.class );
+		SessionFactory sf= null;
         try {
-            cfg.buildSessionFactory( serviceRegistry );
+           sf = cfg.buildSessionFactory( serviceRegistry );
             fail( "@Id and @OneToMany are not placed consistently in test entities. SessionFactory creation should fail." );
         }
         catch ( MappingException e ) {
             // success
-        }
+        }  finally {
+			if(sf!=null){
+				sf.close();
+			}
+		}
     }
 
     @Test
@@ -158,6 +172,7 @@ public class AccessMappingTest {
                 "Property access should be used.",
                 tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
         );
+		factory.close();
     }
 
     @Test
@@ -179,6 +194,7 @@ public class AccessMappingTest {
                 "Property access should be used.",
                 tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
         );
+		factory.close();
     }
 
     @Test
@@ -196,6 +212,7 @@ public class AccessMappingTest {
                 "Field access should be used since the default access mode gets inherited",
                 tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
         );
+		factory.close();
     }
 
     @Test
@@ -220,6 +237,7 @@ public class AccessMappingTest {
                 "Field access should be used since the default access mode gets inherited",
                 tuplizer.getGetter( 0 ) instanceof DirectPropertyAccessor.DirectGetter
         );
+		factory.close();
     }
 
     @TestForIssue(jiraKey = "HHH-5004")
@@ -228,6 +246,6 @@ public class AccessMappingTest {
         AnnotationConfiguration cfg = new AnnotationConfiguration();
         cfg.addAnnotatedClass( Course8.class );
         cfg.addAnnotatedClass( Student.class );
-        cfg.buildSessionFactory( serviceRegistry );
+        cfg.buildSessionFactory( serviceRegistry ).close();
     }
 }

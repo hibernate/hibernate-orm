@@ -45,6 +45,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
@@ -249,6 +251,8 @@ public class JpaSchemaGenerator {
 	private static JdbcConnectionContext determineAppropriateJdbcConnectionContext(
 			Configuration hibernateConfiguration,
 			ServiceRegistry serviceRegistry) {
+		final SqlStatementLogger sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+
 		// see if a specific connection has been provided:
 		final Connection providedConnection = (Connection) hibernateConfiguration.getProperties().get(
 				AvailableSettings.SCHEMA_GEN_CONNECTION
@@ -271,7 +275,8 @@ public class JpaSchemaGenerator {
 						public boolean supportsAggressiveRelease() {
 							return false;
 						}
-					}
+					},
+					sqlStatementLogger
 			);
 		}
 
@@ -293,12 +298,13 @@ public class JpaSchemaGenerator {
 						public boolean supportsAggressiveRelease() {
 							return connectionProvider.supportsAggressiveRelease();
 						}
-					}
+					},
+					sqlStatementLogger
 			);
 		}
 
 		// otherwise, return a no-op impl
-		return new JdbcConnectionContext( null ) {
+		return new JdbcConnectionContext( null, sqlStatementLogger ) {
 			@Override
 			public Connection getJdbcConnection() {
 				throw new PersistenceException( "No connection information supplied" );
@@ -405,12 +411,12 @@ public class JpaSchemaGenerator {
 			List<GenerationSource> dropSourceList,
 			List<GenerationTarget> targets) {
 		for ( GenerationTarget target : targets ) {
-			for ( GenerationSource source : createSourceList ) {
-				target.acceptCreateCommands( source.getCommands() );
-			}
-
 			for ( GenerationSource source : dropSourceList ) {
 				target.acceptDropCommands( source.getCommands() );
+			}
+
+			for ( GenerationSource source : createSourceList ) {
+				target.acceptCreateCommands( source.getCommands() );
 			}
 		}
 	}

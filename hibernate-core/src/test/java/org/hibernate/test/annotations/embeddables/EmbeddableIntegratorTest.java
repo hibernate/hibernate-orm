@@ -53,28 +53,25 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	/**
 	 * Throws a mapping exception because DollarValue is not mapped
 	 */
-	@Test(expected=GenericJDBCException.class)
+	@Test(expected = GenericJDBCException.class)
 	public void testWithoutIntegrator() {
-		
-		ServiceRegistry reg = new StandardServiceRegistryBuilder(new BootstrapServiceRegistryImpl())
-		.build();
-		
-		SessionFactory sf = new Configuration()
-		.addAnnotatedClass( Investor.class )
 
-		.buildSessionFactory(reg);
-		
+		ServiceRegistry reg = new StandardServiceRegistryBuilder( new BootstrapServiceRegistryImpl() ).build();
+
+		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
+				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" ).buildSessionFactory( reg );
+
 		Session sess = sf.openSession();
 		Investor myInv = getInvestor();
-		myInv.setId(1L);
-		
-		sess.save(myInv);
+		myInv.setId( 1L );
+
+		sess.save( myInv );
 		sess.flush();
 		sess.clear();
-		
-		Investor inv = (Investor) sess.get(Investor.class, 1L);
-		assertEquals(new BigDecimal("100"), inv.getInvestments().get(0).getAmount().getAmount());
-		
+
+		Investor inv = (Investor) sess.get( Investor.class, 1L );
+		assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
+
 		sess.close();
 		sf.close();
 		StandardServiceRegistryBuilder.destroy( reg );
@@ -82,42 +79,38 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWithIntegrator() {
-		StandardServiceRegistry reg = new StandardServiceRegistryBuilder(
-				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
-		).build();
-		
-		SessionFactory sf = new Configuration()
-		.addAnnotatedClass( Investor.class )
+		StandardServiceRegistry reg = new StandardServiceRegistryBuilder( new BootstrapServiceRegistryBuilder().with(
+				new InvestorIntegrator() ).build() ).build();
 
-		.setProperty("hibernate.hbm2ddl.auto", "create-drop")
-		.buildSessionFactory(reg);
-		
+		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
+				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" ).buildSessionFactory( reg );
+
 		Session sess = sf.openSession();
 		Investor myInv = getInvestor();
-		myInv.setId(2L);
-		
-		sess.save(myInv);
+		myInv.setId( 2L );
+
+		sess.save( myInv );
 		sess.flush();
 		sess.clear();
-		
-		Investor inv = (Investor) sess.get(Investor.class, 2L);
-		assertEquals(new BigDecimal("100"), inv.getInvestments().get(0).getAmount().getAmount());
-		
+
+		Investor inv = (Investor) sess.get( Investor.class, 2L );
+		assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
+
 		sess.close();
 		sf.close();
 		StandardServiceRegistryBuilder.destroy( reg );
 	}
-	
+
 	private Investor getInvestor() {
 		Investor i = new Investor();
 		List<Investment> investments = new ArrayList<Investment>();
 		Investment i1 = new Investment();
-		i1.setAmount(new DollarValue(new BigDecimal("100")));
-		i1.setDate(new MyDate(new Date()));
-		i1.setDescription("Test Investment");
-		investments.add(i1);
-		i.setInvestments(investments);
-		
+		i1.setAmount( new DollarValue( new BigDecimal( "100" ) ) );
+		i1.setDate( new MyDate( new Date() ) );
+		i1.setDescription( "Test Investment" );
+		investments.add( i1 );
+		i.setInvestments( investments );
+
 		return i;
 	}
 }

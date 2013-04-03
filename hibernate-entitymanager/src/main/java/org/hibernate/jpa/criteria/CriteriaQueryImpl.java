@@ -427,6 +427,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 				}
 
 				return new CriteriaQueryTypeQueryAdapter(
+						entityManager,
 						jpaqlQuery,
 						parameterMetadata.explicitParameterMapping(),
 						parameterMetadata.explicitParameterNameMapping()

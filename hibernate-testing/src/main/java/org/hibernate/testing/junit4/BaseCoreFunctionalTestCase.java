@@ -334,6 +334,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		sessionFactory.close();
 		sessionFactory = null;
 		configuration = null;
+		metadata = null;
         if(serviceRegistry == null){
             return;
         }

@@ -23,6 +23,8 @@
  */
 package org.hibernate.cfg.beanvalidation;
 
+import static junit.framework.Assert.assertEquals;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -32,11 +34,6 @@ import javax.validation.constraints.Digits;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -54,21 +51,22 @@ import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.validator.constraints.Length;
-
-import static junit.framework.Assert.assertEquals;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * @author Hardy Ferentschik
  */
 public class ApplySchemaConstraintTest {
-	private StandardServiceRegistryImpl serviceRegistry;
+	private static StandardServiceRegistryImpl serviceRegistry;
 
 	@BeforeClass
-	public void setUp() {
+	public static void setUp() {
 		serviceRegistry = createServiceRegistry();
 	}
 	@AfterClass
-	public void tearDown(){
+	public static void tearDown(){
 		serviceRegistry.destroy();
 		serviceRegistry = null;
 	}
@@ -172,7 +170,7 @@ public class ApplySchemaConstraintTest {
 		return ( org.hibernate.metamodel.spi.relational.Column ) value;
 	}
 
-	private StandardServiceRegistryImpl createServiceRegistry() {
+	private static StandardServiceRegistryImpl createServiceRegistry() {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		final BootstrapServiceRegistry bootstrapServiceRegistry = builder.build();
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry );

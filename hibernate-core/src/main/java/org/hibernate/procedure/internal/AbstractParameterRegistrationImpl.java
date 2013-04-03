@@ -129,7 +129,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	@Override
-	public ParameterBind getParameterBind() {
+	public ParameterBind<T> getBind() {
 		return bind;
 	}
 

@@ -27,12 +27,14 @@ import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
+import javax.persistence.ParameterMode;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -40,7 +42,9 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.QueryParameterException;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
@@ -59,9 +63,9 @@ import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 /**
- * Intended as the base class for all {@link javax.persistence.Query} implementations, including {@link javax.persistence.TypedQuery} and
- * {@link javax.persistence.StoredProcedureQuery}.  Care should be taken that all changes here fit with all
- * those usages.
+ * Intended as the base class for all {@link javax.persistence.Query} implementations, including
+ * {@link javax.persistence.TypedQuery} and {@link javax.persistence.StoredProcedureQuery}.  Care should be taken
+ * that all changes here fit with all those usages.
  *
  * @author Steve Ebersole
  */
@@ -86,6 +90,10 @@ public abstract class BaseQueryImpl implements Query {
 		return entityManager;
 	}
 
+	protected void checkOpen(boolean markForRollbackIfClosed) {
+		entityManager.checkOpen( markForRollbackIfClosed );
+	}
+
 
 	// Limits (first and max results) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,7 +106,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public BaseQueryImpl setFirstResult(int firstResult) {
-		entityManager().checkOpen( true );
+		checkOpen( true );
 
 		if ( firstResult < 0 ) {
 			throw new IllegalArgumentException(
@@ -112,7 +120,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public int getFirstResult() {
-		entityManager().checkOpen( false ); // technically should rollback
+		checkOpen( false ); // technically should rollback
 		return firstResult;
 	}
 
@@ -125,7 +133,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public BaseQueryImpl setMaxResults(int maxResult) {
-		entityManager().checkOpen( true );
+		checkOpen( true );
 		if ( maxResult < 0 ) {
 			throw new IllegalArgumentException(
 					"Negative value (" + maxResult + ") passed to setMaxResults"
@@ -142,7 +150,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public int getMaxResults() {
-		entityManager().checkOpen( false ); // technically should rollback
+		checkOpen( false ); // technically should rollback
 		return maxResults == -1
 				? Integer.MAX_VALUE // stupid spec... MAX_VALUE??
 				: maxResults;
@@ -158,7 +166,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public Map<String, Object> getHints() {
-		entityManager().checkOpen( false ); // technically should rollback
+		checkOpen( false ); // technically should rollback
 		return hints;
 	}
 
@@ -196,7 +204,7 @@ public abstract class BaseQueryImpl implements Query {
 	 *
 	 * @return {@code true} if the hint was "applied"
 	 */
-	protected abstract boolean applyFetchSize(int fetchSize);
+	protected abstract boolean applyFetchSizeHint(int fetchSize);
 
 	/**
 	 * Apply the cacheable (true/false) hint.
@@ -248,11 +256,11 @@ public abstract class BaseQueryImpl implements Query {
 	 *
 	 * @return {@code true} indicates they can be applied, {@code false} otherwise.
 	 */
-	protected abstract boolean canApplyLockModesHints();
+	protected abstract boolean canApplyAliasSpecificLockModeHints();
 
 	/**
-	 * Apply the alias specific lock modes.  Assumes {@link #canApplyLockModesHints()} has already been called and
-	 * returned {@code true}.
+	 * Apply the alias specific lock modes.  Assumes {@link #canApplyAliasSpecificLockModeHints()} has already been
+	 * called and returned {@code true}.
 	 *
 	 * @param alias The alias to apply the 'lockMode' to.
 	 * @param lockMode The LockMode to apply.
@@ -262,7 +270,7 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings( {"deprecation"})
 	public BaseQueryImpl setHint(String hintName, Object value) {
-		entityManager().checkOpen( true );
+		checkOpen( true );
 		boolean applied = false;
 		try {
 			if ( HINT_TIMEOUT.equals( hintName ) ) {
@@ -280,7 +288,7 @@ public abstract class BaseQueryImpl implements Query {
 				applied = applyCommentHint( (String) value );
 			}
 			else if ( HINT_FETCH_SIZE.equals( hintName ) ) {
-				applied = applyFetchSize( ConfigurationHelper.getInteger( value ) );
+				applied = applyFetchSizeHint( ConfigurationHelper.getInteger( value ) );
 			}
 			else if ( HINT_CACHEABLE.equals( hintName ) ) {
 				applied = applyCacheableHint( ConfigurationHelper.getBoolean( value ) );
@@ -322,7 +330,7 @@ public abstract class BaseQueryImpl implements Query {
 				);
 			}
 			else if ( hintName.startsWith( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE ) ) {
-				if ( canApplyLockModesHints() ) {
+				if ( canApplyAliasSpecificLockModeHints() ) {
 					// extract the alias
 					final String alias = hintName.substring( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
 					// determine the LockMode
@@ -367,7 +375,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public BaseQueryImpl setFlushMode(FlushModeType jpaFlushMode) {
-		entityManager().checkOpen( true );
+		checkOpen( true );
 		this.jpaFlushMode = jpaFlushMode;
 		// TODO : treat as hint?
 		if ( jpaFlushMode == FlushModeType.AUTO ) {
@@ -386,7 +394,7 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public FlushModeType getFlushMode() {
-		entityManager().checkOpen( false );
+		checkOpen( false );
 		return jpaFlushMode != null
 				? jpaFlushMode
 				: entityManager.getFlushMode();
@@ -395,27 +403,78 @@ public abstract class BaseQueryImpl implements Query {
 
 	// Parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private List<ParameterImplementor> parameters;
+	private Set<ParameterRegistration<?>> parameterRegistrations;
+
+	protected <X> ParameterRegistration<X> findParameterRegistration(Parameter<X> parameter) {
+		if ( ParameterRegistration.class.isInstance( parameter ) ) {
+			return (ParameterRegistration<X>) parameter;
+		}
+		else {
+			if ( parameter.getName() != null ) {
+				return findParameterRegistration( parameter.getName() );
+			}
+			else if ( parameter.getPosition() != null ) {
+				return findParameterRegistration( parameter.getPosition() );
+			}
+		}
+
+		throw new IllegalArgumentException( "Unable to resolve incoming parameter [" + parameter + "] to registration" );
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <X> ParameterRegistration<X> findParameterRegistration(String parameterName) {
+		return (ParameterRegistration<X>) getParameter( parameterName );
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <X> ParameterRegistration<X> findParameterRegistration(int parameterPosition) {
+		if ( isJpaPositionalParameter( parameterPosition ) ) {
+			return findParameterRegistration( Integer.toString( parameterPosition ) );
+		}
+		else {
+			return (ParameterRegistration<X>) getParameter( parameterPosition );
+		}
+	}
+
+	protected abstract boolean isJpaPositionalParameter(int position);
 
 	/**
 	 * Hibernate specific extension to the JPA {@link javax.persistence.Parameter} contract.
 	 */
-	protected static interface ParameterImplementor<T> extends Parameter<T> {
+	protected static interface ParameterRegistration<T> extends Parameter<T> {
+		/**
+		 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
+		 * definition (is it an INPUT parameter?  An OUTPUT parameter? etc).
+		 *
+		 * @return The parameter mode.
+		 */
+		public ParameterMode getMode();
+
 		public boolean isBindable();
 
-		public ParameterValue getBoundValue();
+		public void bindValue(T value);
+
+		public void bindValue(T value, TemporalType specifiedTemporalType);
+
+		public ParameterBind<T> getBind();
 	}
 
-	protected static class ParameterValue {
-		private final Object value;
+	protected static interface ParameterBind<T> {
+		public T getValue();
+
+		public TemporalType getSpecifiedTemporalType();
+	}
+
+	protected static class ParameterBindImpl<T> implements ParameterBind<T> {
+		private final T value;
 		private final TemporalType specifiedTemporalType;
 
-		public ParameterValue(Object value, TemporalType specifiedTemporalType) {
+		public ParameterBindImpl(T value, TemporalType specifiedTemporalType) {
 			this.value = value;
 			this.specifiedTemporalType = specifiedTemporalType;
 		}
 
-		public Object getValue() {
+		public T getValue() {
 			return value;
 		}
 
@@ -424,142 +483,193 @@ public abstract class BaseQueryImpl implements Query {
 		}
 	}
 
-	private Map<ParameterImplementor<?>,ParameterValue> parameterBindingMap;
-
-	private Map<ParameterImplementor<?>,ParameterValue> parameterBindingMap() {
-		if ( parameterBindingMap == null ) {
-			parameterBindingMap = new HashMap<ParameterImplementor<?>, ParameterValue>();
+	private Set<ParameterRegistration<?>> parameterRegistrations() {
+		if ( parameterRegistrations == null ) {
+			// todo : could se use an identity set here?
+			parameterRegistrations = new HashSet<ParameterRegistration<?>>();
 		}
-		return parameterBindingMap;
+		return parameterRegistrations;
 	}
 
-	protected void registerParameter(ParameterImplementor parameter) {
+	protected void registerParameter(ParameterRegistration parameter) {
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "parameter cannot be null" );
 		}
 
-		if ( parameterBindingMap().containsKey( parameter ) ) {
+		if ( parameterRegistrations().contains( parameter ) ) {
+			LOG.debug( "Parameter registered multiple times : " + parameter );
 			return;
 		}
 
-		parameterBindingMap().put( parameter, null );
-	}
-
-	@SuppressWarnings("unchecked")
-	protected void registerParameterBinding(Parameter parameter, ParameterValue bindValue) {
-		validateParameterBinding( (ParameterImplementor) parameter, bindValue );
-		parameterBindingMap().put( (ParameterImplementor) parameter, bindValue );
-	}
-
-	protected void validateParameterBinding(ParameterImplementor parameter, ParameterValue bindValue) {
-		if ( parameter == null ) {
-			throw new IllegalArgumentException( "parameter cannot be null" );
-		}
-
-		if ( ! parameter.isBindable() ) {
-			throw new IllegalArgumentException( "Parameter [" + parameter + "] not valid for binding" );
-		}
-
-		if ( ! parameterBindingMap().containsKey( parameter ) ) {
-			throw new IllegalArgumentException( "Unknown parameter [" + parameter + "] specified for value binding" );
-		}
-
-		if ( isBound( parameter ) ) {
-			throw new IllegalArgumentException( "Parameter [" + parameter + "] already had bound value" );
-		}
-
-		validateParameterBindingTypes( parameter, bindValue );
-	}
-
-	protected abstract void validateParameterBindingTypes(ParameterImplementor parameter, ParameterValue bindValue);
-
-	protected ParameterValue makeBindValue(Object value) {
-		return new ParameterValue( value, null );
-	}
-
-	protected ParameterValue makeBindValue(Calendar value, TemporalType temporalType) {
-		return new ParameterValue( value, temporalType );
-	}
-
-	protected ParameterValue makeBindValue(Date value, TemporalType temporalType) {
-		return new ParameterValue( value, temporalType );
+		parameterRegistrations().add( parameter );
 	}
 
 	@Override
 	public <T> BaseQueryImpl setParameter(Parameter<T> param, T value) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( param, makeBindValue( value ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( param ).bindValue( value );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( param, makeBindValue( value, temporalType ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( param ).bindValue( value, temporalType );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( param, makeBindValue( value, temporalType ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( param ).bindValue( value, temporalType );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public BaseQueryImpl setParameter(String name, Object value) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( getParameter( name ), makeBindValue( value ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( name ).bindValue( value );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(String name, Calendar value, TemporalType temporalType) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( getParameter( name ), makeBindValue( value, temporalType ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( name ).bindValue( value, temporalType );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(String name, Date value, TemporalType temporalType) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( getParameter( name ), makeBindValue( value, temporalType ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( name ).bindValue( value, temporalType );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(int position, Object value) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( getParameter( position ), makeBindValue( value ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( position ).bindValue( value );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(int position, Calendar value, TemporalType temporalType) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( getParameter( position ), makeBindValue( value, temporalType ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( position ).bindValue( value, temporalType );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	public BaseQueryImpl setParameter(int position, Date value, TemporalType temporalType) {
-		entityManager().checkOpen( true );
-		registerParameterBinding( getParameter( position ), makeBindValue( value, temporalType ) );
+		checkOpen( true );
+
+		try {
+			findParameterRegistration( position ).bindValue( value, temporalType );
+		}
+		catch (QueryParameterException e) {
+			throw new IllegalArgumentException( e );
+		}
+		catch (HibernateException he) {
+			throw entityManager.convert( he );
+		}
+
 		return this;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Set getParameters() {
-		entityManager().checkOpen( false );
-		return parameterBindingMap().keySet();
+		checkOpen( false );
+		return parameterRegistrations();
 	}
 
 	@Override
 	public Parameter<?> getParameter(String name) {
-		entityManager().checkOpen( false );
-		if ( parameterBindingMap() != null ) {
-			for ( ParameterImplementor<?> param : parameterBindingMap.keySet() ) {
+		checkOpen( false );
+		if ( parameterRegistrations != null ) {
+			for ( ParameterRegistration<?> param : parameterRegistrations ) {
 				if ( name.equals( param.getName() ) ) {
 					return param;
 				}
@@ -571,15 +681,36 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
-		entityManager().checkOpen( false );
-		return (Parameter<T>) getParameter( name );
+		checkOpen( false );
+		Parameter param = getParameter( name );
+
+		if ( param.getParameterType() != null ) {
+			// we were able to determine the expected type during analysis, so validate it here
+			if ( ! param.getParameterType().isAssignableFrom( type ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter type [%s] is not assignment compatible with requested type [%s] for parameter named [%s]",
+								param.getParameterType().getName(),
+								type.getName(),
+								name
+						)
+				);
+			}
+		}
+		return (Parameter<T>) param;
 	}
 
 	@Override
 	public Parameter<?> getParameter(int position) {
-		entityManager().checkOpen( false );
-		if ( parameterBindingMap() != null ) {
-			for ( ParameterImplementor<?> param : parameterBindingMap.keySet() ) {
+		if ( isJpaPositionalParameter( position ) ) {
+			return getParameter( Integer.toString( position ) );
+		}
+		checkOpen( false );
+		if ( parameterRegistrations != null ) {
+			for ( ParameterRegistration<?> param : parameterRegistrations ) {
+				if ( param.getPosition() == null ) {
+					continue;
+				}
 				if ( position == param.getPosition() ) {
 					return param;
 				}
@@ -591,25 +722,46 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
-		entityManager().checkOpen( false );
-		return (Parameter<T>) getParameter( position );
+		checkOpen( false );
+
+		Parameter param = getParameter( position );
+
+		if ( param.getParameterType() != null ) {
+			// we were able to determine the expected type during analysis, so validate it here
+			if ( ! param.getParameterType().isAssignableFrom( type ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter type [%s] is not assignment compatible with requested type [%s] for parameter at position [%s]",
+								param.getParameterType().getName(),
+								type.getName(),
+								position
+						)
+				);
+			}
+		}
+		return (Parameter<T>) param;
 	}
 
 	@Override
 	public boolean isBound(Parameter<?> param) {
-		entityManager().checkOpen( false );
-		return parameterBindingMap() != null
-				&& parameterBindingMap.get( (ParameterImplementor) param ) != null;
+		checkOpen( false );
+		final ParameterRegistration registration = findParameterRegistration( param );
+		return registration != null && registration.isBindable() && registration.getBind() != null;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getParameterValue(Parameter<T> param) {
-		entityManager().checkOpen( false );
-		if ( parameterBindingMap != null ) {
-			final ParameterValue boundValue = parameterBindingMap.get( (ParameterImplementor) param );
-			if ( boundValue != null ) {
-				return (T) boundValue.getValue();
+		checkOpen( false );
+
+		final ParameterRegistration<T> registration = findParameterRegistration( param );
+		if ( registration != null ) {
+			if ( ! registration.isBindable() ) {
+				throw new IllegalArgumentException( "Passed parameter [" + param + "] is not bindable" );
+			}
+			final ParameterBind<T> bind = registration.getBind();
+			if ( bind != null ) {
+				return bind.getValue();
 			}
 		}
 		throw new IllegalStateException( "Parameter [" + param + "] has not yet been bound" );
@@ -617,13 +769,153 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public Object getParameterValue(String name) {
-		entityManager().checkOpen( false );
+		checkOpen( false );
 		return getParameterValue( getParameter( name ) );
 	}
 
 	@Override
 	public Object getParameterValue(int position) {
-		entityManager().checkOpen( false );
+		checkOpen( false );
 		return getParameterValue( getParameter( position ) );
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	protected static void validateBinding(Class parameterType, Object bind, TemporalType temporalType) {
+		if ( bind == null || parameterType == null ) {
+			// nothing we can check
+			return;
+		}
+
+		if ( Collection.class.isInstance( bind ) && ! Collection.class.isAssignableFrom( parameterType ) ) {
+			// we have a collection passed in where we are expecting a non-collection.
+			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
+			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
+			//			will fall through to the main check.
+			validateCollectionValuedParameterBinding( parameterType, (Collection) bind, temporalType );
+		}
+		else if ( bind.getClass().isArray() ) {
+			validateArrayValuedParameterBinding( parameterType, bind, temporalType );
+		}
+		else {
+			if ( ! isValidBindValue( parameterType, bind, temporalType ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value [%s] did not match expected type [%s (%s)]",
+								bind,
+								parameterType.getName(),
+								extractName( temporalType )
+						)
+				);
+			}
+		}
+	}
+
+	private static String extractName(TemporalType temporalType) {
+		return temporalType == null ? "n/a" : temporalType.name();
+	}
+
+	private static void validateCollectionValuedParameterBinding(
+			Class parameterType,
+			Collection value,
+			TemporalType temporalType) {
+		// validate the elements...
+		for ( Object element : value ) {
+			if ( ! isValidBindValue( parameterType, element, temporalType ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value element [%s] did not match expected type [%s (%s)]",
+								element,
+								parameterType.getName(),
+								extractName( temporalType )
+						)
+				);
+			}
+		}
+	}
+
+	private static void validateArrayValuedParameterBinding(
+			Class parameterType,
+			Object value,
+			TemporalType temporalType) {
+		if ( ! parameterType.isArray() ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Encountered array-valued parameter binding, but was expecting [%s (%s)]",
+							parameterType.getName(),
+							extractName( temporalType )
+					)
+			);
+		}
+
+		if ( value.getClass().getComponentType().isPrimitive() ) {
+			// we have a primitive array.  we validate that the actual array has the component type (type of elements)
+			// we expect based on the component type of the parameter specification
+			if ( ! parameterType.getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Primitive array-valued parameter bind value type [%s] did not match expected type [%s (%s)]",
+								value.getClass().getComponentType().getName(),
+								parameterType.getName(),
+								extractName( temporalType )
+						)
+				);
+			}
+		}
+		else {
+			// we have an object array.  Here we loop over the array and physically check each element against
+			// the type we expect based on the component type of the parameter specification
+			final Object[] array = (Object[]) value;
+			for ( Object element : array ) {
+				if ( ! isValidBindValue( parameterType.getComponentType(), element, temporalType ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Array-valued parameter value element [%s] did not match expected type [%s (%s)]",
+									element,
+									parameterType.getName(),
+									extractName( temporalType )
+							)
+					);
+				}
+			}
+		}
+	}
+
+
+	private static boolean isValidBindValue(Class expectedType, Object value, TemporalType temporalType) {
+		if ( expectedType.isInstance( value ) ) {
+			return true;
+		}
+
+		if ( temporalType != null ) {
+			final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
+					|| Calendar.class.isAssignableFrom( expectedType );
+			final boolean bindIsTemporal = Date.class.isInstance( value )
+					|| Calendar.class.isInstance( value );
+
+			if ( parameterDeclarationIsTemporal && bindIsTemporal ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+
+
 }

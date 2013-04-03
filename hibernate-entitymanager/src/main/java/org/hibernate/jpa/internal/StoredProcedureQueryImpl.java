@@ -97,7 +97,11 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
 		entityManager().checkOpen( true );
-		procedureCall.registerParameter( position, type, mode );
+		registerParameter(
+				new ParameterRegistrationImpl(
+						procedureCall.registerParameter( position, type, mode )
+				)
+		);
 		return this;
 	}
 
@@ -105,25 +109,12 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
 		entityManager().checkOpen( true );
-		procedureCall.registerParameter( parameterName, type, mode );
+		registerParameter(
+				new ParameterRegistrationImpl(
+						procedureCall.registerParameter( parameterName, type, mode )
+				)
+		);
 		return this;
-	}
-
-	@Override
-	protected void validateParameterBindingTypes(ParameterImplementor parameter, ParameterValue bindValue) {
-	}
-
-
-	// covariant returns ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public StoredProcedureQueryImpl setFlushMode(FlushModeType jpaFlushMode) {
-		return (StoredProcedureQueryImpl) super.setFlushMode( jpaFlushMode );
-	}
-
-	@Override
-	public StoredProcedureQueryImpl setHint(String hintName, Object value) {
-		return (StoredProcedureQueryImpl) super.setHint( hintName, value );
 	}
 
 	@Override
@@ -169,6 +160,19 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@Override
 	public StoredProcedureQueryImpl setParameter(int position, Date value, TemporalType temporalType) {
 		return (StoredProcedureQueryImpl) super.setParameter( position, value, temporalType );
+	}
+
+
+	// covariant returns ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public StoredProcedureQueryImpl setFlushMode(FlushModeType jpaFlushMode) {
+		return (StoredProcedureQueryImpl) super.setFlushMode( jpaFlushMode );
+	}
+
+	@Override
+	public StoredProcedureQueryImpl setHint(String hintName, Object value) {
+		return (StoredProcedureQueryImpl) super.setHint( hintName, value );
 	}
 
 
@@ -263,7 +267,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	}
 
 	@Override
-	protected boolean canApplyLockModesHints() {
+	protected boolean canApplyAliasSpecificLockModeHints() {
 		return false;
 	}
 
@@ -282,7 +286,81 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	}
 
 	@Override
-	protected boolean applyFetchSize(int fetchSize) {
+	protected boolean applyFetchSizeHint(int fetchSize) {
 		return false;
+	}
+
+
+	// parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	protected boolean isJpaPositionalParameter(int position) {
+		return false;
+	}
+
+	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
+		private final org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration;
+
+		private ParameterBind<T> bind;
+
+		private ParameterRegistrationImpl(org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration) {
+			this.nativeParamRegistration = nativeParamRegistration;
+		}
+
+		@Override
+		public String getName() {
+			return nativeParamRegistration.getName();
+		}
+
+		@Override
+		public Integer getPosition() {
+			return nativeParamRegistration.getPosition();
+		}
+
+		@Override
+		public Class<T> getParameterType() {
+			return nativeParamRegistration.getType();
+		}
+
+		@Override
+		public ParameterMode getMode() {
+			return nativeParamRegistration.getMode();
+		}
+
+		@Override
+		public boolean isBindable() {
+			return getMode() == ParameterMode.IN || getMode() == ParameterMode.INOUT;
+		}
+
+		@Override
+		public void bindValue(T value) {
+			bindValue( value, null );
+		}
+
+		@Override
+		public void bindValue(T value, TemporalType specifiedTemporalType) {
+			validateBinding( getParameterType(), value, specifiedTemporalType );
+
+			nativeParamRegistration.bindValue( value,specifiedTemporalType );
+
+			if ( bind == null ) {
+				bind = new ParameterBind<T>() {
+					@Override
+					public T getValue() {
+						return nativeParamRegistration.getBind().getValue();
+					}
+
+					@Override
+					public TemporalType getSpecifiedTemporalType() {
+						return nativeParamRegistration.getBind().getExplicitTemporalType();
+					}
+				};
+			}
+		}
+
+		@Override
+		public ParameterBind<T> getBind() {
+			return bind;
+		}
 	}
 }

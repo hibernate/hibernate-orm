@@ -423,12 +423,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.flush();
 
 
+		Query query = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
+		query.setParameter( 1, "Lacoste" );
 		try {
-			Query query = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
-			query.setParameter( 1, "Lacoste" );
 			query.setParameter( 2, "Expensive" );
-			query.getResultList();
-			fail("The query should fail due to a user error in parameters");
+			fail( "Should fail due to a user error in parameters" );
 		}
 		catch ( IllegalArgumentException e ) {
 			//success

@@ -856,12 +856,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
             LOG.containerProvidingNullPersistenceUnitRootUrl();
 			return;
 		}
-		if ( scanningContext.url.getProtocol().equalsIgnoreCase( "bundle" ) ) {
-			// TODO: Is there a way to scan the root bundle URL in OSGi containers?
-			// Although the URL provides a stream handler that works for finding
-			// resources in a specific Bundle, the root one does not work.
-			return;
-		}
 		try {
 			addScannedEntries( scanningContext, entities, packages, hbmFiles, null );
 		}

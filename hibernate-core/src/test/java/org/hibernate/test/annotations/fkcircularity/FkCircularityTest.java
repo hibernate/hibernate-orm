@@ -25,17 +25,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 public class FkCircularityTest {
 	private static final Logger log = Logger.getLogger( FkCircularityTest.class );
 
-	private ServiceRegistry serviceRegistry;
 
-	@Before
-    public void setUp() {
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-	}
-
-	@After
-    public void tearDown() {
-        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
-	}
     @Test
 	public void testJoinedSublcassesInPK() {
 		try {
@@ -44,7 +34,7 @@ public class FkCircularityTest {
 			config.addAnnotatedClass(B.class);
 			config.addAnnotatedClass(C.class);
 			config.addAnnotatedClass(D.class);
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings(  );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
@@ -66,7 +56,7 @@ public class FkCircularityTest {
 			config.addAnnotatedClass(ClassB.class);
 			config.addAnnotatedClass(ClassC.class);
 			config.addAnnotatedClass(ClassD.class);
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings(  );
 			String[] schema = config
 					.generateSchemaCreationScript(new HSQLDialect());
 			for (String s : schema) {

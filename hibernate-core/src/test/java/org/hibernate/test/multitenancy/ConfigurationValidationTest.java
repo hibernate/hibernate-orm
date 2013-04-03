@@ -27,7 +27,8 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 		cfg.buildMappings();
 		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( cfg.getProperties() ).build();
-		cfg.buildSessionFactory( serviceRegistry );
+		cfg.buildSessionFactory( serviceRegistry ).close();
+		serviceRegistry.destroy();
 	}
 
 	@Test
@@ -50,6 +51,7 @@ public class ConfigurationValidationTest extends BaseUnitTestCase {
 				)
 				.build();
 
-		cfg.buildSessionFactory( serviceRegistry );
+		cfg.buildSessionFactory( serviceRegistry ).close();
+		serviceRegistry.destroy();
 	}
 }

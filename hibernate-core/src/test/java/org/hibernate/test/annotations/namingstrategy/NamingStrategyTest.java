@@ -10,6 +10,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Environment;
@@ -48,7 +49,7 @@ public class NamingStrategyTest {
 			config.setNamingStrategy(new DummyNamingStrategy());
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings();
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
@@ -59,12 +60,13 @@ public class NamingStrategyTest {
 	}
     @Test
 	public void testWithEJB3NamingStrategy() throws Exception {
+		SessionFactory  sf = null;
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.setNamingStrategy(EJB3NamingStrategy.INSTANCE);
 			config.addAnnotatedClass(A.class);
 			config.addAnnotatedClass(AddressEntry.class);
-			config.buildSessionFactory( serviceRegistry );
+			sf = config.buildSessionFactory( serviceRegistry );
 			Mappings mappings = config.createMappings();
 			boolean foundIt = false;
 
@@ -84,6 +86,10 @@ public class NamingStrategyTest {
 			e.printStackTrace(new PrintWriter(writer));
             log.debug(writer.toString());
 			fail(e.getMessage());
+		} finally {
+			if( sf != null ){
+				sf.close();
+			}
 		}
 	}
     @Test
@@ -92,7 +98,7 @@ public class NamingStrategyTest {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
-			config.buildSessionFactory( serviceRegistry );
+			config.buildMappings();
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();

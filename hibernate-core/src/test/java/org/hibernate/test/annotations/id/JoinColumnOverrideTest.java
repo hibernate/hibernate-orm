@@ -58,7 +58,7 @@ public class JoinColumnOverrideTest extends BaseUnitTestCase {
 			config.addAnnotatedClass(Bunny.class);
 			config.addAnnotatedClass(PointyTooth.class);
 			config.addAnnotatedClass(TwinkleToes.class);
-			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
+			config.buildMappings( );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {

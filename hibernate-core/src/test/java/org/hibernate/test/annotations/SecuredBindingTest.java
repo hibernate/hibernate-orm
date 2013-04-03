@@ -31,7 +31,7 @@ public class SecuredBindingTest {
 		p.put( "hibernate.show_sql", "true" );
 		ac.setProperties( p );
 		ac.addAnnotatedClass( Plane.class );
-		SessionFactory sf;
+		SessionFactory sf=null;
 		ServiceRegistry serviceRegistry = null;
 		try {
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( p );
@@ -47,6 +47,9 @@ public class SecuredBindingTest {
 			//success
 		}
 		finally {
+			if(sf!=null){
+				sf.close();
+			}
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}

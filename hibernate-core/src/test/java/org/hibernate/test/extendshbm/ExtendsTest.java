@@ -59,8 +59,8 @@ public class ExtendsTest extends BaseUnitTestCase {
 			cfg.addResource( getBaseForMappings() + "extendshbm/Person.hbm.xml" );
 			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
 
-			cfg.buildSessionFactory( serviceRegistry );
-
+//			cfg.buildSessionFactory( serviceRegistry );
+			cfg.buildMappings();
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );
@@ -117,8 +117,8 @@ public class ExtendsTest extends BaseUnitTestCase {
 			);
 			cfg.addResource( getBaseForMappings() + "extendshbm/Employee.hbm.xml" );
 
-			cfg.buildSessionFactory( serviceRegistry );
-
+//			cfg.buildSessionFactory( serviceRegistry );
+			cfg.buildMappings();
 			fail( "Should not be able to build sessionFactory without a Person" );
 		}
 		catch ( HibernateException e ) {
@@ -134,8 +134,9 @@ public class ExtendsTest extends BaseUnitTestCase {
 		try {
 			cfg.addResource( getBaseForMappings() + "extendshbm/allseparateinone.hbm.xml" );
 
-			cfg.buildSessionFactory( serviceRegistry );
+//			cfg.buildSessionFactory( serviceRegistry );
 
+			cfg.buildMappings();
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Customer" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Person" ) );
 			assertNotNull( cfg.getClassMapping( "org.hibernate.test.extendshbm.Employee" ) );

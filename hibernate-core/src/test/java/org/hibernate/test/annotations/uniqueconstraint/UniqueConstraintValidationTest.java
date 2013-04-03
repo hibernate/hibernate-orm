@@ -43,7 +43,8 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 		cfg.buildMappings();
 		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings(cfg.getProperties()).build();
-		cfg.buildSessionFactory(serviceRegistry);
+		cfg.buildSessionFactory(serviceRegistry).close();
+		serviceRegistry.destroy();
 	}
 
 	@Entity

@@ -130,6 +130,7 @@ public class TestExpectedUsage extends BaseUnitTestCase {
 		}
 		finally {
 			logicalConnection.close();
+			transactionContext.getTransactionEnvironment().getSessionFactory().close();
 		}
 	}
 

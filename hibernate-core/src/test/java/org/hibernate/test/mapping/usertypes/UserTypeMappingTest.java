@@ -37,6 +37,12 @@ private ServiceRegistry serviceRegistry;
 		cfg.setProperties(p);
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 	}
+
+	public void tearDown(){
+		if(serviceRegistry!=null){
+			ServiceRegistryBuilder.destroy( serviceRegistry );
+		}
+	}
 	
 	@Test
 	public void testFirstTypeThenEntity(){
@@ -44,6 +50,7 @@ private ServiceRegistry serviceRegistry;
 		   .addResource("org/hibernate/test/mapping/usertypes/TestEntity.hbm.xml");
 		SessionFactory sessions=cfg.buildSessionFactory(serviceRegistry);
 		Assert.assertNotNull(sessions);
+		sessions.close();
 	}
 	
 	@Test
@@ -53,6 +60,7 @@ private ServiceRegistry serviceRegistry;
 		
 		SessionFactory sessions=cfg.buildSessionFactory(serviceRegistry);
 		Assert.assertNotNull(sessions);
+		sessions.close();
 	}
 
 }

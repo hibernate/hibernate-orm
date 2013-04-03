@@ -23,6 +23,13 @@
  */
 package org.hibernate.test.annotations.entity;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Date;
@@ -30,26 +37,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.junit.Test;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -648,17 +648,22 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
+		SessionFactory sf=null;
 		try {
 			Configuration config = new Configuration();
 			config.addAnnotatedClass(LocalContactDetails.class);
-			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
+			sf = config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
 			fail("Did not throw expected exception");
 		}
 		catch( AnnotationException ex ) {
 			assertEquals(
 					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType", 
 					ex.getMessage());
-		}	
+		} finally {
+			if( sf != null){
+				sf.close();
+			}
+		}
 	}
 
 	

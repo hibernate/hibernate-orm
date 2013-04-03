@@ -156,7 +156,7 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		try {
 			Configuration config = new Configuration();
 			config.addAnnotatedClass(Foobar.class);
-			config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
+			config.buildMappings(  );
 			fail();
 		}
 		catch (AnnotationException ae) {

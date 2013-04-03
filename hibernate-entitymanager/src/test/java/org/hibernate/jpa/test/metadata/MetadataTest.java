@@ -74,6 +74,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		cfg.buildMappings();
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry() );
 		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi, true );
+		sfi.close();
 	}
 
 	@Test

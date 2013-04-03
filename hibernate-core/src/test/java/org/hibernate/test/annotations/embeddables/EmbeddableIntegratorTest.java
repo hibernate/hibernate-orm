@@ -33,6 +33,7 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
@@ -75,11 +76,13 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 		assertEquals(new BigDecimal("100"), inv.getInvestments().get(0).getAmount().getAmount());
 		
 		sess.close();
+		sf.close();
+		StandardServiceRegistryBuilder.destroy( reg );
 	}
 
 	@Test
 	public void testWithIntegrator() {
-		ServiceRegistry reg = new StandardServiceRegistryBuilder(
+		StandardServiceRegistry reg = new StandardServiceRegistryBuilder(
 				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
 		).build();
 		
@@ -101,6 +104,8 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 		assertEquals(new BigDecimal("100"), inv.getInvestments().get(0).getAmount().getAmount());
 		
 		sess.close();
+		sf.close();
+		StandardServiceRegistryBuilder.destroy( reg );
 	}
 	
 	private Investor getInvestor() {

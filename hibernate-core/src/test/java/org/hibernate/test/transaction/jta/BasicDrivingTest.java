@@ -152,6 +152,7 @@ public class BasicDrivingTest extends BaseUnitTestCase {
 		}
 		finally {
 			logicalConnection.close();
+			transactionContext.getTransactionEnvironment().getSessionFactory().close();
 		}
 	}
 

@@ -171,6 +171,7 @@ public class ManagedDrivingTest extends BaseUnitTestCase {
 		}
 		finally {
 			logicalConnection.close();
+			transactionContext.getTransactionEnvironment().getSessionFactory().close();
 		}
 	}
 }

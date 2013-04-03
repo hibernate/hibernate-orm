@@ -26,9 +26,7 @@ package org.hibernate.loader.plan.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.LoadQuery;
 import org.hibernate.loader.plan.spi.Return;
 
 /**
@@ -39,16 +37,14 @@ import org.hibernate.loader.plan.spi.Return;
 public class LoadPlanImpl implements LoadPlan {
 	private final boolean hasScalars;
 	private final List<Return> returns;
-	private final LoadQuery loadQuery;
 
-	public LoadPlanImpl(LoadQuery loadQuery, boolean hasScalars, List<Return> returns) {
-		this.loadQuery = loadQuery;
+	public LoadPlanImpl(boolean hasScalars, List<Return> returns) {
 		this.hasScalars = hasScalars;
 		this.returns = returns;
 	}
 
-	public LoadPlanImpl(LoadQuery loadQuery, boolean hasScalars, Return rootReturn) {
-		this( loadQuery, hasScalars, Collections.singletonList( rootReturn ) );
+	public LoadPlanImpl(boolean hasScalars, Return rootReturn) {
+		this( hasScalars, Collections.singletonList( rootReturn ) );
 	}
 
 	@Override
@@ -59,10 +55,5 @@ public class LoadPlanImpl implements LoadPlan {
 	@Override
 	public List<Return> getReturns() {
 		return returns;
-	}
-
-	@Override
-	public LoadQuery getLoadQuery() {
-		return loadQuery;
 	}
 }

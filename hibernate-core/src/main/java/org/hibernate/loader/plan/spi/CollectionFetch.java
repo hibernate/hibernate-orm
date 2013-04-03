@@ -31,13 +31,12 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * @author Steve Ebersole
  */
-public class CollectionFetch extends AbstractCollectionReference implements CollectionReference, Fetch {
+public class CollectionFetch extends AbstractCollectionReference implements Fetch {
 	private final FetchOwner fetchOwner;
 	private final FetchStrategy fetchStrategy;
 

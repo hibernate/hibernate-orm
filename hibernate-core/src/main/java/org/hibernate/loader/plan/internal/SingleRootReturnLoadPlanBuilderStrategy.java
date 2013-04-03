@@ -39,11 +39,9 @@ import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.LoadPlanBuilderStrategy;
-import org.hibernate.loader.plan.spi.LoadQuery;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
@@ -103,23 +101,7 @@ public class SingleRootReturnLoadPlanBuilderStrategy
 
 	@Override
 	public LoadPlan buildLoadPlan() {
-		return new LoadPlanImpl( createLoadQuery(), false, rootReturn );
-	}
-
-	private LoadQuery createLoadQuery() {
-		if ( EntityReturn.class.isInstance( rootReturn ) ) {
-			final EntityReturn entityReturn = (EntityReturn) rootReturn;
-			return new EntityLoadQueryImpl(
-					sessionFactory(),
-					loadQueryInfluencers,
-					entityReturn.getLockMode(),
-					(OuterJoinLoadable) entityReturn.getEntityPersister()
-			);
-		}
-		else {
-			// TODO: create a LoadQuery for other types of returns.
-			return null;
-		}
+		return new LoadPlanImpl( false, rootReturn );
 	}
 
 	@Override

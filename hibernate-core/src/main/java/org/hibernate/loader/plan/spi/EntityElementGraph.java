@@ -48,6 +48,11 @@ public class EntityElementGraph extends AbstractPlanNode implements FetchOwner, 
 	}
 
 	@Override
+	public String getSqlTableAlias() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
 	public LockMode getLockMode() {
 		return null;
 	}
@@ -111,11 +116,13 @@ public class EntityElementGraph extends AbstractPlanNode implements FetchOwner, 
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
+				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}

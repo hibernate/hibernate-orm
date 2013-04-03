@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -179,6 +180,13 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		}
 
 		return context;
+	}
+
+	@Override
+	public Set<IdentifierResolutionContext> getIdentifierResolutionContexts() {
+		return Collections.unmodifiableSet(
+				new HashSet<IdentifierResolutionContext>( identifierResolutionContextMap.values() )
+		);
 	}
 
 	@Override

@@ -64,6 +64,7 @@ public class LoadPlanBuildingHelper {
 			FetchOwner fetchOwner,
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 
 		return new EntityFetch(
@@ -73,7 +74,7 @@ public class LoadPlanBuildingHelper {
 				fetchOwner,
 				attributeDefinition.getName(),
 				fetchStrategy,
-				null, // sql table alias
+				sqlTableAlias,
 				loadPlanBuildingContext.resolveEntityColumnAliases( attributeDefinition )
 		);
 	}

@@ -70,6 +70,11 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchOwner, En
 	}
 
 	@Override
+	public String getSqlTableAlias() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
 	public LockMode getLockMode() {
 		return null;
 	}
@@ -133,11 +138,13 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchOwner, En
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
+				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}

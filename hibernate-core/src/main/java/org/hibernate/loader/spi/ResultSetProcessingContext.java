@@ -25,6 +25,7 @@ package org.hibernate.loader.spi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityKey;
@@ -58,6 +59,8 @@ public interface ResultSetProcessingContext {
 	}
 
 	public IdentifierResolutionContext getIdentifierResolutionContext(EntityReference entityReference);
+
+	public Set<IdentifierResolutionContext> getIdentifierResolutionContexts();
 
 	public void registerHydratedEntity(EntityPersister persister, EntityKey entityKey, Object entityInstance);
 

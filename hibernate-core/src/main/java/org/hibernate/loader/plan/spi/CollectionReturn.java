@@ -36,7 +36,7 @@ import org.hibernate.loader.spi.ResultSetProcessingContext;
 /**
  * @author Steve Ebersole
  */
-public class CollectionReturn extends AbstractCollectionReference implements Return, CollectionReference {
+public class CollectionReturn extends AbstractCollectionReference implements Return {
 	private final String ownerEntityName;
 	private final String ownerProperty;
 

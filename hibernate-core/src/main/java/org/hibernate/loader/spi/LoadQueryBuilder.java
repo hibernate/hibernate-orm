@@ -21,12 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi;
+package org.hibernate.loader.spi;
 
 /**
  * @author Gail Badner
  */
-public interface LoadQuery {
+public interface LoadQueryBuilder {
 
 	String generateSql(int batchSize);
 }

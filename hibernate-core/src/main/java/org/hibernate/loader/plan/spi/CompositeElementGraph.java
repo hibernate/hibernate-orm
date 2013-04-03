@@ -72,11 +72,13 @@ public class CompositeElementGraph extends AbstractPlanNode implements FetchOwne
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
+				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}

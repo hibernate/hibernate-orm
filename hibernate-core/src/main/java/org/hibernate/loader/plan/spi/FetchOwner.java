@@ -84,6 +84,7 @@ public interface FetchOwner {
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext);
 
 	public CompositeFetch buildCompositeFetch(

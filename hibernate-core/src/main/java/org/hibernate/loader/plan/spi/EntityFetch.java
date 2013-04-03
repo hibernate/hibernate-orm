@@ -38,12 +38,13 @@ import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityFetch extends AbstractFetch implements EntityReference, FetchOwner {
+public class EntityFetch extends AbstractSingularAttributeFetch implements EntityReference {
 	private final String sqlTableAlias;
 	private final EntityAliases entityAliases;
 
@@ -69,6 +70,10 @@ public class EntityFetch extends AbstractFetch implements EntityReference, Fetch
 		this.persister = sessionFactory.getEntityPersister( associationType.getAssociatedEntityName() );
 	}
 
+	public EntityType getAssociationType() {
+		return associationType;
+	}
+
 	@Override
 	public EntityPersister getEntityPersister() {
 		return persister;
@@ -77,6 +82,11 @@ public class EntityFetch extends AbstractFetch implements EntityReference, Fetch
 	@Override
 	public IdentifierDescription getIdentifierDescription() {
 		return identifierDescription;
+	}
+
+	@Override
+	public String getSqlTableAlias() {
+		return sqlTableAlias;
 	}
 
 	@Override
@@ -107,11 +117,13 @@ public class EntityFetch extends AbstractFetch implements EntityReference, Fetch
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
+				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}

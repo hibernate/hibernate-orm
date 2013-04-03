@@ -31,26 +31,20 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.Session;
-import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
-import org.hibernate.loader.entity.EntityLoader;
+import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
 import org.hibernate.loader.internal.ResultSetProcessorImpl;
-import org.hibernate.loader.plan.internal.EntityLoadQueryImpl;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.LoadPlanBuilder;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.OuterJoinLoadable;
 
 import org.junit.Test;
 
@@ -82,14 +76,6 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 		session.close();
 
 		{
-			final EntityLoadQueryImpl queryBuilder = new EntityLoadQueryImpl(
-					sessionFactory(),
-					LoadQueryInfluencers.NONE,
-					LockMode.NONE,
-					(OuterJoinLoadable) entityPersister
-			);
-			final String sql = queryBuilder.generateSql( 1 );
-
 			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
 					sessionFactory(),
 					LoadQueryInfluencers.NONE,
@@ -97,6 +83,13 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 					0
 			);
 			final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+			final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
+					sessionFactory(),
+					LoadQueryInfluencers.NONE,
+					plan
+			);
+			final String sql = queryBuilder.generateSql( 1 );
+
 			final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan );
 			final List results = new ArrayList();
 

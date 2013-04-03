@@ -44,9 +44,7 @@ import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierReso
 /**
  * @author Steve Ebersole
  */
-public class EntityReturn
-		extends AbstractFetchOwner
-		implements Return, FetchOwner, EntityReference, ResultSetProcessingContext.EntityKeyResolutionContext {
+public class EntityReturn extends AbstractFetchOwner implements Return, EntityReference {
 
 	private final EntityAliases entityAliases;
 	private final String sqlTableAlias;
@@ -74,6 +72,11 @@ public class EntityReturn
 	@Override
 	public String getAlias() {
 		return super.getAlias();
+	}
+
+	@Override
+	public String getSqlTableAlias() {
+		return sqlTableAlias;
 	}
 
 	@Override
@@ -127,11 +130,13 @@ public class EntityReturn
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
+			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
+				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}
@@ -176,13 +181,19 @@ public class EntityReturn
 
 	@Override
 	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		final IdentifierResolutionContext identifierResolutionContext = context.getIdentifierResolutionContext( this );
-		EntityKey entityKey = identifierResolutionContext.getEntityKey();
-		if ( entityKey == null ) {
-			throw new AssertionFailure( "Could not locate resolved EntityKey");
+		Object objectForThisEntityReturn = null;
+		for ( IdentifierResolutionContext identifierResolutionContext : context.getIdentifierResolutionContexts() ) {
+			final EntityReference entityReference = identifierResolutionContext.getEntityReference();
+			final EntityKey entityKey = identifierResolutionContext.getEntityKey();
+			if ( entityKey == null ) {
+				throw new AssertionFailure( "Could not locate resolved EntityKey");
+			}
+			final Object object =  context.resolveEntityKey( entityKey, entityReference );
+			if ( this == entityReference ) {
+				objectForThisEntityReturn = object;
+			}
 		}
-
-		return context.resolveEntityKey( entityKey, this );
+		return objectForThisEntityReturn;
 	}
 
 	@Override

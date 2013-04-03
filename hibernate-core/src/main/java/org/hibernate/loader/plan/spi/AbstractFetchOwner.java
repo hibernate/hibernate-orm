@@ -26,9 +26,12 @@ package org.hibernate.loader.plan.spi;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * @author Steve Ebersole

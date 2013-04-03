@@ -33,8 +33,10 @@ import java.util.List;
 
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
 import org.hibernate.loader.plan.internal.CascadeLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
+import org.hibernate.loader.spi.LoadQueryBuilder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -78,9 +80,8 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		assertNotNull( entityFetch.getFetches() );
 		assertEquals( 0, entityFetch.getFetches().length );
 
-		String loadSql = plan.getLoadQuery().generateSql( 1 );
-		// TODO: assert that aliases used in loadSql match up with those in entityReturn and entityFetch
-		//       (they currently do not match up)
+		LoadQueryBuilder loadQueryBuilder = new EntityLoadQueryBuilderImpl( sessionFactory(), LoadQueryInfluencers.NONE, plan );
+		String sql = loadQueryBuilder.generateSql( 1 );
 	}
 
 	@Test

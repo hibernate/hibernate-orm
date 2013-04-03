@@ -401,7 +401,12 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 			associationFetch = fetchOwner.buildCollectionFetch( attributeDefinition, fetchStrategy, this );
 		}
 		else {
-			associationFetch = fetchOwner.buildEntityFetch( attributeDefinition, fetchStrategy, this );
+			associationFetch = fetchOwner.buildEntityFetch(
+					attributeDefinition,
+					fetchStrategy,
+					generateEntityFetchSqlTableAlias( attributeDefinition.toEntityDefinition().getEntityPersister().getEntityName() ),
+					this
+			);
 		}
 
 		if ( FetchOwner.class.isInstance( associationFetch ) ) {
@@ -477,6 +482,10 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		return sessionFactory();
 	}
 
+	protected String generateEntityFetchSqlTableAlias(String entityName) {
+		return StringHelper.generateAlias( StringHelper.unqualifyEntityName( entityName ), currentDepth() );
+	}
+
 	@Override
 	public EntityAliases resolveEntityColumnAliases(AssociationAttributeDefinition attributeDefinition) {
 		return generateEntityColumnAliases( attributeDefinition.toEntityDefinition().getEntityPersister() );
@@ -540,6 +549,11 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 		@Override
+		public String getSqlTableAlias() {
+			return entityReference.getSqlTableAlias();
+		}
+
+		@Override
 		public LockMode getLockMode() {
 			return entityReference.getLockMode();
 		}
@@ -566,6 +580,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		public EntityFetch buildEntityFetch(
 				AssociationAttributeDefinition attributeDefinition,
 				FetchStrategy fetchStrategy,
+				String sqlTableAlias,
 				LoadPlanBuildingContext loadPlanBuildingContext) {
 			// we have a key-many-to-one
 			//
@@ -575,6 +590,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 					this,
 					attributeDefinition,
 					fetchStrategy,
+					sqlTableAlias,
 					loadPlanBuildingContext
 			);
 			fetchToHydratedStateExtractorMap.put( fetch, attributeDefinition.getHydratedCompoundValueExtractor() );

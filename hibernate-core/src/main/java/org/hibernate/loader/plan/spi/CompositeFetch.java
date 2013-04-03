@@ -39,7 +39,7 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 /**
  * @author Steve Ebersole
  */
-public class CompositeFetch extends AbstractFetch implements Fetch {
+public class CompositeFetch extends AbstractSingularAttributeFetch {
 	public static final FetchStrategy FETCH_PLAN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	public CompositeFetch(
@@ -67,7 +67,7 @@ public class CompositeFetch extends AbstractFetch implements Fetch {
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
+			String sqlTableAlias, LoadPlanBuildingContext loadPlanBuildingContext) {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

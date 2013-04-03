@@ -33,14 +33,14 @@ import org.hibernate.loader.PropertyPath;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractFetch extends AbstractFetchOwner implements Fetch {
+public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner implements Fetch {
 	private final FetchOwner owner;
 	private final String ownerProperty;
 	private final FetchStrategy fetchStrategy;
 
 	private final PropertyPath propertyPath;
 
-	public AbstractFetch(
+	public AbstractSingularAttributeFetch(
 			SessionFactoryImplementor factory,
 			String alias,
 			LockMode lockMode,

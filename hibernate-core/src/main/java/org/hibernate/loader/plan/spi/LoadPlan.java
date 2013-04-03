@@ -25,8 +25,6 @@ package org.hibernate.loader.plan.spi;
 
 import java.util.List;
 
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-
 /**
  * Describes a plan for performing a load of results.
  *
@@ -56,8 +54,6 @@ public interface LoadPlan {
 	public boolean hasAnyScalarReturns();
 
 	public List<Return> getReturns();
-
-	public LoadQuery getLoadQuery();
 
 	// todo : would also like to see "call back" style access for handling "subsequent actions" such as:
 	// 		1) follow-on locking

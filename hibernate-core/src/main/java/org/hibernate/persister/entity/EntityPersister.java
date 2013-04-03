@@ -45,6 +45,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;

@@ -135,7 +135,7 @@ subprojects { subProject ->
             java.srcDir generatedLoggingSrcDir
         }
 
-        task generateMainLoggingClasses(type: Compile) {
+        task generateMainLoggingClasses(type: JavaCompile) {
             ext.aptDumpDir = subProject.file( "${buildDir}/tmp/apt/logging" )
             classpath = compileJava.classpath + configurations.jbossLoggingTool
             source = sourceSets.main.originalJavaSrcDirs
@@ -279,8 +279,8 @@ subprojects { subProject ->
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {
-            name 'A Hibernate Core Module'
-            description 'A module of the Hibernate Core project'
+            name 'A Hibernate O/RM Module'
+            description 'A module of the Hibernate O/RM project'
             url 'http://hibernate.org'
             organization {
                 name 'Hibernate.org'
@@ -342,7 +342,6 @@ subprojects { subProject ->
     }
 
 }
-dependsOnChildren()
 
 // This is a task that generates the gradlew scripts, allowing users to run gradle without having gradle installed
 // on their system.
@@ -351,5 +350,5 @@ dependsOnChildren()
 //  2) /gradlew.bat which is the windows bat script for for executing builds
 //  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.1'
+    gradleVersion = '1.5'
 }

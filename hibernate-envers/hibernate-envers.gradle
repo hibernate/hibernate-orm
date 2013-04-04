@@ -30,7 +30,7 @@ sourceSets {
 }
 
 // Generate JPA2 static metamodel for default revision entities
-task generateJpaMetamodelClasses(type: Compile) {
+task generateJpaMetamodelClasses(type: JavaCompile) {
     classpath = compileJava.classpath + configurations.hibernateJpaModelGenTool
     source = sourceSets.main.originalJavaSrcDirs
     destinationDir = file( "${buildDir}/tmp/apt" )

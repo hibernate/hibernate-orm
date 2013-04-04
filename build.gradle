@@ -94,7 +94,6 @@ subprojects { subProject ->
 
         }
 
-        ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
         // appropriately inject the common dependencies into each sub-project
         dependencies {
             compile( libraries.logging )
@@ -119,11 +118,16 @@ subprojects { subProject ->
             jaxb( libraries.jaxb2_ant )
             deployerJars "org.apache.maven.wagon:wagon-http:1.0"
         }
-        if(ext.toolsJar.exists()){
+
+        ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+        if ( ext.toolsJar.exists() ) {
             dependencies{
                 testCompile files( toolsJar )
             }
         }
+
+        task compile
+        compile.dependsOn compileJava, compileTestJava
 
         sourceSets.main {
             compileClasspath += configurations.provided

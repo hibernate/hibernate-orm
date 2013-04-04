@@ -13,6 +13,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 
 import java.sql.Types;
 import java.util.Collections;
@@ -42,13 +43,27 @@ public class DocumentSessionFactoryBean {
         connectionProvider.setDataSource(dataSource);
         connectionProvider.configure(Collections.EMPTY_MAP);
 
-        ServiceRegistry serviceRegistry = new ServiceRegistryBuilder()
-                .applySettings(configuration.getProperties())
-                .addService(ConnectionProvider.class, connectionProvider)
-                .buildServiceRegistry();
+        ServiceRegistry serviceRegistry = createServiceRegistry(configuration);
 
         return configuration
                 .buildSessionFactory(serviceRegistry);
+    }
+
+    protected ServiceRegistry createServiceRegistry(final Configuration configuration)
+    {
+        DatasourceConnectionProviderImpl connectionProvider = new
+            DatasourceConnectionProviderImpl();
+        connectionProvider.setDataSource(dataSource);
+        connectionProvider.configure(Collections.EMPTY_MAP);
+
+        return new ServiceRegistryBuilder().applySettings(configuration.getProperties())
+            .addService(ConnectionProvider.class, connectionProvider).buildServiceRegistry();
+    }
+
+    public void updateSchema(Configuration cfg)
+    {
+        ServiceRegistry serviceRegistry = createServiceRegistry(cfg);
+        new SchemaUpdate(serviceRegistry, cfg).execute(true, true);
     }
 
     /**
@@ -77,7 +92,7 @@ public class DocumentSessionFactoryBean {
      * Creates our Hibernate configuration. Sets the relevant settings and maps the MetamodelMapping to
      * Hibernate.
      */
-    protected Configuration createConfiguration() {
+    public Configuration createConfiguration() {
         Configuration config = new Configuration();
         config.setProperty("hibernate.dialect", getDatabaseDialect().getName());
         config.setProperty("hibernate.current_session_context_class",
@@ -193,6 +208,7 @@ public class DocumentSessionFactoryBean {
         ToOne value = new ManyToOne(mappings, table);      // TODO fix this for different relationship types
         org.hibernate.mapping.Column hibernateColumn = new org.hibernate.mapping.Column(relationshipColumnMapping.getColumn().getName());
         value.addColumn(hibernateColumn);
+        table.addColumn(hibernateColumn);
 
         String type = relationshipColumnMapping.getRelationship().getDocument(side.oppositeSide()).getName();
         value.setTypeName(type);  // is this correct? or is there a type for object?
@@ -217,7 +233,7 @@ public class DocumentSessionFactoryBean {
      * @return The dialect class
      */
     protected Class<? extends Dialect> getDatabaseDialect() {
-        return HSQLDialect.class;
+        return H2Dialect.class;
     }
 
     /**
@@ -232,7 +248,7 @@ public class DocumentSessionFactoryBean {
 
         PersistentDocumentClass persistentClass = new PersistentDocumentClass(
                 documentTableMapping);
-        org.hibernate.mapping.Table table = createTable(documentTableMapping);
+        org.hibernate.mapping.Table table = createTable(documentTableMapping, mappings);
         persistentClass.setTable(table);
         persistentClass.addTuplizer(EntityMode.MAP,
                 DocumentInstanceTuplizer.class.getName());
@@ -267,9 +283,11 @@ public class DocumentSessionFactoryBean {
 
         org.hibernate.mapping.Column column = new org.hibernate.mapping.Column(documentTableMapping.getTable()
                 .getIdColumnName());
+        column.setLength(16);
         value.addColumn(column);
 
         table.getPrimaryKey().addColumn(column);
+        table.addColumn(column);
 
         String type = UUID.class.getName();
         value.setTypeName(type);
@@ -283,11 +301,12 @@ public class DocumentSessionFactoryBean {
      * Tells Hibernate about a table used to represent a document. All Document tables are assumed to have a
      * single PK.
      */
-    protected org.hibernate.mapping.Table createTable(DocumentTableMapping documentTableMapping) {
+    protected org.hibernate.mapping.Table createTable(DocumentTableMapping documentTableMapping,
+        Mappings mappings) {
         Table mappingTable = documentTableMapping
                 .getTable();
-        org.hibernate.mapping.Table table = new org.hibernate.mapping.Table(mappingTable.getTableName());
-        table.setSchema(mappingTable.getSchemaName());
+        org.hibernate.mapping.Table table = mappings
+            .addTable(null, null, mappingTable.getTableName(), null, false);
         PrimaryKey primaryKey = new PrimaryKey();
         table.setPrimaryKey(primaryKey);
         return table;
@@ -321,6 +340,7 @@ public class DocumentSessionFactoryBean {
 
         SimpleValue value = new SimpleValue(mappings, table);
         org.hibernate.mapping.Column column = createColumn(propertyColumnMapping);
+        table.addColumn(column);
         value.addColumn(column);
 
         String type = getType(propertyColumnMapping);

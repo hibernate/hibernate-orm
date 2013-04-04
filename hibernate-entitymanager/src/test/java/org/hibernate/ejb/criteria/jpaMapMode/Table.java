@@ -1,27 +1,19 @@
 package org.hibernate.ejb.criteria.jpaMapMode;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 
 public class Table {
-    private final String schemaName;
     private final String tableName;
     private final String idColumnName;
     private DocumentTableMapping documentMapping;
-    private final Set<Column> columns = new HashSet<>();
+    private final Set<Column> columns = new HashSet<Column>();
 
-    public Table(String schemaName, String tableName, String idColumnName,
+    public Table(String tableName, String idColumnName,
                  DocumentTableMapping documentMapping, Set<Column> columns) {
         super();
-        this.schemaName = schemaName;
         this.tableName = tableName;
         this.idColumnName = idColumnName;
         this.documentMapping = documentMapping;
@@ -35,10 +27,6 @@ public class Table {
     public void setDocumentMapping(DocumentTableMapping documentMapping) {
         assert this.documentMapping == null;
         this.documentMapping = documentMapping;
-    }
-
-    public String getSchemaName() {
-        return schemaName;
     }
 
     public String getTableName() {
@@ -55,8 +43,7 @@ public class Table {
      * @return The SQL name of the table, either "schema.table" or "table".
      */
     public String getSqlName() {
-        return StringUtils.isBlank(schemaName) ? tableName : schemaName + "."
-                + tableName;
+        return tableName;
     }
 
     public Set<Column> getColumns() {
@@ -65,8 +52,7 @@ public class Table {
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder().append(schemaName).append(tableName)
-                .toHashCode();
+        return tableName.hashCode();
     }
 
     @Override
@@ -85,14 +71,12 @@ public class Table {
 
         Table that = (Table) o;
 
-        return new EqualsBuilder().append(this.schemaName, that.schemaName)
-                .append(this.tableName, that.tableName).isEquals();
+        return this.tableName.equals(that.tableName);
     }
 
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this,
-                ToStringStyle.MULTI_LINE_STYLE);
+        return tableName;
     }
 
 }

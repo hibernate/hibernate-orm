@@ -3,10 +3,20 @@ package org.hibernate.ejb.criteria.jpaMapMode;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import org.enhydra.jdbc.standard.StandardDataSource;
+import org.h2.Driver;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.jdbc.Work;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -22,22 +32,63 @@ public class HibernateStorageImplTest  {
     private MetaModel metaModel;
     private DocumentSessionFactoryBean sessionFactoryBean;
 
+
+    //@After
+    public void tearDown() throws Exception
+    {
+        Session session = sessionFactoryBean.getObject().getCurrentSession();
+        Transaction transaction = session.beginTransaction();
+        session.doWork(new Work()
+        {
+            @Override
+            public void execute(final Connection connection) throws SQLException
+            {
+                Statement stmt = null;
+                try
+                {
+                    stmt = connection.createStatement();
+                    // in-memory databases should get deleted.
+                    stmt.execute("DROP SCHEMA PUBLIC CASCADE");
+                } finally {
+                    if (stmt != null) {
+                        stmt.close();
+                    }
+                }
+            }
+        });
+        transaction.commit();
+
+    }
+
+    private DataSource createDataSource() throws Exception
+    {
+        final String url = "jdbc:h2:mem:test;DB_CLOSE_DELAY=5";
+        Driver.load();
+        Connection connection = DriverManager.getConnection(url);
+        connection.close();
+
+        StandardDataSource dataSource = new StandardDataSource();
+        dataSource.setDriverName(Driver.class.getName());
+        dataSource.setUrl(url);
+        return dataSource;
+    }
+
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        dataSource = createDataSource();
         metaModel = StorageImplTest.createSampleMetaModel();
         MultiTableSchemaGeneratorImpl multiTableSchemaGeneratorImpl = new MultiTableSchemaGeneratorImpl();
-        multiTableSchemaGeneratorImpl.setSqlGenerator(SchemaSqlGeneratorFactory
-                .createSchemaSqlGenerator());
+        multiTableSchemaGeneratorImpl.setSqlGenerator(new GenericSqlGenerator());
         MetaModelMapping metaModelMapping = multiTableSchemaGeneratorImpl
                 .createMetaModelMapping(metaModel);
 
-        multiTableSchemaGeneratorImpl.setDataSource(dataSource);
-
-        //multiTableSchemaGeneratorImpl.createDocumentTables(metaModelMapping);
+        multiTableSchemaGeneratorImpl.createTables(metaModelMapping);
 
         sessionFactoryBean = new DocumentSessionFactoryBean();
         sessionFactoryBean.setDataSource(dataSource);
         sessionFactoryBean.setMetaModelMapping(metaModelMapping);
+        Configuration configuration = sessionFactoryBean.createConfiguration();
+        sessionFactoryBean.updateSchema(configuration);
     }
 
     @Test

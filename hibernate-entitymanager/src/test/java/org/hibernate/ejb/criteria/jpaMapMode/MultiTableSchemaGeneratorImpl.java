@@ -4,7 +4,16 @@ package org.hibernate.ejb.criteria.jpaMapMode;
 import java.util.*;
 
 public class MultiTableSchemaGeneratorImpl {
+    private SqlGenerator sqlGenerator;
+    private int textColumnsPerTable = 3;
+    private int numberOfTables = 5;
+    private int numericColumnsPerTable = 2;
+    private int foreignKeyColumnsPerTable = 2;
 
+    public void setSqlGenerator(final SqlGenerator sqlGenerator)
+    {
+        this.sqlGenerator = sqlGenerator;
+    }
 
     public MetaModelMapping createMetaModelMapping(MetaModel metaModel) {
         MetaModelMapping mapping = new MetaModelMapping(metaModel);
@@ -158,7 +167,7 @@ public class MultiTableSchemaGeneratorImpl {
 
     protected Table createTable(int i) {
         Set<Column> columns = createColumns();
-        return new Table(schemaName, getTableName(i), "id", null,
+        return new Table(getTableName(i), "id", null,
                 columns);
     }
 
@@ -179,6 +188,9 @@ public class MultiTableSchemaGeneratorImpl {
         return columns;
     }
 
+    protected Column createForeignKeyColumn(int i) {
+        return sqlGenerator.createForeignKeyColumn(i);
+    }
 
     protected Set<Column> createTextColumns() {
         Set<Column> columns = new HashSet<Column>(textColumnsPerTable);

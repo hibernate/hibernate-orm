@@ -1,7 +1,5 @@
 package org.hibernate.ejb.criteria.jpaMapMode;
 
-import org.hibernate.ejb.criteria.jpaMapMode.Property;
-
 /**
  * An instance of a property of a document.
  */

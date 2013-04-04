@@ -62,7 +62,8 @@ class DatabaseTarget implements GenerationTarget {
 			}
 			catch (SQLException e) {
 				throw new PersistenceException(
-						"Unable to execute JPA schema generation create command [" + command + "]"
+						"Unable to execute JPA schema generation create command [" + command + "]",
+						e
 				);
 			}
 		}
@@ -93,7 +94,7 @@ class DatabaseTarget implements GenerationTarget {
 			}
 			catch (SQLException e) {
 				// Just log the error because drop commands are often unsuccessful because the tables do not yet exist...
-				log.warn( String.format( "Unable to execute JPA schema generation drop command [%s]", command ), e );
+				log.warnf( "Unable to execute JPA schema generation drop command [" + command + "]", e );
 			}
 		}
 	}

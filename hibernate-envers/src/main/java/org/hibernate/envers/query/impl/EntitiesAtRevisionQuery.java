@@ -45,20 +45,31 @@ import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants
  */
 public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
     private final Number revision;
+    private final boolean includeDeletions;
 
     public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
                                    AuditReaderImplementor versionsReader, Class<?> cls,
                                    Number revision) {
         super(verCfg, versionsReader, cls);
         this.revision = revision;
+        this.includeDeletions = false;
     }
     
 	public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
 			AuditReaderImplementor versionsReader, Class<?> cls, String entityName, Number revision) {
 		super(verCfg, versionsReader, cls, entityName);
 		this.revision = revision;
-	}    
+		this.includeDeletions = false;
+	}
 
+    public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
+                                   AuditReaderImplementor versionsReader, Class<?> cls,
+                                   String entityName, Number revision, boolean includeDeletions) {
+        super(verCfg, versionsReader, cls, entityName);
+        this.revision = revision;
+        this.includeDeletions = includeDeletions;
+    }
+    
     @SuppressWarnings({"unchecked"})
     public List list() {
         /*
@@ -91,8 +102,10 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
         		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
 				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
         
-         // e.revision_type != DEL
-         qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+        // e.revision_type != DEL
+        if (!includeDeletions) {
+            qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
+        }
 
         // all specified conditions
         for (AuditCriterion criterion : criterions) {

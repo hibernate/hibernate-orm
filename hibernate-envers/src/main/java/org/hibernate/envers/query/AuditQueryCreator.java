@@ -81,6 +81,25 @@ public class AuditQueryCreator {
     }
 
     /**
+     * Creates a query, which will return entities satisfying some conditions (specified later),
+     * at a given revision and a given entityName. Deleted entities may be optionally
+     * included.
+     * @param c Class of the entities for which to query.
+     * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
+     * @param revision Revision number at which to execute the query.
+     * @param includeDeletions Whether to include deleted entities in the search.
+     * @return A query for entities at a given revision, to which conditions can be added and which
+     * can then be executed. The result of the query will be a list of entities (beans), unless a
+     * projection is added.
+     */
+    public AuditQuery forEntitiesAtRevision(Class<?> c, String entityName, Number revision, boolean includeDeletions) {
+        checkNotNull(revision, "Entity revision");
+        checkPositive(revision, "Entity revision");
+        c = getTargetClassIfProxied(c);
+        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, entityName, revision, includeDeletions);
+    }
+
+    /**
      * Creates a query, which will return entities modified at the specified revision.
      *
      * In comparison, the {@link #forEntitiesAtRevision(Class, String, Number)} query takes into all entities

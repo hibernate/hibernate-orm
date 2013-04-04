@@ -171,6 +171,9 @@ subprojects { subProject ->
         // for the time being eat the annoying output from running the annotation processors
         generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
 
+        task generateSources( type: Task )
+        generateSources.dependsOn generateMainLoggingClasses
+
         compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
         compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])

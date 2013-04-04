@@ -132,8 +132,13 @@ task jaxb {
     }
 
 }
+
 generateMainLoggingClasses.dependsOn jaxb
 generateMainLoggingClasses.dependsOn generateGrammarSource
+
+generateSources.dependsOn jaxb
+generateSources.dependsOn generateGrammarSource
+
 compileJava.dependsOn jaxb
 
 

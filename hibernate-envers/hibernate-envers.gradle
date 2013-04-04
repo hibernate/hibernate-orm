@@ -47,6 +47,7 @@ task generateJpaMetamodelClasses(type: JavaCompile) {
     }
 }
 compileJava.dependsOn generateJpaMetamodelClasses
+generateSources.dependsOn generateJpaMetamodelClasses
 
 jar {
     manifest {

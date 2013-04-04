@@ -32,6 +32,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleReference;
 
 /**
  * @author Brett Meyer
@@ -62,6 +63,9 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 			properties = new HashMap();
 		}
 		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+		// TODO: This needs tested.
+		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
+				new OsgiScanner( requestingBundle ) );
 		
 		osgiClassLoader.addBundle( requestingBundle );
 
@@ -74,6 +78,9 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 			properties = new HashMap();
 		}
 		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+		// OSGi ClassLoaders must implement BundleReference 
+		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
+				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() ) );
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
 

@@ -1619,4 +1619,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message( value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448 )
 	void multipleValidationModes(String modes);
+	
+	@LogMessage(level = WARN)
+	@Message(value = "Exception while loading a class or resource found during scanning", id = 449)
+	void unableToLoadScannedClassOrResource(@Cause Exception e);
 }

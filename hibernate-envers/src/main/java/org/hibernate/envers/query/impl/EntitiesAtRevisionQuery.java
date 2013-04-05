@@ -49,18 +49,11 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
     public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
                                    AuditReaderImplementor versionsReader, Class<?> cls,
-                                   Number revision) {
+                                   Number revision, boolean includeDeletions) {
         super(verCfg, versionsReader, cls);
         this.revision = revision;
-        this.includeDeletions = false;
+        this.includeDeletions = includeDeletions;
     }
-    
-	public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
-			AuditReaderImplementor versionsReader, Class<?> cls, String entityName, Number revision) {
-		super(verCfg, versionsReader, cls, entityName);
-		this.revision = revision;
-		this.includeDeletions = false;
-	}
 
     public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
                                    AuditReaderImplementor versionsReader, Class<?> cls,
@@ -101,9 +94,9 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
         verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, revisionPropertyPath, 
         		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
 				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
-        
-        // e.revision_type != DEL
+
         if (!includeDeletions) {
+            // e.revision_type != DEL
             qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
         }
 

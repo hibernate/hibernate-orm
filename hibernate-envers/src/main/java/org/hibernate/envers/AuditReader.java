@@ -71,7 +71,7 @@ public interface AuditReader {
 	<T> T find(Class<T> cls, String entityName, Object primaryKey,
 			Number revision) throws IllegalArgumentException,
 			NotAuditedException, IllegalStateException;
-    
+
     /**
      * Find an entity by primary key at the given revision with the specified entityName,
      * possibly including deleted entities in the search.

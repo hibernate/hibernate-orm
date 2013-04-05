@@ -26,6 +26,7 @@ buildscript {
 }
 
 ext.hibernateTargetVersion = '4.3.0-SNAPSHOT'
+ext.javaLanguageLevel = "1.6"
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.5'
@@ -34,7 +35,7 @@ task wrapper(type: Wrapper) {
 
 idea {
     project {
-        languageLevel = '1.6'
+        languageLevel = javaLanguageLevel
         ipr {
             withXml { provider ->
                 provider.node.component.find { it.@name == 'VcsDirectoryMappings' }.mapping.@vcs = 'Git'
@@ -135,6 +136,9 @@ subprojects { subProject ->
         }
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+        targetCompatibility = rootProject.javaLanguageLevel
+        sourceCompatibility = rootProject.javaLanguageLevel
+
         task compile
         compile.dependsOn compileJava, compileTestJava
 
@@ -161,8 +165,8 @@ subprojects { subProject ->
                             "-processor", "org.jboss.logging.processor.apt.LoggingToolsProcessor",
                             "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath",
                             "-AloggingVersion=3.0",
-                            "-source", "1.6",
-                            "-target", "1.6",
+                            "-source", rootProject.javaLanguageLevel,
+                            "-target", rootProject.javaLanguageLevel,
                             "-AtranslationFilesPath=${project.rootDir}/src/main/resources"
 
                     ]
@@ -254,9 +258,6 @@ subprojects { subProject ->
 
         assemble.doLast( { install } )
         uploadArchives.dependsOn install
-
-        targetCompatibility = "1.6"
-        sourceCompatibility = "1.6"
 
         idea {
             module {

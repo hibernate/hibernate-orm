@@ -50,7 +50,6 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
-
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MapsId;
@@ -59,6 +58,10 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
+import org.jboss.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.EmptyInterceptor;
@@ -142,9 +145,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
 
 /**
  * An instance of <tt>Configuration</tt> allows the application
@@ -1045,15 +1045,17 @@ public class Configuration implements Serializable {
 			Table table = (Table) iter.next();
 			if ( table.isPhysicalTable() ) {
 
-				Iterator subIter = table.getUniqueKeyIterator();
-				while ( subIter.hasNext() ) {
-					UniqueKey uk = (UniqueKey) subIter.next();
-					String constraintString = uk.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema );
-					if (constraintString != null) script.add( constraintString );
+				if ( !dialect.supportsUniqueConstraintInCreateAlterTable() ) {
+					Iterator subIter = table.getUniqueKeyIterator();
+					while ( subIter.hasNext() ) {
+						UniqueKey uk = (UniqueKey) subIter.next();
+						String constraintString = uk.sqlCreateString( dialect, mapping, defaultCatalog, defaultSchema );
+						if (constraintString != null) script.add( constraintString );
+					}
 				}
 
 
-				subIter = table.getIndexIterator();
+				Iterator subIter = table.getIndexIterator();
 				while ( subIter.hasNext() ) {
 					Index index = (Index) subIter.next();
 					script.add(
@@ -1224,6 +1226,15 @@ public class Configuration implements Serializable {
 							)
 					);
 				}
+
+//broken, 'cos we don't generate these with names in SchemaExport
+//				subIter = table.getUniqueKeyIterator();
+//				while ( subIter.hasNext() ) {
+//					UniqueKey uk = (UniqueKey) subIter.next();
+//					if ( tableInfo==null || tableInfo.getIndexMetadata( uk.getFilterName() ) == null ) {
+//						script.add( uk.sqlCreateString(dialect, mapping) );
+//					}
+//				}
 			}
 		}
 
@@ -1531,6 +1542,7 @@ public class Configuration implements Serializable {
 	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
 		keyName = normalizer.normalizeIdentifierQuoting( keyName );
 
+		UniqueKey uc;
 		int size = columnNames.length;
 		Column[] columns = new Column[size];
 		Set<Column> unbound = new HashSet<Column>();
@@ -1547,10 +1559,10 @@ public class Configuration implements Serializable {
 				unboundNoLogical.add( new Column( column ) );
 			}
 		}
-		UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 		for ( Column column : columns ) {
 			if ( table.containsColumn( column ) ) {
-				uk.addColumn( column );
+				uc = table.getOrCreateUniqueKey( keyName );
+				uc.addColumn( table.getColumn( column ) );
 				unbound.remove( column );
 			}
 		}

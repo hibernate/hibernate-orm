@@ -15,6 +15,8 @@ import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -35,6 +37,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
+	@RequiresDialectFeature( DialectChecks.SupportNotNullUnique.class )
     public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();
@@ -72,7 +75,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 		Iterator<org.hibernate.mapping.Table> iterator = configuration().getTableMappings();
 		org.hibernate.mapping.Table tableA = null;
 		org.hibernate.mapping.Table tableB = null;
-		while( iterator.hasNext() ) {
+		while ( iterator.hasNext() ) {
 			org.hibernate.mapping.Table table = iterator.next();
 			if ( table.getName().equals( "UniqueNoNameA" ) ) {
 				tableA = table;
@@ -81,14 +84,13 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 				tableB = table;
 			}
 		}
-		
+
 		if ( tableA == null || tableB == null ) {
 			fail( "Could not find the expected tables." );
 		}
-		
-		UniqueKey ukA = (UniqueKey) tableA.getUniqueKeyIterator().next();
-		UniqueKey ukB = (UniqueKey) tableB.getUniqueKeyIterator().next();
-		assertFalse( ukA.getName().equals( ukB.getName() ) );
+
+		assertFalse( ( (UniqueKey) tableA.getUniqueKeyIterator().next() ).getName().equals(
+				( (UniqueKey) tableB.getUniqueKeyIterator().next() ).getName() ) );
 	}
 	
 	@Entity

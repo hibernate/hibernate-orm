@@ -1190,7 +1190,9 @@ public class Configuration implements Serializable {
 				Iterator uniqueIter = table.getUniqueKeyIterator();
 				while ( uniqueIter.hasNext() ) {
 					final UniqueKey uniqueKey = (UniqueKey) uniqueIter.next();
-					// Skip if index already exists
+					// Skip if index already exists.  Most of the time, this
+					// won't work since most Dialects use Constraints.  However,
+					// keep it for the few that do use Indexes.
 					if ( tableInfo != null && StringHelper.isNotEmpty( uniqueKey.getName() ) ) {
 						final IndexMetadata meta = tableInfo.getIndexMetadata( uniqueKey.getName() );
 						if ( meta != null ) {

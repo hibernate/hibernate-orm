@@ -49,7 +49,7 @@ public class AuditQueryCreator {
 
     /**
      * Creates a query, which will return entities satisfying some conditions (specified later),
-     * at a given revision.
+     * at a given revision. Deleted entities are not included.
      * @param c Class of the entities for which to query.
      * @param revision Revision number at which to execute the query.
      * @return A query for entities at a given revision, to which conditions can be added and which
@@ -60,12 +60,12 @@ public class AuditQueryCreator {
         checkNotNull(revision, "Entity revision");
         checkPositive(revision, "Entity revision");
         c = getTargetClassIfProxied(c);
-        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision);
+        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, revision, false);
     }
     
     /**
      * Creates a query, which will return entities satisfying some conditions (specified later),
-     * at a given revision and a given entityName.
+     * at a given revision and a given entityName. Deleted entities are not included.
      * @param c Class of the entities for which to query.
      * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
      * @param revision Revision number at which to execute the query.
@@ -74,10 +74,7 @@ public class AuditQueryCreator {
      * projection is added.
      */
     public AuditQuery forEntitiesAtRevision(Class<?> c, String entityName, Number revision) {
-        checkNotNull(revision, "Entity revision");
-        checkPositive(revision, "Entity revision");
-        c = getTargetClassIfProxied(c);
-        return new EntitiesAtRevisionQuery(auditCfg, auditReaderImplementor, c, entityName, revision);
+        return forEntitiesAtRevision(c, entityName, revision, false);
     }
 
     /**

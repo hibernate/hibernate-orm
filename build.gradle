@@ -196,7 +196,7 @@ subprojects { subProject ->
             Set<String> privatePackages = new HashSet<String>()
             
             // TODO: Could more of this be pulled into utilities.gradle?
-            sourceSets.each { SourceSet sourceSet ->
+            sourceSets.each { sourceSet ->
                         // skip certain source sets
                         if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
                             sourceSet.java.each { javaFile ->
@@ -206,7 +206,7 @@ subprojects { subProject ->
                                 final String[] temporaryExports = [
                                     'org.hibernate.boot.registry.classloading.internal',
                                     'org.hibernate.internal.util' ]
-                            
+
                                 final String packageName = determinePackageName( sourceSet.java, javaFile );
                                 if ( ! temporaryExports.contains( packageName )
                                         && ( packageName.endsWith( ".internal" )
@@ -244,6 +244,8 @@ subprojects { subProject ->
             systemProperties['hibernate.test.validatefailureexpected'] = true
             systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
             maxHeapSize = "1024m"
+            // Not strictly needed but useful to attach a profiler:
+            jvmArgs '-XX:MaxPermSize=256m'
         }
 
         processTestResources.doLast( {

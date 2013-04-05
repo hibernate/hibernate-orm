@@ -182,6 +182,9 @@ distributions {
 
 distZip.dependsOn prepareReleaseBundles
 distTar.dependsOn prepareReleaseBundles
+distTar {
+    compression = Compression.GZIP
+}
 
 task buildReleaseBundles( dependsOn: [distZip,distTar] ) {
     description = "Build release bundle in all formats"

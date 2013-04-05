@@ -1,5 +1,6 @@
 apply plugin: 'base'
 apply plugin: 'idea'
+apply plugin: 'distribution'
 apply from: "../utilities.gradle"
 
 buildDir = "target"
@@ -29,7 +30,7 @@ task aggregateJavadocs(type: Javadoc) {
     parent.subprojects.each{ Project subProject->
         // skip certain sub-projects
         if ( ! ['release','documentation'].contains( subProject.name ) ) {
-            subProject.sourceSets.each { SourceSet sourceSet ->
+            subProject.sourceSets.each { sourceSet ->
                 // skip certain source sets
                 if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
                     source sourceSet.java
@@ -96,106 +97,92 @@ aggregateJavadocs.doLast {
 ext.releaseBuildDir = mkdir( buildDir )
 task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,aggregateJavadocs] )
 
+distributions {
+    main {
+        baseName = 'hibernate-release'
+        contents {
+            from new File( parent.projectDir, 'lgpl.txt' )
+            from new File( parent.projectDir, 'changelog.txt' )
+            from new File( parent.projectDir, 'hibernate_logo.gif' )
 
-ext.releaseCopySpec = copySpec {
-    into( "hibernate-release-$project.version" ) {
-        from new File( parent.projectDir, 'lgpl.txt' )
-        from new File( parent.projectDir, 'changelog.txt' )
-        from new File( parent.projectDir, 'hibernate_logo.gif' )
+            into('lib/required') {
+                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
+                from parent.project( 'hibernate-core' ).configurations.runtime
+                from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                // for now,
+                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
+            }
 
-        into('lib/required') {
-            from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
-            from parent.project( 'hibernate-core' ).configurations.runtime
-            from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-            // for now, 
-            from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
-        }
+            into( 'lib/jpa' ) {
+                from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+            }
 
-//        into('lib/bytecode/javassist') {
-//            from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
-//        }
-
-        into( 'lib/jpa' ) {
-            from parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-        }
-
-        into( 'lib/envers' ) {
-            from(
-                    ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                            + parent.project( 'hibernate-envers' ).configurations.runtime )
-                            - parent.project( 'hibernate-core' ).configurations.runtime
-                            - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-                            - parent.project( 'hibernate-entitymanager' ).configurations.runtime
-                            - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files
-            )
-        }
-
-        // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
-        // due to http://issues.gradle.org/browse/GRADLE-1450
-        [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->
-            final String shortName = feature.substring( 'hibernate-'.length() );
-// WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
-//            into('lib/optional/' + shortName) {
-            owner.into('lib/optional/' + shortName) {
-                from (
-                        ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( feature ).configurations.runtime )
+            into( 'lib/envers' ) {
+                from(
+                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                                + parent.project( 'hibernate-envers' ).configurations.runtime )
                                 - parent.project( 'hibernate-core' ).configurations.runtime
                                 - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                                - parent.project( 'hibernate-entitymanager' ).configurations.runtime
+                                - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files
                 )
             }
-        }
 
-        into('documentation') {
-            from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
-        }
+            // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
+            // due to http://issues.gradle.org/browse/GRADLE-1450
+            [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->
+                final String shortName = feature.substring( 'hibernate-'.length() );
+// WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
+//                into('lib/optional/' + shortName) {
+                owner.into('lib/optional/' + shortName) {
+                    from (
+                            ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                                    + parent.project( feature ).configurations.runtime )
+                                    - parent.project( 'hibernate-core' ).configurations.runtime
+                                    - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                    )
+                }
+            }
 
-        into('documentation/javadocs') {
-            from javadocBuildDir
-        }
+            into('documentation') {
+                from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
+            }
 
-        into( 'project' ) {
-            from ( rootProject.projectDir ) {
-                exclude( '.git' )
-                exclude( '.gitignore' )
-                exclude( 'changelog.txt' )
-                exclude( 'lgpl.txt' )
-                exclude( 'hibernate_logo.gif' )
-                exclude( 'tagRelease.sh' )
-                exclude( 'gradlew' )
-                exclude( 'gradlew.bat' )
-                exclude( 'wrapper/*' )
-                exclude( '**/.gradle/**' )
-                exclude( '**/target/**' )
-                exclude( '.idea' )
-                exclude( '**/*.ipr' )
-                exclude( '**/*.iml' )
-                exclude( '**/*.iws' )
-                exclude( '**/atlassian-ide-plugin.xml' )
-                exclude( '**/.classpath' )
-                exclude( '**/.project' )
-                exclude( '**/.settings' )
-                exclude( '**/.nbattrs' )
+            into('documentation/javadocs') {
+                from javadocBuildDir
+            }
+
+            into( 'project' ) {
+                from ( rootProject.projectDir ) {
+                    exclude( '.git' )
+                    exclude( '.gitignore' )
+                    exclude( 'changelog.txt' )
+                    exclude( 'lgpl.txt' )
+                    exclude( 'hibernate_logo.gif' )
+                    exclude( 'tagRelease.sh' )
+                    exclude( 'gradlew' )
+                    exclude( 'gradlew.bat' )
+                    exclude( 'wrapper/*' )
+                    exclude( '**/.gradle/**' )
+                    exclude( '**/target/**' )
+                    exclude( '.idea' )
+                    exclude( '**/*.ipr' )
+                    exclude( '**/*.iml' )
+                    exclude( '**/*.iws' )
+                    exclude( '**/atlassian-ide-plugin.xml' )
+                    exclude( '**/.classpath' )
+                    exclude( '**/.project' )
+                    exclude( '**/.settings' )
+                    exclude( '**/.nbattrs' )
+                }
             }
         }
     }
 }
 
-task buildReleaseZip( type: Zip, dependsOn: [prepareReleaseBundles] ) {
-    description = "Build release bundle in ZIP format"
-    baseName = 'hibernate-release'
-    destinationDir = releaseBuildDir
-    with project.releaseCopySpec
-}
+distZip.dependsOn prepareReleaseBundles
+distTar.dependsOn prepareReleaseBundles
 
-task buildReleaseTgz( type: Tar, dependsOn: [prepareReleaseBundles] ) {
-    description = "Build release bundle in GZIP format"
-    baseName = 'hibernate-release'
-    destinationDir = releaseBuildDir
-    compression = Compression.GZIP
-    with project.releaseCopySpec
-}
-
-task buildReleaseBundles( dependsOn: [buildReleaseZip,buildReleaseTgz] ) {
+task buildReleaseBundles( dependsOn: [distZip,distTar] ) {
     description = "Build release bundle in all formats"
 }

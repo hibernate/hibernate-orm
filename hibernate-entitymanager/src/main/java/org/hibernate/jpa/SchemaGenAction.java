@@ -68,7 +68,7 @@ public enum SchemaGenAction {
 	 * @throws IllegalArgumentException If the incoming value is unrecognized
 	 */
 	public static SchemaGenAction interpret(String value) {
-		if ( StringHelper.isEmpty( value ) ) {
+		if ( StringHelper.isEmpty( value ) || NONE.externalName.equals( value ) ) {
 			// default is NONE
 			return NONE;
 		}

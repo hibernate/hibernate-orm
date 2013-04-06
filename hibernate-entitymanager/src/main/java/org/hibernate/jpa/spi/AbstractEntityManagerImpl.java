@@ -322,19 +322,25 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public Query createQuery(String jpaqlString) {
+		checkOpen();
 		try {
-			return applyProperties( new QueryImpl<Object>( getSession().createQuery( jpaqlString ), this ) );
+			return applyProperties( new QueryImpl<Object>( internalGetSession().createQuery( jpaqlString ), this ) );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
 		}
 	}
 
+	protected abstract void checkOpen();
+
+	@Override
 	public <T> TypedQuery<T> createQuery(String jpaqlString, Class<T> resultClass) {
+		checkOpen();
 		try {
 			// do the translation
-			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
+			org.hibernate.Query hqlQuery = internalGetSession().createQuery( jpaqlString );
 
 			resultClassChecking( resultClass, hqlQuery );
 
@@ -529,13 +535,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public <T> QueryImpl<T> createQuery(
 			String jpaqlString,
 			Class<T> resultClass,
 			Selection selection,
 			Options options) {
 		try {
-			org.hibernate.Query hqlQuery = getSession().createQuery( jpaqlString );
+			org.hibernate.Query hqlQuery = internalGetSession().createQuery( jpaqlString );
 
 			if ( options.getValueHandlers() == null ) {
 				if ( options.getResultMetadataValidator() != null ) {
@@ -675,23 +682,29 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return criteriaCompiler;
 	}
 
+	@Override
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		checkOpen();
 		return (TypedQuery<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
 	}
 
 	@Override
 	public Query createQuery(CriteriaUpdate criteriaUpdate) {
+		checkOpen();
 		return criteriaCompiler().compile( (CompilableCriteria) criteriaUpdate );
 	}
 
 	@Override
 	public Query createQuery(CriteriaDelete criteriaDelete) {
+		checkOpen();
 		return criteriaCompiler().compile( (CompilableCriteria) criteriaDelete );
 	}
 
+	@Override
 	public Query createNamedQuery(String name) {
+		checkOpen();
 		try {
-			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
+			org.hibernate.Query namedQuery = internalGetSession().getNamedQuery( name );
 			try {
 				return new QueryImpl( namedQuery, this );
 			}
@@ -704,7 +717,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
+		checkOpen();
 		try {
 			/*
 			 * Get the named query.
@@ -712,7 +727,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			 * or its associated result set mapping
 			 * If the named query is a HQL query, use getReturnType()
 			 */
-			org.hibernate.Query namedQuery = getSession().getNamedQuery( name );
+			org.hibernate.Query namedQuery = internalGetSession().getNamedQuery( name );
 			//TODO clean this up to avoid downcasting
 			final SessionFactoryImplementor factoryImplementor = entityManagerFactory.getSessionFactory();
 			final NamedSQLQueryDefinition queryDefinition = factoryImplementor.getNamedSQLQuery( name );
@@ -776,9 +791,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					);
 	}
 
+	@Override
 	public Query createNativeQuery(String sqlString) {
+		checkOpen();
 		try {
-			SQLQuery q = getSession().createSQLQuery( sqlString );
+			SQLQuery q = internalGetSession().createSQLQuery( sqlString );
 			return new QueryImpl( q, this );
 		}
 		catch ( HibernateException he ) {
@@ -786,9 +803,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public Query createNativeQuery(String sqlString, Class resultClass) {
+		checkOpen();
 		try {
-			SQLQuery q = getSession().createSQLQuery( sqlString );
+			SQLQuery q = internalGetSession().createSQLQuery( sqlString );
 			q.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 			return new QueryImpl( q, this );
 		}
@@ -797,9 +816,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public Query createNativeQuery(String sqlString, String resultSetMapping) {
+		checkOpen();
 		try {
-			SQLQuery q = getSession().createSQLQuery( sqlString );
+			SQLQuery q = internalGetSession().createSQLQuery( sqlString );
 			q.setResultSetMapping( resultSetMapping );
 			return new QueryImpl( q, this );
 		}
@@ -810,13 +831,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+		checkOpen();
 		throw new NotYetImplementedException();
 	}
 
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+		checkOpen();
 		try {
-			ProcedureCall procedureCall = getSession().createStoredProcedureCall( procedureName );
+			ProcedureCall procedureCall = internalGetSession().createStoredProcedureCall( procedureName );
 			return new StoredProcedureQueryImpl( procedureCall, this );
 		}
 		catch ( HibernateException he ) {
@@ -826,8 +849,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+		checkOpen();
 		try {
-			ProcedureCall procedureCall = getSession().createStoredProcedureCall( procedureName, resultClasses );
+			ProcedureCall procedureCall = internalGetSession().createStoredProcedureCall( procedureName, resultClasses );
 			return new StoredProcedureQueryImpl( procedureCall, this );
 		}
 		catch ( HibernateException he ) {
@@ -837,13 +861,16 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+		checkOpen();
 		throw new NotYetImplementedException();
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
+		checkOpen();
 		try {
-			return ( T ) getSession().load( entityClass, ( Serializable ) primaryKey );
+			return ( T ) internalGetSession().load( entityClass, ( Serializable ) primaryKey );
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
@@ -859,35 +886,44 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object primaryKey) {
+		checkOpen();
 		return find( entityClass, primaryKey, null, null );
 	}
 
+	@Override
 	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+		checkOpen();
 		return find( entityClass, primaryKey, null, properties );
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <A> A find(Class<A> entityClass, Object primaryKey, LockModeType lockModeType) {
+		checkOpen();
 		return find( entityClass, primaryKey, lockModeType, null );
 	}
 
+	@Override
 	public <A> A find(Class<A> entityClass, Object primaryKey, LockModeType lockModeType, Map<String, Object> properties) {
-		CacheMode previousCacheMode = getSession().getCacheMode();
+		checkOpen();
+		Session session = internalGetSession();
+		CacheMode previousCacheMode = session.getCacheMode();
 		CacheMode cacheMode = determineAppropriateLocalCacheMode( properties );
 		LockOptions lockOptions = null;
 		try {
-			getSession().setCacheMode( cacheMode );
+			session.setCacheMode( cacheMode );
 			if ( lockModeType != null ) {
 				lockOptions = getLockRequest( lockModeType, properties );
-				return ( A ) getSession().get(
+				return ( A ) session.get(
 						entityClass, ( Serializable ) primaryKey, 
 						lockOptions
 				);
 			}
 			else {
-				return ( A ) getSession().get( entityClass, ( Serializable ) primaryKey );
+				return ( A ) session.get( entityClass, ( Serializable ) primaryKey );
 			}
 		}
 		catch ( EntityNotFoundException ignored ) {
@@ -921,7 +957,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw convert( he, lockOptions );
 		}
 		finally {
-			getSession().setCacheMode( previousCacheMode );
+			session.setCacheMode( previousCacheMode );
 		}
 	}
 
@@ -952,10 +988,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public void persist(Object entity) {
+		checkOpen();
 		checkTransactionNeeded();
 		try {
-			getSession().persist( entity );
+			internalGetSession().persist( entity );
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage() );
@@ -965,11 +1003,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <A> A merge(A entity) {
+		checkOpen();
 		checkTransactionNeeded();
 		try {
-			return ( A ) getSession().merge( entity );
+			return ( A ) internalGetSession().merge( entity );
 		}
 		catch ( ObjectDeletedException sse ) {
 			throw new IllegalArgumentException( sse );
@@ -982,10 +1022,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public void remove(Object entity) {
+		checkOpen();
 		checkTransactionNeeded();
 		try {
-			getSession().delete( entity );
+			internalGetSession().delete( entity );
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
@@ -995,34 +1037,41 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public void refresh(Object entity) {
 		refresh( entity, null, null );
 	}
 
+	@Override
 	public void refresh(Object entity, Map<String, Object> properties) {
 		refresh( entity, null, properties );
 	}
 
+	@Override
 	public void refresh(Object entity, LockModeType lockModeType) {
 		refresh( entity, lockModeType, null );
 	}
 
+	@Override
 	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+		checkOpen();
 		checkTransactionNeeded();
-		CacheMode previousCacheMode = getSession().getCacheMode();
+
+		Session session = internalGetSession();
+		CacheMode previousCacheMode = session.getCacheMode();
 		CacheMode localCacheMode = determineAppropriateLocalCacheMode( properties );
 		LockOptions lockOptions = null;
 		try {
-			getSession().setCacheMode( localCacheMode );
-			if ( !getSession().contains( entity ) ) {
+			session.setCacheMode( localCacheMode );
+			if ( !session.contains( entity ) ) {
 				throw new IllegalArgumentException( "Entity not managed" );
 			}
 			if ( lockModeType != null ) {
 				lockOptions = getLockRequest( lockModeType, properties );
-				getSession().refresh( entity, lockOptions );
+				session.refresh( entity, lockOptions );
 			}
 			else {
-				getSession().refresh( entity );
+				session.refresh( entity );
 			}
 		}
 		catch ( MappingException e ) {
@@ -1032,18 +1081,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw convert( he, lockOptions );
 		}
 		finally {
-			getSession().setCacheMode( previousCacheMode );
+			session.setCacheMode( previousCacheMode );
 		}
 	}
 
+	@Override
 	public boolean contains(Object entity) {
+		checkOpen();
+
 		try {
 			if ( entity != null
 					&& !( entity instanceof HibernateProxy )
-					&& getSession().getSessionFactory().getClassMetadata( entity.getClass() ) == null ) {
+					&& internalGetSession().getSessionFactory().getClassMetadata( entity.getClass() ) == null ) {
 				throw new IllegalArgumentException( "Not an entity:" + entity.getClass() );
 			}
-			return getSession().contains( entity );
+			return internalGetSession().contains( entity );
 		}
 		catch ( MappingException e ) {
 			throw new IllegalArgumentException( e.getMessage(), e );
@@ -1053,30 +1105,43 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
+	@Override
 	public LockModeType getLockMode(Object entity) {
+		checkOpen();
+
 		if ( !contains( entity ) ) {
 			throw new IllegalArgumentException( "entity not in the persistence context" );
 		}
-		return getLockModeType( getSession().getCurrentLockMode( entity ) );
+		return getLockModeType( internalGetSession().getCurrentLockMode( entity ) );
 	}
 
+	@Override
 	public void setProperty(String s, Object o) {
+		checkOpen();
+
 		if ( entityManagerSpecificProperties.contains( s ) ) {
 			properties.put( s, o );
 			applyProperties();
-        } else LOG.debugf("Trying to set a property which is not supported on entity manager level");
+        }
+		else {
+			LOG.debugf("Trying to set a property which is not supported on entity manager level");
+		}
 	}
 
+	@Override
 	public Map<String, Object> getProperties() {
 		return Collections.unmodifiableMap( properties );
 	}
 
+	@Override
 	public void flush() {
+		checkOpen();
+
 		if ( !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "no transaction is in progress" );
 		}
 		try {
-			getSession().flush();
+			internalGetSession().flush();
 		}
 		catch ( RuntimeException e ) {
 			throw convert( e );
@@ -1094,9 +1159,19 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 * Return a Session (even if the entity manager is closed).
 	 *
 	 * @return A session.
+	 * @deprecated Deprecated in favor of {@link #getRawSession()}
 	 */
+	@Deprecated
 	protected abstract Session getRawSession();
 
+	/**
+	 * Return a Session without any validation checks.
+	 *
+	 * @return A session.
+	 */
+	protected abstract Session internalGetSession();
+
+	@Override
 	public EntityTransaction getTransaction() {
 		if ( transactionType == PersistenceUnitTransactionType.JTA ) {
 			throw new IllegalStateException( "A JTA EntityManager cannot use getTransaction()" );
@@ -1104,58 +1179,63 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return tx;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public EntityManagerFactoryImpl getEntityManagerFactory() {
+		checkOpen();
+		return internalGetEntityManagerFactory();
+	}
+
+	protected EntityManagerFactoryImpl internalGetEntityManagerFactory() {
 		return entityManagerFactory;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public HibernateEntityManagerFactory getFactory() {
 		return entityManagerFactory;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
+		checkOpen();
 		return getEntityManagerFactory().getCriteriaBuilder();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Metamodel getMetamodel() {
+		checkOpen();
 		return getEntityManagerFactory().getMetamodel();
 	}
 
+	@Override
 	public void setFlushMode(FlushModeType flushModeType) {
+		checkOpen();
 		if ( flushModeType == FlushModeType.AUTO ) {
-			getSession().setFlushMode( FlushMode.AUTO );
+			internalGetSession().setFlushMode( FlushMode.AUTO );
 		}
 		else if ( flushModeType == FlushModeType.COMMIT ) {
-			getSession().setFlushMode( FlushMode.COMMIT );
+			internalGetSession().setFlushMode( FlushMode.COMMIT );
 		}
 		else {
 			throw new AssertionFailure( "Unknown FlushModeType: " + flushModeType );
 		}
 	}
 
+	@Override
 	public void clear() {
+		checkOpen();
 		try {
-			getSession().clear();
+			internalGetSession().clear();
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
 		}
 	}
 
+	@Override
 	public void detach(Object entity) {
+		checkOpen();
 		try {
-			getSession().evict( entity );
+			internalGetSession().evict( entity );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -1168,8 +1248,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 * If it returns null, do em.unwrap(Session.class).getFlushMode() to get the
 	 * Hibernate flush mode
 	 */
+	@Override
 	public FlushModeType getFlushMode() {
-		FlushMode mode = getSession().getFlushMode();
+		checkOpen();
+
+		FlushMode mode = internalGetSession().getFlushMode();
 		if ( mode == FlushMode.AUTO ) {
 			return FlushModeType.AUTO;
 		}
@@ -1187,6 +1270,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public void lock(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
+		checkOpen();
+
 		LockOptions lockOptions = null;
 		if ( !isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "no transaction is in progress" );
@@ -1197,7 +1282,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				throw new IllegalArgumentException( "entity not in the persistence context" );
 			}
 			lockOptions = getLockRequest( lockModeType, properties );
-			getSession().buildLockRequest( lockOptions ).lock( entity );
+			internalGetSession().buildLockRequest( lockOptions ).lock( entity );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he, lockOptions );
@@ -1226,20 +1311,22 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	}
 
 	public boolean isTransactionInProgress() {
-		return ( ( SessionImplementor ) getRawSession() ).isTransactionInProgress();
+		return ( ( SessionImplementor ) internalGetSession() ).isTransactionInProgress();
 	}
 
 	private SessionFactoryImplementor sfi() {
-		return (SessionFactoryImplementor) getRawSession().getSessionFactory();
+		return (SessionFactoryImplementor) internalGetSession().getSessionFactory();
 	}
 
 	@Override
 	public <T> T unwrap(Class<T> clazz) {
+		checkOpen();
+
 		if ( Session.class.isAssignableFrom( clazz ) ) {
-			return ( T ) getSession();
+			return ( T ) internalGetSession();
 		}
 		if ( SessionImplementor.class.isAssignableFrom( clazz ) ) {
-			return ( T ) getSession();
+			return ( T ) internalGetSession();
 		}
 		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
 			return ( T ) this;
@@ -1275,7 +1362,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public boolean isJoinedToTransaction() {
-		final SessionImplementor session = (SessionImplementor) getSession();
+		checkOpen();
+
+		final SessionImplementor session = (SessionImplementor) internalGetSession();
 		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
 		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
 
@@ -1284,9 +1373,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public void joinTransaction() {
-		if( !isOpen() ){
-			throw new IllegalStateException( "EntityManager is closed" );
-		}
+		checkOpen();
 		joinTransaction( true );
 	}
 
@@ -1298,7 +1385,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return;
 		}
 
-		final SessionImplementor session = (SessionImplementor) getSession();
+		final SessionImplementor session = (SessionImplementor) internalGetSession();
 		final TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
 		final TransactionImplementor transaction = transactionCoordinator.getTransaction();
 
@@ -1350,7 +1437,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	 * returns the underlying session
 	 */
 	public Object getDelegate() {
-		return getSession();
+		checkOpen();
+		return internalGetSession();
 	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
@@ -1362,9 +1450,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		tx = new TransactionImpl( this );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void handlePersistenceException(PersistenceException e) {
 		if ( e instanceof NoResultException ) {
 			return;
@@ -1388,19 +1474,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void throwPersistenceException(PersistenceException e) {
 		handlePersistenceException( e );
 		throw e;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	//FIXME should we remove all calls to this method and use convert(RuntimeException) ?
+	@Override
 	public RuntimeException convert(HibernateException e) {
+		//FIXME should we remove all calls to this method and use convert(RuntimeException) ?
 		return convert( e, null );
 	}
 
@@ -1415,9 +1497,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		return result;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
 		if ( e instanceof StaleStateException ) {
 			PersistenceException converted = wrapStaleStateException( ( StaleStateException ) e );
@@ -1484,16 +1564,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void throwPersistenceException(HibernateException e) {
 		throw convert( e );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public PersistenceException wrapStaleStateException(StaleStateException e) {
 		PersistenceException pe;
 		if ( e instanceof StaleObjectStateException ) {
@@ -1501,7 +1577,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			Serializable identifier = sose.getIdentifier();
 			if ( identifier != null ) {
 				try {
-					Object entity = getRawSession().load( sose.getEntityName(), identifier );
+					Object entity = internalGetSession().load( sose.getEntityName(), identifier );
 					if ( entity instanceof Serializable ) {
 						//avoid some user errors regarding boundary crossing
 						pe = new OptimisticLockException( null, e, entity );

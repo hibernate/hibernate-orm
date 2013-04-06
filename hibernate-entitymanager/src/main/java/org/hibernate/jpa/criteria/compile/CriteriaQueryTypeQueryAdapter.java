@@ -38,19 +38,23 @@ import java.util.Set;
 import org.hibernate.Query;
 import org.hibernate.ejb.HibernateQuery;
 import org.hibernate.jpa.internal.QueryImpl;
+import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, HibernateQuery {
+	private final HibernateEntityManagerImplementor entityManager;
 	private final QueryImpl<X> jpaqlQuery;
 	private final Map<ParameterExpression<?>, String> explicitParameterMapping;
 	private final Map<String, ParameterExpression<?>> explicitParameterNameMapping;
 
 	public CriteriaQueryTypeQueryAdapter(
+			HibernateEntityManagerImplementor entityManager,
 			QueryImpl<X> jpaqlQuery,
 			Map<ParameterExpression<?>, String> explicitParameterMapping,
 			Map<String, ParameterExpression<?>> explicitParameterNameMapping) {
+		this.entityManager = entityManager;
 		this.jpaqlQuery = jpaqlQuery;
 		this.explicitParameterMapping = explicitParameterMapping;
 		this.explicitParameterNameMapping = explicitParameterNameMapping;
@@ -116,20 +120,24 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 
 	@SuppressWarnings({ "unchecked" })
 	public Set getParameters() {
+		entityManager.checkOpen( false );
 		return explicitParameterMapping.keySet();
 	}
 
 	public boolean isBound(Parameter<?> param) {
+		entityManager.checkOpen( false );
 		return jpaqlQuery.isBound( param );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public <T> T getParameterValue(Parameter<T> param) {
+		entityManager.checkOpen( false );
 		return ( T ) jpaqlQuery.getParameterValue( mapToNamedParameter( param ) );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public <T> TypedQuery<X> setParameter(Parameter<T> param, T t) {
+		entityManager.checkOpen( false );
 		jpaqlQuery.setParameter( mapToNamedParameter( param ), t );
 		return this;
 	}
@@ -143,12 +151,14 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar calendar, TemporalType temporalType) {
+		entityManager.checkOpen( false );
 		jpaqlQuery.setParameter( mapToNamedParameter( param ), calendar, temporalType );
 		return this;
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setParameter(Parameter<Date> param, Date date, TemporalType temporalType) {
+		entityManager.checkOpen( false );
 		jpaqlQuery.setParameter( mapToNamedParameter( param ), date, temporalType );
 		return this;
 	}
@@ -159,6 +169,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 
 	@SuppressWarnings({ "unchecked" })
 	public Object getParameterValue(String name) {
+		entityManager.checkOpen( false );
 		return getParameterValue( resolveExplicitCriteriaParameterName( name ) );
 	}
 
@@ -171,11 +182,13 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	}
 
 	public Parameter<?> getParameter(String name) {
+		entityManager.checkOpen( false );
 		return mapToNamedParameter( resolveExplicitCriteriaParameterName( name ) );
 	}
 
 	@SuppressWarnings({ "unchecked" })
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
+		entityManager.checkOpen( false );
 		Parameter parameter = resolveExplicitCriteriaParameterName( name );
 		if ( type.isAssignableFrom( parameter.getParameterType() ) ) {
 			return parameter;
@@ -188,6 +201,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setParameter(String name, Object value) {
+		entityManager.checkOpen( true );
 		setParameter(
 				resolveExplicitCriteriaParameterName( name, value ),
 				value
@@ -212,6 +226,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setParameter(String name, Calendar calendar, TemporalType temporalType) {
+		entityManager.checkOpen( true );
 		Parameter parameter = resolveExplicitCriteriaParameterName( name );
 		if ( ! Calendar.class.isAssignableFrom( parameter.getParameterType() ) ) {
 			throw new IllegalArgumentException(
@@ -226,6 +241,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setParameter(String name, Date date, TemporalType temporalType) {
+		entityManager.checkOpen( true );
 		Parameter parameter = resolveExplicitCriteriaParameterName( name );
 		if ( ! Date.class.isAssignableFrom( parameter.getParameterType() ) ) {
 			throw new IllegalArgumentException(

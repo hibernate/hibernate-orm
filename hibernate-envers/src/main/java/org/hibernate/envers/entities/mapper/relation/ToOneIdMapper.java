@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.AuditConfiguration;
 import org.hibernate.envers.entities.PropertyData;
 import org.hibernate.envers.entities.mapper.id.IdMapper;
@@ -99,7 +100,7 @@ public class ToOneIdMapper extends AbstractToOneMapper {
                 EntityInfo referencedEntity = getEntityInfo(verCfg, referencedEntityName);
                 value = ToOneEntityLoader.createProxyOrLoadImmediate(
                         versionsReader, referencedEntity.getEntityClass(), referencedEntityName,
-                        entityId, revision, verCfg
+                        entityId, revision, RevisionType.DEL.equals( data.get( verCfg.getAuditEntCfg().getRevisionTypePropName() ) ), verCfg
                 );
             }
         }

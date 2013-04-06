@@ -78,7 +78,7 @@ public interface ParameterRegistration<T> {
 	 *
 	 * @return The parameter binding
 	 */
-	public ParameterBind getParameterBind();
+	public ParameterBind<T> getBind();
 
 	/**
 	 * Bind a value to the parameter.  How this value is bound to the underlying JDBC CallableStatement is

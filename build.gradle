@@ -90,7 +90,6 @@ subprojects { subProject ->
 
         }
 
-        ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
         // appropriately inject the common dependencies into each sub-project
         dependencies {
             compile( libraries.logging )
@@ -117,11 +116,16 @@ subprojects { subProject ->
             jaxb( libraries.jaxb2_jaxb_xjc )
             deployerJars "org.apache.maven.wagon:wagon-http:1.0"
         }
-        if( ext.toolsJar.exists() ){
+
+        ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+        if ( ext.toolsJar.exists() ) {
             dependencies{
                 testCompile files( toolsJar )
             }
         }
+
+        task compile
+        compile.dependsOn compileJava, compileTestJava
 
         sourceSets.main {
             compileClasspath += configurations.provided
@@ -133,7 +137,7 @@ subprojects { subProject ->
             java.srcDir generatedLoggingSrcDir
         }
 
-        task generateMainLoggingClasses(type: Compile) {
+        task generateMainLoggingClasses(type: JavaCompile) {
             ext.aptDumpDir = subProject.file( "${buildDir}/tmp/apt/logging" )
             classpath = compileJava.classpath + configurations.jbossLoggingTool
             source = sourceSets.main.originalJavaSrcDirs
@@ -162,6 +166,9 @@ subprojects { subProject ->
 
         // for the time being eat the annoying output from running the annotation processors
         generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
+
+        task generateSources( type: Task )
+        generateSources.dependsOn generateMainLoggingClasses
 
         compileJava.dependsOn generateMainLoggingClasses
         compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
@@ -282,8 +289,8 @@ subprojects { subProject ->
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {
-            name 'A Hibernate Core Module'
-            description 'A module of the Hibernate Core project'
+            name 'A Hibernate O/RM Module'
+            description 'A module of the Hibernate O/RM project'
             url 'http://hibernate.org'
             organization {
                 name 'Hibernate.org'
@@ -345,7 +352,6 @@ subprojects { subProject ->
     }
 
 }
-dependsOnChildren()
 
 // This is a task that generates the gradlew scripts, allowing users to run gradle without having gradle installed
 // on their system.
@@ -354,5 +360,5 @@ dependsOnChildren()
 //  2) /gradlew.bat which is the windows bat script for for executing builds
 //  3) /wrapper which is a directory named by the "jarPath" config which contains other needed files.
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.1'
+    gradleVersion = '1.5'
 }

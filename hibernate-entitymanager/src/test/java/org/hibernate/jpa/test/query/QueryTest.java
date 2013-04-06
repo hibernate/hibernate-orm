@@ -23,11 +23,14 @@
  */
 package org.hibernate.jpa.test.query;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
@@ -358,6 +361,24 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void testTemporalTypeBinding() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Query query = em.createQuery( "select w from " + Wallet.class.getName() + " w where w.marketEntrance = :me" );
+		Parameter parameter = query.getParameter( "me", Date.class );
+		assertEquals( parameter.getParameterType(), Date.class );
+
+		query.setParameter( "me", new Date() );
+		query.setParameter( "me", new Date(), TemporalType.DATE );
+		query.setParameter( "me", new GregorianCalendar(), TemporalType.DATE );
+
+		em.getTransaction().commit();
+		em.close();
+
+	}
+
+	@Test
 	public void testPositionalParameterForms() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -404,12 +425,11 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.flush();
 
 
+		Query query = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
+		query.setParameter( 1, "Lacoste" );
 		try {
-			Query query = em.createQuery( "select w from Wallet w where w.brand = ?1 and w.model = ?3" );
-			query.setParameter( 1, "Lacoste" );
 			query.setParameter( 2, "Expensive" );
-			query.getResultList();
-			fail("The query should fail due to a user error in parameters");
+			fail( "Should fail due to a user error in parameters" );
 		}
 		catch ( IllegalArgumentException e ) {
 			//success

@@ -53,6 +53,19 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	public HibernateEntityManagerFactory getFactory();
 
 	/**
+	 * Used to ensure the EntityManager is open, throwing IllegalStateException if it is closed.
+	 *
+	 * Depending on the value of {@code markForRollbackIfClosed}, may also rollback any enlisted-in transaction.  This
+	 * distinction is made across various sections of the spec.  Most failed checks should rollback.  Section
+	 * 3.10.7 (per 2.1 spec) lists cases related to calls on related query objects that should not rollback.
+	 *
+	 * @param markForRollbackIfClosed If the EM is closed, should the transaction (if one) be marked for rollback?
+	 *
+	 * @throws IllegalStateException Thrown if the EM is closed
+	 */
+	public void checkOpen(boolean markForRollbackIfClosed) throws IllegalStateException;
+
+	/**
 	 * Provides access to whether a transaction is currently in progress.
 	 *
 	 * @return True if a transaction is considered currently in progress; false otherwise.

@@ -52,7 +52,7 @@ sourceSets.test {
     ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
 }
-task generateTestJpaMetamodelClasses(type: Compile) {
+task generateTestJpaMetamodelClasses(type: JavaCompile) {
     ext.aptDumpDir = file( "${buildDir}/tmp/apt/jpamodelgen" )
     classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
     source = sourceSets.test.originalJavaSrcDirs
@@ -76,6 +76,8 @@ task generateTestJpaMetamodelClasses(type: Compile) {
 generateTestJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
 compileTestJava.dependsOn generateTestJpaMetamodelClasses
 compileTestJava.options.define(compilerArgs: ["-proc:none"])
+
+generateSources.dependsOn generateTestJpaMetamodelClasses
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

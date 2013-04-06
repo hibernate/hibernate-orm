@@ -29,6 +29,8 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 
+import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
 /**
  * Defines access to a JDBC Connection for use in Schema generation
@@ -37,10 +39,13 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
  */
 class JdbcConnectionContext {
 	private final JdbcConnectionAccess jdbcConnectionAccess;
+	private final SqlStatementLogger sqlStatementLogger;
+
 	private Connection jdbcConnection;
 
-	JdbcConnectionContext(JdbcConnectionAccess jdbcConnectionAccess) {
+	JdbcConnectionContext(JdbcConnectionAccess jdbcConnectionAccess, SqlStatementLogger sqlStatementLogger) {
 		this.jdbcConnectionAccess = jdbcConnectionAccess;
+		this.sqlStatementLogger = sqlStatementLogger;
 	}
 
 	public Connection getJdbcConnection() {
@@ -64,5 +69,9 @@ class JdbcConnectionContext {
 				throw new PersistenceException( "Unable to release JDBC Connection", e );
 			}
 		}
+	}
+
+	public void logSqlStatement(String sqlStatement) {
+		sqlStatementLogger.logStatement( sqlStatement, DDLFormatterImpl.INSTANCE );
 	}
 }

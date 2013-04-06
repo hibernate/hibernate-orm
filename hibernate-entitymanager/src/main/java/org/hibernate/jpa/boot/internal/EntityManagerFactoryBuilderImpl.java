@@ -108,7 +108,6 @@ import org.hibernate.jpa.boot.scan.spi.ScanOptions;
 import org.hibernate.jpa.boot.scan.spi.ScanResult;
 import org.hibernate.jpa.boot.scan.spi.Scanner;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
-import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -995,7 +994,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						@Override
 						public EntityManagerFactoryImpl perform() {
 							hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
-
+							JpaSchemaGenerator.performGeneration( hibernateConfiguration, serviceRegistry );
 							SessionFactoryImplementor sessionFactory;
 							try {
 								sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory(
@@ -1093,13 +1092,21 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void applyJdbcConnectionProperties() {
 		if ( dataSource != null ) {
-			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, dataSource );
+			serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, dataSource );
 		}
 		else if ( persistenceUnit.getJtaDataSource() != null ) {
-			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getJtaDataSource() );
+			if ( ! serviceRegistryBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
+				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getJtaDataSource() );
+				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
+				configurationValues.put( AvailableSettings.JTA_DATASOURCE, persistenceUnit.getJtaDataSource() );
+			}
 		}
 		else if ( persistenceUnit.getNonJtaDataSource() != null ) {
-			serviceRegistryBuilder.applySetting( Environment.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+			if ( ! serviceRegistryBuilder.getSettings().containsKey( org.hibernate.cfg.AvailableSettings.DATASOURCE ) ) {
+				serviceRegistryBuilder.applySetting( org.hibernate.cfg.AvailableSettings.DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+				// HHH-8121 : make the PU-defined value available to EMF.getProperties()
+				configurationValues.put( AvailableSettings.NON_JTA_DATASOURCE, persistenceUnit.getNonJtaDataSource() );
+			}
 		}
 		else {
 			final String driver = (String) configurationValues.get( AvailableSettings.JDBC_DRIVER );

@@ -25,11 +25,10 @@ package org.hibernate.jpa.internal;
 
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
-import javax.persistence.Parameter;
+import javax.persistence.ParameterMode;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import java.util.Calendar;
 import java.util.Collection;
@@ -46,11 +45,10 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.QueryParameterException;
-import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
+import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
@@ -78,7 +76,6 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 	private org.hibernate.Query query;
 	private Set<Integer> jpaPositionalIndices;
-	private Set<Parameter<?>> parameters;
 
 	public QueryImpl(org.hibernate.Query query, AbstractEntityManagerImpl em) {
 		this( query, em, Collections.<String, Class>emptyMap() );
@@ -99,13 +96,11 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			throw new IllegalStateException( "Unknown query type for parameter extraction" );
 		}
 
-		HashSet<Parameter<?>> parameters = new HashSet<Parameter<?>>();
-		org.hibernate.internal.AbstractQueryImpl queryImpl = org.hibernate.internal.AbstractQueryImpl.class.cast( query );
+		final ParameterMetadata parameterMetadata = org.hibernate.internal.AbstractQueryImpl.class.cast( query ).getParameterMetadata();
 
 		// extract named params
-		for ( String name : (Set<String>) queryImpl.getParameterMetadata().getNamedParameterNames() ) {
-			final NamedParameterDescriptor descriptor =
-					queryImpl.getParameterMetadata().getNamedParameterDescriptor( name );
+		for ( String name : (Set<String>) parameterMetadata.getNamedParameterNames() ) {
+			final NamedParameterDescriptor descriptor = parameterMetadata.getNamedParameterDescriptor( name );
 			Class javaType = namedParameterTypeRedefinition.get( name );
 			if ( javaType != null && mightNeedRedefinition( javaType ) ) {
 				descriptor.resetExpectedType(
@@ -115,8 +110,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			else if ( descriptor.getExpectedType() != null ) {
 				javaType = descriptor.getExpectedType().getReturnedClass();
 			}
-			final ParameterImpl parameter = new ParameterImpl( name, javaType );
-			parameters.add( parameter );
+			registerParameter( new ParameterRegistrationImpl( query, name, javaType ) );
 			if ( descriptor.isJpaStyle() ) {
 				if ( jpaPositionalIndices == null ) {
 					jpaPositionalIndices = new HashSet<Integer>();
@@ -126,21 +120,15 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		}
 
 		// extract positional parameters
-		for ( int i = 0, max = queryImpl.getParameterMetadata().getOrdinalParameterCount(); i < max; i++ ) {
-			final OrdinalParameterDescriptor descriptor =
-					queryImpl.getParameterMetadata().getOrdinalParameterDescriptor( i+1 );
-			ParameterImpl parameter = new ParameterImpl(
-					i + 1,
-					descriptor.getExpectedType() == null
-							? null
-							: descriptor.getExpectedType().getReturnedClass()
-			);
-			parameters.add( parameter );
+		for ( int i = 0, max = parameterMetadata.getOrdinalParameterCount(); i < max; i++ ) {
+			final OrdinalParameterDescriptor descriptor = parameterMetadata.getOrdinalParameterDescriptor( i + 1 );
+			Class javaType = descriptor.getExpectedType() == null ? null : descriptor.getExpectedType().getReturnedClass();
+			registerParameter( new ParameterRegistrationImpl( query, i+1, javaType ) );
 			Integer position = descriptor.getOrdinalPosition();
-            if (jpaPositionalIndices != null && jpaPositionalIndices.contains(position)) LOG.parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(position);
+            if ( jpaPositionalIndices != null && jpaPositionalIndices.contains(position) ) {
+				LOG.parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(position);
+			}
 		}
-
-		this.parameters = java.util.Collections.unmodifiableSet( parameters );
 	}
 
 	private SessionFactoryImplementor sfi() {
@@ -152,33 +140,141 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		return java.util.Date.class.isAssignableFrom( javaType );
 	}
 
-	private static class ParameterImpl implements Parameter {
+
+
+	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
+		private final org.hibernate.Query query;
+
 		private final String name;
 		private final Integer position;
-		private final Class javaType;
+		private final Class<T> javaType;
 
-		private ParameterImpl(String name, Class javaType) {
+		private ParameterBind<T> bind;
+
+		private ParameterRegistrationImpl(org.hibernate.Query query, String name, Class<T> javaType) {
+			this.query = query;
 			this.name = name;
 			this.javaType = javaType;
 			this.position = null;
 		}
 
-		private ParameterImpl(Integer position, Class javaType) {
+		private ParameterRegistrationImpl(org.hibernate.Query query, Integer position, Class<T> javaType) {
+			this.query = query;
 			this.position = position;
 			this.javaType = javaType;
 			this.name = null;
 		}
 
+		@Override
 		public String getName() {
 			return name;
 		}
 
+		@Override
 		public Integer getPosition() {
 			return position;
 		}
 
-		public Class getParameterType() {
+		@Override
+		public Class<T> getParameterType() {
 			return javaType;
+		}
+
+		@Override
+		public ParameterMode getMode() {
+			// implicitly
+			return ParameterMode.IN;
+		}
+
+		@Override
+		public boolean isBindable() {
+			// again, implicitly
+			return true;
+		}
+
+		@Override
+		public void bindValue(T value) {
+			validateBinding( getParameterType(), value, null );
+
+			if ( name != null ) {
+				if ( value instanceof Collection ) {
+					query.setParameterList( name, (Collection) value );
+				}
+				else {
+					query.setParameter( name, value );
+				}
+			}
+			else {
+				query.setParameter( position-1, value );
+			}
+
+			bind = new ParameterBindImpl<T>( value, null );
+		}
+
+		@Override
+		public void bindValue(T value, TemporalType specifiedTemporalType) {
+			validateBinding( getParameterType(), value, specifiedTemporalType );
+
+			if ( Date.class.isInstance( value ) ) {
+				if ( name != null ) {
+					if ( specifiedTemporalType == DATE ) {
+						query.setDate( name, (Date) value );
+					}
+					else if ( specifiedTemporalType == TIME ) {
+						query.setTime( name, (Date) value );
+					}
+					else if ( specifiedTemporalType == TIMESTAMP ) {
+						query.setTimestamp( name, (Date) value );
+					}
+				}
+				else {
+					if ( specifiedTemporalType == DATE ) {
+						query.setDate( position-1, (Date) value );
+					}
+					else if ( specifiedTemporalType == TIME ) {
+						query.setTime( position-1, (Date) value );
+					}
+					else if ( specifiedTemporalType == TIMESTAMP ) {
+						query.setTimestamp( position-1, (Date) value );
+					}
+				}
+			}
+			else if ( Calendar.class.isInstance( value ) ) {
+				if ( name != null ) {
+					if ( specifiedTemporalType == DATE ) {
+						query.setCalendarDate( name, (Calendar) value );
+					}
+					else if ( specifiedTemporalType == TIME ) {
+						throw new IllegalArgumentException( "not yet implemented" );
+					}
+					else if ( specifiedTemporalType == TIMESTAMP ) {
+						query.setCalendar( name, (Calendar) value );
+					}
+				}
+				else {
+					if ( specifiedTemporalType == DATE ) {
+						query.setCalendarDate( position-1, (Calendar) value );
+					}
+					else if ( specifiedTemporalType == TIME ) {
+						throw new IllegalArgumentException( "not yet implemented" );
+					}
+					else if ( specifiedTemporalType == TIMESTAMP ) {
+						query.setCalendar( position-1, (Calendar) value );
+					}
+				}
+			}
+			else {
+				throw new IllegalArgumentException(
+						"Unexpected type [" + value + "] passed with TemporalType; expecting Date or Calendar"
+				);
+			}
+
+			bind = new ParameterBindImpl<T>( value, specifiedTemporalType );
+		}
+
+		@Override
+		public ParameterBind<T> getBind() {
+			return bind;
 		}
 	}
 
@@ -202,61 +298,67 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	@Override
-    protected void applyTimeout(int timeout) {
+    protected boolean applyTimeoutHint(int timeout) {
 		query.setTimeout( timeout );
+		return true;
 	}
 
 	@Override
-    protected void applyComment(String comment) {
+    protected boolean applyCommentHint(String comment) {
 		query.setComment( comment );
+		return true;
 	}
 
 	@Override
-    protected void applyFetchSize(int fetchSize) {
+    protected boolean applyFetchSizeHint(int fetchSize) {
 		query.setFetchSize( fetchSize );
+		return true;
 	}
 
 	@Override
-    protected void applyCacheable(boolean isCacheable) {
+    protected boolean applyCacheableHint(boolean isCacheable) {
 		query.setCacheable( isCacheable );
+		return true;
 	}
 
 	@Override
-    protected void applyCacheRegion(String regionName) {
+    protected boolean applyCacheRegionHint(String regionName) {
 		query.setCacheRegion( regionName );
+		return true;
 	}
 
 	@Override
-    protected void applyReadOnly(boolean isReadOnly) {
+    protected boolean applyReadOnlyHint(boolean isReadOnly) {
 		query.setReadOnly( isReadOnly );
+		return true;
 	}
 
 	@Override
-    protected void applyCacheMode(CacheMode cacheMode) {
+    protected boolean applyCacheModeHint(CacheMode cacheMode) {
 		query.setCacheMode( cacheMode );
+		return true;
 	}
 
 	@Override
-    protected void applyFlushMode(FlushMode flushMode) {
+    protected boolean applyFlushModeHint(FlushMode flushMode) {
 		query.setFlushMode( flushMode );
+		return true;
 	}
 
 	@Override
-    protected boolean canApplyLockModes() {
-		return org.hibernate.internal.QueryImpl.class.isInstance( query )
-				|| SQLQueryImpl.class.isInstance( query );
+	protected boolean canApplyAliasSpecificLockModeHints() {
+		return org.hibernate.internal.QueryImpl.class.isInstance( query ) || SQLQueryImpl.class.isInstance( query );
 	}
 
 	@Override
-	protected void applyAliasSpecificLockMode(String alias, LockMode lockMode) {
+	protected void applyAliasSpecificLockModeHint(String alias, LockMode lockMode) {
 		query.getLockOptions().setAliasSpecificLockMode( alias, lockMode );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public List<X> getResultList() {
+		getEntityManager().checkOpen( true );
 		try {
 			return query.list();
 		}
@@ -271,11 +373,10 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public X getSingleResult() {
+		getEntityManager().checkOpen( true );
 		try {
 			final List<X> result = query.list();
 
@@ -310,284 +411,12 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		}
 	}
 
-	public <T> TypedQuery<X> setParameter(Parameter<T> param, T value) {
-		if ( ! parameters.contains( param ) ) {
-			throw new IllegalArgumentException( "Specified parameter was not found in query" );
-		}
-		if ( param.getName() != null ) {
-			// a named param, for not delegate out.  Eventually delegate *into* this method...
-			setParameter( param.getName(), value );
-		}
-		else {
-			setParameter( param.getPosition(), value );
-		}
-		return this;
-	}
-
-	public TypedQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		if ( ! parameters.contains( param ) ) {
-			throw new IllegalArgumentException( "Specified parameter was not found in query" );
-		}
-		if ( param.getName() != null ) {
-			// a named param, for not delegate out.  Eventually delegate *into* this method...
-			setParameter( param.getName(), value, temporalType );
-		}
-		else {
-			setParameter( param.getPosition(), value, temporalType );
-		}
-		return this;
-	}
-
-	public TypedQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		if ( ! parameters.contains( param ) ) {
-			throw new IllegalArgumentException( "Specified parameter was not found in query" );
-		}
-		if ( param.getName() != null ) {
-			// a named param, for not delegate out.  Eventually delegate *into* this method...
-			setParameter( param.getName(), value, temporalType );
-		}
-		else {
-			setParameter( param.getPosition(), value, temporalType );
-		}
-		return this;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setParameter(String name, Object value) {
-		try {
-			if ( value instanceof Collection ) {
-				query.setParameterList( name, (Collection) value );
-			}
-			else {
-				query.setParameter( name, value );
-			}
-			registerParameterBinding( getParameter( name ), value );
-			return this;
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
-		}
-		catch (HibernateException he) {
-			throw getEntityManager().convert( he );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setParameter(String name, Date value, TemporalType temporalType) {
-		try {
-			if ( temporalType == DATE ) {
-				query.setDate( name, value );
-			}
-			else if ( temporalType == TIME ) {
-				query.setTime( name, value );
-			}
-			else if ( temporalType == TIMESTAMP ) {
-				query.setTimestamp( name, value );
-			}
-			registerParameterBinding( getParameter( name ), value );
-			return this;
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
-		}
-		catch (HibernateException he) {
-			throw getEntityManager().convert( he );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setParameter(String name, Calendar value, TemporalType temporalType) {
-		try {
-			if ( temporalType == DATE ) {
-				query.setCalendarDate( name, value );
-			}
-			else if ( temporalType == TIME ) {
-				throw new IllegalArgumentException( "not yet implemented" );
-			}
-			else if ( temporalType == TIMESTAMP ) {
-				query.setCalendar( name, value );
-			}
-			registerParameterBinding( getParameter(name), value );
-			return this;
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
-		}
-		catch (HibernateException he) {
-			throw getEntityManager().convert( he );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setParameter(int position, Object value) {
-		try {
-			if ( isJpaPositionalParameter( position ) ) {
-				this.setParameter( Integer.toString( position ), value );
-			}
-			else {
-				query.setParameter( position - 1, value );
-				registerParameterBinding( getParameter( position ), value );
-			}
-			return this;
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
-		}
-		catch (HibernateException he) {
-			throw getEntityManager().convert( he );
-		}
-	}
-
-	private boolean isJpaPositionalParameter(int position) {
+	@Override
+	protected boolean isJpaPositionalParameter(int position) {
 		return jpaPositionalIndices != null && jpaPositionalIndices.contains( position );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
-		try {
-			if ( isJpaPositionalParameter( position ) ) {
-				String name = Integer.toString( position );
-				this.setParameter( name, value, temporalType );
-			}
-			else {
-				if ( temporalType == DATE ) {
-					query.setDate( position - 1, value );
-				}
-				else if ( temporalType == TIME ) {
-					query.setTime( position - 1, value );
-				}
-				else if ( temporalType == TIMESTAMP ) {
-					query.setTimestamp( position - 1, value );
-				}
-				registerParameterBinding( getParameter( position ), value );
-			}
-			return this;
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
-		}
-		catch (HibernateException he) {
-			throw getEntityManager().convert( he );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public TypedQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
-		try {
-			if ( isJpaPositionalParameter( position ) ) {
-				String name = Integer.toString( position );
-				this.setParameter( name, value, temporalType );
-			}
-			else {
-				if ( temporalType == DATE ) {
-					query.setCalendarDate( position - 1, value );
-				}
-				else if ( temporalType == TIME ) {
-					throw new IllegalArgumentException( "not yet implemented" );
-				}
-				else if ( temporalType == TIMESTAMP ) {
-					query.setCalendar( position - 1, value );
-				}
-				registerParameterBinding( getParameter( position ), value );
-			}
-			return this;
-		}
-		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
-		}
-		catch (HibernateException he) {
-			throw getEntityManager().convert( he );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Set<Parameter<?>> getParameters() {
-		return parameters;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Parameter<?> getParameter(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "Name of parameter to locate cannot be null" );
-		}
-		for ( Parameter parameter : parameters ) {
-			if ( name.equals( parameter.getName() ) ) {
-				return parameter;
-			}
-		}
-		throw new IllegalArgumentException( "Unable to locate parameter named [" + name + "]" );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public Parameter<?> getParameter(int position) {
-		if ( isJpaPositionalParameter( position ) ) {
-			return getParameter( Integer.toString( position ) );
-		}
-		else {
-			for ( Parameter parameter : parameters ) {
-				if ( parameter.getPosition() != null && position == parameter.getPosition() ) {
-					return parameter;
-				}
-			}
-			throw new IllegalArgumentException( "Unable to locate parameter with position [" + position + "]" );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
-	public <T> Parameter<T> getParameter(String name, Class<T> type) {
-		Parameter param = getParameter( name );
-		if ( param.getParameterType() != null ) {
-			// we were able to determine the expected type during analysis, so validate it here
-			throw new IllegalArgumentException(
-					"Parameter type [" + param.getParameterType().getName() +
-							"] is not assignment compatible with requested type [" +
-							type.getName() + "]"
-			);
-		}
-		return param;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
-	public <T> Parameter<T> getParameter(int position, Class<T> type) {
-		Parameter param = getParameter( position );
-		if ( param.getParameterType() != null ) {
-			// we were able to determine the expected type during analysis, so validate it here
-			throw new IllegalArgumentException(
-					"Parameter type [" + param.getParameterType().getName() +
-							"] is not assignment compatible with requested type [" +
-							type.getName() + "]"
-			);
-		}
-		return param;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <T> T unwrap(Class<T> tClass) {
 		if ( org.hibernate.Query.class.isAssignableFrom( tClass ) ) {
@@ -608,33 +437,19 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		}
 	}
 
-	private javax.persistence.LockModeType jpaLockMode = javax.persistence.LockModeType.NONE;
-
 	@Override
-    @SuppressWarnings({ "unchecked" })
-	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
-		if (! getEntityManager().isTransactionInProgress()) {
-			throw new TransactionRequiredException( "no transaction is in progress" );
-		}
-		if ( ! canApplyLockModes() ) {
-			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
-		}
-		this.jpaLockMode = lockModeType;
+	protected void internalApplyLockMode(javax.persistence.LockModeType lockModeType) {
 		query.getLockOptions().setLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		if ( getHints() != null && getHints().containsKey( AvailableSettings.LOCK_TIMEOUT ) ) {
-			applyLockTimeout( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT ) ) );
+			applyLockTimeoutHint( ConfigurationHelper.getInteger( getHints().get( AvailableSettings.LOCK_TIMEOUT ) ) );
 		}
-		return this;
 	}
 
 	@Override
-	protected void applyLockTimeout(int timeout) {
+	protected boolean applyLockTimeoutHint(int timeout) {
 		query.getLockOptions().setTimeOut( timeout );
+		return true;
 	}
 
-	@Override
-    public javax.persistence.LockModeType getLockMode() {
-		return jpaLockMode;
-	}
 
 }

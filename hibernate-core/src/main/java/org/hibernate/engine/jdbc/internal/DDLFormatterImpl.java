@@ -34,6 +34,8 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class DDLFormatterImpl implements Formatter {
+	public static final DDLFormatterImpl INSTANCE = new DDLFormatterImpl();
+
 	/**
 	 * Format an SQL statement using simple rules<ul>
 	 * <li>Insert newline after each comma</li>

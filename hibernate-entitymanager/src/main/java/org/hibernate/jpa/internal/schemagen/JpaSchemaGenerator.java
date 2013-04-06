@@ -45,6 +45,8 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.AvailableSettings;
@@ -114,6 +116,18 @@ public class JpaSchemaGenerator {
 			final GenerationTarget scriptsTarget = new ScriptsTarget( createScriptTargetSetting, dropScriptTargetSetting, scriptsAction );
 
 			final List<GenerationTarget> targets = Arrays.asList( databaseTarget, scriptsTarget );
+
+
+			// See if native Hibernate schema generation has also been requested and warn the user if so...
+
+			final String hbm2ddl = hibernateConfiguration.getProperty( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO );
+			if ( StringHelper.isNotEmpty( hbm2ddl ) ) {
+				log.warnf(
+						"Hibernate hbm2ddl-auto setting was specified [%s] in combination with JPA schema-generation; " +
+								"combination will likely cause trouble",
+						hbm2ddl
+				);
+			}
 
 
 			// finally, do the generation
@@ -237,6 +251,8 @@ public class JpaSchemaGenerator {
 	private static JdbcConnectionContext determineAppropriateJdbcConnectionContext(
 			Configuration hibernateConfiguration,
 			ServiceRegistry serviceRegistry) {
+		final SqlStatementLogger sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
+
 		// see if a specific connection has been provided:
 		final Connection providedConnection = (Connection) hibernateConfiguration.getProperties().get(
 				AvailableSettings.SCHEMA_GEN_CONNECTION
@@ -259,7 +275,8 @@ public class JpaSchemaGenerator {
 						public boolean supportsAggressiveRelease() {
 							return false;
 						}
-					}
+					},
+					sqlStatementLogger
 			);
 		}
 
@@ -281,12 +298,13 @@ public class JpaSchemaGenerator {
 						public boolean supportsAggressiveRelease() {
 							return connectionProvider.supportsAggressiveRelease();
 						}
-					}
+					},
+					sqlStatementLogger
 			);
 		}
 
 		// otherwise, return a no-op impl
-		return new JdbcConnectionContext( null ) {
+		return new JdbcConnectionContext( null, sqlStatementLogger ) {
 			@Override
 			public Connection getJdbcConnection() {
 				throw new PersistenceException( "No connection information supplied" );
@@ -393,12 +411,12 @@ public class JpaSchemaGenerator {
 			List<GenerationSource> dropSourceList,
 			List<GenerationTarget> targets) {
 		for ( GenerationTarget target : targets ) {
-			for ( GenerationSource source : createSourceList ) {
-				target.acceptCreateCommands( source.getCommands() );
-			}
-
 			for ( GenerationSource source : dropSourceList ) {
 				target.acceptDropCommands( source.getCommands() );
+			}
+
+			for ( GenerationSource source : createSourceList ) {
+				target.acceptCreateCommands( source.getCommands() );
 			}
 		}
 	}

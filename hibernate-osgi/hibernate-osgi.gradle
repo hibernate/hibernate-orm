@@ -1,7 +1,7 @@
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( project( ':hibernate-entitymanager' ) )
-    compile( "org.osgi:org.osgi.core:4.2.0" )
+    compile( "org.osgi:org.osgi.core:4.3.0" )
 }
 
 jar {

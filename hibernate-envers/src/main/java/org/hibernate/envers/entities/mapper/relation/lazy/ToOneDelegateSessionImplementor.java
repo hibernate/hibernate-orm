@@ -42,20 +42,22 @@ public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImpl
     private final Class<?> entityClass;
     private final Object entityId;
     private final Number revision;
+    private final boolean removed;
     private final AuditConfiguration verCfg;
 
 	public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
-                                           Class<?> entityClass, Object entityId, Number revision,
+                                           Class<?> entityClass, Object entityId, Number revision, boolean removed,
                                            AuditConfiguration verCfg) {
         super(versionsReader.getSessionImplementor());
         this.versionsReader = versionsReader;
         this.entityClass = entityClass;
         this.entityId = entityId;
         this.revision = revision;
+        this.removed = removed;
         this.verCfg = verCfg;
     }
 
     public Object doImmediateLoad(String entityName) throws HibernateException {
-        return ToOneEntityLoader.loadImmediate( versionsReader, entityClass, entityName, entityId, revision, verCfg );
+        return ToOneEntityLoader.loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, verCfg );
     }
 }

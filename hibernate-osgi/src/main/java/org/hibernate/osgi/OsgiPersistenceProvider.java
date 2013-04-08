@@ -66,6 +66,9 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		// TODO: This needs tested.
 		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER,
 				new OsgiScanner( requestingBundle ) );
+		// TODO: This is temporary -- for PersistenceXmlParser's use of
+		// ClassLoaderServiceImpl#fromConfigSettings
+		properties.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
 		
 		osgiClassLoader.addBundle( requestingBundle );
 

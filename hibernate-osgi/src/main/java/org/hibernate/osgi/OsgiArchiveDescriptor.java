@@ -20,8 +20,11 @@
  */
 package org.hibernate.osgi;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+
+import javax.persistence.PersistenceException;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
@@ -55,50 +58,63 @@ public class OsgiArchiveDescriptor implements ArchiveDescriptor {
 	public void visitArchive(ArchiveContext context) {
 		Collection<String> resources = bundleWiring.listResources( "/", "*", BundleWiring.LISTRESOURCES_RECURSE );
 		for ( final String resource : resources ) {
-			try {
-				final InputStream inputStream = persistenceBundle.getResource( resource ).openStream();
-				
-				// TODO: Is using resource as the names correct?
-				
-				final InputStreamAccess inputStreamAccess = new InputStreamAccess() {
-					@Override
-					public String getStreamName() {
-						return resource;
-					}
-
-					@Override
-					public InputStream accessInputStream() {
-						return inputStream;
-					}
-
-					@Override
-					public NamedInputStream asNamedInputStream() {
-						return new NamedInputStream( resource, inputStream );
-					}
+			// TODO: Is there a better way to check this?  Karaf is including
+			// directories.
+			if ( !resource.endsWith( "/" ) ) {
+				try {
+					// TODO: Is using resource as the names correct?
 					
-				};
-				
-				final ArchiveEntry entry = new ArchiveEntry() {
-					@Override
-					public String getName() {
-						return resource;
-					}
-
-					@Override
-					public String getNameWithinArchive() {
-						return resource;
-					}
-
-					@Override
-					public InputStreamAccess getStreamAccess() {
-						return inputStreamAccess;
-					}
-				};
-				
-				context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
-			}
-			catch ( Exception e ) {
-				LOG.unableToLoadScannedClassOrResource( e );
+					final InputStreamAccess inputStreamAccess = new InputStreamAccess() {
+						@Override
+						public String getStreamName() {
+							return resource;
+						}
+	
+						@Override
+						public InputStream accessInputStream() {
+							return openInputStream();
+						}
+	
+						@Override
+						public NamedInputStream asNamedInputStream() {
+							return new NamedInputStream( resource, openInputStream() );
+						}
+						
+						private InputStream openInputStream() {
+							try {
+								return persistenceBundle.getResource( resource ).openStream();
+							}
+							catch ( IOException e ) {
+								throw new PersistenceException(
+										"Unable to open an InputStream on the OSGi Bundle resource!",
+										e );
+							}
+						}
+						
+					};
+					
+					final ArchiveEntry entry = new ArchiveEntry() {
+						@Override
+						public String getName() {
+							return resource;
+						}
+	
+						@Override
+						public String getNameWithinArchive() {
+							return resource;
+						}
+	
+						@Override
+						public InputStreamAccess getStreamAccess() {
+							return inputStreamAccess;
+						}
+					};
+					
+					context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
+				}
+				catch ( Exception e ) {
+					LOG.unableToLoadScannedClassOrResource( e );
+				}
 			}
 		}
 	}

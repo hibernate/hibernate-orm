@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.flush;
 
-import org.hibernate.testing.TestForIssue;
-
 import java.util.Map;
+
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

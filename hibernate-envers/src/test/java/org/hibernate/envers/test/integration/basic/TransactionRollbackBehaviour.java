@@ -1,13 +1,13 @@
 package org.hibernate.envers.test.integration.basic;
 
 import java.util.List;
-
 import javax.persistence.EntityManager;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.entities.IntTestEntity;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * @author Tomasz Dziurko (tdziurko at gmail dot com)

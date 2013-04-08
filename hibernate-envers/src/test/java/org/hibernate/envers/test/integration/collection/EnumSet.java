@@ -30,7 +30,7 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity;
 import org.hibernate.envers.test.entities.collection.EnumSetEntity.E1;

@@ -23,7 +23,6 @@
  */
 package org.hibernate.envers.tools;
 
-
 /**
  * A pair of objects.
  * @param <T1>

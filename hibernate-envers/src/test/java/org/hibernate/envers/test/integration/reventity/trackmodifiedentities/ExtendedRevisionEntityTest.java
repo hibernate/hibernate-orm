@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ExtendedRevisionEntity;
 import org.hibernate.envers.test.entities.reventity.trackmodifiedentities.ExtendedRevisionListener;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -23,7 +24,7 @@ public class ExtendedRevisionEntityTest extends DefaultTrackingEntitiesTest {
     @Override
     public void addConfigOptions(Map configuration) {
         super.addConfigOptions(configuration);
-        configuration.put("org.hibernate.envers.track_entities_changed_in_revision", "false");
+        configuration.put(EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "false");
     }
 
     @Test

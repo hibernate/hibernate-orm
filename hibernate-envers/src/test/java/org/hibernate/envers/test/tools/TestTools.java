@@ -33,7 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
-import org.hibernate.envers.configuration.GlobalConfiguration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
@@ -41,70 +40,61 @@ import org.hibernate.mapping.Property;
  * @author Adam Warski (adam at warski dot org)
  */
 public class TestTools {
-    public static <T> Set<T> makeSet(T... objects) {
-        Set<T> ret = new HashSet<T>();
-        //noinspection ManualArrayToCollectionCopy
-        for (T o : objects) {
-            ret.add(o);
-        }
+	public static <T> Set<T> makeSet(T... objects) {
+		final Set<T> ret = new HashSet<T>();
+		//noinspection ManualArrayToCollectionCopy
+		for ( T o : objects ) {
+			ret.add( o );
+		}
+		return ret;
+	}
 
-        return ret;
-    }
+	public static <T> List<T> makeList(T... objects) {
+		return Arrays.asList( objects );
+	}
 
-    public static <T> List<T> makeList(T... objects) {
-        return Arrays.asList(objects);
-    }
+	public static Map<Object, Object> makeMap(Object... objects) {
+		final Map<Object, Object> ret = new HashMap<Object, Object>();
+		// The number of objects must be divisable by 2.
+		//noinspection ManualArrayToCollectionCopy
+		for ( int i = 0; i < objects.length; i += 2 ) {
+			ret.put( objects[i], objects[i + 1] );
+		}
+		return ret;
+	}
 
-    public static Map<Object, Object> makeMap(Object... objects) {
-        Map<Object, Object> ret = new HashMap<Object, Object>();
-        // The number of objects must be divisable by 2.
-        //noinspection ManualArrayToCollectionCopy
-        for (int i=0; i<objects.length; i+=2) {
-            ret.put(objects[i], objects[i+1]);
-        }
-
-        return ret;
-    }
-
-    public static <T> boolean checkList(List<T> list, T... objects) {
-        if (list.size() != objects.length) {
-            return false;
-        }
-
-        for (T obj : objects) {
-            if (!list.contains(obj)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
+	public static <T> boolean checkList(List<T> list, T... objects) {
+		if ( list.size() != objects.length ) {
+			return false;
+		}
+		for ( T obj : objects ) {
+			if ( !list.contains( obj ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	public static List<Integer> extractRevisionNumbers(List queryResults) {
-		List<Integer> result = new ArrayList<Integer>();
-		for (Object queryResult : queryResults) {
-			result.add(((SequenceIdRevisionEntity) ((Object[]) queryResult)[1])
-					.getId());
+		final List<Integer> result = new ArrayList<Integer>();
+		for ( Object queryResult : queryResults ) {
+			result.add( ( (SequenceIdRevisionEntity) ( (Object[]) queryResult )[1] ).getId() );
 		}
 		return result;
 	}
 
-	public static Set<String> extractModProperties(
-			PersistentClass persistentClass) {
-		return extractModProperties(persistentClass,
-				GlobalConfiguration.DEFAULT_MODIFIED_FLAG_SUFFIX);
+	public static Set<String> extractModProperties(PersistentClass persistentClass) {
+		return extractModProperties( persistentClass, "_MOD" );
 	}
 
-	public static Set<String> extractModProperties(
-			PersistentClass persistentClass, String suffix) {
-		Set<String> result = new HashSet<String>();
-		Iterator iterator = persistentClass.getPropertyIterator();
-
-		while (iterator.hasNext()) {
-			Property property = (Property) iterator.next();
-			String propertyName = property.getName();
-			if (propertyName.endsWith(suffix)) {
-				result.add(propertyName);
+	public static Set<String> extractModProperties(PersistentClass persistentClass, String suffix) {
+		final Set<String> result = new HashSet<String>();
+		final Iterator iterator = persistentClass.getPropertyIterator();
+		while ( iterator.hasNext() ) {
+			final Property property = (Property) iterator.next();
+			final String propertyName = property.getName();
+			if ( propertyName.endsWith( suffix ) ) {
+				result.add( propertyName );
 			}
 		}
 		return result;

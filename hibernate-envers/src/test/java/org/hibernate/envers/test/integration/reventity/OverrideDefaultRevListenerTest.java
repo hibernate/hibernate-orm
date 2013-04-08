@@ -1,7 +1,6 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
-
 import org.hibernate.testing.TestForIssue;
 
 /**

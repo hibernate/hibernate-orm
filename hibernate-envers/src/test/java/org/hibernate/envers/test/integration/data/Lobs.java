@@ -27,9 +27,9 @@ import java.util.Arrays;
 import java.util.Map;
 import javax.persistence.EntityManager;
 
-import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.junit.Test;
 
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.DialectChecks;

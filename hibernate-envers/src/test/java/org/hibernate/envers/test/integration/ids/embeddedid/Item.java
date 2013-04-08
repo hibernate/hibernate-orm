@@ -1,10 +1,10 @@
 package org.hibernate.envers.test.integration.ids.embeddedid;
 
-import org.hibernate.envers.Audited;
-
 import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+
+import org.hibernate.envers.Audited;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

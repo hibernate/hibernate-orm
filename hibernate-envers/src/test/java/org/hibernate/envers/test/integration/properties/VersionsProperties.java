@@ -29,6 +29,7 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
@@ -46,10 +47,10 @@ public class VersionsProperties extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put("org.hibernate.envers.auditTablePrefix", "VP_");
-		options.put("org.hibernate.envers.auditTableSuffix", "_VS");
-		options.put("org.hibernate.envers.revisionFieldName", "ver_rev");
-		options.put("org.hibernate.envers.revisionTypeFieldName", "ver_rev_type");
+		options.put(EnversSettings.AUDIT_TABLE_PREFIX, "VP_");
+		options.put(EnversSettings.AUDIT_TABLE_SUFFIX, "_VS");
+		options.put(EnversSettings.REVISION_FIELD_NAME, "ver_rev");
+		options.put(EnversSettings.REVISION_TYPE_FIELD_NAME, "ver_rev_type");
 	}
 
 	@Test

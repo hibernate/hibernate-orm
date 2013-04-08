@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractActivity;
 import org.hibernate.envers.test.integration.inheritance.mixed.entities.AbstractCheckActivity;

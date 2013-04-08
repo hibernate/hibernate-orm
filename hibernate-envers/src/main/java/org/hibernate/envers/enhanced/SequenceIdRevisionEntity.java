@@ -23,18 +23,18 @@
  */
 package org.hibernate.envers.enhanced;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.envers.RevisionNumber;
-import org.hibernate.envers.RevisionTimestamp;
-
+import java.io.Serializable;
+import java.text.DateFormat;
+import java.util.Date;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-import java.io.Serializable;
-import java.text.DateFormat;
-import java.util.Date;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.envers.RevisionNumber;
+import org.hibernate.envers.RevisionTimestamp;
 
 /**
  * @author Adam Warski (adam at warski dot org)

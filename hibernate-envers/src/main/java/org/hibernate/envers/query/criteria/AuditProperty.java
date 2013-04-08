@@ -21,19 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.envers.query.criteria;
+
 import java.util.Collection;
 
 import org.hibernate.criterion.MatchMode;
-import org.hibernate.envers.configuration.AuditConfiguration;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.tools.Triple;
+import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
+import org.hibernate.envers.query.criteria.internal.InAuditExpression;
+import org.hibernate.envers.query.criteria.internal.NotNullAuditExpression;
+import org.hibernate.envers.query.criteria.internal.NullAuditExpression;
+import org.hibernate.envers.query.criteria.internal.PropertyAuditExpression;
+import org.hibernate.envers.query.criteria.internal.SimpleAuditExpression;
 import org.hibernate.envers.query.order.AuditOrder;
-import org.hibernate.envers.query.order.PropertyAuditOrder;
+import org.hibernate.envers.query.order.internal.PropertyAuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
-import org.hibernate.envers.query.projection.PropertyAuditProjection;
-import org.hibernate.envers.query.property.ModifiedFlagPropertyName;
-import org.hibernate.envers.query.property.PropertyNameGetter;
-import org.hibernate.envers.tools.Triple;
+import org.hibernate.envers.query.projection.internal.PropertyAuditProjection;
+import org.hibernate.envers.query.internal.property.ModifiedFlagPropertyName;
+import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * Create restrictions, projections and specify order for a property of an audited entity.
@@ -194,8 +200,7 @@ public class AuditProperty<T> implements AuditProjection {
      * property
      */
     public AggregatedAuditExpression maximize() {
-        return new AggregatedAuditExpression(propertyNameGetter,
-                AggregatedAuditExpression.AggregatedMode.MAX);
+        return new AggregatedAuditExpression(propertyNameGetter, AggregatedAuditExpression.AggregatedMode.MAX);
     }
 
     /**
@@ -203,8 +208,7 @@ public class AuditProperty<T> implements AuditProjection {
      * property
      */
     public AggregatedAuditExpression minimize() {
-        return new AggregatedAuditExpression(propertyNameGetter,
-                AggregatedAuditExpression.AggregatedMode.MIN);
+        return new AggregatedAuditExpression(propertyNameGetter, AggregatedAuditExpression.AggregatedMode.MIN);
     }
 
     // Projections

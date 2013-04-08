@@ -24,7 +24,7 @@
 package org.hibernate.envers.test.integration.modifiedflags;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.AbstractOneSessionTest;
 
 /**
@@ -39,8 +39,7 @@ public abstract class AbstractModifiedFlagsOneSessionTest extends
 	protected void addProperties(Configuration configuration) {
 		super.addProperties(configuration);
 		if (forceModifiedFlags()) {
-			configuration.setProperty(
-					GlobalConfiguration.GLOBAL_WITH_MODIFIED_FLAG_PROPERTY, "true");
+			configuration.setProperty(EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, "true");
 		}
 	}
 

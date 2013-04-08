@@ -32,6 +32,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.criteria.AuditCriterion;
@@ -59,7 +60,7 @@ public class StoreDeletedData extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put( "org.hibernate.envers.storeDataAtDelete", "true" );
+		options.put( EnversSettings.STORE_DATA_AT_DELETE, "true" );
 	}
 
 	@Test

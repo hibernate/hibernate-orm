@@ -22,7 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query.order;
-import org.hibernate.envers.configuration.AuditConfiguration;
+
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.tools.Pair;
 
 /**

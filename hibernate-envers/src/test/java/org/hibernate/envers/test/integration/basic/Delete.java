@@ -28,7 +28,7 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase ;
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
 /**

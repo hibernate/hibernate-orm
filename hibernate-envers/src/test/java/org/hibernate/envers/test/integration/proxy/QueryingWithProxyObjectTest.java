@@ -1,13 +1,11 @@
 package org.hibernate.envers.test.integration.proxy;
 
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.MappingException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;

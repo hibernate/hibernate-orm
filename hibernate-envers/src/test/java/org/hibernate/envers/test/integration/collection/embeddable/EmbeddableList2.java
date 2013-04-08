@@ -24,7 +24,6 @@
 package org.hibernate.envers.test.integration.collection.embeddable;
 
 import java.util.Arrays;
-import java.util.Date;
 import javax.persistence.EntityManager;
 
 import org.junit.Test;

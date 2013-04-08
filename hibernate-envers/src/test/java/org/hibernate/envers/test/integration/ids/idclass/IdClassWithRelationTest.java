@@ -1,13 +1,14 @@
 package org.hibernate.envers.test.integration.ids.idclass;
 
+import java.util.Arrays;
+import javax.persistence.EntityManager;
+
 import junit.framework.Assert;
+import org.junit.Test;
+
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
-
-import javax.persistence.EntityManager;
-import java.util.Arrays;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

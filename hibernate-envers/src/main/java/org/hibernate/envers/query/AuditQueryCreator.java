@@ -23,15 +23,15 @@
  */
 package org.hibernate.envers.query;
 
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.query.impl.EntitiesAtRevisionQuery;
-import org.hibernate.envers.query.impl.EntitiesModifiedAtRevisionQuery;
-import org.hibernate.envers.query.impl.RevisionsOfEntityQuery;
-import org.hibernate.envers.reader.AuditReaderImplementor;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.internal.impl.EntitiesAtRevisionQuery;
+import org.hibernate.envers.query.internal.impl.EntitiesModifiedAtRevisionQuery;
+import org.hibernate.envers.query.internal.impl.RevisionsOfEntityQuery;
 
-import static org.hibernate.envers.tools.ArgumentsTools.checkNotNull;
-import static org.hibernate.envers.tools.ArgumentsTools.checkPositive;
-import static org.hibernate.envers.tools.Tools.getTargetClassIfProxied;
+import static org.hibernate.envers.internal.tools.ArgumentsTools.checkNotNull;
+import static org.hibernate.envers.internal.tools.ArgumentsTools.checkPositive;
+import static org.hibernate.envers.internal.tools.EntityTools.getTargetClassIfProxied;
 
 /**
  * @author Adam Warski (adam at warski dot org)

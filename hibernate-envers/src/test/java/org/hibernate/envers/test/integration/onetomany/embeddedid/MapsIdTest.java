@@ -1,15 +1,14 @@
 package org.hibernate.envers.test.integration.onetomany.embeddedid;
 
+import java.util.Arrays;
 import javax.persistence.EntityManager;
 
-import org.hibernate.envers.test.Priority;
-import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-
-import java.util.Arrays;
+import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

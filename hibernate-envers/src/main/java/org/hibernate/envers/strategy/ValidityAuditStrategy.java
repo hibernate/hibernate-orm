@@ -1,8 +1,5 @@
 package org.hibernate.envers.strategy;
 
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
-
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,21 +10,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.configuration.AuditEntitiesConfiguration;
-import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
-import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.synchronization.SessionCacheCleaner;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
+import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -41,7 +40,9 @@ import org.hibernate.sql.Update;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
+
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS;
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
  *  Audit strategy which persists and retrieves audit information using a validity algorithm, based on the 

@@ -1,14 +1,9 @@
 package org.hibernate.envers.test.integration.components;
 
-import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
-
-import org.hibernate.Session;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.MappingException;
+import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.UniquePropsEntity;

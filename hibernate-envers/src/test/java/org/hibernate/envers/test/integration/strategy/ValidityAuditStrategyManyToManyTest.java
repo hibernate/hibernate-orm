@@ -7,6 +7,7 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
@@ -36,7 +37,7 @@ public class ValidityAuditStrategyManyToManyTest extends BaseEnversJPAFunctional
 
 	@Override
 	protected void addConfigOptions(Map options) {
-		options.put("org.hibernate.envers.audit_strategy", "org.hibernate.envers.strategy.ValidityAuditStrategy");
+		options.put(EnversSettings.AUDIT_STRATEGY, "org.hibernate.envers.strategy.ValidityAuditStrategy");
 	}
 
 	@Test

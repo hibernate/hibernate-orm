@@ -21,9 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.envers.query.criteria;
-import org.hibernate.envers.query.property.PropertyNameGetter;
+
+import org.hibernate.envers.query.criteria.internal.RelatedAuditExpression;
+import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * Create restrictions on an id of an entity related to an audited entity.

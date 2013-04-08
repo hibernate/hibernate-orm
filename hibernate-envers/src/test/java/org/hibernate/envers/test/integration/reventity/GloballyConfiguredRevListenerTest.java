@@ -6,6 +6,7 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -24,7 +25,7 @@ public class GloballyConfiguredRevListenerTest extends BaseEnversJPAFunctionalTe
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put("org.hibernate.envers.revision_listener", "org.hibernate.envers.test.integration.reventity.CountingRevisionListener");
+		options.put(EnversSettings.REVISION_LISTENER, CountingRevisionListener.class.getName());
 	}
 
 	@Test

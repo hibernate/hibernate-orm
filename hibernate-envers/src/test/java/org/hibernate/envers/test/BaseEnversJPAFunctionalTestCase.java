@@ -23,34 +23,33 @@
  */
 package org.hibernate.envers.test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.transaction.SystemException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.transaction.SystemException;
 
 import org.jboss.logging.Logger;
+import org.junit.After;
 
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.event.EnversIntegrator;
+import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.event.spi.EnversIntegrator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-
-import org.junit.After;
-
+import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -126,14 +125,14 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 
 		if ( StringHelper.isNotEmpty( getAuditStrategy() ) ) {
-			settings.put( "org.hibernate.envers.audit_strategy", getAuditStrategy() );
+			settings.put( EnversSettings.AUDIT_STRATEGY, getAuditStrategy() );
 		}
 
 		if ( ! autoRegisterListeners() ) {
 			settings.put( EnversIntegrator.AUTO_REGISTER, "false" );
 		}
 
-		settings.put( "org.hibernate.envers.use_revision_entity_with_native_id", "false" );
+		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
 
 		settings.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );

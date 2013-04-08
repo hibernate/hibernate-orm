@@ -3,17 +3,17 @@ package org.hibernate.envers.strategy;
 import java.io.Serializable;
 
 import org.hibernate.Session;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
-import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.synchronization.SessionCacheCleaner;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.internal.synchronization.SessionCacheCleaner;
+import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS_DEF_AUD_STR;
-import static org.hibernate.envers.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.MIDDLE_ENTITY_ALIAS_DEF_AUD_STR;
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REVISION_PARAMETER;
 
 /**
  * Default strategy is to simply persist the audit data.

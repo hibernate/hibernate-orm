@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
@@ -36,7 +37,7 @@ public class DefaultTrackingEntitiesTest extends BaseEnversJPAFunctionalTestCase
 	@Override
 	public void addConfigOptions(Map configuration) {
 		super.addConfigOptions( configuration );
-		configuration.put("org.hibernate.envers.track_entities_changed_in_revision", "true");
+		configuration.put(EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true");
 	}
 
 	@Test

@@ -7,7 +7,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 10/12/12
  */
-public class GeolatteGeometryType extends AbstractSingleColumnStandardBasicType<Geometry> {
+public class GeolatteGeometryType extends AbstractSingleColumnStandardBasicType<Geometry> implements Spatial {
 
 	public static final GeolatteGeometryType INSTANCE = new GeolatteGeometryType();
 

@@ -36,11 +36,8 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-import org.hibernate.HibernateException;
-import org.hibernate.spatial.jts.Circle;
 import org.hibernate.spatial.dialect.AbstractGeometryValueExtractor;
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-import org.hibernate.spatial.jts.mgeom.MLineString;
+import org.hibernate.spatial.jts.Circle;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -157,42 +154,41 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 			}
 		}
 
-		LineString ls = lrs ? getGeometryFactory().createMLineString( cs )
-				: getGeometryFactory().createLineString( cs );
-		return ls;
+
+		if (lrs)
+			throw new UnsupportedOperationException();
+		else
+			return getGeometryFactory().createLineString( cs );
+
 	}
 
 	private MultiLineString convertSDOMultiLine(int dim, int lrsDim,
 												SDOGeometry SDOGeom) {
 		boolean lrs = SDOGeom.isLRSGeometry();
+		if (lrs) {
+			throw new UnsupportedOperationException();
+		}
 		ElemInfo info = SDOGeom.getInfo();
-		LineString[] lines = lrs ? new MLineString[SDOGeom.getInfo().getSize()]
-				: new LineString[SDOGeom.getInfo().getSize()];
+		LineString[] lines = new LineString[SDOGeom.getInfo().getSize()];
 		int i = 0;
 		while ( i < info.getSize() ) {
 			CoordinateSequence cs = null;
 			if ( info.getElementType( i ).isCompound() ) {
 				int numCompounds = info.getNumCompounds( i );
 				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, SDOGeom ) );
-				LineString line = lrs ? getGeometryFactory().createMLineString(
-						cs
-				) : getGeometryFactory().createLineString( cs );
+				LineString line = getGeometryFactory().createLineString( cs );
 				lines[i] = line;
 				i += 1 + numCompounds;
 			}
 			else {
 				cs = add( cs, getElementCSeq( i, SDOGeom, false ) );
-				LineString line = lrs ? getGeometryFactory().createMLineString(
-						cs
-				) : getGeometryFactory().createLineString( cs );
+				LineString line = getGeometryFactory().createLineString( cs );
 				lines[i] = line;
 				i++;
 			}
 		}
 
-		MultiLineString mls = lrs ? getGeometryFactory()
-				.createMultiMLineString( (MLineString[]) lines )
-				: getGeometryFactory().createMultiLineString( lines );
+		MultiLineString mls = getGeometryFactory().createMultiLineString( lines );
 		return mls;
 
 	}
@@ -405,11 +401,13 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 			}
 			else if ( dim == 3 ) {
 				if ( SDOGeom.isLRSGeometry() ) {
-					coordinates[i] = MCoordinate.create2dWithMeasure(
-							oordinates[i * dim], // X
-							oordinates[i * dim + 1], // Y
-							oordinates[i * dim + lrsDim]
-					); // M
+
+					throw new UnsupportedOperationException();
+//					coordinates[i] = MCoordinate.create2dWithMeasure(
+//							oordinates[i * dim], // X
+//							oordinates[i * dim + 1], // Y
+//							oordinates[i * dim + lrsDim]
+//					); // M
 				}
 				else {
 					coordinates[i] = new Coordinate(
@@ -419,21 +417,21 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 					); // Z
 				}
 			}
-			else if ( dim == 4 ) {
-				// This must be an LRS Geometry
-				if ( !SDOGeom.isLRSGeometry() ) {
-					throw new HibernateException(
-							"4 dimensional Geometries must be LRS geometry"
-					);
-				}
-				coordinates[i] = MCoordinate.create3dWithMeasure(
-						oordinates[i
-								* dim], // X
-						oordinates[i * dim + 1], // Y
-						oordinates[i * dim + zDim], // Z
-						oordinates[i * dim + lrsDim]
-				); // M
-			}
+//			else if ( dim == 4 ) {
+//				// This must be an LRS Geometry
+//				if ( !SDOGeom.isLRSGeometry() ) {
+//					throw new HibernateException(
+//							"4 dimensional Geometries must be LRS geometry"
+//					);
+//				}
+//				coordinates[i] = MCoordinate.create3dWithMeasure(
+//						oordinates[i
+//								* dim], // X
+//						oordinates[i * dim + 1], // Y
+//						oordinates[i * dim + zDim], // Z
+//						oordinates[i * dim + lrsDim]
+//				); // M
+//			}
 		}
 		return getGeometryFactory().getCoordinateSequenceFactory().create(
 				coordinates
@@ -489,21 +487,22 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 			// if this is an LRS geometry, fill the measure values into
 			// the linearized array
 			if ( lrs ) {
-				MCoordinate[] mcoord = new MCoordinate[coords.length];
-				int lastIndex = coords.length - 1;
-				mcoord[0] = MCoordinate.create2dWithMeasure( x1, y1, m1 );
-				mcoord[lastIndex] = MCoordinate.create2dWithMeasure( x3, y3, m3 );
-				// convert the middle coordinates to MCoordinate
-				for ( int i = 1; i < lastIndex; i++ ) {
-					mcoord[i] = MCoordinate.convertCoordinate( coords[i] );
-					// if we happen to split on the middle measure, then
-					// assign it
-					if ( Double.compare( mcoord[i].x, x2 ) == 0
-							&& Double.compare( mcoord[i].y, y2 ) == 0 ) {
-						mcoord[i].m = m2;
-					}
-				}
-				coords = mcoord;
+				throw new UnsupportedOperationException();
+//				MCoordinate[] mcoord = new MCoordinate[coords.length];
+//				int lastIndex = coords.length - 1;
+//				mcoord[0] = MCoordinate.create2dWithMeasure( x1, y1, m1 );
+//				mcoord[lastIndex] = MCoordinate.create2dWithMeasure( x3, y3, m3 );
+//				// convert the middle coordinates to MCoordinate
+//				for ( int i = 1; i < lastIndex; i++ ) {
+//					mcoord[i] = MCoordinate.convertCoordinate( coords[i] );
+//					// if we happen to split on the middle measure, then
+//					// assign it
+//					if ( Double.compare( mcoord[i].x, x2 ) == 0
+//							&& Double.compare( mcoord[i].y, y2 ) == 0 ) {
+//						mcoord[i].m = m2;
+//					}
+//				}
+//				coords = mcoord;
 			}
 
 			// if this is not the first arcsegment, the first linearized

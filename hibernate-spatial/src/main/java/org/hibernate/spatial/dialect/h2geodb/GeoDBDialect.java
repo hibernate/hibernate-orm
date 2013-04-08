@@ -25,7 +25,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
@@ -118,8 +117,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		);
 		registerFunction(
 				"envelope", new StandardSQLFunction(
-				"ST_Envelope",
-				JTSGeometryType.INSTANCE
+				"ST_Envelope"
 		)
 		);
 		registerFunction(
@@ -212,8 +210,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		);
 		registerFunction(
 				"buffer", new StandardSQLFunction(
-				"ST_Buffer",
-				JTSGeometryType.INSTANCE
+				"ST_Buffer"
 		)
 		);
 		// NOT YET AVAILABLE IN GEODB

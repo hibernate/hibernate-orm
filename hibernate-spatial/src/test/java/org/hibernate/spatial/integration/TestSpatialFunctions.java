@@ -48,8 +48,6 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	private static Log LOG = LogFactory.make();
 
-	private static String JTS = "jts";
-	private static String GEOLATTE = "geolatte";
 
 	protected Log getLogger() {
 		return LOG;
@@ -71,7 +69,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Integer> dbexpected = expectationsFactory.getDimension();
 		String hql = format( "SELECT id, dimension(geom) FROM org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -90,7 +88,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, String> dbexpected = expectationsFactory.getAsText();
 		String hql = format( "SELECT id, astext(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg);
 	}
 
 	@Test
@@ -110,7 +108,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, byte[]> dbexpected = expectationsFactory.getAsBinary();
 		String hql = format( "SELECT id, asbinary(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -132,7 +130,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 				"SELECT id, geometrytype(geom) from org.hibernate.spatial.integration.%s.GeomEntity",
 				pckg
 		);
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -151,7 +149,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Integer> dbexpected = expectationsFactory.getSrid();
 		String hql = format( "SELECT id, srid(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -170,7 +168,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getIsSimple();
 		String hql = format( "SELECT id, issimple(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -189,7 +187,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getIsEmpty();
 		String hql = format( "SELECT id, isEmpty(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -208,7 +206,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Geometry> dbexpected = expectationsFactory.getBoundary();
 		String hql = format( "SELECT id, boundary(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg );
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -227,7 +225,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		}
 		Map<Integer, Geometry> dbexpected = expectationsFactory.getEnvelope();
 		String hql = format("SELECT id, envelope(geom) from org.hibernate.spatial.integration.%s.GeomEntity", pckg);
-		retrieveHQLResultsAndCompare( dbexpected, hql );
+		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
 	@Test
@@ -248,7 +246,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, within(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where within(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -269,7 +267,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, equals(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where equals(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -290,7 +288,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, crosses(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where crosses(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 
 	}
 
@@ -312,7 +310,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, contains(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where contains(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -333,7 +331,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, disjoint(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where disjoint(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -354,7 +352,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, intersects(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where intersects(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -375,7 +373,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, overlaps(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where overlaps(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -396,7 +394,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 				"where touches(geom, :filter) = true and srid(geom) = 4326", pckg);
 		Map<Integer, Boolean> dbexpected = expectationsFactory.getTouches( expectationsFactory.getTestPolygon() );
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -422,12 +420,12 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 				"where relate(geom, :filter, :matrix) = true and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
 		params.put( "matrix", matrix );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 
 		matrix = "FF*FF****";
 		dbexpected = expectationsFactory.getRelate( expectationsFactory.getTestPolygon(), matrix );
 		params.put( "matrix", matrix );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 
 	}
 
@@ -449,7 +447,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, distance(geom, :filter) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -470,7 +468,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, buffer(geom, :distance) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "distance", Double.valueOf( 1.0 ) );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 
 	}
 
@@ -492,7 +490,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, convexhull(geomunion(geom, :polygon)) from org.hibernate.spatial.integration" +
 				".%s.GeomEntity where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "polygon", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 
 	}
 
@@ -514,7 +512,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, intersection(geom, :polygon) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "polygon", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -535,7 +533,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, difference(geom, :polygon) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "polygon", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -556,7 +554,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, symdifference(geom, :polygon) from " +
 				"org.hibernate.spatial.integration.%s.GeomEntity where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "polygon", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -577,7 +575,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, geomunion(geom, :polygon) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "polygon", expectationsFactory.getTestPolygon() );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg);
 	}
 
 	@Test
@@ -604,7 +602,7 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 				"and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPoint() );
 		params.put( "distance", 30.0 );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 
 	@Test
@@ -626,18 +624,18 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		String hql = format("SELECT id, transform(geom, :epsg) from org.hibernate.spatial.integration.%s.GeomEntity " +
 				"where srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "epsg", Integer.valueOf( epsg ) );
-		retrieveHQLResultsAndCompare( dbexpected, hql, params );
+		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 
 	}
 
-	public <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql) {
-		retrieveHQLResultsAndCompare( dbexpected, hql, null );
+	public <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, String geometryType) {
+		retrieveHQLResultsAndCompare( dbexpected, hql, null, geometryType);
 	}
 
-	protected <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, Map<String, Object> params) {
+	protected <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, Map<String, Object> params, String geometryType) {
 		Map<Integer, T> hsreceived = new HashMap<Integer, T>();
 		doInSession( hql, hsreceived, params );
-		compare( dbexpected, hsreceived );
+		compare( dbexpected, hsreceived, geometryType );
 	}
 
 	private Map<String, Object> createQueryParams(String filterParamName, Object value) {

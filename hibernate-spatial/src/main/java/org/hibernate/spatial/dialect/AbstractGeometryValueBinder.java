@@ -26,9 +26,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 
-import org.hibernate.spatial.jts.JTS;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
@@ -40,6 +39,8 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public abstract class AbstractGeometryValueBinder<X> extends BasicBinder<X> {
 
+	private static GeometryFactory geometryFactory = new GeometryFactory();
+
 	public AbstractGeometryValueBinder(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlDescriptor) {
 		super( javaDescriptor, sqlDescriptor );
 	}
@@ -50,8 +51,8 @@ public abstract class AbstractGeometryValueBinder<X> extends BasicBinder<X> {
 		st.setObject( index, dbGeom );
 	}
 
-	protected MGeometryFactory getGeometryFactory() {
-		return JTS.getDefaultGeometryFactory();
+	protected GeometryFactory getGeometryFactory() {
+		return geometryFactory;
 	}
 
 	protected abstract Object toNative(Geometry jtsGeom, Connection connection);

@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -36,8 +35,7 @@ class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFun
 		);
 		functionsToRegister.put(
 				"envelope", new StandardSQLFunction(
-				"envelope",
-				JTSGeometryType.INSTANCE
+				"envelope"
 		)
 		);
 		functionsToRegister.put(
@@ -64,12 +62,11 @@ class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFun
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
-				"boundary", new StandardSQLFunction(
-				"boundary",
-				JTSGeometryType.INSTANCE
-		)
-		);
+//		functionsToRegister.put(
+//				"boundary", new StandardSQLFunction(
+//				"boundary"
+//		)
+//		);
 
 		// Register functions for spatial relation constructs
 		functionsToRegister.put(
@@ -120,54 +117,50 @@ class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFun
 				StandardBasicTypes.BOOLEAN
 		)
 		);
-		functionsToRegister.put(
-				"relate", new StandardSQLFunction(
-				"relate",
-				StandardBasicTypes.BOOLEAN
-		)
-		);
-
-		// register the spatial analysis functions
-		functionsToRegister.put(
-				"distance", new StandardSQLFunction(
-				"distance",
-				StandardBasicTypes.DOUBLE
-		)
-		);
-		functionsToRegister.put(
-				"buffer", new StandardSQLFunction(
-				"buffer",
-				JTSGeometryType.INSTANCE
-		)
-		);
-		functionsToRegister.put(
-				"convexhull", new StandardSQLFunction(
-				"convexhull",
-				JTSGeometryType.INSTANCE
-		)
-		);
-		functionsToRegister.put(
-				"difference", new StandardSQLFunction(
-				"difference",
-				JTSGeometryType.INSTANCE
-		)
-		);
-		functionsToRegister.put(
-				"intersection", new StandardSQLFunction(
-				"intersection", JTSGeometryType.INSTANCE
-		)
-		);
-		functionsToRegister.put(
-				"symdifference", new StandardSQLFunction(
-				"symdifference", JTSGeometryType.INSTANCE
-		)
-		);
-		functionsToRegister.put(
-				"geomunion", new StandardSQLFunction(
-				"union",
-				JTSGeometryType.INSTANCE
-		)
-		);
+//		functionsToRegister.put(
+//				"relate", new StandardSQLFunction(
+//				"relate",
+//				StandardBasicTypes.BOOLEAN
+//		)
+//		);
+//
+//		// register the spatial analysis functions
+//		functionsToRegister.put(
+//				"distance", new StandardSQLFunction(
+//				"distance",
+//				StandardBasicTypes.DOUBLE
+//		)
+//		);
+//		functionsToRegister.put(
+//				"buffer", new StandardSQLFunction(
+//				"buffer"
+//		)
+//		);
+//		functionsToRegister.put(
+//				"convexhull", new StandardSQLFunction(
+//				"convexhull"
+//		)
+//		);
+//		functionsToRegister.put(
+//				"difference", new StandardSQLFunction(
+//				"difference"
+//		)
+//		);
+//		functionsToRegister.put(
+//				"intersection", new StandardSQLFunction(
+//				"intersection"
+//		)
+//		);
+//		functionsToRegister.put(
+//				"symdifference", new StandardSQLFunction(
+//				"symdifference"
+//		)
+//		);
+//		functionsToRegister.put(
+//				"geomunion", new StandardSQLFunction(
+//				"union"
+//		)
+//		);
 	}
 
 	@Override

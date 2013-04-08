@@ -21,17 +21,17 @@
 
 package org.hibernate.spatial.dialect;
 
-import com.vividsolutions.jts.geom.Geometry;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
-import org.hibernate.spatial.jts.JTS;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.sql.BasicExtractor;
-
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+
+import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicExtractor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -39,12 +39,16 @@ import java.sql.SQLException;
  */
 public abstract class AbstractGeometryValueExtractor<X> extends BasicExtractor<X> {
 
+	// later this will need to be configurable. So define this only once for both
+	// extractor and binder.
+	private static GeometryFactory geometryFactory = new GeometryFactory();
+
 	public AbstractGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, GeometrySqlTypeDescriptor typeDescriptor) {
 		super( javaDescriptor, typeDescriptor );
 	}
 
-	protected MGeometryFactory getGeometryFactory() {
-		return JTS.getDefaultGeometryFactory();
+	protected GeometryFactory getGeometryFactory() {
+		return geometryFactory;
 	}
 
 	@Override

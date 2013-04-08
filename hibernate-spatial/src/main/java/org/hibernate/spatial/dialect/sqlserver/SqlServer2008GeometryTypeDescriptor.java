@@ -29,10 +29,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.sqlserver.Decoders;
+import org.geolatte.geom.codec.sqlserver.Encoders;
 
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
-import org.hibernate.spatial.dialect.sqlserver.convertors.Decoders;
-import org.hibernate.spatial.dialect.sqlserver.convertors.Encoders;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;

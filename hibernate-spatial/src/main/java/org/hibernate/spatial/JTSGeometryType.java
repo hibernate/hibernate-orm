@@ -29,7 +29,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
  *
  * @author Karel Maesen
  */
-public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geometry> {
+public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geometry> implements Spatial {
 
 	public static final JTSGeometryType INSTANCE = new JTSGeometryType();
 

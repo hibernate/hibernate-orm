@@ -22,7 +22,6 @@
 package org.hibernate.spatial.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
@@ -53,7 +52,7 @@ public class HavingSridExpression implements Criterion {
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
-				new TypedValue( StandardBasicTypes.INTEGER, Integer.valueOf( srid ), EntityMode.POJO )
+				new TypedValue( StandardBasicTypes.INTEGER, srid )
 		};
 	}
 

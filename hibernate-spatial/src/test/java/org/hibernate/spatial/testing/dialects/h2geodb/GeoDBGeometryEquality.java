@@ -35,6 +35,7 @@ import org.hibernate.spatial.testing.GeometryEquality;
  *
  * @author Jan Boonen, Geodan IT b.v.
  */
+@Deprecated //NO LONGER REQUIRED
 public class GeoDBGeometryEquality extends GeometryEquality {
 
 	@Override

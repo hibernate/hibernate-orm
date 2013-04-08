@@ -40,7 +40,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.helper.FinderException;
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -341,6 +340,10 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	 */
 	private Double[] convertCoordinates(Coordinate[] coordinates, int dim,
 										boolean isLrs) {
+
+		if (isLrs)
+			throw new UnsupportedOperationException();
+
 		if ( dim > 4 ) {
 			throw new IllegalArgumentException(
 					"Dim parameter value cannot be greater than 4"
@@ -348,18 +351,18 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 		}
 		Double[] converted = new Double[coordinates.length * dim];
 		for ( int i = 0; i < coordinates.length; i++ ) {
-			MCoordinate c = MCoordinate.convertCoordinate( coordinates[i] );
+			Coordinate c = coordinates[i];
 
 			// set the X and Y values
 			converted[i * dim] = toDouble( c.x );
 			converted[i * dim + 1] = toDouble( c.y );
 			if ( dim == 3 ) {
-				converted[i * dim + 2] = isLrs ? toDouble( c.m ) : toDouble( c.z );
-			}
-			else if ( dim == 4 ) {
 				converted[i * dim + 2] = toDouble( c.z );
-				converted[i * dim + 3] = toDouble( c.m );
 			}
+//			else if ( dim == 4 ) {
+//				converted[i * dim + 2] = toDouble( c.z );
+//				converted[i * dim + 3] = toDouble( c.m );
+//			}
 		}
 		return converted;
 	}
@@ -392,7 +395,7 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 		// This shall be cleaner if MCoordinate.getOrdinate(int ordinateIndex)
 		// is moved to the
 		// Coordinate class
-		MCoordinate c = MCoordinate.convertCoordinate( geom.getCoordinate() );
+		Coordinate c = geom.getCoordinate();
 		int d = 0;
 		if ( c != null ) {
 			if ( !Double.isNaN( c.x ) ) {
@@ -404,9 +407,9 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 			if ( !Double.isNaN( c.z ) ) {
 				d++;
 			}
-			if ( !Double.isNaN( c.m ) ) {
-				d++;
-			}
+//			if ( !Double.isNaN( c.m ) ) {
+//				d++;
+//			}
 		}
 		return d;
 	}
@@ -426,11 +429,11 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	 * @return the lrs position for the SDOGeometry.SDOGType
 	 */
 	private int getCoordinateLrsPosition(Geometry geom) {
-		MCoordinate c = MCoordinate.convertCoordinate( geom.getCoordinate() );
+		Coordinate c = geom.getCoordinate();
 		int measurePos = 0;
-		if ( c != null && !Double.isNaN( c.m ) ) {
-			measurePos = ( Double.isNaN( c.z ) ) ? 3 : 4;
-		}
+//		if ( c != null && !Double.isNaN( c.m ) ) {
+//			measurePos = ( Double.isNaN( c.z ) ) ? 3 : 4;
+//		}
 		return measurePos;
 	}
 

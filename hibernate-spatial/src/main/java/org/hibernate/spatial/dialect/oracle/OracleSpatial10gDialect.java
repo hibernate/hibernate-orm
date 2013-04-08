@@ -35,9 +35,9 @@ import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
+import org.hibernate.spatial.Spatial;
 import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -57,114 +57,10 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		SpatialDialect, Serializable {
 
 
-	/**
-	 * Implementation of the OGC astext function for HQL.
-	 */
-	private class AsTextFunction extends StandardSQLFunction {
-
-		private AsTextFunction() {
-			super( "astext", StandardBasicTypes.STRING );
-		}
-
-		public String render(Type firstArgumentType, final List args,
-							 final SessionFactoryImplementor factory) {
-
-			StringBuffer buf = new StringBuffer();
-			if ( args.isEmpty() ) {
-				throw new IllegalArgumentException(
-						"First Argument in arglist must be object "
-								+ "to which method is applied"
-				);
-			}
-
-			buf.append( "TO_CHAR(SDO_UTIL.TO_WKTGEOMETRY(" ).append( args.get( 0 ) )
-					.append( "))" );
-			return buf.toString();
-		}
-	}
-
-
-	/**
-	 * HQL Spatial relation function.
-	 */
-	private class SpatialRelateFunction extends StandardSQLFunction {
-		private final int relation;
-
-		private SpatialRelateFunction(final String name, final int relation) {
-			super(
-					name, isOGCStrict() ? StandardBasicTypes.BOOLEAN
-					: new SDOBooleanType()
-			);
-			this.relation = relation;
-		}
-
-		public String render(Type firstArgumentType, final List args,
-							 final SessionFactoryImplementor factory) {
-
-			if ( args.size() < 2 ) {
-				throw new QueryException(
-						"Spatial relate functions require at least two arguments"
-				);
-			}
-
-			String srf;
-			return isOGCStrict() ?
-					getOGCSpatialRelateSQL(
-							(String) args.get( 0 ),
-							(String) args.get( 1 ), this.relation
-					) :
-					getNativeSpatialRelateSQL(
-							(String) args.get( 0 ),
-							(String) args.get( 1 ), this.relation
-					);
-		}
-
-	}
-
-	private class SpatialAnalysisFunction extends StandardSQLFunction {
-		private final int analysis;
-
-		private SpatialAnalysisFunction(String name, Type returnType,
-										int analysis) {
-			super( name, returnType );
-			this.analysis = analysis;
-		}
-
-		public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) {
-			return isOGCStrict() ? getSpatialAnalysisSQL(
-					args, this.analysis,
-					false
-			) : getNativeSpatialAnalysisSQL( args, analysis );
-		}
-
-	}
-
-	private class SpatialAggregationFunction extends StandardSQLFunction {
-
-		private final int aggregation;
-
-		private SpatialAggregationFunction(String name, Type returnType,
-										   boolean isProjection, int aggregation) {
-			super( name, returnType );
-			this.aggregation = aggregation;
-		}
-
-		public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) {
-			return getNativeSpatialAggregateSQL(
-					(String) args.get( 0 ),
-					this.aggregation
-			);
-		}
-	}
-
 	public final static String SHORT_NAME = "oraclespatial";
-
 	private final static String CONNECTION_FINDER_PROPERTY = "CONNECTION-FINDER";
-
 	private final static Log LOG = LogFactory.make();
-
 	private String OGC_STRICT = "OGC_STRICT";
-
 	private Map<String, Boolean> features = new HashMap<String, Boolean>();
 
 	public OracleSpatial10gDialect() {
@@ -188,204 +84,81 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		// section 2.1.1.1
 		registerFunction( "dimension", new GetDimensionFunction() );
 		registerFunction( "geometrytype", new GetGeometryTypeFunction() );
-		registerFunction(
-				"srid", new SDOObjectProperty(
-				"SDO_SRID",
-				StandardBasicTypes.INTEGER
-		)
-		);
-		registerFunction(
-				"envelope",
-				new StandardSQLFunction( "SDO_GEOM.SDO_MBR", JTSGeometryType.INSTANCE )
-		);
+		registerFunction( "srid", new SDOObjectProperty( "SDO_SRID", StandardBasicTypes.INTEGER ) );
+		registerFunction( "envelope", new StandardSQLFunction( "SDO_GEOM.SDO_MBR" ) );
 		registerFunction( "astext", new AsTextFunction() );
-
+		registerFunction( "asbinary", new StandardSQLFunction( "SDO_UTIL.TO_WKBGEOMETRY", StandardBasicTypes.BINARY ) );
 		registerFunction(
-				"asbinary", new StandardSQLFunction(
-				"SDO_UTIL.TO_WKBGEOMETRY", StandardBasicTypes.BINARY
-		)
+				"isempty",
+				new WrappedOGCFunction( "OGC_ISEMPTY", StandardBasicTypes.BOOLEAN, new boolean[] { true } )
 		);
 		registerFunction(
-				"isempty", new WrappedOGCFunction(
-				"OGC_ISEMPTY",
-				StandardBasicTypes.BOOLEAN, new boolean[] { true }
-		)
+				"issimple",
+				new WrappedOGCFunction( "OGC_ISSIMPLE", StandardBasicTypes.BOOLEAN, new boolean[] { true } )
 		);
-		registerFunction(
-				"issimple", new WrappedOGCFunction(
-				"OGC_ISSIMPLE",
-				StandardBasicTypes.BOOLEAN, new boolean[] { true }
-		)
-		);
-		registerFunction(
-				"boundary", new WrappedOGCFunction(
-				"OGC_BOUNDARY",
-				JTSGeometryType.INSTANCE,
-				new boolean[] { true }
-		)
-		);
+		registerFunction( "boundary", new WrappedOGCFunction( "OGC_BOUNDARY", new boolean[] { true } ) );
 
 		// registerFunction("area", new AreaFunction());
 
 		// Register functions for spatial relation constructs
 		// section 2.1.1.2
+		registerFunction( "overlaps", new SpatialRelateFunction( "overlaps", SpatialRelation.OVERLAPS ) );
+		registerFunction( "intersects", new SpatialRelateFunction( "intersects", SpatialRelation.INTERSECTS ) );
+		registerFunction( "contains", new SpatialRelateFunction( "contains", SpatialRelation.CONTAINS ) );
+		registerFunction( "crosses", new SpatialRelateFunction( "crosses", SpatialRelation.CROSSES ) );
+		registerFunction( "disjoint", new SpatialRelateFunction( "disjoint", SpatialRelation.DISJOINT ) );
+		registerFunction( "equals", new SpatialRelateFunction( "equals", SpatialRelation.EQUALS ) );
+		registerFunction( "touches", new SpatialRelateFunction( "touches", SpatialRelation.TOUCHES ) );
+		registerFunction( "within", new SpatialRelateFunction( "within", SpatialRelation.WITHIN ) );
 		registerFunction(
-				"overlaps", new SpatialRelateFunction(
-				"overlaps",
-				SpatialRelation.OVERLAPS
-		)
-		);
-		registerFunction(
-				"intersects", new SpatialRelateFunction(
-				"intersects",
-				SpatialRelation.INTERSECTS
-		)
-		);
-		registerFunction(
-				"contains", new SpatialRelateFunction(
-				"contains",
-				SpatialRelation.CONTAINS
-		)
-		);
-		registerFunction(
-				"crosses", new SpatialRelateFunction(
-				"crosses",
-				SpatialRelation.CROSSES
-		)
-		);
-		registerFunction(
-				"disjoint", new SpatialRelateFunction(
-				"disjoint",
-				SpatialRelation.DISJOINT
-		)
-		);
-		registerFunction(
-				"equals", new SpatialRelateFunction(
-				"equals",
-				SpatialRelation.EQUALS
-		)
-		);
-		registerFunction(
-				"touches", new SpatialRelateFunction(
-				"touches",
-				SpatialRelation.TOUCHES
-		)
-		);
-		registerFunction(
-				"within", new SpatialRelateFunction(
-				"within",
-				SpatialRelation.WITHIN
-		)
-		);
-		registerFunction(
-				"relate", new WrappedOGCFunction(
-				"OGC_RELATE",
-				StandardBasicTypes.BOOLEAN, new boolean[] { true, true, false }
-		)
+				"relate",
+				new WrappedOGCFunction( "OGC_RELATE", StandardBasicTypes.BOOLEAN, new boolean[] { true, true, false } )
 		);
 
 		// Register spatial analysis functions.
 		// Section 2.1.1.3
 		registerFunction(
-				"distance", new SpatialAnalysisFunction(
 				"distance",
-				StandardBasicTypes.DOUBLE, SpatialAnalysis.DISTANCE
-		)
+				new SpatialAnalysisFunction( "distance", StandardBasicTypes.DOUBLE, SpatialAnalysis.DISTANCE )
 		);
+		registerFunction( "buffer", new SpatialAnalysisFunction( "buffer", SpatialAnalysis.BUFFER ) );
+		registerFunction( "convexhull", new SpatialAnalysisFunction( "convexhull", SpatialAnalysis.CONVEXHULL ) );
+		registerFunction( "difference", new SpatialAnalysisFunction( "difference", SpatialAnalysis.DIFFERENCE ) );
+		registerFunction( "intersection", new SpatialAnalysisFunction( "intersection", SpatialAnalysis.INTERSECTION ) );
 		registerFunction(
-				"buffer", new SpatialAnalysisFunction(
-				"buffer",
-				JTSGeometryType.INSTANCE,
-				SpatialAnalysis.BUFFER
-		)
+				"symdifference",
+				new SpatialAnalysisFunction( "symdifference", SpatialAnalysis.SYMDIFFERENCE )
 		);
-		registerFunction(
-				"convexhull", new SpatialAnalysisFunction(
-				"convexhull", JTSGeometryType.INSTANCE,
-				SpatialAnalysis.CONVEXHULL
-		)
-		);
-		registerFunction(
-				"difference", new SpatialAnalysisFunction(
-				"difference", JTSGeometryType.INSTANCE,
-				SpatialAnalysis.DIFFERENCE
-		)
-		);
-		registerFunction(
-				"intersection", new SpatialAnalysisFunction(
-				"intersection", JTSGeometryType.INSTANCE,
-				SpatialAnalysis.INTERSECTION
-		)
-		);
-		registerFunction(
-				"symdifference", new SpatialAnalysisFunction(
-				"symdifference", JTSGeometryType.INSTANCE,
-				SpatialAnalysis.SYMDIFFERENCE
-		)
-		);
-		registerFunction(
-				"geomunion", new SpatialAnalysisFunction(
-				"union",
-				JTSGeometryType.INSTANCE,
-				SpatialAnalysis.UNION
-		)
-		);
+		registerFunction( "geomunion", new SpatialAnalysisFunction( "union", SpatialAnalysis.UNION ) );
 		// we rename OGC union to geomunion because union is a reserved SQL
 		// keyword. (See also postgis documentation).
 
 		// portable spatial aggregate functions
-		registerFunction(
-				"extent", new SpatialAggregationFunction(
-				"extent",
-				JTSGeometryType.INSTANCE, false,
-				OracleSpatialAggregate.EXTENT
-		)
-		);
+		registerFunction(	"extent", new SpatialAggregationFunction("extent", false, OracleSpatialAggregate.EXTENT) );
 
 		//other common functions
-		registerFunction(
-				"transform", new StandardSQLFunction(
-				"SDO_CS.TRANSFORM",
-				JTSGeometryType.INSTANCE
-		)
-		);
+		registerFunction( "transform", new StandardSQLFunction("SDO_CS.TRANSFORM"));
 
 		// Oracle specific Aggregate functions
 		registerFunction(
-				"centroid", new SpatialAggregationFunction(
-				"extent",
-				JTSGeometryType.INSTANCE, false,
-				OracleSpatialAggregate.CENTROID
-		)
+				"centroid",
+				new SpatialAggregationFunction( "extent", false, OracleSpatialAggregate.CENTROID )
 		);
-
 		registerFunction(
-				"concat_lines", new SpatialAggregationFunction(
-				"extent", JTSGeometryType.INSTANCE, false,
-				OracleSpatialAggregate.CONCAT_LINES
-		)
+				"concat_lines",
+				new SpatialAggregationFunction( "extent", false, OracleSpatialAggregate.CONCAT_LINES )
 		);
-
 		registerFunction(
-				"aggr_convexhull", new SpatialAggregationFunction(
-				"extent", JTSGeometryType.INSTANCE, false,
-				OracleSpatialAggregate.CONVEXHULL
-		)
+				"aggr_convexhull",
+				new SpatialAggregationFunction( "extent", false, OracleSpatialAggregate.CONVEXHULL )
 		);
-
 		registerFunction(
-				"aggr_union", new SpatialAggregationFunction(
-				"extent",
-				JTSGeometryType.INSTANCE, false,
-				OracleSpatialAggregate.UNION
-		)
+				"aggr_union",
+				new SpatialAggregationFunction( "extent", false, OracleSpatialAggregate.UNION )
 		);
-
 		registerFunction(
-				"lrs_concat", new SpatialAggregationFunction(
-				"lrsconcat", JTSGeometryType.INSTANCE,
-				false, OracleSpatialAggregate.LRS_CONCAT
-		)
+				"lrs_concat",
+				new SpatialAggregationFunction( "lrsconcat", false, OracleSpatialAggregate.LRS_CONCAT )
 		);
 	}
 
@@ -670,7 +443,6 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		return ( (Boolean) this.features.get( OGC_STRICT ) ).booleanValue();
 	}
 
-
 	private void configure() {
 		ClassLoader loader = Thread.currentThread().getContextClassLoader();
 		String propfileLoc = getClass().getCanonicalName() + ".properties";
@@ -731,7 +503,6 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		}
 	}
 
-
 	public boolean isTwoPhaseFiltering() {
 		return false;
 	}
@@ -742,6 +513,111 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 	public boolean supports(SpatialFunction function) {
 		return ( getFunctions().get( function.toString() ) != null );
+	}
+
+	/**
+	 * Implementation of the OGC astext function for HQL.
+	 */
+	private class AsTextFunction extends StandardSQLFunction {
+
+		private AsTextFunction() {
+			super( "astext", StandardBasicTypes.STRING );
+		}
+
+		public String render(Type firstArgumentType, final List args,
+							 final SessionFactoryImplementor factory) {
+
+			StringBuffer buf = new StringBuffer();
+			if ( args.isEmpty() ) {
+				throw new IllegalArgumentException(
+						"First Argument in arglist must be object "
+								+ "to which method is applied"
+				);
+			}
+
+			buf.append( "TO_CHAR(SDO_UTIL.TO_WKTGEOMETRY(" ).append( args.get( 0 ) )
+					.append( "))" );
+			return buf.toString();
+		}
+	}
+
+	/**
+	 * HQL Spatial relation function.
+	 */
+	private class SpatialRelateFunction extends StandardSQLFunction {
+		private final int relation;
+
+		private SpatialRelateFunction(final String name, final int relation) {
+			super(
+					name, isOGCStrict() ? StandardBasicTypes.BOOLEAN
+					: new SDOBooleanType()
+			);
+			this.relation = relation;
+		}
+
+		public String render(Type firstArgumentType, final List args,
+							 final SessionFactoryImplementor factory) {
+
+			if ( args.size() < 2 ) {
+				throw new QueryException(
+						"Spatial relate functions require at least two arguments"
+				);
+			}
+
+			String srf;
+			return isOGCStrict() ?
+					getOGCSpatialRelateSQL(
+							(String) args.get( 0 ),
+							(String) args.get( 1 ), this.relation
+					) :
+					getNativeSpatialRelateSQL(
+							(String) args.get( 0 ),
+							(String) args.get( 1 ), this.relation
+					);
+		}
+
+	}
+
+	private class SpatialAnalysisFunction extends StandardSQLFunction {
+		private final int analysis;
+
+		private SpatialAnalysisFunction(String name, Type returnType, int analysis) {
+			super( name, returnType );
+			if (Spatial.class.isAssignableFrom( returnType.getClass() )) {
+				throw new IllegalArgumentException("This constructor is only valid for functions returning non-spatial values.");
+			}
+			this.analysis = analysis;
+		}
+
+		private SpatialAnalysisFunction(String name, int analysis) {
+			this( name, null, analysis );
+		}
+
+
+		public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) {
+			return isOGCStrict() ? getSpatialAnalysisSQL(
+					args, this.analysis,
+					false
+			) : getNativeSpatialAnalysisSQL( args, analysis );
+		}
+
+	}
+
+	private class SpatialAggregationFunction extends StandardSQLFunction {
+
+		private final int aggregation;
+
+		private SpatialAggregationFunction(String name, boolean isProjection, int aggregation) {
+			super( name );
+			this.aggregation = aggregation;
+		}
+
+		public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) {
+			return getNativeSpatialAggregateSQL(
+					(String) args.get( 0 ),
+					this.aggregation
+			);
+		}
 	}
 
 

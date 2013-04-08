@@ -22,7 +22,6 @@
 package org.hibernate.spatial.dialect.postgis;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
@@ -66,8 +65,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		);
 		registerFunction(
 				"envelope", new StandardSQLFunction(
-				"envelope",
-				new JTSGeometryType()
+				"envelope"
 		)
 		);
 		registerFunction(
@@ -96,8 +94,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		);
 		registerFunction(
 				"boundary", new StandardSQLFunction(
-				"boundary",
-				new JTSGeometryType()
+				"boundary"
 		)
 		);
 
@@ -166,51 +163,45 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		);
 		registerFunction(
 				"buffer", new StandardSQLFunction(
-				"buffer",
-				JTSGeometryType.INSTANCE
+				"buffer"
 		)
 		);
 		registerFunction(
 				"convexhull", new StandardSQLFunction(
-				"convexhull",
-				JTSGeometryType.INSTANCE
+				"convexhull"
 		)
 		);
 		registerFunction(
 				"difference", new StandardSQLFunction(
-				"difference",
-				JTSGeometryType.INSTANCE
+				"difference"
 		)
 		);
 		registerFunction(
 				"intersection", new StandardSQLFunction(
-				"intersection", new JTSGeometryType()
+				"intersection"
 		)
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSQLFunction( "symdifference", JTSGeometryType.INSTANCE )
+				new StandardSQLFunction( "symdifference")
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
-				"geomunion",
-				JTSGeometryType.INSTANCE
+				"geomunion"
 		)
 		);
 
 		//register Spatial Aggregate function
 		registerFunction(
 				"extent", new StandardSQLFunction(
-				"extent",
-				JTSGeometryType.INSTANCE
+				"extent"
 		)
 		);
 
 		//other common spatial functions
 		registerFunction(
 				"transform", new StandardSQLFunction(
-				"transform",
-				JTSGeometryType.INSTANCE
+				"transform"
 		)
 		);
 	}

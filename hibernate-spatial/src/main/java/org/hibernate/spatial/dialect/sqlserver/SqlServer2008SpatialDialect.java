@@ -26,7 +26,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
-import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
@@ -60,13 +59,13 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		registerFunction( "dimension", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1.STDimension()" ) );
 		registerFunction( "geometrytype", new SQLFunctionTemplate( StandardBasicTypes.STRING, "?1.STGeometryType()" ) );
 		registerFunction( "srid", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "?1.STSrid" ) );
-		registerFunction( "envelope", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STEnvelope()" ) );
+		registerFunction( "envelope", new SqlServerMethod( "STEnvelope" ) );
 		registerFunction( "astext", new SQLFunctionTemplate( StandardBasicTypes.STRING, "?1.STAsText()" ) );
 		registerFunction( "asbinary", new SQLFunctionTemplate( StandardBasicTypes.BINARY, "?1.STAsBinary()" ) );
 
 		registerFunction( "isempty", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "?1.STIsEmpty()" ) );
 		registerFunction( "issimple", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, "?1.STIsSimple()" ) );
-		registerFunction( "boundary", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STBoundary()" ) );
+		registerFunction( "boundary", new SqlServerMethod( "STBoundary" ) );
 
 		// section 2.1.1.2
 		// Register functions for spatial relation constructs
@@ -83,18 +82,12 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		// section 2.1.1.3
 		// Register spatial analysis functions.
 		registerFunction( "distance", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "?1.STDistance(?2)" ) );
-		registerFunction( "buffer", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STBuffer(?2)" ) );
-		registerFunction( "convexhull", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STConvexHull()" ) );
-		registerFunction( "difference", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STDifference(?2)" ) );
-		registerFunction(
-				"intersection",
-				new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STIntersection(?2)" )
-		);
-		registerFunction(
-				"symdifference",
-				new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STSymDifference(?2)" )
-		);
-		registerFunction( "geomunion", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STUnion(?2)" ) );
+		registerFunction( "buffer", new SqlServerMethod( "STBuffer" ) );
+		registerFunction( "convexhull", new SqlServerMethod( "STConvexHull" ) );
+		registerFunction( "difference", new SqlServerMethod( "STDifference" ) );
+		registerFunction( "intersection", new SqlServerMethod( "STIntersection" ) );
+		registerFunction( "symdifference", new SqlServerMethod( "STSymDifference" ) );
+		registerFunction( "geomunion", new SqlServerMethod( "STUnion" ) );
 		// we rename OGC union to geomunion because union is a reserved SQL keyword.
 		// (See also postgis documentation).
 
@@ -104,10 +97,9 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 
 		// section 2.1.9.1 methods on surfaces
 		registerFunction( "area", new SQLFunctionTemplate( StandardBasicTypes.DOUBLE, "?1.STArea()" ) );
-		registerFunction( "centroid", new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STCentroid()" ) );
+		registerFunction( "centroid", new SqlServerMethod( "STCentroid" ) );
 		registerFunction(
-				"pointonsurface",
-				new SQLFunctionTemplate( JTSGeometryType.INSTANCE, "?1.STPointOnSurface()" )
+				"pointonsurface", new SqlServerMethod( "STPointOnSurface" )
 		);
 	}
 
@@ -175,7 +167,6 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 	public String getDWithinSQL(String columnName) {
 		throw new UnsupportedOperationException( "SQL Server has no DWithin function." );
 	}
-
 
 	public String getHavingSridSQL(String columnName) {
 		return columnName + ".STSrid = (?)";

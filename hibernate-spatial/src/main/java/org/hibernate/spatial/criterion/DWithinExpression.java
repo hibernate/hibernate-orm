@@ -24,7 +24,6 @@ package org.hibernate.spatial.criterion;
 import com.vividsolutions.jts.geom.Geometry;
 
 import org.hibernate.Criteria;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
@@ -57,11 +56,10 @@ public class DWithinExpression implements Criterion {
 
 	}
 
-
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
 				criteriaQuery.getTypedValue( criteria, propertyName, geometry ),
-				new TypedValue( StandardBasicTypes.DOUBLE, Double.valueOf( distance ), EntityMode.POJO )
+				new TypedValue( StandardBasicTypes.DOUBLE, distance )
 		};
 	}
 }

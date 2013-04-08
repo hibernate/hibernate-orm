@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.vividsolutions.jts.geom.Geometry;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.GeometryEquality;
+import org.geolatte.geom.GeometryPointEquality;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.junit.Test;
 
@@ -13,7 +15,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
-import org.hibernate.spatial.integration.jts.GeomEntity;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.TestDataElement;
@@ -42,7 +43,7 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 
 	@Test
 	public void testAfterStoreRetrievingEqualObject() throws WktDecodeException {
-		Map<Integer, org.hibernate.spatial.integration.jts.GeomEntity> stored = new HashMap<Integer, org.hibernate.spatial.integration.jts.GeomEntity>();
+		Map<Integer,GeomEntity> stored = new HashMap<Integer, GeomEntity>();
 		//check whether we retrieve exactly what we store
 		storeTestObjects( stored );
 		retrieveAndCompare( stored );
@@ -54,20 +55,21 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 		retrieveNullGeometry();
 	}
 
-	private void retrieveAndCompare(Map<Integer, org.hibernate.spatial.integration.jts.GeomEntity> stored) {
+	private void retrieveAndCompare(Map<Integer, GeomEntity> stored) {
 		int id = -1;
 		Transaction tx = null;
 		Session session = null;
+		GeometryEquality geomEq = new GeometryPointEquality();
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			for ( org.hibernate.spatial.integration.jts.GeomEntity storedEntity : stored.values() ) {
+			for ( GeomEntity storedEntity : stored.values() ) {
 				id = storedEntity.getId();
-				org.hibernate.spatial.integration.jts.GeomEntity retrievedEntity = (org.hibernate.spatial.integration.jts.GeomEntity) session.get( org.hibernate.spatial.integration.jts.GeomEntity.class, id );
+				GeomEntity retrievedEntity = (GeomEntity) session.get( GeomEntity.class, id );
 				Geometry retrievedGeometry = retrievedEntity.getGeom();
 				Geometry storedGeometry = storedEntity.getGeom();
 				String msg = createFailureMessage( storedEntity.getId(), storedGeometry, retrievedGeometry );
-				assertTrue( msg, geometryEquality.test( storedGeometry, retrievedGeometry ) );
+				assertTrue( msg, geomEq.equals( storedGeometry, retrievedGeometry ) );
 			}
 			tx.commit();
 		}
@@ -85,8 +87,8 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 	}
 
 	private String createFailureMessage(int id, Geometry storedGeometry, Geometry retrievedGeometry) {
-		String expectedText = ( storedGeometry != null ? storedGeometry.toText() : "NULL" );
-		String retrievedText = ( retrievedGeometry != null ? retrievedGeometry.toText() : "NULL" );
+		String expectedText = ( storedGeometry != null ? storedGeometry.asText() : "NULL" );
+		String retrievedText = ( retrievedGeometry != null ? retrievedGeometry.asText() : "NULL" );
 		return String.format(
 				"Equality testsuite-suite failed for %d.\nExpected: %s\nReceived:%s",
 				id,
@@ -95,7 +97,7 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 		);
 	}
 
-	private void storeTestObjects(Map<Integer, org.hibernate.spatial.integration.jts.GeomEntity> stored) {
+	private void storeTestObjects(Map<Integer,GeomEntity> stored) {
 		Session session = null;
 		Transaction tx = null;
 		int id = -1;
@@ -106,12 +108,7 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 			for ( TestDataElement element : testData ) {
 				id = element.id;
 				tx = session.beginTransaction();
-				org.hibernate.spatial.integration.jts.GeomEntity entity = org.hibernate
-						.spatial
-						.integration
-						.jts
-						.GeomEntity
-						.createFrom( element );
+				GeomEntity entity = GeomEntity.createFrom( element );
 				stored.put( entity.getId(), entity );
 				session.save( entity );
 				tx.commit();
@@ -131,13 +128,13 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 	}
 
 	private void storeNullGeometry() {
-		org.hibernate.spatial.integration.jts.GeomEntity entity = null;
+		GeomEntity entity = null;
 		Session session = null;
 		Transaction tx = null;
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			entity = new org.hibernate.spatial.integration.jts.GeomEntity();
+			entity = new GeomEntity();
 			entity.setId( 1 );
 			entity.setType( "NULL OBJECT" );
 			session.save( entity );
@@ -162,8 +159,8 @@ public class TestStoreRetrieveUsingGeolatte extends SpatialFunctionalTestCase {
 		try {
 			session = openSession();
 			tx = session.beginTransaction();
-			Criteria criteria = session.createCriteria( org.hibernate.spatial.integration.jts.GeomEntity.class );
-			List<org.hibernate.spatial.integration.jts.GeomEntity> retrieved = criteria.list();
+			Criteria criteria = session.createCriteria( GeomEntity.class );
+			List<GeomEntity> retrieved = criteria.list();
 			assertEquals( "Expected exactly one result", 1, retrieved.size() );
 			GeomEntity entity = retrieved.get( 0 );
 			assertNull( entity.getGeom() );

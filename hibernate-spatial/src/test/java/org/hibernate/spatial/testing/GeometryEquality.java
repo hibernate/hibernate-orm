@@ -25,14 +25,14 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 
-import org.hibernate.spatial.jts.mgeom.MCoordinate;
-
 /**
  * This class tests for the equality between geometries.
  * <p/>
  * The notion of geometric equality can differ slightly between
  * spatial databases.
  */
+//TODO -- replace by Geolatte-geom
+@Deprecated
 public class GeometryEquality {
 
 	public boolean test(Geometry geom1, Geometry geom2) {
@@ -116,16 +116,16 @@ public class GeometryEquality {
 	}
 
 	private boolean testCoordinateEquality(Coordinate c1, Coordinate c2) {
-		if ( c1 instanceof MCoordinate ) {
-			if ( !( c2 instanceof MCoordinate ) ) {
-				return false;
-			}
-			MCoordinate mc1 = (MCoordinate) c1;
-			MCoordinate mc2 = (MCoordinate) c2;
-			if ( !Double.isNaN( mc1.m ) && mc1.m != mc2.m ) {
-				return false;
-			}
-		}
+//		if ( c1 instanceof MCoordinate ) {
+//			if ( !( c2 instanceof MCoordinate ) ) {
+//				return false;
+//			}
+//			MCoordinate mc1 = (MCoordinate) c1;
+//			MCoordinate mc2 = (MCoordinate) c2;
+//			if ( !Double.isNaN( mc1.m ) && mc1.m != mc2.m ) {
+//				return false;
+//			}
+//		}
 		if ( !Double.isNaN( c1.z ) && c1.z != c2.z ) {
 			return false;
 		}

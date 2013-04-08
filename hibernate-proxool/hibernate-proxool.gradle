@@ -7,6 +7,5 @@ dependencies {
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Proxool'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.proxool'
     }
 }

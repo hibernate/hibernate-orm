@@ -44,6 +44,5 @@ artifacts.archives sourcesTestJar
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Infinispan'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.infinispan'
     }
 }

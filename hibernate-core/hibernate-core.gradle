@@ -40,7 +40,6 @@ manifest.mainAttributes(
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Core'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.core'
 
         instruction 'Import-Package',
             'javax.security.auth;resolution:=optional',
@@ -49,6 +48,13 @@ jar {
             'javax.validation.constraints;resolution:=optional',
             'javax.validation.groups;resolution:=optional',
             'javax.validation.metadata;resolution:=optional',
+            // TODO: Shouldn't have to explicitly list this, but the plugin
+            // generates it with a [1.0,2) version.
+            'javax.persistence;version="2.1.0"',
+            // Temporarily support JTA 1.1 -- Karaf and other frameworks still
+            // use it.  Without this, the plugin generates [1.2,2).
+            // build.gradle adds javax.transaction for all modules
+            'javax.transaction.xa;version="[1.1,2)"',
             '*'
 
         // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer

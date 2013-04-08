@@ -27,7 +27,6 @@ dependencies {
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM JPA Entity Manager'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.entitymanager'
         
         // A cdi-api OSGi bundle does not currently exist.  For now, explicitly
         // ignore its packages.  This will only cause issues if an app tries
@@ -39,6 +38,14 @@ jar {
         // occurs.
         instruction 'Import-Package',
             '!javax.enterprise*',
+            'javax.enterprise.context.spi;resolution:=optional',
+            'javax.enterprise.inject.spi;resolution:=optional',
+            // TODO: Shouldn't have to explicitly list the JPA packages, but
+            // the plugin generates them with [1.0,2) versions.
+            'javax.persistence;version="2.1.0"',
+            'javax.persistence.criteria;version="2.1.0"',
+            'javax.persistence.metamodel;version="2.1.0"',
+            'javax.persistence.spi;version="2.1.0"',
             '*'
     }
 }

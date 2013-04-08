@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+  ~ indicated by the @author tags or express copyright attribution
+  ~ statements applied by the authors.  All third-party contributions are
+  ~ distributed under license by Red Hat Inc.
+  ~
+  ~ This copyrighted material is made available to anyone wishing to use, modify,
+  ~ copy, or redistribute it subject to the terms and conditions of the GNU
+  ~ Lesser General Public License, as published by the Free Software Foundation.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+  ~ or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+  ~ for more details.
+  ~
+  ~ You should have received a copy of the GNU Lesser General Public License
+  ~ along with this distribution; if not, write to:
+  ~ Free Software Foundation, Inc.
+  ~ 51 Franklin Street, Fifth Floor
+  ~ Boston, MA  02110-1301  USA
+  -->
+<!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.1//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
+<module name="Checker">
+
+    <module name="TreeWalker">
+
+        <!-- Annotation checks : http://checkstyle.sourceforge.net/config_annotation.html -->
+        <module name="MissingDeprecated" />
+        <module name="MissingOverride" />
+        <module name="PackageAnnotation" />
+
+        <!-- Block checks : http://checkstyle.sourceforge.net/config_blocks.html -->
+        <module name="AvoidNestedBlocks">
+            <property name="allowInSwitchCase" value="true" />
+            <property name="severity" value="warning" />
+        </module>
+        <module name="NeedBraces" />
+
+        <!-- Design checks : http://checkstyle.sourceforge.net/config_design.html -->
+        <module name="HideUtilityClassConstructor" />
+        <module name="MutableException" />
+
+        <!-- Coding checks : http://checkstyle.sourceforge.net/config_coding.html -->
+        <module name="EmptyStatement" />
+        <module name="EqualsHashCode" />
+        <module name="FinalLocalVariable" />
+        <module name="MissingSwitchDefault" />
+        <module name="ModifiedControlVariable" />
+        <module name="SimplifyBooleanExpression" />
+        <module name="SimplifyBooleanReturn" />
+        <module name="StringLiteralEquality" />
+        <module name="NoFinalizer" />
+        <module name="ExplicitInitialization" />
+        <module name="MissingSwitchDefault" />
+        <module name="DefaultComesLast" />
+        <module name="FallThrough" />
+<!--
+        <module name="RequireThis" />
+-->
+        <module name="OneStatementPerLine" />
+
+        <!-- Import checks : http://checkstyle.sourceforge.net/config_imports.html -->
+        <module name="AvoidStarImport" />
+        <module name="RedundantImport" />
+        <module name="UnusedImports" />
+
+        <!-- Javadoc checks : http://checkstyle.sourceforge.net/config_javadoc.html -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+            <property name="allowUnknownTags" value="true" />
+        </module>
+        <module name="JavadocMethod">
+            <property name="scope" value="public" />
+            <property name="allowUndeclaredRTE" value="true" />
+            <property name="allowMissingPropertyJavadoc" value="true" />
+        </module>
+        <module name="JavadocVariable">
+            <property name="scope" value="public" />
+        </module>
+        <module name="JavadocStyle">
+            <property name="scope" value="public" />
+        </module>
+
+        <!-- Metric checks : http://checkstyle.sourceforge.net/config_metrics.html -->
+        <module name="BooleanExpressionComplexity" />
+
+        <!-- Misc checks : http://checkstyle.sourceforge.net/config_misc.html-->
+        <module name="TodoComment">
+            <property name="format" value="TODO|todo" />
+        </module>
+        <module name="UpperEll" />
+        <module name="ArrayTypeStyle" />
+<!--
+        <module name="FinalParameters" />
+        <module name="TrailingComment" />
+-->
+
+        <!-- Modifier checks : http://checkstyle.sourceforge.net/config_modifier.html -->
+        <module name="ModifierOrder"/>
+
+        <!-- Naming checks : http://checkstyle.sourceforge.net/config_naming.html -->
+        <module name="AbstractClassName" />
+        <module name="ClassTypeParameterName" />
+        <module name="ConstantName">
+            <property name="format" value="^[A-Z](_?[A-Z0-9]+)*$|log" />
+        </module>
+        <module name="LocalFinalVariableName" />
+        <module name="LocalVariableName" />
+        <module name="MemberName" />
+        <module name="MethodName" />
+        <module name="MethodTypeParameterName" />
+        <module name="PackageName" />
+        <module name="ParameterName" />
+        <module name="StaticVariableName" />
+        <module name="TypeName" />
+
+        <!-- Whitespace checks : http://checkstyle.sourceforge.net/config_whitespace.html -->
+        <module name="MethodParamPad" />
+        <module name="TypecastParenPad" />
+
+    </module>
+
+    <!-- Misc checks : http://checkstyle.sourceforge.net/config_misc.html-->
+    <module name="NewlineAtEndOfFile" />
+
+</module>

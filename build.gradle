@@ -72,7 +72,13 @@ subprojects { subProject ->
         apply plugin: 'maven' // for install task as well as deploy dependencies
         apply plugin: 'uploadAuth'
         apply plugin: 'osgi'
+
         apply from: "../utilities.gradle"
+
+        apply plugin: 'findbugs'
+        apply plugin: 'checkstyle'
+        apply plugin: 'build-dashboard'
+        apply plugin: 'project-report'
 
         configurations {
             provided {
@@ -194,33 +200,33 @@ subprojects { subProject ->
         jar {
             Set<String> exportPackages = new HashSet<String>()
             Set<String> privatePackages = new HashSet<String>()
-            
+
             // TODO: Could more of this be pulled into utilities.gradle?
             sourceSets.each { sourceSet ->
-                        // skip certain source sets
-                        if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
-                            sourceSet.java.each { javaFile ->
-                                // - org.hibernate.boot.registry.classloading.internal
-                                // until EntityManagerFactoryBuilderImpl no longer imports ClassLoaderServiceImpl
-                                // - .util for external module use (especially envers)
-                                final String[] temporaryExports = [
-                                    'org.hibernate.boot.registry.classloading.internal',
-                                    'org.hibernate.internal.util' ]
+                // skip certain source sets
+                if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
+                    sourceSet.java.each { javaFile ->
+                        // - org.hibernate.boot.registry.classloading.internal
+                        // until EntityManagerFactoryBuilderImpl no longer imports ClassLoaderServiceImpl
+                        // - .util for external module use (especially envers)
+                        final String[] temporaryExports = [
+                            'org.hibernate.boot.registry.classloading.internal',
+                            'org.hibernate.internal.util' ]
 
-                                final String packageName = determinePackageName( sourceSet.java, javaFile );
-                                if ( ! temporaryExports.contains( packageName )
-                                        && ( packageName.endsWith( ".internal" )
-                                        || packageName.contains( ".internal." )
-                                        || packageName.endsWith( ".test" )
-                                        || packageName.contains( ".test." ) ) ) {
-                                    privatePackages.add( packageName );
-                                }
-                                else {
-                                    exportPackages.add( packageName );
-                                }
-                            }
+                        final String packageName = determinePackageName( sourceSet.java, javaFile );
+                        if ( ! temporaryExports.contains( packageName )
+                                && ( packageName.endsWith( ".internal" )
+                                || packageName.contains( ".internal." )
+                                || packageName.endsWith( ".test" )
+                                || packageName.contains( ".test." ) ) ) {
+                            privatePackages.add( packageName );
+                        }
+                        else {
+                            exportPackages.add( packageName );
                         }
                     }
+                }
+            }
 
             manifest = osgiManifest {
                 // GRADLE-1411: Even if we override Imports and Exports
@@ -293,6 +299,19 @@ subprojects { subProject ->
                 plusConfigurations.add( configurations.provided )
             }
         }
+
+        // Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        checkstyle {
+            configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
+            showViolations = false
+            ignoreFailures = true
+        }
+        findbugs {
+            ignoreFailures = true
+        }
+        buildDashboard.dependsOn check
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
         // elements used to customize the generated POM used during upload
         def pomConfig = {

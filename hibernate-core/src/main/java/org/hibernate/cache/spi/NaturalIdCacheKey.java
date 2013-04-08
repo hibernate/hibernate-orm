@@ -28,11 +28,13 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import org.hamcrest.core.IsAnything;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 /**
@@ -60,6 +62,16 @@ public class NaturalIdCacheKey implements Serializable {
 			final Object[] naturalIdValues,
 			final EntityPersister persister,
 			final SessionImplementor session) {
+		
+		this(naturalIdValues, persister, session, false);
+	}
+	
+	
+	public NaturalIdCacheKey(
+				final Object[] naturalIdValues,
+				final EntityPersister persister,
+				final SessionImplementor session,
+				final boolean isSnapshot) {
 
 		this.entityName = persister.getRootEntityName();
 		this.tenantId = session.getTenantIdentifier();
@@ -81,7 +93,11 @@ public class NaturalIdCacheKey implements Serializable {
 			
 			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
 			
-			this.naturalIdValues[i] = type.disassemble( value, session, null );
+			if (isSnapshot && type instanceof ManyToOneType) {
+				this.naturalIdValues[i] = (Serializable) value;
+			}
+			else
+				this.naturalIdValues[i] = type.disassemble( value, session, null );
 		}
 		
 		this.hashCode = result;

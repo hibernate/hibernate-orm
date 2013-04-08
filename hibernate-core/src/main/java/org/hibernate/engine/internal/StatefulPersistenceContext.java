@@ -2005,7 +2005,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues) {
+		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues, boolean isSnapshot) {
 			if ( !persister.hasNaturalIdentifier() ) {
 				// nothing to do
 				return;
@@ -2022,7 +2022,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			persister = locateProperPersister( persister );
 			final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy = persister.getNaturalIdCacheAccessStrategy();
-			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session );
+			final NaturalIdCacheKey naturalIdCacheKey = new NaturalIdCacheKey( naturalIdValues, persister, session, isSnapshot );
 			naturalIdCacheAccessStrategy.evict( naturalIdCacheKey );
 
 //			if ( sessionCachedNaturalIdValues != null
@@ -2104,7 +2104,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 				removeSharedNaturalIdCrossReference(
 						persister,
 						pk,
-						cachedNaturalIdValues
+						cachedNaturalIdValues,
+						false
 				);
 			}
 		}

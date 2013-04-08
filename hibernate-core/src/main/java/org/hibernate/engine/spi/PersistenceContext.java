@@ -790,7 +790,7 @@ public interface PersistenceContext {
 		 * @param id The primary key value
 		 * @param naturalIdValues The natural id values array
 		 */
-		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues);
+		public void removeSharedNaturalIdCrossReference(EntityPersister persister, Serializable id, Object[] naturalIdValues, boolean isSnapshot);
 
 		/**
 		 * Given a persister and primary key, find the corresponding cross-referenced natural id values.

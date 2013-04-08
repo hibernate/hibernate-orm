@@ -66,8 +66,7 @@ public final class EntityDeleteAction extends EntityAction {
 		naturalIdValues = session.getPersistenceContext().getNaturalIdHelper().removeLocalNaturalIdCrossReference(
 				getPersister(),
 				getId(),
-				state
-		);
+				state);
 	}
 
 	@Override
@@ -118,7 +117,7 @@ public final class EntityDeleteAction extends EntityAction {
 			persister.getCacheAccessStrategy().remove( ck );
 		}
 
-		persistenceContext.getNaturalIdHelper().removeSharedNaturalIdCrossReference( persister, id, naturalIdValues );
+		persistenceContext.getNaturalIdHelper().removeSharedNaturalIdCrossReference( persister, id, naturalIdValues, false);
 
 		postDelete();
 

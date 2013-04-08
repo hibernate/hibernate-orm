@@ -29,20 +29,53 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.hibernate.Session;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * 2011/10/20 Unit test for code added in EventCache for performance improvement. 
- * @author Wim Ockerman @ CISCO
- * 
- * 
+ * 2011/10/20 Unit test for code added in EventCache for performance improvement.
  *
+ * @author Wim Ockerman @ CISCO
  */
-public class EventCacheTest extends TestCase {
-    
+public class EventCacheTest extends BaseCoreFunctionalTestCase {
+	private Session session = null;
+	private EventCache cache = null;
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { Simple.class };
+	}
+
+	@Before
+	public void setUp() {
+		session = openSession();
+		cache = new EventCache( ( EventSource) session );
+	}
+
+	@After
+	public void tearDown() {
+		cache = null;
+		session.close();
+		session = null;
+	}
+
+	@Test
     public void testEntityToCopyFillFollowedByCopyToEntityMapping() {
-        EventCache cache = new EventCache(); 
         Object entity = new Simple( 1 );
         Object copy = new Simple( 2 );
         
@@ -66,8 +99,8 @@ public class EventCacheTest extends TestCase {
         assertFalse(cache.invertMap().containsKey(copy));
 	}
 
+	@Test
     public void testEntityToCopyFillFollowedByCopyToEntityMappingOnRemove() {
-        EventCache cache = new EventCache(); 
         Object entity = new Simple( 1 );
         Object copy = new Simple( 2 );
         
@@ -88,9 +121,9 @@ public class EventCacheTest extends TestCase {
         assertFalse(cache.containsKey(entity)); 
         assertFalse(cache.invertMap().containsKey(copy));        
     }
-    
+
+	@Test
     public void testEntityToCopyFillFollowedByCopyToEntityUsingPutAll() {
-        EventCache cache = new EventCache(); 
         Map<Object,Object> input = new HashMap<Object,Object>();
         Object entity1 = new Simple( 1 );
 		//
@@ -114,9 +147,9 @@ public class EventCacheTest extends TestCase {
         assertTrue(cache.invertMap().containsKey(copy2));
         assertFalse(cache.invertMap().containsKey(entity2));
     }
-    
+
+	@Test
     public void testEntityToCopyFillFollowedByCopyToEntityMappingUsingPutWithSetOperatedOnArg() {
-        EventCache cache = new EventCache(); 
         Object entity = new Simple( 1 );
         Object copy = new Simple( 2 );
         
@@ -142,8 +175,8 @@ public class EventCacheTest extends TestCase {
         assertFalse(cache.containsKey(copy)); 
     }
 
+	@Test
 	public void testEntityToCopyFillFollowedByIterateEntrySet() {
-		EventCache cache = new EventCache();
 		Object entity = new Simple( 1 );
 		Object copy = new Simple( 2 );
 
@@ -160,8 +193,8 @@ public class EventCacheTest extends TestCase {
 
 	}
 
+	@Test
 	public void testEntityToCopyFillFollowedByModifyEntrySet() {
-		EventCache cache = new EventCache();
 		Object entity = new Simple( 1 );
 		Object copy = new Simple( 2 );
 
@@ -215,8 +248,8 @@ public class EventCacheTest extends TestCase {
 
 	}
 
+	@Test
 	public void testEntityToCopyFillFollowedByModifyKeys() {
-		EventCache cache = new EventCache();
 		Object entity = new Simple( 1 );
 		Object copy = new Simple( 2 );
 
@@ -249,8 +282,8 @@ public class EventCacheTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testEntityToCopyFillFollowedByModifyValues() {
-		EventCache cache = new EventCache();
 		Object entity = new Simple( 1 );
 		Object copy = new Simple( 2 );
 
@@ -283,9 +316,8 @@ public class EventCacheTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testEntityToCopyFillFollowedByModifyKeyOfEntrySetElement() {
-
-		EventCache cache = new EventCache();
 		Simple entity = new Simple( 1 );
 		Simple copy = new Simple( 0 );
 		cache.put(entity, copy, true);
@@ -301,9 +333,8 @@ public class EventCacheTest extends TestCase {
 		assertSame( copy, entry.getValue() );
 	}
 
+	@Test
 	public void testEntityToCopyFillFollowedByModifyValueOfEntrySetElement() {
-
-		EventCache cache = new EventCache();
 		Simple entity = new Simple( 1 );
 		Simple copy = new Simple( 0 );
 		cache.put(entity, copy, true);
@@ -319,9 +350,8 @@ public class EventCacheTest extends TestCase {
 		assertSame( copy, entry.getValue() );
 	}
 
+	@Test
 	public void testReplaceEntityCopy() {
-
-		EventCache cache = new EventCache();
 		Simple entity = new Simple( 1 );
 		Simple copy = new Simple( 0 );
 		cache.put(entity, copy);
@@ -340,12 +370,14 @@ public class EventCacheTest extends TestCase {
 		checkCacheConsistency( cache, 1 );
 	}
 
+	@Test
 	public void testCopyAssociatedWithNewAndExistingEntity() {
-
-		EventCache cache = new EventCache();
+		session.getTransaction().begin();
 		Simple entity = new Simple( 1 );
 		Simple copy = new Simple( 0 );
+		session.persist( entity );
 		cache.put(entity, copy);
+		session.flush();
 
 		try {
 			cache.put( new Simple( 1 ), copy );
@@ -353,19 +385,23 @@ public class EventCacheTest extends TestCase {
 		}
 		catch( IllegalStateException ex ) {
 			// expected
+			assertTrue( ex.getMessage().startsWith( "Error occurred while storing entity [org.hibernate.event.internal.EventCacheTest$Simple@" ) );
 		}
-
+		session.getTransaction().rollback();
 	}
 
+	@Test
 	public void testCopyAssociatedWith2ExistingEntities() {
-
-		EventCache cache = new EventCache();
+		session.getTransaction().begin();
 		Simple entity1 = new Simple( 1 );
-		Simple copy1 = new Simple( 0 );
+		session.persist( entity1 );
+		Simple copy1 = new Simple( 1 );
 		cache.put(entity1, copy1);
 		Simple entity2 = new Simple( 2 );
-		Simple copy2 = new Simple( 0 );
+		session.persist( entity2 );
+		Simple copy2 = new Simple( 2 );
 		cache.put( entity2, copy2 );
+		session.flush();
 
 		try {
 			cache.put( entity1, copy2 );
@@ -373,17 +409,17 @@ public class EventCacheTest extends TestCase {
 		}
 		catch( IllegalStateException ex ) {
 			// expected
+			assertTrue( ex.getMessage().startsWith( "Error occurred while storing entity [org.hibernate.event.internal.EventCacheTest$Simple#1]." ) );
 		}
+		session.getTransaction().rollback();
 	}
 
+	@Test
 	public void testRemoveNonExistingEntity() {
-
-		EventCache cache = new EventCache();
 		assertNull( cache.remove( new Simple( 1 ) ) );
 	}
 
 	private void checkCacheConsistency(EventCache cache, int expectedSize) {
-
 		Set entrySet = cache.entrySet();
 		Set cacheKeys = cache.keySet();
 		Collection cacheValues = cache.values();
@@ -404,7 +440,9 @@ public class EventCacheTest extends TestCase {
 		}
 	}
 
+	@Entity
 	private static class Simple {
+		@Id
 		private int value;
 
 		public Simple(int value) {

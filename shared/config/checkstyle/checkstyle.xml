@@ -73,9 +73,6 @@
         <module name="UnusedImports" />
 
         <!-- Javadoc checks : http://checkstyle.sourceforge.net/config_javadoc.html -->
-        <module name="JavadocPackage">
-            <property name="allowLegacy" value="true" />
-        </module>
         <module name="JavadocType">
             <property name="scope" value="public"/>
             <property name="allowUnknownTags" value="true" />
@@ -136,6 +133,12 @@
         <module name="MethodParamPad" />
         <module name="TypecastParenPad" />
 
+    </module>
+
+
+    <!-- Javadoc checks : http://checkstyle.sourceforge.net/config_javadoc.html -->
+    <module name="JavadocPackage">
+        <property name="allowLegacy" value="true" />
     </module>
 
     <!-- Misc checks : http://checkstyle.sourceforge.net/config_misc.html-->

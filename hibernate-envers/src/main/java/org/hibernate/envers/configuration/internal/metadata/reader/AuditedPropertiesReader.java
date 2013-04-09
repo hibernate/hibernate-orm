@@ -328,29 +328,34 @@ public class AuditedPropertiesReader {
 			auditedPropertiesHolder.addPropertyAuditingData(embeddedName, componentData);
 		}
 	}
-	
-	private void addFromComponentProperty(XProperty property,
-			String accessType, Component propertyValue, Audited allClassAudited) {
 
+	private void addFromComponentProperty(XProperty property, String accessType, Component propertyValue, Audited allClassAudited) {
 		ComponentAuditingData componentData = new ComponentAuditingData();
-		boolean isAudited = fillPropertyData(property, componentData, accessType,
-				allClassAudited);
+		boolean isAudited = fillPropertyData( property, componentData, accessType, allClassAudited );
+
+		if ( propertyValue.isDynamic() ) {
+			if ( isAudited ) {
+				throw new MappingException(
+						"Audited dynamic-component properties are not supported. Consider applying @NotAudited annotation to "
+								+ propertyValue.getOwner().getEntityName() + "#" + property + "."
+				);
+			}
+			return;
+		}
 
 		PersistentPropertiesSource componentPropertiesSource = new ComponentPropertiesSource(
 				reflectionManager, propertyValue
 		);
-		
+
 		ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
-				ModificationStore.FULL, componentPropertiesSource,
-				componentData, globalCfg, reflectionManager, propertyNamePrefix
-						+ MappingTools
-								.createComponentPrefix(property.getName()));
+				ModificationStore.FULL, componentPropertiesSource, componentData, globalCfg, reflectionManager,
+				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
+		);
 		audPropReader.read();
 
-		if (isAudited) {
+		if ( isAudited ) {
 			// Now we know that the property is audited
-			auditedPropertiesHolder.addPropertyAuditingData(property.getName(),
-					componentData);
+			auditedPropertiesHolder.addPropertyAuditingData( property.getName(), componentData );
 		}
 	}
 

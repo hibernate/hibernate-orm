@@ -315,6 +315,17 @@
                             For example: a property called "age", will by default get modified flag with column name "age_MOD".
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <property>org.hibernate.envers.embeddable_set_ordinal_field_name</property>
+                        </entry>
+                        <entry>
+                            SETORDINAL
+                        </entry>
+                        <entry>
+                            The name of the column used for storing the ordinal of the change in sets of embeddables. 
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

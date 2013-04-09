@@ -32,7 +32,7 @@ import java.sql.SQLException;
  */
 public class PessimisticLockException extends JDBCException {
 	/**
-	 * Constructs a PessimisticLockException using the specified information
+	 * Constructs a PessimisticLockException using the specified information.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param sqlException The underlying SQL exception

@@ -35,7 +35,7 @@ import org.hibernate.dialect.lock.OptimisticEntityLockException;
 @Deprecated
 public class OptimisticLockException extends OptimisticEntityLockException {
 	/**
-	 * Constructs a OptimisticLockException using the specified information
+	 * Constructs a OptimisticLockException using the specified information.
 	 *
 	 * @param entity The entity instance that could not be locked
 	 * @param message A message explaining the exception condition

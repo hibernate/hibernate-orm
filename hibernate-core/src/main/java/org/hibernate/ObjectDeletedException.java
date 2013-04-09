@@ -32,7 +32,7 @@ import java.io.Serializable;
  */
 public class ObjectDeletedException extends UnresolvableObjectException {
 	/**
-	 * Constructs an ObjectDeletedException using the given information
+	 * Constructs an ObjectDeletedException using the given information.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param identifier The identifier of the entity

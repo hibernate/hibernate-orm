@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -36,33 +36,43 @@ import org.hibernate.loader.Loader;
 import org.hibernate.type.Type;
 
 /**
- * Implementation of the <tt>ScrollableResults</tt> interface
+ * Standard ScrollableResults implementation.
+ *
  * @author Gavin King
  */
 public class ScrollableResultsImpl extends AbstractScrollableResults implements ScrollableResults {
-
 	private Object[] currentRow;
 
+	/**
+	 * Constructs a ScrollableResultsImpl using the specified information.
+	 *
+	 * @param rs The scrollable result set
+	 * @param ps The prepared statement used to obtain the result set
+	 * @param sess The originating session
+	 * @param loader The loader
+	 * @param queryParameters query parameters
+	 * @param types The result types
+	 * @param holderInstantiator Ugh
+	 */
 	public ScrollableResultsImpl(
 	        ResultSet rs,
 	        PreparedStatement ps,
 	        SessionImplementor sess,
 	        Loader loader,
 	        QueryParameters queryParameters,
-	        Type[] types, HolderInstantiator holderInstantiator) throws MappingException {
+	        Type[] types, HolderInstantiator holderInstantiator) {
 		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
 	}
 
+	@Override
 	protected Object[] getCurrentRow() {
 		return currentRow;
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#scroll(int)
-	 */
-	public boolean scroll(int i) throws HibernateException {
+	@Override
+	public boolean scroll(int i) {
 		try {
-			boolean result = getResultSet().relative(i);
+			final boolean result = getResultSet().relative(i);
 			prepareCurrentRow(result);
 			return result;
 		}
@@ -70,16 +80,14 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using scroll()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#first()
-	 */
-	public boolean first() throws HibernateException {
+	@Override
+	public boolean first() {
 		try {
-			boolean result = getResultSet().first();
+			final boolean result = getResultSet().first();
 			prepareCurrentRow(result);
 			return result;
 		}
@@ -87,16 +95,14 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using first()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#last()
-	 */
-	public boolean last() throws HibernateException {
+	@Override
+	public boolean last() {
 		try {
-			boolean result = getResultSet().last();
+			final boolean result = getResultSet().last();
 			prepareCurrentRow(result);
 			return result;
 		}
@@ -104,16 +110,14 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using last()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#next()
-	 */
-	public boolean next() throws HibernateException {
+	@Override
+	public boolean next() {
 		try {
-			boolean result = getResultSet().next();
+			final boolean result = getResultSet().next();
 			prepareCurrentRow(result);
 			return result;
 		}
@@ -121,16 +125,14 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using next()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#previous()
-	 */
-	public boolean previous() throws HibernateException {
+	@Override
+	public boolean previous() {
 		try {
-			boolean result = getResultSet().previous();
+			final boolean result = getResultSet().previous();
 			prepareCurrentRow(result);
 			return result;
 		}
@@ -138,14 +140,12 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using previous()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#afterLast()
-	 */
-	public void afterLast() throws HibernateException {
+	@Override
+	public void afterLast() {
 		try {
 			getResultSet().afterLast();
 		}
@@ -153,14 +153,12 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling afterLast()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#beforeFirst()
-	 */
-	public void beforeFirst() throws HibernateException {
+	@Override
+	public void beforeFirst() {
 		try {
 			getResultSet().beforeFirst();
 		}
@@ -168,14 +166,12 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling beforeFirst()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#isFirst()
-	 */
-	public boolean isFirst() throws HibernateException {
+	@Override
+	public boolean isFirst() {
 		try {
 			return getResultSet().isFirst();
 		}
@@ -183,14 +179,12 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling isFirst()"
-				);
+			);
 		}
 	}
 
-	/**
-	 * @see org.hibernate.ScrollableResults#isLast()
-	 */
-	public boolean isLast() throws HibernateException {
+	@Override
+	public boolean isLast() {
 		try {
 			return getResultSet().isLast();
 		}
@@ -198,10 +192,11 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling isLast()"
-				);
+			);
 		}
 	}
 
+	@Override
 	public int getRowNumber() throws HibernateException {
 		try {
 			return getResultSet().getRow()-1;
@@ -210,14 +205,18 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"exception calling getRow()"
-				);
+			);
 		}
 	}
 
+	@Override
 	public boolean setRowNumber(int rowNumber) throws HibernateException {
-		if (rowNumber>=0) rowNumber++;
+		if ( rowNumber >= 0 ) {
+			rowNumber++;
+		}
+
 		try {
-			boolean result = getResultSet().absolute(rowNumber);
+			final boolean result = getResultSet().absolute(rowNumber);
 			prepareCurrentRow(result);
 			return result;
 		}
@@ -225,19 +224,17 @@ public class ScrollableResultsImpl extends AbstractScrollableResults implements 
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not advance using absolute()"
-				);
+			);
 		}
 	}
 
-	private void prepareCurrentRow(boolean underlyingScrollSuccessful) 
-	throws HibernateException {
-		
-		if (!underlyingScrollSuccessful) {
+	private void prepareCurrentRow(boolean underlyingScrollSuccessful) {
+		if ( !underlyingScrollSuccessful ) {
 			currentRow = null;
 			return;
 		}
 
-		Object result = getLoader().loadSingleRow(
+		final Object result = getLoader().loadSingleRow(
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),

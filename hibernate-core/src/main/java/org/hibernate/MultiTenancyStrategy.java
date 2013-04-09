@@ -61,7 +61,7 @@ public enum MultiTenancyStrategy {
 	/**
 	 * Does this strategy indicate a requirement for the specialized
 	 * {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider}, rather than the
-	 * traditional {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
+	 * traditional {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}?
 	 *
 	 * @return {@code true} indicates a MultiTenantConnectionProvider is required; {@code false} indicates it is not.
 	 */

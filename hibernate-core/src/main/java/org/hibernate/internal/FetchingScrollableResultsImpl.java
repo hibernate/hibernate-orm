@@ -22,12 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.internal;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.HolderInstantiator;
@@ -40,7 +40,21 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
+	private Object[] currentRow;
+	private int currentPosition;
+	private Integer maxPosition;
 
+	/**
+	 * Constructs a FetchingScrollableResultsImpl.
+	 *
+	 * @param rs The scrollable result set
+	 * @param ps The prepared statement used to obtain the result set
+	 * @param sess The originating session
+	 * @param loader The loader
+	 * @param queryParameters query parameters
+	 * @param types The result types
+	 * @param holderInstantiator Ugh
+	 */
 	public FetchingScrollableResultsImpl(
 	        ResultSet rs,
 	        PreparedStatement ps,
@@ -48,25 +62,17 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 	        Loader loader,
 	        QueryParameters queryParameters,
 	        Type[] types,
-	        HolderInstantiator holderInstantiator) throws MappingException {
+	        HolderInstantiator holderInstantiator) {
 		super( rs, ps, sess, loader, queryParameters, types, holderInstantiator );
 	}
-
-	private Object[] currentRow = null;
-	private int currentPosition = 0;
-	private Integer maxPosition = null;
 
 	@Override
     protected Object[] getCurrentRow() {
 		return currentRow;
 	}
 
-	/**
-	 * Advance to the next result
-	 *
-	 * @return <tt>true</tt> if there is another result
-	 */
-	public boolean next() throws HibernateException {
+	@Override
+	public boolean next() {
 		if ( maxPosition != null && maxPosition <= currentPosition ) {
 			currentRow = null;
 			currentPosition = maxPosition + 1;
@@ -79,7 +85,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			return false;
 		}
 
-		Object row = getLoader().loadSequentialRowsForward(
+		final Object row = getLoader().loadSequentialRowsForward(
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),
@@ -87,7 +93,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		);
 
 
-		boolean afterLast;
+		final boolean afterLast;
 		try {
 			afterLast = getResultSet().isAfterLast();
 		}
@@ -95,7 +101,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 			        e,
 			        "exception calling isAfterLast()"
-				);
+			);
 		}
 
 		currentPosition++;
@@ -113,19 +119,15 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		return true;
 	}
 
-	/**
-	 * Retreat to the previous result
-	 *
-	 * @return <tt>true</tt> if there is a previous result
-	 */
-	public boolean previous() throws HibernateException {
+	@Override
+	public boolean previous() {
 		if ( currentPosition <= 1 ) {
 			currentPosition = 0;
 			currentRow = null;
 			return false;
 		}
 
-		Object loadResult = getLoader().loadSequentialRowsReverse(
+		final Object loadResult = getLoader().loadSequentialRowsReverse(
 				getResultSet(),
 				getSession(),
 				getQueryParameters(),
@@ -139,17 +141,10 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		afterScrollOperation();
 
 		return true;
-
 	}
 
-	/**
-	 * Scroll an arbitrary number of locations
-	 *
-	 * @param positions a positive (forward) or negative (backward) number of rows
-	 *
-	 * @return <tt>true</tt> if there is a result at the new location
-	 */
-	public boolean scroll(int positions) throws HibernateException {
+	@Override
+	public boolean scroll(int positions) {
 		boolean more = false;
 		if ( positions > 0 ) {
 			// scroll ahead
@@ -178,12 +173,8 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		return more;
 	}
 
-	/**
-	 * Go to the last result
-	 *
-	 * @return <tt>true</tt> if there are any results
-	 */
-	public boolean last() throws HibernateException {
+	@Override
+	public boolean last() {
 		boolean more = false;
 		if ( maxPosition != null ) {
 			if ( currentPosition > maxPosition ) {
@@ -209,7 +200,7 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 				throw getSession().getFactory().getSQLExceptionHelper().convert(
 						e,
 						"exception calling isAfterLast()"
-					);
+				);
 			}
 		}
 
@@ -218,12 +209,8 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		return more;
 	}
 
-	/**
-	 * Go to the first result
-	 *
-	 * @return <tt>true</tt> if there are any results
-	 */
-	public boolean first() throws HibernateException {
+	@Override
+	public boolean first() {
 		beforeFirst();
 		boolean more = next();
 
@@ -232,10 +219,8 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		return more;
 	}
 
-	/**
-	 * Go to a location just before first result (this is the initial location)
-	 */
-	public void beforeFirst() throws HibernateException {
+	@Override
+	public void beforeFirst() {
 		try {
 			getResultSet().beforeFirst();
 		}
@@ -243,16 +228,14 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(
 			        e,
 			        "exception calling beforeFirst()"
-				);
+			);
 		}
 		currentRow = null;
 		currentPosition = 0;
 	}
 
-	/**
-	 * Go to a location just after the last result
-	 */
-	public void afterLast() throws HibernateException {
+	@Override
+	public void afterLast() {
 		// TODO : not sure the best way to handle this.
 		// The non-performant way :
 		last();
@@ -260,52 +243,23 @@ public class FetchingScrollableResultsImpl extends AbstractScrollableResults {
 		afterScrollOperation();
 	}
 
-	/**
-	 * Is this the first result?
-	 *
-	 * @return <tt>true</tt> if this is the first row of results
-	 *
-	 * @throws org.hibernate.HibernateException
-	 */
-	public boolean isFirst() throws HibernateException {
+	@Override
+	public boolean isFirst() {
 		return currentPosition == 1;
 	}
 
-	/**
-	 * Is this the last result?
-	 *
-	 * @return <tt>true</tt> if this is the last row of results
-	 *
-	 * @throws org.hibernate.HibernateException
-	 */
-	public boolean isLast() throws HibernateException {
-		if ( maxPosition == null ) {
-			// we have not yet hit the last result...
-			return false;
-		}
-		else {
-			return currentPosition == maxPosition;
-		}
+	@Override
+	public boolean isLast() {
+		return maxPosition != null && currentPosition == maxPosition;
 	}
 
-	/**
-	 * Get the current location in the result set. The first row is number <tt>0</tt>, contrary to JDBC.
-	 *
-	 * @return the row number, numbered from <tt>0</tt>, or <tt>-1</tt> if there is no current row
-	 */
-	public int getRowNumber() throws HibernateException {
+	@Override
+	public int getRowNumber() {
 		return currentPosition;
 	}
 
-	/**
-	 * Set the current location in the result set, numbered from either the first row (row number <tt>0</tt>), or the last
-	 * row (row number <tt>-1</tt>).
-	 *
-	 * @param rowNumber the row number, numbered from the last row, in the case of a negative row number
-	 *
-	 * @return true if there is a row at that row number
-	 */
-	public boolean setRowNumber(int rowNumber) throws HibernateException {
+	@Override
+	public boolean setRowNumber(int rowNumber) {
 		if ( rowNumber == 1 ) {
 			return first();
 		}

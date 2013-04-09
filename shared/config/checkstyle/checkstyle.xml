@@ -27,9 +27,9 @@
 
     <!--
         Note that checkstyle is used to validate contributed code and generally used to fail builds if
-        the checks fail.  So as much as I'd like to have, for example, the TodoCommentCheck enabled it
-        is just not practical given how we use the plugin.
+        the checks fail.
 
+        Note also that some checks apply a warning severity, rather than error.
         The commented-out checks are ones I would ultimately like to (re)enable.
     -->
 
@@ -65,9 +65,6 @@
         <module name="MissingSwitchDefault" />
         <module name="DefaultComesLast" />
         <module name="FallThrough" />
-<!--
-        <module name="RequireThis" />
--->
         <module name="OneStatementPerLine" />
 
         <!-- Import checks : http://checkstyle.sourceforge.net/config_imports.html -->
@@ -76,6 +73,9 @@
         <module name="UnusedImports" />
 
         <!-- Javadoc checks : http://checkstyle.sourceforge.net/config_javadoc.html -->
+        <module name="JavadocPackage">
+            <property name="allowLegacy" value="true" />
+        </module>
         <module name="JavadocType">
             <property name="scope" value="public"/>
             <property name="allowUnknownTags" value="true" />
@@ -90,6 +90,7 @@
         </module>
         <module name="JavadocStyle">
             <property name="scope" value="public" />
+            <property name="checkEmptyJavadoc" value="true" />
         </module>
 
         <!-- Metric checks : http://checkstyle.sourceforge.net/config_metrics.html -->
@@ -99,10 +100,19 @@
         <module name="UpperEll" />
         <module name="ArrayTypeStyle" />
 <!--
-        <module name="FinalParameters" />
-        <module name="TrailingComment" />
+        <module name="FinalParameters">
+            <property name="severity" value="info" />
+        </module>
 -->
-
+        <module name="TrailingComment">
+            <property name="severity" value="warning" />
+        </module>
+<!--
+        <module name="TodoComment">
+            <property name="format" value="[Tt][Oo][Dd][Oo]"/>
+            <property name="severity" value="info" />
+        </module>
+-->
         <!-- Modifier checks : http://checkstyle.sourceforge.net/config_modifier.html -->
         <module name="ModifierOrder"/>
 

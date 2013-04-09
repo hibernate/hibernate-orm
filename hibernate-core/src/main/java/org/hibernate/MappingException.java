@@ -31,7 +31,7 @@ package org.hibernate;
  */
 public class MappingException extends HibernateException {
 	/**
-	 * Constructs a MappingException using the given information
+	 * Constructs a MappingException using the given information.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param cause The underlying cause
@@ -41,7 +41,7 @@ public class MappingException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a MappingException using the given information
+	 * Constructs a MappingException using the given information.
 	 *
 	 * @param cause The underlying cause
 	 */
@@ -50,7 +50,7 @@ public class MappingException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a MappingException using the given information
+	 * Constructs a MappingException using the given information.
 	 *
 	 * @param message A message explaining the exception condition
 	 */

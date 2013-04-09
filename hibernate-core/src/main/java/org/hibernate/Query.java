@@ -77,6 +77,7 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface Query extends BasicQueryContract {
 	/**
 	 * Get the query string.
@@ -163,6 +164,8 @@ public interface Query extends BasicQueryContract {
 	 * </ol>
 	 * For alias-specific locking, use {@link #setLockMode(String, LockMode)}.
 	 *
+	 * @param lockOptions The lock options to apply to the query.
+	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getLockOptions()
@@ -179,7 +182,8 @@ public interface Query extends BasicQueryContract {
 	 * speaking, for maximum portability, this method should only be used to mark that the rows corresponding to
 	 * the given alias should be included in pessimistic locking ({@link LockMode#PESSIMISTIC_WRITE}).
 	 *
-	 * @param alias a query alias, or <tt>this</tt> for a collection filter
+	 * @param alias a query alias, or {@code "this"} for a collection filter
+	 * @param lockMode The lock mode to apply.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -209,7 +213,7 @@ public interface Query extends BasicQueryContract {
 	public Query setComment(String comment);
 
 	/**
-	 * Return the HQL select clause aliases (if any)
+	 * Return the HQL select clause aliases, if any.
 	 *
 	 * @return an array of aliases as strings
 	 */
@@ -246,14 +250,16 @@ public interface Query extends BasicQueryContract {
 	public ScrollableResults scroll();
 
 	/**
-	 * Return the query results as <tt>ScrollableResults</tt>. The
-	 * scrollability of the returned results depends upon JDBC driver
-	 * support for scrollable <tt>ResultSet</tt>s.<br>
+	 * Return the query results as ScrollableResults. The scrollability of the returned results
+	 * depends upon JDBC driver support for scrollable ResultSets.
+	 *
+	 * @param scrollMode The scroll mode
+	 *
+	 * @return the result iterator
 	 *
 	 * @see ScrollableResults
 	 * @see ScrollMode
 	 *
-	 * @return the result iterator
 	 */
 	public ScrollableResults scroll(ScrollMode scrollMode);
 
@@ -278,9 +284,8 @@ public interface Query extends BasicQueryContract {
 
 	/**
 	 * Execute the update or delete statement.
-	 * </p>
-	 * The semantics are compliant with the ejb3 Query.executeUpdate()
-	 * method.
+	 *
+	 * The semantics are compliant with the ejb3 Query.executeUpdate() method.
 	 *
 	 * @return The number of entities updated or deleted.
 	 */
@@ -407,7 +412,7 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */	
-	public Query setProperties(Object bean) throws HibernateException;
+	public Query setProperties(Object bean);
 	
 	/**
 	 * Bind the values of the given Map for each named parameters of the query,
@@ -418,45 +423,356 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setProperties(Map bean) throws HibernateException;
+	public Query setProperties(Map bean);
 
+	/**
+	 * Bind a positional String-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setString(int position, String val);
+
+	/**
+	 * Bind a positional char-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setCharacter(int position, char val);
+
+	/**
+	 * Bind a positional boolean-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBoolean(int position, boolean val);
+
+	/**
+	 * Bind a positional byte-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setByte(int position, byte val);
+
+	/**
+	 * Bind a positional short-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setShort(int position, short val);
+
+	/**
+	 * Bind a positional int-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setInteger(int position, int val);
+
+	/**
+	 * Bind a positional long-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setLong(int position, long val);
+
+	/**
+	 * Bind a positional float-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setFloat(int position, float val);
+
+	/**
+	 * Bind a positional double-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setDouble(int position, double val);
+
+	/**
+	 * Bind a positional binary-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBinary(int position, byte[] val);
+
+	/**
+	 * Bind a positional String-valued parameter using streaming.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setText(int position, String val);
+
+	/**
+	 * Bind a positional binary-valued parameter using serialization.
+	 *
+	 * @param position The parameter position
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setSerializable(int position, Serializable val);
+
+	/**
+	 * Bind a positional Locale-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param locale The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setLocale(int position, Locale locale);
+
+	/**
+	 * Bind a positional BigDecimal-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param number The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBigDecimal(int position, BigDecimal number);
+
+	/**
+	 * Bind a positional BigDecimal-valued parameter.
+	 *
+	 * @param position The parameter position
+	 * @param number The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBigInteger(int position, BigInteger number);
 
+	/**
+	 * Bind a positional Date-valued parameter using just the Date portion.
+	 *
+	 * @param position The parameter position
+	 * @param date The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setDate(int position, Date date);
+
+	/**
+	 * Bind a positional Date-valued parameter using just the Time portion.
+	 *
+	 * @param position The parameter position
+	 * @param date The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setTime(int position, Date date);
+
+	/**
+	 * Bind a positional Date-valued parameter using the full Timestamp.
+	 *
+	 * @param position The parameter position
+	 * @param date The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setTimestamp(int position, Date date);
 
+	/**
+	 * Bind a positional Calendar-valued parameter using the full Timestamp portion.
+	 *
+	 * @param position The parameter position
+	 * @param calendar The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setCalendar(int position, Calendar calendar);
+
+	/**
+	 * Bind a positional Calendar-valued parameter using just the Date portion.
+	 *
+	 * @param position The parameter position
+	 * @param calendar The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setCalendarDate(int position, Calendar calendar);
 
+	/**
+	 * Bind a named String-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setString(String name, String val);
+
+	/**
+	 * Bind a named char-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setCharacter(String name, char val);
+
+	/**
+	 * Bind a named boolean-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBoolean(String name, boolean val);
+
+	/**
+	 * Bind a named byte-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setByte(String name, byte val);
+
+	/**
+	 * Bind a named short-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setShort(String name, short val);
+
+	/**
+	 * Bind a named int-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setInteger(String name, int val);
+
+	/**
+	 * Bind a named long-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setLong(String name, long val);
+
+	/**
+	 * Bind a named float-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setFloat(String name, float val);
+
+	/**
+	 * Bind a named double-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setDouble(String name, double val);
+
+	/**
+	 * Bind a named binary-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBinary(String name, byte[] val);
+
+	/**
+	 * Bind a named String-valued parameter using streaming.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setText(String name, String val);
+
+	/**
+	 * Bind a named binary-valued parameter using serialization.
+	 *
+	 * @param name The parameter name
+	 * @param val The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setSerializable(String name, Serializable val);
+
+	/**
+	 * Bind a named Locale-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param locale The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setLocale(String name, Locale locale);
+
+	/**
+	 * Bind a named BigDecimal-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param number The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBigDecimal(String name, BigDecimal number);
+
+	/**
+	 * Bind a named BigInteger-valued parameter.
+	 *
+	 * @param name The parameter name
+	 * @param number The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setBigInteger(String name, BigInteger number);
 
 	/**
@@ -489,11 +805,29 @@ public interface Query extends BasicQueryContract {
 	 */
 	public Query setTimestamp(String name, Date date);
 
+	/**
+	 * Bind a named Calendar-valued parameter using the full Timestamp.
+	 *
+	 * @param name The parameter name
+	 * @param calendar The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setCalendar(String name, Calendar calendar);
+
+	/**
+	 * Bind a named Calendar-valued parameter using just the Date portion.
+	 *
+	 * @param name The parameter name
+	 * @param calendar The bind value
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setCalendarDate(String name, Calendar calendar);
 
 	/**
 	 * Bind an instance of a mapped persistent class to a JDBC-style query parameter.
+	 * Use {@link #setParameter(int, Object)} for null values.
 	 *
 	 * @param position the position of the parameter in the query
 	 * string, numbered from <tt>0</tt>.
@@ -501,17 +835,18 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setEntity(int position, Object val); // use setParameter for null values
+	public Query setEntity(int position, Object val);
 
 	/**
-	 * Bind an instance of a mapped persistent class to a named query parameter.
+	 * Bind an instance of a mapped persistent class to a named query parameter.  Use
+	 * {@link #setParameter(String, Object)} for null values.
 	 *
 	 * @param name the name of the parameter
 	 * @param val a non-null instance of a persistent class
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	public Query setEntity(String name, Object val); // use setParameter for null values
+	public Query setEntity(String name, Object val);
 	
 	
 	/**

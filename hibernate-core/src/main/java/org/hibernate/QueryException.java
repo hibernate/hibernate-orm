@@ -34,7 +34,7 @@ public class QueryException extends HibernateException {
 	private String queryString;
 
 	/**
-	 * Constructs a QueryException using the specified exception message
+	 * Constructs a QueryException using the specified exception message.
 	 *
 	 * @param message A message explaining the exception condition
 	 */
@@ -43,7 +43,7 @@ public class QueryException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a QueryException using the specified exception message and cause
+	 * Constructs a QueryException using the specified exception message and cause.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param cause The underlying cause
@@ -53,7 +53,7 @@ public class QueryException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a QueryException using the specified exception message and query-string
+	 * Constructs a QueryException using the specified exception message and query-string.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param queryString The query being evaluated when the exception occurred
@@ -64,7 +64,7 @@ public class QueryException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a QueryException using the specified cause
+	 * Constructs a QueryException using the specified cause.
 	 *
 	 * @param cause The underlying cause
 	 */
@@ -82,7 +82,7 @@ public class QueryException extends HibernateException {
 	}
 
 	/**
-	 * Set the query string.  EVen an option, since often the part of the code generating the exception does not
+	 * Set the query string.  Even an option since often the part of the code generating the exception does not
 	 * have access to the query overall.
 	 *
 	 * @param queryString The query string.
@@ -108,10 +108,3 @@ public class QueryException extends HibernateException {
 	}
 
 }
-
-
-
-
-
-
-

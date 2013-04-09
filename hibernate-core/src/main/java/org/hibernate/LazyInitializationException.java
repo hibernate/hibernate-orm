@@ -44,7 +44,7 @@ public class LazyInitializationException extends HibernateException {
 	);
 
 	/**
-	 * Constructs a LazyInitializationException using the given message
+	 * Constructs a LazyInitializationException using the given message.
 	 *
 	 * @param message A message explaining the exception condition
 	 */

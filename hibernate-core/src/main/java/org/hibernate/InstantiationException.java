@@ -66,7 +66,11 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
+	 * Returns the Class we were attempting to instantiate.
+	 *
 	 * @deprecated Use {@link #getUninstantiatableClass} instead
+	 *
+	 * @return The class we are unable to instantiate
 	 */
 	@Deprecated
 	public Class getPersistentClass() {

@@ -75,13 +75,13 @@ public class LockOptions implements Serializable {
 	private Map<String,LockMode> aliasSpecificLockModes;
 
 	/**
-	 * Constructs a LockOptions with all default options
+	 * Constructs a LockOptions with all default options.
 	 */
 	public LockOptions() {
 	}
 
 	/**
-	 * Constructs a LockOptions with the given lock mode
+	 * Constructs a LockOptions with the given lock mode.
 	 *
 	 * @param lockMode The lock mode to use
 	 */
@@ -173,6 +173,11 @@ public class LockOptions implements Serializable {
 		return lockMode == null ? LockMode.NONE : lockMode;
 	}
 
+	/**
+	 * Does this LockOptions object define alias-specific lock modes?
+	 *
+	 * @return {@code true} if this LockOptions object define alias-specific lock modes; {@code false} otherwise.
+	 */
 	public boolean hasAliasSpecificLockModes() {
 		return aliasSpecificLockModes != null
 				&& ! aliasSpecificLockModes.isEmpty();
@@ -203,7 +208,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Currently needed for follow-on locking
+	 * Currently needed for follow-on locking.
 	 *
 	 * @return The greatest of all requested lock modes.
 	 */
@@ -256,7 +261,7 @@ public class LockOptions implements Serializable {
 		return this;
 	}
 
-	private boolean scope=false;
+	private boolean scope;
 
 	/**
 	 * Retrieve the current lock scope setting.
@@ -293,7 +298,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Perform a shallow copy
+	 * Perform a shallow copy.
 	 *
 	 * @param source Source for the copy (copied from)
 	 * @param destination Destination for the copy (copied to)

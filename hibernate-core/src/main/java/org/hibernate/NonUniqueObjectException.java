@@ -52,7 +52,7 @@ public class NonUniqueObjectException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a NonUniqueObjectException using the given information, using a standard message
+	 * Constructs a NonUniqueObjectException using the given information, using a standard message.
 	 *
 	 * @param entityId The identifier of the entity
 	 * @param entityName The name of the entity

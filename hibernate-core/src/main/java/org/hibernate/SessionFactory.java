@@ -54,13 +54,37 @@ import org.hibernate.stat.Statistics;
  * @author Steve Ebersole
  */
 public interface SessionFactory extends Referenceable, Serializable {
-
+	/**
+	 * Aggregator of special options used to build the SessionFactory.
+	 */
 	public interface SessionFactoryOptions {
+		/**
+		 * The service registry to use in building the factory.
+		 *
+		 * @return The service registry to use.
+		 */
 		public StandardServiceRegistry getServiceRegistry();
+
+		/**
+		 * Get the interceptor to use by default for all sessions opened from this factory.
+		 *
+		 * @return The interceptor to use factory wide.  May be {@code null}
+		 */
 		public Interceptor getInterceptor();
+
+		/**
+		 * Get the delegate for handling entity-not-found exception conditions.
+		 *
+		 * @return The specific EntityNotFoundDelegate to use,  May be {@code null}
+		 */
 		public EntityNotFoundDelegate getEntityNotFoundDelegate();
 	}
 
+	/**
+	 * Get the special options used to build the factory.
+	 *
+	 * @return The special options used to build the factory.
+	 */
 	public SessionFactoryOptions getSessionFactoryOptions();
 
 	/**
@@ -172,7 +196,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	public Map<String,ClassMetadata> getAllClassMetadata();
 
 	/**
-	 * Get the {@link CollectionMetadata} for all mapped collections
+	 * Get the {@link CollectionMetadata} for all mapped collections.
 	 *
 	 * @return a map from <tt>String</tt> to <tt>CollectionMetadata</tt>
 	 *
@@ -372,7 +396,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 	public boolean containsFetchProfileDefinition(String name);
 
 	/**
-	 * Retrieve this factory's {@link TypeHelper}
+	 * Retrieve this factory's {@link TypeHelper}.
 	 *
 	 * @return The factory's {@link TypeHelper}
 	 */

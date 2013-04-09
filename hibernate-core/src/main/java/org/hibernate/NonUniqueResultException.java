@@ -32,7 +32,7 @@ package org.hibernate;
  */
 public class NonUniqueResultException extends HibernateException {
 	/**
-	 * Constructs a NonUniqueResultException
+	 * Constructs a NonUniqueResultException.
 	 *
 	 * @param resultCount The number of actual results.
 	 */

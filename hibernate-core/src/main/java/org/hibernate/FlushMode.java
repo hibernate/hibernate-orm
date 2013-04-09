@@ -89,7 +89,7 @@ public enum FlushMode {
 	}
 
 	/**
-	 * Checks to see if the given mode is the same as {@link #MANUAL}
+	 * Checks to see if the given mode is the same as {@link #MANUAL}.
 	 *
 	 * @param mode The mode to check
 	 *

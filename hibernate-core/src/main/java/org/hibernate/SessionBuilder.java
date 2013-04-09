@@ -39,7 +39,7 @@ public interface SessionBuilder {
 	public Session openSession();
 
 	/**
-	 * Adds a specific interceptor to the session options
+	 * Adds a specific interceptor to the session options.
 	 *
 	 * @param interceptor The interceptor to use.
 	 *
@@ -61,7 +61,7 @@ public interface SessionBuilder {
 	public SessionBuilder noInterceptor();
 
 	/**
-	 * Adds a specific connection to the session options
+	 * Adds a specific connection to the session options.
 	 *
 	 * @param connection The connection to use.
 	 *
@@ -70,7 +70,7 @@ public interface SessionBuilder {
 	public SessionBuilder connection(Connection connection);
 
 	/**
-	 * Use a specific connection release mode for these session options
+	 * Use a specific connection release mode for these session options.
 	 *
 	 * @param connectionReleaseMode The connection release mode to use.
 	 *
@@ -79,7 +79,7 @@ public interface SessionBuilder {
 	public SessionBuilder connectionReleaseMode(ConnectionReleaseMode connectionReleaseMode);
 
 	/**
-	 * Should the session built automatically join in any ongoing JTA transactions
+	 * Should the session built automatically join in any ongoing JTA transactions.
 	 *
 	 * @param autoJoinTransactions Should JTA transactions be automatically joined
 	 *
@@ -88,7 +88,7 @@ public interface SessionBuilder {
 	public SessionBuilder autoJoinTransactions(boolean autoJoinTransactions);
 
 	/**
-	 * Should the session be automatically closed after transaction completion
+	 * Should the session be automatically closed after transaction completion.
 	 *
 	 * @param autoClose Should the session be automatically closed
 	 *

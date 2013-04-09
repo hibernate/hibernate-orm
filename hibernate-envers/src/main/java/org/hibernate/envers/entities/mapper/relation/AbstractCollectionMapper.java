@@ -55,15 +55,17 @@ import org.hibernate.property.Setter;
 public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
     protected final CommonCollectionMapperData commonCollectionMapperData;    
     protected final Class<? extends T> collectionClass;
+    protected final boolean ordinalInId;
 	protected final boolean revisionTypeInId;
 
     private final Constructor<? extends T> proxyConstructor;
 
-    protected AbstractCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
-                                       Class<? extends T> collectionClass, Class<? extends T> proxyClass,
-									   boolean revisionTypeInId) {
+	protected AbstractCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
+			Class<? extends T> collectionClass, Class<? extends T> proxyClass, boolean ordinalInId,
+			boolean revisionTypeInId) {
         this.commonCollectionMapperData = commonCollectionMapperData;
         this.collectionClass = collectionClass;
+		this.ordinalInId = ordinalInId;
 		this.revisionTypeInId = revisionTypeInId;
 
         try {
@@ -84,11 +86,38 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
      */
     protected abstract void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object changed);
 
+	/**
+	 * Creates a Map for the id.
+	 * 
+	 * <p>
+	 * The ordinal parameter represents the iteration ordinal of the current element, used to add a synthetic id when
+	 * dealing with embeddables since embeddable fields can't be contained within the primary key since they might be
+	 * nullable.
+	 * </p>
+	 * 
+	 * @param ordinal
+	 *            The element iteration ordinal.
+	 * 
+	 * @return A Map for holding the ID information.
+	 */
+	protected Map<String, Object> createIdMap(int ordinal) {
+		final HashMap<String, Object> idMap = new HashMap<String, Object>();
+
+		if ( ordinalInId ) {
+			idMap.put( this.commonCollectionMapperData.getVerEntCfg().getEmbeddableSetOrdinalPropertyName(),
+					Integer.valueOf( ordinal ) );
+		}
+
+		return idMap;
+	}
+
     private void addCollectionChanges(SessionImplementor session, List<PersistentCollectionChangeData> collectionChanges,
 									  Set<Object> changed, RevisionType revisionType, Serializable id) {
+		int ordinal = 0;
+
         for (Object changedObj : changed) {
             Map<String, Object> entityData = new HashMap<String, Object>();
-            Map<String, Object> originalId = new HashMap<String, Object>();
+			Map<String, Object> originalId = createIdMap( ordinal++ );
             entityData.put(commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId);
 
             collectionChanges.add(new PersistentCollectionChangeData(

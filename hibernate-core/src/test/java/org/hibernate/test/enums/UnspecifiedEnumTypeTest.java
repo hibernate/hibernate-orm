@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -50,6 +51,11 @@ public class UnspecifiedEnumTypeTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.HBM2DDL_AUTO, "" );
 	}
 
 	@Before

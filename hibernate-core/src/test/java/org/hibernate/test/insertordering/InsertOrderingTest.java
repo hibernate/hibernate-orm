@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
@@ -58,6 +59,13 @@ public class InsertOrderingTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.ORDER_INSERTS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "10" );
 		cfg.setProperty( BatchBuilderInitiator.BUILDER, StatsBatchBuilder.class.getName() );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.ORDER_INSERTS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.STATEMENT_BATCH_SIZE, "10" );
+		serviceRegistryBuilder.applySetting( BatchBuilderInitiator.BUILDER, StatsBatchBuilder.class.getName() );
 	}
 
 	@Test

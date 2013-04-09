@@ -154,7 +154,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 			configuration.buildMappings();
 			applyCacheSettings( configuration );
 			afterConfigurationBuilt( configuration );
-			serviceRegistry = buildServiceRegistry( buildBootstrapServiceRegistry(), configuration );
+			serviceRegistry = buildServiceRegistry( buildBootstrapServiceRegistry(), configuration.getProperties() );
 			sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
 		}
 

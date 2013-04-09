@@ -31,6 +31,8 @@ import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.TransientPropertyValueException;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -96,6 +98,12 @@ public class MultiPathCircleCascadeTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	@Override

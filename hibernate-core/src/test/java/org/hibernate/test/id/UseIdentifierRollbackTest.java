@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -46,6 +47,11 @@ public class UseIdentifierRollbackTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_IDENTIFIER_ROLLBACK, "true");
 		super.configure( cfg );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_IDENTIFIER_ROLLBACK, "true" );
 	}
 
 	@Test

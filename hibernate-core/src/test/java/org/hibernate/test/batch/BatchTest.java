@@ -25,16 +25,16 @@ package org.hibernate.test.batch;
 
 import java.math.BigDecimal;
 
-import org.junit.Test;
-
 import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * This is how to do batch processing in Hibernate. Remember to enable JDBC batch updates, or this test will take a
@@ -56,6 +56,11 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "20" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.STATEMENT_BATCH_SIZE, "20" );
 	}
 
 	@Test

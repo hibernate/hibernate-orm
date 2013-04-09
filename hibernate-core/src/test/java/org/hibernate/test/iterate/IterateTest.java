@@ -23,21 +23,21 @@
  */
 package org.hibernate.test.iterate;
 
-import java.util.Iterator;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
+import java.util.Iterator;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -55,6 +55,14 @@ public class IterateTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "foo" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_PREFIX, "foo" );
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Test

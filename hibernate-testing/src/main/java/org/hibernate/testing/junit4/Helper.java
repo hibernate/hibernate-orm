@@ -139,13 +139,6 @@ public class Helper {
 	}
 
 	/**
-	 * @see #createH2Schema(String, Map)
-	 */
-	public static void createH2Schema(String schemaName, Configuration cfg) {
-		createH2Schema( schemaName, cfg.getProperties() );
-	}
-
-	/**
 	 * Create additional H2 schema.
 	 *
 	 * @param schemaName New schema name.

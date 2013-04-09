@@ -24,6 +24,7 @@
 package org.hibernate.test.cache;
 
 import java.util.Map;
+import java.util.Properties;
 
 import org.junit.Test;
 

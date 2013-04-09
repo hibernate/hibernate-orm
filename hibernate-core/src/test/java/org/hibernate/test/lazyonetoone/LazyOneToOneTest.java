@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.instrumentation.internal.FieldInterceptionHelper;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -58,6 +59,12 @@ public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.MAX_FETCH_DEPTH, "2");
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.MAX_FETCH_DEPTH, "2" );
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Test

@@ -32,6 +32,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
@@ -62,6 +63,12 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "1");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.DEFAULT_BATCH_FETCH_SIZE, "1" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override

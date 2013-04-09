@@ -32,6 +32,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -61,6 +62,12 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 				Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
 				MultipleLinesSqlCommandExtractor.class.getName()
 		);
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/fileimport/multi-line-statements.sql" );
+		serviceRegistryBuilder.applySetting( Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR, MultipleLinesSqlCommandExtractor.class.getName() );
 	}
 
 	@Test

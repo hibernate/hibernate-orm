@@ -29,9 +29,11 @@ import org.junit.Test;
 
 import org.hibernate.LobHelper;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.test.manytomany.batchload.BatchedManyToManyTest.TestingBatchBuilder;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -56,6 +58,11 @@ public class JpaLargeBlobTest extends BaseCoreFunctionalTestCase {
     	super.configure( configuration );
         configuration.setProperty(Environment.USE_STREAMS_FOR_BINARY, "true");
     }
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_STREAMS_FOR_BINARY, "true" );
+	}
 
     @Test
     public void jpaBlobStream() throws Exception {

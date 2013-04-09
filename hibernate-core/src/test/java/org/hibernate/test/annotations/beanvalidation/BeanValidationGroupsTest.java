@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -102,6 +103,15 @@ public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
 				Default.class.getName() + ", " + Strict.class.getName()
 		);
 		cfg.setProperty( "hibernate.validator.apply_to_ddl", "false" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( "javax.persistence.validation.group.pre-persist", "" );
+		serviceRegistryBuilder.applySetting( "javax.persistence.validation.group.pre-update", "" );
+		serviceRegistryBuilder.applySetting( "javax.persistence.validation.group.pre-remove",
+				Default.class.getName() + ", " + Strict.class.getName() );
+		serviceRegistryBuilder.applySetting( "hibernate.validator.apply_to_ddl", "false" );
 	}
 
 	@Override

@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -174,6 +175,12 @@ public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 	}
 
 	@Override

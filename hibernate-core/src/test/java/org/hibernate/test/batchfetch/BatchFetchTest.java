@@ -23,23 +23,23 @@
  */
 package org.hibernate.test.batchfetch;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -60,6 +60,12 @@ public class BatchFetchTest extends BaseCoreFunctionalTestCase {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@SuppressWarnings( {"unchecked"})

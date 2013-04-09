@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
@@ -50,6 +51,12 @@ public class ThreadLocalCurrentSessionTest extends ConnectionManagementTestCase 
 		super.configure( cfg );
 		cfg.setProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS, TestableThreadLocalContext.class.getName() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.CURRENT_SESSION_CONTEXT_CLASS, TestableThreadLocalContext.class.getName() );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override

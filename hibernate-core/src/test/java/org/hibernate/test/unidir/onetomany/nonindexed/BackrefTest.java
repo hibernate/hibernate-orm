@@ -23,15 +23,13 @@
  */
 package org.hibernate.test.unidir.onetomany.nonindexed;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertFalse;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -40,12 +38,6 @@ public class BackrefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "unidir/onetomany/nonindexed/ParentChild.hbm.xml" };
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
 	}
 
 	@Override

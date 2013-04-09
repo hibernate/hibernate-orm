@@ -29,6 +29,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Property;
@@ -72,6 +73,13 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "2");
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
+		serviceRegistryBuilder.applySetting( Environment.DEFAULT_BATCH_FETCH_SIZE, "2" );
 	}
 
 	@Test

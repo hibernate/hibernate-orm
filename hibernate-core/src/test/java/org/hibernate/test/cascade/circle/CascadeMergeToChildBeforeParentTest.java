@@ -26,6 +26,7 @@ package org.hibernate.test.cascade.circle;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -67,6 +68,11 @@ public class CascadeMergeToChildBeforeParentTest extends BaseCoreFunctionalTestC
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.CHECK_NULLABILITY, "true" );
 	}
 
 	@Override

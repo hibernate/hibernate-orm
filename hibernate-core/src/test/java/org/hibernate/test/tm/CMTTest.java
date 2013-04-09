@@ -35,6 +35,7 @@ import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Order;
@@ -71,6 +72,19 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 		cfg.setProperty( "hibernate.cache.region_prefix", "" );
 		cfg.setProperty( Environment.DEFAULT_ENTITY_MODE, EntityMode.MAP.toString() );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		TestingJtaBootstrap.prepare( serviceRegistryBuilder.getSettings() );
+		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+		serviceRegistryBuilder.applySetting( Environment.AUTO_CLOSE_SESSION, "true" );
+		serviceRegistryBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "true" );
+		serviceRegistryBuilder.applySetting( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( "hibernate.cache.region_prefix", "" );
+		serviceRegistryBuilder.applySetting( Environment.DEFAULT_ENTITY_MODE, EntityMode.MAP.toString() );
 	}
 
 	@Override

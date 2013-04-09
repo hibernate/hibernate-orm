@@ -24,6 +24,7 @@
  */
 package org.hibernate.test.annotations.manytomany.complex;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
@@ -38,5 +39,10 @@ public class ManyToManyMaxFetchDepth0Test extends ManyToManyComplexTest {
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "0" );
 		super.configure( cfg );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.MAX_FETCH_DEPTH, "0" );
 	}
 }

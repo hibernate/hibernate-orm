@@ -27,8 +27,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import org.hibernate.EntityMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.EntityStatistics;
@@ -51,6 +53,12 @@ public class JoinedSubclassOneToOneTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Test

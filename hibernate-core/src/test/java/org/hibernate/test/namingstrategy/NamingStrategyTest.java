@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -50,6 +51,11 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setNamingStrategy( new TestNamingStrategy() );
+	}
+	
+	@Override
+	protected void configMetadataBuilder(MetadataBuilder metadataBuilder) {
+		metadataBuilder.with( new TestNamingStrategy() );
 	}
 
     @Override

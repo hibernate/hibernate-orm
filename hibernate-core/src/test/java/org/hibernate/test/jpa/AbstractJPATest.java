@@ -25,9 +25,11 @@ package org.hibernate.test.jpa;
 
 import java.io.Serializable;
 import java.util.IdentityHashMap;
+
 import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.CascadingAction;
@@ -44,6 +46,7 @@ import org.hibernate.event.spi.FlushEntityEventListener;
 import org.hibernate.event.spi.FlushEventListener;
 import org.hibernate.event.spi.PersistEventListener;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
@@ -66,6 +69,17 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.JPAQL_STRICT_COMPLIANCE, "true" );
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 		cfg.setEntityNotFoundDelegate( new JPAEntityNotFoundDelegate() );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.JPAQL_STRICT_COMPLIANCE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
+	}
+
+	@Override
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+		sessionFactoryBuilder.with( new JPAEntityNotFoundDelegate() );
 	}
 
 	@Override

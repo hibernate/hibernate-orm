@@ -23,30 +23,30 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
+import static org.junit.Assert.fail;
+
 import java.io.InputStream;
 
 import org.hibernate.InvalidMappingException;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
-
-import org.junit.Test;
-
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-6271")
 public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNonExistentOrmVersion() {
 		try {
-			Configuration config = configuration();
+			MetadataSources sources = new MetadataSources( buildBootstrapServiceRegistry() );
 			String xmlFileName = "org/hibernate/test/annotations/xml/ejb3/orm5.xml";
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFileName );
-			config.addInputStream( is );
-			config.buildMappings();
+			sources.addInputStream( is );
+			sources.buildMetadata();
 			fail( "Expecting failure due to unsupported xsd version" );
 		}
 		catch ( InvalidMappingException expected ) {

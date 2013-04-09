@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -60,6 +61,17 @@ public abstract class AbstractOperationTestCase extends BaseCoreFunctionalTestCa
 		cfg.setProperty( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		TestingJtaBootstrap.prepare( serviceRegistryBuilder.getSettings() );
+		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+		serviceRegistryBuilder.applySetting( Environment.AUTO_CLOSE_SESSION, "true" );
+		serviceRegistryBuilder.applySetting( Environment.FLUSH_BEFORE_COMPLETION, "true" );
+		serviceRegistryBuilder.applySetting( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.AFTER_STATEMENT.toString() );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 
 	public String[] getMappings() {

@@ -23,14 +23,12 @@
  */
 package org.hibernate.test.annotations.naturalid;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
@@ -38,6 +36,8 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Guenther Demetz
@@ -333,6 +333,10 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
 	}
-
-
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, "true" );
+	}
 }

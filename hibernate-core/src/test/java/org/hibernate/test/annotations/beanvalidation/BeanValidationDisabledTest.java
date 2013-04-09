@@ -23,20 +23,21 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
-import java.math.BigDecimal;
-import javax.validation.ConstraintViolationException;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.junit.Test;
+import java.math.BigDecimal;
+
+import javax.validation.ConstraintViolationException;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -72,6 +73,11 @@ public class BeanValidationDisabledTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( "javax.persistence.validation.mode", "none" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( "javax.persistence.validation.mode", "none" );
 	}
 
 	@Override

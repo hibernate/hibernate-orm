@@ -23,22 +23,23 @@
  */
 package org.hibernate.test.annotations.beanvalidation;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.math.BigDecimal;
 import java.util.Locale;
+
 import javax.validation.ConstraintViolationException;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -88,5 +89,23 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 		configuration.messageInterpolator( messageInterpolator );
 		ValidatorFactory vf = configuration.buildValidatorFactory();
 		cfg.getProperties().put( "javax.persistence.validation.factory", vf );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		final MessageInterpolator messageInterpolator = new MessageInterpolator() {
+
+			public String interpolate(String s, Context context) {
+				return "Oops";
+			}
+
+			public String interpolate(String s, Context context, Locale locale) {
+				return interpolate( s, context );
+			}
+		};
+		final javax.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
+		configuration.messageInterpolator( messageInterpolator );
+		ValidatorFactory vf = configuration.buildValidatorFactory();
+		serviceRegistryBuilder.applySetting( "javax.persistence.validation.factory", vf );
 	}
 }

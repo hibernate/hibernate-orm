@@ -30,7 +30,9 @@ import java.sql.ResultSet;
 import org.junit.Test;
 
 import org.hibernate.ConnectionReleaseMode;
+import org.hibernate.EntityMode;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
@@ -132,6 +134,31 @@ public class SuppliedConnectionTest extends ConnectionManagementTestCase {
 			}
 		}
 		cfg.setProperty( Environment.USE_SCROLLABLE_RESULTSET, "" + supportsScroll );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.RELEASE_CONNECTIONS, ConnectionReleaseMode.ON_CLOSE.toString() );
+		serviceRegistryBuilder.applySetting( Environment.CONNECTION_PROVIDER, UserSuppliedConnectionProviderImpl.class.getName() );
+		boolean supportsScroll = true;
+		Connection conn = null;
+		try {
+			conn = cp.getConnection();
+			supportsScroll = conn.getMetaData().supportsResultSetType(ResultSet.TYPE_SCROLL_INSENSITIVE);
+		}
+		catch( Throwable ignore ) {
+		}
+		finally {
+			if ( conn != null ) {
+				try {
+					conn.close();
+				}
+				catch( Throwable ignore ) {
+					// ignore it...
+				}
+			}
+		}
+		serviceRegistryBuilder.applySetting( Environment.USE_SCROLLABLE_RESULTSET, "" + supportsScroll );
 	}
 
 	@Override

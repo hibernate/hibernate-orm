@@ -28,8 +28,10 @@ import java.util.List;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
@@ -55,6 +57,12 @@ public class DoesNotWorkWithHbmTest extends BaseCoreFunctionalTestCase {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 		configuration.setProperty( AvailableSettings.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/propertyref/import.sql" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
+		serviceRegistryBuilder.applySetting( AvailableSettings.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/propertyref/import.sql" );
 	}
 
 	@Test

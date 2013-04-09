@@ -10,6 +10,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.test.annotations.id.sequences.entities.HibernateSequenceEntity;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
@@ -37,6 +38,12 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.addResource( "org/hibernate/test/annotations/id/sequences/orm.xml" );
+	}
+	
+	@Override
+	protected void addMappings(MetadataSources sources) {
+		super.addMappings( sources );
+		sources.addResource( "org/hibernate/test/annotations/id/sequences/orm.xml" );
 	}
 
 	@Override

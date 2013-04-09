@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -45,6 +46,11 @@ public class SingleLineImportFileTest extends BaseCoreFunctionalTestCase {
 				Environment.HBM2DDL_IMPORT_FILES,
 				"/org/hibernate/test/fileimport/humans.sql,/org/hibernate/test/fileimport/dogs.sql"
 		);
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/fileimport/humans.sql,/org/hibernate/test/fileimport/dogs.sql" );
 	}
 
 	@Override

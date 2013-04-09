@@ -22,24 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.immutable;
-import java.util.Iterator;
-
-import org.junit.Test;
-
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.Projections;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.TextType;
-import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,6 +29,25 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.Iterator;
+
+import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.criterion.Projections;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.TextType;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.junit.Test;
 
 /**
  * @author Gavin King
@@ -69,6 +70,17 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		}
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true");
 		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
+	}
+	
+	@Override
+	protected void configMetadataBuilder(MetadataBuilder metadataBuilder) {
+		metadataBuilder.with( TextAsMaterializedClobType.INSTANCE );
 	}
 
 	@Override

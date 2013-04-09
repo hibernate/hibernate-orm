@@ -27,10 +27,14 @@ import java.io.Serializable;
 
 import org.junit.Test;
 
+import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -53,6 +57,12 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override

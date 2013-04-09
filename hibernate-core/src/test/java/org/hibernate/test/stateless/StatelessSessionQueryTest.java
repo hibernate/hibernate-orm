@@ -32,6 +32,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -46,6 +47,11 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
 	public void configure( Configuration cfg ) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "1" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.MAX_FETCH_DEPTH, "1" );
 	}
 
 	@Override

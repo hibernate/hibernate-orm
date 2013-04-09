@@ -23,10 +23,10 @@
  */
 package org.hibernate.test.bidir.onetomany.nonindexed;
 
-import org.junit.Test;
-
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -37,6 +37,11 @@ public class AbstractBidirectionalOneToManyTest extends BaseCoreFunctionalTestCa
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( USE_NEW_METADATA_MAPPINGS, "true" );
 	}
 
 	@Test

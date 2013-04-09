@@ -23,13 +23,13 @@
  */
 package org.hibernate.test.annotations.generics;
 
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -71,6 +71,11 @@ public class GenericsTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( Environment.AUTO_CLOSE_SESSION, "true" );
 		super.configure( cfg );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.AUTO_CLOSE_SESSION, "true" );
 	}
 
 	@Override

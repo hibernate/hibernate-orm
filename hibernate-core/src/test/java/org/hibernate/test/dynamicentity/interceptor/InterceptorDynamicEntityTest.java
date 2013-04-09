@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.ProxyHelper;
@@ -62,6 +63,11 @@ public class InterceptorDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public void configure(Configuration cfg) {
 		cfg.setInterceptor( new ProxyInterceptor() );
+	}
+	
+	@Override
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+		sessionFactoryBuilder.with( new ProxyInterceptor() );
 	}
 
 	@Test

@@ -30,7 +30,9 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.DialectChecks;
@@ -100,6 +102,11 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( "javax.persistence.validation.mode", "ddl" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( "javax.persistence.validation.mode", "ddl" );
 	}
 
 	@Override

@@ -23,25 +23,19 @@
  */
 package org.hibernate.test.ops;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
  */
 public class SimpleOpsTest extends AbstractOperationTestCase {
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
-	}
 
 	public String[] getMappings() {
 		return new String[] { "ops/SimpleEntity.hbm.xml" };

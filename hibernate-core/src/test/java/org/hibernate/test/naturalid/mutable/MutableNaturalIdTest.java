@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Restrictions;
@@ -55,6 +56,13 @@ public class MutableNaturalIdTest extends BaseCoreFunctionalTestCase {
 		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
 		cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
 		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, "true" );
 	}
 
 	@Test

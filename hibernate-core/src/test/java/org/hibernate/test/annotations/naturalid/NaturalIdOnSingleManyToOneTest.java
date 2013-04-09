@@ -23,24 +23,24 @@
  */
 package org.hibernate.test.annotations.naturalid;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.jboss.logging.Logger;
-import org.junit.After;
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.jboss.logging.Logger;
+import org.junit.After;
+import org.junit.Test;
 
 /**
  * Test case for NaturalId annotation. See ANN-750.
@@ -148,5 +148,10 @@ public class NaturalIdOnSingleManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Override
     protected void configure(Configuration cfg) {
 		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( "hibernate.cache.use_query_cache", "true" );
 	}
 }

@@ -31,8 +31,10 @@ import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.test.connections.ThreadLocalCurrentSessionTest.TestableThreadLocalContext;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertFalse;
@@ -52,6 +54,11 @@ public class HibernateCreateBlobFailedCase extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread" );
+	}
+
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.CURRENT_SESSION_CONTEXT_CLASS, "thread" );
 	}
 
 	@Test

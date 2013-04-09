@@ -11,6 +11,8 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
@@ -62,14 +64,30 @@ public class BaseFunctionalTestCase extends BaseUnitTestCase {
 	protected StandardServiceRegistryImpl serviceRegistry() {
 		return serviceRegistry;
 	}
-	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
-		Properties properties = new Properties();
-		properties.putAll( configuration.getProperties() );
+	
+
+	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry ).applySettings( properties );
 		prepareStandardServiceRegistryBuilder( registryBuilder );
+		
+		// TODO: StandardServiceRegistryBuilder#applySettings sets up the
+		// Environment.URL property.  Rather than rely on that, createH2Schema
+		// could be refactored and this whole block put back in 
+		// BaseCoreFunctionalTestCase#constructProperties
+		if ( createSchema() ) {
+			registryBuilder.applySetting( Environment.HBM2DDL_AUTO, "create-drop" );
+			final String secondSchemaName = createSecondSchema();
+			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
+				if ( !( getDialect() instanceof H2Dialect ) ) {
+					throw new UnsupportedOperationException( "Only H2 dialect supports creation of second schema." );
+				}
+				Helper.createH2Schema( secondSchemaName, registryBuilder.getSettings() );
+			}
+		}
+		
 		return (StandardServiceRegistryImpl) registryBuilder.build();
 	}
 
@@ -140,6 +158,14 @@ public class BaseFunctionalTestCase extends BaseUnitTestCase {
 				sources.addInputStream( is );
 			}
 		}
+	}
+
+	/**
+	 * Feature supported only by H2 dialect.
+	 * @return Provide not empty name to create second schema.
+	 */
+	protected String createSecondSchema() {
+		return null;
 	}
 
 	protected String[] getMappings() {

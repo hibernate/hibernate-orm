@@ -23,9 +23,11 @@
  */
 package org.hibernate.test.jpa.txn;
 
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -35,9 +37,7 @@ import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -48,6 +48,12 @@ public class TransactionJoiningTest extends AbstractJPATest {
 		super.configure( cfg );
 		TestingJtaBootstrap.prepare( cfg.getProperties() );
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		TestingJtaBootstrap.prepare( serviceRegistryBuilder.getSettings() );
+		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 	}
 
 	@Test

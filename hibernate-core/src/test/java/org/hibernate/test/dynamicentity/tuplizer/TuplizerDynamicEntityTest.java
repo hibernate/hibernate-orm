@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
@@ -63,6 +64,11 @@ public class TuplizerDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setInterceptor( new EntityNameInterceptor() );
+	}
+	
+	@Override
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+		sessionFactoryBuilder.with( new EntityNameInterceptor() );
 	}
 
 	@Test

@@ -24,18 +24,16 @@
 
 package org.hibernate.test.collection.set;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -44,12 +42,6 @@ public class LazyCollectionInitializationTest extends BaseCoreFunctionalTestCase
 	@Override
 	public String[] getMappings() {
 		return new String[] { "collection/set/User.hbm.xml" };
-	}
-
-	@Override
-	public void configure( Configuration cfg ) {
-		super.configure( cfg );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true" );
 	}
 
 	@Test

@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
@@ -43,7 +44,6 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
@@ -107,11 +107,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
-		// for now, build the configuration to get all the property settings
-		configuration = constructAndConfigureConfiguration();
+		Properties properties = constructProperties();
+		
 		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
-		isMetadataUsed = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+		serviceRegistry = buildServiceRegistry( bootRegistry, properties );
+		
+		ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		isMetadataUsed = configService.getSetting(
 				USE_NEW_METADATA_MAPPINGS,
 				new ConfigurationService.Converter<Boolean>() {
 					@Override
@@ -123,15 +125,16 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		);
 		if ( isMetadataUsed ) {
 			MetadataBuilder metadataBuilder = getMetadataBuilder( bootRegistry, serviceRegistry );
-			configMetadataBuilder(metadataBuilder, configuration);
+			configMetadataBuilder(metadataBuilder);
 			metadata = (MetadataImplementor)metadataBuilder.build();
 			afterConstructAndConfigureMetadata( metadata );
 			applyCacheSettings( metadata );
 			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-			configSessionFactoryBuilder(sessionFactoryBuilder, configuration);
+			configSessionFactoryBuilder(sessionFactoryBuilder);
 			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
 		}
 		else {
+			configuration = constructAndConfigureConfiguration(properties);
 			// this is done here because Configuration does not currently support 4.0 xsd
 			afterConstructAndConfigureConfiguration( configuration );
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
@@ -149,14 +152,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 
 
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
-
 	}
 
-	protected void configMetadataBuilder(MetadataBuilder metadataBuilder, Configuration configuration) {
-		//see if the naming strategy is the default one
-		if ( configuration.getNamingStrategy() != EJB3NamingStrategy.INSTANCE ) {
-			metadataBuilder.with( configuration.getNamingStrategy() );
-		}
+	protected void configMetadataBuilder(MetadataBuilder metadataBuilder) {
+	}
+
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
 	}
 
 	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder, Configuration configuration) {
@@ -178,9 +179,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		addMappings( sources );
 		return sources.getMetadataBuilder(serviceRegistry);
 	}
+	
+	protected Configuration constructConfiguration() {
+		return new Configuration().setProperties( constructProperties() );
+	}
 
-	private Configuration constructAndConfigureConfiguration() {
-		Configuration cfg = constructConfiguration();
+	private Configuration constructAndConfigureConfiguration(Properties properties) {
+		Configuration cfg = new Configuration().setProperties( properties );
 		configure( cfg );
 		return cfg;
 	}
@@ -192,22 +197,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		afterConfigurationBuilt( cfg );
 	}
 
-	protected Configuration constructConfiguration() {
-		Configuration configuration = new Configuration()
-				.setProperty( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-		if ( createSchema() ) {
-			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-			final String secondSchemaName = createSecondSchema();
-			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
-				if ( !( getDialect() instanceof H2Dialect ) ) {
-					throw new UnsupportedOperationException( "Only H2 dialect supports creation of second schema." );
-				}
-				Helper.createH2Schema( secondSchemaName, configuration );
-			}
-		}
-		configuration.setProperty( Environment.DIALECT, getDialect().getClass().getName() );
-		return configuration;
+	protected Properties constructProperties() {
+		Properties properties = new Properties();
+		properties.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
+		properties.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		properties.put( Environment.DIALECT, getDialect().getClass().getName() );
+		return properties;
 	}
 
 	protected void configure(Configuration configuration) {
@@ -306,14 +301,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 
 
 	protected void afterSessionFactoryBuilt() {
-	}
-
-	/**
-	 * Feature supported only by H2 dialect.
-	 * @return Provide not empty name to create second schema.
-	 */
-	protected String createSecondSchema() {
-		return null;
 	}
 
 	protected boolean rebuildSessionFactoryOnError() {

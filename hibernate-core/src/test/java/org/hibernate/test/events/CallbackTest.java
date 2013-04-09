@@ -23,9 +23,9 @@
  */
 package org.hibernate.test.events;
 
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
@@ -38,11 +38,11 @@ import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 
 /**
@@ -57,6 +57,11 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	@Override
     public void configure(Configuration cfg) {
 		cfg.setSessionFactoryObserver( observer );
+	}
+	
+	@Override
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+		sessionFactoryBuilder.add( observer );
 	}
 
 	@Override

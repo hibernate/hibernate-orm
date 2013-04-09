@@ -66,6 +66,8 @@ generateTestJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
 compileTestJava.dependsOn generateTestJpaMetamodelClasses
 compileTestJava.options.define(compilerArgs: ["-proc:none"])
 
+generateSources.dependsOn generateTestJpaMetamodelClasses
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Process 'bundle resources' for the packaging tests

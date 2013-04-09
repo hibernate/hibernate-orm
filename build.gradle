@@ -305,6 +305,8 @@ subprojects { subProject ->
                 plusConfigurations.add( configurations.provided )
             }
         }
+	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
+	eclipseClasspath.dependsOn("generateSources")
 
         // Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         checkstyle {

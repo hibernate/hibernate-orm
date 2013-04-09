@@ -33,19 +33,28 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Gavin King
  */
 public class AssertionFailure extends RuntimeException {
-
     private static final long serialVersionUID = 1L;
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AssertionFailure.class.getName());
 
-    public AssertionFailure( String s ) {
-        super(s);
-        LOG.failed(this);
+	/**
+	 * Creates an instance of AssertionFailure using the given message.
+	 *
+	 * @param message The message explaining the reason for the exception
+	 */
+    public AssertionFailure(String message) {
+        super( message );
+        LOG.failed( this );
     }
 
-    public AssertionFailure( String s,
-                             Throwable t ) {
-        super(s, t);
-        LOG.failed(t);
+	/**
+	 * Creates an instance of AssertionFailure using the given message and underlying cause.
+	 *
+	 * @param message The message explaining the reason for the exception
+	 * @param cause The underlying cause.
+	 */
+    public AssertionFailure(String message, Throwable cause) {
+        super( message, cause );
+        LOG.failed( cause );
     }
 }

@@ -30,7 +30,7 @@ import java.sql.Clob;
 import java.sql.NClob;
 
 /**
- * A {@link Session session's} helper for creating LOB data
+ * A {@link Session session's} helper for creating LOB data.
  *
  * @author Steve Ebersole
  */
@@ -56,7 +56,7 @@ public interface LobHelper {
 	public Blob createBlob(InputStream stream, long length);
 
 	/**
-	 * Create a new {@link java.sql.Clob} from content
+	 * Create a new {@link java.sql.Clob} from content.
 	 *
 	 * @param string The string data
 	 *

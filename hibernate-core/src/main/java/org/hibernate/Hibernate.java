@@ -70,8 +70,9 @@ public final class Hibernate {
 		if ( proxy == null ) {
 			return;
 		}
-		else if ( proxy instanceof HibernateProxy ) {
-			( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().initialize();
+
+		if ( proxy instanceof HibernateProxy ) {
+			( (HibernateProxy) proxy ).getHibernateLazyInitializer().initialize();
 		}
 		else if ( proxy instanceof PersistentCollection ) {
 			( (PersistentCollection) proxy ).forceInitialization();
@@ -84,12 +85,13 @@ public final class Hibernate {
 	 * @param proxy a persistable object, proxy, persistent collection or <tt>null</tt>
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
+	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isInitialized(Object proxy) {
 		if ( proxy instanceof HibernateProxy ) {
-			return !( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().isUninitialized();
+			return !( (HibernateProxy) proxy ).getHibernateLazyInitializer().isUninitialized();
 		}
 		else if ( proxy instanceof PersistentCollection ) {
-			return ( ( PersistentCollection ) proxy ).wasInitialized();
+			return ( (PersistentCollection) proxy ).wasInitialized();
 		}
 		else {
 			return true;
@@ -106,7 +108,7 @@ public final class Hibernate {
 	 */
 	public static Class getClass(Object proxy) {
 		if ( proxy instanceof HibernateProxy ) {
-			return ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer()
+			return ( (HibernateProxy) proxy ).getHibernateLazyInitializer()
 					.getImplementation()
 					.getClass();
 		}
@@ -115,10 +117,24 @@ public final class Hibernate {
 		}
 	}
 
+	/**
+	 * Obtain a lob creator for the given session.
+	 *
+	 * @param session The session for which to obtain a lob creator
+	 *
+	 * @return The log creator reference
+	 */
 	public static LobCreator getLobCreator(Session session) {
 		return getLobCreator( (SessionImplementor) session );
 	}
 
+	/**
+	 * Obtain a lob creator for the given session.
+	 *
+	 * @param session The session for which to obtain a lob creator
+	 *
+	 * @return The log creator reference
+	 */
 	public static LobCreator getLobCreator(SessionImplementor session) {
 		return session.getFactory()
 				.getJdbcServices()
@@ -126,17 +142,19 @@ public final class Hibernate {
 	}
 
 	/**
-	 * Close an <tt>Iterator</tt> created by <tt>iterate()</tt> immediately,
+	 * Close an {@link Iterator} instances obtained from {@link org.hibernate.Query#iterate()} immediately
 	 * instead of waiting until the session is closed or disconnected.
 	 *
-	 * @param iterator an <tt>Iterator</tt> created by <tt>iterate()</tt>
-	 * @throws HibernateException
-	 * @see org.hibernate.Query#iterate
+	 * @param iterator an Iterator created by iterate()
+	 *
+	 * @throws HibernateException Indicates a problem closing the Hibernate iterator.
+	 * @throws IllegalArgumentException If the Iterator is not a "Hibernate Iterator".
+	 *
 	 * @see Query#iterate()
 	 */
 	public static void close(Iterator iterator) throws HibernateException {
 		if ( iterator instanceof HibernateIterator ) {
-			( ( HibernateIterator ) iterator ).close();
+			( (HibernateIterator) iterator ).close();
 		}
 		else {
 			throw new IllegalArgumentException( "not a Hibernate iterator" );
@@ -152,10 +170,9 @@ public final class Hibernate {
 	 * @return true if the named property of the object is not listed as uninitialized; false otherwise
 	 */
 	public static boolean isPropertyInitialized(Object proxy, String propertyName) {
-		
-		Object entity;
+		final Object entity;
 		if ( proxy instanceof HibernateProxy ) {
-			LazyInitializer li = ( ( HibernateProxy ) proxy ).getHibernateLazyInitializer();
+			final LazyInitializer li = ( (HibernateProxy) proxy ).getHibernateLazyInitializer();
 			if ( li.isUninitialized() ) {
 				return false;
 			}
@@ -168,13 +185,12 @@ public final class Hibernate {
 		}
 
 		if ( FieldInterceptionHelper.isInstrumented( entity ) ) {
-			FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
+			final FieldInterceptor interceptor = FieldInterceptionHelper.extractFieldInterceptor( entity );
 			return interceptor == null || interceptor.isInitialized( propertyName );
 		}
 		else {
 			return true;
 		}
-		
 	}
 
 }

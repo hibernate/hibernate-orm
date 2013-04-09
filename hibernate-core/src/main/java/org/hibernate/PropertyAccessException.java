@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
 
@@ -39,13 +38,26 @@ import org.hibernate.internal.util.StringHelper;
  * @author Gavin King
  */
 public class PropertyAccessException extends HibernateException {
-
 	private final Class persistentClass;
 	private final String propertyName;
 	private final boolean wasSetter;
 
-	public PropertyAccessException(Throwable root, String s, boolean wasSetter, Class persistentClass, String propertyName) {
-		super(s, root);
+	/**
+	 * Constructs a PropertyAccessException using the specified information.
+	 *
+	 * @param cause The underlying cause
+	 * @param message A message explaining the exception condition
+	 * @param wasSetter Was the attempting to access the setter the cause of the exception?
+	 * @param persistentClass The class which is supposed to contain the property in question
+	 * @param propertyName The name of the property.
+	 */
+	public PropertyAccessException(
+			Throwable cause,
+			String message,
+			boolean wasSetter,
+			Class persistentClass,
+			String propertyName) {
+		super(message, cause);
 		this.persistentClass = persistentClass;
 		this.wasSetter = wasSetter;
 		this.propertyName = propertyName;

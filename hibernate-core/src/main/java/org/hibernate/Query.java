@@ -99,6 +99,8 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @param maxResults the maximum number of rows
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @see #getMaxResults()
 	 */
 	public Query setMaxResults(int maxResults);
@@ -116,6 +118,8 @@ public interface Query extends BasicQueryContract {
 	 * Set the first row to retrieve.
 	 *
 	 * @param firstResult a row number, numbered from <tt>0</tt>
+	 *
+	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getFirstResult()
 	 */
@@ -159,6 +163,8 @@ public interface Query extends BasicQueryContract {
 	 * </ol>
 	 * For alias-specific locking, use {@link #setLockMode(String, LockMode)}.
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @see #getLockOptions()
 	 */
 	public Query setLockOptions(LockOptions lockOptions);
@@ -174,6 +180,8 @@ public interface Query extends BasicQueryContract {
 	 * the given alias should be included in pessimistic locking ({@link LockMode#PESSIMISTIC_WRITE}).
 	 *
 	 * @param alias a query alias, or <tt>this</tt> for a collection filter
+	 *
+	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getLockOptions()
 	 */
@@ -194,21 +202,25 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @param comment The human-readable comment
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @see #getComment()
 	 */
 	public Query setComment(String comment);
 
 	/**
 	 * Return the HQL select clause aliases (if any)
+	 *
 	 * @return an array of aliases as strings
 	 */
-	public String[] getReturnAliases() throws HibernateException;
+	public String[] getReturnAliases();
 
 	/**
 	 * Return the names of all named parameters of the query.
+	 *
 	 * @return the parameter names, in no particular order
 	 */
-	public String[] getNamedParameters() throws HibernateException;
+	public String[] getNamedParameters();
 
 	/**
 	 * Return the query results as an <tt>Iterator</tt>. If the query
@@ -219,9 +231,8 @@ public interface Query extends BasicQueryContract {
 	 * SQL query returns identifiers only.<br>
 	 *
 	 * @return the result iterator
-	 * @throws HibernateException
 	 */
-	public Iterator iterate() throws HibernateException;
+	public Iterator iterate();
 
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
@@ -229,10 +240,10 @@ public interface Query extends BasicQueryContract {
 	 * support for scrollable <tt>ResultSet</tt>s.<br>
 	 *
 	 * @see ScrollableResults
+	 *
 	 * @return the result iterator
-	 * @throws HibernateException
 	 */
-	public ScrollableResults scroll() throws HibernateException;
+	public ScrollableResults scroll();
 
 	/**
 	 * Return the query results as <tt>ScrollableResults</tt>. The
@@ -241,10 +252,10 @@ public interface Query extends BasicQueryContract {
 	 *
 	 * @see ScrollableResults
 	 * @see ScrollMode
+	 *
 	 * @return the result iterator
-	 * @throws HibernateException
 	 */
-	public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException;
+	public ScrollableResults scroll(ScrollMode scrollMode);
 
 	/**
 	 * Return the query results as a <tt>List</tt>. If the query contains
@@ -252,18 +263,18 @@ public interface Query extends BasicQueryContract {
 	 * of <tt>Object[]</tt>.
 	 *
 	 * @return the result list
-	 * @throws HibernateException
 	 */
-	public List list() throws HibernateException;
+	public List list();
 
 	/**
 	 * Convenience method to return a single instance that matches
 	 * the query, or null if the query returns no results.
 	 *
 	 * @return the single result or <tt>null</tt>
+	 *
 	 * @throws NonUniqueResultException if there is more than one matching result
 	 */
-	public Object uniqueResult() throws HibernateException;
+	public Object uniqueResult();
 
 	/**
 	 * Execute the update or delete statement.
@@ -272,24 +283,29 @@ public interface Query extends BasicQueryContract {
 	 * method.
 	 *
 	 * @return The number of entities updated or deleted.
-	 * @throws HibernateException
 	 */
-	public int executeUpdate() throws HibernateException;
+	public int executeUpdate();
 
 	/**
 	 * Bind a value to a JDBC-style query parameter.
+	 *
 	 * @param position the position of the parameter in the query
 	 * string, numbered from <tt>0</tt>.
 	 * @param val the possibly-null parameter value
 	 * @param type the Hibernate type
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public Query setParameter(int position, Object val, Type type);
 
 	/**
 	 * Bind a value to a named query parameter.
+	 *
 	 * @param name the name of the parameter
 	 * @param val the possibly-null parameter value
 	 * @param type the Hibernate type
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public Query setParameter(String name, Object val, Type type);
 
@@ -297,79 +313,110 @@ public interface Query extends BasicQueryContract {
 	 * Bind a value to a JDBC-style query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly 
 	 * guessed from the class of the given object.
+	 *
 	 * @param position the position of the parameter in the query
 	 * string, numbered from <tt>0</tt>.
 	 * @param val the non-null parameter value
-	 * @throws org.hibernate.HibernateException if no type could be determined
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameter(int position, Object val) throws HibernateException;
+	public Query setParameter(int position, Object val);
 
 	/**
 	 * Bind a value to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly 
 	 * guessed from the class of the given object.
+	 *
 	 * @param name the name of the parameter
 	 * @param val the non-null parameter value
-	 * @throws org.hibernate.HibernateException if no type could be determined
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameter(String name, Object val) throws HibernateException;
+	public Query setParameter(String name, Object val);
 	
 	/**
-	 * Bind values and types to positional parameters.
+	 * Bind values and types to positional parameters.  Allows binding more than one at a time; no real performance
+	 * impact.
+	 *
+	 * The number of elements in each array should match.  That is, element number-0 in types array corresponds to
+	 * element-0 in the values array, etc,
+	 *
+	 * @param types The types
+	 * @param values The values
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameters(Object[] values, Type[] types) throws HibernateException;
+	public Query setParameters(Object[] values, Type[] types);
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
 	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
 	 * @param name the name of the parameter
-	 * @param vals a collection of values to list
+	 * @param values a collection of values to list
 	 * @param type the Hibernate type of the values
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameterList(String name, Collection vals, Type type) throws HibernateException;
+	public Query setParameterList(String name, Collection values, Type type);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly 
 	 * guessed from the class of the first object in the collection. This is useful for binding a list of values
 	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
 	 * @param name the name of the parameter
-	 * @param vals a collection of values to list
+	 * @param values a collection of values to list
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameterList(String name, Collection vals) throws HibernateException;
+	public Query setParameterList(String name, Collection values);
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
 	 * a list of values to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
 	 * @param name the name of the parameter
-	 * @param vals a collection of values to list
+	 * @param values a collection of values to list
 	 * @param type the Hibernate type of the values
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameterList(String name, Object[] vals, Type type) throws HibernateException;
+	public Query setParameterList(String name, Object[] values, Type type);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
 	 * first detected via the usage/position in the query and if not sufficient secondly 
 	 * guessed from the class of the first object in the array. This is useful for binding a list of values
 	 * to an expression such as <tt>foo.bar in (:value_list)</tt>.
+	 *
 	 * @param name the name of the parameter
-	 * @param vals a collection of values to list
+	 * @param values a collection of values to list
+	 *
+	 * @return {@code this}, for method chaining
 	 */
-	public Query setParameterList(String name, Object[] vals) throws HibernateException;
+	public Query setParameterList(String name, Object[] values);
 
 	/**
 	 * Bind the property values of the given bean to named parameters of the query,
 	 * matching property names with parameter names and mapping property types to
-	 * Hibernate types using hueristics.
+	 * Hibernate types using heuristics.
+	 *
 	 * @param bean any JavaBean or POJO
+	 *
+	 * @return {@code this}, for method chaining
 	 */	
 	public Query setProperties(Object bean) throws HibernateException;
 	
 	/**
 	 * Bind the values of the given Map for each named parameters of the query,
 	 * matching key names with parameter names and mapping value types to
-	 * Hibernate types using hueristics.
+	 * Hibernate types using heuristics.
+	 *
 	 * @param bean a java.util.Map
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public Query setProperties(Map bean) throws HibernateException;
 
@@ -412,28 +459,34 @@ public interface Query extends BasicQueryContract {
 	public Query setBigDecimal(String name, BigDecimal number);
 	public Query setBigInteger(String name, BigInteger number);
 
-        /**
-         * Bind the date (time is truncated) of a given Date object to a named query parameter.
-         * 
+	/**
+	 * Bind the date (time is truncated) of a given Date object to a named query parameter.
+	 *
 	 * @param name The name of the parameter
 	 * @param date The date object
-         */
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setDate(String name, Date date);
 
-        /**
-         * Bind the time (date is truncated) of a given Date object to a named query parameter.
-         * 
+	/**
+	 * Bind the time (date is truncated) of a given Date object to a named query parameter.
+	 *
 	 * @param name The name of the parameter
 	 * @param date The date object
-         */
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setTime(String name, Date date);
 
-        /**
-         * Bind the date and the time of a given Date object to a named query parameter.
-         *
+	/**
+	 * Bind the date and the time of a given Date object to a named query parameter.
+	 *
 	 * @param name The name of the parameter
 	 * @param date The date object
-         */
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Query setTimestamp(String name, Date date);
 
 	public Query setCalendar(String name, Calendar calendar);
@@ -441,16 +494,22 @@ public interface Query extends BasicQueryContract {
 
 	/**
 	 * Bind an instance of a mapped persistent class to a JDBC-style query parameter.
+	 *
 	 * @param position the position of the parameter in the query
 	 * string, numbered from <tt>0</tt>.
 	 * @param val a non-null instance of a persistent class
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public Query setEntity(int position, Object val); // use setParameter for null values
 
 	/**
 	 * Bind an instance of a mapped persistent class to a named query parameter.
+	 *
 	 * @param name the name of the parameter
 	 * @param val a non-null instance of a persistent class
+	 *
+	 * @return {@code this}, for method chaining
 	 */
 	public Query setEntity(String name, Object val); // use setParameter for null values
 	
@@ -460,7 +519,7 @@ public interface Query extends BasicQueryContract {
 	 * "shape" of the query result.
 	 *
 	 * @param transformer The transformer to apply
-	 * @return this (for method chaining)	
+	 * @return this (for method chaining)
 	 */
 	public Query setResultTransformer(ResultTransformer transformer);
 

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,38 +20,44 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
 
-
 /**
- * Should be thrown by persistent objects from <tt>Lifecycle</tt>
- * or <tt>Interceptor</tt> callbacks.
+ * Intended to be thrown from {@link org.hibernate.classic.Lifecycle} and {@link Interceptor} callbacks.
+ * <p/>
+ * IMPL NOTE : This is a legacy exception type from back in the day before Hibernate moved to a untyped (runtime)
+ * exception strategy.
  *
- * @see org.hibernate.classic.Lifecycle
- * @see Interceptor
  * @author Gavin King
  */
-
 public class CallbackException extends HibernateException {
-
-	public CallbackException(Exception root) {
-		super("An exception occurred in a callback", root);
+	/**
+	 * Creates a CallbackException using the given underlying cause.
+	 *
+	 * @param cause The underlying cause
+	 */
+	public CallbackException(Exception cause) {
+		this( "An exception occurred in a callback", cause );
 	}
 
+	/**
+	 * Creates a CallbackException using the given message.
+	 *
+	 * @param message The message explaining the reason for the exception
+	 */
 	public CallbackException(String message) {
-		super(message);
+		super( message );
 	}
 
-	public CallbackException(String message, Exception e) {
-		super(message, e);
+	/**
+	 * Creates a CallbackException using the given message and underlying cause.
+	 *
+	 * @param message The message explaining the reason for the exception
+	 * @param cause The underlying cause
+	 */
+	public CallbackException(String message, Exception cause) {
+		super( message, cause );
 	}
 
 }
-
-
-
-
-
-

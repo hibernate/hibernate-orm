@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2007-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2007,2011, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,9 +23,8 @@
  */
 package org.hibernate;
 
-
 /**
- * The base {@link Throwable} type for Hibernate.
+ * The base exception type for Hibernate exceptions.
  * <p/>
  * Note that all {@link java.sql.SQLException SQLExceptions} will be wrapped in some form of 
  * {@link JDBCException}.
@@ -35,16 +34,32 @@ package org.hibernate;
  * @author Gavin King
  */
 public class HibernateException extends RuntimeException {
+	/**
+	 * Constructs a HibernateException using the given exception message.
+	 *
+	 * @param message The message explaining the reason for the exception
+	 */
 	public HibernateException(String message) {
 		super( message );
 	}
 
-	public HibernateException(Throwable root) {
-		super( root );
+	/**
+	 * Constructs a HibernateException using the given message and underlying cause.
+	 *
+	 * @param cause The underlying cause.
+	 */
+	public HibernateException(Throwable cause) {
+		super( cause );
 	}
 
-	public HibernateException(String message, Throwable root) {
-		super( message, root );
+	/**
+	 * Constructs a HibernateException using the given message and underlying cause.
+	 *
+	 * @param message The message explaining the reason for the exception.
+	 * @param cause The underlying cause.
+	 */
+	public HibernateException(String message, Throwable cause) {
+		super( message, cause );
 	}
 }
 

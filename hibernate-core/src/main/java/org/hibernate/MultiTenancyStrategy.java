@@ -49,7 +49,7 @@ public enum MultiTenancyStrategy {
 	 */
 	DATABASE,
 	/**
-	 * No multi-tenancy
+	 * No multi-tenancy.
 	 */
 	NONE;
 
@@ -58,10 +58,24 @@ public enum MultiTenancyStrategy {
 			MultiTenancyStrategy.class.getName()
 	);
 
+	/**
+	 * Does this strategy indicate a requirement for the specialized
+	 * {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider}, rather than the
+	 * traditional {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider}
+	 *
+	 * @return {@code true} indicates a MultiTenantConnectionProvider is required; {@code false} indicates it is not.
+	 */
 	public boolean requiresMultiTenantConnectionProvider() {
 		return this == DATABASE || this == SCHEMA;
 	}
 
+	/**
+	 * Extract the MultiTenancyStrategy from the setting map.
+	 *
+	 * @param properties The map of settings.
+	 *
+	 * @return The selected strategy.  {@link #NONE} is always the default.
+	 */
 	public static MultiTenancyStrategy determineMultiTenancyStrategy(Map properties) {
 		final Object strategy = properties.get( Environment.MULTI_TENANT );
 		if ( strategy == null ) {

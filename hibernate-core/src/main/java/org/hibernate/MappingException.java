@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008, 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,23 +24,38 @@
 package org.hibernate;
 
 /**
- * An exception that usually occurs at configuration time, rather
- * than runtime, as a result of something screwy in the O-R mappings.
+ * An exception that occurs while reading mapping sources (xml/annotations),usually as a result of something
+ * screwy in the O-R mappings.
  *
  * @author Gavin King
  */
 public class MappingException extends HibernateException {
-
-	public MappingException(String msg, Throwable root) {
-		super( msg, root );
+	/**
+	 * Constructs a MappingException using the given information
+	 *
+	 * @param message A message explaining the exception condition
+	 * @param cause The underlying cause
+	 */
+	public MappingException(String message, Throwable cause) {
+		super( message, cause );
 	}
 
-	public MappingException(Throwable root) {
-		super(root);
+	/**
+	 * Constructs a MappingException using the given information
+	 *
+	 * @param cause The underlying cause
+	 */
+	public MappingException(Throwable cause) {
+		super(cause);
 	}
 
-	public MappingException(String s) {
-		super(s);
+	/**
+	 * Constructs a MappingException using the given information
+	 *
+	 * @param message A message explaining the exception condition
+	 */
+	public MappingException(String message) {
+		super(message);
 	}
 
 }

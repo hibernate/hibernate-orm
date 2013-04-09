@@ -31,7 +31,14 @@ import java.sql.SQLException;
  * @author Scott Marlow
  */
 public class PessimisticLockException extends JDBCException {
-	public PessimisticLockException(String s, SQLException se, String sql) {
-		super( s, se, sql );
+	/**
+	 * Constructs a PessimisticLockException using the specified information
+	 *
+	 * @param message A message explaining the exception condition
+	 * @param sqlException The underlying SQL exception
+	 * @param sql The sql that led to the exception (may be null, though usually should not be)
+	 */
+	public PessimisticLockException(String message, SQLException sqlException, String sql) {
+		super( message, sqlException, sql );
 	}
 }

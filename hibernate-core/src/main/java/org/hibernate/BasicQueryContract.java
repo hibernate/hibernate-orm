@@ -47,6 +47,8 @@ public interface BasicQueryContract {
 	 *
 	 * @param flushMode The new FlushMode to use.
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @see #getFlushMode()
 	 */
 	public BasicQueryContract setFlushMode(FlushMode flushMode);
@@ -69,6 +71,8 @@ public interface BasicQueryContract {
 	 * (Re)set the current CacheMode in effect for this query.
 	 *
 	 * @param cacheMode The new CacheMode to use.
+	 *
+	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getCacheMode()
 	 */
@@ -93,6 +97,8 @@ public interface BasicQueryContract {
 	 *
 	 * @param cacheable Should the query results be cacheable?
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @see #isCacheable
 	 */
 	public BasicQueryContract setCacheable(boolean cacheable);
@@ -112,6 +118,8 @@ public interface BasicQueryContract {
 	 *
 	 * @param cacheRegion the name of a query cache region, or {@code null} to indicate that the default region
 	 * should be used.
+	 *
+	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getCacheRegion()
 	 */
@@ -136,6 +144,8 @@ public interface BasicQueryContract {
 	 *
 	 * @param timeout the timeout <b>in seconds</b>
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @see #getTimeout()
 	 */
 	public BasicQueryContract setTimeout(int timeout);
@@ -159,6 +169,8 @@ public interface BasicQueryContract {
 	 * Sets a JDBC fetch size hint for the query.
 	 *
 	 * @param fetchSize the fetch size hint
+	 *
+	 * @return {@code this}, for method chaining
 	 *
 	 * @see #getFetchSize()
 	 */
@@ -201,6 +213,8 @@ public interface BasicQueryContract {
 	 * The read-only/modifiable setting has no impact on entities/proxies
 	 * returned by the query that existed in the session before the query was executed.
 	 *
+	 * @return {@code this}, for method chaining
+	 *
 	 * @param readOnly true, entities and proxies loaded by the query will be put in read-only mode
 	 *                 false, entities and proxies loaded by the query will be put in modifiable mode
 	 */
@@ -211,5 +225,5 @@ public interface BasicQueryContract {
 	 *
 	 * @return an array of types
 	 */
-	public Type[] getReturnTypes() throws HibernateException;
+	public Type[] getReturnTypes();
 }

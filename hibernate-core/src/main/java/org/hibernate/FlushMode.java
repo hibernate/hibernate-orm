@@ -35,13 +35,14 @@ package org.hibernate;
  * @author Gavin King
  */
 public enum FlushMode {
-		/**
+	/**
 	 * The {@link Session} is never flushed unless {@link Session#flush}
 	 * is explicitly called by the application. This mode is very
 	 * efficient for read only transactions.
 	 *
 	 * @deprecated use {@link #MANUAL} instead.
 	 */
+	@Deprecated
 	NEVER ( 0 ),
 
 	/**
@@ -75,25 +76,53 @@ public enum FlushMode {
 	private FlushMode(int level) {
 		this.level = level;
 	}
-	
+
+	/**
+	 * Checks to see if {@code this} flush mode is less than the given flush mode.
+	 *
+	 * @param other THe flush mode value to be checked against {@code this}
+	 *
+	 * @return {@code true} indicates {@code other} is less than {@code this}; {@code false} otherwise
+	 */
 	public boolean lessThan(FlushMode other) {
-		return this.level<other.level;
+		return this.level < other.level;
 	}
 
+	/**
+	 * Checks to see if the given mode is the same as {@link #MANUAL}
+	 *
+	 * @param mode The mode to check
+	 *
+	 * @return true/false
+	 *
+	 * @deprecated Just use equality check against {@link #MANUAL}.  Legacy from before this was an enum
+	 */
+	@Deprecated
 	public static boolean isManualFlushMode(FlushMode mode) {
 		return MANUAL.level == mode.level;
 	}
 
-	public static FlushMode interpretExternalSetting(String setting) {
-		if ( setting == null ) {
+	/**
+	 * Interprets an external representation of the flush mode.  {@code null} is returned as {@code null}, otherwise
+	 * {@link FlushMode#valueOf(String)} is used with the upper-case version of the incoming value.  An unknown,
+	 * non-null value results in a MappingException being thrown.
+	 *
+	 * @param externalName The external representation
+	 *
+	 * @return The interpreted FlushMode value.
+	 *
+	 * @throws MappingException Indicates an unrecognized external representation
+	 */
+	public static FlushMode interpretExternalSetting(String externalName) {
+		if ( externalName == null ) {
 			return null;
 		}
 
 		try {
-			return FlushMode.valueOf( setting.toUpperCase() );
+			return FlushMode.valueOf( externalName.toUpperCase() );
 		}
 		catch ( IllegalArgumentException e ) {
-			throw new MappingException( "unknown FlushMode : " + setting );
+			throw new MappingException( "unknown FlushMode : " + externalName );
 		}
 	}
 }

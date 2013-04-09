@@ -143,7 +143,7 @@ public interface Criteria extends CriteriaSpecification {
 	public Criteria setFetchMode(String associationPath, FetchMode mode) throws HibernateException;
 
 	/**
-	 * Set the lock mode of the current entity
+	 * Set the lock mode of the current entity.
 	 *
 	 * @param lockMode The lock mode to be applied
 	 *
@@ -152,7 +152,7 @@ public interface Criteria extends CriteriaSpecification {
 	public Criteria setLockMode(LockMode lockMode);
 
 	/**
-	 * Set the lock mode of the aliased entity
+	 * Set the lock mode of the aliased entity.
 	 *
 	 * @param alias The previously assigned alias representing the entity to
 	 *			which the given lock mode should apply.
@@ -533,7 +533,7 @@ public interface Criteria extends CriteriaSpecification {
 	public List list() throws HibernateException;
 	
 	/**
-	 * Get the results as an instance of {@link ScrollableResults}
+	 * Get the results as an instance of {@link ScrollableResults}.
 	 *
 	 * @return The {@link ScrollableResults} representing the matched
 	 * query results.

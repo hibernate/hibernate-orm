@@ -25,6 +25,14 @@
 <!DOCTYPE module PUBLIC "-//Puppy Crawl//DTD Check Configuration 1.1//EN" "http://www.puppycrawl.com/dtds/configuration_1_2.dtd">
 <module name="Checker">
 
+    <!--
+        Note that checkstyle is used to validate contributed code and generally used to fail builds if
+        the checks fail.  So as much as I'd like to have, for example, the TodoCommentCheck enabled it
+        is just not practical given how we use the plugin.
+
+        The commented-out checks are ones I would ultimately like to (re)enable.
+    -->
+
     <module name="TreeWalker">
 
         <!-- Annotation checks : http://checkstyle.sourceforge.net/config_annotation.html -->
@@ -88,9 +96,6 @@
         <module name="BooleanExpressionComplexity" />
 
         <!-- Misc checks : http://checkstyle.sourceforge.net/config_misc.html-->
-        <module name="TodoComment">
-            <property name="format" value="TODO|todo" />
-        </module>
         <module name="UpperEll" />
         <module name="ArrayTypeStyle" />
 <!--

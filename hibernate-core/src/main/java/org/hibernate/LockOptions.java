@@ -36,18 +36,17 @@ import java.util.Map;
  */
 public class LockOptions implements Serializable {
 	/**
-	 * NONE represents LockMode.NONE (timeout + scope do not apply)
+	 * Represents LockMode.NONE (timeout + scope do not apply).
 	 */
 	public static final LockOptions NONE = new LockOptions(LockMode.NONE);
 
 	/**
-	 * READ represents LockMode.READ (timeout + scope do not apply)
+	 * Represents LockMode.READ (timeout + scope do not apply).
 	 */
 	public static final LockOptions READ = new LockOptions(LockMode.READ);
 
 	/**
-	 * UPGRADE represents LockMode.UPGRADE (will wait forever for lock and
-	 * scope of false meaning only entity is locked)
+	 * Represents LockMode.UPGRADE (will wait forever for lock and scope of false meaning only entity is locked).
 	 */
 	@SuppressWarnings("deprecation")
 	public static final LockOptions UPGRADE = new LockOptions(LockMode.UPGRADE);
@@ -73,12 +72,19 @@ public class LockOptions implements Serializable {
 	private LockMode lockMode = LockMode.NONE;
 	private int timeout = WAIT_FOREVER;
 
-	//initialize lazily as LockOptions is frequently created without needing this
-	private Map<String,LockMode> aliasSpecificLockModes = null;
+	private Map<String,LockMode> aliasSpecificLockModes;
 
+	/**
+	 * Constructs a LockOptions with all default options
+	 */
 	public LockOptions() {
 	}
 
+	/**
+	 * Constructs a LockOptions with the given lock mode
+	 *
+	 * @param lockMode The lock mode to use
+	 */
 	public LockOptions( LockMode lockMode) {
 		this.lockMode = lockMode;
 	}
@@ -108,7 +114,6 @@ public class LockOptions implements Serializable {
 		this.lockMode = lockMode;
 		return this;
 	}
-
 
 	/**
 	 * Specify the {@link LockMode} to be used for a specific query alias.
@@ -186,7 +191,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Iterator for accessing Alias (key) and LockMode (value) as Map.Entry
+	 * Iterator for accessing Alias (key) and LockMode (value) as Map.Entry.
 	 *
 	 * @return Iterator for accessing the Map.Entry's
 	 */
@@ -265,7 +270,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Set the cope.
+	 * Set the scope.
 	 *
 	 * @param scope The new scope setting
 	 *
@@ -276,6 +281,11 @@ public class LockOptions implements Serializable {
 		return this;
 	}
 
+	/**
+	 * Make a copy.
+	 *
+	 * @return The copy
+	 */
 	public LockOptions makeCopy() {
 		final LockOptions copy = new LockOptions();
 		copy( this, copy );

@@ -94,7 +94,7 @@ public interface CustomEntityDirtinessStrategy {
 	public static interface DirtyCheckContext {
 		/**
 		 * The callback to indicate that dirty checking (the dirty attribute determination phase) should be handled
-		 * by the calling {@link CustomEntityDirtinessStrategy} using the given {@link AttributeChecker}
+		 * by the calling {@link CustomEntityDirtinessStrategy} using the given {@link AttributeChecker}.
 		 *
 		 * @param attributeChecker The delegate usable by the context for determining which attributes are dirty.
 		 */
@@ -139,7 +139,7 @@ public interface CustomEntityDirtinessStrategy {
 		public int getAttributeIndex();
 
 		/**
-		 * Get the name of this attribute
+		 * Get the name of this attribute.
 		 *
 		 * @return The attribute name
 		 */

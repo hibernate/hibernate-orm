@@ -29,12 +29,20 @@ package org.hibernate;
  * @author Steve Ebersole
  */
 public enum EntityMode {
+	/**
+	 * The {@code pojo} entity mode describes an entity model made up of entity classes (loosely) following
+	 * the java bean convention.
+	 */
 	POJO( "pojo" ),
+
+	/**
+	 * The {@code dynamic-map} entity mode describes an entity model defined using {@link java.util.Map} references.
+	 */
 	MAP( "dynamic-map" );
 
 	private final String name;
 
-	EntityMode(String name) {
+	private EntityMode(String name) {
 		this.name = name;
 	}
 

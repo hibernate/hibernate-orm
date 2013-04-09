@@ -887,8 +887,8 @@ public abstract class AbstractQueryImpl implements Query {
 		return setParameterList( name, Arrays.asList(vals), type );
 	}
 
-	public Query setParameterList(String name, Object[] vals) throws HibernateException {
-		return setParameterList( name, Arrays.asList(vals) );
+	public Query setParameterList(String name, Object[] values) throws HibernateException {
+		return setParameterList( name, Arrays.asList( values ) );
 	}
 
 	public Query setProperties(Map map) throws HibernateException {

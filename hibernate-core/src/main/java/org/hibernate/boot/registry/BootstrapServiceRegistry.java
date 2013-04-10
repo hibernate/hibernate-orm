@@ -26,8 +26,11 @@ package org.hibernate.boot.registry;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Specialization of the {@link org.hibernate.service.ServiceRegistry} contract mainly to make the
- * {@link StandardServiceRegistryBuilder#StandardServiceRegistryBuilder(BootstrapServiceRegistry)} signature type-safe
+ * Provides the most basic services needed.  Class loading, etc.
+ *
+ * Specialized mainly for type safety.
+ *
+ * @see BootstrapServiceRegistryBuilder
  *
  * @author Steve Ebersole
  */

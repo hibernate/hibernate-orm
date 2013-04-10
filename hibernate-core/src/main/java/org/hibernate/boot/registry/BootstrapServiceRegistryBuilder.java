@@ -39,13 +39,15 @@ import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 
 /**
- * Builder for bootstrap {@link org.hibernate.service.ServiceRegistry} instances.
+ * Builder for {@link BootstrapServiceRegistry} instances.  Provides registry for services needed for
+ * most operations.  This includes {@link Integrator} handling and ClassLoader handling.
+ *
+ * Additionally responsible for building and managing the {@link org.hibernate.boot.registry.selector.spi.StrategySelector}
  *
  * @author Steve Ebersole
  * @author Brett Meyer
  *
- * @see BootstrapServiceRegistryImpl
- * @see StandardServiceRegistryBuilder#StandardServiceRegistryBuilder(org.hibernate.boot.registry.BootstrapServiceRegistry)
+ * @see StandardServiceRegistryBuilder
  */
 public class BootstrapServiceRegistryBuilder {
 	private final LinkedHashSet<Integrator> providedIntegrators = new LinkedHashSet<Integrator>();
@@ -53,12 +55,11 @@ public class BootstrapServiceRegistryBuilder {
 	private ClassLoaderService providedClassLoaderService;
 	private StrategySelectorBuilder strategySelectorBuilder = new StrategySelectorBuilder();
 	
-	
-
 	/**
 	 * Add an {@link Integrator} to be applied to the bootstrap registry.
 	 *
 	 * @param integrator The integrator to add.
+	 *
 	 * @return {@code this}, for method chaining
 	 */
 	public BootstrapServiceRegistryBuilder with(Integrator integrator) {
@@ -67,7 +68,7 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Adds a provided {@link ClassLoader} for use in class-loading and resource-lookup
+	 * Adds a provided {@link ClassLoader} for use in class-loading and resource-lookup.
 	 *
 	 * @param classLoader The class loader to use
 	 *
@@ -82,9 +83,9 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup
+	 * Adds a provided {@link ClassLoaderService} for use in class-loading and resource-lookup.
 	 *
-	 * @param classLoader The class loader to use
+	 * @param classLoaderService The class loader service to use
 	 *
 	 * @return {@code this}, for method chaining
 	 */
@@ -94,9 +95,10 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Applies the specified {@link ClassLoader} as the application class loader for the bootstrap registry
+	 * Applies the specified {@link ClassLoader} as the application class loader for the bootstrap registry.
 	 *
 	 * @param classLoader The class loader to use
+	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @deprecated Use {@link #with(ClassLoader)} instead
@@ -108,9 +110,10 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Applies the specified {@link ClassLoader} as the resource class loader for the bootstrap registry
+	 * Applies the specified {@link ClassLoader} as the resource class loader for the bootstrap registry.
 	 *
 	 * @param classLoader The class loader to use
+	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @deprecated Use {@link #with(ClassLoader)} instead
@@ -122,9 +125,10 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Applies the specified {@link ClassLoader} as the Hibernate class loader for the bootstrap registry
+	 * Applies the specified {@link ClassLoader} as the Hibernate class loader for the bootstrap registry.
 	 *
 	 * @param classLoader The class loader to use
+	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @deprecated Use {@link #with(ClassLoader)} instead
@@ -136,9 +140,10 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Applies the specified {@link ClassLoader} as the environment (or system) class loader for the bootstrap registry
+	 * Applies the specified {@link ClassLoader} as the environment (or system) class loader for the bootstrap registry.
 	 *
 	 * @param classLoader The class loader to use
+	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @deprecated Use {@link #with(ClassLoader)} instead
@@ -150,11 +155,13 @@ public class BootstrapServiceRegistryBuilder {
 	}
 
 	/**
-	 * Applies a named strategy implementation to the bootstrap registry
+	 * Applies a named strategy implementation to the bootstrap registry.
 	 *
 	 * @param strategy The strategy
 	 * @param name The registered name
 	 * @param implementation The strategy implementation Class
+	 * @param <T> Defines the strategy type and makes sure that the strategy and implementation are of
+	 * compatible types.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -176,7 +183,7 @@ public class BootstrapServiceRegistryBuilder {
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public <T> BootstrapServiceRegistryBuilder withStrategySelectors(AvailabilityAnnouncer availabilityAnnouncer) {
+	public BootstrapServiceRegistryBuilder withStrategySelectors(AvailabilityAnnouncer availabilityAnnouncer) {
 		for ( Availability availability : availabilityAnnouncer.getAvailabilities() ) {
 			this.strategySelectorBuilder.addExplicitAvailability( availability );
 		}
@@ -200,7 +207,8 @@ public class BootstrapServiceRegistryBuilder {
             }
 			
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders );
-		} else {
+		}
+		else {
 			classLoaderService = providedClassLoaderService;
 		}
 

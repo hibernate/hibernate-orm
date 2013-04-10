@@ -25,16 +25,27 @@ package org.hibernate.boot.registry.classloading.spi;
 import org.hibernate.HibernateException;
 
 /**
- * Indicates a problem performing class loading
+ * Indicates a problem performing class loading.
  *
  * @author Steve Ebersole
  */
 public class ClassLoadingException extends HibernateException {
-	public ClassLoadingException(String string, Throwable root) {
-		super( string, root );
+	/**
+	 * Constructs a ClassLoadingException using the specified message and cause.
+	 *
+	 * @param message A message explaining the exception condition.
+	 * @param cause The underlying cause
+	 */
+	public ClassLoadingException(String message, Throwable cause) {
+		super( message, cause );
 	}
 
-	public ClassLoadingException(String s) {
-		super( s );
+	/**
+	 * Constructs a ClassLoadingException using the specified message.
+	 *
+	 * @param message A message explaining the exception condition.
+	 */
+	public ClassLoadingException(String message) {
+		super( message );
 	}
 }

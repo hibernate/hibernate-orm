@@ -30,7 +30,9 @@ import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Contract for an initiator of services that target the standard {@link org.hibernate.service.ServiceRegistry}
+ * Contract for an initiator of services that target the standard {@link org.hibernate.service.ServiceRegistry}.
+ *
+ * @param <R> The type of the service initiated.
  *
  * @author Steve Ebersole
  */

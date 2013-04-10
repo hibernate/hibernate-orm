@@ -98,6 +98,8 @@ import org.hibernate.hql.spi.TemporaryTableBulkIdStrategy;
 import org.jboss.logging.Logger;
 
 /**
+ * Builder for StrategySelector instances.
+ *
  * @author Steve Ebersole
  */
 public class StrategySelectorBuilder {
@@ -105,15 +107,31 @@ public class StrategySelectorBuilder {
 
 	private final List<Availability> explicitAvailabilities = new ArrayList<Availability>();
 
+	/**
+	 * Adds an explicit (as opposed to discovered) strategy availability.
+	 *
+	 * @param strategy The strategy
+	 * @param implementation The strategy implementation
+	 * @param name The registered name
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
+	 */
 	@SuppressWarnings("unchecked")
 	public <T> void addExplicitAvailability(Class<T> strategy, Class<? extends T> implementation, String name) {
-		addExplicitAvailability( new SimpleAvailabilityImpl( strategy, implementation, name ) );
+		addExplicitAvailability( new SimpleAvailabilityImpl<T>( strategy, implementation, name ) );
 	}
 
-	public void addExplicitAvailability(Availability availability) {
+	/**
+	 * Adds an explicit (as opposed to discovered) strategy availability.
+	 *
+	 * @param availability The strategy implementation availability.
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
+	 */
+	public <T> void addExplicitAvailability(Availability<T> availability) {
 		if ( !availability.getStrategyRole().isInterface() ) {
 			// not good form...
-			log.debug( "Registering non-interface strategy implementation : " + availability.getStrategyRole().getName()  );
+			log.debug( "Registering non-interface strategy : " + availability.getStrategyRole().getName()  );
 		}
 
 		if ( ! availability.getStrategyRole().isAssignableFrom( availability.getStrategyImplementation() ) ) {
@@ -126,8 +144,16 @@ public class StrategySelectorBuilder {
 		explicitAvailabilities.add( availability );
 	}
 
+	/**
+	 * Builds the selector.
+	 *
+	 * @param classLoaderService The class loading service used to (attempt to) resolve any un-registered
+	 * strategy implementations.
+	 *
+	 * @return The selector.
+	 */
 	public StrategySelector buildSelector(ClassLoaderService classLoaderService) {
-		StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
+		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...
 		addDialects( strategySelector );
@@ -151,7 +177,7 @@ public class StrategySelectorBuilder {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void applyFromAvailability(StrategySelectorImpl strategySelector, Availability availability) {
+	private <T> void applyFromAvailability(StrategySelectorImpl strategySelector, Availability<T> availability) {
 		for ( String name : availability.getSelectorNames() ) {
 			strategySelector.registerStrategyImplementor(
 					availability.getStrategyRole(),

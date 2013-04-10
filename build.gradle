@@ -305,8 +305,9 @@ subprojects { subProject ->
                 plusConfigurations.add( configurations.provided )
             }
         }
-	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-	eclipseClasspath.dependsOn("generateSources")
+
+    	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
+	    eclipseClasspath.dependsOn("generateSources")
 
         // specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         task checkstylePublicSources(type: Checkstyle) {

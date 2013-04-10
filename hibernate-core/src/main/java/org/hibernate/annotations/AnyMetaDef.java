@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -42,8 +43,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface AnyMetaDef {
 	/**
-	 * If defined, assign a global meta definition name to be used in an @Any or @ManyToAny annotation
-	 * If not defined, the metadata applies to the current property or field
+	 * If defined, assign a global meta definition name to be used in an @Any or @ManyToAny annotation.  If
+	 * not defined, the metadata applies to the current property or field.
 	 */
 	String name() default "";
 

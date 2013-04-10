@@ -38,7 +38,7 @@ public class StaleObjectStateException extends StaleStateException {
 	private final Serializable identifier;
 
 	/**
-	 * Constructs a StaleObjectStateException using the supplied information
+	 * Constructs a StaleObjectStateException using the supplied information.
 	 *
 	 * @param entityName The name of the entity
 	 * @param identifier The identifier of the entity

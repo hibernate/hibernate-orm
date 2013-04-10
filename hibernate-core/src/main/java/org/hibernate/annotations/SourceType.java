@@ -21,9 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.annotations;
-
 
 /**
  * Where should Hibernate retrieve the value from? From the database, or from the current JVM?
@@ -34,19 +32,24 @@ public enum SourceType {
 	/**
 	 * Get the timestamp from the current VM.
 	 */
-	VM("timestamp"),
+	VM( "timestamp" ),
 
 	/**
 	 * Get the timestamp from the database.
 	 */
-	DB("dbtimestamp");
+	DB( "dbtimestamp" );
 
 	private final String typeName;
 
-	SourceType(String typeName ) {
+	private SourceType(String typeName ) {
 		this.typeName = typeName;
 	}
 
+	/**
+	 * Get the corresponding Hibernate {@link org.hibernate.type.VersionType} name.
+	 *
+	 * @return The corresponding type name.
+	 */
 	public String typeName() {
 		return typeName;
 	}

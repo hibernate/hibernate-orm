@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -29,13 +30,15 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Plural of Table
+ * A grouping of tables.
  *
  * @author Emmanuel Bernard
- * @see Table
  */
 @Target({TYPE})
 @Retention(RUNTIME)
 public @interface Tables {
+	/**
+	 * The table grouping.
+	 */
 	Table[] value();
 }

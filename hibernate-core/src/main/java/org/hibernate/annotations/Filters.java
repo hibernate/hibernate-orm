@@ -31,7 +31,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Add multiple @Filters
+ * Add multiple {@code @Filters}.
  *
  * @author Emmanuel Bernard
  * @author Matthew Inger
@@ -40,5 +40,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Filters {
+	/**
+	 * The aggregated filters.
+	 */
 	Filter[] value();
 }

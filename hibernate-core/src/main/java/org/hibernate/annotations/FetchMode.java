@@ -23,23 +23,23 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * Fetch options on associations
+ * Fetch options on associations.  Defines more of the "how" of fetching, whereas JPA {@link javax.persistence.FetchType}
+ * focuses on the "when".
  *
  * @author Emmanuel Bernard
  */
 public enum FetchMode {
 	/**
-	 * use a select for each individual entity, collection, or join load
+	 * use a select for each individual entity, collection, or join load.
 	 */
 	SELECT,
 	/**
-	 * use an outer join to load the related entities, collections or joins
+	 * use an outer join to load the related entities, collections or joins.
 	 */
 	JOIN,
 	/**
-	 * use a subselect query to load the additional collections
+	 * use a subselect query to load the additional collections.
 	 */
 	SUBSELECT
 }

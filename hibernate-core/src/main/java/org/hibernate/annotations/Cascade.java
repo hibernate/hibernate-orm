@@ -40,5 +40,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Cascade {
+	/**
+	 * The cascade value.
+	 */
 	CascadeType[] value();
 }

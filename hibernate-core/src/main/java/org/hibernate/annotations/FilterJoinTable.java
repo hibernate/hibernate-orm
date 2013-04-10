@@ -21,16 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-//$Id$
 package org.hibernate.annotations;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Add filters to a join table collection
+ * Add filters to a join table collection.
  *
  * @author Emmanuel Bernard
  * @author Rob Worsnop
@@ -38,8 +37,24 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FilterJoinTable {
+	/**
+	 * The filter name.
+	 */
 	String name();
+
+	/**
+	 * The filter condition.  If empty, the default condition from the correspondingly named {@link FilterDef} is used.
+	 */
 	String condition() default "";
+
+	/**
+	 * Do we need to determine all points within the condition fragment that are alias injection points?  Or
+	 * are injection points already marked?
+	 */
 	boolean deduceAliasInjectionPoints() default true;
+
+	/**
+	 * The alias descriptors for injection.
+	 */
 	SqlFragmentAlias[] aliases() default {};
 }

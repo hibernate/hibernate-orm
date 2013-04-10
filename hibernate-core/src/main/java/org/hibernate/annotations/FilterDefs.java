@@ -30,7 +30,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Array of filter definitions
+ * Array of filter definitions.
  *
  * @author Matthew Inger
  * @author Emmanuel Bernard
@@ -38,5 +38,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PACKAGE, TYPE})
 @Retention(RUNTIME)
 public @interface FilterDefs {
+	/**
+	 * The aggregated filter definitions.
+	 */
 	FilterDef[] value();
 }

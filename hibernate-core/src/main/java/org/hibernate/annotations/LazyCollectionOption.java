@@ -23,17 +23,22 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * Lazy options available for a collection
+ * Lazy options available for a collection.
  *
  * @author Emmanuel Bernard
  */
 public enum LazyCollectionOption {
-	/** eagerly load it */
+	/**
+	 * Eagerly load it.
+	 */
 	FALSE,
-	/** load it when the state is requested */
+	/**
+	 * Load it when the state is requested.
+	 */
 	TRUE,
-	/** prefer extra queries over fill collection loading */
+	/**
+	 * Prefer extra queries over full collection loading.
+	 */
 	EXTRA
 }

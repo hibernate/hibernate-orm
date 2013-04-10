@@ -36,7 +36,7 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Persister {
 	/**
-	 * @return The custom persister class
+	 * The custom persister class.
 	 */
 	Class<?> impl();
 }

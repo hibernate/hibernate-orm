@@ -21,10 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
-
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -40,17 +38,35 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({ TYPE, PACKAGE })
 @Retention(RUNTIME)
 public @interface FetchProfile {
+	/**
+	 * The name of the fetch profile.
+	 */
 	String name();
 
+	/**
+	 * The association fetch overrides.
+	 */
 	FetchOverride[] fetchOverrides();
 
+	/**
+	 * Descriptor for a particular association override.
+	 */
 	@Target({ TYPE, PACKAGE })
 	@Retention(RUNTIME)
-			@interface FetchOverride {
+	@interface FetchOverride {
+		/**
+		 * The entity containing the association whose fetch is being overridden.
+		 */
 		Class<?> entity();
 
+		/**
+		 * The association whose fetch is being overridden.
+		 */
 		String association();
 
+		/**
+		 * The fetch mode to apply to the association.
+		 */
 		FetchMode mode();
 	}
 }

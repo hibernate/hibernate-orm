@@ -23,18 +23,17 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * Possible checks on Sql Insert, Delete, Update
+ * Possible styles of checking return codes on SQL INSERT, UPDATE and DELETE queries.
  *
  * @author L�szl� Benke
  */
 public enum ResultCheckStyle {
 	/**
-	 * Do not perform checking.  Either user simply does not want checking, or is
-	 * indicating a {@link java.sql.CallableStatement} execution in which the
-	 * checks are being performed explicitly and failures are handled through
-	 * propogation of {@link java.sql.SQLException}s.
+	 * Do not perform checking.  Might mean that the user really just does not want any checking.  Might
+	 * also mean that the user is expecting a failure to be indicated by a {@link java.sql.SQLException} being
+	 * thrown (presumably from a {@link java.sql.CallableStatement} which is performing explicit checks and
+	 * propagating failures back through the driver).
 	 */
 	NONE,
 	/**

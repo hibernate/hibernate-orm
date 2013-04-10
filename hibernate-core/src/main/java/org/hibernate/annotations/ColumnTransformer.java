@@ -43,20 +43,20 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface ColumnTransformer {
 	/**
-	 * (Logical) column name for which the expression is used
+	 * (Logical) column name for which the expression is used.
 	 *
 	 * This can be left out if the property is bound to a single column
 	 */
 	String forColumn() default "";
 
 	/**
-	 * Custom SQL expression used to read from the column
+	 * Custom SQL expression used to read from the column.
 	 */
 	String read() default "";
 
 	/**
-	 * Custom SQL expression used to write to the column.
-	 * The write expression must contain exactly one '?' placeholder for the value.
+	 * Custom SQL expression used to write to the column. The write expression must contain exactly
+	 * one '?' placeholder for the value.
 	 */
 	String write() default "";
 }

@@ -56,7 +56,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface BatchSize {
 	/**
-	 * Strictly positive integer
+	 * Strictly positive integer.
 	 */
 	int size();
 }

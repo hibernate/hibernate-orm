@@ -30,13 +30,16 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link javax.persistence.NamedNativeQueries} to hold hibernate NamedNativeQuery
- * objects
+ * A grouping of Hibernate-specific {@link NamedNativeQuery} definitions.  Effectively extends the named native
+ * query definitions made available through {@link javax.persistence.NamedNativeQueries}.
  *
  * @author Emmanuel Bernard
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 public @interface NamedNativeQueries {
+	/**
+	 * The grouping of Hibernate named native SQL queries.
+	 */
 	NamedNativeQuery[] value();
 }

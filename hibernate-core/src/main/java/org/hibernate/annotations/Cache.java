@@ -31,20 +31,26 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Add caching strategy to a root entity or a collection
+ * Add caching strategy to a root entity or a collection.
  *
  * @author Emmanuel Bernard
  */
 @Target({TYPE, METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Cache {
-	/** concurrency strategy chosen */
-	CacheConcurrencyStrategy usage();
-	/** cache region name */
-	String region() default "";
 	/**
-	 * whether or not lazy-properties are included in the second level cache
-	 * default all, other value: non-lazy
+	 * The concurrency strategy chosen.
+	 */
+	CacheConcurrencyStrategy usage();
+
+	/**
+	 * The cache region name.
+	 */
+	String region() default "";
+
+	/**
+	 * How lazy properties are included in the second level cache. Default value is "all"; other allowable
+	 * value: "non-lazy"
 	 */
 	String include() default "all";
 }

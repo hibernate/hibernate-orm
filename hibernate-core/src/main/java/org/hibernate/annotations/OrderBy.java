@@ -30,13 +30,18 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Order a collection using SQL ordering (not HQL ordering)
+ * Order a collection using SQL ordering (not HQL ordering).
  *
  * @author Emmanuel Bernard
+ *
+ * @see javax.persistence.OrderBy
+ * @see Sort
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface OrderBy {
-	/** SQL orderby clause */
+	/**
+	 * SQL ordering clause.
+	 */
 	String clause();
 }

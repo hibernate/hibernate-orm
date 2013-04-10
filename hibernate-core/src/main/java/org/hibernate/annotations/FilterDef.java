@@ -30,7 +30,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Filter definition
+ * Filter definition.  Defines a name, default condition and parameter types (if any).
  *
  * @author Matthew Inger
  * @author Emmanuel Bernard
@@ -38,9 +38,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 public @interface FilterDef {
+	/**
+	 * The filter name.
+	 */
 	String name();
 
+	/**
+	 * The default filter condition.
+	 */
 	String defaultCondition() default "";
 
+	/**
+	 * The filter parameter definitions.
+	 */
 	ParamDef[] parameters() default {};
 }

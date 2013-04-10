@@ -42,11 +42,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CollectionType {
 	/**
-	 * Names the type (either {@link org.hibernate.type.CollectionType} or
-	 * {@link org.hibernate.usertype.UserCollectionType} implementation class.  Could also name a
-	 * custom type defined via a {@link TypeDef @TypeDef}
-	 * 
-	 * @return The implementation class to use.
+	 * Names the type.
+	 *
+	 * Could name the implementation class (an implementation of {@link org.hibernate.type.CollectionType} or
+	 * {@link org.hibernate.usertype.UserCollectionType}).  Could also name a custom type defined via a
+	 * {@link TypeDef @TypeDef}
 	 */
 	String type();
 
@@ -54,8 +54,6 @@ public @interface CollectionType {
 	 * Specifies configuration information for the type.  Note that if the named type is a
 	 * {@link org.hibernate.usertype.UserCollectionType}, it must also implement 
 	 * {@link org.hibernate.usertype.ParameterizedType} in order to receive these values.
-	 *
-	 * @return The configuration parameters.
 	 */
 	Parameter[] parameters() default {};
 }

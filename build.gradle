@@ -308,6 +308,24 @@ subprojects { subProject ->
 	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
 	eclipseClasspath.dependsOn("generateSources")
 
+        // specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        task checkstylePublicSources(type: Checkstyle) {
+            checkstyleClasspath = checkstyleMain.checkstyleClasspath
+            classpath = checkstyleMain.classpath
+            configFile = rootProject.file( 'shared/config/checkstyle/public_checks.xml' )
+            source subProject.sourceSets.main.originalJavaSrcDirs
+            exclude '**/internal/**'
+            exclude '**/internal/*'
+            ignoreFailures = false
+            showViolations = true
+            reports {
+                xml {
+                    destination "$buildDir/reports/checkstyle/public.xml"
+                }
+            }
+        }
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
         // Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         checkstyle {
             configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )

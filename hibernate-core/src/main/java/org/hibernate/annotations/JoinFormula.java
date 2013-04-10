@@ -21,8 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -31,14 +31,21 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * JoinFormula. To be used as a replacement for @JoinColumn in most places
- * The formula has to be a valid SQL fragment
+ * To be used as a replacement for {@code @JoinColumn} in most places.  The formula has to be a valid
+ * SQL fragment
  *
  * @author Sharath Reddy
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface JoinFormula {
+	/**
+	 * The formula.
+	 */
 	String value();
+
+	/**
+	 * The column this formula references.
+	 */
 	String referencedColumnName() default "";
 }

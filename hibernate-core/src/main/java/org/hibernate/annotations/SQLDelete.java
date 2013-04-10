@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -31,7 +32,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * SqlDelete Annotation for overwriting Hibernate default DELETE method
+ * Custom SQL statement for delete of an entity/collection.
  *
  * @author L�szl� Benke
  */
@@ -39,12 +40,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention( RUNTIME )
 public @interface SQLDelete {
 	/**
-	 * Procedure name or DELETE STATEMENT
+	 * Procedure name or SQL DELETE statement.
 	 */
 	String sql();
 
 	/**
-	 * Is the statement using stored procedure or not
+	 * Is the statement callable (aka a {@link java.sql.CallableStatement})?
 	 */
 	boolean callable() default false;
 

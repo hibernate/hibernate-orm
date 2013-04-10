@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -31,9 +32,8 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Property Access type
- *
- * Prefer the standard {@link javax.persistence.Access} annotation
+ * Property Access type.  Prefer the standard {@link javax.persistence.Access} annotation; however,
+ * {@code @Access} is limited to field/property access definitions.
  *
  * @author Emmanuel Bernard
  *
@@ -44,5 +44,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Deprecated
 public @interface AccessType {
+	/**
+	 * The access strategy name.
+	 */
 	String value();
 }

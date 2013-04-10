@@ -23,14 +23,22 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * Sort strategies
+ * Possible collection sorting strategies.
  *
  * @author Emmanuel Bernard
  */
 public enum SortType {
+	/**
+	 * The collection is unsorted.
+	 */
 	UNSORTED,
+	/**
+	 * The collection is sorted using its natural sorting.
+	 */
 	NATURAL,
+	/**
+	 * The collection is sorted using a supplied comparator.
+	 */
 	COMPARATOR
 }

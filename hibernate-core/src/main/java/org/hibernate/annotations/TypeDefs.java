@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -30,12 +31,15 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Type definition array
+ * Grouping of type definitions.
  *
  * @author Emmanuel Bernard
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 public @interface TypeDefs {
+	/**
+	 * The grouping of type defs.
+	 */
 	TypeDef[] value();
 }

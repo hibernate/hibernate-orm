@@ -37,5 +37,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface Polymorphism {
+	/**
+	 * Specifies the polymorphism type.
+	 */
 	PolymorphismType type() default PolymorphismType.IMPLICIT;
 }

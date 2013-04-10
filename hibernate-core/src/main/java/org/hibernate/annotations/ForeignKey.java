@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -30,12 +31,13 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * Define the foreign key name.
+ *
+ * Prefer the JPA 2.1 introduced {@link javax.persistence.ForeignKey} instead.
+ */
 @Target({FIELD, METHOD, TYPE})
 @Retention(RUNTIME)
-
-/**
- * Define the foreign key name
- */
 public @interface ForeignKey {
 	/**
 	 * Name of the foreign key.  Used in OneToMany, ManyToOne, and OneToOne

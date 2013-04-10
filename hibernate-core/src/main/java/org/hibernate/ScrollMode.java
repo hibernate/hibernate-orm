@@ -40,14 +40,14 @@ public enum ScrollMode {
 	FORWARD_ONLY( ResultSet.TYPE_FORWARD_ONLY ),
 
 	/**
-	 * Requests a scrollable result which is sensitive to changes in the underlying data
+	 * Requests a scrollable result which is sensitive to changes in the underlying data.
 	 *
 	 * @see java.sql.ResultSet#TYPE_SCROLL_SENSITIVE
 	 */
 	SCROLL_SENSITIVE( ResultSet.TYPE_SCROLL_SENSITIVE ),
 
 	/**
-	 * Requests a scrollable result which is insensitive to changes in the underlying data
+	 * Requests a scrollable result which is insensitive to changes in the underlying data.
 	 *
 	 * Note that since the Hibernate session acts as a cache, you
 	 * might need to explicitly evict objects, if you need to see

@@ -111,6 +111,7 @@ import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
@@ -1708,6 +1709,9 @@ public final class AnnotationBinder {
 							entityBinder.getSecondaryTables(),
 							mappings
 					);
+					if ( property.isAnnotationPresent( ListIndexBase.class ) ) {
+						indexColumn.setBase( ( property.getAnnotation( ListIndexBase.class ) ).value() );
+					}
 				}
 				else {
 					//if @IndexColumn is not there, the generated IndexColumn is an implicit column and not used.

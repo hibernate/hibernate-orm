@@ -584,13 +584,16 @@ public class Order {
         </example>
 
         <note>
-          <para>We recommend you to convert <classname>the legacy
-          @org.hibernate.annotations.IndexColumn</classname> usages to
-          <classname>@OrderColumn</classname> unless you are making use of the
-          base property. The <literal>base</literal> property lets you define
-          the index value of the first element (aka as base index). The usual
-          value is <literal>0</literal> or <literal>1</literal>. The default
-          is 0 like in Java.</para>
+            <para>
+                We recommend you to convert the legacy <classname>@org.hibernate.annotations.IndexColumn</classname>
+                usages to the JPA standard <classname>@javax.persistence.OrderColumn</classname>.
+            </para>
+            <para>
+                If you are leveraging a custom list index base (maybe currently using the
+                <methodname>org.hibernate.annotations.IndexColumn.literal</methodname> attribute), you can
+                specify this using the <classname>@org.hibernate.annotations.ListIndexBase</classname> in conjunction
+                with <classname>@javax.persistence.OrderColumn</classname>.  The default base is 0 like in Java.
+            </para>
         </note>
 
         <para>Looking again at the Hibernate mapping file equivalent, the

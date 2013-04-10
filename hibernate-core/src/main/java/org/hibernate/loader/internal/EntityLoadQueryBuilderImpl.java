@@ -23,11 +23,15 @@
  */
 package org.hibernate.loader.internal;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.CollectionAliases;
+import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;
@@ -35,8 +39,10 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.LoadPlanVisitationStrategyAdapter;
 import org.hibernate.loader.plan.spi.LoadPlanVisitor;
+import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.spi.LoadQueryBuilder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.walking.spi.WalkingException;
 
 /**
  * @author Gail Badner
@@ -46,7 +52,6 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LoadPlan loadPlan;
 	private final List<JoinableAssociationImpl> associations;
-	private final List<String> suffixes;
 
 	public EntityLoadQueryBuilderImpl(
 			SessionFactoryImplementor sessionFactory,
@@ -58,7 +63,6 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 		LocalVisitationStrategy strategy = new LocalVisitationStrategy();
 		LoadPlanVisitor.visit( loadPlan, strategy );
 		this.associations = strategy.associations;
-		this.suffixes = strategy.suffixes;
 	}
 
 	@Override
@@ -70,8 +74,7 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 		final EntityLoadQueryImpl loadQuery = new EntityLoadQueryImpl(
 				sessionFactory,
 				getRootEntityReturn(),
-				associations,
-				suffixes
+				associations
 		);
 		return loadQuery.generateSql( uniqueKey, batchSize, getRootEntityReturn().getLockMode() );
 	}
@@ -85,7 +88,8 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 	}
 	private class LocalVisitationStrategy extends LoadPlanVisitationStrategyAdapter {
 		private final List<JoinableAssociationImpl> associations = new ArrayList<JoinableAssociationImpl>();
-		private final List<String> suffixes = new ArrayList<String>();
+		private Deque<EntityAliases> entityAliasStack = new ArrayDeque<EntityAliases>();
+		private Deque<CollectionAliases> collectionAliasStack = new ArrayDeque<CollectionAliases>();
 
 		private EntityReturn entityRootReturn;
 
@@ -95,31 +99,70 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 		}
 
 		@Override
+		public void startingRootReturn(Return rootReturn) {
+			if ( !EntityReturn.class.isInstance( rootReturn ) ) {
+				throw new WalkingException(
+						String.format(
+								"Unexpected type of return; expected [%s]; instead it was [%s]",
+								EntityReturn.class.getName(),
+								rootReturn.getClass().getName()
+						)
+				);
+			}
+			this.entityRootReturn = (EntityReturn) rootReturn;
+			pushToStack( entityAliasStack, entityRootReturn.getEntityAliases() );
+		}
+
+		@Override
+		public void finishingRootReturn(Return rootReturn) {
+			if ( !EntityReturn.class.isInstance( rootReturn ) ) {
+				throw new WalkingException(
+						String.format(
+								"Unexpected type of return; expected [%s]; instead it was [%s]",
+								EntityReturn.class.getName(),
+								rootReturn.getClass().getName()
+						)
+				);
+			}
+			popFromStack( entityAliasStack, ( (EntityReturn) rootReturn ).getEntityAliases() );
+		}
+
+		@Override
 		public void startingEntityFetch(EntityFetch entityFetch) {
 			JoinableAssociationImpl assoc = new JoinableAssociationImpl(
 					entityFetch,
+					getCurrentCollectionSuffix(),
 					"",    // getWithClause( entityFetch.getPropertyPath() )
 					false, // hasRestriction( entityFetch.getPropertyPath() )
 					sessionFactory,
 					loadQueryInfluencers.getEnabledFilters()
 			);
 			associations.add( assoc );
-			suffixes.add( entityFetch.getEntityAliases().getSuffix() );
+			pushToStack( entityAliasStack, entityFetch.getEntityAliases() );
 		}
 
 		@Override
 		public void finishingEntityFetch(EntityFetch entityFetch) {
-			//To change body of implemented methods use File | Settings | File Templates.
+			popFromStack( entityAliasStack, entityFetch.getEntityAliases() );
 		}
 
 		@Override
 		public void startingCollectionFetch(CollectionFetch collectionFetch) {
-			//To change body of implemented methods use File | Settings | File Templates.
+			JoinableAssociationImpl assoc = new JoinableAssociationImpl(
+					collectionFetch,
+					getCurrentEntitySuffix(),
+					"",    // getWithClause( entityFetch.getPropertyPath() )
+					false, // hasRestriction( entityFetch.getPropertyPath() )
+					sessionFactory,
+					loadQueryInfluencers.getEnabledFilters()
+			);
+			associations.add( assoc );
+			pushToStack( collectionAliasStack, collectionFetch.getCollectionAliases() );
 		}
 
 		@Override
 		public void finishingCollectionFetch(CollectionFetch collectionFetch) {
-			//To change body of implemented methods use File | Settings | File Templates.
+			popFromStack( collectionAliasStack, collectionFetch.getCollectionAliases() );
 		}
 
 		@Override
@@ -134,7 +177,33 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 
 		@Override
 		public void finish(LoadPlan loadPlan) {
-			//suffixes.add( entityRootReturn.getEntityAliases().getSuffix() );
+			entityAliasStack.clear();
+			collectionAliasStack.clear();
+		}
+
+		private String getCurrentEntitySuffix() {
+			return entityAliasStack.peekFirst() == null ? null : entityAliasStack.peekFirst().getSuffix();
+		}
+
+		private String getCurrentCollectionSuffix() {
+			return collectionAliasStack.peekFirst() == null ? null : collectionAliasStack.peekFirst().getSuffix();
+		}
+
+		private <T> void pushToStack(Deque<T> stack, T value) {
+			stack.push( value );
+		}
+
+		private <T> void popFromStack(Deque<T> stack, T expectedValue) {
+			T poppedValue = stack.pop();
+			if ( poppedValue != expectedValue ) {
+				throw new WalkingException(
+						String.format(
+								"Unexpected value from stack. Expected=[%s]; instead it was [%s].",
+								expectedValue,
+								poppedValue
+						)
+				);
+			}
 		}
 	}
 }

@@ -82,13 +82,15 @@ public class LoadPlanVisitor {
 	}
 
 	private void visitFetches(FetchOwner fetchOwner) {
-		strategy.startingFetches( fetchOwner );
+		if ( fetchOwner != null ) {
+			strategy.startingFetches( fetchOwner );
 
-		for ( Fetch fetch : fetchOwner.getFetches() ) {
-			visitFetch( fetch );
+			for ( Fetch fetch : fetchOwner.getFetches() ) {
+				visitFetch( fetch );
+			}
+
+			strategy.finishingFetches( fetchOwner );
 		}
-
-		strategy.finishingFetches( fetchOwner );
 	}
 
 	private void visitFetch(Fetch fetch) {

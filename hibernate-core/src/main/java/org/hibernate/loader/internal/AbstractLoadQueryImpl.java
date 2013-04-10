@@ -22,7 +22,6 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.loader.internal;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.MappingException;
@@ -47,18 +46,12 @@ public abstract class AbstractLoadQueryImpl {
 
 	private final SessionFactoryImplementor factory;
 	private final List<JoinableAssociationImpl> associations;
-	private final List<String> suffixes;
-
-	private String[] collectionSuffixes;
 
 	protected AbstractLoadQueryImpl(
 			SessionFactoryImplementor factory,
-			List<JoinableAssociationImpl> associations,
-			List<String> suffixes) {
+			List<JoinableAssociationImpl> associations) {
 		this.factory = factory;
 		this.associations = associations;
-		// TODO: we should be able to get the suffixes out of associations.
-		this.suffixes = suffixes;
 	}
 
 	protected SessionFactoryImplementor getFactory() {
@@ -105,29 +98,9 @@ public abstract class AbstractLoadQueryImpl {
 	}
 
 	/**
-	 * Count the number of instances of Joinable which are actually
-	 * also instances of PersistentCollection which are being fetched
-	 * by outer join
-	 */
-	protected static final int countCollectionPersisters(List associations)
-	throws MappingException {
-		int result = 0;
-		Iterator iter = associations.iterator();
-		while ( iter.hasNext() ) {
-			JoinableAssociationImpl oj = (JoinableAssociationImpl) iter.next();
-			if ( oj.getJoinType()==JoinType.LEFT_OUTER_JOIN &&
-					oj.getJoinable().isCollection() &&
-					! oj.hasRestriction() ) {
-				result++;
-			}
-		}
-		return result;
-	}
-	
-	/**
 	 * Get the order by string required for collection fetching
 	 */
-	protected static final String orderBy(List<JoinableAssociationImpl> associations)
+	protected static String orderBy(List<JoinableAssociationImpl> associations)
 	throws MappingException {
 		StringBuilder buf = new StringBuilder();
 		JoinableAssociationImpl last = null;
@@ -156,7 +129,9 @@ public abstract class AbstractLoadQueryImpl {
 			}
 			last = oj;
 		}
-		if ( buf.length()>0 ) buf.setLength( buf.length()-2 );
+		if ( buf.length() > 0 ) {
+			buf.setLength( buf.length() - 2 );
+		}
 		return buf.toString();
 	}
 
@@ -168,7 +143,9 @@ public abstract class AbstractLoadQueryImpl {
 			// if not a composite key, use "foo in (?, ?, ?)" for batching
 			// if no batch, and not a composite key, use "foo = ?"
 			InFragment in = new InFragment().setColumn( alias, columnNames[0] );
-			for ( int i=0; i<batchSize; i++ ) in.addValue("?");
+			for ( int i = 0; i < batchSize; i++ ) {
+				in.addValue( "?" );
+			}
 			return new StringBuilder( in.toFragmentString() );
 		}
 		else {
@@ -207,33 +184,23 @@ public abstract class AbstractLoadQueryImpl {
 		}
 		else {
 			StringBuilder buf = new StringBuilder( associations.size() * 100 );
-			int entityAliasCount=0;
-			int collectionAliasCount=0;
 			for ( int i=0; i<associations.size(); i++ ) {
 				JoinableAssociationImpl join = associations.get(i);
 				JoinableAssociationImpl next = (i == associations.size() - 1)
 				        ? null
 				        : associations.get( i + 1 );
 				final Joinable joinable = join.getJoinable();
-				final String entitySuffix = ( suffixes == null || entityAliasCount >= suffixes.size() )
-				        ? null
-				        : suffixes.get( entityAliasCount );
-				final String collectionSuffix = ( collectionSuffixes == null || collectionAliasCount >= collectionSuffixes.length )
-				        ? null
-				        : collectionSuffixes[collectionAliasCount];
 				final String selectFragment = joinable.selectFragment(
 						next == null ? null : next.getJoinable(),
 						next == null ? null : next.getRHSAlias(),
 						join.getRHSAlias(),
-						entitySuffix,
-				        collectionSuffix,
+						associations.get( i ).getCurrentEntitySuffix(),
+						associations.get( i ).getCurrentCollectionSuffix(),
 						join.getJoinType()==JoinType.LEFT_OUTER_JOIN
 				);
 				if (selectFragment.trim().length() > 0) {
 					buf.append(", ").append(selectFragment);
 				}
-				if ( joinable.consumesEntityAlias() ) entityAliasCount++;
-				if ( joinable.consumesCollectionAlias() && join.getJoinType()==JoinType.LEFT_OUTER_JOIN ) collectionAliasCount++;
 			}
 			return buf.toString();
 		}

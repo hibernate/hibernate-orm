@@ -60,9 +60,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class AssociationResultSetProcessorTest extends BaseCoreFunctionalTestCase {
+public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

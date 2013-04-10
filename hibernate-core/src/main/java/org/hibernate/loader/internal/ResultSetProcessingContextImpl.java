@@ -40,15 +40,18 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReturn;
@@ -463,6 +466,113 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 
 	}
 
+	public void readCollectionElements(final Object[] row) {
+			LoadPlanVisitor.visit(
+					loadPlan,
+					new LoadPlanVisitationStrategyAdapter() {
+						@Override
+						public void handleCollectionReturn(CollectionReturn rootCollectionReturn) {
+							readCollectionElement(
+									null,
+									null,
+									rootCollectionReturn.getCollectionPersister(),
+									rootCollectionReturn.getCollectionAliases(),
+									resultSet,
+									session
+							);
+						}
+
+						@Override
+						public void startingCollectionFetch(CollectionFetch collectionFetch) {
+							// TODO: determine which element is the owner.
+							final Object owner = row[ 0 ];
+							readCollectionElement(
+									owner,
+									collectionFetch.getCollectionPersister().getCollectionType().getKeyOfOwner( owner, session ),
+									collectionFetch.getCollectionPersister(),
+									collectionFetch.getCollectionAliases(),
+									resultSet,
+									session
+							);
+						}
+
+						private void readCollectionElement(
+								final Object optionalOwner,
+								final Serializable optionalKey,
+								final CollectionPersister persister,
+								final CollectionAliases descriptor,
+								final ResultSet rs,
+								final SessionImplementor session) {
+
+							try {
+								final PersistenceContext persistenceContext = session.getPersistenceContext();
+
+								final Serializable collectionRowKey = (Serializable) persister.readKey(
+										rs,
+										descriptor.getSuffixedKeyAliases(),
+										session
+								);
+
+								if ( collectionRowKey != null ) {
+									// we found a collection element in the result set
+
+									if ( LOG.isDebugEnabled() ) {
+										LOG.debugf( "Found row of collection: %s",
+												MessageHelper.collectionInfoString( persister, collectionRowKey, session.getFactory() ) );
+									}
+
+									Object owner = optionalOwner;
+									if ( owner == null ) {
+										owner = persistenceContext.getCollectionOwner( collectionRowKey, persister );
+										if ( owner == null ) {
+											//TODO: This is assertion is disabled because there is a bug that means the
+											//	  original owner of a transient, uninitialized collection is not known
+											//	  if the collection is re-referenced by a different object associated
+											//	  with the current Session
+											//throw new AssertionFailure("bug loading unowned collection");
+										}
+									}
+
+									PersistentCollection rowCollection = persistenceContext.getLoadContexts()
+											.getCollectionLoadContext( rs )
+											.getLoadingCollection( persister, collectionRowKey );
+
+									if ( rowCollection != null ) {
+										rowCollection.readFrom( rs, persister, descriptor, owner );
+									}
+
+								}
+								else if ( optionalKey != null ) {
+									// we did not find a collection element in the result set, so we
+									// ensure that a collection is created with the owner's identifier,
+									// since what we have is an empty collection
+
+									if ( LOG.isDebugEnabled() ) {
+										LOG.debugf( "Result set contains (possibly empty) collection: %s",
+												MessageHelper.collectionInfoString( persister, optionalKey, session.getFactory() ) );
+									}
+
+									persistenceContext.getLoadContexts()
+											.getCollectionLoadContext( rs )
+											.getLoadingCollection( persister, optionalKey ); // handle empty collection
+
+								}
+
+								// else no collection element, but also no owner
+							}
+							catch ( SQLException sqle ) {
+								// TODO: would be nice to have the SQL string that failed...
+								throw session.getFactory().getSQLExceptionHelper().convert(
+										sqle,
+										"could not read next row of results"
+								);
+							}
+						}
+
+					}
+			);
+	}
+
 	@Override
 	public void registerHydratedEntity(EntityPersister persister, EntityKey entityKey, Object entityInstance) {
 		if ( currentRowHydratedEntityRegistrationList == null ) {
@@ -488,19 +598,18 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 
 
 		// managing the map forms needed for subselect fetch generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		if ( ! hadSubselectFetches ) {
-			return;
-		}
-		if ( subselectLoadableEntityKeyMap == null ) {
-			subselectLoadableEntityKeyMap = new HashMap<EntityPersister, Set<EntityKey>>();
-		}
-		for ( HydratedEntityRegistration registration : currentRowHydratedEntityRegistrationList ) {
-			Set<EntityKey> entityKeys = subselectLoadableEntityKeyMap.get( registration.persister );
-			if ( entityKeys == null ) {
-				entityKeys = new HashSet<EntityKey>();
-				subselectLoadableEntityKeyMap.put( registration.persister, entityKeys );
+		if ( hadSubselectFetches ) {
+			if ( subselectLoadableEntityKeyMap == null ) {
+				subselectLoadableEntityKeyMap = new HashMap<EntityPersister, Set<EntityKey>>();
 			}
-			entityKeys.add( registration.key );
+			for ( HydratedEntityRegistration registration : currentRowHydratedEntityRegistrationList ) {
+				Set<EntityKey> entityKeys = subselectLoadableEntityKeyMap.get( registration.persister );
+				if ( entityKeys == null ) {
+					entityKeys = new HashSet<EntityKey>();
+					subselectLoadableEntityKeyMap.put( registration.persister, entityKeys );
+				}
+				entityKeys.add( registration.key );
+			}
 		}
 
 		// release the currentRowHydratedEntityRegistrationList entries
@@ -602,15 +711,15 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				new LoadPlanVisitationStrategyAdapter() {
 					@Override
 					public void handleCollectionReturn(CollectionReturn rootCollectionReturn) {
-						endLoadingArray( rootCollectionReturn.getCollectionPersister() );
+						endLoadingCollection( rootCollectionReturn.getCollectionPersister() );
 					}
 
 					@Override
 					public void startingCollectionFetch(CollectionFetch collectionFetch) {
-						endLoadingArray( collectionFetch.getCollectionPersister() );
+						endLoadingCollection( collectionFetch.getCollectionPersister() );
 					}
 
-					private void endLoadingArray(CollectionPersister persister) {
+					private void endLoadingCollection(CollectionPersister persister) {
 						if ( ! persister.isArray() ) {
 							session.getPersistenceContext()
 									.getLoadContexts()

@@ -126,6 +126,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 				loadPlan.getReturns().get( 0 ).resolve( resultSet, context );
 
 				logicalRow = loadPlan.getReturns().get( 0 ).read( resultSet, context );
+				context.readCollectionElements( new Object[] { logicalRow } );
 			}
 			else {
 				for ( Return rootReturn : loadPlan.getReturns() ) {
@@ -141,6 +142,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 					( (Object[]) logicalRow )[pos] = rootReturn.read( resultSet, context );
 					pos++;
 				}
+				context.readCollectionElements( (Object[]) logicalRow );
 			}
 
 			// todo : apply transformers here?

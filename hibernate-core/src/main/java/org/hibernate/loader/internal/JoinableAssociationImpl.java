@@ -31,6 +31,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -40,6 +41,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 
 /**
@@ -57,6 +59,8 @@ public final class JoinableAssociationImpl {
 	private final String[] lhsColumns; // belong to other persister
 	private final String rhsAlias;
 	private final String[] rhsColumns;
+	private final String currentEntitySuffix;
+	private final String currentCollectionSuffix;
 	private final JoinType joinType;
 	private final String on;
 	private final Map enabledFilters;
@@ -64,6 +68,7 @@ public final class JoinableAssociationImpl {
 
 	public JoinableAssociationImpl(
 			EntityFetch entityFetch,
+			String currentCollectionSuffix,
 			String withClause,
 			boolean hasRestriction,
 			SessionFactoryImplementor factory,
@@ -94,7 +99,52 @@ public final class JoinableAssociationImpl {
 			joinType = JoinType.NONE;
 		}
 		this.joinable = joinableType.getAssociatedJoinable(factory);
-		this.rhsColumns = JoinHelper.getRHSColumnNames(joinableType, factory);
+		this.rhsColumns = JoinHelper.getRHSColumnNames( joinableType, factory );
+		this.currentEntitySuffix = entityFetch.getEntityAliases().getSuffix();
+		this.currentCollectionSuffix = currentCollectionSuffix;
+		this.on = joinableType.getOnCondition( rhsAlias, factory, enabledFilters )
+				+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
+		this.hasRestriction = hasRestriction;
+		this.enabledFilters = enabledFilters; // needed later for many-to-many/filter application
+	}
+
+	public JoinableAssociationImpl(
+			CollectionFetch collectionFetch,
+			String currentEntitySuffix,
+			String withClause,
+			boolean hasRestriction,
+			SessionFactoryImplementor factory,
+			Map enabledFilters) throws MappingException {
+		this.propertyPath = collectionFetch.getPropertyPath();
+		final CollectionType collectionType =  collectionFetch.getCollectionPersister().getCollectionType();
+		this.joinableType = collectionType;
+		// TODO: this is not correct
+		final EntityPersister fetchSourcePersister = collectionFetch.getOwner().retrieveFetchSourcePersister();
+		final int propertyNumber = fetchSourcePersister.getEntityMetamodel().getPropertyIndex( collectionFetch.getOwnerPropertyName() );
+
+		if ( EntityReference.class.isInstance( collectionFetch.getOwner() ) ) {
+			this.lhsAlias = ( (EntityReference) collectionFetch.getOwner() ).getSqlTableAlias();
+		}
+		else {
+			throw new NotYetImplementedException( "Cannot determine LHS alias for a FetchOwner that is not an EntityReference." );
+		}
+		final OuterJoinLoadable ownerPersister = (OuterJoinLoadable) collectionFetch.getOwner().retrieveFetchSourcePersister();
+		this.lhsColumns = JoinHelper.getAliasedLHSColumnNames(
+				collectionType, lhsAlias, propertyNumber, ownerPersister, factory
+		);
+		this.rhsAlias = collectionFetch.getAlias();
+
+		final boolean isNullable = ownerPersister.isSubclassPropertyNullable( propertyNumber );
+		if ( collectionFetch.getFetchStrategy().getStyle() == FetchStyle.JOIN ) {
+			joinType = isNullable ? JoinType.LEFT_OUTER_JOIN : JoinType.INNER_JOIN;
+		}
+		else {
+			joinType = JoinType.NONE;
+		}
+		this.joinable = joinableType.getAssociatedJoinable(factory);
+		this.rhsColumns = JoinHelper.getRHSColumnNames( joinableType, factory );
+		this.currentEntitySuffix = currentEntitySuffix;
+		this.currentCollectionSuffix = collectionFetch.getCollectionAliases().getSuffix();
 		this.on = joinableType.getOnCondition( rhsAlias, factory, enabledFilters )
 				+ ( withClause == null || withClause.trim().length() == 0 ? "" : " and ( " + withClause + " )" );
 		this.hasRestriction = hasRestriction;
@@ -115,6 +165,14 @@ public final class JoinableAssociationImpl {
 
 	public String getRHSAlias() {
 		return rhsAlias;
+	}
+
+	public String getCurrentEntitySuffix() {
+		return currentEntitySuffix;
+	}
+
+	public String getCurrentCollectionSuffix() {
+		return currentCollectionSuffix;
 	}
 
 	private boolean isOneToOne() {

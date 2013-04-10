@@ -46,9 +46,8 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 	public AbstractEntityLoadQueryImpl(
 			SessionFactoryImplementor factory,
 			EntityReturn entityReturn,
-			List<JoinableAssociationImpl> associations,
-			List<String> suffixes) {
-		super( factory, associations, suffixes );
+			List<JoinableAssociationImpl> associations) {
+		super( factory, associations );
 		this.entityReturn = entityReturn;
 	}
 
@@ -67,6 +66,10 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 			final LockOptions lockOptions) throws MappingException {
 
 		JoinFragment ojf = mergeOuterJoins();
+
+		// If no projection, then the last suffix should be for the entity return.
+		// TODO: simplify how suffixes are generated/processed.
+
 
 		Select select = new Select( getDialect() )
 				.setLockOptions( lockOptions )

@@ -42,9 +42,8 @@ public class EntityLoadQueryImpl extends AbstractEntityLoadQueryImpl {
 	public EntityLoadQueryImpl(
 			final SessionFactoryImplementor factory,
 			EntityReturn entityReturn,
-			List<JoinableAssociationImpl> associations,
-			List<String> suffixes) throws MappingException {
-		super( factory, entityReturn, associations, suffixes );
+			List<JoinableAssociationImpl> associations) throws MappingException {
+		super( factory, entityReturn, associations );
 	}
 
 	public String generateSql(String[] uniqueKey, int batchSize, LockMode lockMode) {

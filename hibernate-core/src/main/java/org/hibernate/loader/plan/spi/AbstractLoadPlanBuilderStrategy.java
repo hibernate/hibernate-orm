@@ -399,6 +399,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		final Fetch associationFetch;
 		if ( attributeDefinition.isCollection() ) {
 			associationFetch = fetchOwner.buildCollectionFetch( attributeDefinition, fetchStrategy, this );
+			pushToCollectionStack( (CollectionReference) associationFetch );
 		}
 		else {
 			associationFetch = fetchOwner.buildEntityFetch(

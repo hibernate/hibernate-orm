@@ -34,6 +34,7 @@ import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
 import org.hibernate.loader.plan.spi.LoadPlanBuildingContext;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
@@ -46,7 +47,11 @@ public class LoadPlanBuildingHelper {
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		final CollectionAliases collectionAliases = loadPlanBuildingContext.resolveCollectionColumnAliases( attributeDefinition );
-		final EntityAliases elementEntityAliases = loadPlanBuildingContext.resolveEntityColumnAliases( attributeDefinition );
+		final CollectionDefinition collectionDefinition = attributeDefinition.toCollectionDefinition();
+		final EntityAliases elementEntityAliases =
+				collectionDefinition.getElementDefinition().getType().isEntityType() ?
+						loadPlanBuildingContext.resolveEntityColumnAliases( attributeDefinition ) :
+						null;
 
 		return new CollectionFetch(
 				loadPlanBuildingContext.getSessionFactory(),

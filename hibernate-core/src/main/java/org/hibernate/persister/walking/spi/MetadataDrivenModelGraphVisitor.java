@@ -199,7 +199,7 @@ public class MetadataDrivenModelGraphVisitor {
 		if ( elementDefinition.getType().isComponentType() ) {
 			visitCompositeDefinition( elementDefinition.toCompositeDefinition() );
 		}
-		else {
+		else if ( elementDefinition.getType().isEntityType() ) {
 			visitEntityDefinition( elementDefinition.toEntityDefinition() );
 		}
 

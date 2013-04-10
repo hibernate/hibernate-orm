@@ -62,6 +62,8 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 		);
 		this.fetchOwner = fetchOwner;
 		this.fetchStrategy = fetchStrategy;
+
+		fetchOwner.addFetch( this );
 	}
 
 	@Override

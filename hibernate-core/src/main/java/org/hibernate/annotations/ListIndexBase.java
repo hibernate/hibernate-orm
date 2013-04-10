@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,42 +23,22 @@
  */
 package org.hibernate.annotations;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 /**
- * Describe an index column of a List.
+ * Defines the start index value for a list index as stored on the database.  This base is subtracted from the
+ * incoming database value on reads to determine the List position; it is added to the List position index when
+ * writing to the database.
  *
- * @author Matthew Inger
+ * By default list indexes are stored starting at zero.
  *
- * @deprecated Prefer the standard JPA {@link javax.persistence.OrderColumn} annotation and the Hibernate specific
- * {@link ListIndexBase} (for replacing {@link #base()}).
+ * Generally used in conjunction with {@link javax.persistence.OrderColumn}.
+ *
+ * @see javax.persistence.OrderColumn
+ *
+ * @author Steve Ebersole
  */
-@Target({METHOD, FIELD})
-@Retention(RUNTIME)
-@Deprecated
-public @interface IndexColumn {
+public @interface ListIndexBase {
 	/**
-	 * The column name.
+	 * The list index base.  Default is 0.
 	 */
-	String name();
-
-	/**
-	 * The starting index value.  Zero (0) by default, since Lists indexes start at zero (0).
-	 */
-	int base() default 0;
-
-	/**
-	 * Is the column nullable?
-	 */
-	boolean nullable() default true;
-
-	/**
-	 * An explicit column definition.
-	 */
-	String columnDefinition() default "";
+	int value() default 0;
 }

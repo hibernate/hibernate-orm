@@ -126,6 +126,8 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.Sort;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.Tuplizer;
 import org.hibernate.annotations.Tuplizers;
@@ -1733,14 +1735,16 @@ public final class AnnotationBinder {
 				collectionBinder.setIndexColumn( indexColumn );
 				collectionBinder.setMapKey( property.getAnnotation( MapKey.class ) );
 				collectionBinder.setPropertyName( inferredData.getPropertyName() );
-				BatchSize batchAnn = property.getAnnotation( BatchSize.class );
-				collectionBinder.setBatchSize( batchAnn );
-				javax.persistence.OrderBy ejb3OrderByAnn = property.getAnnotation( javax.persistence.OrderBy.class );
-				OrderBy orderByAnn = property.getAnnotation( OrderBy.class );
-				collectionBinder.setEjb3OrderBy( ejb3OrderByAnn );
-				collectionBinder.setSqlOrderBy( orderByAnn );
-				Sort sortAnn = property.getAnnotation( Sort.class );
-				collectionBinder.setSort( sortAnn );
+
+				collectionBinder.setBatchSize( property.getAnnotation( BatchSize.class ) );
+
+				collectionBinder.setJpaOrderBy( property.getAnnotation( javax.persistence.OrderBy.class ) );
+				collectionBinder.setSqlOrderBy( property.getAnnotation( OrderBy.class ) );
+
+				collectionBinder.setSort( property.getAnnotation( Sort.class ) );
+				collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
+				collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
+
 				Cache cachAnn = property.getAnnotation( Cache.class );
 				collectionBinder.setCache( cachAnn );
 				collectionBinder.setPropertyHolder( propertyHolder );

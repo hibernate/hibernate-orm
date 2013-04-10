@@ -33,10 +33,6 @@ import org.hibernate.mapping.PersistentClass;
  * @author Matthew Inger
  */
 public class SetBinder extends CollectionBinder {
-
-	public SetBinder() {
-	}
-
 	public SetBinder(boolean sorted) {
 		super( sorted );
 	}

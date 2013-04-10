@@ -36,9 +36,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Emmanuel Bernard
  *
  * @see OrderBy
+ *
+ * @deprecated Use {@link SortComparator} or {@link SortNatural} instead depending on need.
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@Deprecated
 public @interface Sort {
 	/**
 	 * The type of sorting to use.  The default is to not use sorting.

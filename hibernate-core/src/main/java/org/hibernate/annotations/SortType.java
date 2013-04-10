@@ -27,7 +27,10 @@ package org.hibernate.annotations;
  * Possible collection sorting strategies.
  *
  * @author Emmanuel Bernard
+ *
+ * @deprecated Since {@link Sort} is deprecated.
  */
+@Deprecated
 public enum SortType {
 	/**
 	 * The collection is unsorted.

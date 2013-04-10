@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,31 +22,25 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import java.util.Comparator;
 
 /**
- * Order a collection using SQL ordering (not HQL ordering).
+ * Specifies in-memory Set/Map sorting using a specified {@link Comparator} for sorting.
  *
- * Different from {@link javax.persistence.OrderBy} in that this expects SQL fragment, JPA OrderBy expects a
- * valid JPQL order-by fragment.
+ * NOTE : Sorting is different than ordering (see {@link OrderBy}) which is applied during the SQL SELECT.
  *
- * @author Emmanuel Bernard
- * @author Steve Ebersole
+ * For sorting based on natural sort order, use {@link SortNatural} instead.  It is illegal to combine
+ * {@link SortComparator} and {@link SortNatural}.
  *
- * @see javax.persistence.OrderBy
+ * @see OrderBy
  * @see SortComparator
- * @see SortNatural
+ *
+ * @author Steve Ebersole
  */
-@Target({METHOD, FIELD})
-@Retention(RUNTIME)
-public @interface OrderBy {
+public @interface SortComparator {
 	/**
-	 * SQL ordering clause.
+	 * Specifies the comparator class to use.
 	 */
-	String clause();
+	Class<? extends Comparator<?>> value();
 }

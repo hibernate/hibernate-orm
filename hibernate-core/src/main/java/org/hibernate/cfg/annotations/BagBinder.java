@@ -31,8 +31,8 @@ import org.hibernate.mapping.PersistentClass;
  * @author Matthew Inger
  */
 public class BagBinder extends CollectionBinder {
-
 	public BagBinder() {
+		super( false );
 	}
 
 	protected Collection createCollection(PersistentClass persistentClass) {

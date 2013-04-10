@@ -65,7 +65,7 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 public class EntityHierarchyBuilder {
 	private static final Logger LOG = Logger.getLogger(
 			EntityHierarchyBuilder.class);
-	private static final DotName OBJECT = DotName.createSimple( Object.class.getName() );
+
 
 	/**
 	 * Pre-processes the annotated entities from the index and create a set of entity hierarchies which can be bound
@@ -188,7 +188,7 @@ public class EntityHierarchyBuilder {
 		DotName superName = info.superName();
 		ClassInfo tmpInfo;
 		// walk up the hierarchy until java.lang.Object
-		while ( !OBJECT.equals( superName ) ) {
+		while ( !JandexHelper.OBJECT.equals( superName ) ) {
 			tmpInfo = index.getClassByName( superName );
 			if ( tmpInfo == null && superName != null ) {
 				Class clazz = bindingContext.locateClassByName( superName.toString() );
@@ -217,7 +217,7 @@ public class EntityHierarchyBuilder {
 		DotName superName = info.superName();
 		ClassInfo tmpInfo;
 		// walk up the hierarchy until java.lang.Object
-		while ( !OBJECT.equals( superName ) ) {
+		while ( !JandexHelper.OBJECT.equals( superName ) ) {
 			tmpInfo = index.getClassByName( superName );
 			if ( isMappedSuperclass( tmpInfo ) ) {
 				mappedSuperclasses.add( tmpInfo );

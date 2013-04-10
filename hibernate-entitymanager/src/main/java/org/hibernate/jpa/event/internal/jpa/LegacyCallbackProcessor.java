@@ -87,13 +87,11 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 		do {
 			Callback callback = null;
 			List<XMethod> methods = currentClazz.getDeclaredMethods();
-			final int size = methods.size();
-			for ( int i = 0; i < size ; i++ ) {
-				final XMethod xMethod = methods.get( i );
+			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( annotation ) ) {
 					Method method = reflectionManager.toMethod( xMethod );
 					final String methodName = method.getName();
-					if ( ! callbacksMethodNames.contains( methodName ) ) {
+					if ( !callbacksMethodNames.contains( methodName ) ) {
 						//overridden method, remove the superclass overridden method
 						if ( callback == null ) {
 							callback = new EntityCallback( method );
@@ -105,11 +103,15 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 												.getName() + " - " + xMethod
 								);
 							}
-							if (!method.isAccessible()) method.setAccessible(true);
-							log.debugf("Adding %s as %s callback for entity %s",
-									   methodName,
-									   annotation.getSimpleName(),
-									   beanClass.getName());
+							if ( !method.isAccessible() ) {
+								method.setAccessible( true );
+							}
+							log.debugf(
+									"Adding %s as %s callback for entity %s",
+									methodName,
+									annotation.getSimpleName(),
+									beanClass.getName()
+							);
 							callbacks.add( 0, callback ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
@@ -156,13 +158,11 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<String>();
 				List<XMethod> methods = xListener.getDeclaredMethods();
-				final int size = methods.size();
-				for ( int i = 0; i < size ; i++ ) {
-					final XMethod xMethod = methods.get( i );
+				for ( final XMethod xMethod : methods ) {
 					if ( xMethod.isAnnotationPresent( annotation ) ) {
 						final Method method = reflectionManager.toMethod( xMethod );
 						final String methodName = method.getName();
-						if ( ! callbacksMethodNames.contains( methodName ) ) {
+						if ( !callbacksMethodNames.contains( methodName ) ) {
 							//overridden method, remove the superclass overridden method
 							if ( callback == null ) {
 								callback = new ListenerCallback( jpaListenerFactory.buildListener( listener ), method );
@@ -175,11 +175,15 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 													.getName() + " - " + method
 									);
 								}
-								if (!method.isAccessible()) method.setAccessible(true);
-								log.debugf("Adding %s as %s callback for entity %s",
-										   methodName,
-										   annotation.getSimpleName(),
-										   beanClass.getName());
+								if ( !method.isAccessible() ) {
+									method.setAccessible( true );
+								}
+								log.debugf(
+										"Adding %s as %s callback for entity %s",
+										methodName,
+										annotation.getSimpleName(),
+										beanClass.getName()
+								);
 								callbacks.add( 0, callback ); // listeners first
 							}
 							else {

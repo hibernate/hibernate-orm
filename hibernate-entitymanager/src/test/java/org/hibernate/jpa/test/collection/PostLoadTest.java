@@ -13,7 +13,6 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 @TestForIssue( jiraKey="HHH-6043" )
-@FailureExpectedWithNewMetamodel
 public class PostLoadTest extends BaseEntityManagerFunctionalTestCase {
 
     /**

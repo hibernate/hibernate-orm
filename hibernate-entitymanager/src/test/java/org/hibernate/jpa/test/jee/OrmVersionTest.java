@@ -55,7 +55,6 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class OrmVersionTest extends BaseUnitTestCase{
     @Test
 	public void testOrm1() {
@@ -68,6 +67,7 @@ public class OrmVersionTest extends BaseUnitTestCase{
 		emf.getMetamodel().entity( Lighter1.class ); // exception if not entity
 	}
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testOrm2() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/valid-orm-2.xml" );
@@ -78,6 +78,7 @@ public class OrmVersionTest extends BaseUnitTestCase{
 		emf.getMetamodel().entity( Lighter.class ); // exception if not entity
 	}
     @Test
+	@FailureExpectedWithNewMetamodel
 	public void testInvalidOrm1() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "invalid-orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/jpa/test/jee/invalid-orm-1.xml" );

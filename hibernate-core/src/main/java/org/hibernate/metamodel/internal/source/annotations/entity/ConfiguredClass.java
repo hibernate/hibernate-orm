@@ -331,11 +331,8 @@ public class ConfiguredClass {
 			return false;
 		}
 
-		if ( explicitlyConfiguredMemberNames.contains( ReflectHelper.getPropertyName( member ) ) ) {
-			return false;
-		}
+		return !explicitlyConfiguredMemberNames.contains( ReflectHelper.getPropertyName( member ) );
 
-		return true;
 	}
 
 	/**
@@ -827,4 +824,5 @@ public class ConfiguredClass {
 		);
 		return AnnotationParserHelper.determineCustomTuplizer( tuplizersAnnotation, tuplizerAnnotation );
 	}
+
 }

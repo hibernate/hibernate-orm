@@ -335,11 +335,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		sessionFactory = null;
 		configuration = null;
 		metadata = null;
-        if(serviceRegistry == null){
-            return;
-        }
-        serviceRegistry.destroy();
-        serviceRegistry=null;
+		if ( serviceRegistry == null ) {
+			return;
+		}
+		serviceRegistry.destroy();
+		serviceRegistry = null;
 	}
 
 	@OnFailure

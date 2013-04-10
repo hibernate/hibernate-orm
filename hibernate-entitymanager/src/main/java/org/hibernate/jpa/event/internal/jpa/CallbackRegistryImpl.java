@@ -124,10 +124,9 @@ public class CallbackRegistryImpl implements CallbackRegistry {
 	 */
 	public void addEntityCallbacks(Class entityClass, Class annotationClass, Callback[] callbacks) {
 		final HashMap<Class, Callback[]> map = determineAppropriateCallbackMap( annotationClass );
-		if ( map.containsKey( entityClass ) ) {
+		if ( map.put( entityClass, callbacks ) != null ) {
 			throw new PersistenceException( "Error build callback listeners; entity [" + entityClass.getName() + " was already processed" );
 		}
-		map.put( entityClass, callbacks );
 	}
 
 	private HashMap<Class, Callback[]> determineAppropriateCallbackMap(Class annotationClass) {

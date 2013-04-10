@@ -129,6 +129,10 @@ public class RootEntityClass extends EntityClass {
 		return discriminatorType;
 	}
 
+	public List<MappedSuperclass> getMappedSuperclasses() {
+		return mappedSuperclasses;
+	}
+
 	public IdType getIdType() {
 		return idType;
 	}

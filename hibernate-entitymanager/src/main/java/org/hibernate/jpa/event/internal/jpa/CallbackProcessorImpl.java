@@ -31,6 +31,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -47,16 +48,12 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 	private static final Logger log = Logger.getLogger( CallbackProcessorImpl.class );
 
 	private final ListenerFactory jpaListenerFactory;
-	private final MetadataImplementor metadata;
-
 	private final ClassLoaderService classLoaderService;
 
 	public CallbackProcessorImpl(
 			ListenerFactory jpaListenerFactory,
-			MetadataImplementor metadata,
 			SessionFactoryServiceRegistry serviceRegistry) {
 		this.jpaListenerFactory = jpaListenerFactory;
-		this.metadata = metadata;
 		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 	}
 
@@ -67,7 +64,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 			return;
 		}
 		final Class entityClass = entityBinding.getEntity().getClassReference();
-		for ( Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
+		for ( final Class annotationClass : CALLBACK_ANNOTATION_CLASSES ) {
 			callbackRegistry.addEntityCallbacks(
 					entityClass,
 					annotationClass,
@@ -79,31 +76,33 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 	private final static Callback[] EMPTY_CALLBACK = new Callback[0];
 
 	private Callback[] collectCallbacks(EntityBinding entityBinding, Class entityClass, Class annotationClass) {
-		if ( entityBinding.getJpaCallbackClasses() == null || entityBinding.getJpaCallbackClasses().isEmpty() ) {
+		final List<JpaCallbackSource> jpaCallbackSources = entityBinding.getJpaCallbackClasses();
+		if ( CollectionHelper.isEmpty( jpaCallbackSources ) ) {
 			return EMPTY_CALLBACK;
 		}
-		final int size = entityBinding.getJpaCallbackClasses().size();
-		final Callback[] result = new Callback[size];
-		for ( int i = 0; i < size; i++ ) {
-			final JpaCallbackSource jpaCallbackClass = entityBinding.getJpaCallbackClasses().get( i );
-			final Class listenerClass = classLoaderService.classForName( jpaCallbackClass.getName() );
-			final String methodName = jpaCallbackClass.getCallbackMethod( annotationClass );
-
+		final List<Callback> result = new ArrayList<Callback>(jpaCallbackSources.size());
+		for ( final JpaCallbackSource jpaCallbackSource : entityBinding.getJpaCallbackClasses() ) {
+			final Class listenerClass = classLoaderService.classForName( jpaCallbackSource.getName() );
+			final String methodName = jpaCallbackSource.getCallbackMethod( annotationClass );
+			if ( methodName == null ) {
+				continue;
+			}
 			log.debugf(
-					"Adding $s.%s as %s callback for entity %s",
+					"Adding %s.%s as %s callback for entity %s",
 					listenerClass.getName(),
 					methodName,
 					annotationClass.getName(),
 					entityClass.getName()
 			);
 
-			final Callback callback = jpaCallbackClass.isListener()
+			final Callback callback = jpaCallbackSource.isListener()
 					? createListenerCallback( listenerClass, entityClass, methodName )
 					: createBeanCallback( listenerClass, methodName );
-			assert callback != null;
-			result[i] = callback;
+			if ( callback != null ) {
+				result.add( callback );
+			}
 		}
-		return result;
+		return result.toArray( new Callback[result.size()] );
 	}
 
 	private Callback createListenerCallback(
@@ -111,7 +110,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 			Class entityClass,
 			String methodName ) {
 		final Class<?> callbackSuperclass = listenerClass.getSuperclass();
-		if ( callbackSuperclass != null ) {
+		if ( callbackSuperclass != null && callbackSuperclass != Object.class) {
 			Callback callback = createListenerCallback( entityClass, callbackSuperclass, methodName );
 			if ( callback != null ) {
 				return callback;
@@ -130,7 +129,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 			}
 
 			final Class<?> argType = argTypes[0];
-			if (argType != Object.class && argType != entityClass) {
+			if ( argType != Object.class && argType != entityClass && !argType.isAssignableFrom( entityClass ) ) {
 				continue;
 			}
 			if (!method.isAccessible()) {
@@ -145,7 +144,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 	private Callback createBeanCallback(Class<?> callbackClass,
 										String methodName) {
 		Class<?> callbackSuperclass = callbackClass.getSuperclass();
-		if ( callbackSuperclass != null ) {
+		if ( callbackSuperclass != null && callbackSuperclass != Object.class) {
 			Callback callback = createBeanCallback( callbackSuperclass, methodName );
 			if ( callback != null ) {
 				return callback;

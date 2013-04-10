@@ -4,16 +4,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import javax.persistence.EntityManager;
-
 import org.junit.Test;
-
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Kitten;
-
+import org.hibernate.jpa.test.LastUpdateListener;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -24,7 +20,6 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testCallbackMethod() throws Exception {
@@ -247,7 +242,14 @@ public class CallbacksTest extends BaseEntityManagerFunctionalTestCase {
 				RemoteControl.class,
 				Rythm.class,
 				Plant.class,
-				Kitten.class
+				Kitten.class,
+				LastUpdateListener.class,
+				ExceptionListener.class,
+				FirstOneListener.class,
+				VideoSystem.class,
+				CommunicationSystem.class,
+				IncreaseListener.class
 		};
 	}
+
 }

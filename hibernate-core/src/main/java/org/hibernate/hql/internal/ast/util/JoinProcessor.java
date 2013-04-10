@@ -247,10 +247,10 @@ public class JoinProcessor implements SqlTokenTypes {
 	}
 
 	private static boolean hasDynamicFilterParam(String sqlFragment) {
-		return sqlFragment.indexOf( ParserHelper.HQL_VARIABLE_PREFIX ) < 0;
+		return !sqlFragment.contains( ParserHelper.HQL_VARIABLE_PREFIX );
 	}
 
 	private static boolean hasCollectionFilterParam(String sqlFragment) {
-		return sqlFragment.indexOf( "?" ) < 0;
+		return !sqlFragment.contains( "?" );
 	}
 }

@@ -50,6 +50,7 @@ import org.jboss.jandex.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.service.ServiceRegistry;
 
@@ -61,7 +62,7 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class JandexHelper {
 	private static final Map<String, Object> DEFAULT_VALUES_BY_ELEMENT = new HashMap<String, Object>();
-
+	public static final DotName OBJECT = DotName.createSimple( Object.class.getName() );
 	private JandexHelper() {
 	}
 
@@ -270,6 +271,12 @@ public class JandexHelper {
 							+ ". Expected was one."
 			);
 		}
+	}
+
+	public static void throwNotIndexException(String className){
+		throw new MappingException( "Class " + className +" is not indexed, probably means this class should be explicitly added" +
+				"into MatadataSources" );
+
 	}
 
 	/**

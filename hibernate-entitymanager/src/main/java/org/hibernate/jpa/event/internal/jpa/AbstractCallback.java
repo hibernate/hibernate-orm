@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2009-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -29,18 +29,40 @@ import java.lang.reflect.Method;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 
 /**
- * Represents a JPA callback on the entity itself
- *
- * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public class EntityCallback extends AbstractCallback {
-	public EntityCallback(Method callbackMethod) {
-		super( callbackMethod );
+abstract class AbstractCallback implements Callback {
+
+	protected final Method callbackMethod;
+
+	AbstractCallback(Method callbackMethod) {
+		this.callbackMethod = callbackMethod;
 	}
 
 	@Override
-	protected void doCallback(Object entity) throws InvocationTargetException, IllegalAccessException {
-		callbackMethod.invoke( entity );
+	public boolean performCallback(Object entity) {
+		try {
+			doCallback(entity);
+			return true;
+		}
+		catch (InvocationTargetException e) {
+			//keep runtime exceptions as is
+			if ( e.getTargetException() instanceof RuntimeException ) {
+				throw (RuntimeException) e.getTargetException();
+			}
+			else {
+				throw new RuntimeException( e.getTargetException() );
+			}
+		}
+		catch (Exception e) {
+			throw new RuntimeException( e );
+		}
+	}
+
+	protected abstract void doCallback(Object entity) throws InvocationTargetException, IllegalAccessException;
+
+	@Override
+	public boolean isActive() {
+		return true;
 	}
 }

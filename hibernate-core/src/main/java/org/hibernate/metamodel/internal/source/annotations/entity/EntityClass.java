@@ -23,29 +23,14 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.AccessType;
-import javax.persistence.PersistenceException;
-import javax.persistence.PostLoad;
-import javax.persistence.PostPersist;
-import javax.persistence.PostRemove;
-import javax.persistence.PostUpdate;
-import javax.persistence.PrePersist;
-import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
 
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.jandex.Type;
-import org.jboss.jandex.Type.Kind;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OnDeleteAction;
@@ -55,13 +40,12 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.JpaCallbackSourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JPAListenerHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
@@ -109,7 +93,7 @@ public class EntityClass extends ConfiguredClass {
 
 	private String discriminatorMatchValue;
 
-	private final List<JpaCallbackSource> jpaCallbacks;
+	private  List<JpaCallbackSource> jpaCallbacks;
 	private final List<PrimaryKeyJoinColumn> joinedSubclassPrimaryKeyJoinColumnSources;
 
 	/**
@@ -134,7 +118,6 @@ public class EntityClass extends ConfiguredClass {
 		this.customLoaderQueryName = determineCustomLoader();
 		this.synchronizedTableNames = determineSynchronizedTableNames();
 		this.batchSize = determineBatchSize();
-		this.jpaCallbacks = determineEntityListeners();
 
 		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_INSERT,
@@ -293,6 +276,9 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	public List<JpaCallbackSource> getJpaCallbacks() {
+		if(jpaCallbacks == null){
+			jpaCallbacks = new JPAListenerHelper( this ).bindJPAListeners();
+		}
 		return jpaCallbacks;
 	}
 
@@ -301,6 +287,9 @@ public class EntityClass extends ConfiguredClass {
 	}
 	public String getExplicitForeignKeyName(){
 		return explicitForeignKeyName;
+	}
+	public List<MappedSuperclass> getMappedSuperclasses() {
+		return Collections.EMPTY_LIST;
 	}
 
 	public OnDeleteAction getOnDeleteAction() {
@@ -588,199 +577,4 @@ public class EntityClass extends ConfiguredClass {
 		return batchSizeAnnotation == null ? -1 : batchSizeAnnotation.value( "size" ).asInt();
 	}
 
-	private List<JpaCallbackSource> determineEntityListeners() {
-		List<JpaCallbackSource> callbackClassList = new ArrayList<JpaCallbackSource>();
-
-		// Bind default JPA entity listener callbacks (unless excluded), using superclasses first (unless excluded)
-		if ( JandexHelper.getSingleAnnotation( getClassInfo(), JPADotNames.EXCLUDE_DEFAULT_LISTENERS ) == null ) {
-			Collection<AnnotationInstance> defaultEntityListenerAnnotations = getLocalBindingContext().getIndex()
-					.getAnnotations( PseudoJpaDotNames.DEFAULT_ENTITY_LISTENERS );
-			for ( AnnotationInstance annotation : defaultEntityListenerAnnotations ) {
-				for ( Type callbackClass : annotation.value().asClassArray() ) {
-					String callbackClassName = callbackClass.name().toString();
-					try {
-						processDefaultJpaCallbacks( callbackClassName, callbackClassList );
-					}
-					catch ( PersistenceException error ) {
-						throw new PersistenceException( error.getMessage() + "default entity listener " + callbackClassName );
-					}
-				}
-			}
-		}
-
-		// Bind JPA entity listener callbacks, using superclasses first (unless excluded)
-		List<AnnotationInstance> annotationList = getClassInfo().annotations().get( JPADotNames.ENTITY_LISTENERS );
-		if ( annotationList != null ) {
-			for ( AnnotationInstance annotation : annotationList ) {
-				for ( Type callbackClass : annotation.value().asClassArray() ) {
-					String callbackClassName = callbackClass.name().toString();
-					try {
-						processJpaCallbacks( callbackClassName, true, callbackClassList );
-					}
-					catch ( PersistenceException error ) {
-						throw new PersistenceException( error.getMessage() + "entity listener " + callbackClassName );
-					}
-				}
-			}
-		}
-
-		// Bind JPA entity.mapped superclass callbacks, using superclasses first (unless excluded)
-		try {
-			processJpaCallbacks( getName(), false, callbackClassList );
-		}
-		catch ( PersistenceException error ) {
-			throw new PersistenceException(
-					error.getMessage() + "entity/mapped superclass " + getClassInfo().name().toString()
-			);
-		}
-
-		return callbackClassList;
-	}
-
-	private void processDefaultJpaCallbacks(String instanceCallbackClassName, List<JpaCallbackSource> jpaCallbackClassList) {
-		ClassInfo callbackClassInfo = getLocalBindingContext().getClassInfo( instanceCallbackClassName );
-
-		// Process superclass first if available and not excluded
-		if ( JandexHelper.getSingleAnnotation( callbackClassInfo, JPADotNames.EXCLUDE_SUPERCLASS_LISTENERS ) != null ) {
-			DotName superName = callbackClassInfo.superName();
-			if ( superName != null ) {
-				processDefaultJpaCallbacks( instanceCallbackClassName, jpaCallbackClassList );
-			}
-		}
-
-		String callbackClassName = callbackClassInfo.name().toString();
-		Map<Class<?>, String> callbacksByType = new HashMap<Class<?>, String>();
-		createDefaultCallback(
-				PrePersist.class, PseudoJpaDotNames.DEFAULT_PRE_PERSIST, callbackClassName, callbacksByType
-		);
-		createDefaultCallback(
-				PreRemove.class, PseudoJpaDotNames.DEFAULT_PRE_REMOVE, callbackClassName, callbacksByType
-		);
-		createDefaultCallback(
-				PreUpdate.class, PseudoJpaDotNames.DEFAULT_PRE_UPDATE, callbackClassName, callbacksByType
-		);
-		createDefaultCallback(
-				PostLoad.class, PseudoJpaDotNames.DEFAULT_POST_LOAD, callbackClassName, callbacksByType
-		);
-		createDefaultCallback(
-				PostPersist.class, PseudoJpaDotNames.DEFAULT_POST_PERSIST, callbackClassName, callbacksByType
-		);
-		createDefaultCallback(
-				PostRemove.class, PseudoJpaDotNames.DEFAULT_POST_REMOVE, callbackClassName, callbacksByType
-		);
-		createDefaultCallback(
-				PostUpdate.class, PseudoJpaDotNames.DEFAULT_POST_UPDATE, callbackClassName, callbacksByType
-		);
-		if ( !callbacksByType.isEmpty() ) {
-			jpaCallbackClassList.add( new JpaCallbackSourceImpl( instanceCallbackClassName, callbacksByType, true ) );
-		}
-	}
-
-	private void processJpaCallbacks(String instanceCallbackClassName, boolean isListener, List<JpaCallbackSource> callbackClassList) {
-
-		ClassInfo callbackClassInfo = getLocalBindingContext().getClassInfo( instanceCallbackClassName );
-
-		// Process superclass first if available and not excluded
-		if ( JandexHelper.getSingleAnnotation( callbackClassInfo, JPADotNames.EXCLUDE_SUPERCLASS_LISTENERS ) != null ) {
-			DotName superName = callbackClassInfo.superName();
-			if ( superName != null ) {
-				processJpaCallbacks(
-						instanceCallbackClassName,
-						isListener,
-						callbackClassList
-				);
-			}
-		}
-
-		Map<Class<?>, String> callbacksByType = new HashMap<Class<?>, String>();
-		createCallback( PrePersist.class, JPADotNames.PRE_PERSIST, callbacksByType, callbackClassInfo, isListener );
-		createCallback( PreRemove.class, JPADotNames.PRE_REMOVE, callbacksByType, callbackClassInfo, isListener );
-		createCallback( PreUpdate.class, JPADotNames.PRE_UPDATE, callbacksByType, callbackClassInfo, isListener );
-		createCallback( PostLoad.class, JPADotNames.POST_LOAD, callbacksByType, callbackClassInfo, isListener );
-		createCallback( PostPersist.class, JPADotNames.POST_PERSIST, callbacksByType, callbackClassInfo, isListener );
-		createCallback( PostRemove.class, JPADotNames.POST_REMOVE, callbacksByType, callbackClassInfo, isListener );
-		createCallback( PostUpdate.class, JPADotNames.POST_UPDATE, callbacksByType, callbackClassInfo, isListener );
-		if ( !callbacksByType.isEmpty() ) {
-			callbackClassList.add(
-					new JpaCallbackSourceImpl(
-							instanceCallbackClassName,
-							callbacksByType,
-							isListener
-					)
-			);
-		}
-	}
-
-	private void createDefaultCallback(Class callbackTypeClass,
-									   DotName callbackTypeName,
-									   String callbackClassName,
-									   Map<Class<?>, String> callbacksByClass) {
-		for ( AnnotationInstance callback : getLocalBindingContext().getIndex().getAnnotations( callbackTypeName ) ) {
-			MethodInfo methodInfo = ( MethodInfo ) callback.target();
-			validateMethod( methodInfo, callbackTypeClass, callbacksByClass, true );
-			if ( methodInfo.declaringClass().name().toString().equals( callbackClassName ) ) {
-				if ( methodInfo.args().length != 1 ) {
-					throw new PersistenceException(
-							String.format(
-									"Callback method %s must have exactly one argument defined as either Object or %s in ",
-									methodInfo.name(),
-									getEntityName()
-							)
-					);
-				}
-				callbacksByClass.put( callbackTypeClass, methodInfo.name() );
-			}
-		}
-	}
-
-	private void createCallback(Class callbackTypeClass,
-								DotName callbackTypeName,
-								Map<Class<?>, String> callbacksByClass,
-								ClassInfo callbackClassInfo,
-								boolean isListener) {
-		Map<DotName, List<AnnotationInstance>> annotations = callbackClassInfo.annotations();
-		List<AnnotationInstance> annotationInstances = annotations.get( callbackTypeName );
-		if ( annotationInstances == null ) {
-			return;
-		}
-		for ( AnnotationInstance callbackAnnotation : annotationInstances ) {
-			MethodInfo methodInfo = ( MethodInfo ) callbackAnnotation.target();
-			validateMethod( methodInfo, callbackTypeClass, callbacksByClass, isListener );
-			callbacksByClass.put( callbackTypeClass, methodInfo.name() );
-		}
-	}
-
-	private void validateMethod(MethodInfo methodInfo,
-								Class callbackTypeClass,
-								Map<Class<?>, String> callbacksByClass,
-								boolean isListener) {
-		if ( methodInfo.returnType().kind() != Kind.VOID ) {
-			throw new PersistenceException( "Callback method " + methodInfo.name() + " must have a void return type in " );
-		}
-		if ( Modifier.isStatic( methodInfo.flags() ) || Modifier.isFinal( methodInfo.flags() ) ) {
-			throw new PersistenceException( "Callback method " + methodInfo.name() + " must not be static or final in " );
-		}
-		Type[] argTypes = methodInfo.args();
-		if ( isListener ) {
-			if ( argTypes.length != 1 ) {
-				throw new PersistenceException( "Callback method " + methodInfo.name() + " must have exactly one argument in " );
-			}
-			String argTypeName = argTypes[0].name().toString();
-			if ( !argTypeName.equals( Object.class.getName() ) && !argTypeName.equals( getName() ) ) {
-				throw new PersistenceException(
-						"The argument for callback method " + methodInfo.name() +
-								" must be defined as either Object or " + getEntityName() + " in "
-				);
-			}
-		}
-		else if ( argTypes.length != 0 ) {
-			throw new PersistenceException( "Callback method " + methodInfo.name() + " must have no arguments in " );
-		}
-		if ( callbacksByClass.containsKey( callbackTypeClass ) ) {
-			throw new PersistenceException(
-					"Only one method may be annotated as a " + callbackTypeClass.getSimpleName() +
-							" callback method in "
-			);
-		}
-	}
 }

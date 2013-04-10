@@ -34,37 +34,17 @@ import org.hibernate.jpa.event.spi.jpa.Callback;
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole
  */
-public class ListenerCallback implements Callback {
-	private final Method callbackMethod;
+public class ListenerCallback extends AbstractCallback {
 	private final Object listenerInstance;
 
 	public ListenerCallback(Object listenerInstance, Method callbackMethod) {
+		super( callbackMethod );
 		this.listenerInstance = listenerInstance;
-		this.callbackMethod = callbackMethod;
 	}
 
-	@Override
-    public boolean performCallback(Object entity) {
-		try {
-			callbackMethod.invoke( listenerInstance, entity );
-			return true;
-		}
-		catch (InvocationTargetException e) {
-			//keep runtime exceptions as is
-			if ( e.getTargetException() instanceof RuntimeException ) {
-				throw (RuntimeException) e.getTargetException();
-			}
-			else {
-				throw new RuntimeException( e.getTargetException() );
-			}
-		}
-		catch (Exception e) {
-			throw new RuntimeException( e );
-		}
-	}
 
 	@Override
-	public boolean isActive() {
-		return true;
+	protected void doCallback(Object entity) throws InvocationTargetException, IllegalAccessException {
+		callbackMethod.invoke( listenerInstance, entity );
 	}
 }

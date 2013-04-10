@@ -43,7 +43,6 @@ import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
 import org.hibernate.jpa.test.LastUpdateListener;
 import org.hibernate.jpa.test.Wallet;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -51,7 +50,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class EntityManagerFactorySerializationTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testSerialization() throws Exception {

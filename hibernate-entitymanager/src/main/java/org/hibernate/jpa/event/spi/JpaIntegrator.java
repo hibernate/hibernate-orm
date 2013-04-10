@@ -279,7 +279,7 @@ public class JpaIntegrator implements Integrator {
 		this.jpaListenerFactory = beanManagerRef == null
 				? new StandardListenerFactory()
 				: buildBeanManagerListenerFactory( beanManagerRef );
-		this.callbackProcessor = new CallbackProcessorImpl( jpaListenerFactory, metadata, serviceRegistry );
+		this.callbackProcessor = new CallbackProcessorImpl( jpaListenerFactory, serviceRegistry );
 
         for ( EntityBinding binding : metadata.getEntityBindings() ) {
 			callbackProcessor.processCallbacksForEntity( binding, callbackRegistry );

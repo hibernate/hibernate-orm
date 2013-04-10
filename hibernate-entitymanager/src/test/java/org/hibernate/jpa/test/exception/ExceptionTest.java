@@ -47,7 +47,6 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
 public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 	private static final Logger log = Logger.getLogger( ExceptionTest.class );
 

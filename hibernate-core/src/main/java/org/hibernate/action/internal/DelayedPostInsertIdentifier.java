@@ -37,7 +37,7 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-public class DelayedPostInsertIdentifier implements Serializable {
+public class DelayedPostInsertIdentifier implements Serializable, Comparable<DelayedPostInsertIdentifier> {
 	private static long SEQUENCE = 0;
 	private final long sequence;
 
@@ -65,6 +65,10 @@ public class DelayedPostInsertIdentifier implements Serializable {
 	@Override
 	public int hashCode() {
 		return ( int ) ( sequence ^ ( sequence >>> 32 ) );
+	}
+
+	public int compareTo(DelayedPostInsertIdentifier i) {
+		return sequence < i.sequence ? -1 : (sequence == i.sequence ? 0 : 1);
 	}
 
 	@Override

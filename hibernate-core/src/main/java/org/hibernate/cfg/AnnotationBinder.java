@@ -2106,12 +2106,12 @@ public final class AnnotationBinder {
 		if ( naturalIdAnn != null ) {
 			if ( joinColumns != null ) {
 				for ( Ejb3Column column : joinColumns ) {
-					column.addUniqueKey( StringHelper.randomFixedLengthHex("UK_"), inSecondPass );
+					column.addUniqueKey( column.getTable().getNaturalIdUniqueKeyName(), inSecondPass );
 				}
 			}
 			else {
 				for ( Ejb3Column column : columns ) {
-					column.addUniqueKey( StringHelper.randomFixedLengthHex("UK_"), inSecondPass );
+					column.addUniqueKey( column.getTable().getNaturalIdUniqueKeyName(), inSecondPass );
 				}
 			}
 		}

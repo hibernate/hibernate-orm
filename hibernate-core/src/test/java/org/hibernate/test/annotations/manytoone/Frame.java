@@ -2,10 +2,12 @@
 package org.hibernate.test.annotations.manytoone;
 import java.io.Serializable;
 import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.annotations.Formula;
 
@@ -13,6 +15,8 @@ import org.hibernate.annotations.Formula;
  * @author Emmanuel Bernard
  */
 @Entity
+// "frame" is reserved in postgresplus
+@Table(name = "FrameTable")
 public class Frame implements Serializable {
 	@Id
 	@GeneratedValue

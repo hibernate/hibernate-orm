@@ -26,16 +26,21 @@ package org.hibernate.test.exception;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQLMyISAMDialect;
+import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.ResultSetReturn;
+import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.fail;
@@ -78,14 +83,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 							// expected outcome
 						}
 						finally {
-							if ( ps != null ) {
-								try {
-									((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().release( ps );
-								}
-								catch( Throwable ignore ) {
-									// ignore...
-								}
-							}
+							releaseStatement( session, ps );
 						}
 					}
 				}
@@ -116,14 +114,7 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 							// expected outcome
 						}
 						finally {
-							if ( ps != null ) {
-								try {
-									((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().release( ps );
-								}
-								catch( Throwable ignore ) {
-									// ignore...
-								}
-							}
+							releaseStatement( session, ps );
 						}
 					}
 				}
@@ -131,5 +122,57 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().rollback();
 		session.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7357")
+	public void testNotNullConstraint() {
+		final Session session = openSession();
+		session.beginTransaction();
+
+		final User user = new User();
+		user.setUsername( "Lukasz" );
+		session.save( user );
+		session.flush();
+
+		session.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						final JdbcCoordinator jdbcCoordinator = ( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator();
+						final StatementPreparer statementPreparer = jdbcCoordinator.getStatementPreparer();
+						final ResultSetReturn resultSetReturn = jdbcCoordinator.getResultSetReturn();
+						PreparedStatement ps = null;
+						try {
+							ps = statementPreparer.prepareStatement( "UPDATE T_USER SET user_name = ? WHERE user_id = ?" );
+							ps.setNull( 1, Types.VARCHAR ); // Attempt to update user name to NULL (NOT NULL constraint defined).
+							ps.setLong( 2, user.getId() );
+							resultSetReturn.executeUpdate( ps );
+
+							fail( "UPDATE should have failed because of not NULL constraint." );
+						}
+						catch ( ConstraintViolationException ignore ) {
+							// expected outcome
+						}
+						finally {
+							releaseStatement( session, ps );
+						}
+					}
+				}
+		);
+
+		session.getTransaction().rollback();
+		session.close();
+	}
+
+	private void releaseStatement(Session session, PreparedStatement ps) {
+		if ( ps != null ) {
+			try {
+				( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator().release( ps );
+			}
+			catch ( Throwable ignore ) {
+				// ignore...
+			}
+		}
 	}
 }

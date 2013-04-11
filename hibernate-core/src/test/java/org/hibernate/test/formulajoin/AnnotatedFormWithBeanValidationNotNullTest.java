@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.test.formulajoin;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import org.hibernate.cfg.Configuration;
+
+import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
- * Models the commonality between a column and a formula (computed value).
+ * @author Steve Ebersole
  */
-public interface Selectable {
-	public String getAlias(Dialect dialect);
-	public String getAlias(Dialect dialect, Table table);
-	public boolean isFormula();
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry);
-	public String getText(Dialect dialect);
-	public String getText();
+public class AnnotatedFormWithBeanValidationNotNullTest extends BaseUnitTestCase {
+	@Test
+	@TestForIssue( jiraKey = "HHH-8167" )
+	public void testAnnotatedFormWithBeanValidationNotNull() {
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( AnnotatedMaster.class ).addAnnotatedClass( AnnotatedDetail.class );
+		cfg.buildSessionFactory();
+	}
 }

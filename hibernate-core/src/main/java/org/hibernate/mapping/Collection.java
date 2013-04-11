@@ -23,6 +23,7 @@
  */
 package org.hibernate.mapping;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -365,8 +366,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 	}
 
-	public Iterator getColumnIterator() {
-		return EmptyIterator.INSTANCE;
+	public Iterator<Selectable> getColumnIterator() {
+		return Collections.emptyIterator();
 	}
 
 	public int getColumnSpan() {

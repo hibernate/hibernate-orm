@@ -4890,7 +4890,7 @@ Changes in version 0.9.5 (8.2.2002)
 * fixed potential bug related to cacheing of compiled queries
 * major rewrite of code relating to O-R mappings
 * Session.copy() and Session.equals() as convenience for users
-* fixed repeated invocations of hasNext() on iterator + iterators now always work with distinct SQL resultsets
+* fixed repeated invocations of hasNext() on iterator + wrappedIterators now always work with distinct SQL resultsets
 * McKoi dialect was contributed by Gabe Hicks
 
 Changes in version 0.9.4 (29.1.2002)

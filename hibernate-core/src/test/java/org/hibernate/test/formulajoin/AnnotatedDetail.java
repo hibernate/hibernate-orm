@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,19 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.mapping;
+package org.hibernate.test.formulajoin;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.function.SQLFunctionRegistry;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 
 /**
- * Models the commonality between a column and a formula (computed value).
+ * @author Steve Ebersole
  */
-public interface Selectable {
-	public String getAlias(Dialect dialect);
-	public String getAlias(Dialect dialect, Table table);
-	public boolean isFormula();
-	public String getTemplate(Dialect dialect, SQLFunctionRegistry functionRegistry);
-	public String getText(Dialect dialect);
-	public String getText();
+@Entity
+public class AnnotatedDetail {
+	@Id
+	private Integer id;
+	private String name;
+
+	// because otherwise schema export would not know about it...
+	@Column( name = "detail_domain" )
+	private String domain;
 }

@@ -76,7 +76,7 @@ public class OneToMany implements Value {
 		// no foreign key element of for a one-to-many
 	}
 
-	public Iterator getColumnIterator() {
+	public Iterator<Selectable> getColumnIterator() {
 		return associatedClass.getKey().getColumnIterator();
 	}
 

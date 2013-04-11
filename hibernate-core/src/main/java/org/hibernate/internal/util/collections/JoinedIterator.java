@@ -24,46 +24,35 @@
  */
 package org.hibernate.internal.util.collections;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * An JoinedIterator is an Iterator that wraps a number of Iterators.
+ * An Iterator implementation that wraps other Iterators, and presents them all as one
+ * continuous Iterator.  When any method from Iterator is called, we delegate to each
+ * wrapped Iterator in turn until all wrapped Iterators are exhausted.
  *
- * This class makes multiple iterators look like one to the caller.
- * When any method from the Iterator interface is called, the JoinedIterator
- * will delegate to a single underlying Iterator. The JoinedIterator will
- * invoke the Iterators in sequence until all Iterators are exhausted.
- *
+ * @author Gavine King
+ * @author Steve Ebersole
  */
-public class JoinedIterator implements Iterator {
+public class JoinedIterator<T> implements Iterator<T> {
+	private Iterator<T>[] wrappedIterators;
 
-	private static final Iterator[] ITERATORS = {};
-
-	// wrapped iterators
-	private Iterator[] iterators;
-
-	// index of current iterator in the wrapped iterators array
 	private int currentIteratorIndex;
+	private Iterator<T> currentIterator;
+	private Iterator<T> lastUsedIterator;
 
-	// the current iterator
-	private Iterator currentIterator;
-
-	// the last used iterator
-	private Iterator lastUsedIterator;
-
-	public JoinedIterator(List iterators) {
-		this( (Iterator[]) iterators.toArray(ITERATORS) );
+	@SuppressWarnings("unchecked")
+	public JoinedIterator(List<Iterator<T>> wrappedIterators) {
+		this( wrappedIterators.toArray( new Iterator[ wrappedIterators.size() ]) );
 	}
 
-	public JoinedIterator(Iterator[] iterators) {
-		if( iterators==null )
-			throw new NullPointerException("Unexpected NULL iterators argument");
-		this.iterators = iterators;
-	}
-
-	public JoinedIterator(Iterator first, Iterator second) {
-		this( new Iterator[] { first, second } );
+	public JoinedIterator(Iterator<T>... iteratorsToWrap) {
+		if( iteratorsToWrap == null ) {
+			throw new NullPointerException( "Iterators to join were null" );
+		}
+		this.wrappedIterators = iteratorsToWrap;
 	}
 
 	public boolean hasNext() {
@@ -71,7 +60,7 @@ public class JoinedIterator implements Iterator {
 		return currentIterator.hasNext();
 	}
 
-	public Object next() {
+	public T next() {
 		updateCurrentIterator();
 		return currentIterator.next();
 	}
@@ -85,22 +74,21 @@ public class JoinedIterator implements Iterator {
 	// call this before any Iterator method to make sure that the current Iterator
 	// is not exhausted
 	protected void updateCurrentIterator() {
-
-		if (currentIterator == null) {
-			if( iterators.length==0  ) {
-				currentIterator = EmptyIterator.INSTANCE;
+		if ( currentIterator == null ) {
+			if( wrappedIterators.length == 0  ) {
+				currentIterator = Collections.emptyIterator();
 			}
 			else {
-				currentIterator = iterators[0];
+				currentIterator = wrappedIterators[0];
 			}
 			// set last used iterator here, in case the user calls remove
 			// before calling hasNext() or next() (although they shouldn't)
 			lastUsedIterator = currentIterator;
 		}
 
-		while (! currentIterator.hasNext() && currentIteratorIndex < iterators.length - 1) {
+		while (! currentIterator.hasNext() && currentIteratorIndex < wrappedIterators.length - 1) {
 			currentIteratorIndex++;
-			currentIterator = iterators[currentIteratorIndex];
+			currentIterator = wrappedIterators[currentIteratorIndex];
 		}
 	}
 

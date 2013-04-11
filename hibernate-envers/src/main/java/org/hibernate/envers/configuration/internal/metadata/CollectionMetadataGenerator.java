@@ -88,6 +88,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
@@ -506,6 +507,22 @@ public final class CollectionMetadataGenerator {
 				);
 			}
 
+			// Add an additional column holding a number to make each entry unique within the set,
+			// since embeddable properties can be null
+			if ( propertyValue.getCollectionType() instanceof SetType ) {
+				final String auditedEmbeddableSetOrdinalPropertyName = mainGenerator.getVerEntCfg()
+						.getEmbeddableSetOrdinalPropertyName();
+				final String auditedEmbeddableSetOrdinalPropertyType = "integer";
+
+				final SimpleValue simpleValue = new SimpleValue( component.getMappings(), component.getTable() );
+				simpleValue.setTypeName( auditedEmbeddableSetOrdinalPropertyType );
+
+				final Element idProperty = MetadataTools.addProperty( xmlMapping,
+						auditedEmbeddableSetOrdinalPropertyName, auditedEmbeddableSetOrdinalPropertyType, true, true );
+				MetadataTools.addColumn( idProperty, auditedEmbeddableSetOrdinalPropertyName, null, 0, 0, null, null,
+						null, false );
+			}
+
 			return new MiddleComponentData( componentMapper, 0 );
         } else {
             // Last but one parameter: collection components are always insertable
@@ -529,14 +546,13 @@ public final class CollectionMetadataGenerator {
         Type type = propertyValue.getType();
 		boolean embeddableElementType = isEmbeddableElementType();
         if (type instanceof SortedSetType) {
-			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-					new SortedSetCollectionMapper(commonCollectionMapperData,
-							TreeSet.class, SortedSetProxy.class, elementComponentData, propertyValue.getComparator(),
-							embeddableElementType));
+			currentMapper.addComposite( propertyAuditingData.getPropertyData(), new SortedSetCollectionMapper(
+					commonCollectionMapperData, TreeSet.class, SortedSetProxy.class, elementComponentData,
+					propertyValue.getComparator(), embeddableElementType, embeddableElementType ) );
 		} else if (type instanceof SetType) {
-			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-                    new BasicCollectionMapper<Set>(commonCollectionMapperData,
-                    HashSet.class, SetProxy.class, elementComponentData, embeddableElementType));
+			currentMapper.addComposite( propertyAuditingData.getPropertyData(), new BasicCollectionMapper<Set>(
+					commonCollectionMapperData, HashSet.class, SetProxy.class, elementComponentData,
+					embeddableElementType, embeddableElementType ) );
         } else if (type instanceof SortedMapType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
 			currentMapper.addComposite(propertyAuditingData.getPropertyData(),
@@ -549,9 +565,9 @@ public final class CollectionMetadataGenerator {
                     new MapCollectionMapper<Map>(commonCollectionMapperData,
                     HashMap.class, MapProxy.class, elementComponentData, indexComponentData, embeddableElementType));
         } else if (type instanceof BagType) {
-            currentMapper.addComposite(propertyAuditingData.getPropertyData(),
-                    new BasicCollectionMapper<List>(commonCollectionMapperData,
-                    ArrayList.class, ListProxy.class, elementComponentData, embeddableElementType));
+			currentMapper.addComposite( propertyAuditingData.getPropertyData(), new BasicCollectionMapper<List>(
+					commonCollectionMapperData, ArrayList.class, ListProxy.class, elementComponentData,
+					embeddableElementType, embeddableElementType ) );
         } else if (type instanceof ListType) {
             // Indexed collection, so <code>indexComponentData</code> is not null.
             currentMapper.addComposite(propertyAuditingData.getPropertyData(),

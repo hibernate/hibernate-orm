@@ -46,7 +46,7 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
                                Class<? extends T> collectionClass, Class<? extends T> proxyClass,
                                MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
 							   boolean revisionTypeInId) {
-        super(commonCollectionMapperData, collectionClass, proxyClass, revisionTypeInId);
+		super( commonCollectionMapperData, collectionClass, proxyClass, false, revisionTypeInId );
         this.elementComponentData = elementComponentData;
         this.indexComponentData = indexComponentData;
     }

@@ -935,8 +935,10 @@ public abstract class Loader {
         EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
         LOG.trace( "Processing result set" );
         int count;
+        boolean isDebugEnabled = LOG.isDebugEnabled();
         for ( count = 0; count < maxRows && rs.next(); count++ ) {
-            LOG.debugf( "Result set row: %s", count );
+        	if ( isDebugEnabled ) 
+        		LOG.debugf( "Result set row: %s", count );
             Object result = getRowFromResultSet(
                     rs,
                     session,
@@ -954,8 +956,9 @@ public abstract class Loader {
                 keys = new EntityKey[entitySpan]; //can't reuse in this case
             }
         }
-
-        LOG.tracev( "Done processing result set ({0} rows)", count );
+        
+        if ( LOG.isTraceEnabled() )
+        	LOG.tracev( "Done processing result set ({0} rows)", count );
 
 		initializeEntitiesAndCollections(
 				hydratedObjects,
@@ -1098,7 +1101,8 @@ public abstract class Loader {
 
 		if ( hydratedObjects!=null ) {
 			int hydratedObjectsSize = hydratedObjects.size();
-			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
+			if ( LOG.isTraceEnabled() )
+			   LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 			for ( int i = 0; i < hydratedObjectsSize; i++ ) {
 				TwoPhaseLoad.initializeEntity( hydratedObjects.get(i), readOnly, session, pre, post );
 			}
@@ -1900,7 +1904,8 @@ public abstract class Loader {
 				}
 			}
 
-			LOG.tracev( "Bound [{0}] parameters total", col );
+			if ( LOG.isTraceEnabled() )
+			   LOG.tracev( "Bound [{0}] parameters total", col );
 		}
 		catch ( SQLException sqle ) {
 			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
@@ -2056,7 +2061,8 @@ public abstract class Loader {
 		// potential deadlock issues due to nature of code.
 		if ( session.getFactory().getSettings().isWrapResultSetsEnabled() ) {
 			try {
-				LOG.debugf( "Wrapping result set [%s]", rs );
+			   if ( LOG.isDebugEnabled() )
+			      LOG.debugf( "Wrapping result set [%s]", rs );
 				return session.getFactory()
 						.getJdbcServices()
 						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );

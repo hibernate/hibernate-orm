@@ -57,6 +57,8 @@ public class AuditEntitiesConfiguration {
     
     private final boolean revisionEndTimestampEnabled;
     private final String revisionEndTimestampFieldName;
+    
+	private final String embeddableSetOrdinalPropertyName;
 
     public AuditEntitiesConfiguration(Properties properties, String revisionInfoEntityName) {
         this.revisionInfoEntityName = revisionInfoEntityName;
@@ -112,6 +114,10 @@ public class AuditEntitiesConfiguration {
 
         revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
         revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
+
+		embeddableSetOrdinalPropertyName = getProperty( properties,
+				"org.hibernate.envers.embeddable_set_ordinal_field_name",
+				"org.hibernate.envers.embeddable_set_ordinal_field_name", "SETORDINAL" );
     }
 
     public String getOriginalIdPropName() {
@@ -182,4 +188,8 @@ public class AuditEntitiesConfiguration {
     public String getRevisionEndFieldName() {
         return revisionEndFieldName;
     }
+
+	public String getEmbeddableSetOrdinalPropertyName() {
+		return embeddableSetOrdinalPropertyName;
+	}
 }

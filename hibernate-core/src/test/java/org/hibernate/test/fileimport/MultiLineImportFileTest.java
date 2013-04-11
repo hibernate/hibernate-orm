@@ -24,6 +24,9 @@
 package org.hibernate.test.fileimport;
 
 import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import org.junit.Test;
 
@@ -32,6 +35,8 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.jdbc.Work;
+import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -82,5 +87,28 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 
 		tx.commit();
 		s.close();
+	}
+
+	@AfterClassOnce
+	public void tearDown() {
+		final Session session = openSession();
+		session.getTransaction().begin();
+		session.doWork( new Work() {
+			@Override
+			public void execute(Connection connection) throws SQLException {
+				PreparedStatement statement = null;
+				try {
+					statement = connection.prepareStatement( "DROP TABLE test_data" );
+					statement.execute();
+				}
+				finally {
+					if ( statement != null ) {
+						statement.close();
+					}
+				}
+			}
+		} );
+		session.getTransaction().commit();
+		session.close();
 	}
 }

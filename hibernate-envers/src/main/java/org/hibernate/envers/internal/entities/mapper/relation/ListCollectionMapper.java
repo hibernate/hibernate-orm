@@ -49,7 +49,7 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
     public ListCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
                                 MiddleComponentData elementComponentData, MiddleComponentData indexComponentData,
 								boolean revisionTypeInId) {
-        super(commonCollectionMapperData, List.class, ListProxy.class, revisionTypeInId);
+		super( commonCollectionMapperData, List.class, ListProxy.class, false, revisionTypeInId );
         this.elementComponentData = elementComponentData;
         this.indexComponentData = indexComponentData;
     }

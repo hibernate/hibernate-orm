@@ -31,6 +31,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
@@ -48,6 +49,10 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 			AbstractFetchOwner owner,
 			String ownerProperty) {
 		super( sessionFactory, alias, LockMode.NONE, owner, ownerProperty, FETCH_PLAN );
+	}
+
+	public CompositeFetch(CompositeFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+		super( original, copyContext, fetchOwnerCopy );
 	}
 
 	@Override
@@ -85,5 +90,13 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 	@Override
 	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public CompositeFetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+		copyContext.getReturnGraphVisitationStrategy().startingCompositeFetch( this );
+		final CompositeFetch copy = new CompositeFetch( this, copyContext, fetchOwnerCopy );
+		copyContext.getReturnGraphVisitationStrategy().finishingCompositeFetch( this );
+		return copy;
 	}
 }

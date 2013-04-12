@@ -21,26 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa;
+package org.hibernate.loader.plan.spi.visit;
 
-import javax.persistence.EntityManagerFactory;
-import java.io.Serializable;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
+import org.hibernate.loader.plan.spi.LoadPlan;
 
 /**
- * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
- *
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
+public interface LoadPlanVisitationStrategy extends ReturnGraphVisitationStrategy {
 	/**
-	 * Obtain the underlying Hibernate SessionFactory.
-	 *
-	 * @return The underlying Hibernate SessionFactory
+	 * Notification we are preparing to start visitation.
 	 */
-	public SessionFactory getSessionFactory();
+	public void start(LoadPlan loadPlan);
 
-	public EntityTypeImpl getEntityTypeByName(String entityName);
+	/**
+	 * Notification we are finished visitation.
+	 */
+	public void finish(LoadPlan loadPlan);
 }

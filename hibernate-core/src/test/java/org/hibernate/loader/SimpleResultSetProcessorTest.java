@@ -42,8 +42,9 @@ import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
 import org.hibernate.loader.internal.ResultSetProcessorImpl;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.LoadPlanBuilder;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
 import org.hibernate.loader.spi.NamedParameterContext;
+import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
@@ -104,6 +105,7 @@ public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 							ResultSet resultSet = ps.executeQuery();
 							results.addAll(
 									resultSetProcessor.extractResults(
+											NoOpLoadPlanAdvisor.INSTANCE,
 											resultSet,
 											(SessionImplementor) workSession,
 											new QueryParameters(),

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.graph;
+package org.hibernate.jpa.graph.internal;
 
 import javax.persistence.AttributeNode;
 import javax.persistence.Subgraph;
@@ -34,6 +34,7 @@ import java.util.Map;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.graph.spi.AttributeNodeImplementor;
 import org.hibernate.jpa.internal.metamodel.Helper;
 import org.hibernate.jpa.internal.metamodel.PluralAttributeImpl;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -47,14 +48,14 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class AttributeNodeImpl<T> implements AttributeNode<T> {
+public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImplementor<T> {
 	private final HibernateEntityManagerFactory entityManagerFactory;
-	private final Attribute attribute;
+	private final Attribute<?,T> attribute;
 
 	private Map<Class, Subgraph> subgraphMap;
 	private Map<Class, Subgraph> keySubgraphMap;
 
-	public AttributeNodeImpl(HibernateEntityManagerFactory entityManagerFactory, Attribute attribute) {
+	public <X> AttributeNodeImpl(HibernateEntityManagerFactory entityManagerFactory, Attribute<X,T> attribute) {
 		this.entityManagerFactory = entityManagerFactory;
 		this.attribute = attribute;
 	}
@@ -64,7 +65,7 @@ public class AttributeNodeImpl<T> implements AttributeNode<T> {
 	 */
 	private AttributeNodeImpl(
 			HibernateEntityManagerFactory entityManagerFactory,
-			Attribute attribute,
+			Attribute<?,T> attribute,
 			Map<Class, Subgraph> subgraphMap,
 			Map<Class, Subgraph> keySubgraphMap) {
 		this.entityManagerFactory = entityManagerFactory;
@@ -73,11 +74,17 @@ public class AttributeNodeImpl<T> implements AttributeNode<T> {
 		this.keySubgraphMap = keySubgraphMap;
 	}
 
-	private SessionFactoryImplementor sessionFactory() {
-		return (SessionFactoryImplementor) entityManagerFactory.getSessionFactory();
+	@Override
+	public HibernateEntityManagerFactory entityManagerFactory() {
+		return entityManagerFactory;
 	}
 
-	public Attribute getAttribute() {
+	private SessionFactoryImplementor sessionFactory() {
+		return (SessionFactoryImplementor) entityManagerFactory().getSessionFactory();
+	}
+
+	@Override
+	public Attribute<?,T> getAttribute() {
 		return attribute;
 	}
 
@@ -102,11 +109,15 @@ public class AttributeNodeImpl<T> implements AttributeNode<T> {
 
 	@SuppressWarnings("unchecked")
 	public <T> Subgraph<T> makeSubgraph() {
-		return (Subgraph<T>) makeSubgraph( null );
+		return (Subgraph<T>) internalMakeSubgraph( null );
 	}
 
 	@SuppressWarnings("unchecked")
 	public <X extends T> Subgraph<X> makeSubgraph(Class<X> type) {
+		return (Subgraph<X>) internalMakeSubgraph( type );
+	}
+
+	private Subgraph internalMakeSubgraph(Class type) {
 		if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC
 				|| attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
 			throw new IllegalArgumentException(
@@ -239,7 +250,8 @@ public class AttributeNodeImpl<T> implements AttributeNode<T> {
 		return subgraph;
 	}
 
-	AttributeNodeImpl<T> makeImmutableCopy() {
+	@Override
+	public AttributeNodeImpl<T> makeImmutableCopy() {
 		return new AttributeNodeImpl<T>(
 				this.entityManagerFactory,
 				this.attribute,

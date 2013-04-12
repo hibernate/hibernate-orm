@@ -21,84 +21,72 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi;
+package org.hibernate.loader.plan.spi.visit;
+
+import org.hibernate.loader.plan.spi.CollectionFetch;
+import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.CompositeFetch;
+import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.FetchOwner;
+import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.loader.plan.spi.ScalarReturn;
 
 /**
  * @author Steve Ebersole
  */
-public class LoadPlanVisitationStrategyAdapter implements LoadPlanVisitationStrategy {
-	@Override
-	public void start(LoadPlan loadPlan) {
-		//To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public void finish(LoadPlan loadPlan) {
-		//To change body of implemented methods use File | Settings | File Templates.
-	}
+public class ReturnGraphVisitationStrategyAdapter implements ReturnGraphVisitationStrategy {
+	public static final ReturnGraphVisitationStrategyAdapter INSTANCE = new ReturnGraphVisitationStrategyAdapter();
 
 	@Override
 	public void startingRootReturn(Return rootReturn) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void finishingRootReturn(Return rootReturn) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void handleScalarReturn(ScalarReturn scalarReturn) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void handleEntityReturn(EntityReturn rootEntityReturn) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void handleCollectionReturn(CollectionReturn rootCollectionReturn) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void startingFetches(FetchOwner fetchOwner) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void finishingFetches(FetchOwner fetchOwner) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void startingEntityFetch(EntityFetch entityFetch) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void finishingEntityFetch(EntityFetch entityFetch) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void startingCollectionFetch(CollectionFetch collectionFetch) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void finishingCollectionFetch(CollectionFetch collectionFetch) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void startingCompositeFetch(CompositeFetch fetch) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
 	public void finishingCompositeFetch(CompositeFetch fetch) {
-		//To change body of implemented methods use File | Settings | File Templates.
 	}
 }

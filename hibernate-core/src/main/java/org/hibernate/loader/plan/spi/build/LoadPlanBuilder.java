@@ -21,14 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi;
+package org.hibernate.loader.plan.spi.build;
 
+import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor;
 
 /**
- * Coordinates building of a {@link LoadPlan} between the {@link org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor} and
+ * Coordinates building of a {@link org.hibernate.loader.plan.spi.LoadPlan} between the {@link org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor} and
  * {@link LoadPlanBuilderStrategy}
  *
  * @author Steve Ebersole

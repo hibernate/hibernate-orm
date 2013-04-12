@@ -57,6 +57,17 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 		this.propertyPath = owner.getPropertyPath().append( ownerProperty );
 	}
 
+	public AbstractSingularAttributeFetch(
+			AbstractSingularAttributeFetch original,
+			CopyContext copyContext,
+			FetchOwner fetchOwnerCopy) {
+		super( original, copyContext );
+		this.owner = fetchOwnerCopy;
+		this.ownerProperty = original.ownerProperty;
+		this.fetchStrategy = original.fetchStrategy;
+		this.propertyPath = original.propertyPath;
+	}
+
 	@Override
 	public FetchOwner getOwner() {
 		return owner;

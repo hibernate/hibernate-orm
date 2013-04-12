@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,26 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa;
+package org.hibernate.loader.spi;
 
-import javax.persistence.EntityManagerFactory;
-import java.io.Serializable;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
+import org.hibernate.loader.plan.spi.LoadPlan;
 
 /**
- * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
- *
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
-	/**
-	 * Obtain the underlying Hibernate SessionFactory.
-	 *
-	 * @return The underlying Hibernate SessionFactory
-	 */
-	public SessionFactory getSessionFactory();
+public class NoOpLoadPlanAdvisor implements LoadPlanAdvisor {
+	public static final NoOpLoadPlanAdvisor INSTANCE = new NoOpLoadPlanAdvisor();
 
-	public EntityTypeImpl getEntityTypeByName(String entityName);
+	@Override
+	public LoadPlan advise(LoadPlan loadPlan) {
+		return loadPlan;
+	}
 }

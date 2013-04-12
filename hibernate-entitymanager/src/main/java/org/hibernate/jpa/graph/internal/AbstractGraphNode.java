@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.graph;
+package org.hibernate.jpa.graph.internal;
 
 import javax.persistence.AttributeNode;
 import javax.persistence.Subgraph;
@@ -36,24 +36,27 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.graph.spi.GraphNodeImplementor;
 
 /**
+ * Base class for EntityGraph and Subgraph implementations.
+ *
  * @author Steve Ebersole
  */
-public abstract class GraphNode<T> {
-	private static final Logger log = Logger.getLogger( GraphNode.class );
+public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
+	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
 
 	private final HibernateEntityManagerFactory entityManagerFactory;
 	private final boolean mutable;
 
 	private Map<String, AttributeNode<?>> attributeNodeMap;
 
-	protected GraphNode(HibernateEntityManagerFactory entityManagerFactory, boolean mutable) {
+	protected AbstractGraphNode(HibernateEntityManagerFactory entityManagerFactory, boolean mutable) {
 		this.entityManagerFactory = entityManagerFactory;
 		this.mutable = mutable;
 	}
 
-	protected GraphNode(GraphNode<T> original, boolean mutable) {
+	protected AbstractGraphNode(AbstractGraphNode<T> original, boolean mutable) {
 		this.entityManagerFactory = original.entityManagerFactory;
 		this.mutable = mutable;
 		this.attributeNodeMap = makeSafeMapCopy( original.attributeNodeMap );
@@ -75,11 +78,13 @@ public abstract class GraphNode<T> {
 		return copy;
 	}
 
-	protected HibernateEntityManagerFactory entityManagerFactory() {
+	@Override
+	public HibernateEntityManagerFactory entityManagerFactory() {
 		return entityManagerFactory;
 	}
 
-	protected List<AttributeNode<?>> attributeNodes() {
+	@Override
+	public List<AttributeNode<?>> attributeNodes() {
 		if ( attributeNodeMap == null ) {
 			return Collections.emptyList();
 		}
@@ -105,8 +110,8 @@ public abstract class GraphNode<T> {
 
 	protected abstract Attribute<T,?> resolveAttribute(String attributeName);
 
-	protected AttributeNodeImpl<?> buildAttributeNode(Attribute<T, ?> attribute) {
-		return new AttributeNodeImpl<Object>( entityManagerFactory, attribute );
+	protected <X> AttributeNodeImpl<X> buildAttributeNode(Attribute<T, X> attribute) {
+		return new AttributeNodeImpl<X>( entityManagerFactory, attribute );
 	}
 
 	protected AttributeNodeImpl addAttributeNode(AttributeNodeImpl attributeNode) {

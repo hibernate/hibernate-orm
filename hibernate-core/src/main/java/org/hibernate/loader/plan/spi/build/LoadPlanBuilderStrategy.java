@@ -1,7 +1,7 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
+ * jDocBook, processing of DocBook sources
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,26 +21,21 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa;
+package org.hibernate.loader.plan.spi.build;
 
-import javax.persistence.EntityManagerFactory;
-import java.io.Serializable;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
+import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 
 /**
- * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
+ * Specialized {@link org.hibernate.persister.walking.spi.AssociationVisitationStrategy} implementation for building {@link org.hibernate.loader.plan.spi.LoadPlan} instances.
  *
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
+public interface LoadPlanBuilderStrategy extends AssociationVisitationStrategy {
 	/**
-	 * Obtain the underlying Hibernate SessionFactory.
+	 * After visitation is done, build the load plan.
 	 *
-	 * @return The underlying Hibernate SessionFactory
+	 * @return The load plan
 	 */
-	public SessionFactory getSessionFactory();
-
-	public EntityTypeImpl getEntityTypeByName(String entityName);
+	public LoadPlan buildLoadPlan();
 }

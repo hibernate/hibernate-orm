@@ -37,7 +37,7 @@ import org.hibernate.loader.spi.ResultSetProcessingContext;
  *
  * @author Steve Ebersole
  */
-public interface Fetch {
+public interface Fetch extends CopyableFetch {
 	/**
 	 * Obtain the owner of this fetch.
 	 *
@@ -64,4 +64,7 @@ public interface Fetch {
 	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
 
 	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
+
+	@Override
+	public Fetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy);
 }

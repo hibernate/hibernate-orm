@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,32 +21,40 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi;
+package org.hibernate.loader.plan.spi.visit;
+
+import java.util.List;
+
+import org.hibernate.loader.plan.spi.CollectionFetch;
+import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.CompositeFetch;
+import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.Fetch;
+import org.hibernate.loader.plan.spi.FetchOwner;
+import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.loader.plan.spi.ScalarReturn;
 
 /**
- * Visitor for processing {@link Return} graphs
- *
  * @author Steve Ebersole
  */
-public class LoadPlanVisitor {
-	public static void visit(LoadPlan loadPlan, LoadPlanVisitationStrategy strategy) {
-		new LoadPlanVisitor( strategy ).visit( loadPlan );
-	}
+public class ReturnGraphVisitor {
+	private final ReturnGraphVisitationStrategy strategy;
 
-	private final LoadPlanVisitationStrategy strategy;
-
-	public LoadPlanVisitor(LoadPlanVisitationStrategy strategy) {
+	public ReturnGraphVisitor(ReturnGraphVisitationStrategy strategy) {
 		this.strategy = strategy;
 	}
 
-	private void visit(LoadPlan loadPlan) {
-		strategy.start( loadPlan );
-
-		for ( Return rootReturn : loadPlan.getReturns() ) {
+	public void visit(Return... rootReturns) {
+		for ( Return rootReturn : rootReturns ) {
 			visitRootReturn( rootReturn );
 		}
+	}
 
-		strategy.finish( loadPlan );
+	public void visit(List<Return> rootReturns) {
+		for ( Return rootReturn : rootReturns ) {
+			visitRootReturn( rootReturn );
+		}
 	}
 
 	private void visitRootReturn(Return rootReturn) {
@@ -117,5 +125,4 @@ public class LoadPlanVisitor {
 			);
 		}
 	}
-
 }

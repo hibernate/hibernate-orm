@@ -36,6 +36,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
 import org.hibernate.loader.plan.internal.CascadeLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
 import org.hibernate.loader.spi.LoadQueryBuilder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;

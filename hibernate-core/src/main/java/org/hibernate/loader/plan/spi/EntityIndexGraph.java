@@ -24,6 +24,7 @@
 package org.hibernate.loader.plan.spi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -32,6 +33,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
@@ -41,7 +43,7 @@ import org.hibernate.type.AssociationType;
 /**
  * @author Steve Ebersole
  */
-public class EntityIndexGraph extends AbstractPlanNode implements FetchOwner, EntityReference {
+public class EntityIndexGraph extends AbstractPlanNode implements FetchableCollectionIndex, EntityReference {
 	private final CollectionReference collectionReference;
 	private final CollectionPersister collectionPersister;
 	private final AssociationType indexType;
@@ -62,6 +64,28 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchOwner, En
 		this.indexType = (AssociationType) collectionPersister.getIndexType();
 		this.indexPersister = (EntityPersister) this.indexType.getAssociatedJoinable( sessionFactory() );
 		this.propertyPath = collectionPath.append( "<index>" ); // todo : do we want the <index> part?
+	}
+
+	public EntityIndexGraph(EntityIndexGraph original, CopyContext copyContext) {
+		super( original );
+		this.collectionReference = original.collectionReference;
+		this.collectionPersister = original.collectionReference.getCollectionPersister();
+		this.indexType = original.indexType;
+		this.indexPersister = original.indexPersister;
+		this.propertyPath = original.propertyPath;
+
+		copyContext.getReturnGraphVisitationStrategy().startingFetches( original );
+		if ( fetches == null || fetches.size() == 0 ) {
+			this.fetches = Collections.emptyList();
+		}
+		else {
+			List<Fetch> fetchesCopy = new ArrayList<Fetch>();
+			for ( Fetch fetch : fetches ) {
+				fetchesCopy.add( fetch.makeCopy( copyContext, this ) );
+			}
+			this.fetches = fetchesCopy;
+		}
+		copyContext.getReturnGraphVisitationStrategy().finishingFetches( original );
 	}
 
 	@Override
@@ -159,5 +183,10 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchOwner, En
 	@Override
 	public void injectIdentifierDescription(IdentifierDescription identifierDescription) {
 		this.identifierDescription = identifierDescription;
+	}
+
+	@Override
+	public EntityIndexGraph makeCopy(CopyContext copyContext) {
+		return new EntityIndexGraph( this, copyContext );
 	}
 }

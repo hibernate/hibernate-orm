@@ -229,4 +229,8 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	public Set<EmbeddableType<?>> getEmbeddables() {
 		return new HashSet<EmbeddableType<?>>( embeddables.values() );
 	}
+
+	public EntityTypeImpl getEntityTypeByName(String entityName) {
+		return entityTypesByEntityName.get( entityName );
+	}
 }

@@ -21,26 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa;
+package org.hibernate.loader.plan.spi.visit;
 
-import javax.persistence.EntityManagerFactory;
-import java.io.Serializable;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
+import org.hibernate.loader.plan.spi.LoadPlan;
 
 /**
- * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
+ * Visitor for processing {@link org.hibernate.loader.plan.spi.Return} graphs
  *
- * @author Gavin King
+ * @author Steve Ebersole
  */
-public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
-	/**
-	 * Obtain the underlying Hibernate SessionFactory.
-	 *
-	 * @return The underlying Hibernate SessionFactory
-	 */
-	public SessionFactory getSessionFactory();
+public class LoadPlanVisitor {
+	public static void visit(LoadPlan loadPlan, LoadPlanVisitationStrategy strategy) {
+		new LoadPlanVisitor( strategy ).visit( loadPlan );
+	}
 
-	public EntityTypeImpl getEntityTypeByName(String entityName);
+	private final LoadPlanVisitationStrategy strategy;
+	private final ReturnGraphVisitor returnGraphVisitor;
+
+	public LoadPlanVisitor(LoadPlanVisitationStrategy strategy) {
+		this.strategy = strategy;
+		this.returnGraphVisitor = new ReturnGraphVisitor( strategy );
+	}
+
+	private void visit(LoadPlan loadPlan) {
+		strategy.start( loadPlan );
+
+		returnGraphVisitor.visit( loadPlan.getReturns() );
+
+		strategy.finish( loadPlan );
+	}
 }

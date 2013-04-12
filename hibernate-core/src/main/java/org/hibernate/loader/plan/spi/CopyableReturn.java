@@ -1,5 +1,5 @@
 /*
- * jDocBook, processing of DocBook sources
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
  * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -23,18 +23,16 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
-
 /**
- * Specialized {@link org.hibernate.persister.walking.spi.AssociationVisitationStrategy} implementation for building {@link LoadPlan} instances.
- *
  * @author Steve Ebersole
  */
-public interface LoadPlanBuilderStrategy extends AssociationVisitationStrategy {
+public interface CopyableReturn {
+
 	/**
-	 * After visitation is done, build the load plan.
+	 * Makes a deep copy.
 	 *
-	 * @return The load plan
+	 * @return
 	 */
-	public LoadPlan buildLoadPlan();
+	public CopyableReturn makeCopy(CopyContext copyContext);
+
 }

@@ -43,8 +43,8 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 	private final CollectionAliases collectionAliases;
 	private final EntityAliases elementEntityAliases;
 
-	private final FetchOwner indexGraph;
-	private final FetchOwner elementGraph;
+	private final FetchableCollectionIndex indexGraph;
+	private final FetchableCollectionElement elementGraph;
 
 	protected AbstractCollectionReference(
 			SessionFactoryImplementor sessionFactory,
@@ -67,7 +67,7 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 		this.elementGraph = buildElementGraph( getCollectionPersister() );
 	}
 
-	private FetchOwner buildIndexGraph(CollectionPersister persister) {
+	private FetchableCollectionIndex buildIndexGraph(CollectionPersister persister) {
 		if ( persister.hasIndex() ) {
 			final Type type = persister.getIndexType();
 			if ( type.isAssociationType() ) {
@@ -83,7 +83,7 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 		return null;
 	}
 
-	private FetchOwner buildElementGraph(CollectionPersister persister) {
+	private FetchableCollectionElement buildElementGraph(CollectionPersister persister) {
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
 			if ( type.isEntityType() ) {
@@ -95,6 +95,20 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 		}
 
 		return null;
+	}
+
+	protected AbstractCollectionReference(AbstractCollectionReference original, CopyContext copyContext) {
+		super( original );
+		this.alias = original.alias;
+		this.lockMode = original.lockMode;
+		this.collectionPersister = original.collectionPersister;
+		this.propertyPath = original.propertyPath;
+
+		this.collectionAliases = original.collectionAliases;
+		this.elementEntityAliases = original.elementEntityAliases;
+
+		this.indexGraph = original.indexGraph == null ? null : original.indexGraph.makeCopy( copyContext );
+		this.elementGraph = original.elementGraph == null ? null : original.elementGraph.makeCopy( copyContext );
 	}
 
 	@Override

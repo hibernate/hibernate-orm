@@ -48,17 +48,20 @@ public interface ResultSetProcessor {
 	 *
 	 * Semi-copy of {@link org.hibernate.loader.Loader#doQuery}, with focus on just the ResultSet processing bit.
 	 *
+	 * @param loadPlanAdvisor A dynamic advisor on the load plan.
 	 * @param resultSet The result set being processed.
 	 * @param session The originating session
 	 * @param queryParameters The "parameters" used to build the query
 	 * @param returnProxies Can proxies be returned (not the same as can they be created!)
 	 * @param forcedResultTransformer My old "friend" ResultTransformer...
+	 * @param afterLoadActions Actions to be performed after loading an entity.
 	 *
 	 * @return The extracted results list.
 	 *
 	 * @throws java.sql.SQLException Indicates a problem access the JDBC ResultSet
 	 */
 	public List extractResults(
+			LoadPlanAdvisor loadPlanAdvisor,
 			ResultSet resultSet,
 			SessionImplementor session,
 			QueryParameters queryParameters,

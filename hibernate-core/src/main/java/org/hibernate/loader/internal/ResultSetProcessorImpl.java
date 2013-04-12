@@ -41,10 +41,11 @@ import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.LoadPlanVisitationStrategyAdapter;
-import org.hibernate.loader.plan.spi.LoadPlanVisitor;
+import org.hibernate.loader.plan.spi.visit.LoadPlanVisitationStrategyAdapter;
+import org.hibernate.loader.plan.spi.visit.LoadPlanVisitor;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.loader.spi.LoadPlanAdvisor;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.ScrollableResultSetProcessor;
 import org.hibernate.loader.spi.ResultSetProcessor;
@@ -58,12 +59,12 @@ import org.hibernate.transform.ResultTransformer;
 public class ResultSetProcessorImpl implements ResultSetProcessor {
 	private static final Logger LOG = Logger.getLogger( ResultSetProcessorImpl.class );
 
-	private final LoadPlan loadPlan;
+	private final LoadPlan baseLoadPlan;
 
 	private final boolean hadSubselectFetches;
 
 	public ResultSetProcessorImpl(LoadPlan loadPlan) {
-		this.loadPlan = loadPlan;
+		this.baseLoadPlan = loadPlan;
 
 		LocalVisitationStrategy strategy = new LocalVisitationStrategy();
 		LoadPlanVisitor.visit( loadPlan, strategy );
@@ -78,6 +79,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 
 	@Override
 	public List extractResults(
+			LoadPlanAdvisor loadPlanAdvisor,
 			ResultSet resultSet,
 			final SessionImplementor session,
 			QueryParameters queryParameters,
@@ -87,7 +89,9 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			ResultTransformer forcedResultTransformer,
 			List<AfterLoadAction> afterLoadActionList) throws SQLException {
 
-		handlePotentiallyEmptyCollectionRootReturns( queryParameters.getCollectionKeys(), resultSet, session );
+		final LoadPlan loadPlan = loadPlanAdvisor.advise( this.baseLoadPlan );
+
+		handlePotentiallyEmptyCollectionRootReturns( loadPlan, queryParameters.getCollectionKeys(), resultSet, session );
 
 		final int maxRows;
 		final RowSelection selection = queryParameters.getRowSelection();
@@ -163,6 +167,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 
 
 	private void handlePotentiallyEmptyCollectionRootReturns(
+			LoadPlan loadPlan,
 			Serializable[] collectionKeys,
 			ResultSet resultSet,
 			SessionImplementor session) {

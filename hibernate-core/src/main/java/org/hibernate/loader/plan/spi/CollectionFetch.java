@@ -66,6 +66,12 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 		fetchOwner.addFetch( this );
 	}
 
+	protected CollectionFetch(CollectionFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+		super( original, copyContext );
+		this.fetchOwner = fetchOwnerCopy;
+		this.fetchStrategy = original.fetchStrategy;
+	}
+
 	@Override
 	public FetchOwner getOwner() {
 		return fetchOwner;
@@ -89,5 +95,13 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 	@Override
 	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public CollectionFetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+		copyContext.getReturnGraphVisitationStrategy().startingCollectionFetch( this );
+		final CollectionFetch copy = new CollectionFetch( this, copyContext, fetchOwnerCopy );
+		copyContext.getReturnGraphVisitationStrategy().finishingCollectionFetch( this );
+		return copy;
 	}
 }

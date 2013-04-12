@@ -24,14 +24,12 @@
 package org.hibernate.loader.plan.spi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * @author Steve Ebersole
@@ -45,10 +43,39 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 	public AbstractFetchOwner(SessionFactoryImplementor factory, String alias, LockMode lockMode) {
 		super( factory );
 		this.alias = alias;
+		this.lockMode = lockMode;
+		validate();
+	}
+
+	private void validate() {
 		if ( alias == null ) {
 			throw new HibernateException( "alias must be specified" );
 		}
-		this.lockMode = lockMode;
+	}
+
+	/**
+	 * A "copy" constructor.  Used while making clones/copies of this.
+	 *
+	 * @param original
+	 */
+	protected AbstractFetchOwner(AbstractFetchOwner original, CopyContext copyContext) {
+		super( original );
+		this.alias = original.alias;
+		this.lockMode = original.lockMode;
+		validate();
+
+		copyContext.getReturnGraphVisitationStrategy().startingFetches( original );
+		if ( fetches == null || fetches.size() == 0 ) {
+			this.fetches = Collections.emptyList();
+		}
+		else {
+			List<Fetch> fetchesCopy = new ArrayList<Fetch>();
+			for ( Fetch fetch : fetches ) {
+				fetchesCopy.add( fetch.makeCopy( copyContext, this ) );
+			}
+			this.fetches = fetchesCopy;
+		}
+		copyContext.getReturnGraphVisitationStrategy().finishingFetches( original );
 	}
 
 	public String getAlias() {

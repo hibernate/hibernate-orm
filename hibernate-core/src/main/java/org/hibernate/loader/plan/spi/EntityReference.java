@@ -23,9 +23,7 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,7 +33,8 @@ import org.hibernate.persister.entity.EntityPersister;
  *
  * @author Steve Ebersole
  */
-public interface EntityReference extends IdentifierDescriptionInjectable, ResultSetProcessingContext.EntityKeyResolutionContext {
+public interface EntityReference
+		extends IdentifierDescriptionInjectable, ResultSetProcessingContext.EntityKeyResolutionContext {
 	/**
 	 * Retrieve the alias associated with the persister (entity/collection).
 	 *

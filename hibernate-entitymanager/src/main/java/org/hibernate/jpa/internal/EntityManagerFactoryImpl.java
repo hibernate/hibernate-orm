@@ -34,7 +34,6 @@ import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
 import javax.persistence.spi.PersistenceUnitTransactionType;
@@ -70,7 +69,8 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.internal.graph.EntityGraphImpl;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.mapping.PersistentClass;
@@ -95,7 +95,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final transient boolean discardOnClose;
 	private final transient Class sessionInterceptorClass;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
-	private final transient Metamodel metamodel;
+	private final transient MetamodelImpl metamodel;
 	private final transient HibernatePersistenceUnitUtil util;
 	private final transient Map<String,Object> properties;
 	private final String entityManagerFactoryName;
@@ -386,6 +386,15 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	public SessionFactoryImpl getSessionFactory() {
 		return sessionFactory;
+	}
+
+	@Override
+	public EntityTypeImpl getEntityTypeByName(String entityName) {
+		final EntityTypeImpl entityType = metamodel.getEntityTypeByName( entityName );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "[" + entityName + "] did not refer to EntityType" );
+		}
+		return entityType;
 	}
 
 	public String getEntityManagerFactoryName() {

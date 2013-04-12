@@ -36,7 +36,7 @@ import org.hibernate.loader.spi.ResultSetProcessingContext;
 /**
  * @author Steve Ebersole
  */
-public class CollectionReturn extends AbstractCollectionReference implements Return {
+public class CollectionReturn extends AbstractCollectionReference implements Return, CopyableReturn {
 	private final String ownerEntityName;
 	private final String ownerProperty;
 
@@ -59,6 +59,12 @@ public class CollectionReturn extends AbstractCollectionReference implements Ret
 		);
 		this.ownerEntityName = ownerEntityName;
 		this.ownerProperty = ownerProperty;
+	}
+
+	public CollectionReturn(CollectionReturn original, CopyContext copyContext) {
+		super( original, copyContext );
+		this.ownerEntityName = original.ownerEntityName;
+		this.ownerProperty = original.ownerProperty;
 	}
 
 	/**
@@ -97,5 +103,10 @@ public class CollectionReturn extends AbstractCollectionReference implements Ret
 	@Override
 	public String toString() {
 		return "CollectionReturn(" + getCollectionPersister().getRole() + ")";
+	}
+
+	@Override
+	public CollectionReturn makeCopy(CopyContext copyContext) {
+		return new CollectionReturn( this, copyContext );
 	}
 }

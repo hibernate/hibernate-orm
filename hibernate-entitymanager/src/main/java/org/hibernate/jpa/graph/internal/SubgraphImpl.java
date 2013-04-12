@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.graph;
+package org.hibernate.jpa.graph.internal;
 
 import javax.persistence.AttributeNode;
 import javax.persistence.Subgraph;
@@ -34,7 +34,7 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
 /**
  * @author Steve Ebersole
  */
-public class SubgraphImpl<T> extends GraphNode<T> implements Subgraph<T> {
+public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T> {
 	private final ManagedType managedType;
 	private final Class<T> subclass;
 

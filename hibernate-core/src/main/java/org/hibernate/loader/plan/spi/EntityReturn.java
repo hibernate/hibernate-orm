@@ -34,6 +34,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
@@ -44,7 +45,7 @@ import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierReso
 /**
  * @author Steve Ebersole
  */
-public class EntityReturn extends AbstractFetchOwner implements Return, EntityReference {
+public class EntityReturn extends AbstractFetchOwner implements Return, EntityReference, CopyableReturn {
 
 	private final EntityAliases entityAliases;
 	private final String sqlTableAlias;
@@ -67,6 +68,13 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 		this.sqlTableAlias = sqlTableAlias;
 
 		this.persister = sessionFactory.getEntityPersister( entityName );
+	}
+
+	protected EntityReturn(EntityReturn original, CopyContext copyContext) {
+		super( original, copyContext );
+		this.entityAliases = original.entityAliases;
+		this.sqlTableAlias = original.sqlTableAlias;
+		this.persister = original.persister;
 	}
 
 	@Override
@@ -204,5 +212,10 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	@Override
 	public String toString() {
 		return "EntityReturn(" + persister.getEntityName() + ")";
+	}
+
+	@Override
+	public EntityReturn makeCopy(CopyContext copyContext) {
+		return new EntityReturn( this, copyContext );
 	}
 }

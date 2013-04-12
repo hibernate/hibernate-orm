@@ -34,11 +34,11 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.EntityType;
 
 /**
@@ -68,6 +68,20 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 
 		this.associationType = (EntityType) owner.retrieveFetchSourcePersister().getPropertyType( ownerProperty );
 		this.persister = sessionFactory.getEntityPersister( associationType.getAssociatedEntityName() );
+	}
+
+	/**
+	 * Copy constructor.
+	 *
+	 * @param original The original fetch
+	 * @param copyContext Access to contextual needs for the copy operation
+	 */
+	protected EntityFetch(EntityFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+		super( original, copyContext, fetchOwnerCopy );
+		this.sqlTableAlias = original.sqlTableAlias;
+		this.entityAliases = original.entityAliases;
+		this.associationType = original.associationType;
+		this.persister = original.persister;
 	}
 
 	public EntityType getAssociationType() {
@@ -261,5 +275,13 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 	@Override
 	public String toString() {
 		return "EntityFetch(" + getPropertyPath().getFullPath() + " -> " + persister.getEntityName() + ")";
+	}
+
+	@Override
+	public EntityFetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+		copyContext.getReturnGraphVisitationStrategy().startingEntityFetch( this );
+		final EntityFetch copy = new EntityFetch( this, copyContext, fetchOwnerCopy );
+		copyContext.getReturnGraphVisitationStrategy().finishingEntityFetch( this );
+		return copy;
 	}
 }

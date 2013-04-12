@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,25 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi;
+package org.hibernate.loader.plan.spi.visit;
+
+import org.hibernate.loader.plan.spi.CollectionFetch;
+import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.CompositeFetch;
+import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.FetchOwner;
+import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.loader.plan.spi.ScalarReturn;
 
 /**
+ * A strategy for visiting a root {@link Return} and fetches it defines.
+ *
  * @author Steve Ebersole
  */
-public interface LoadPlanVisitationStrategy {
+public interface ReturnGraphVisitationStrategy {
 	/**
-	 * Notification we are preparing to start visitation.
-	 */
-	public void start(LoadPlan loadPlan);
-
-	/**
-	 * Notification we are finished visitation.
-	 */
-	public void finish(LoadPlan loadPlan);
-
-	/**
-	 * Notification that a new root return branch is being started.  Will be followed by calls to one of the following
-	 * based on the type of return:<ul>
+	 * Notification that a new root return branch is being started.  Will be followed by calls
+	 * to one of the following based on the type of return:<ul>
 	 *     <li>{@link #handleScalarReturn}</li>
 	 *     <li>{@link #handleEntityReturn}</li>
 	 *     <li>{@link #handleCollectionReturn}</li>
@@ -57,8 +58,8 @@ public interface LoadPlanVisitationStrategy {
 	public void finishingRootReturn(Return rootReturn);
 
 	/**
-	 * Notification that a scalar return is being processed.  Will be surrounded by calls to {@link #startingRootReturn}
-	 * and {@link #finishingRootReturn}
+	 * Notification that a scalar return is being processed.  Will be surrounded by calls to
+	 * {@link #startingRootReturn} and {@link #finishingRootReturn}
 	 *
 	 * @param scalarReturn The scalar return
 	 */

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.graph;
+package org.hibernate.jpa.graph.internal;
 
 import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
@@ -39,7 +39,7 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
  *
  * @author Steve Ebersole
  */
-public class EntityGraphImpl<T> extends GraphNode<T> implements EntityGraph<T> {
+public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraph<T> {
 	private final String name;
 	private final EntityType<T> entityType;
 
@@ -61,6 +61,10 @@ public class EntityGraphImpl<T> extends GraphNode<T> implements EntityGraph<T> {
 		super( original, mutable );
 		this.name = name;
 		this.entityType = original.entityType;
+	}
+
+	public EntityType<T> getEntityType() {
+		return entityType;
 	}
 
 	@Override
@@ -142,6 +146,11 @@ public class EntityGraphImpl<T> extends GraphNode<T> implements EntityGraph<T> {
 			);
 		}
 		return attribute;
+	}
+
+	@SuppressWarnings("unchecked")
+	public boolean appliesTo(String entityName) {
+		return appliesTo( entityManagerFactory().getEntityTypeByName( entityName ) );
 	}
 
 	public boolean appliesTo(EntityType<? super T> entityType) {

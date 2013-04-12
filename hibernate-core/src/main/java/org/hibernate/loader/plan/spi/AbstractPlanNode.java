@@ -37,6 +37,10 @@ public abstract class AbstractPlanNode {
 		this.sessionFactory = sessionFactory;
 	}
 
+	public AbstractPlanNode(AbstractPlanNode original) {
+		this( original.sessionFactory() );
+	}
+
 	protected SessionFactoryImplementor sessionFactory() {
 		return sessionFactory;
 	}

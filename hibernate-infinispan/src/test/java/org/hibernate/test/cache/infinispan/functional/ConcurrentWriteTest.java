@@ -476,7 +476,7 @@ sessionFactory().getStatistics().clear();
 					contactExists();
 					thinkRandomTime();
 					++completedIterations;
-					if ( log.isTraceEnabled() ) {
+					if ( trace ) {
 						log.tracef( "Iteration completed {0}", completedIterations );
 					}
 				}

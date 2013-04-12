@@ -340,15 +340,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 		public void setValue(PreparedStatement st, Enum value, int index) throws SQLException {
 			final Object jdbcValue = value == null ? null : extractJdbcValue( value );
 
+			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( jdbcValue == null ) {
-				if ( LOG.isTraceEnabled() ) {
+				if ( traceEnabled ) {
 					LOG.trace(String.format("Binding null to parameter: [%s]", index));
 				}
 				st.setNull( index, getSqlType() );
 				return;
 			}
 
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace(String.format("Binding [%s] to parameter: [%s]", jdbcValue, index));
 			}
 			st.setObject( index, jdbcValue, EnumType.this.sqlType );
@@ -366,15 +367,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 		@Override
 		public Enum getValue(ResultSet rs, String[] names) throws SQLException {
 			final int ordinal = rs.getInt( names[0] );
+			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( rs.wasNull() ) {
-				if ( LOG.isTraceEnabled() ) {
+				if ( traceEnabled ) {
 					LOG.trace(String.format("Returning null as column [%s]", names[0]));
 				}
 				return null;
 			}
 
 			final Enum enumValue = fromOrdinal( ordinal );
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
 			}
 			return enumValue;
@@ -436,15 +438,16 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 		public Enum getValue(ResultSet rs, String[] names) throws SQLException {
 			final String value = rs.getString( names[0] );
 
+			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( rs.wasNull() ) {
-				if ( LOG.isTraceEnabled() ) {
+				if ( traceEnabled ) {
 					LOG.trace(String.format("Returning null as column [%s]", names[0]));
 				}
 				return null;
 			}
 
 			final Enum enumValue = fromName( value );
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.trace(String.format("Returning [%s] as column [%s]", enumValue, names[0]));
 			}
 			return enumValue;

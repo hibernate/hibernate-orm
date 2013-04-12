@@ -26,12 +26,11 @@ package org.hibernate.type.descriptor.sql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.jboss.logging.Logger;
 
 /**
  * Convenience base implementation of {@link org.hibernate.type.descriptor.ValueExtractor}
@@ -63,12 +62,15 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	 */
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( value == null || rs.wasNull() ) {
-			LOG.tracev( "Found [null] as column [{0}]", name );
+			if ( traceEnabled ) {
+				LOG.tracev( "Found [null] as column [{0}]", name );
+			}
 			return null;
 		}
 		else {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Found [{0}] as column [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), name );
 			}
 			return value;

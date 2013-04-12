@@ -650,7 +650,12 @@ public final class SessionFactoryImpl
 			MetadataImplementor metadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			SessionFactoryObserver observer) throws HibernateException {
-		LOG.debug( "Building session factory" );
+
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean debugEnabled = traceEnabled || LOG.isDebugEnabled();
+		if ( debugEnabled ) {
+			LOG.debug( "Building session factory" );
+		}
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
@@ -692,9 +697,10 @@ public final class SessionFactoryImpl
 			filters.put( filterDefinition.getFilterName(), filterDefinition );
 		}
 
-		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
-		LOG.debugf( "Instantiating session factory with properties: %s", properties );
-
+		if ( debugEnabled ) {
+			LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
+			LOG.debugf( "Instantiating session factory with properties: %s", properties );
+		}
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		class IntegratorObserver implements SessionFactoryObserver {
@@ -761,7 +767,7 @@ public final class SessionFactoryImpl
 				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
 				if ( accessStrategy == null ) {
 					final AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
-					if ( LOG.isTraceEnabled() ) {
+					if ( traceEnabled ) {
 						LOG.tracev( "Building cache for entity data [{0}]", model.getEntity().getName() );
 					}
 					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion(
@@ -796,7 +802,7 @@ public final class SessionFactoryImpl
 			final AccessType accessType = model.getCaching().getAccessType();
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				if ( LOG.isTraceEnabled() ) {
+				if ( traceEnabled ) {
 					LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
 				}
 				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
@@ -887,7 +893,9 @@ public final class SessionFactoryImpl
 				serviceRegistry.getService( JndiService.class )
 		);
 
-		LOG.debug("Instantiated session factory");
+		if ( debugEnabled ) {
+			LOG.debug("Instantiated session factory");
+		}
 
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( metadata )
@@ -1054,9 +1062,9 @@ public final class SessionFactoryImpl
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
 	private Map<String,HibernateException> checkNamedQueries() throws HibernateException {
 		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
-
+		final boolean debugEnabled = LOG.isDebugEnabled();
 		// Check named HQL queries
-		if ( LOG.isDebugEnabled() ) {
+		if ( debugEnabled ) {
 			LOG.debugf( "Checking %s named HQL queries", namedQueries.size() );
 		}
 		Iterator itr = namedQueries.entrySet().iterator();
@@ -1066,7 +1074,9 @@ public final class SessionFactoryImpl
 			final NamedQueryDefinition qd = ( NamedQueryDefinition ) entry.getValue();
 			// this will throw an error if there's something wrong.
 			try {
-				LOG.debugf( "Checking named query: %s", queryName );
+				if ( debugEnabled ) {
+					LOG.debugf( "Checking named query: %s", queryName );
+				}
 				//TODO: BUG! this currently fails for named queries for non-POJO entities
 				queryPlanCache.getHQLQueryPlan( qd.getQueryString(), false, Collections.EMPTY_MAP );
 			}
@@ -1076,10 +1086,8 @@ public final class SessionFactoryImpl
 			catch ( MappingException e ) {
 				errors.put( queryName, e );
 			}
-
-
 		}
-		if ( LOG.isDebugEnabled() ) {
+		if ( debugEnabled ) {
 			LOG.debugf( "Checking %s named SQL queries", namedSqlQueries.size() );
 		}
 		itr = namedSqlQueries.entrySet().iterator();
@@ -1089,7 +1097,9 @@ public final class SessionFactoryImpl
 			final NamedSQLQueryDefinition qd = ( NamedSQLQueryDefinition ) entry.getValue();
 			// this will throw an error if there's something wrong.
 			try {
-				LOG.debugf( "Checking named SQL query: %s", queryName );
+				if ( debugEnabled ) {
+					LOG.debugf( "Checking named SQL query: %s", queryName );
+				}
 				// TODO : would be really nice to cache the spec on the query-def so as to not have to re-calc the hash;
 				// currently not doable though because of the resultset-ref stuff...
 				NativeSQLQuerySpecification spec;

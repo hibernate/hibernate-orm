@@ -54,7 +54,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
@@ -103,7 +102,6 @@ import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
@@ -657,7 +655,12 @@ public final class SessionFactoryImpl
 			MetadataImplementor metadata,
 			SessionFactoryOptions sessionFactoryOptions,
 			SessionFactoryObserver observer) throws HibernateException {
-		LOG.debug( "Building session factory" );
+
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean debugEnabled = traceEnabled || LOG.isDebugEnabled();
+		if ( debugEnabled ) {
+			LOG.debug( "Building session factory" );
+		}
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
@@ -699,9 +702,10 @@ public final class SessionFactoryImpl
 			filters.put( filterDefinition.getFilterName(), filterDefinition );
 		}
 
-		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
-		LOG.debugf( "Instantiating session factory with properties: %s", properties );
-
+		if ( debugEnabled ) {
+			LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
+			LOG.debugf( "Instantiating session factory with properties: %s", properties );
+		}
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		class IntegratorObserver implements SessionFactoryObserver {
@@ -768,7 +772,7 @@ public final class SessionFactoryImpl
 				accessStrategy = EntityRegionAccessStrategy.class.cast( entityAccessStrategies.get( cacheRegionName ) );
 				if ( accessStrategy == null ) {
 					final AccessType accessType = model.getHierarchyDetails().getCaching().getAccessType();
-					if ( LOG.isTraceEnabled() ) {
+					if ( traceEnabled ) {
 						LOG.tracev( "Building cache for entity data [{0}]", model.getEntity().getName() );
 					}
 					EntityRegion entityRegion = settings.getRegionFactory().buildEntityRegion(
@@ -803,7 +807,7 @@ public final class SessionFactoryImpl
 			final AccessType accessType = model.getCaching().getAccessType();
 			CollectionRegionAccessStrategy accessStrategy = null;
 			if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-				if ( LOG.isTraceEnabled() ) {
+				if ( traceEnabled ) {
 					LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
 				}
 				CollectionRegion collectionRegion = settings.getRegionFactory().buildCollectionRegion(
@@ -889,7 +893,9 @@ public final class SessionFactoryImpl
 				serviceRegistry.getService( JndiService.class )
 		);
 
-		LOG.debug("Instantiated session factory");
+		if ( debugEnabled ) {
+			LOG.debug("Instantiated session factory");
+		}
 
 		if ( settings.isAutoCreateSchema() ) {
 			new SchemaExport( metadata )

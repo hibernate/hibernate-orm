@@ -101,8 +101,9 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			oldVersion = persister.getCurrentVersion( id, source );
 		}
 
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		if ( oldVersion != null ) {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Found existing row for {0}", MessageHelper.infoString( persister, id, source.getFactory() ) );
 			}
 
@@ -120,14 +121,14 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			// else do nothing (don't even reassociate object!)
 			if ( canReplicate )
 				performReplication( entity, id, realOldVersion, persister, replicationMode, source );
-			else
+			else if ( traceEnabled )
 				LOG.trace( "No need to replicate" );
 
 			//TODO: would it be better to do a refresh from db?
 		}
 		else {
 			// no existing row - do an insert
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "No existing row, replicating new instance {0}",
 						MessageHelper.infoString( persister, id, source.getFactory() ) );
 			}

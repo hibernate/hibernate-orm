@@ -204,11 +204,13 @@ public class UnresolvedEntityInsertActions {
 		if ( entityEntry.getStatus() != Status.MANAGED && entityEntry.getStatus() != Status.READ_ONLY ) {
 			throw new IllegalArgumentException( "EntityEntry did not have status MANAGED or READ_ONLY: " + entityEntry );
 		}
+
+		final boolean traceEnabled = LOG.isTraceEnabled();
 		// Find out if there are any unresolved insertions that are waiting for the
 		// specified entity to be resolved.
 		Set<AbstractEntityInsertAction> dependentActions = dependentActionsByTransientEntity.remove( managedEntity );
 		if ( dependentActions == null ) {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev(
 						"No unresolved entity inserts that depended on [{0}]",
 						MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() )
@@ -217,7 +219,7 @@ public class UnresolvedEntityInsertActions {
 			return Collections.emptySet();  //NOTE EARLY EXIT!
 		}
 		Set<AbstractEntityInsertAction> resolvedActions = new IdentitySet(  );
-		if ( LOG.isTraceEnabled()  ) {
+		if ( traceEnabled  ) {
 			LOG.tracev(
 					"Unresolved inserts before resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),
@@ -225,7 +227,7 @@ public class UnresolvedEntityInsertActions {
 			);
 		}
 		for ( AbstractEntityInsertAction dependentAction : dependentActions ) {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev(
 						"Resolving insert [{0}] dependency on [{1}]",
 						MessageHelper.infoString( dependentAction.getEntityName(), dependentAction.getId() ),
@@ -235,7 +237,7 @@ public class UnresolvedEntityInsertActions {
 			NonNullableTransientDependencies dependencies = dependenciesByAction.get( dependentAction );
 			dependencies.resolveNonNullableTransientEntity( managedEntity );
 			if ( dependencies.isEmpty() ) {
-				if ( LOG.isTraceEnabled() ) {
+				if ( traceEnabled ) {
 					LOG.tracev(
 							"Resolving insert [{0}] (only depended on [{1}])",
 							dependentAction,
@@ -247,7 +249,7 @@ public class UnresolvedEntityInsertActions {
 				resolvedActions.add( dependentAction );
 			}
 		}
-		if ( LOG.isTraceEnabled()  ) {
+		if ( traceEnabled  ) {
 			LOG.tracev(
 					"Unresolved inserts after resolving [{0}]: [{1}]",
 					MessageHelper.infoString( entityEntry.getEntityName(), entityEntry.getId() ),

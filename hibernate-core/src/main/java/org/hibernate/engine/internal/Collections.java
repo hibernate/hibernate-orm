@@ -72,7 +72,7 @@ public final class Collections {
 		CollectionEntry entry = persistenceContext.getCollectionEntry(coll);
 		final CollectionPersister loadedPersister = entry.getLoadedPersister();
 
-		if ( LOG.isDebugEnabled() && loadedPersister != null ) {
+		if ( loadedPersister != null && LOG.isDebugEnabled() ) {
 			LOG.debugf(
 					"Collection dereferenced: %s",
 					MessageHelper.collectionInfoString( loadedPersister, 

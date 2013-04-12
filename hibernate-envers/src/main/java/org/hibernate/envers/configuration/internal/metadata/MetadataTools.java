@@ -32,6 +32,7 @@ import org.dom4j.Element;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.Selectable;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -221,9 +222,13 @@ public class MetadataTools {
         return join_mapping;
     }
 
-    public static void addColumns(Element any_mapping, Iterator<Column> columns) {
-        while (columns.hasNext()) {
-            addColumn(any_mapping, columns.next());
+    public static void addColumns(Element any_mapping, Iterator selectables) {
+        while ( selectables.hasNext() ) {
+			final Selectable selectable = (Selectable) selectables.next();
+			if ( selectable.isFormula() ) {
+				throw new FormulaNotSupportedException();
+			}
+            addColumn( any_mapping, (Column) selectable );
         }
     }
 
@@ -310,13 +315,26 @@ public class MetadataTools {
     /**
      * An iterator over column names.
      */
-    public static abstract class ColumnNameIterator implements Iterator<String> { }
+    public static abstract class ColumnNameIterator implements Iterator<String> {
+	}
 
-    public static ColumnNameIterator getColumnNameIterator(final Iterator<Column> columnIterator) {
+    public static ColumnNameIterator getColumnNameIterator(final Iterator<Selectable> selectableIterator) {
         return new ColumnNameIterator() {
-            public boolean hasNext() { return columnIterator.hasNext(); }
-            public String next() { return columnIterator.next().getName(); }
-            public void remove() { columnIterator.remove(); }
+            public boolean hasNext() {
+				return selectableIterator.hasNext();
+			}
+
+            public String next() {
+				final Selectable next = selectableIterator.next();
+				if ( next.isFormula() ) {
+					throw new FormulaNotSupportedException();
+				}
+				return ( (Column) next ).getName();
+			}
+
+            public void remove() {
+				selectableIterator.remove();
+			}
         };
     }
 

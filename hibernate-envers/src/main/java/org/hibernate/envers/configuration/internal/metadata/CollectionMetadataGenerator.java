@@ -88,7 +88,6 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
@@ -507,20 +506,16 @@ public final class CollectionMetadataGenerator {
 				);
 			}
 
-			// Add an additional column holding a number to make each entry unique within the set,
-			// since embeddable properties can be null
-			if ( propertyValue.getCollectionType() instanceof SetType ) {
-				final String auditedEmbeddableSetOrdinalPropertyName = mainGenerator.getVerEntCfg()
-						.getEmbeddableSetOrdinalPropertyName();
-				final String auditedEmbeddableSetOrdinalPropertyType = "integer";
-
-				final SimpleValue simpleValue = new SimpleValue( component.getMappings(), component.getTable() );
-				simpleValue.setTypeName( auditedEmbeddableSetOrdinalPropertyType );
-
-				final Element idProperty = MetadataTools.addProperty( xmlMapping,
-						auditedEmbeddableSetOrdinalPropertyName, auditedEmbeddableSetOrdinalPropertyType, true, true );
-				MetadataTools.addColumn( idProperty, auditedEmbeddableSetOrdinalPropertyName, null, 0, 0, null, null,
-						null, false );
+			// Add an additional column holding a number to make each entry unique within the set.
+			// Embeddable properties may contain null values, so cannot be stored within composite primary key.
+			if ( propertyValue.isSet() ) {
+				final String setOrdinalPropertyName = mainGenerator.getVerEntCfg().getEmbeddableSetOrdinalPropertyName();
+				final Element ordinalProperty = MetadataTools.addProperty(
+						xmlMapping, setOrdinalPropertyName, "integer", true, true
+				);
+				MetadataTools.addColumn(
+						ordinalProperty, setOrdinalPropertyName, null, null, null, null, null, null, false
+				);
 			}
 
 			return new MiddleComponentData( componentMapper, 0 );

@@ -101,7 +101,7 @@ public interface EnversSettings {
 	public static final String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name";
 	
 	/**
-	 * The name of the column used for storing the ordinal of the change in sets of embeddables. Defaults to {@literal SETORDINAL}. 
+	 * Name of column used for storing ordinal of the change in sets of embeddable elements. Defaults to {@literal SETORDINAL}.
 	 */
 	public static final String EMBEDDABLE_SET_ORDINAL_FIELD_NAME = "org.hibernate.envers.embeddable_set_ordinal_field_name";
 }

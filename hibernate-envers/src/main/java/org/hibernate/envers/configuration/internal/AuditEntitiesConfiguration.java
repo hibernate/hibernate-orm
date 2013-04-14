@@ -104,7 +104,8 @@ public class AuditEntitiesConfiguration {
 		revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
 
 		embeddableSetOrdinalPropertyName = ConfigurationHelper.getString(
-				EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME, properties, "SETORDINAL" );
+				EnversSettings.EMBEDDABLE_SET_ORDINAL_FIELD_NAME, properties, "SETORDINAL"
+		);
 	}
 
 	public String getOriginalIdPropName() {

@@ -323,7 +323,7 @@
                             SETORDINAL
                         </entry>
                         <entry>
-                            The name of the column used for storing the ordinal of the change in sets of embeddables. 
+                            Name of column used for storing ordinal of the change in sets of embeddable elements.
                         </entry>
                     </row>
                 </tbody>

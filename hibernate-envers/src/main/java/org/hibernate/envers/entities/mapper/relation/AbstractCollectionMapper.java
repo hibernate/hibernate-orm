@@ -87,27 +87,16 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
     protected abstract void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object changed);
 
 	/**
-	 * Creates a Map for the id.
-	 * 
-	 * <p>
-	 * The ordinal parameter represents the iteration ordinal of the current element, used to add a synthetic id when
-	 * dealing with embeddables since embeddable fields can't be contained within the primary key since they might be
-	 * nullable.
-	 * </p>
-	 * 
-	 * @param ordinal
-	 *            The element iteration ordinal.
-	 * 
-	 * @return A Map for holding the ID information.
+	 * Creates map for storing identifier data. Ordinal parameter guarantees uniqueness of primary key.
+	 * Composite primary key cannot contain embeddable properties since they might be nullable.
+	 * @param ordinal Iteration ordinal.
+	 * @return Map for holding identifier data.
 	 */
 	protected Map<String, Object> createIdMap(int ordinal) {
-		final HashMap<String, Object> idMap = new HashMap<String, Object>();
-
+		final Map<String, Object> idMap = new HashMap<String, Object>();
 		if ( ordinalInId ) {
-			idMap.put( this.commonCollectionMapperData.getVerEntCfg().getEmbeddableSetOrdinalPropertyName(),
-					Integer.valueOf( ordinal ) );
+			idMap.put( commonCollectionMapperData.getVerEntCfg().getEmbeddableSetOrdinalPropertyName(), ordinal );
 		}
-
 		return idMap;
 	}
 

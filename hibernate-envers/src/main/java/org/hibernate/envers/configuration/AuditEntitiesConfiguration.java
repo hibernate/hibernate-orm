@@ -115,9 +115,10 @@ public class AuditEntitiesConfiguration {
         revisionNumberPath = originalIdPropName + "." + revisionFieldName + ".id";
         revisionPropBasePath = originalIdPropName + "." + revisionFieldName + ".";
 
-		embeddableSetOrdinalPropertyName = getProperty( properties,
-				"org.hibernate.envers.embeddable_set_ordinal_field_name",
-				"org.hibernate.envers.embeddable_set_ordinal_field_name", "SETORDINAL" );
+		embeddableSetOrdinalPropertyName = getProperty(
+				properties, "org.hibernate.envers.embeddable_set_ordinal_field_name",
+				"org.hibernate.envers.embeddable_set_ordinal_field_name", "SETORDINAL"
+		);
     }
 
     public String getOriginalIdPropName() {

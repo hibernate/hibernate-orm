@@ -145,7 +145,7 @@ public class SchemaValidator {
                 LOG.fetchingDatabaseMetadata();
 				connectionHelper.prepare( false );
 				connection = connectionHelper.getConnection();
-				meta = new DatabaseMetadata( connection, dialect, false );
+				meta = new DatabaseMetadata( connection, dialect, configuration, false );
 			}
 			catch ( SQLException sqle ) {
                 LOG.unableToGetDatabaseMetadata(sqle);

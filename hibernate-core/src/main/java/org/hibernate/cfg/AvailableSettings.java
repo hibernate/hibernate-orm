@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg;
 
+
 /**
  * @author Steve Ebersole
  */
@@ -641,4 +642,12 @@ public interface AvailableSettings {
 	 * Default is <code>true</code> (enabled).
 	 */
 	public static final String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
+
+	/**
+	 * If enabled, allows {@link org.hibernate.tool.hbm2ddl.DatabaseMetadata} to
+	 * support synonyms during schema update and validations.  Due to the
+	 * possibility that this would return duplicate tables (especially in
+	 * Oracle), this is disabled by default.
+	 */
+	public static final String ENABLE_SYNONYMS = "hibernate.synonyms";
 }

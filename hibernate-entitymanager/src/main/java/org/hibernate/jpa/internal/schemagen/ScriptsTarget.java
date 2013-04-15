@@ -24,10 +24,10 @@
 package org.hibernate.jpa.internal.schemagen;
 
 import javax.persistence.PersistenceException;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+-import java.io.File;
+-import java.io.FileWriter;
+-import java.io.IOException;
+-import java.io.Writer;
 
 import org.jboss.logging.Logger;
 
@@ -188,6 +188,9 @@ class ScriptsTarget implements GenerationTarget {
 		try {
 			return new FileWriter( file );
 		}
+        catch (FileNotFoundException e) {
+            throw new PersistenceException( "Unable to find file : " + fileUrl );
+        }
 		catch (IOException e) {
 			throw new PersistenceException( "Unable to open specified script target file for writing : " + fileUrl );
 		}

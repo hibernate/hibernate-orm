@@ -319,7 +319,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					     || "hashCode".equals( methodName )
 				         || "getStatistics".equals( methodName )
 					     || "isOpen".equals( methodName )
-						 || "getListeners".equals( methodName ) //useful for HSearch in particular
+						 || "getListeners".equals( methodName )
 						) {
 					// allow these to go through the the real session no matter what
 				}
@@ -333,15 +333,15 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 				else if ( !realSession.getTransaction().isActive() ) {
 					// limit the methods available if no transaction is active
 					if ( "beginTransaction".equals( methodName )
-					     || "getTransaction".equals( methodName )
-					     || "isTransactionInProgress".equals( methodName )
-					     || "setFlushMode".equals( methodName )
-						 || "getFactory".equals( methodName ) //from SessionImplementor
-					     || "getSessionFactory".equals( methodName ) ) {
+							|| "getTransaction".equals( methodName )
+							|| "isTransactionInProgress".equals( methodName )
+							|| "setFlushMode".equals( methodName )
+							|| "getFactory".equals( methodName )
+							|| "getSessionFactory".equals( methodName )
+							|| "getTenantIdentifier".equals( methodName ) ) {
 						LOG.tracev( "Allowing method [{0}] in non-transacted context", methodName );
 					}
-					else if ( "reconnect".equals( methodName )
-					          || "disconnect".equals( methodName ) ) {
+					else if ( "reconnect".equals( methodName ) || "disconnect".equals( methodName ) ) {
 						// allow these (deprecated) methods to pass through
 					}
 					else {

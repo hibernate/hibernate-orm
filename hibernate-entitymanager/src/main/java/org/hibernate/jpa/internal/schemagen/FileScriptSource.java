@@ -24,10 +24,7 @@
 package org.hibernate.jpa.internal.schemagen;
 
 import javax.persistence.PersistenceException;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 
 import org.jboss.logging.Logger;
 
@@ -67,6 +64,9 @@ class FileScriptSource extends ReaderScriptSource implements SqlScriptReader {
 		try {
 			return new FileReader( file );
 		}
+        catch (FileNotFoundException e) {
+            throw new PersistenceException( "Unable to find file : " + fileUrl );
+        }
 		catch (IOException e) {
 			throw new PersistenceException( "Unable to open specified script target file for writing : " + fileUrl );
 		}

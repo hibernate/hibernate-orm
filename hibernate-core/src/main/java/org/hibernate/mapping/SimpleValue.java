@@ -75,7 +75,8 @@ public class SimpleValue implements KeyValue {
 
 	private final Mappings mappings;
 
-	private final List columns = new ArrayList();
+	private final List<Selectable> columns = new ArrayList<Selectable>();
+
 	private String typeName;
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
@@ -132,7 +133,7 @@ public class SimpleValue implements KeyValue {
 	public int getColumnSpan() {
 		return columns.size();
 	}
-	public Iterator getColumnIterator() {
+	public Iterator<Selectable> getColumnIterator() {
 		return columns.iterator();
 	}
 	public List getConstraintColumns() {

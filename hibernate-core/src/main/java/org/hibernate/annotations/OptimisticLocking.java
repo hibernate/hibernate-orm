@@ -38,5 +38,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface OptimisticLocking {
+	/**
+	 * Defines the style of optimistic locking for the entity.
+	 */
 	OptimisticLockType type() default OptimisticLockType.VERSION;
 }

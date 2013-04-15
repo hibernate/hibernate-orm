@@ -2,10 +2,10 @@ package org.hibernate.envers.test.integration.merge;
 
 import java.util.Arrays;
 
-import org.hibernate.Session;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;

@@ -31,61 +31,63 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extends {@link javax.persistence.NamedQuery} with Hibernate features
+ * Extends {@link javax.persistence.NamedQuery} with Hibernate features.
  *
  * @author Carlos Gonzalez-Cadenas
+ *
+ * @see org.hibernate.Query
  */
 @Target( { TYPE, PACKAGE })
 @Retention(RUNTIME)
 public @interface NamedQuery {
 
 	/**
-	 * @return returns the name of this {@code NamedQuery}
+	 * The name of this {@code NamedQuery}.
 	 */
 	String name();
 
 	/**
-	 * @return returns the query string for this {@code NamedQuery}
+	 * The query string for this {@code NamedQuery}.
 	 */
 	String query();
 
 	/**
-	 * @return returns the flush mode for this query
+	 * The flush mode for this query.
 	 */
 	FlushModeType flushMode() default FlushModeType.PERSISTENCE_CONTEXT;
 
 	/**
-	 * @return returns whether this query is cacheable or not
+	 * Whether the query (results) is cacheable or not.  Default is {@code false}, that is not cacheable.
 	 */
 	boolean cacheable() default false;
 
 	/**
-	 * @return returns the the cache region to use
+	 * If the query results are cacheable, name the query cache region to use.
 	 */
 	String cacheRegion() default "";
 
 	/**
-	 * @return returns the number of rows fetched by the JDBC Driver per database round-trip
+	 * The number of rows fetched by the JDBC Driver per trip.
 	 */
 	int fetchSize() default -1;
 
 	/**
-	 * @return return the query timeout in seconds
+	 * The query timeout (in seconds).  Default is no timeout.
 	 */
 	int timeout() default -1;
 
 	/**
-	 * @return returns the comment added to the SQL query (useful for the DBA)
+	 * A comment added to the generated SQL query.  Useful when engaging with DBA.
 	 */
 	String comment() default "";
 
 	/**
-	 * @return returns the cache mode used for this query
+	 * The cache mode used for this query.  This refers to entities/collections returned from the query.
 	 */
 	CacheModeType cacheMode() default CacheModeType.NORMAL;
 
 	/**
-	 * @return returns whether the results are fetched in read-only mode or not. Default is {@code false}
+	 * Whether the results should be read-only.  Default is {@code false}.
 	 */
 	boolean readOnly() default false;
 }

@@ -35,6 +35,8 @@ import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 
 /**
+ * Standard implementation of the StrategySelector contract.
+ *
  * @author Steve Ebersole
  */
 public class StrategySelectorImpl implements StrategySelector {
@@ -45,6 +47,11 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	private final ClassLoaderService classLoaderService;
 
+	/**
+	 * Constructs a StrategySelectorImpl using the given class loader service.
+	 *
+	 * @param classLoaderService The class loader service usable by this StrategySelectorImpl instance.
+	 */
 	public StrategySelectorImpl(ClassLoaderService classLoaderService) {
 		this.classLoaderService = classLoaderService;
 	}
@@ -57,7 +64,7 @@ public class StrategySelectorImpl implements StrategySelector {
 			namedStrategyImplementorByStrategyMap.put( strategy, namedStrategyImplementorMap );
 		}
 
-		Class old = namedStrategyImplementorMap.put( name, implementation );
+		final Class old = namedStrategyImplementorMap.put( name, implementation );
 		if ( old == null ) {
 			log.trace(
 					String.format(
@@ -83,7 +90,7 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation) {
-		Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
 			log.debug( "Named strategy map did not exist on call to un-register" );
 			return;
@@ -106,7 +113,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Class<? extends T> selectStrategyImplementor(Class<T> strategy, String name) {
-		Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap != null ) {
 			final Class registered = namedStrategyImplementorMap.get( name );
 			if ( registered != null ) {

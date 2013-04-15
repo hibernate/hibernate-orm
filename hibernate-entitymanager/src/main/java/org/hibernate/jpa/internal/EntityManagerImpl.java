@@ -42,7 +42,7 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.internal.graph.EntityGraphImpl;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 
 /**
  * Hibernate implementation of {@link javax.persistence.EntityManager}.

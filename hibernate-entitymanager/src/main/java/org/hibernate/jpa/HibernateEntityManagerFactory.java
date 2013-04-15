@@ -27,6 +27,7 @@ import javax.persistence.EntityManagerFactory;
 import java.io.Serializable;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.jpa.metamodel.internal.EntityTypeImpl;
 
 /**
  * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link javax.persistence.EntityManagerFactory}
@@ -40,4 +41,6 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	 * @return The underlying Hibernate SessionFactory
 	 */
 	public SessionFactory getSessionFactory();
+
+	public EntityTypeImpl getEntityTypeByName(String entityName);
 }

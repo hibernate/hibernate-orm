@@ -55,7 +55,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface AttributeAccessor {
 	/**
-	 * Names the {@link org.hibernate.property.PropertyAccessor} strategy
+	 * Names the {@link org.hibernate.property.PropertyAccessor} strategy.
 	 */
 	String value();
 }

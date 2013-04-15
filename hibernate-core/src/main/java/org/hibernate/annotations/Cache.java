@@ -32,7 +32,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Add caching strategy to a root entity or a collection
+ * Add caching strategy to a root entity or a collection.
  *
  * @author Emmanuel Bernard
  */

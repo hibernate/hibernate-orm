@@ -3,13 +3,14 @@ package org.hibernate.envers.test;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.cfg.Configuration;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import org.hibernate.Session;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
@@ -49,7 +50,7 @@ public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTes
     @Override
     protected Configuration constructConfiguration() {
         Configuration configuration = super.constructConfiguration();
-        configuration.setProperty("org.hibernate.envers.use_revision_entity_with_native_id", "false");
+        configuration.setProperty(EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false");
         return configuration;
     }
 

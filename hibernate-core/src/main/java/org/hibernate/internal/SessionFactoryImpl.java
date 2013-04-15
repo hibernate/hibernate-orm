@@ -56,7 +56,6 @@ import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.SessionFactory;
@@ -106,7 +105,6 @@ import org.hibernate.engine.profile.Association;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
@@ -664,8 +662,15 @@ public final class SessionFactoryImpl
 	}
 
 	@SuppressWarnings( {"ThrowableResultOfMethodCallIgnored"})
-	public SessionFactoryImpl(MetadataImplementor metadata,SessionFactoryOptions sessionFactoryOptions) throws HibernateException {
-		LOG.debug( "Building session factory" );
+	public SessionFactoryImpl(
+			MetadataImplementor metadata,
+			SessionFactoryOptions sessionFactoryOptions) throws HibernateException {
+
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean debugEnabled = traceEnabled || LOG.isDebugEnabled();
+		if ( debugEnabled ) {
+			LOG.debug( "Building session factory" );
+		}
 
 		this.sessionFactoryOptions = sessionFactoryOptions;
 
@@ -704,9 +709,10 @@ public final class SessionFactoryImpl
 
 		this.filters = Collections.unmodifiableMap( metadata.getFilterDefinitions() );
 
-		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
-		LOG.debugf( "Instantiating session factory with properties: %s", properties );
-
+		if ( debugEnabled ) {
+			LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
+			LOG.debugf( "Instantiating session factory with properties: %s", properties );
+		}
 		this.queryPlanCache = new QueryPlanCache( this );
 
 		class IntegratorObserver implements SessionFactoryObserver {
@@ -782,7 +788,7 @@ public final class SessionFactoryImpl
 					if ( accessType == null ) {
 						accessType = regionFactory.getDefaultAccessType();
 					}
-					if ( LOG.isTraceEnabled() ) {
+					if ( traceEnabled ) {
 						LOG.tracev( "Building cache for entity data [{0}]", model.getEntity().getName() );
 					}
 					EntityRegion entityRegion = serviceRegistry.getService( RegionFactory.class ).buildEntityRegion(
@@ -860,7 +866,7 @@ public final class SessionFactoryImpl
 					accessType = regionFactory.getDefaultAccessType();
 				}
 				if ( accessType != null && settings.isSecondLevelCacheEnabled() ) {
-					if ( LOG.isTraceEnabled() ) {
+					if ( traceEnabled ) {
 						LOG.tracev( "Building cache for collection data [{0}]", model.getAttribute().getRole() );
 					}
 					CollectionRegion collectionRegion = serviceRegistry.getService( RegionFactory.class ).buildCollectionRegion(
@@ -953,7 +959,9 @@ public final class SessionFactoryImpl
 				serviceRegistry.getService( JndiService.class )
 		);
 
-		LOG.debug("Instantiated session factory");
+		if ( debugEnabled ) {
+			LOG.debug("Instantiated session factory");
+		}
 
 		schemaExport = new SchemaExport( metadata ).setImportSqlCommandExtractor( serviceRegistry
 				.getService( ImportSqlCommandExtractor.class ) );

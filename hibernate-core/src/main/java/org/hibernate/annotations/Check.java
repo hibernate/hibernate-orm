@@ -32,12 +32,15 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Arbitrary SQL CHECK constraints which can be defined at the class, property or collection level
+ * Arbitrary SQL CHECK constraints which can be defined at the class, property or collection level.
  *
  * @author Emmanuel Bernard
  */
 @Target({ TYPE, METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface Check {
+	/**
+	 * The check constraints string.
+	 */
 	String constraints();
 }

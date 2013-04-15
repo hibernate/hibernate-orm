@@ -141,7 +141,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		FromElement fromElement = getFromElement();
 		buf.append( "{propertyName=" ).append( propertyName );
 		buf.append( ",dereferenceType=" ).append( getWalker().getASTPrinter().getTokenTypeName( dereferenceType ) );
-		buf.append( ",propertyPath=" ).append( propertyPath );
+		buf.append( ",getPropertyPath=" ).append( propertyPath );
 		buf.append( ",path=" ).append( getPath() );
 		if ( fromElement != null ) {
 			buf.append( ",tableAlias=" ).append( fromElement.getTableAlias() );
@@ -585,7 +585,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			LOG.debugf( "Unresolved property path is now '%s'", dotNode.propertyPath );
 		}
 		else {
-			LOG.debugf( "Terminal propertyPath = [%s]", propertyPath );
+			LOG.debugf( "Terminal getPropertyPath = [%s]", propertyPath );
 		}
 	}
 

@@ -24,7 +24,7 @@
 package org.hibernate;
 
 /**
- * Loads an entity by its natural identifier
+ * Loads an entity by its natural identifier.
  * 
  * @author Eric Dalquist
  * @author Steve Ebersole

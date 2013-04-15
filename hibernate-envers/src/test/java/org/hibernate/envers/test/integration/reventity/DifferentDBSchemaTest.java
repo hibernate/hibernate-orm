@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -29,7 +30,7 @@ public class DifferentDBSchemaTest extends BaseEnversJPAFunctionalTestCase {
         super.addConfigOptions(options);
         // Creates new schema after establishing connection
         options.putAll(Environment.getProperties());
-        options.put("org.hibernate.envers.default_schema", SCHEMA_NAME);
+        options.put(EnversSettings.DEFAULT_SCHEMA, SCHEMA_NAME);
     }
 
     @Override

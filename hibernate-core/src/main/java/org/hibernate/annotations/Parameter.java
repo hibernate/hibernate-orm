@@ -28,14 +28,20 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Parameter (basically key/value pattern)
+ * Generic parameter (basically a key/value combination) used to parametrize other annotations.
  *
  * @author Emmanuel Bernard
  */
 @Target({})
 @Retention(RUNTIME)
 public @interface Parameter {
+	/**
+	 * The parameter name.
+	 */
 	String name();
 
+	/**
+	 * The parameter value.
+	 */
 	String value();
 }

@@ -62,6 +62,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.BasicAttributeBinding;
@@ -167,6 +168,7 @@ class TypeSafeActivator {
 		}
 		applyRelationalConstraints( activationContext );
 
+//<<<<<<< HEAD
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -175,6 +177,22 @@ class TypeSafeActivator {
 		final Dialect dialect = activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect();
 		final ClassLoaderService classLoaderService = activationContext.getServiceRegistry().getService( ClassLoaderService.class );
 		ValidatorFactory factory = getValidatorFactory( properties );
+//=======
+//		applyRelationalConstraints(
+//				factory,
+//				activationContext.getConfiguration().createMappings().getClasses().values(),
+//				properties,
+//				activationContext.getServiceRegistry().getService( JdbcServices.class ).getDialect()
+//		);
+//	}
+//
+//	@SuppressWarnings( {"UnusedDeclaration"})
+//	public static void applyRelationalConstraints(
+//			ValidatorFactory factory,
+//			Collection<PersistentClass> persistentClasses,
+//			Properties properties,
+//			Dialect dialect) {
+//>>>>>>> master
 		Class<?>[] groupsArray = new GroupsPerOperation( properties ).get( GroupsPerOperation.Operation.DDL );
 		Set<Class<?>> groups = new HashSet<Class<?>>( Arrays.asList( groupsArray ) );
 
@@ -482,14 +500,23 @@ class TypeSafeActivator {
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
 		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+			// single table inheritance should not be forced to null due to shared state
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
-				//single table should not be forced to null
-				if ( !property.isComposite() ) { //composite should not add not-null on all columns
-					@SuppressWarnings( "unchecked" )
-					Iterator<Column> iter = property.getColumnIterator();
+				//composite should not add not-null on all columns
+				if ( !property.isComposite() ) {
+					final Iterator<Selectable> iter = property.getColumnIterator();
 					while ( iter.hasNext() ) {
-						iter.next().setNullable( false );
-						hasNotNull = true;
+						final Selectable selectable = iter.next();
+						if ( Column.class.isInstance( selectable ) ) {
+							Column.class.cast( selectable ).setNullable( false );
+						}
+						else {
+							LOG.debugf(
+									"@NotNull was applied to attribute [%s] which is defined (at least partially) " +
+											"by formula(s); formula portions will be skipped",
+									property.getName()
+							);
+						}
 					}
 				}
 			}

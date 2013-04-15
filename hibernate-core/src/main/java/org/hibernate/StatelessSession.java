@@ -52,6 +52,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * Insert a row.
 	 *
 	 * @param entity a new transient instance
+	 *
+	 * @return The identifier of the inserted entity
 	 */
 	public Serializable insert(Object entity);
 
@@ -60,6 +62,7 @@ public interface StatelessSession extends SharedSessionContract {
 	 *
 	 * @param entityName The entityName for the entity to be inserted
 	 * @param entity a new transient instance
+	 *
 	 * @return the identifier of the instance
 	 */
 	public Serializable insert(String entityName, Object entity);
@@ -97,12 +100,18 @@ public interface StatelessSession extends SharedSessionContract {
 	/**
 	 * Retrieve a row.
 	 *
+	 * @param entityName The name of the entity to retrieve
+	 * @param id The id of the entity to retrieve
+	 *
 	 * @return a detached entity instance
 	 */
 	public Object get(String entityName, Serializable id);
 
 	/**
 	 * Retrieve a row.
+	 *
+	 * @param entityClass The class of the entity to retrieve
+	 * @param id The id of the entity to retrieve
 	 *
 	 * @return a detached entity instance
 	 */
@@ -111,12 +120,20 @@ public interface StatelessSession extends SharedSessionContract {
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
 	 *
+	 * @param entityName The name of the entity to retrieve
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
+	 *
 	 * @return a detached entity instance
 	 */
 	public Object get(String entityName, Serializable id, LockMode lockMode);
 
 	/**
 	 * Retrieve a row, obtaining the specified lock mode.
+	 *
+	 * @param entityClass The class of the entity to retrieve
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
 	 *
 	 * @return a detached entity instance
 	 */
@@ -164,6 +181,8 @@ public interface StatelessSession extends SharedSessionContract {
 	 * application should not close the connection.
 	 *
 	 * @deprecated just missed when deprecating same method from {@link Session}
+	 *
+	 * @return The connection associated with this stateless session
 	 */
 	@Deprecated
 	public Connection connection();

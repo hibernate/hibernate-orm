@@ -1,5 +1,5 @@
-//$Id$
 package org.hibernate.test.annotations.indexcoll;
+
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -7,8 +7,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 
-import org.hibernate.annotations.IndexColumn;
+import org.hibernate.annotations.ListIndexBase;
 
 /**
  * @author Emmanuel Bernard
@@ -34,8 +35,9 @@ public class Wardrobe {
 	 * not recommended).
 	 */
 	@OneToMany(cascade = CascadeType.ALL)
-	@IndexColumn(name = "drawer_position", base = 1)
 	@JoinColumn(name = "wardrobe_id", nullable = false)
+	@OrderColumn( name = "drawer_position" )
+	@ListIndexBase( 1 )
 	public List<Drawer> getDrawers() {
 		return drawers;
 	}

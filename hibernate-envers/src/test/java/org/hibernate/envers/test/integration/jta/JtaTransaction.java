@@ -2,16 +2,16 @@ package org.hibernate.envers.test.integration.jta;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.EntityManager;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.junit.Assert;
-import org.junit.Test;
 
 /**
  * Same as {@link org.hibernate.envers.test.integration.basic.Simple}, but in a JTA environment.

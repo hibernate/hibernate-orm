@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import javax.persistence.Column;
@@ -31,7 +32,8 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Describe an identifier column for a bag (ie an idbag)
+ * Describe an identifier column for a bag (ie an idbag).
+ *
  * EXPERIMENTAL: the structure of this annotation might slightly change (generator() mix strategy and generator
  * 
  * @author Emmanuel Bernard
@@ -39,10 +41,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface CollectionId {
-	/** Collection id column(s) */
+	/**
+	 * Collection id column(s).
+	 */
 	Column[] columns();
-	/** id type, type.type() must be set  */
+
+	/**
+	 * id type, type.type() must be set.
+	 */
 	Type type();
-	/** generator name: 'identity' or a defined generator name */
+
+	/**
+	 * The generator name.  For example 'identity' or a defined generator name
+	 */
 	String generator();
 }

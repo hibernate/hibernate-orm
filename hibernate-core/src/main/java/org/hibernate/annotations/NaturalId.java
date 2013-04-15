@@ -34,15 +34,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * This specifies that a property is part of the natural id of the entity.
  *
  * @author Nicol�s Lichtmaier
+ *
  * @see NaturalIdCache
  */
 @Target( { METHOD, FIELD } )
 @Retention( RUNTIME )
 public @interface NaturalId {
 	/**
-	 * Is this natural id mutable (or immutable)?
-	 *
-	 * @return {@code true} indicates the natural id is mutable; {@code false} (the default) that it is immutable.
+	 * Whether the natural id is mutable (or immutable)?  {@code false} (the default) indicates it is immutable;
+	 * {@code true} indicates it is mutable.
 	 */
 	boolean mutable() default false;
 }

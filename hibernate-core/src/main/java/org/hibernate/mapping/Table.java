@@ -69,6 +69,15 @@ public class Table implements RelationalModel, Serializable {
 	private boolean isAbstract;
 	private boolean hasDenormalizedTables = false;
 	private String comment;
+	
+	/**
+	 * Natural ID columns must reside in one single UniqueKey within the Table.
+	 * To prevent separate UniqueKeys from being created, this keeps track of
+	 * a sole name used for all of them.  It's necessary since
+	 * AnnotationBinder#processElementAnnotations (static) creates the
+	 * UniqueKeys on a second pass using randomly-generated names.
+	 */
+	private final String naturalIdUniqueKeyName = StringHelper.randomFixedLengthHex( "UK_" );
 
 	static class ForeignKeyKey implements Serializable {
 		String referencedClassName;
@@ -845,6 +854,10 @@ public class Table implements RelationalModel, Serializable {
 
 	public Iterator getCheckConstraintsIterator() {
 		return checkConstraints.iterator();
+	}
+	
+	public String getNaturalIdUniqueKeyName() {
+		return naturalIdUniqueKeyName;
 	}
 
 	public Iterator sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {

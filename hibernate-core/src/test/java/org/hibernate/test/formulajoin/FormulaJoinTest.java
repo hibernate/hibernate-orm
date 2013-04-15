@@ -114,6 +114,5 @@ public class FormulaJoinTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 	}
-
 }
 

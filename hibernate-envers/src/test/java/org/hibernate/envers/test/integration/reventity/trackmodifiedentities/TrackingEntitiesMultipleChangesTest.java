@@ -8,6 +8,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.hibernate.envers.CrossTypeRevisionChangesReader;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -28,7 +29,7 @@ public class TrackingEntitiesMultipleChangesTest extends BaseEnversJPAFunctional
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put( "org.hibernate.envers.track_entities_changed_in_revision", "true" ) ;
+		options.put( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" ) ;
 	}
 
 	@Test

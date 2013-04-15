@@ -60,6 +60,7 @@ public class ListBinder extends CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, ListBinder.class.getName() );
 
 	public ListBinder() {
+		super( false );
 	}
 
 	@Override

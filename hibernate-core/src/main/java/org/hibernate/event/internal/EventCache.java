@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.event.spi.EventSource;
+import org.hibernate.pretty.MessageHelper;
 
 /**
  * EventCache is a Map implementation that can be used by an event
@@ -59,6 +61,8 @@ import org.hibernate.AssertionFailure;
  * @author Gail Badner
  */
 class EventCache implements Map {
+	private final EventSource session;
+
 	private Map<Object,Object> entityToCopyMap = new IdentityHashMap<Object,Object>(10);
 		// key is an entity involved with the operation performed by the listener;
 		// value can be either a copy of the entity or the entity itself
@@ -69,6 +73,10 @@ class EventCache implements Map {
 	private Map<Object,Boolean> entityToOperatedOnFlagMap = new IdentityHashMap<Object,Boolean>( 10 );
 	    // key is an entity involved with the operation performed by the listener;
 	    // value is a flag indicating if the listener explicitly operates on the entity
+
+	EventCache(EventSource session) {
+		this.session = session;
+	}
 
 	/**
 	 * Clears the EventCache.
@@ -181,10 +189,16 @@ class EventCache implements Map {
 
 		if ( oldCopy == null ) {
 			if  ( oldEntity != null ) {
-				throw new IllegalStateException( "An entity copy was already assigned to a different entity." );
+				throw new IllegalStateException(
+						"Error occurred while storing entity " + printEntity( entity ) + ". An entity copy " + printEntity( copy )
+								+ " was already assigned to a different entity " + printEntity( oldEntity ) + "."
+				);
 			}
 			if ( oldOperatedOn != null ) {
-				throw new IllegalStateException( "entityToOperatedOnFlagMap contains an entity, but entityToCopyMap does not." );
+				throw new IllegalStateException(
+						"EventCache#entityToOperatedOnFlagMap contains an entity " + printEntity( entity )
+								+ ", but EventCache#entityToCopyMap does not."
+				);
 			}
 		}
 		else {
@@ -193,21 +207,33 @@ class EventCache implements Map {
 				// to synch things up.
 				Object removedEntity = copyToEntityMap.remove( oldCopy );
 				if ( removedEntity != entity ) {
-					throw new IllegalStateException( "An unexpected entity was associated with the old entity copy." );
+					throw new IllegalStateException(
+							"Error occurred while storing entity " + printEntity( entity ) + ". An unexpected entity " + printEntity( removedEntity )
+									+ " was associated with the old entity copy " + printEntity( oldCopy ) + "."
+					);
 				}
 				if ( oldEntity != null ) {
-					throw new IllegalStateException( "A new entity copy is already associated with a different entity." );
+					throw new IllegalStateException(
+							"Error occurred while storing entity " + printEntity( entity ) + ". A new entity copy " + printEntity( copy )
+									+ " is already associated with a different entity " + printEntity( oldEntity ) + "."
+					);
 				}
 			}
 			else {
 				// Replaced an entity copy with the same copy in entityToCopyMap.
 				// Make sure that copy is associated with the same entity in copyToEntityMap.
 				if ( oldEntity != entity ) {
-					throw new IllegalStateException( "An entity copy was associated with a different entity than provided." );
+					throw new IllegalStateException(
+							"An entity copy " + printEntity( copy ) + " was associated with a different entity "
+									+ printEntity( oldEntity ) + " than provided " + printEntity( entity ) + "."
+					);
 				}
 			}
 			if ( oldOperatedOn == null ) {
-				throw new IllegalStateException( "entityToCopyMap contained an entity, but entityToOperatedOnFlagMap did not." );
+				throw new IllegalStateException(
+						"EventCache#entityToCopyMap contained an entity " + printEntity( entity )
+								+ ", but EventCache#entityToOperatedOnFlagMap did not."
+				);
 			}
 		}
 
@@ -242,18 +268,30 @@ class EventCache implements Map {
 
 		if ( oldCopy == null ) {
 			if ( oldOperatedOn != null ) {
-				throw new IllegalStateException( "Removed entity from entityToOperatedOnFlagMap, but entityToCopyMap did not contain the entity." );
+				throw new IllegalStateException(
+						"Removed entity " + printEntity( entity )
+								+ " from EventCache#entityToOperatedOnFlagMap, but EventCache#entityToCopyMap did not contain the entity."
+				);
 			}
 		}
 		else {
 			if ( oldEntity == null ) {
-				throw new IllegalStateException( "Removed entity from entityToCopyMap, but copyToEntityMap did not contain the entity." );
+				throw new IllegalStateException(
+						"Removed entity " + printEntity( entity )
+								+ " from EventCache#entityToCopyMap, but EventCache#copyToEntityMap did not contain the entity."
+				);
 			}
 			if ( oldOperatedOn == null ) {
-				throw new IllegalStateException( "entityToCopyMap contained an entity, but entityToOperatedOnFlagMap did not." );
+				throw new IllegalStateException(
+						"EventCache#entityToCopyMap contained an entity " + printEntity( entity )
+								+ ", but EventCache#entityToOperatedOnFlagMap did not."
+				);
 			}
 			if ( oldEntity != entity ) {
-				throw new IllegalStateException( "An entity copy was associated with a different entity than provided." );
+				throw new IllegalStateException(
+						"An entity copy " + printEntity( oldCopy ) + " was associated with a different entity "
+								+ printEntity( oldEntity ) + " than provided " + printEntity( entity ) + "."
+				);
 			}
 		}
 
@@ -303,7 +341,7 @@ class EventCache implements Map {
 		}
 		if ( ! entityToOperatedOnFlagMap.containsKey( entity ) ||
 			! entityToCopyMap.containsKey( entity ) ) {
-			throw new AssertionFailure( "called EventCache.setOperatedOn() for entity not found in EventCache" );
+			throw new AssertionFailure( "called EventCache#setOperatedOn() for entity not found in EventCache" );
 		}
 		entityToOperatedOnFlagMap.put( entity, isOperatedOn );
 	}
@@ -316,5 +354,13 @@ class EventCache implements Map {
 	 */
 	public Map invertMap() {
 		return Collections.unmodifiableMap( copyToEntityMap );
+	}
+
+	private String printEntity(Object entity) {
+		if ( session.getPersistenceContext().getEntry( entity ) != null ) {
+			return MessageHelper.infoString( session.getEntityName( entity ), session.getIdentifier( entity ) );
+		}
+		// Entity was not found in current persistence context. Use Object#toString() method.
+		return "[" + entity + "]";
 	}
 }

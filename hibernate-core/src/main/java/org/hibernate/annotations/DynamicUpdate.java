@@ -42,5 +42,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface DynamicUpdate {
+	/**
+	 * Should dynamic update generation be used for this entity?  {@code true} says the update sql will be dynamic
+	 * generated.  Default is {@code true} (since generally this annotation is not used unless the user wants dynamic
+	 * generation).
+	 */
 	boolean value() default true;
 }

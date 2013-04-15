@@ -81,7 +81,7 @@ public class MetamodelBuilder {
 	// these fields are needed just for the duration of building the metamodel
 	private final JpaMetaModelPopulationSetting populationSetting;
 	private final AttributeBuilder attributeBuilder;
-	private final Map<String,EntityTypeImpl> entityTypeByNameMap = new HashMap<String, EntityTypeImpl>();
+	private final Map<String,EntityTypeImpl<?>> entityTypeByNameMap = new HashMap<String, EntityTypeImpl<?>>();
 	private final Map<MappedSuperclassTypeImpl,String> mappedSuperclassEntityNameMap = new HashMap<MappedSuperclassTypeImpl, String>();
 	private List<EntityBinding> entityBindingList = new ArrayList<EntityBinding>();
 	private Set<Hierarchical> alreadyProcessed = new HashSet<Hierarchical>();
@@ -207,7 +207,8 @@ public class MetamodelBuilder {
 		return new MetamodelImpl(
 				entityTypeMap,
 				mappedSuperclassTypeMap,
-				embeddableTypeMap
+				embeddableTypeMap,
+				entityTypeByNameMap
 		);
 	}
 

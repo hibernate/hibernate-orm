@@ -31,10 +31,15 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Collection of {@code @JoinColumnOrFormula} definitions.
+ *
  * @author Sharath Reddy
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface JoinColumnsOrFormulas {
+	/**
+	 * The aggregated values.
+	 */
 	JoinColumnOrFormula [] value();
 }

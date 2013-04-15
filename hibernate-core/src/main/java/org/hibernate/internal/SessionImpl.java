@@ -86,6 +86,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.query.spi.FilterQueryPlan;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
@@ -2244,7 +2245,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		private LobCreator lobCreator() {
-			return session.getFactory().getJdbcServices().getLobCreator( session );
+			// Always use NonContextualLobCreator.  If ContextualLobCreator is
+			// used both here and in WrapperOptions, 
+			return NonContextualLobCreator.INSTANCE;
 		}
 
 		@Override
@@ -2571,13 +2574,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				return;
 			}
 
+			final boolean debugEnabled = LOG.isDebugEnabled();
 			for ( Serializable pk : getPersistenceContext().getNaturalIdHelper().getCachedPkResolutions( entityPersister ) ) {
 				final EntityKey entityKey = generateEntityKey( pk, entityPersister );
 				final Object entity = getPersistenceContext().getEntity( entityKey );
 				final EntityEntry entry = getPersistenceContext().getEntry( entity );
 
 				if ( entry == null ) {
-					if ( LOG.isDebugEnabled() ) {
+					if ( debugEnabled ) {
 						LOG.debug(
 								"Cached natural-id/pk resolution linked to null EntityEntry in persistence context : "
 										+ MessageHelper.infoString( entityPersister, pk, getFactory() )

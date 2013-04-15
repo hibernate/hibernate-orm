@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -73,9 +74,9 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
-		options.put("org.hibernate.envers.audit_strategy", "org.hibernate.envers.strategy.ValidityAuditStrategy");
-		options.put("org.hibernate.envers.audit_strategy_validity_store_revend_timestamp", "true");
-		options.put("org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name", revendTimestampColumName);
+		options.put(EnversSettings.AUDIT_STRATEGY, "org.hibernate.envers.strategy.ValidityAuditStrategy");
+		options.put(EnversSettings.AUDIT_STRATEGY_VALIDITY_STORE_REVEND_TIMESTAMP, "true");
+		options.put(EnversSettings.AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME, revendTimestampColumName);
 	}
 
 	@Test

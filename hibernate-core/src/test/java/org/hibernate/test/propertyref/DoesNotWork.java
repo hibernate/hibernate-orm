@@ -32,9 +32,10 @@ import javax.persistence.ElementCollection;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.IndexColumn;
+import org.hibernate.annotations.ListIndexBase;
 
 /**
  * @author Steve Ebersole
@@ -57,7 +58,8 @@ public class DoesNotWork implements Serializable {
 			joinColumns = @JoinColumn(name = "text_id", referencedColumnName = "production_credits_tid")
 	)
 	@Column(name = "text_part", insertable = false, updatable = false)
-	@IndexColumn(name = "seq_no", base = 1)
+	@OrderColumn( name = "seq_no" )
+	@ListIndexBase(1)
 	private List<String> globalNotes = new ArrayList<String>();
 
 	public DoesNotWork() {

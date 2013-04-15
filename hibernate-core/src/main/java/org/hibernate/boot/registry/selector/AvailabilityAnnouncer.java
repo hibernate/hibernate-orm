@@ -25,12 +25,17 @@ package org.hibernate.boot.registry.selector;
 
 /**
  * Responsible for announcing the availability of strategy selector(s).  Can be registered directly with the
- * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} or located via discovery
+ * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} or located via discovery.
  *
  * todo : better name?
  *
  * @author Steve Ebersole
  */
 public interface AvailabilityAnnouncer {
+	/**
+	 * Get all availabilities announced by this announcer.
+	 *
+	 * @return All announced availabilities
+	 */
 	public Iterable<Availability> getAvailabilities();
 }

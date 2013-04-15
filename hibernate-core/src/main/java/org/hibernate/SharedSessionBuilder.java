@@ -26,41 +26,41 @@ package org.hibernate;
 import java.sql.Connection;
 
 /**
- * Specialized {@link SessionBuilder} with access to stuff from another session
+ * Specialized {@link SessionBuilder} with access to stuff from another session.
  *
  * @author Steve Ebersole
  */
 public interface SharedSessionBuilder extends SessionBuilder {
 	/**
-	 * Signifies the interceptor from the original session should be used to create the new session
+	 * Signifies the interceptor from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	public SharedSessionBuilder interceptor();
 
 	/**
-	 * Signifies that the connection from the original session should be used to create the new session
+	 * Signifies that the connection from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	public SharedSessionBuilder connection();
 
 	/**
-	 * Signifies that the connection release mode from the original session should be used to create the new session
+	 * Signifies that the connection release mode from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	public SharedSessionBuilder connectionReleaseMode();
 
 	/**
-	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session
+	 * Signifies that the autoJoinTransaction flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	public SharedSessionBuilder autoJoinTransactions();
 
 	/**
-	 * Signifies that the autoClose flag from the original session should be used to create the new session
+	 * Signifies that the autoClose flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -71,14 +71,14 @@ public interface SharedSessionBuilder extends SessionBuilder {
 	public SharedSessionBuilder autoClose();
 
 	/**
-	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session
+	 * Signifies that the flushBeforeCompletion flag from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */
 	public SharedSessionBuilder flushBeforeCompletion();
 
 	/**
-	 * Signifies that the transaction context from the original session should be used to create the new session
+	 * Signifies that the transaction context from the original session should be used to create the new session.
 	 *
 	 * @return {@code this}, for method chaining
 	 */

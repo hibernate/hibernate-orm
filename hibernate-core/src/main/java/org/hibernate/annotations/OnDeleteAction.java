@@ -23,19 +23,18 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * Possible actions on deletes
+ * Possible actions for on-delete.
  *
  * @author Emmanuel Bernard
  */
 public enum OnDeleteAction {
 	/**
-	 * the default
+	 * Take no action.  The default.
 	 */
 	NO_ACTION,
 	/**
-	 * use cascade delete capabilities of the DD
+	 * Use cascade delete capabilities of the database foreign-key.
 	 */
 	CASCADE
 }

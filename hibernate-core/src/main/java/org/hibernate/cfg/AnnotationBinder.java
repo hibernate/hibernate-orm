@@ -111,6 +111,7 @@ import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.NaturalId;
@@ -125,6 +126,8 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Proxy;
 import org.hibernate.annotations.Sort;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.Tuplizer;
 import org.hibernate.annotations.Tuplizers;
@@ -1466,7 +1469,8 @@ public final class AnnotationBinder {
 		 * ordering does not matter
 		 */
 
-		if ( LOG.isTraceEnabled() ) {
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) {
 			LOG.tracev( "Processing annotations of {0}.{1}" , propertyHolder.getEntityName(), inferredData.getPropertyName() );
 		}
 
@@ -1532,7 +1536,7 @@ public final class AnnotationBinder {
 								+ propertyHolder.getEntityName()
 				);
 			}
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "{0} is a version property", inferredData.getPropertyName() );
 			}
 			RootClass rootClass = ( RootClass ) propertyHolder.getPersistentClass();
@@ -1558,7 +1562,7 @@ public final class AnnotationBinder {
 			SimpleValue simpleValue = ( SimpleValue ) prop.getValue();
 			simpleValue.setNullValue( "undefined" );
 			rootClass.setOptimisticLockMode( Versioning.OPTIMISTIC_LOCK_VERSION );
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Version name: {0}, unsavedValue: {1}", rootClass.getVersion().getName(),
 						( (SimpleValue) rootClass.getVersion().getValue() ).getNullValue() );
 			}
@@ -1701,6 +1705,9 @@ public final class AnnotationBinder {
 							entityBinder.getSecondaryTables(),
 							mappings
 					);
+					if ( property.isAnnotationPresent( ListIndexBase.class ) ) {
+						indexColumn.setBase( ( property.getAnnotation( ListIndexBase.class ) ).value() );
+					}
 				}
 				else {
 					//if @IndexColumn is not there, the generated IndexColumn is an implicit column and not used.
@@ -1722,14 +1729,16 @@ public final class AnnotationBinder {
 				collectionBinder.setIndexColumn( indexColumn );
 				collectionBinder.setMapKey( property.getAnnotation( MapKey.class ) );
 				collectionBinder.setPropertyName( inferredData.getPropertyName() );
-				BatchSize batchAnn = property.getAnnotation( BatchSize.class );
-				collectionBinder.setBatchSize( batchAnn );
-				javax.persistence.OrderBy ejb3OrderByAnn = property.getAnnotation( javax.persistence.OrderBy.class );
-				OrderBy orderByAnn = property.getAnnotation( OrderBy.class );
-				collectionBinder.setEjb3OrderBy( ejb3OrderByAnn );
-				collectionBinder.setSqlOrderBy( orderByAnn );
-				Sort sortAnn = property.getAnnotation( Sort.class );
-				collectionBinder.setSort( sortAnn );
+
+				collectionBinder.setBatchSize( property.getAnnotation( BatchSize.class ) );
+
+				collectionBinder.setJpaOrderBy( property.getAnnotation( javax.persistence.OrderBy.class ) );
+				collectionBinder.setSqlOrderBy( property.getAnnotation( OrderBy.class ) );
+
+				collectionBinder.setSort( property.getAnnotation( Sort.class ) );
+				collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
+				collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
+
 				Cache cachAnn = property.getAnnotation( Cache.class );
 				collectionBinder.setCache( cachAnn );
 				collectionBinder.setPropertyHolder( propertyHolder );
@@ -2091,12 +2100,12 @@ public final class AnnotationBinder {
 		if ( naturalIdAnn != null ) {
 			if ( joinColumns != null ) {
 				for ( Ejb3Column column : joinColumns ) {
-					column.addUniqueKey( StringHelper.randomFixedLengthHex("UK_"), inSecondPass );
+					column.addUniqueKey( column.getTable().getNaturalIdUniqueKeyName(), inSecondPass );
 				}
 			}
 			else {
 				for ( Ejb3Column column : columns ) {
-					column.addUniqueKey( StringHelper.randomFixedLengthHex("UK_"), inSecondPass );
+					column.addUniqueKey( column.getTable().getNaturalIdUniqueKeyName(), inSecondPass );
 				}
 			}
 		}

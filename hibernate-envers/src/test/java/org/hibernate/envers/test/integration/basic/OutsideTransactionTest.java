@@ -1,14 +1,16 @@
 package org.hibernate.envers.test.integration.basic;
 
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.integration.collection.norevision.Name;
 import org.hibernate.envers.test.integration.collection.norevision.Person;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -22,8 +24,8 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 
     @Override
     protected void configure(Configuration configuration) {
-        configuration.setProperty("org.hibernate.envers.store_data_at_delete", "true");
-        configuration.setProperty("org.hibernate.envers.revision_on_collection_change", "true");
+        configuration.setProperty(EnversSettings.STORE_DATA_AT_DELETE, "true");
+        configuration.setProperty(EnversSettings.REVISION_ON_COLLECTION_CHANGE, "true");
     }
 
     @Test(expected = AuditException.class)

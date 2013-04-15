@@ -38,5 +38,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( { METHOD, FIELD })
 @Retention(RUNTIME)
 public @interface NotFound {
+	/**
+	 * The action to perform when an associated entity is not found.  By default an exception is thrown.
+	 */
 	NotFoundAction action() default NotFoundAction.EXCEPTION;
 }

@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.jboss.logging.Logger;
@@ -68,8 +67,10 @@ import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.internal.graph.EntityGraphImpl;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
+import org.hibernate.jpa.metamodel.internal.EntityTypeImpl;
+import org.hibernate.jpa.metamodel.internal.MetamodelImpl;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.service.ServiceRegistry;
 
@@ -91,7 +92,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private final transient boolean discardOnClose;
 	private final transient Class sessionInterceptorClass;
 	private final transient CriteriaBuilderImpl criteriaBuilder;
-	private final transient Metamodel metamodel;
+	private final transient MetamodelImpl metamodel;
 	private final transient HibernatePersistenceUnitUtil util;
 	private final transient Map<String,Object> properties;
 	private final String entityManagerFactoryName;
@@ -135,7 +136,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
 		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
-		this.metamodel = sessionFactory.getJpaMetamodel();
+		this.metamodel = (MetamodelImpl)sessionFactory.getJpaMetamodel();
 		this.criteriaBuilder = new CriteriaBuilderImpl( this );
 		this.util = new HibernatePersistenceUnitUtil( this );
 
@@ -342,6 +343,15 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	public SessionFactoryImpl getSessionFactory() {
 		return sessionFactory;
+	}
+
+	@Override
+	public EntityTypeImpl getEntityTypeByName(String entityName) {
+		final EntityTypeImpl entityType = metamodel.getEntityTypeByName( entityName );
+		if ( entityType == null ) {
+			throw new IllegalArgumentException( "[" + entityName + "] did not refer to EntityType" );
+		}
+		return entityType;
 	}
 
 	public String getEntityManagerFactoryName() {

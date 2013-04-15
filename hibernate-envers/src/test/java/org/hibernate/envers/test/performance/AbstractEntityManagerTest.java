@@ -28,21 +28,22 @@ import java.util.Arrays;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
-import org.hibernate.envers.test.AbstractEnversTest;
 import org.junit.Before;
 
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.event.spi.EnversIntegrator;
+import org.hibernate.envers.test.AbstractEnversTest;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
-import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.envers.event.EnversIntegrator;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 
@@ -96,12 +97,12 @@ public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
         Properties configurationProperties = new Properties();
 		configurationProperties.putAll( Environment.getProperties() );
         if (!audited) {
-			configurationProperties.setProperty(EnversIntegrator.AUTO_REGISTER, "false");
+			configurationProperties.setProperty( EnversIntegrator.AUTO_REGISTER, "false");
         }
 		if ( createSchema() ) {
 			configurationProperties.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 			configurationProperties.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-			configurationProperties.setProperty("org.hibernate.envers.use_revision_entity_with_native_id", "false");
+			configurationProperties.setProperty( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
 		}
         if (auditStrategy != null && !"".equals(auditStrategy)) {
             configurationProperties.setProperty("org.hibernate.envers.audit_strategy", auditStrategy);

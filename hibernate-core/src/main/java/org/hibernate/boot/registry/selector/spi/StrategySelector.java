@@ -37,6 +37,8 @@ public interface StrategySelector extends Service {
 	 * @param strategy The strategy contract.
 	 * @param name The registration name
 	 * @param implementation The implementation Class
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
 	 */
 	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation);
 
@@ -46,6 +48,8 @@ public interface StrategySelector extends Service {
 	 *
 	 * @param strategy The strategy contract.
 	 * @param implementation The implementation Class
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
 	 */
 	public <T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation);
 
@@ -54,6 +58,8 @@ public interface StrategySelector extends Service {
 	 *
 	 * @param strategy The type of strategy to be resolved.
 	 * @param name The name of the strategy to locate; might be either a registered name or the implementation FQN.
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
 	 *
 	 * @return The named strategy implementation class.
 	 */
@@ -65,6 +71,8 @@ public interface StrategySelector extends Service {
 	 *
 	 * @param strategy The type (interface) of the strategy to be resolved.
 	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
 	 *
 	 * @return The strategy instance
 	 */
@@ -91,6 +99,8 @@ public interface StrategySelector extends Service {
 	 * @param strategy The type (interface) of the strategy to be resolved.
 	 * @param strategyReference The reference to the strategy for which we need to resolve an instance.
 	 * @param defaultValue THe default value to use if strategyReference is null
+	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
+	 * compatible.
 	 *
 	 * @return The strategy instance
 	 */

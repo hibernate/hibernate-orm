@@ -28,7 +28,7 @@ import java.util.Map;
 import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.property.BackrefPropertyAccessor;
-import org.hibernate.tuple.StandardProperty;
+import org.hibernate.tuple.NonIdentifierAttribute;
 
 /**
  * Collection of convenience methods relating to operations across arrays of types...
@@ -280,7 +280,7 @@ public class TypeHelper {
 	 * @return Array containing indices of the dirty properties, or null if no properties considered dirty.
 	 */
 	public static int[] findDirty(
-			final StandardProperty[] properties,
+			final NonIdentifierAttribute[] properties,
 			final Object[] currentState,
 			final Object[] previousState,
 			final boolean[][] includeColumns,
@@ -328,7 +328,7 @@ public class TypeHelper {
 	 * @return Array containing indices of the modified properties, or null if no properties considered modified.
 	 */
 	public static int[] findModified(
-			final StandardProperty[] properties,
+			final NonIdentifierAttribute[] properties,
 			final Object[] currentState,
 			final Object[] previousState,
 			final boolean[][] includeColumns,

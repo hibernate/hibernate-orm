@@ -26,7 +26,7 @@ package org.hibernate;
 import java.io.Serializable;
 
 /**
- * Loads an entity by its primary identifier
+ * Loads an entity by its primary identifier.
  * 
  * @author Eric Dalquist
  * @author Steve Ebersole

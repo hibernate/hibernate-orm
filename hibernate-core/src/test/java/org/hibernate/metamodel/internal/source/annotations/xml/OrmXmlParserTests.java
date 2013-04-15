@@ -58,7 +58,7 @@ public class OrmXmlParserTests extends BaseUnitTestCase {
 		assertNotNull( binding );
 	}
 
-	@Test(expected = MappingException.class)
+	@Test(expected = org.hibernate.metamodel.spi.source.InvalidMappingException.class)
 	public void testInvalidOrmXmlThrowsException() {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		sources.addResource( "org/hibernate/metamodel/internal/source/annotations/xml/orm-invalid.xml" );

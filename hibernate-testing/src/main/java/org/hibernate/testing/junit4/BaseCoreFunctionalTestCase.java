@@ -87,11 +87,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 
 	protected Session session;
 
-
-
-
-
-
 	protected SessionFactoryImplementor sessionFactory() {
 		return sessionFactory;
 	}

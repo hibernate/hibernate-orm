@@ -22,15 +22,15 @@ package org.hibernate.osgi;
 
 import java.net.URL;
 
-import org.hibernate.jpa.boot.archive.internal.StandardArchiveDescriptorFactory;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
+import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 import org.osgi.framework.Bundle;
 
 /**
  * @author Brett Meyer
  * @author Tim Ward
  */
-public class OsgiArchiveDescriptorFactory extends StandardArchiveDescriptorFactory {
+public class OsgiArchiveDescriptorFactory implements ArchiveDescriptorFactory {
 
 	private Bundle persistenceBundle;
 
@@ -39,11 +39,24 @@ public class OsgiArchiveDescriptorFactory extends StandardArchiveDescriptorFacto
 	}
 
 	@Override
+	public ArchiveDescriptor buildArchiveDescriptor(URL url) {
+		return buildArchiveDescriptor( url, "" );
+	}
+
+	@Override
 	public ArchiveDescriptor buildArchiveDescriptor(URL url, String entry) {
-		final String protocol = url.getProtocol();
-		if ( "bundle".equals( protocol ) ) {
-			return new OsgiArchiveDescriptor( persistenceBundle );
-		}
-		return super.buildArchiveDescriptor( url, entry );
+		return new OsgiArchiveDescriptor( persistenceBundle );
+	}
+
+	@Override
+	public URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException {
+		// not used
+		return null;
+	}
+
+	@Override
+	public URL getURLFromPath(String jarPath) {
+		// not used
+		return null;
 	}
 }

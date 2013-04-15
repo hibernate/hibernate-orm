@@ -26,7 +26,7 @@ package org.hibernate.envers.test.integration.modifiedflags;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -41,7 +41,7 @@ public abstract class AbstractModifiedFlagsEntityTest extends BaseEnversJPAFunct
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions(options);
 		if (forceModifiedFlags()) {
-			options.put(GlobalConfiguration.GLOBAL_WITH_MODIFIED_FLAG_PROPERTY, "true");
+			options.put(EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, "true");
 		}
 	}
 

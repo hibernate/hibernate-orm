@@ -64,8 +64,11 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		}
 		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 		// TODO: This needs tested.
-		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
+		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER,
 				new OsgiScanner( requestingBundle ) );
+		// TODO: This is temporary -- for PersistenceXmlParser's use of
+		// ClassLoaderServiceImpl#fromConfigSettings
+		properties.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
 		
 		osgiClassLoader.addBundle( requestingBundle );
 
@@ -79,7 +82,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		}
 		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 		// OSGi ClassLoaders must implement BundleReference 
-		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
+		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER,
 				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() ) );
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -29,7 +30,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Complementary information to a table either primary or secondary
+ * Complementary information to a table either primary or secondary.
  *
  * @author Emmanuel Bernard
  */
@@ -37,23 +38,22 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface Table {
 	/**
-	 * name of the targeted table
+	 * name of the targeted table.
 	 */
 	String appliesTo();
 
 	/**
-	 * Indexes
+	 * Indexes.
 	 */
 	Index[] indexes() default {};
 
 	/**
-	 * define a table comment
+	 * define a table comment.
 	 */
 	String comment() default "";
 
 	/**
-	 * Defines the Foreign Key name of a secondary table
-	 * pointing back to the primary table
+	 * Defines the Foreign Key name of a secondary table pointing back to the primary table.
 	 */
 	ForeignKey foreignKey() default @ForeignKey( name="" );
 
@@ -86,21 +86,21 @@ public @interface Table {
 	boolean optional() default true;
 
 	/**
-	 * Defines a custom SQL insert statement
+	 * Defines a custom SQL insert statement.
 	 *
 	 * <b>Only applies to secondary tables</b>
 	 */
 	SQLInsert sqlInsert() default @SQLInsert(sql="");
 
 	/**
-	 * Defines a custom SQL update statement
+	 * Defines a custom SQL update statement.
 	 *
 	 * <b>Only applies to secondary tables</b>
 	 */
 	SQLUpdate sqlUpdate() default @SQLUpdate(sql="");
 
 	/**
-	 * Defines a custom SQL delete statement
+	 * Defines a custom SQL delete statement.
 	 *
 	 * <b>Only applies to secondary tables</b>
 	 */

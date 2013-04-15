@@ -33,12 +33,12 @@ package org.hibernate.annotations;
  */
 public @interface MetaValue {
 	/**
-	 * entity type
+	 * The entity type.
 	 */
 	Class targetEntity();
 
 	/**
-	 * discriminator value stored in database
+	 * The corresponding discriminator value stored in database.
 	 */
 	String value();
 }

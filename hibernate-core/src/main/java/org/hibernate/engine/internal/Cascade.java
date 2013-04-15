@@ -145,7 +145,8 @@ public final class Cascade {
 			throws HibernateException {
 
 		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
-			if ( LOG.isTraceEnabled() ) {
+			final boolean traceEnabled = LOG.isTraceEnabled();
+			if ( traceEnabled ) {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 
@@ -182,7 +183,7 @@ public final class Cascade {
 				}
 			}
 
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Done processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 		}
@@ -248,7 +249,7 @@ public final class Cascade {
 							//				orphaned value, something a delete with a subquery to
 							// 				match the owner.
 //							final EntityType entityType = (EntityType) type;
-//							final String propertyPath = composePropertyPath( entityType.getPropertyName() );
+//							final String getPropertyPath = composePropertyPath( entityType.getPropertyName() );
 							loadedValue = null;
 						}
 						if ( loadedValue != null ) {
@@ -406,7 +407,8 @@ public final class Cascade {
 		boolean reallyDoCascade = style.reallyDoCascade(action) && child!=CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
-			if ( LOG.isTraceEnabled() ) {
+            final boolean traceEnabled = LOG.isTraceEnabled();
+			if ( traceEnabled ) {
 				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 
@@ -423,7 +425,7 @@ public final class Cascade {
 					);
 			}
 
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Done cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 		}
@@ -434,7 +436,8 @@ public final class Cascade {
 				child instanceof PersistentCollection; //a newly instantiated collection can't have orphans
 
 		if ( deleteOrphans ) { // handle orphaned entities!!
-			if ( LOG.isTraceEnabled() ) {
+			final boolean traceEnabled = LOG.isTraceEnabled();
+			if ( traceEnabled ) {
 				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
 			}
 			// we can do the cast since orphan-delete does not apply to:
@@ -443,7 +446,7 @@ public final class Cascade {
 			final String entityName = collectionType.getAssociatedEntityName( eventSource.getFactory() );
 			deleteOrphans( entityName, (PersistentCollection) child );
 
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Done deleting orphans for collection: {0}", collectionType.getRole() );
 			}
 		}

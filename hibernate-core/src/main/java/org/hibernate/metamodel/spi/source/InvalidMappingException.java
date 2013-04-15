@@ -24,25 +24,26 @@
 
 package org.hibernate.metamodel.spi.source;
 
+import javassist.runtime.Desc;
+
 import org.hibernate.jaxb.spi.Origin;
 
 /**
  * @author Brett Meyer
  */
-public class InvalidMappingException extends MappingException {
-	public InvalidMappingException(String message, Origin origin) {
-		super( message, origin );
-	}
+public class InvalidMappingException extends org.hibernate.InvalidMappingException {
+
+	private final Origin origin;
 
 	public InvalidMappingException(Origin origin) {
-		super( String.format( "Could not parse mapping document: %s (%s)", origin.getName(), origin.getType() ), origin );
+		super(
+				String.format( "Could not parse mapping document: %s (%s)", origin.getName(), origin.getType() ),
+				origin
+		);
+		this.origin = origin;
 	}
 
-	public InvalidMappingException(String message, Throwable root, Origin origin) {
-		super( message, root, origin );
-	}
-
-	public InvalidMappingException(Throwable root, Origin origin) {
-		super( String.format( "Could not parse mapping document: %s (%s)", origin.getName(), origin.getType() ), root, origin );
+	public Origin getOrigin() {
+		return origin;
 	}
 }

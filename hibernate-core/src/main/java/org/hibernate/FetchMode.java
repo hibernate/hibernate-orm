@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
 
@@ -32,6 +31,7 @@ package org.hibernate;
  * For HQL queries, use the <tt>FETCH</tt> keyword instead.
  *
  * @see Criteria#setFetchMode(java.lang.String, FetchMode)
+ *
  * @author Gavin King
  */
 public enum FetchMode  {
@@ -52,18 +52,16 @@ public enum FetchMode  {
 
 	/**
 	 * Fetch lazily. Equivalent to <tt>outer-join="false"</tt>.
+	 *
 	 * @deprecated use <tt>FetchMode.SELECT</tt>
 	 */
+	@Deprecated
 	public static final FetchMode LAZY = SELECT;
 	/**
-	 * Fetch eagerly, using an outer join. Equivalent to
-	 * <tt>outer-join="true"</tt>.
+	 * Fetch eagerly, using an outer join. Equivalent to <tt>outer-join="true"</tt>.
+	 *
 	 * @deprecated use <tt>FetchMode.JOIN</tt>
 	 */
+	@Deprecated
 	public static final FetchMode EAGER = JOIN;
 }
-
-
-
-
-

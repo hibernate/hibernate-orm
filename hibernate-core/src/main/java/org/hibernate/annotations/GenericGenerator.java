@@ -32,8 +32,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Generator annotation describing any kind of Hibernate
- * generator in a detyped manner
+ * Generator annotation describing any kind of Hibernate generator in a generic (de-typed) manner.
  *
  * @author Emmanuel Bernard
  */
@@ -41,16 +40,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface GenericGenerator {
 	/**
-	 * unique generator name
+	 * unique generator name.
 	 */
 	String name();
 	/**
-	 * Generator strategy either a predefined Hibernate
-	 * strategy or a fully qualified class name.
+	 * Generator strategy either a predefined Hibernate strategy or a fully qualified class name.
 	 */
 	String strategy();
 	/**
-	 * Optional generator parameters
+	 * Optional generator parameters.
 	 */
 	Parameter[] parameters() default {};
 }

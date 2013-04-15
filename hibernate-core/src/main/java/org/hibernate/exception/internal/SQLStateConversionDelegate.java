@@ -112,7 +112,8 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 	@Override
 	public JDBCException convert(SQLException sqlException, String message, String sql) {
-		String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+		final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+		final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 
 		if ( sqlState != null ) {
 			String sqlStateClassCode = JdbcExceptionHelper.determineSqlStateClassCode( sqlState );
@@ -146,8 +147,8 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 
 			// MySQL Query execution was interrupted
 			if ( "70100".equals( sqlState ) ||
-				// Oracle user requested cancel of current operation
-				  "72000".equals( sqlState ) ) {
+					// Oracle user requested cancel of current operation
+					( "72000".equals( sqlState ) && errorCode == 1013 ) ) {
 				throw new QueryTimeoutException(  message, sqlException, sql );
 			}
 		}

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.Retention;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -37,5 +38,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @java.lang.annotation.Target({FIELD,METHOD})
 @Retention(RUNTIME)
 public @interface ColumnTransformers {
+	/**
+	 * The aggregated transformers.
+	 */
 	ColumnTransformer[] value();
 }

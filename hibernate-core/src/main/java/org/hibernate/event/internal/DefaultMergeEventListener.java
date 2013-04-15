@@ -73,7 +73,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
-		EventCache copyCache = new EventCache();
+		EventCache copyCache = new EventCache( event.getSession() );
 		onMerge( event, copyCache );
 		copyCache.clear();
 		copyCache = null;

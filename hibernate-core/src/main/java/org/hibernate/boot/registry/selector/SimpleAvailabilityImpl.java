@@ -26,31 +26,49 @@ package org.hibernate.boot.registry.selector;
 import java.util.Arrays;
 
 /**
+ * A simple implementation of Availability.
+ *
+ * @param <T> The strategy type.
+ *
  * @author Steve Ebersole
  */
-public class SimpleAvailabilityImpl implements Availability {
-	private final Class strategyRole;
-	private final Class strategyImplementation;
+public class SimpleAvailabilityImpl<T> implements Availability<T> {
+	private final Class<T> strategyRole;
+	private final Class<? extends T> strategyImplementation;
 	private final Iterable<String> selectorNames;
 
+	/**
+	 * Constructs a SimpleAvailabilityImpl.
+	 *
+	 * @param strategyRole The strategy contract
+	 * @param strategyImplementation The strategy implementation class
+	 * @param selectorNames The selection/registration names for this implementation
+	 */
 	public SimpleAvailabilityImpl(
-			Class strategyRole,
-			Class strategyImplementation,
+			Class<T> strategyRole,
+			Class<? extends T> strategyImplementation,
 			Iterable<String> selectorNames) {
 		this.strategyRole = strategyRole;
 		this.strategyImplementation = strategyImplementation;
 		this.selectorNames = selectorNames;
 	}
 
+	/**
+	 * Constructs a SimpleAvailabilityImpl.
+	 *
+	 * @param strategyRole The strategy contract
+	 * @param strategyImplementation The strategy implementation class
+	 * @param selectorNames The selection/registration names for this implementation
+	 */
 	public SimpleAvailabilityImpl(
-			Class strategyRole,
-			Class strategyImplementation,
+			Class<T> strategyRole,
+			Class<? extends T> strategyImplementation,
 			String... selectorNames) {
 		this( strategyRole, strategyImplementation, Arrays.asList( selectorNames ) );
 	}
 
 	@Override
-	public Class getStrategyRole() {
+	public Class<T> getStrategyRole() {
 		return strategyRole;
 	}
 
@@ -60,7 +78,7 @@ public class SimpleAvailabilityImpl implements Availability {
 	}
 
 	@Override
-	public Class getStrategyImplementation() {
+	public Class<? extends T> getStrategyImplementation() {
 		return strategyImplementation;
 	}
 }

@@ -58,10 +58,12 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.domain.Aggregate;
 import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.tuple.IdentifierProperty;
+import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.PropertyFactory;
 import org.hibernate.tuple.StandardProperty;
-import org.hibernate.tuple.VersionProperty;
+import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -79,17 +81,18 @@ public class EntityMetamodel implements Serializable {
 	private static final int NO_VERSION_INDX = -66;
 
 	private final SessionFactoryImplementor sessionFactory;
+	private final AbstractEntityPersister persister;
 
 	private final String name;
 	private final String rootName;
 	private final EntityType entityType;
 
-	private final IdentifierProperty identifierProperty;
+	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
 
 	private final int propertySpan;
 	private final int versionPropertyIndex;
-	private final StandardProperty[] properties;
+	private final NonIdentifierAttribute[] properties;
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
@@ -137,17 +140,21 @@ public class EntityMetamodel implements Serializable {
 	private final EntityTuplizer entityTuplizer;
 	private final EntityInstrumentationMetadata instrumentationMetadata;
 
-	public EntityMetamodel(PersistentClass persistentClass, SessionFactoryImplementor sessionFactory) {
+	public EntityMetamodel(
+			PersistentClass persistentClass,
+			AbstractEntityPersister persister,
+			SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
+		this.persister = persister;
 
 		name = persistentClass.getEntityName();
 		rootName = persistentClass.getRootClass().getEntityName();
 		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
-		identifierProperty = PropertyFactory.buildIdentifierProperty(
-		        persistentClass,
-		        sessionFactory.getIdentifierGenerator( rootName )
-			);
+		identifierAttribute = PropertyFactory.buildIdentifierAttribute(
+				persistentClass,
+				sessionFactory.getIdentifierGenerator( rootName )
+		);
 
 		versioned = persistentClass.isVersioned();
 
@@ -158,7 +165,7 @@ public class EntityMetamodel implements Serializable {
 		boolean hasLazy = false;
 
 		propertySpan = persistentClass.getPropertyClosureSpan();
-		properties = new StandardProperty[propertySpan];
+		properties = new NonIdentifierAttribute[propertySpan];
 		List<Integer> naturalIdNumbers = new ArrayList<Integer>();
 		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		propertyNames = new String[propertySpan];
@@ -192,10 +199,22 @@ public class EntityMetamodel implements Serializable {
 
 			if ( prop == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
-				properties[i] = PropertyFactory.buildVersionProperty( prop, instrumentationMetadata.isInstrumented() );
+				properties[i] = PropertyFactory.buildVersionProperty(
+						persister,
+						sessionFactory,
+						i,
+						prop,
+						instrumentationMetadata.isInstrumented()
+				);
 			}
 			else {
-				properties[i] = PropertyFactory.buildStandardProperty( prop, instrumentationMetadata.isInstrumented() );
+				properties[i] = PropertyFactory.buildEntityBasedAttribute(
+						persister,
+						sessionFactory,
+						i,
+						prop,
+						instrumentationMetadata.isInstrumented()
+				);
 			}
 
 			if ( prop.isNaturalIdentifier() ) {
@@ -289,7 +308,7 @@ public class EntityMetamodel implements Serializable {
 			             ReflectHelper.isAbstractClass( persistentClass.getMappedClass() );
 		}
 		else {
-			isAbstract = persistentClass.isAbstract().booleanValue();
+			isAbstract = persistentClass.isAbstract();
 			if ( !isAbstract && persistentClass.hasPojoRepresentation() &&
 			     ReflectHelper.isAbstractClass( persistentClass.getMappedClass() ) ) {
                 LOG.entityMappedAsNonAbstract(name);
@@ -364,15 +383,19 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	public EntityMetamodel(EntityBinding entityBinding, SessionFactoryImplementor sessionFactory) {
+	public EntityMetamodel(
+			EntityBinding entityBinding,
+			AbstractEntityPersister persister,
+			SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
+		this.persister = persister;
 
 		name = entityBinding.getEntity().getName();
 
 		rootName = entityBinding.getHierarchyDetails().getRootEntityBinding().getEntity().getName();
 		entityType = sessionFactory.getTypeResolver().getTypeFactory().manyToOne( name );
 
-		identifierProperty = PropertyFactory.buildIdentifierProperty(
+		identifierAttribute = PropertyFactory.buildIdentifierProperty(
 		        entityBinding,
 				rootName,
 				sessionFactory
@@ -399,8 +422,8 @@ public class EntityMetamodel implements Serializable {
 		final AttributeBinding [] attributeBindings = entityBinding.getNonIdAttributeBindingClosure();
 		propertySpan = attributeBindings.length;
 
-		properties = new StandardProperty[propertySpan];
-		List naturalIdNumbers = new ArrayList();
+		properties = new NonIdentifierAttribute[propertySpan];
+		List<Integer> naturalIdNumbers = new ArrayList<Integer>();
 		// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		propertyNames = new String[propertySpan];
 		propertyTypes = new Type[propertySpan];
@@ -428,23 +451,35 @@ public class EntityMetamodel implements Serializable {
 		boolean foundUpdateableNaturalIdProperty = false;
 
 		for ( AttributeBinding attributeBinding : attributeBindings ) {
+
 			if ( attributeBinding == entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding() ) {
 				tempVersionProperty = i;
 				properties[i] = PropertyFactory.buildVersionProperty(
+						persister,
+						sessionFactory,
+						tempVersionProperty,
 						entityBinding,
-						entityBinding.getHierarchyDetails().getEntityVersion().getVersioningAttributeBinding(),
 						instrumentationMetadata.isInstrumented()
 				);
 			}
 			else {
-				properties[i] = PropertyFactory.buildStandardProperty( attributeBinding, instrumentationMetadata.isInstrumented() );
+				properties[i] = PropertyFactory.buildEntityBasedAttribute(
+						persister,
+						sessionFactory,
+						i,
+						attributeBinding,
+						instrumentationMetadata.isInstrumented()
+				);
 			}
-			if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ){
-				SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast( attributeBinding );
-				if(singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.MUTABLE){
+			if ( SingularAttributeBinding.class.isInstance( attributeBinding ) ) {
+				SingularAttributeBinding singularAttributeBinding = SingularAttributeBinding.class.cast(
+						attributeBinding
+				);
+				if ( singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.MUTABLE ) {
 					naturalIdNumbers.add( i );
 					foundUpdateableNaturalIdProperty = true;
-				} else if(singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE){
+				}
+				else if ( singularAttributeBinding.getNaturalIdMutability() == SingularAttributeBinding.NaturalIdMutability.IMMUTABLE ) {
 					naturalIdNumbers.add( i );
 				}
 			}
@@ -592,7 +627,7 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	private ValueInclusion determineInsertValueGenerationType(Property mappingProperty, StandardProperty runtimeProperty) {
+	private ValueInclusion determineInsertValueGenerationType(Property mappingProperty, NonIdentifierAttribute runtimeProperty) {
 		if ( runtimeProperty.isInsertGenerated() ) {
 			return ValueInclusion.FULL;
 		}
@@ -604,7 +639,7 @@ public class EntityMetamodel implements Serializable {
 		return ValueInclusion.NONE;
 	}
 
-	private ValueInclusion determineInsertValueGenerationType(AttributeBinding mappingProperty, StandardProperty runtimeProperty) {
+	private ValueInclusion determineInsertValueGenerationType(AttributeBinding mappingProperty, NonIdentifierAttribute runtimeProperty) {
 		if ( runtimeProperty.isInsertGenerated() ) {
 			return ValueInclusion.FULL;
 		}
@@ -633,7 +668,7 @@ public class EntityMetamodel implements Serializable {
 		return false;
 	}
 
-	private ValueInclusion determineUpdateValueGenerationType(Property mappingProperty, StandardProperty runtimeProperty) {
+	private ValueInclusion determineUpdateValueGenerationType(Property mappingProperty, NonIdentifierAttribute runtimeProperty) {
 		if ( runtimeProperty.isUpdateGenerated() ) {
 			return ValueInclusion.FULL;
 		}
@@ -645,7 +680,7 @@ public class EntityMetamodel implements Serializable {
 		return ValueInclusion.NONE;
 	}
 
-	private ValueInclusion determineUpdateValueGenerationType(AttributeBinding mappingProperty, StandardProperty runtimeProperty) {
+	private ValueInclusion determineUpdateValueGenerationType(AttributeBinding mappingProperty, NonIdentifierAttribute runtimeProperty) {
 		if ( runtimeProperty.isUpdateGenerated() ) {
 			return ValueInclusion.FULL;
 		}
@@ -759,7 +794,7 @@ public class EntityMetamodel implements Serializable {
 	}
 
 	public IdentifierProperty getIdentifierProperty() {
-		return identifierProperty;
+		return identifierAttribute;
 	}
 
 	public int getPropertySpan() {
@@ -779,7 +814,7 @@ public class EntityMetamodel implements Serializable {
 		}
 	}
 
-	public StandardProperty[] getProperties() {
+	public NonIdentifierAttribute[] getProperties() {
 		return properties;
 	}
 

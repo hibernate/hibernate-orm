@@ -23,19 +23,18 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * Type of available polymorphism for a particular entity
+ * Type of available polymorphism for a particular entity.
  *
  * @author Emmanuel Bernard
  */
 public enum PolymorphismType {
 	/**
-	 * default, this entity is retrieved if any of its super entity is asked
+	 * This entity is retrieved if any of its super entity are retrieved.  The default,
 	 */
 	IMPLICIT,
 	/**
-	 * this entity is retrieved only if explicitly asked
+	 * This entity is retrieved only if explicitly asked.
 	 */
 	EXPLICIT
 }

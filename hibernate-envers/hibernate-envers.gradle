@@ -48,10 +48,18 @@ task generateJpaMetamodelClasses(type: JavaCompile) {
 }
 compileJava.dependsOn generateJpaMetamodelClasses
 generateSources.dependsOn generateJpaMetamodelClasses
-
+test.enabled = false
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Envers'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.envers'
+        
+        instruction 'Import-Package',
+            // TODO: Shouldn't have to explicitly list the JPA packages, but
+            // the plugin generates them with [1.0,2) versions.
+            'javax.persistence;version="2.1.0"',
+            'javax.persistence.criteria;version="2.1.0"',
+            'javax.persistence.metamodel;version="2.1.0"',
+            'javax.persistence.spi;version="2.1.0"',
+            '*'
     }
 }

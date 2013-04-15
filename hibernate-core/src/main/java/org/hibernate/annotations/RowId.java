@@ -29,7 +29,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Support for {@literal ROWID} mapping feature of Hibernate.
+ * Support for {@code ROWID} mapping feature of Hibernate.
  *
  * @author Steve Ebersole
  */
@@ -37,9 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RowId {
 	/**
-	 * Names the {@literal ROWID} identifier
-	 *
-	 * @return The {@literal ROWID} identifier
+	 * Names the {@code ROWID} identifier.
 	 */
 	String value();
 }

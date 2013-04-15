@@ -39,7 +39,7 @@ public interface StatelessSessionBuilder {
 	public StatelessSession openStatelessSession();
 
 	/**
-	 * Adds a specific connection to the session options
+	 * Adds a specific connection to the session options.
 	 *
 	 * @param connection The connection to use.
 	 *

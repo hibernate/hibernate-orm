@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.query.criteria;
 
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.reader.AuditReaderImplementor;
-import org.hibernate.envers.tools.query.Parameters;
-import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.internal.tools.query.Parameters;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 
 /**
  * @author Adam Warski (adam at warski dot org)

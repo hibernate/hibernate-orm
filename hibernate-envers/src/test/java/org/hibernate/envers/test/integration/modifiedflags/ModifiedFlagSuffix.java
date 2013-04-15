@@ -29,7 +29,7 @@ import javax.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.envers.configuration.GlobalConfiguration;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.basic.BasicTestEntity1;
@@ -54,7 +54,7 @@ public class ModifiedFlagSuffix extends AbstractModifiedFlagsEntityTest {
 	@Override
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions(options);
-		options.put(GlobalConfiguration.MODIFIED_FLAG_SUFFIX_PROPERTY, "_CHANGED");
+		options.put(EnversSettings.MODIFIED_FLAG_SUFFIX, "_CHANGED");
 	}
 
 	private Integer addNewEntity(String str, long lng) {

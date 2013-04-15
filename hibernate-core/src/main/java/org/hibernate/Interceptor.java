@@ -30,18 +30,18 @@ import org.hibernate.type.Type;
 
 /**
  * Allows user code to inspect and/or change property values.
- * <br><br>
+ *
  * Inspection occurs before property values are written and after they are read
- * from the database.<br>
- * <br>
+ * from the database.
+ *
  * There might be a single instance of <tt>Interceptor</tt> for a <tt>SessionFactory</tt>, or a new instance
  * might be specified for each <tt>Session</tt>. Whichever approach is used, the interceptor must be
  * serializable if the <tt>Session</tt> is to be serializable. This means that <tt>SessionFactory</tt>-scoped
- * interceptors should implement <tt>readResolve()</tt>.<br>
- * <br>
+ * interceptors should implement <tt>readResolve()</tt>.
+ *
  * The <tt>Session</tt> may not be invoked from a callback (nor may a callback cause a collection or proxy to
- * be lazily initialized).<br>
- * <br>
+ * be lazily initialized).
+ *
  * Instead of implementing this interface directly, it is usually better to extend <tt>EmptyInterceptor</tt>
  * and override only the callback methods of interest.
  *
@@ -155,9 +155,9 @@ public interface Interceptor {
 	public void onCollectionUpdate(Object collection, Serializable key) throws CallbackException;
 
 	/**
-	 * Called before a flush
+	 * Called before a flush.
 	 *
-	 * @param entities The entities to be flushed
+	 * @param entities The entities to be flushed.
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
 	 */
@@ -215,6 +215,7 @@ public interface Interceptor {
 	 * @param entityName the name of the entity
 	 * @param entityMode The type of entity instance to be returned.
 	 * @param id the identifier of the new instance
+	 *
 	 * @return an instance of the class, or <tt>null</tt> to choose default behaviour
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
@@ -222,8 +223,10 @@ public interface Interceptor {
 	public Object instantiate(String entityName, EntityMode entityMode, Serializable id) throws CallbackException;
 
 	/**
-	 * Get the entity name for a persistent or transient instance
+	 * Get the entity name for a persistent or transient instance.
+	 *
 	 * @param object an entity instance
+	 *
 	 * @return the name of the entity
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.
@@ -231,9 +234,11 @@ public interface Interceptor {
 	public String getEntityName(Object object) throws CallbackException;
 
 	/**
-	 * Get a fully loaded entity instance that is cached externally
+	 * Get a fully loaded entity instance that is cached externally.
+	 *
 	 * @param entityName the name of the entity
 	 * @param id the instance identifier
+	 *
 	 * @return a fully initialized entity
 	 *
 	 * @throws CallbackException Thrown if the interceptor encounters any problems handling the callback.

@@ -1,5 +1,6 @@
 //$Id$
 package org.hibernate.test.annotations.array;
+
 import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -8,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
-import org.hibernate.annotations.IndexColumn;
+import org.hibernate.annotations.ListIndexBase;
 
 /**
  * @author Emmanuel Bernard
@@ -40,7 +41,8 @@ public class Contest {
 	}
 	
 	@ElementCollection
-	@IndexColumn(name = "pos", base=1) //legacy + base
+	@OrderColumn
+	@ListIndexBase( 1 )
 	public Month[] getHeldIn() {
 		return heldIn;
 	}

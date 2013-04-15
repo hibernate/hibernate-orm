@@ -1,16 +1,18 @@
 package org.hibernate.envers.test.integration.reventity.trackmodifiedentities;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.Test;
+
 import org.hibernate.cfg.Configuration;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Car;
 import org.hibernate.envers.test.integration.entityNames.manyToManyAudited.Person;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.envers.tools.Pair;
-import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -23,7 +25,7 @@ public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 
     @Override
     protected void configure(Configuration configuration) {
-        configuration.setProperty("org.hibernate.envers.track_entities_changed_in_revision", "true");
+        configuration.setProperty(EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true");
     }
 
     @Test

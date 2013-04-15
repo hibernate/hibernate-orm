@@ -122,7 +122,10 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
 	private void initializePreviousValueHolder(SessionImplementor session) {
 		previousValueHolder = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
 
-		LOG.debugf( "Fetching initial value: %s", sql );
+		final boolean debugEnabled = LOG.isDebugEnabled();
+		if ( debugEnabled ) {
+			LOG.debugf( "Fetching initial value: %s", sql );
+		}
 		try {
 			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
@@ -131,7 +134,7 @@ public class IncrementGenerator implements IdentifierGenerator, Configurable {
                     if (rs.next()) previousValueHolder.initialize(rs, 0L).increment();
                     else previousValueHolder.initialize(1L);
 					sql = null;
-					if ( LOG.isDebugEnabled() ) {
+					if ( debugEnabled ) {
 						LOG.debugf( "First free id: %s", previousValueHolder.makeValue() );
 					}
 				}

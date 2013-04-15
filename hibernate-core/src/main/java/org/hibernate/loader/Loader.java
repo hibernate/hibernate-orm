@@ -79,6 +79,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -243,10 +244,6 @@ public abstract class Loader {
 		return getFactory().getSettings().isCommentsEnabled()
 				? prependComment( sql, parameters )
 				: sql;
-	}
-
-	protected static interface AfterLoadAction {
-		public void afterLoad(SessionImplementor session, Object entity, Loadable persister);
 	}
 
 	protected boolean shouldUseFollowOnLocking(
@@ -509,7 +506,7 @@ public abstract class Loader {
 			}
 
 			// We call getKeyFromResultSet() here so that we can know the
-			// key value upon which to doAfterTransactionCompletion the breaking logic.  However,
+			// key value upon which to perform the breaking logic.  However,
 			// it is also then called from getRowFromResultSet() which is certainly
 			// not the most efficient.  But the call here is needed, and there
 			// currently is no other way without refactoring of the doQuery()/getRowFromResultSet()
@@ -527,7 +524,7 @@ public abstract class Loader {
 		catch ( SQLException sqle ) {
 			throw factory.getSQLExceptionHelper().convert(
 			        sqle,
-			        "could not doAfterTransactionCompletion sequential read of results (forward)",
+			        "could not perform sequential read of results (forward)",
 			        getSQLString()
 				);
 		}
@@ -934,8 +931,10 @@ public abstract class Loader {
 		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
 		LOG.trace( "Processing result set" );
 		int count;
+		boolean isDebugEnabled = LOG.isDebugEnabled();
 		for ( count = 0; count < maxRows && rs.next(); count++ ) {
-			LOG.debugf( "Result set row: %s", count );
+		   if ( isDebugEnabled ) 
+			   LOG.debugf( "Result set row: %s", count );
 			Object result = getRowFromResultSet(
 					rs,
 					session,
@@ -954,7 +953,8 @@ public abstract class Loader {
 			}
 		}
 
-		LOG.tracev( "Done processing result set ({0} rows)", count );
+		if ( LOG.isTraceEnabled() )
+		   LOG.tracev( "Done processing result set ({0} rows)", count );
 
 		initializeEntitiesAndCollections(
 				hydratedObjects,
@@ -1096,7 +1096,8 @@ public abstract class Loader {
 
 		if ( hydratedObjects!=null ) {
 			int hydratedObjectsSize = hydratedObjects.size();
-			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
+			if ( LOG.isTraceEnabled() )
+			   LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 			for ( int i = 0; i < hydratedObjectsSize; i++ ) {
 				TwoPhaseLoad.initializeEntity( hydratedObjects.get(i), readOnly, session, pre, post );
 			}
@@ -1345,16 +1346,16 @@ public abstract class Loader {
 	        final SessionImplementor session) {
 
 		if ( keys != null ) {
+			final boolean debugEnabled = LOG.isDebugEnabled();
 			// this is a collection initializer, so we must create a collection
 			// for each of the passed-in keys, to account for the possibility
 			// that the collection is empty and has no rows in the result set
-
 			CollectionPersister[] collectionPersisters = getCollectionPersisters();
 			for ( int j=0; j<collectionPersisters.length; j++ ) {
 				for ( int i = 0; i < keys.length; i++ ) {
 					//handle empty collections
 
-					if ( LOG.isDebugEnabled() ) {
+					if ( debugEnabled ) {
 						LOG.debugf( "Result set contains (possibly empty) collection: %s",
 								MessageHelper.collectionInfoString( collectionPersisters[j], keys[i], getFactory() ) );
 					}
@@ -1904,7 +1905,8 @@ public abstract class Loader {
 				}
 			}
 
-			LOG.tracev( "Bound [{0}] parameters total", col );
+			if ( LOG.isTraceEnabled() )
+			   LOG.tracev( "Bound [{0}] parameters total", col );
 		}
 		catch ( SQLException sqle ) {
 			session.getTransactionCoordinator().getJdbcCoordinator().release( st );
@@ -2060,7 +2062,8 @@ public abstract class Loader {
 		// potential deadlock issues due to nature of code.
 		if ( session.getFactory().getSettings().isWrapResultSetsEnabled() ) {
 			try {
-				LOG.debugf( "Wrapping result set [%s]", rs );
+			   if ( LOG.isDebugEnabled() )
+			      LOG.debugf( "Wrapping result set [%s]", rs );
 				return session.getFactory()
 						.getJdbcServices()
 						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );

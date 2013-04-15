@@ -556,7 +556,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				);
 			}
 			catch (MappingException e) {
-				throw new RecoverableException(e);
+				throw new RecoverableException( e.getMessage(), e );
 			}
 		}
 		Table matchingTable = columnOwner instanceof PersistentClass ?

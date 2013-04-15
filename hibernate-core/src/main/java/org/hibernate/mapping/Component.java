@@ -106,7 +106,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 		return n;
 	}
-	public Iterator getColumnIterator() {
+	public Iterator<Selectable> getColumnIterator() {
 		Iterator[] iters = new Iterator[ getPropertySpan() ];
 		Iterator iter = getPropertyIterator();
 		int i=0;

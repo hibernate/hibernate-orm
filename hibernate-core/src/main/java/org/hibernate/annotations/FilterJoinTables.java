@@ -22,18 +22,22 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.annotations;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Add multiple @FilterJoinTable to a collection
+ * Add multiple {@code @FilterJoinTable} to a collection.
  *
  * @author Emmanuel Bernard
  */
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FilterJoinTables {
+	/**
+	 * The aggregated filters.
+	 */
 	FilterJoinTable[] value();
 }

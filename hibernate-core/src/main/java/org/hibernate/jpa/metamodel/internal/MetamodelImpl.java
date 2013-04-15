@@ -44,6 +44,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	private final Map<Class<?>, EntityTypeImpl<?>> entityTypeMap;
 	private final Map<Class<?>, MappedSuperclassTypeImpl<?>> mappedSuperclassTypeMap;
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddableTypeMap;
+	private final Map<String, EntityTypeImpl<?>> entityTypesByEntityName;
 
 	/**
 	 * Instantiate the metamodel.
@@ -55,10 +56,12 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	public MetamodelImpl(
 			Map<Class<?>, EntityTypeImpl<?>> entityTypeMap,
 			Map<Class<?>, MappedSuperclassTypeImpl<?>> mappedSuperclassTypeMap,
-			Map<Class<?>, EmbeddableTypeImpl<?>> embeddableTypeMap) {
+			Map<Class<?>, EmbeddableTypeImpl<?>> embeddableTypeMap,
+			Map<String, EntityTypeImpl<?>> entityTypesByEntityName) {
 		this.entityTypeMap = entityTypeMap;
 		this.mappedSuperclassTypeMap = mappedSuperclassTypeMap;
 		this.embeddableTypeMap = embeddableTypeMap;
+		this.entityTypesByEntityName = entityTypesByEntityName;
 	}
 
 	@Override
@@ -111,11 +114,15 @@ public class MetamodelImpl implements Metamodel, Serializable {
 
 	@Override
 	public Set<EntityType<?>> getEntities() {
-		return new HashSet<EntityType<?>>( entityTypeMap.values() );
+		return new HashSet<EntityType<?>>( entityTypesByEntityName.values() );
 	}
 
 	@Override
 	public Set<EmbeddableType<?>> getEmbeddables() {
 		return new HashSet<EmbeddableType<?>>( embeddableTypeMap.values() );
+	}
+
+	public EntityTypeImpl getEntityTypeByName(String entityName) {
+		return entityTypesByEntityName.get( entityName );
 	}
 }

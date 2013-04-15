@@ -1,1 +1,1 @@
-org.hibernate.envers.event.EnversIntegrator
+org.hibernate.envers.event.spi.EnversIntegrator

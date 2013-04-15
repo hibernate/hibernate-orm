@@ -62,6 +62,7 @@ import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -119,6 +120,12 @@ import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeSource;
+import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
+import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.sql.Alias;
@@ -529,7 +536,7 @@ public abstract class AbstractEntityPersister
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		isLazyPropertiesCacheable = persistentClass.isLazyPropertiesCacheable();
 
-		this.entityMetamodel = new EntityMetamodel( persistentClass, factory );
+		this.entityMetamodel = new EntityMetamodel( persistentClass, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -855,11 +862,11 @@ public abstract class AbstractEntityPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
-		this.isLazyPropertiesCacheable = entityBinding.getHierarchyDetails()
-				.getCaching() == null || entityBinding.getHierarchyDetails()
+		this.isLazyPropertiesCacheable = ( entityBinding.getHierarchyDetails()
+				.getCaching() != null ) && entityBinding.getHierarchyDetails()
 				.getCaching()
 				.isCacheLazyProperties();
-		this.entityMetamodel = new EntityMetamodel( entityBinding, factory );
+		this.entityMetamodel = new EntityMetamodel( entityBinding, this, factory );
 		this.entityTuplizer = this.entityMetamodel.getTuplizer();
 		int batch = entityBinding.getBatchSize();
 		if ( batch == -1 ) {
@@ -2829,10 +2836,19 @@ public abstract class AbstractEntityPersister
 		Insert insert = identityDelegate.prepareIdentifierGeneratingInsert();
 		insert.setTableName( getTableName( 0 ) );
 
-		// add normal properties
+		// add normal properties except lobs
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, 0 ) ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, 0 ) && !lobProperties.contains( i ) ) {
 				// this property belongs on the table and is to be inserted
+				insert.addColumns( getPropertyColumnNames(i), propertyColumnInsertable[i], propertyColumnWriters[i] );
+			}
+		}
+
+		// HHH-4635 & HHH-8103
+		// Oracle expects all Lob properties to be last in inserts
+		// and updates.  Insert them at the end.
+		for ( int i : lobProperties ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, 0 ) ) {
 				insert.addColumns( getPropertyColumnNames(i), propertyColumnInsertable[i], propertyColumnWriters[i] );
 			}
 		}
@@ -3406,7 +3422,8 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		if ( LOG.isTraceEnabled() ) {
+		final boolean traceEnabled = LOG.isTraceEnabled();
+		if ( traceEnabled ) {
 			LOG.tracev( "Deleting entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
 			if ( useVersion ) {
 				LOG.tracev( "Version: {0}", version );
@@ -3414,7 +3431,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( isTableCascadeDeleteEnabled( j ) ) {
-			if ( LOG.isTraceEnabled() ) {
+			if ( traceEnabled ) {
 				LOG.tracev( "Delete handled by foreign key constraint: {0}", getTableName( j ) );
 			}
 			return; //EARLY EXIT!
@@ -3960,10 +3977,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	public void postInstantiate() throws MappingException {
+		generateEntityDefinition();
+
 		createLoaders();
 		createUniqueKeyLoaders();
 		createQueryLoader();
-
 	}
 
 	//needed by subclasses to override the createLoader strategy
@@ -5238,5 +5256,145 @@ public abstract class AbstractEntityPersister
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
 			throw new HibernateException( "Illegal attempt to build cache entry for non-cached entity" );
 		}
+	}
+
+
+	// EntityDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	private EntityIdentifierDefinition entityIdentifierDefinition;
+	private Iterable<AttributeDefinition> embeddedCompositeIdentifierAttributes;
+	private Iterable<AttributeDefinition> attributeDefinitions;
+
+	protected void generateEntityDefinition() {
+		prepareEntityIdentifierDefinition();
+		collectAttributeDefinitions();
+	}
+
+	@Override
+	public EntityPersister getEntityPersister() {
+		return this;
+	}
+
+	@Override
+	public EntityIdentifierDefinition getEntityKeyDefinition() {
+		return entityIdentifierDefinition;
+	}
+
+	@Override
+	public Iterable<AttributeDefinition> getAttributes() {
+		return attributeDefinitions;
+	}
+
+
+	private void prepareEntityIdentifierDefinition() {
+		final Type idType = getIdentifierType();
+
+		if ( !idType.isComponentType() ) {
+			entityIdentifierDefinition = buildEncapsulatedIdentifierDefinition();
+			return;
+		}
+
+		final CompositeType cidType = (CompositeType) idType;
+		if ( !cidType.isEmbedded() ) {
+			entityIdentifierDefinition = buildEncapsulatedIdentifierDefinition();
+			return;
+		}
+
+		entityIdentifierDefinition = new NonEncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public Iterable<AttributeDefinition> getAttributes() {
+				// todo : implement
+				throw new NotYetImplementedException();
+			}
+
+			@Override
+			public Class getSeparateIdentifierMappingClass() {
+				// todo : implement
+				throw new NotYetImplementedException();
+			}
+
+			@Override
+			public boolean isEncapsulated() {
+				return false;
+			}
+
+			@Override
+			public EntityDefinition getEntityDefinition() {
+				return AbstractEntityPersister.this;
+			}
+		};
+	}
+
+	private EntityIdentifierDefinition buildEncapsulatedIdentifierDefinition() {
+		final AttributeDefinition simpleIdentifierAttributeAdapter = new AttributeDefinition() {
+			@Override
+			public String getName() {
+				return entityMetamodel.getIdentifierProperty().getName();
+			}
+
+			@Override
+			public Type getType() {
+				return entityMetamodel.getIdentifierProperty().getType();
+			}
+
+			@Override
+			public AttributeSource getSource() {
+				return AbstractEntityPersister.this;
+			}
+
+			@Override
+			public String toString() {
+				return "<identifier-property:" + getName() + ">";
+			}
+		};
+
+		return new EncapsulatedEntityIdentifierDefinition() {
+			@Override
+			public AttributeDefinition getAttributeDefinition() {
+				return simpleIdentifierAttributeAdapter;
+			}
+
+			@Override
+			public boolean isEncapsulated() {
+				return true;
+			}
+
+			@Override
+			public EntityDefinition getEntityDefinition() {
+				return AbstractEntityPersister.this;
+			}
+		};
+	}
+
+	private void collectAttributeDefinitions() {
+		// todo : leverage the attribute definitions housed on EntityMetamodel
+		// 		for that to work, we'd have to be able to walk our super entity persister(s)
+		attributeDefinitions = new Iterable<AttributeDefinition>() {
+			@Override
+			public Iterator<AttributeDefinition> iterator() {
+				return new Iterator<AttributeDefinition>() {
+//					private final int numberOfAttributes = countSubclassProperties();
+					private final int numberOfAttributes = entityMetamodel.getPropertySpan();
+					private int currentAttributeNumber = 0;
+
+					@Override
+					public boolean hasNext() {
+						return currentAttributeNumber < numberOfAttributes;
+					}
+
+					@Override
+					public AttributeDefinition next() {
+						final int attributeNumber = currentAttributeNumber;
+						currentAttributeNumber++;
+						return entityMetamodel.getProperties()[ attributeNumber ];
+					}
+
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException( "Remove operation not supported here" );
+					}
+				};
+			}
+		};
 	}
 }

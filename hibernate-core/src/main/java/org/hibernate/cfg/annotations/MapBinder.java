@@ -77,10 +77,6 @@ public class MapBinder extends CollectionBinder {
 		super( sorted );
 	}
 
-	public MapBinder() {
-		super();
-	}
-
 	public boolean isMap() {
 		return true;
 	}

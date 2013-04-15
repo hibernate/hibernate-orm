@@ -28,9 +28,8 @@ import java.io.Serializable;
 import org.hibernate.HibernateException;
 
 /**
- * An operation which may be scheduled for later execution.
- * Usually, the operation is a database insert/update/delete,
- * together with required second-level cache management.
+ * An operation which may be scheduled for later execution.  Usually, the operation is a database
+ * insert/update/delete, together with required second-level cache management.
  * 
  * @author Gavin King
  * @author Steve Ebersole
@@ -51,7 +50,7 @@ public interface Executable {
 	public void beforeExecutions() throws HibernateException;
 
 	/**
-	 * Execute this action
+	 * Execute this action.
 	 *
 	 * @throws HibernateException Indicates a problem during execution.
 	 */

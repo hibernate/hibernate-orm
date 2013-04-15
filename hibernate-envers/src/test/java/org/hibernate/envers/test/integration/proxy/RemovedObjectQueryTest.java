@@ -1,7 +1,15 @@
 package org.hibernate.envers.test.integration.proxy;
 
+import java.util.List;
+import java.util.Map;
+import javax.persistence.EntityManager;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.Hibernate;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
@@ -11,20 +19,13 @@ import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.EntityManager;
 
 @TestForIssue(jiraKey = "HHH-5845")
 public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
     @Override
     @SuppressWarnings("unchecked")
     protected void addConfigOptions(Map options) {
-        options.put("org.hibernate.envers.store_data_at_delete", "true");
+        options.put(EnversSettings.STORE_DATA_AT_DELETE, "true");
     }
 
     @Override

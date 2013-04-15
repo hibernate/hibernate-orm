@@ -23,14 +23,22 @@
  */
 package org.hibernate.annotations;
 
-
 /**
- * When should the generation occurs
+ * At what time(s) will the generation occur?
  *
  * @author Emmanuel Bernard
  */
 public enum GenerationTime {
+	/**
+	 * Indicates the value is never generated.
+	 */
 	NEVER,
+	/**
+	 * Indicates the value is generated on insert.
+	 */
 	INSERT,
+	/**
+	 * Indicates the value is generated on insert and on update.
+	 */
 	ALWAYS
 }

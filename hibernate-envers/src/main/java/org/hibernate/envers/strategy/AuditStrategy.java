@@ -4,12 +4,12 @@ import java.io.Serializable;
 
 import org.hibernate.Session;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.envers.configuration.AuditConfiguration;
-import org.hibernate.envers.configuration.GlobalConfiguration;
-import org.hibernate.envers.entities.mapper.PersistentCollectionChangeData;
-import org.hibernate.envers.entities.mapper.relation.MiddleComponentData;
-import org.hibernate.envers.entities.mapper.relation.MiddleIdData;
-import org.hibernate.envers.tools.query.QueryBuilder;
+import org.hibernate.envers.configuration.internal.GlobalConfiguration;
+import org.hibernate.envers.configuration.spi.AuditConfiguration;
+import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
+import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.internal.tools.query.QueryBuilder;
 
 /**
  * Behaviours of different audit strategy for populating audit data.

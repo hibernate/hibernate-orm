@@ -30,13 +30,23 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Order a collection using SQL ordering (not HQL ordering)
+ * Order a collection using SQL ordering (not HQL ordering).
+ *
+ * Different from {@link javax.persistence.OrderBy} in that this expects SQL fragment, JPA OrderBy expects a
+ * valid JPQL order-by fragment.
  *
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
+ *
+ * @see javax.persistence.OrderBy
+ * @see SortComparator
+ * @see SortNatural
  */
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface OrderBy {
-	/** SQL orderby clause */
+	/**
+	 * SQL ordering clause.
+	 */
 	String clause();
 }

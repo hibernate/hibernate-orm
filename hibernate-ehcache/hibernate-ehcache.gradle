@@ -8,6 +8,5 @@ dependencies {
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM EHCache'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.ehcache'
     }
 }

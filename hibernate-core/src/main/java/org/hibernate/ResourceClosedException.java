@@ -29,11 +29,12 @@ package org.hibernate;
  * @author Steve Ebersole
  */
 public class ResourceClosedException extends HibernateException {
-	public ResourceClosedException(String s) {
-		super( s );
-	}
-
-	public ResourceClosedException(String string, Throwable root) {
-		super( string, root );
+	/**
+	 * Constructs a ResourceClosedException using the supplied message.
+	 *
+	 * @param message The message explaining the exception condition
+	 */
+	public ResourceClosedException(String message) {
+		super( message );
 	}
 }

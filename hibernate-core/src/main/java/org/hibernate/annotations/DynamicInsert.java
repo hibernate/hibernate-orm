@@ -38,5 +38,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( TYPE )
 @Retention( RUNTIME )
 public @interface DynamicInsert {
+	/**
+	 * Should dynamic insertion be used for this entity?  {@code true} says dynamic insertion will be used.
+	 * Default is {@code true} (since generally this annotation is not used unless the user wants dynamic insertion).
+	 */
 	boolean value() default true;
 }

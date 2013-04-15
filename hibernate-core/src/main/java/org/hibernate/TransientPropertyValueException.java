@@ -82,18 +82,9 @@ public class TransientPropertyValueException extends TransientObjectException {
 		return propertyName;
 	}
 
-
-	/**
-	 * Return the exception message.
-	 * @return the exception message.
-	 */
 	@Override
 	public String getMessage() {
-		return new StringBuilder( super.getMessage() )
-				.append( ": " )
-				.append( StringHelper.qualify( propertyOwnerEntityName, propertyName ) )
-				.append( " -> " )
-				.append( transientEntityName )
-				.toString();
+		return super.getMessage() + " : "
+				+ StringHelper.qualify( propertyOwnerEntityName, propertyName ) + " -> " + transientEntityName;
 	}
 }

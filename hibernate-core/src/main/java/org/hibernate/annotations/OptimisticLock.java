@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
 
 /**
  * Whether or not a change of the annotated property will trigger a entity version increment.
+ *
  * If the annotation is not present, the property is involved in the optimistic lock strategy (default).
  *
  * @author Logi Ragnarsson
@@ -38,7 +39,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OptimisticLock {
 	/**
-	 * @return If {@code true}, the annotated property change will not trigger a version increment.
+	 * Whether the annotated property should be included in optimistic locking determinations for the owner.
 	 */
 	boolean excluded();
 }

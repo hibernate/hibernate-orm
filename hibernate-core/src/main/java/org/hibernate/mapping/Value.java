@@ -41,7 +41,7 @@ import org.hibernate.type.Type;
  */
 public interface Value extends Serializable {
 	public int getColumnSpan();
-	public Iterator getColumnIterator();
+	public Iterator<Selectable> getColumnIterator();
 	public Type getType() throws MappingException;
 	public FetchMode getFetchMode();
 	public Table getTable();

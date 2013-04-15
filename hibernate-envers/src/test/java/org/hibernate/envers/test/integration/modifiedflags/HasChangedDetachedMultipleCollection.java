@@ -14,9 +14,9 @@ import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
-import static org.junit.Assert.assertEquals;
 import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
 import static org.hibernate.envers.test.tools.TestTools.makeList;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

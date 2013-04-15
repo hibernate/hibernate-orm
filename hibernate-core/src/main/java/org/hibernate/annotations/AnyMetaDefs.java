@@ -38,5 +38,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @java.lang.annotation.Target( { PACKAGE, TYPE } )
 @Retention( RUNTIME )
 public @interface AnyMetaDefs {
+	/**
+	 * The collective set of any meta-defs.
+	 */
 	AnyMetaDef[] value();
 }

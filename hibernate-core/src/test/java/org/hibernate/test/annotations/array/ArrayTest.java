@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.test.annotations.array.Contest.Month;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel
 public class ArrayTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToMany() throws Exception {
@@ -69,6 +71,6 @@ public class ArrayTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Competitor.class, Contest.class };
+		return new Class[] { Competitor.class, Contest.class, Contest.Month.class };
 	}
 }

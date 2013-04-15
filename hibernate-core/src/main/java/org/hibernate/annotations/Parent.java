@@ -30,7 +30,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Reference the property as a pointer back to the owner (generally the owning entity)
+ * Reference the property as a pointer back to the owner (generally the owning entity).
  * 
  * @author Emmanuel Bernard
  */

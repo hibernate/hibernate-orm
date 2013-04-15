@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,21 +20,26 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
+
 import java.io.Serializable;
 
 /**
- * Thrown when the user tries to do something illegal with a deleted
- * object.
+ * Thrown when the user tries to do something illegal with a deleted object.
  *
  * @author Gavin King
  */
 public class ObjectDeletedException extends UnresolvableObjectException {
-
-	public ObjectDeletedException(String message, Serializable identifier, String clazz) {
-		super(message, identifier, clazz);
+	/**
+	 * Constructs an ObjectDeletedException using the given information.
+	 *
+	 * @param message A message explaining the exception condition
+	 * @param identifier The identifier of the entity
+	 * @param entityName The name of the entity
+	 */
+	public ObjectDeletedException(String message, Serializable identifier, String entityName) {
+		super( message, identifier, entityName );
 	}
 
 }

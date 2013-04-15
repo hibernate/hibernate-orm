@@ -76,7 +76,7 @@ public class Person {
 	@ElementCollection
 	@JoinColumn
 	@JoinTable(name = "T_NICKNAMES_A")
-	@OrderBy
+	@OrderBy // testing default @OrderBy mapping
 	public Set<String> getNickNamesAscendingNaturalSort() {
 		return nickNamesAscendingNaturalSort;
 	}

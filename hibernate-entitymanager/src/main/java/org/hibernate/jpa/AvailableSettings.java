@@ -208,7 +208,7 @@ public interface AvailableSettings {
 	 *
 	 * @see SchemaGenSource
 	 */
-	public static final String SCHEMA_GEN_CREATE_SOURCE = "javax.persistence.schema-generation.create-source ";
+	public static final String SCHEMA_GEN_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
 	 * Specifies whether schema generation commands for schema dropping are to be determine based on object/relational
@@ -224,7 +224,7 @@ public interface AvailableSettings {
 	 *
 	 * @see SchemaGenSource
 	 */
-	public static final String SCHEMA_GEN_DROP_SOURCE = "javax.persistence.schema-generation.drop-source ";
+	public static final String SCHEMA_GEN_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
 	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading of the DDL script
@@ -233,7 +233,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_CREATE_SOURCE
 	 * @see #SCHEMA_GEN_DROP_SCRIPT_SOURCE
 	 */
-	public static final String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source ";
+	public static final String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
 	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading of the DDL script
@@ -242,7 +242,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_DROP_SOURCE
 	 * @see #SCHEMA_GEN_CREATE_SCRIPT_SOURCE
 	 */
-	public static final String SCHEMA_GEN_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source ";
+	public static final String SCHEMA_GEN_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
 	 * Specifies the type of schema generation action to be taken by the persistence provider in regards to sending

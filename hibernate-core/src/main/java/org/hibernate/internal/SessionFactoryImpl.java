@@ -1626,6 +1626,10 @@ public final class SessionFactoryImpl
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
+
+			if ( sessionFactory.getCurrentTenantIdentifierResolver() != null ) {
+				tenantIdentifier = sessionFactory.getCurrentTenantIdentifierResolver().resolveCurrentTenantIdentifier();
+			}
 		}
 
 		@Override

@@ -38,7 +38,9 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
@@ -166,6 +168,19 @@ public class RootEntityClass extends EntityClass {
 		}
 
 		return attributes;
+	}
+
+	@Override
+	public Iterable<AssociationAttribute> getAssociationAttributes() {
+		List<Iterable<AssociationAttribute>> list = new ArrayList<Iterable<AssociationAttribute>>(  );
+		list.add( super.getAssociationAttributes() );
+
+		// now the attributes of the mapped superclasses
+		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
+			list.add( mappedSuperclass.getAssociationAttributes() );
+		}
+
+		return new JoinedIterable<AssociationAttribute>( list );
 	}
 
 	public Collection<MappedAttribute> getIdAttributes() {

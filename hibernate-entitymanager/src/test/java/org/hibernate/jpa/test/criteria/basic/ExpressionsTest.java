@@ -57,7 +57,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel(message = "@OneToOne with mappedBy specified is not supported yet")
 public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 

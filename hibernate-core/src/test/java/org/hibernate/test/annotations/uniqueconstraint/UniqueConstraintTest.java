@@ -12,7 +12,8 @@ import org.junit.Test;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -22,7 +23,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
  */
-@FailureExpectedWithNewMetamodel
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 
     @Override
@@ -70,25 +70,26 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8026" )
 	public void testUnNamedConstraints() {
-		Iterator<org.hibernate.mapping.Table> iterator = configuration().getTableMappings();
-		org.hibernate.mapping.Table tableA = null;
-		org.hibernate.mapping.Table tableB = null;
-		while( iterator.hasNext() ) {
-			org.hibernate.mapping.Table table = iterator.next();
-			if ( table.getName().equals( "UniqueNoNameA" ) ) {
-				tableA = table;
-			}
-			else if ( table.getName().equals( "UniqueNoNameB" ) ) {
-				tableB = table;
+		Database database = metadata().getDatabase();
+		org.hibernate.metamodel.spi.relational.Table tableA = null;
+		org.hibernate.metamodel.spi.relational.Table tableB = null;
+		for(final Schema schema : database.getSchemas()){
+			for(final org.hibernate.metamodel.spi.relational.Table table : schema.getTables()){
+				if ( table.getPhysicalName().getText().equals( "UniqueNoNameA" ) ) {
+					tableA = table;
+				}
+				else if ( table.getPhysicalName().getText().equals( "UniqueNoNameB" ) ) {
+					tableB = table;
+				}
+
 			}
 		}
-		
 		if ( tableA == null || tableB == null ) {
 			fail( "Could not find the expected tables." );
 		}
-		
-		assertFalse( tableA.getUniqueKeyIterator().next().getName().equals(
-				tableB.getUniqueKeyIterator().next().getName() ) );
+
+		assertFalse( tableA.getUniqueKeys().iterator().next().getName().equals(
+				tableB.getUniqueKeys().iterator().next().getName() ) );
 	}
 	
 	@Entity

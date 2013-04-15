@@ -32,15 +32,15 @@ import java.io.Reader;
 import org.jboss.logging.Logger;
 
 /**
- * SqlScriptReader implementation for File references.  A reader is opened here and then explicitly closed on
- * {@link #reader}.
+ * SqlScriptInput implementation for File references.  A reader is opened here and then explicitly closed on
+ * {@link #release}.
  *
  * @author Steve Ebersole
  */
-class FileScriptSource extends ReaderScriptSource implements SqlScriptReader {
-	private static final Logger log = Logger.getLogger( FileScriptSource.class );
+class SqlScriptFileInput extends SqlScriptReaderInput implements SqlScriptInput {
+	private static final Logger log = Logger.getLogger( SqlScriptFileInput.class );
 
-	public FileScriptSource(String fileUrl) {
+	public SqlScriptFileInput(String fileUrl) {
 		super( toFileReader( fileUrl ) );
 	}
 
@@ -57,18 +57,28 @@ class FileScriptSource extends ReaderScriptSource implements SqlScriptReader {
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	private static Reader toFileReader(String fileUrl) {
 		final File file = new File( fileUrl );
-		try {
-			// best effort, since this is very well not allowed in EE environments
-			file.createNewFile();
+		if ( ! file.exists() ) {
+			log.warnf( "Specified schema generation script file [%s] did not exist for reading", fileUrl );
+			return new Reader() {
+				@Override
+				public int read(char[] cbuf, int off, int len) throws IOException {
+					return -1;
+				}
+
+				@Override
+				public void close() throws IOException {
+				}
+			};
 		}
-		catch (Exception e) {
-			log.debug( "Exception calling File#createNewFile : " + e.toString() );
-		}
+
 		try {
 			return new FileReader( file );
 		}
 		catch (IOException e) {
-			throw new PersistenceException( "Unable to open specified script target file for writing : " + fileUrl );
+			throw new PersistenceException(
+					"Unable to open specified script target file [" + fileUrl + "] for reading",
+					e
+			);
 		}
 	}
 

@@ -23,41 +23,14 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import java.io.Reader;
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 
 /**
- * SqlScriptReader implementation for explicitly given Readers.  The readers are not released by this class.
+ * Contract for handling Reader/File differences
  *
  * @author Steve Ebersole
  */
-class ReaderScriptSource implements SqlScriptReader {
-	private final Reader reader;
-
-	public ReaderScriptSource(Reader reader) {
-		this.reader = reader;
-	}
-
-	@Override
-	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor) {
-		final String[] commands = commandExtractor.extractCommands( reader );
-		if ( commands == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Arrays.asList( commands );
-		}
-	}
-
-	@Override
-	public void release() {
-		// nothing to do here
-	}
-
-	protected Reader reader() {
-		return reader;
-	}
+public interface SqlScriptInput {
+	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor);
+	public void release();
 }

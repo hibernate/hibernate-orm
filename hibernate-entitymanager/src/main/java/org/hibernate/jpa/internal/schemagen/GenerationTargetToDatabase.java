@@ -36,15 +36,15 @@ import org.hibernate.jpa.SchemaGenAction;
  *
  * @author Steve Ebersole
  */
-class DatabaseTarget implements GenerationTarget {
-	private static final Logger log = Logger.getLogger( DatabaseTarget.class );
+class GenerationTargetToDatabase implements GenerationTarget {
+	private static final Logger log = Logger.getLogger( GenerationTargetToDatabase.class );
 
 	private final JdbcConnectionContext jdbcConnectionContext;
 	private final SchemaGenAction databaseAction;
 
 	private Statement jdbcStatement;
 
-	DatabaseTarget(JdbcConnectionContext jdbcConnectionContext, SchemaGenAction databaseAction) {
+	GenerationTargetToDatabase(JdbcConnectionContext jdbcConnectionContext, SchemaGenAction databaseAction) {
 		this.jdbcConnectionContext = jdbcConnectionContext;
 		this.databaseAction = databaseAction;
 	}

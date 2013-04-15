@@ -26,8 +26,9 @@ package org.hibernate.jpa.internal.schemagen;
 /**
  * Describes a schema generation target
  *
- * @see org.hibernate.jpa.SchemaGenTarget
- * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_TARGET
+ * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_SCRIPTS_ACTION
+ * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_SCRIPTS_CREATE_TARGET
+ * @see org.hibernate.jpa.AvailableSettings#SCHEMA_GEN_SCRIPTS_DROP_TARGET
  *
  * @author Steve Ebersole
  */

@@ -40,7 +40,7 @@ public enum SchemaGenSource {
 	 */
 	METADATA( "metadata" ),
 	/**
-	 * "scripts" - External DDL script(s) are used as the exclusive source for generation.  The scripts for schema
+	 * "script" - External DDL script(s) are used as the exclusive source for generation.  The scripts for schema
 	 * creation and dropping come from different sources.  The creation DDL script is identified by the
 	 * {@value AvailableSettings#SCHEMA_GEN_CREATE_SCRIPT_SOURCE} setting; the drop DDL script is identified by the
 	 * {@value AvailableSettings#SCHEMA_GEN_DROP_SCRIPT_SOURCE} setting.
@@ -48,23 +48,23 @@ public enum SchemaGenSource {
 	 * @see AvailableSettings#SCHEMA_GEN_CREATE_SCRIPT_SOURCE
 	 * @see AvailableSettings#SCHEMA_GEN_DROP_SCRIPT_SOURCE
 	 */
-	SCRIPTS( "scripts" ),
+	SCRIPT( "script" ),
 	/**
 	 * "metadata-then-scripts" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
 	 * with the O/RM metadata being applied first.
 	 *
 	 * @see #METADATA
-	 * @see #SCRIPTS
+	 * @see #SCRIPT
 	 */
-	METADATA_THEN_SCRIPTS( "metadata-then-scripts" ),
+	METADATA_THEN_SCRIPT( "metadata-then-script" ),
 	/**
 	 * "scripts-then-metadata" - Both the O/RM metadata and external DDL scripts are used as sources for generation,
 	 * with the commands from the external DDL script(s) being applied first
 	 *
-	 * @see #SCRIPTS
+	 * @see #SCRIPT
 	 * @see #METADATA
 	 */
-	SCRIPTS_THEN_METADATA( "scripts-then-metadata" );
+	SCRIPT_THEN_METADATA( "script-then-metadata" );
 
 	private final String externalName;
 
@@ -90,14 +90,14 @@ public enum SchemaGenSource {
 		if ( METADATA.externalName.equals( value ) ) {
 			return METADATA;
 		}
-		else if ( SCRIPTS.externalName.equals( value ) ) {
-			return SCRIPTS;
+		else if ( SCRIPT.externalName.equals( value ) ) {
+			return SCRIPT;
 		}
-		else if ( METADATA_THEN_SCRIPTS.externalName.equals( value ) ) {
-			return METADATA_THEN_SCRIPTS;
+		else if ( METADATA_THEN_SCRIPT.externalName.equals( value ) ) {
+			return METADATA_THEN_SCRIPT;
 		}
-		else if ( SCRIPTS_THEN_METADATA.externalName.equals( value ) ) {
-			return SCRIPTS_THEN_METADATA;
+		else if ( SCRIPT_THEN_METADATA.externalName.equals( value ) ) {
+			return SCRIPT_THEN_METADATA;
 		}
 
 		throw new IllegalArgumentException( "Unrecognized schema generation source value : " + value );

@@ -105,7 +105,7 @@ public class JpaSchemaGenerator {
 
 			// determine targets ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-			final GenerationTarget databaseTarget = new DatabaseTarget( jdbcConnectionContext, databaseAction );
+			final GenerationTarget databaseTarget = new GenerationTargetToDatabase( jdbcConnectionContext, databaseAction );
 
 			final Object createScriptTargetSetting = hibernateConfiguration.getProperties().get(
 					AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET
@@ -113,7 +113,7 @@ public class JpaSchemaGenerator {
 			final Object dropScriptTargetSetting = hibernateConfiguration.getProperties().get(
 					AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET
 			);
-			final GenerationTarget scriptsTarget = new ScriptsTarget( createScriptTargetSetting, dropScriptTargetSetting, scriptsAction );
+			final GenerationTarget scriptsTarget = new GenerationTargetToScript( createScriptTargetSetting, dropScriptTargetSetting, scriptsAction );
 
 			final List<GenerationTarget> targets = Arrays.asList( databaseTarget, scriptsTarget );
 
@@ -171,7 +171,7 @@ public class JpaSchemaGenerator {
 
 		if ( sourceType == null ) {
 			if ( createScriptSourceSetting != null ) {
-				sourceType = SchemaGenSource.SCRIPTS;
+				sourceType = SchemaGenSource.SCRIPT;
 			}
 			else {
 				sourceType = SchemaGenSource.METADATA;
@@ -181,18 +181,18 @@ public class JpaSchemaGenerator {
 		final ImportSqlCommandExtractor scriptCommandExtractor = serviceRegistry.getService( ImportSqlCommandExtractor.class );
 
 		if ( sourceType == SchemaGenSource.METADATA ) {
-			generationSourceList.add( new MetadataSource( hibernateConfiguration, dialect, true ) );
+			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
 		}
-		else if ( sourceType == SchemaGenSource.SCRIPTS ) {
-			generationSourceList.add( new ScriptSource( createScriptSourceSetting, scriptCommandExtractor ) );
+		else if ( sourceType == SchemaGenSource.SCRIPT ) {
+			generationSourceList.add( new GenerationSourceFromScript( createScriptSourceSetting, scriptCommandExtractor ) );
 		}
-		else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPTS ) {
-			generationSourceList.add( new MetadataSource( hibernateConfiguration, dialect, true ) );
-			generationSourceList.add( new ScriptSource( createScriptSourceSetting, scriptCommandExtractor ) );
+		else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
+			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+			generationSourceList.add( new GenerationSourceFromScript( createScriptSourceSetting, scriptCommandExtractor ) );
 		}
-		else if ( sourceType == SchemaGenSource.SCRIPTS_THEN_METADATA ) {
-			generationSourceList.add( new ScriptSource( createScriptSourceSetting, scriptCommandExtractor ) );
-			generationSourceList.add( new MetadataSource( hibernateConfiguration, dialect, true ) );
+		else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
+			generationSourceList.add( new GenerationSourceFromScript( createScriptSourceSetting, scriptCommandExtractor ) );
+			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
 		}
 
 		final Object importScriptSetting = hibernateConfiguration.getProperties().get(
@@ -221,7 +221,7 @@ public class JpaSchemaGenerator {
 
 		if ( sourceType == null ) {
 			if ( dropScriptSourceSetting != null ) {
-				sourceType = SchemaGenSource.SCRIPTS;
+				sourceType = SchemaGenSource.SCRIPT;
 			}
 			else {
 				sourceType = SchemaGenSource.METADATA;
@@ -231,18 +231,18 @@ public class JpaSchemaGenerator {
 		final ImportSqlCommandExtractor scriptCommandExtractor = serviceRegistry.getService( ImportSqlCommandExtractor.class );
 
 		if ( sourceType == SchemaGenSource.METADATA ) {
-			generationSourceList.add( new MetadataSource( hibernateConfiguration, dialect, false ) );
+			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
 		}
-		else if ( sourceType == SchemaGenSource.SCRIPTS ) {
-			generationSourceList.add( new ScriptSource( dropScriptSourceSetting, scriptCommandExtractor ) );
+		else if ( sourceType == SchemaGenSource.SCRIPT ) {
+			generationSourceList.add( new GenerationSourceFromScript( dropScriptSourceSetting, scriptCommandExtractor ) );
 		}
-		else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPTS ) {
-			generationSourceList.add( new MetadataSource( hibernateConfiguration, dialect, false ) );
-			generationSourceList.add( new ScriptSource( dropScriptSourceSetting, scriptCommandExtractor ) );
+		else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
+			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+			generationSourceList.add( new GenerationSourceFromScript( dropScriptSourceSetting, scriptCommandExtractor ) );
 		}
-		else if ( sourceType == SchemaGenSource.SCRIPTS_THEN_METADATA ) {
-			generationSourceList.add( new ScriptSource( dropScriptSourceSetting, scriptCommandExtractor ) );
-			generationSourceList.add( new MetadataSource( hibernateConfiguration, dialect, false ) );
+		else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
+			generationSourceList.add( new GenerationSourceFromScript( dropScriptSourceSetting, scriptCommandExtractor ) );
+			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
 		}
 
 		return generationSourceList;
@@ -508,17 +508,17 @@ public class JpaSchemaGenerator {
 	}
 
 	private static class ImportScriptSource implements GenerationSource {
-		private final SqlScriptReader sourceReader;
+		private final SqlScriptInput sourceReader;
 		private final ImportSqlCommandExtractor scriptCommandExtractor;
 
 		public ImportScriptSource(Object scriptSourceSetting, ImportSqlCommandExtractor scriptCommandExtractor) {
 			this.scriptCommandExtractor = scriptCommandExtractor;
 
 			if ( Reader.class.isInstance( scriptSourceSetting ) ) {
-				sourceReader = new ReaderScriptSource( (Reader) scriptSourceSetting );
+				sourceReader = new SqlScriptReaderInput( (Reader) scriptSourceSetting );
 			}
 			else {
-				sourceReader = new FileScriptSource( scriptSourceSetting.toString() );
+				sourceReader = new SqlScriptFileInput( scriptSourceSetting.toString() );
 			}
 		}
 

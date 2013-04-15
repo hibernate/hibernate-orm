@@ -70,7 +70,7 @@ public class DatabaseMetadata {
 		initSequences(connection, dialect);
 	}
 
-	private static final String[] TYPES = {"TABLE", "VIEW"};
+	private static final String[] TYPES = {"TABLE", "VIEW", "SYNONYM"};
 
 	public TableMetadata getTableMetadata(String name, String schema, String catalog, boolean isQuoted) throws HibernateException {
 

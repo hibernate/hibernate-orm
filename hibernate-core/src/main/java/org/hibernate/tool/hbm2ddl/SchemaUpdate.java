@@ -193,7 +193,7 @@ public class SchemaUpdate {
                 LOG.fetchingDatabaseMetadata();
 				connectionHelper.prepare( true );
 				connection = connectionHelper.getConnection();
-				meta = new DatabaseMetadata( connection, dialect );
+				meta = new DatabaseMetadata( connection, dialect, configuration );
 				stmt = connection.createStatement();
 			}
 			catch ( SQLException sqle ) {

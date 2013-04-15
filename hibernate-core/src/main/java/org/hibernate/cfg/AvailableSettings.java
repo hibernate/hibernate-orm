@@ -23,6 +23,8 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
+
 /**
  * @author Steve Ebersole
  */
@@ -638,4 +640,12 @@ public interface AvailableSettings {
 	public static final String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
 	public static final String JACC_PREFIX = "hibernate.jacc";
 	public static final String JACC_ENABLED = "hibernate.jacc.enabled";
+
+	/**
+	 * If enabled, allows {@link org.hibernate.tool.hbm2ddl.DatabaseMetadata} to
+	 * support synonyms during schema update and validations.  Due to the
+	 * possibility that this would return duplicate tables (especially in
+	 * Oracle), this is disabled by default.
+	 */
+	public static final String ENABLE_SYNONYMS = "hibernate.synonyms";
 }

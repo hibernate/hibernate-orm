@@ -34,19 +34,24 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.mapping.Table;
+import org.jboss.logging.Logger;
 
 /**
  * JDBC database metadata
  * @author Christoph Sturm, Teodor Danciu
+ */
+/**
+ * @author Brett Meyer
  */
 public class DatabaseMetadata {
 
@@ -59,18 +64,41 @@ public class DatabaseMetadata {
 	private DatabaseMetaData meta;
 	private SQLExceptionConverter sqlExceptionConverter;
 
+	private final String[] types;
+	/**
+	 * @deprecated Use {@link #DatabaseMetadata(Connection, Dialect, Configuration)} instead
+	 */
+	@Deprecated
 	public DatabaseMetadata(Connection connection, Dialect dialect) throws SQLException {
-		this(connection, dialect, true);
+		this(connection, dialect, null, true);
 	}
 
+	/**
+	 * @deprecated Use {@link #DatabaseMetadata(Connection, Dialect, Configuration, boolean)} instead
+	 */
+	@Deprecated
 	public DatabaseMetadata(Connection connection, Dialect dialect, boolean extras) throws SQLException {
+		this(connection, dialect, null, extras);
+	}
+	
+	public DatabaseMetadata(Connection connection, Dialect dialect, Configuration config) throws SQLException {
+		this(connection, dialect, config, true);
+	}
+
+	public DatabaseMetadata(Connection connection, Dialect dialect, Configuration config, boolean extras)
+			throws SQLException {
 		sqlExceptionConverter = dialect.buildSQLExceptionConverter();
 		meta = connection.getMetaData();
 		this.extras = extras;
-		initSequences(connection, dialect);
+		initSequences( connection, dialect );
+		if ( config != null
+				&& ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, config.getProperties(), false ) ) {
+			types = new String[] { "TABLE", "VIEW", "SYNONYM" };
+		}
+		else {
+			types = new String[] { "TABLE", "VIEW" };
+		}
 	}
-
-	private static final String[] TYPES = {"TABLE", "VIEW", "SYNONYM"};
 
 	public TableMetadata getTableMetadata(String name, String schema, String catalog, boolean isQuoted) throws HibernateException {
 
@@ -85,14 +113,14 @@ public class DatabaseMetadata {
 				ResultSet rs = null;
 				try {
 					if ( (isQuoted && meta.storesMixedCaseQuotedIdentifiers())) {
-						rs = meta.getTables(catalog, schema, name, TYPES);
+						rs = meta.getTables(catalog, schema, name, types);
 					} else if ( (isQuoted && meta.storesUpperCaseQuotedIdentifiers())
 						|| (!isQuoted && meta.storesUpperCaseIdentifiers() )) {
 						rs = meta.getTables(
 								StringHelper.toUpperCase(catalog),
 								StringHelper.toUpperCase(schema),
 								StringHelper.toUpperCase(name),
-								TYPES
+								types
 							);
 					}
 					else if ( (isQuoted && meta.storesLowerCaseQuotedIdentifiers())
@@ -101,11 +129,11 @@ public class DatabaseMetadata {
 								StringHelper.toLowerCase( catalog ),
 								StringHelper.toLowerCase(schema), 
 								StringHelper.toLowerCase(name), 
-								TYPES 
+								types 
 							);
 					}
 					else {
-						rs = meta.getTables(catalog, schema, name, TYPES);
+						rs = meta.getTables(catalog, schema, name, types);
 					}
 
 					while ( rs.next() ) {

@@ -370,7 +370,7 @@
               <entry>
                 <itemizedlist>
                   <listitem><para>read-only</para></listitem>
-                  <listitem><para>nontrict read-write</para></listitem>
+                  <listitem><para>nonstrict read-write</para></listitem>
                   <listitem><para>read-write</para></listitem>
                 </itemizedlist>
               </entry>
@@ -381,7 +381,7 @@
               <entry>
                 <itemizedlist>
                   <listitem><para>read-only</para></listitem>
-                  <listitem><para>nontrict read-write</para></listitem>
+                  <listitem><para>nonstrict read-write</para></listitem>
                   <listitem><para>read-write</para></listitem>
                   <listitem><para>transactional</para></listitem>
                 </itemizedlist>

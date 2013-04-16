@@ -33,6 +33,14 @@ dependencies {
 
 }
 
+def pomName() {
+    return 'Core Hibernate O/RM functionality'
+}
+
+def pomDescription() {
+    return 'The core O/RM functionality as provided by Hibernate'
+}
+
 manifest.mainAttributes(
         'Main-Class': 'org.hibernate.Version'
 )

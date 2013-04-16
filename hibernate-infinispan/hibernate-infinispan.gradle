@@ -16,6 +16,14 @@ dependencies {
     testCompile ('mysql:mysql-connector-java:5.1.17')
 }
 
+def pomName() {
+    return 'Hibernate/Infinispan Integration'
+}
+
+def pomDescription() {
+    return 'Integration for Infinispan into Hibernate as a second-level caching service'
+}
+
 test {
    systemProperties['java.net.preferIPv4Stack'] = true
    systemProperties['jgroups.ping.timeout'] = 500

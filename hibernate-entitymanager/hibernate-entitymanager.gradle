@@ -24,6 +24,14 @@ dependencies {
 //    testRuntime( "org.glassfish.web:el-impl:2.1.2-b04" )
 }
 
+def pomName() {
+    return 'Hibernate JPA Support'
+}
+
+def pomDescription() {
+    return 'Hibernate O/RM implementation of the JPA specification'
+}
+
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM JPA Entity Manager'

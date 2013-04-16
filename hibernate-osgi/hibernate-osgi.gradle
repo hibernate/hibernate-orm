@@ -4,6 +4,14 @@ dependencies {
     compile( "org.osgi:org.osgi.core:4.3.0" )
 }
 
+def pomName() {
+    return 'Hibernate OSGi Support'
+}
+
+def pomDescription() {
+    return 'Support for running Hibernate O/RM in OSGi environments'
+}
+
 jar {
     manifest {
         instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'

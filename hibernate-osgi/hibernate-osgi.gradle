@@ -13,7 +13,6 @@ jar {
             // TODO: Shouldn't have to explicitly list this, but the plugin
             // generates it with a [1.0,2) version.
             'javax.persistence;version="2.1.0"',
-            'javax.persistence.spi;version="2.1.0"',
-            '*'
+            'javax.persistence.spi;version="2.1.0"'
     }
 }

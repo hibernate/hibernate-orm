@@ -59,7 +59,6 @@ jar {
             'javax.persistence;version="2.1.0"',
             'javax.persistence.criteria;version="2.1.0"',
             'javax.persistence.metamodel;version="2.1.0"',
-            'javax.persistence.spi;version="2.1.0"',
-            '*'
+            'javax.persistence.spi;version="2.1.0"'
     }
 }

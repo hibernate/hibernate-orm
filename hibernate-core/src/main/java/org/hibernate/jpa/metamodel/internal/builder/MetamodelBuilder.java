@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.metamodel.internal.builder;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
@@ -37,8 +39,11 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.metamodel.internal.AbstractIdentifiableType;
+import org.hibernate.jpa.metamodel.internal.AbstractManagedType;
 import org.hibernate.jpa.metamodel.internal.EmbeddableTypeImpl;
 import org.hibernate.jpa.metamodel.internal.EntityTypeImpl;
 import org.hibernate.jpa.metamodel.internal.JpaMetaModelPopulationSetting;
@@ -69,8 +74,10 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Emmanuel Bernard
  */
 public class MetamodelBuilder {
-	private static final Logger log = Logger.getLogger( MetamodelBuilder.class );
-
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			MetamodelBuilder.class.getName()
+	);
 	private final SessionFactoryImplementor sessionFactory;
 
 	// these maps eventually make up the JPA Metamodel
@@ -193,7 +200,7 @@ public class MetamodelBuilder {
 	}
 
 	public MetamodelImpl buildMetamodel() {
-		log.trace( "Building JPA Metamodel instance..." );
+		LOG.trace( "Building JPA Metamodel instance..." );
 		// we need to process types from superclasses to subclasses
 		for ( EntityBinding entityBinding : entityBindingList ) {
 			processHierarchy( entityBinding );
@@ -213,7 +220,7 @@ public class MetamodelBuilder {
 	}
 
 	private void processHierarchy(EntityBinding entityBinding) {
-		log.trace( "  Starting binding [" + entityBinding.getEntity().getName() + "]" );
+		LOG.trace( "  Starting binding [" + entityBinding.getEntity().getName() + "]" );
 		processType( entityBinding.getEntity(), entityBinding );
 	}
 
@@ -334,21 +341,137 @@ public class MetamodelBuilder {
 		}
 	}
 
-	private void populateStaticMetamodel(AbstractIdentifiableType jpaDescriptor) {
+	private void populateStaticMetamodel(AbstractManagedType jpaDescriptor) {
 		if ( populationSetting == JpaMetaModelPopulationSetting.DISABLED ) {
 			return;
 		}
+		final Class managedTypeClass = jpaDescriptor.getJavaType();
+		final String metamodelClassName = managedTypeClass.getName() + "_";
+		try {
+			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+			// we found the class; so populate it...
+			registerAttributes( metamodelClass, jpaDescriptor );
+		}
+		catch ( ClassNotFoundException ignore ) {
+			// nothing to do...
+		}
 
-		// todo : implement !
+		AbstractManagedType superType = jpaDescriptor.getSupertype();
+		if ( superType != null ) {
+			populateStaticMetamodel( superType );
+		}
+
 	}
 
-	private void populateStaticMetamodel(EmbeddableTypeImpl embeddable) {
-		if ( populationSetting == JpaMetaModelPopulationSetting.DISABLED ) {
+
+	private final Set<Class> processedMetamodelClasses = new HashSet<Class>();
+
+	private <X> void registerAttributes(Class metamodelClass, AbstractManagedType managedType) {
+		if ( !processedMetamodelClasses.add( metamodelClass ) ) {
 			return;
 		}
 
-		// todo : implement !
+		// push the attributes on to the metamodel class...
+		for ( Object attribute : managedType.getDeclaredAttributes() ) {
+
+			registerAttribute( metamodelClass, (Attribute<X, ?>) attribute );
+		}
+		if ( IdentifiableType.class.isInstance( managedType ) ) {
+			final AbstractIdentifiableType<X> entityType = (AbstractIdentifiableType<X>) managedType;
+			// handle version
+			if ( entityType.hasDeclaredVersionAttribute() ) {
+				registerAttribute( metamodelClass, entityType.getDeclaredVersion() );
+			}
+
+			// handle id-class mappings specially
+			if ( !entityType.hasSingleIdAttribute() ) {
+				final Set<SingularAttribute<? super X, ?>> attributes = entityType.getIdClassAttributes();
+				if ( attributes != null ) {
+					for ( SingularAttribute<? super X, ?> attribute : attributes ) {
+						registerAttribute( metamodelClass, attribute );
+					}
+				}
+			}
+		}
+
+
 	}
+
+	private <X> void registerAttribute(Class metamodelClass, Attribute<X, ?> attribute) {
+		final String name = attribute.getName();
+		try {
+			// there is a shortcoming in the existing Hibernate code in terms of the way MappedSuperclass
+			// support was bolted on which comes to bear right here when the attribute is an embeddable type
+			// defined on a MappedSuperclass.  We do not have the correct information to determine the
+			// appropriate attribute declarer in such cases and so the incoming metamodelClass most likely
+			// does not represent the declarer in such cases.
+			//
+			// As a result, in the case of embeddable classes we simply use getField rather than get
+			// getDeclaredField
+			final Field field = attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
+					? metamodelClass.getField( name )
+					: metamodelClass.getDeclaredField( name );
+			try {
+				if ( ! field.isAccessible() ) {
+					// should be public anyway, but to be sure...
+					field.setAccessible( true );
+				}
+				field.set( null, attribute );
+			}
+			catch ( IllegalAccessException e ) {
+				// todo : exception type?
+				throw new AssertionFailure(
+						"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
+						e
+				);
+			}
+			catch ( IllegalArgumentException e ) {
+				// most likely a mismatch in the type we are injecting and the defined field; this represents a
+				// mismatch in how the annotation processor interpretted the attribute and how our metamodel
+				// and/or annotation binder did.
+
+//              This is particularly the case as arrays are nto handled propery by the StaticMetamodel generator
+
+//				throw new AssertionFailure(
+//						"Illegal argument on static metamodel field injection : " + metamodelClass.getName() + '#' + name
+//								+ "; expected type :  " + attribute.getClass().getName()
+//								+ "; encountered type : " + field.getType().getName()
+//				);
+				LOG.illegalArgumentOnStaticMetamodelFieldInjection(metamodelClass.getName(),
+						name,
+						attribute.getClass().getName(),
+						field.getType().getName());
+			}
+		}
+		catch ( NoSuchFieldException e ) {
+			LOG.unableToLocateStaticMetamodelField(metamodelClass.getName(), name);
+//			throw new AssertionFailure(
+//					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
+//			);
+		}
+	}
+
+
+//	private void populateStaticMetamodel(EmbeddableTypeImpl embeddable) {
+//		if ( populationSetting == JpaMetaModelPopulationSetting.DISABLED ) {
+//			return;
+//		}
+//		final Class managedTypeClass = embeddable.getJavaType();
+//		final String metamodelClassName = managedTypeClass.getName() + "_";
+//		try {
+//			final Class metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
+//			// we found the class; so populate it...
+//			registerAttributes( metamodelClass, embeddable );
+//		}
+//		catch ( ClassNotFoundException ignore ) {
+//			// nothing to do...
+//		}
+//
+//		AbstractManagedType superType = embeddable.getSupertype();
+//		if ( superType != null ) {
+//			populateStaticMetamodel( superType );
+//		}
+//	}
 
 
 	/**
@@ -398,7 +521,7 @@ public class MetamodelBuilder {
 		@Override
 		public void handleUnsupportedFeature(UnsupportedFeature feature) {
 			if ( populationSetting == JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED ) {
-				log.debug( "Ignoring mapping construct not supported as part of JPA metamodel [" + feature.getMessage() + "]" );
+				LOG.debug( "Ignoring mapping construct not supported as part of JPA metamodel [" + feature.getMessage() + "]" );
 			}
 			else {
 				throw new UnsupportedOperationException( feature.getMessage() );

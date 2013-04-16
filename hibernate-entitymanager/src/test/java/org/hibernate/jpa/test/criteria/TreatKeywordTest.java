@@ -36,7 +36,6 @@ import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity_;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -51,7 +50,6 @@ public class TreatKeywordTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void basicTest() {
 		EntityManager em = getOrCreateEntityManager();
 		CriteriaBuilder builder = em.getCriteriaBuilder();

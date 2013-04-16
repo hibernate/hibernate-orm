@@ -43,7 +43,7 @@ import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel(message = "@OneToOne with mappedBy specified is not supported yet")
 public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 

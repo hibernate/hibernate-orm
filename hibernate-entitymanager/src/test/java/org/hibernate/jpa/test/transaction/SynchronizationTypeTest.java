@@ -41,7 +41,6 @@ import org.hibernate.jpa.AvailableSettings;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -120,7 +119,6 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDisallowedOperations() throws Exception {
 		// test calling operations that are disallowed while a UNSYNCHRONIZED persistence context is not
 		// yet joined/enlisted

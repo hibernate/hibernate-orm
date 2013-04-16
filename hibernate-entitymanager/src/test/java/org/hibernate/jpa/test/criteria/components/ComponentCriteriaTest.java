@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.junit.Assert;
@@ -87,7 +88,7 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-4586" )
-	@FailureExpectedWithNewMetamodel
+//	@FailureExpectedWithNewMetamodel
 	public void testParameterizedFunctions() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -95,7 +96,8 @@ public class ComponentCriteriaTest extends BaseEntityManagerFunctionalTestCase {
 		// lower
 		CriteriaQuery<Client> cq = cb.createQuery( Client.class );
 		Root<Client> root = cq.from( Client.class );
-		cq.where( cb.equal( cb.lower( root.get( Client_.name ).get( Name_.lastName ) ),"test" ) );
+		Path<String> path = root.get( Client_.name ).get( Name_.lastName );
+		cq.where( cb.equal( cb.lower( path ),"test" ) );
 		em.createQuery( cq ).getResultList();
 		// upper
 		cq = cb.createQuery( Client.class );

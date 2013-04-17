@@ -209,9 +209,9 @@ public class SchemaUpdate {
 				outputFileWriter = new FileWriter( outputFile );
 			}
 
-			String[] sqlStrings = configuration.generateSchemaUpdateScript( dialect, meta );
-			for ( String sql : sqlStrings ) {
-				String formatted = formatter.format( sql );
+			List<SchemaUpdateScript> scripts = configuration.generateSchemaUpdateScriptList( dialect, meta );
+			for ( SchemaUpdateScript script : scripts ) {
+				String formatted = formatter.format( script.getScript() );
 				try {
 					if ( delimiter != null ) {
 						formatted += delimiter;
@@ -223,17 +223,19 @@ public class SchemaUpdate {
 						outputFileWriter.write( formatted + "\n" );
 					}
 					if ( target.doExport() ) {
-                        LOG.debug( sql );
+                        LOG.debug( script.getScript() );
 						stmt.executeUpdate( formatted );
 					}
 				}
 				catch ( SQLException e ) {
-					if ( haltOnError ) {
-						throw new JDBCException( "Error during DDL export", e );
+					if (!script.isQuiet()) {
+						if ( haltOnError ) {
+							throw new JDBCException( "Error during DDL export", e );
+						}
+						exceptions.add( e );
+	                    LOG.unsuccessful(script.getScript());
+	                    LOG.error(e.getMessage());
 					}
-					exceptions.add( e );
-                    LOG.unsuccessful(sql);
-                    LOG.error(e.getMessage());
 				}
 			}
 

@@ -49,8 +49,6 @@ import org.jboss.logging.Logger;
 /**
  * JDBC database metadata
  * @author Christoph Sturm, Teodor Danciu
- */
-/**
  * @author Brett Meyer
  */
 public class DatabaseMetadata {

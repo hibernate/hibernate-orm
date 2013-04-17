@@ -23,8 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
-
 /**
  * @author Steve Ebersole
  */
@@ -648,4 +646,22 @@ public interface AvailableSettings {
 	 * Oracle), this is disabled by default.
 	 */
 	public static final String ENABLE_SYNONYMS = "hibernate.synonyms";
+	
+	/**
+	 * Unique columns and unique keys both use unique constraints in most dialects.
+	 * SchemaUpdate needs to create these constraints, but DB's
+	 * support for finding existing constraints is extremely inconsistent. Further,
+	 * non-explicitly-named unique constraints use randomly generated characters.
+	 * 
+	 * Therefore, select from these strategies.
+	 * {@link org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy#DROP_RECREATE_QUIETLY} (DEFAULT):
+	 * 			Attempt to drop, then (re-)create each unique constraint.
+	 * 			Ignore any exceptions thrown.
+	 * {@link org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy#RECREATE_QUIETLY}:
+	 * 			attempt to (re-)create unique constraints,
+	 * 			ignoring exceptions thrown if the constraint already existed
+	 * {@link org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy#SKIP}:
+	 * 			do not attempt to create unique constraints on a schema update
+	 */
+	public static final String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
 }

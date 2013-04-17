@@ -52,9 +52,9 @@ public class MapCollectionMapper<T extends Map> extends AbstractCollectionMapper
     }
 
     protected Initializor<T> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-                                            Object primaryKey, Number revision) {
+                                            Object primaryKey, Number revision, boolean removed) {
         return new MapCollectionInitializor<T>(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-                primaryKey, revision, collectionClass, elementComponentData, indexComponentData);
+                primaryKey, revision, removed, collectionClass, elementComponentData, indexComponentData);
     }
 
     protected Collection getNewCollectionContent(PersistentCollection newCollection) {

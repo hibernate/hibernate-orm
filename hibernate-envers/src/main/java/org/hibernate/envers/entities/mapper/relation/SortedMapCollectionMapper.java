@@ -46,9 +46,9 @@ public final class SortedMapCollectionMapper extends MapCollectionMapper<SortedM
 	}
 
 	protected Initializor<SortedMap> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-													Object primaryKey, Number revision) {
+													Object primaryKey, Number revision, boolean removed) {
 		return new SortedMapCollectionInitializor(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-				primaryKey, revision, collectionClass, elementComponentData, indexComponentData, comparator);
+				primaryKey, revision, removed, collectionClass, elementComponentData, indexComponentData, comparator);
 	}
 
 }

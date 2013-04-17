@@ -42,10 +42,10 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
     public ListCollectionInitializor(AuditConfiguration verCfg,
                                     AuditReaderImplementor versionsReader,
                                     RelationQueryGenerator queryGenerator,
-                                    Object primaryKey, Number revision,
+                                    Object primaryKey, Number revision, boolean removed,
                                     MiddleComponentData elementComponentData,
                                     MiddleComponentData indexComponentData) {
-        super(verCfg, versionsReader, queryGenerator, primaryKey, revision);
+        super(verCfg, versionsReader, queryGenerator, primaryKey, revision, removed);
 
         this.elementComponentData = elementComponentData;
         this.indexComponentData = indexComponentData;

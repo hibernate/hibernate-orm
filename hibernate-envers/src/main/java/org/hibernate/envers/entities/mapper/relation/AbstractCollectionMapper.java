@@ -200,14 +200,22 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 	protected abstract Initializor<T> getInitializor(AuditConfiguration verCfg,
                                                      AuditReaderImplementor versionsReader, Object primaryKey,
-                                                     Number revision);
+                                                     Number revision, boolean removed);
 
     public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
                                    AuditReaderImplementor versionsReader, Number revision) {
-        Setter setter = ReflectionTools.getSetter(obj.getClass(),
-                commonCollectionMapperData.getCollectionReferencingPropertyData());
+        Setter setter = ReflectionTools.getSetter(obj.getClass(), commonCollectionMapperData.getCollectionReferencingPropertyData());
         try {
-            setter.set(obj, proxyConstructor.newInstance(getInitializor(verCfg, versionsReader, primaryKey, revision)), null);
+			setter.set(
+					obj,
+					proxyConstructor.newInstance(
+							getInitializor(
+									verCfg, versionsReader, primaryKey, revision,
+									RevisionType.DEL.equals( data.get( verCfg.getAuditEntCfg().getRevisionTypePropName() ) )
+							)
+					),
+					null
+			);
         } catch (InstantiationException e) {
             throw new AuditException(e);
         } catch (IllegalAccessException e) {

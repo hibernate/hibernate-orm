@@ -36,6 +36,10 @@ public class MutableInteger {
         this.value = value;
     }
 
+	public MutableInteger deepCopy() {
+		return new MutableInteger( value );
+	}
+
     public int getAndIncrease() {
         return value++;
     }

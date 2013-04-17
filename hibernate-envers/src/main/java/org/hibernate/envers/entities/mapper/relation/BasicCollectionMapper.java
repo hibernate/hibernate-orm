@@ -49,9 +49,9 @@ public class BasicCollectionMapper<T extends Collection> extends AbstractCollect
     }
 
     protected Initializor<T> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-                                            Object primaryKey, Number revision) {
+                                            Object primaryKey, Number revision, boolean removed) {
         return new BasicCollectionInitializor<T>(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-                primaryKey, revision, collectionClass, elementComponentData);
+                primaryKey, revision, removed, collectionClass, elementComponentData);
     }
 
     protected Collection getNewCollectionContent(PersistentCollection newCollection) {

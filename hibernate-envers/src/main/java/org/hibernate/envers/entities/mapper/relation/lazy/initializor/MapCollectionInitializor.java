@@ -46,11 +46,11 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
     public MapCollectionInitializor(AuditConfiguration verCfg,
                                     AuditReaderImplementor versionsReader,
                                     RelationQueryGenerator queryGenerator,
-                                    Object primaryKey, Number revision,
+                                    Object primaryKey, Number revision, boolean removed,
                                     Class<? extends T> collectionClass,
                                     MiddleComponentData elementComponentData,
                                     MiddleComponentData indexComponentData) {
-        super(verCfg, versionsReader, queryGenerator, primaryKey, revision);
+        super(verCfg, versionsReader, queryGenerator, primaryKey, revision, removed);
 
         this.collectionClass = collectionClass;
         this.elementComponentData = elementComponentData;

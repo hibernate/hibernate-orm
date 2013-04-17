@@ -46,9 +46,8 @@ public final class SortedSetCollectionMapper extends BasicCollectionMapper<Sorte
 	}
 
 	protected Initializor<SortedSet> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-													Object primaryKey, Number revision) {
+													Object primaryKey, Number revision, boolean removed) {
 		return new SortedSetCollectionInitializor(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-				primaryKey, revision, collectionClass, elementComponentData, comparator);
+				primaryKey, revision, removed, collectionClass, elementComponentData, comparator);
 	}
-
 }

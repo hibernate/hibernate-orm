@@ -55,9 +55,9 @@ public final class ListCollectionMapper extends AbstractCollectionMapper<List> i
     }
 
     protected Initializor<List> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-                                               Object primaryKey, Number revision) {
+                                               Object primaryKey, Number revision, boolean removed) {
         return new ListCollectionInitializor(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-                primaryKey, revision, elementComponentData, indexComponentData);
+                primaryKey, revision, removed, elementComponentData, indexComponentData);
     }
 
     @SuppressWarnings({"unchecked"})

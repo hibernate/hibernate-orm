@@ -86,7 +86,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
 			final Serializable id,
 			Object data,
 			final Object revision) {
-
         final AuditEntitiesConfiguration audEntitiesCfg = auditCfg.getAuditEntCfg();
         final String auditedEntityName = audEntitiesCfg.getAuditEntityName( entityName );
 		final String revisionInfoEntityName = auditCfg.getAuditEntCfg().getRevisionInfoEntityName();
@@ -291,32 +290,29 @@ public class ValidityAuditStrategy implements AuditStrategy {
     }
 
     public void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder,
-			String revisionProperty,String revisionEndProperty, boolean addAlias,
+			Parameters parameters, String revisionProperty,String revisionEndProperty, boolean addAlias,
             MiddleIdData idData, String revisionPropertyPath, String originalIdPropertyName,
-            String alias1, String alias2) {
-		Parameters rootParameters = rootQueryBuilder.getRootParameters();
-		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
+            String alias1, String alias2, boolean inclusive) {
+		addRevisionRestriction(parameters, revisionProperty, revisionEndProperty, addAlias, inclusive);
 	}
 	
-	public void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 
+	public void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder, Parameters parameters, String revisionProperty,
 		    String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData, 
 		    String versionsMiddleEntityName, String eeOriginalIdPropertyPath, String revisionPropertyPath,
-		    String originalIdPropertyName, String alias1, MiddleComponentData... componentDatas) {
-		Parameters rootParameters = rootQueryBuilder.getRootParameters();
-		addRevisionRestriction(rootParameters, revisionProperty, revisionEndProperty, addAlias);
+		    String originalIdPropertyName, String alias1, boolean inclusive, MiddleComponentData... componentDatas) {
+		addRevisionRestriction(parameters, revisionProperty, revisionEndProperty, addAlias, inclusive);
 	}
     
 	public void setRevisionTimestampGetter(Getter revisionTimestampGetter) {
 		this.revisionTimestampGetter = revisionTimestampGetter;
 	}
 
-    private void addRevisionRestriction(Parameters rootParameters,  
-			String revisionProperty, String revisionEndProperty, boolean addAlias) {
-    	
+    private void addRevisionRestriction(Parameters rootParameters, String revisionProperty, String revisionEndProperty,
+										boolean addAlias, boolean inclusive) {
 		// e.revision <= _revision and (e.endRevision > _revision or e.endRevision is null)
 		Parameters subParm = rootParameters.addSubParameters("or");
-		rootParameters.addWhereWithNamedParam(revisionProperty, addAlias, "<=", REVISION_PARAMETER);
-		subParm.addWhereWithNamedParam(revisionEndProperty + ".id", addAlias, ">", REVISION_PARAMETER);
+		rootParameters.addWhereWithNamedParam(revisionProperty, addAlias, inclusive ? "<=" : "<", REVISION_PARAMETER);
+		subParm.addWhereWithNamedParam(revisionEndProperty + ".id", addAlias, inclusive ? ">" : ">=", REVISION_PARAMETER);
 		subParm.addWhere(revisionEndProperty, addAlias, "is", "null", false);
 	}
 
@@ -328,7 +324,6 @@ public class ValidityAuditStrategy implements AuditStrategy {
     @SuppressWarnings({"unchecked"})
     private void updateLastRevision(Session session, AuditConfiguration auditCfg, List<Object> l,
                                     Object id, String auditedEntityName, Object revision) {
-
         // There should be one entry
         if (l.size() == 1) {
             // Setting the end revision to be the current rev

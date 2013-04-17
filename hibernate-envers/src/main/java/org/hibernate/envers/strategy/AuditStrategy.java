@@ -9,6 +9,7 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.mapper.PersistentCollectionChangeData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
+import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 
 /**
@@ -59,6 +60,7 @@ public interface AuditStrategy {
 	 * 
 	 * @param globalCfg the {@link GlobalConfiguration}
      * @param rootQueryBuilder the {@link QueryBuilder} that will be updated
+	 * @param parameters root parameters to which restrictions shall be added
      * @param revisionProperty property of the revision column
      * @param revisionEndProperty property of the revisionEnd column (only used for {@link ValidityAuditStrategy})
      * @param addAlias {@code boolean} indicator if a left alias is needed
@@ -67,10 +69,11 @@ public interface AuditStrategy {
      * @param originalIdPropertyName name of the id property (only used for {@link ValidityAuditStrategy})
      * @param alias1 an alias used for subquery (only used for {@link ValidityAuditStrategy})
      * @param alias2 an alias used for subquery (only used for {@link ValidityAuditStrategy})
+	 * @param inclusive indicates whether revision number shall be treated as inclusive or exclusive
      */
-	void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder,
+	void addEntityAtRevisionRestriction(GlobalConfiguration globalCfg, QueryBuilder rootQueryBuilder, Parameters parameters,
 			String revisionProperty, String revisionEndProperty, boolean addAlias, MiddleIdData idData, 
-			String revisionPropertyPath, String originalIdPropertyName, String alias1, String alias2);
+			String revisionPropertyPath, String originalIdPropertyName, String alias1, String alias2, boolean inclusive);
 
 	/**
 	 * Update the rootQueryBuilder with an extra WHERE clause to restrict the revision for a middle-entity 
@@ -85,6 +88,7 @@ public interface AuditStrategy {
 	 * </ul>
 	 * 
 	 * @param rootQueryBuilder the {@link QueryBuilder} that will be updated
+	 * @param parameters root parameters to which restrictions shall be added
      * @param revisionProperty property of the revision column
      * @param revisionEndProperty property of the revisionEnd column (only used for {@link ValidityAuditStrategy})
      * @param addAlias {@code boolean} indicator if a left alias is needed
@@ -94,11 +98,11 @@ public interface AuditStrategy {
 	 * @param revisionPropertyPath path of the revision property (only used for {@link ValidityAuditStrategy})
 	 * @param originalIdPropertyName name of the id property (only used for {@link ValidityAuditStrategy})
 	 * @param alias1 an alias used for subqueries (only used for {@link DefaultAuditStrategy})
+	 * @param inclusive indicates whether revision number shall be treated as inclusive or exclusive
 	 * @param componentDatas information about the middle-entity relation
 	 */
-	void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder,  String revisionProperty, 
+	void addAssociationAtRevisionRestriction(QueryBuilder rootQueryBuilder, Parameters parameters, String revisionProperty,
 			String revisionEndProperty, boolean addAlias, MiddleIdData referencingIdData, 
 			String versionsMiddleEntityName, String eeOriginalIdPropertyPath, String revisionPropertyPath,
-          String originalIdPropertyName, String alias1, MiddleComponentData... componentDatas);
-
+			String originalIdPropertyName, String alias1, boolean inclusive, MiddleComponentData... componentDatas);
 }

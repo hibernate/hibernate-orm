@@ -85,7 +85,7 @@ sourceSets.test.resources {
 
 idea {
 	module {
-		sourceDirs += file( '$buildDir/generated-src/antlr/main' )
+		sourceDirs += file( "${buildDir}/generated-src/antlr/main" )
 	}
 }
 

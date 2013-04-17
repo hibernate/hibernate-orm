@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.Transaction;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
+import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.event.spi.EventSource;
@@ -53,7 +54,16 @@ public class AuditProcessManager {
             auditProcess = new AuditProcess(revisionInfoGenerator, session);
             auditProcesses.put(transaction, auditProcess);
 
-            session.getActionQueue().registerProcess(auditProcess);
+			session.getActionQueue().registerProcess(
+					new BeforeTransactionCompletionProcess() {
+						public void doBeforeTransactionCompletion(SessionImplementor session) {
+							final AuditProcess process = auditProcesses.get( transaction );
+							if ( process != null ) {
+								process.doBeforeTransactionCompletion( session );
+							}
+						}
+					}
+			);
 
             session.getActionQueue().registerProcess(new AfterTransactionCompletionProcess() {
                 public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {

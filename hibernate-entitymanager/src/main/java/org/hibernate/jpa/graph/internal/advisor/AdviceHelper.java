@@ -47,32 +47,25 @@ public class AdviceHelper {
 			if ( attributeNode.getAttribute().isCollection() ) {
 				return new CollectionFetch(
 						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-						"abc-xyz", 				// alias
 						LockMode.NONE,
 						fetchOwner,
 						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT ),
-						attributeNode.getAttributeName(),
-						null,					// sql table alias
-						null					// entityaliases
+						attributeNode.getAttributeName()
 				);
 			}
 			else {
 				return new EntityFetch(
 						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-						"abc-xyz", 				// alias
 						LockMode.NONE,
 						fetchOwner,
 						attributeNode.getAttributeName(),
-						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT ),
-						null,					// sql table alias
-						null					// entityaliases
+						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
 				);
 			}
 		}
 		else {
 			return new CompositeFetch(
 					(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-					"abc-xyz", 				// alias
 					fetchOwner,
 					attributeNode.getAttributeName()
 			);

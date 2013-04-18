@@ -37,12 +37,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.graph.internal.advisor.EntityGraphBasedLoadPlanAdvisor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.loader.DefaultEntityAliases;
 import org.hibernate.loader.plan.internal.LoadPlanImpl;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.spi.LoadPlanAdvisor;
-import org.hibernate.persister.entity.Loadable;
 
 import org.junit.Test;
 
@@ -71,11 +69,8 @@ public class BasicGraphLoadPlanAdviceTests extends BaseEntityManagerFunctionalTe
 		return new LoadPlanImpl(
 				new EntityReturn(
 						sfi(),
-						"abc",
 						LockMode.NONE,
-						ENTIYT_NAME,
-						"a1",
-						new DefaultEntityAliases( (Loadable) sfi().getEntityPersister( ENTIYT_NAME ), "1" )
+						ENTIYT_NAME
 				)
 		);
 	}

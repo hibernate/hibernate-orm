@@ -21,7 +21,7 @@ buildscript {
         mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
     }
     dependencies {
-        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.0'
+        classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
     }
 }
 

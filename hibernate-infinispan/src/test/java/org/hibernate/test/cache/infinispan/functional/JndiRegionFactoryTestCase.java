@@ -23,7 +23,10 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Properties;
+
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
@@ -31,6 +34,17 @@ import javax.naming.NameNotFoundException;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
+import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.Mappings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.stat.Statistics;
 import org.infinispan.Cache;
 import org.infinispan.lifecycle.ComponentStatus;
 import org.infinispan.manager.DefaultCacheManager;
@@ -41,19 +55,6 @@ import org.jboss.util.naming.NonSerializableFactory;
 import org.jnp.server.Main;
 import org.jnp.server.SingletonNamingServer;
 import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.infinispan.JndiInfinispanRegionFactory;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.stat.Statistics;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * // TODO: Document this
@@ -123,6 +124,14 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 		cfg.setProperty( JndiInfinispanRegionFactory.CACHE_MANAGER_RESOURCE_PROP, JNDI_NAME );
 		cfg.setProperty( Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory" );
 		cfg.setProperty( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		super.prepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+		serviceRegistryBuilder.applySetting( JndiInfinispanRegionFactory.CACHE_MANAGER_RESOURCE_PROP, JNDI_NAME );
+		serviceRegistryBuilder.applySetting( Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory" );
+		serviceRegistryBuilder.applySetting( "java.naming.factory.url.pkgs", "org.jboss.naming:org.jnp.interfaces" );
 	}
 
 	@Test

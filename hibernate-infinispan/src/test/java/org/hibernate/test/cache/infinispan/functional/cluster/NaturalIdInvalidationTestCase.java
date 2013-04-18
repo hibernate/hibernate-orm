@@ -9,6 +9,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.test.cache.infinispan.functional.Citizen;
 import org.hibernate.test.cache.infinispan.functional.NaturalIdOnManyToOne;
 import org.hibernate.test.cache.infinispan.functional.State;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
@@ -35,6 +36,7 @@ import static org.junit.Assert.fail;
  * @author Galder Zamarreño
  * @since // TODO
  */
+@FailureExpectedWithNewMetamodel
 public class NaturalIdInvalidationTestCase extends DualNodeTestCase {
 
 	private static final Log log = LogFactory.getLog( NaturalIdInvalidationTestCase.class );

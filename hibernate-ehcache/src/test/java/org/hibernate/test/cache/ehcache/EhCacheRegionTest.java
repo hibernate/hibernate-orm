@@ -2,6 +2,7 @@ package org.hibernate.test.cache.ehcache;
 
 import java.util.Map;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cfg.Configuration;
@@ -15,6 +16,12 @@ public class EhCacheRegionTest extends EhCacheTest {
 	protected void configCache(final Configuration cfg) {
 		cfg.setProperty( Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
 		cfg.setProperty( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
+	}
+	
+	@Override
+	protected void configCache(final StandardServiceRegistryBuilder builder) {
+		builder.applySetting( Environment.CACHE_REGION_FACTORY, EhCacheRegionFactory.class.getName() );
+		builder.applySetting( Environment.CACHE_PROVIDER_CONFIG, "ehcache.xml" );
 	}
 
 	@Override

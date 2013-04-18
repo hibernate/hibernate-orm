@@ -23,8 +23,18 @@
  */
 package org.hibernate.test.cache.infinispan.functional.classloader;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import javax.transaction.TransactionManager;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+import org.hibernate.cache.internal.StandardQueryCache;
+import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
+import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
 import org.infinispan.Cache;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.EmbeddedCacheManager;
@@ -33,17 +43,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import org.hibernate.SessionFactory;
-import org.hibernate.cache.infinispan.InfinispanRegionFactory;
-import org.hibernate.cache.internal.StandardQueryCache;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.test.cache.infinispan.functional.cluster.ClusterAwareRegionFactory;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
-import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  * Tests entity and query caching when class of objects being cached are not visible to Infinispan's classloader. Also serves as a
@@ -103,10 +102,10 @@ public class IsolatedClassLoaderTest extends DualNodeTestCase {
 	}
 
 	@Override
-	protected void standardConfigure(Configuration cfg) {
-		super.standardConfigure( cfg );
-		cfg.setProperty( InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query" );
-		cfg.setProperty( "hibernate.cache.infinispan.AccountRegion.cfg", "replicated-query" );
+	protected void corePrepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		super.corePrepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+		serviceRegistryBuilder.applySetting( InfinispanRegionFactory.QUERY_CACHE_RESOURCE_PROP, "replicated-query" );
+		serviceRegistryBuilder.applySetting( "hibernate.cache.infinispan.AccountRegion.cfg", "replicated-query" );
 	}
 
 	@Override

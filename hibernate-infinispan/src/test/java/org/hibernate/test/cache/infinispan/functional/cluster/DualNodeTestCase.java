@@ -23,18 +23,23 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
+import java.util.Properties;
+
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
+import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.SessionFactoryBuilder;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
-
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Galder Zamarreño
@@ -61,12 +66,20 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 	public String getCacheConcurrencyStrategy() {
 		return "transactional";
 	}
-
+	
 	@Override
-	public void configure(Configuration cfg) {
-		standardConfigure( cfg );
-		cfg.setProperty( NODE_ID_PROP, LOCAL );
-		cfg.setProperty( NODE_ID_FIELD, LOCAL );
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		corePrepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+		serviceRegistryBuilder.applySetting( NODE_ID_PROP, LOCAL );
+		serviceRegistryBuilder.applySetting( NODE_ID_FIELD, LOCAL );
+	}
+	
+	protected void corePrepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+		serviceRegistryBuilder.applySetting( AvailableSettings.JTA_PLATFORM, getJtaPlatformClass().getName() );
+		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
 	}
 
 	@Override
@@ -124,42 +137,41 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 		return true;
 	}
 
-	protected void configureSecondNode(Configuration cfg) {
+	protected void configureSecondNode(StandardServiceRegistryBuilder builder) {
 
-	}
-
-	protected void standardConfigure(Configuration cfg) {
-		super.configure( cfg );
-
-		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
-		cfg.setProperty( AvailableSettings.JTA_PLATFORM, getJtaPlatformClass().getName() );
-		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
-		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
-		cfg.setProperty( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "false" );
 	}
 
 	public class SecondNodeEnvironment {
-		private Configuration configuration;
+		private StandardServiceRegistryBuilder serviceRegistryBuilder;
 		private StandardServiceRegistryImpl serviceRegistry;
 		private SessionFactoryImplementor sessionFactory;
 
 		public SecondNodeEnvironment() {
-			configuration = constructConfiguration();
-			standardConfigure( configuration );
-			configuration.setProperty( NODE_ID_PROP, REMOTE );
-			configuration.setProperty( NODE_ID_FIELD, REMOTE );
-			configureSecondNode( configuration );
-			addMappings( configuration );
-			configuration.buildMappings();
-			applyCacheSettings( configuration );
-			afterConfigurationBuilt( configuration );
-			serviceRegistry = buildServiceRegistry( buildBootstrapServiceRegistry(), configuration.getProperties() );
-			sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+			Properties properties = constructProperties();
+			
+			// TODO: Look into separating out some of these steps in
+			// BaseCoreFuntionalTestCase
+			BootstrapServiceRegistry bootstrapServiceRegistry = buildBootstrapServiceRegistry();
+			serviceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry )
+					.applySettings( properties );
+			corePrepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+			serviceRegistryBuilder.applySetting( NODE_ID_PROP, REMOTE );
+			serviceRegistryBuilder.applySetting( NODE_ID_FIELD, REMOTE );
+			configureSecondNode( serviceRegistryBuilder );
+			serviceRegistry = (StandardServiceRegistryImpl) serviceRegistryBuilder.build();
+			
+			MetadataBuilder metadataBuilder = getMetadataBuilder( bootstrapServiceRegistry, serviceRegistry );
+			configMetadataBuilder(metadataBuilder);
+			MetadataImplementor metadata = (MetadataImplementor)metadataBuilder.build();
+			afterConstructAndConfigureMetadata( metadata );
+			applyCacheSettings( metadata );
+			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
+			configSessionFactoryBuilder(sessionFactoryBuilder);
+			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
 		}
 
-		public Configuration getConfiguration() {
-			return configuration;
+		public StandardServiceRegistryBuilder getServiceRegistryBuilder() {
+			return serviceRegistryBuilder;
 		}
 
 		public StandardServiceRegistryImpl getServiceRegistry() {

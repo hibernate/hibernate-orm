@@ -26,23 +26,23 @@ package org.hibernate.test.cache.infinispan.functional;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.test.fwk.TestCacheManagerFactory;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.manager.EmbeddedCacheManager;
+import org.infinispan.test.fwk.TestCacheManagerFactory;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * @author Galder Zamarreño
@@ -120,6 +120,20 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 		}
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
 		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, String.valueOf( getUseQueryCache() ) );
+		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+
+		if ( getJtaPlatform() != null ) {
+			serviceRegistryBuilder.applySetting( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
+		}
+		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		serviceRegistryBuilder.applySetting( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 	}
 
 	protected void beginTx() throws Exception {

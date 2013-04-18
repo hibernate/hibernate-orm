@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hamcrest.CoreMatchers;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.ehcache.EhCacheRegionFactory;
 import org.hibernate.cache.ehcache.internal.strategy.ItemValueExtractor;
 import org.hibernate.cache.spi.access.SoftLock;
@@ -33,7 +34,6 @@ import org.junit.Test;
  * @author Chris Dennis
  * @author Brett Meyer
  */
-//@FailureExpectedWithNewMetamodel
 public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 
 	private static final String REGION_PREFIX = "hibernate.test.";
@@ -46,6 +46,16 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 		config.setProperty( AvailableSettings.CACHE_REGION_FACTORY,  EhCacheRegionFactory.class.getName());
 		config.setProperty( "net.sf.ehcache.configurationResourceName", "/hibernate-config/ehcache.xml" );
 	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( AvailableSettings.USE_QUERY_CACHE, "true");
+		serviceRegistryBuilder.applySetting( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( AvailableSettings.CACHE_REGION_FACTORY,  EhCacheRegionFactory.class.getName());
+		serviceRegistryBuilder.applySetting( "net.sf.ehcache.configurationResourceName", "/hibernate-config/ehcache.xml" );
+	}
+	
 	@Override
 	protected String getBaseForMappings() {
 		return "hibernate-config/domain/";

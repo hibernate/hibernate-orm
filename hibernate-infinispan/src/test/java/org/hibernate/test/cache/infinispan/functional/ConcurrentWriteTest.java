@@ -23,6 +23,10 @@
  */
 package org.hibernate.test.cache.infinispan.functional;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -36,14 +40,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.transaction.TransactionManager;
 
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-import org.junit.Test;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
@@ -52,10 +54,9 @@ import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeConnection
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaPlatformImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeJtaTransactionManagerImpl;
 import org.hibernate.test.cache.infinispan.functional.cluster.DualNodeTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
+import org.junit.Test;
 
 /**
  * @author nikita_tovstoles@mba.berkeley.edu
@@ -90,6 +91,13 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 		super.configure( cfg );
 		cfg.setProperty( DualNodeTestCase.NODE_ID_PROP, DualNodeTestCase.LOCAL );
 		cfg.setProperty( DualNodeTestCase.NODE_ID_FIELD, DualNodeTestCase.LOCAL );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		super.prepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+		serviceRegistryBuilder.applySetting( DualNodeTestCase.NODE_ID_PROP, DualNodeTestCase.LOCAL );
+		serviceRegistryBuilder.applySetting( DualNodeTestCase.NODE_ID_FIELD, DualNodeTestCase.LOCAL );
 	}
 
 	@Override

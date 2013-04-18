@@ -47,7 +47,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -141,7 +140,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		}
 		afterSessionFactoryBuilt();
 	}
-
 
 	protected void rebuildSessionFactory() {
 		if ( sessionFactory == null ) {

@@ -21,35 +21,35 @@
  */
 package org.hibernate.test.cache.infinispan.functional.bulk;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
 
-import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
-
-import org.junit.Test;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
-import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.transaction.internal.jta.CMTTransactionFactory;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.test.cache.infinispan.functional.Contact;
 import org.hibernate.test.cache.infinispan.functional.Customer;
+import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.test.cache.infinispan.tm.JtaPlatformImpl;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
 
 /**
  * BulkOperationsTestCase.
@@ -99,6 +99,17 @@ public class BulkOperationsTestCase extends BaseCoreFunctionalTestCase {
 		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
 		cfg.getProperties().put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
 		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+	}
+	
+	@Override
+	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, "false" );
+		serviceRegistryBuilder.applySetting( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		serviceRegistryBuilder.applySetting( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
+		serviceRegistryBuilder.applySetting( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
 	}
 
 	@Test

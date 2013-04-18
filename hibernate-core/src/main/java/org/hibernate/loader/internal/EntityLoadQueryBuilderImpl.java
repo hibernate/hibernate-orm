@@ -30,16 +30,17 @@ import java.util.List;
 
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.spi.CollectionFetch;
+import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.visit.LoadPlanVisitationStrategyAdapter;
 import org.hibernate.loader.plan.spi.visit.LoadPlanVisitor;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.LoadQueryBuilder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.spi.WalkingException;
@@ -51,15 +52,20 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 	private final SessionFactoryImplementor sessionFactory;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LoadPlan loadPlan;
+	private final LoadQueryAliasResolutionContext aliasResolutionContext;
 	private final List<JoinableAssociationImpl> associations;
 
 	public EntityLoadQueryBuilderImpl(
 			SessionFactoryImplementor sessionFactory,
 			LoadQueryInfluencers loadQueryInfluencers,
-			LoadPlan loadPlan) {
+			LoadPlan loadPlan,
+			LoadQueryAliasResolutionContext aliasResolutionContext) {
 		this.sessionFactory = sessionFactory;
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.loadPlan = loadPlan;
+
+		// TODO: remove reliance on aliasResolutionContext; it should only be needed when generating the SQL.
+		this.aliasResolutionContext = aliasResolutionContext;
 		LocalVisitationStrategy strategy = new LocalVisitationStrategy();
 		LoadPlanVisitor.visit( loadPlan, strategy );
 		this.associations = strategy.associations;
@@ -76,7 +82,7 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 				getRootEntityReturn(),
 				associations
 		);
-		return loadQuery.generateSql( uniqueKey, batchSize, getRootEntityReturn().getLockMode() );
+		return loadQuery.generateSql( uniqueKey, batchSize, getRootEntityReturn().getLockMode(), aliasResolutionContext );
 	}
 
 	private EntityReturn getRootEntityReturn() {
@@ -88,8 +94,8 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 	}
 	private class LocalVisitationStrategy extends LoadPlanVisitationStrategyAdapter {
 		private final List<JoinableAssociationImpl> associations = new ArrayList<JoinableAssociationImpl>();
-		private Deque<EntityAliases> entityAliasStack = new ArrayDeque<EntityAliases>();
-		private Deque<CollectionAliases> collectionAliasStack = new ArrayDeque<CollectionAliases>();
+		private Deque<EntityReference> entityReferenceStack = new ArrayDeque<EntityReference>();
+		private Deque<CollectionReference> collectionReferenceStack = new ArrayDeque<CollectionReference>();
 
 		private EntityReturn entityRootReturn;
 
@@ -110,7 +116,7 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 				);
 			}
 			this.entityRootReturn = (EntityReturn) rootReturn;
-			pushToStack( entityAliasStack, entityRootReturn.getEntityAliases() );
+			pushToStack( entityReferenceStack, entityRootReturn );
 		}
 
 		@Override
@@ -124,45 +130,45 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 						)
 				);
 			}
-			popFromStack( entityAliasStack, ( (EntityReturn) rootReturn ).getEntityAliases() );
+			popFromStack( entityReferenceStack, entityRootReturn );
 		}
 
 		@Override
 		public void startingEntityFetch(EntityFetch entityFetch) {
 			JoinableAssociationImpl assoc = new JoinableAssociationImpl(
 					entityFetch,
-					getCurrentCollectionSuffix(),
+					getCurrentCollectionReference(),
 					"",    // getWithClause( entityFetch.getPropertyPath() )
 					false, // hasRestriction( entityFetch.getPropertyPath() )
 					sessionFactory,
 					loadQueryInfluencers.getEnabledFilters()
 			);
 			associations.add( assoc );
-			pushToStack( entityAliasStack, entityFetch.getEntityAliases() );
+			pushToStack( entityReferenceStack, entityFetch );
 		}
 
 		@Override
 		public void finishingEntityFetch(EntityFetch entityFetch) {
-			popFromStack( entityAliasStack, entityFetch.getEntityAliases() );
+			popFromStack( entityReferenceStack, entityFetch );
 		}
 
 		@Override
 		public void startingCollectionFetch(CollectionFetch collectionFetch) {
 			JoinableAssociationImpl assoc = new JoinableAssociationImpl(
 					collectionFetch,
-					getCurrentEntitySuffix(),
+					getCurrentEntityReference(),
 					"",    // getWithClause( entityFetch.getPropertyPath() )
 					false, // hasRestriction( entityFetch.getPropertyPath() )
 					sessionFactory,
 					loadQueryInfluencers.getEnabledFilters()
 			);
 			associations.add( assoc );
-			pushToStack( collectionAliasStack, collectionFetch.getCollectionAliases() );
+			pushToStack( collectionReferenceStack, collectionFetch );
 		}
 
 		@Override
 		public void finishingCollectionFetch(CollectionFetch collectionFetch) {
-			popFromStack( collectionAliasStack, collectionFetch.getCollectionAliases() );
+			popFromStack( collectionReferenceStack, collectionFetch );
 		}
 
 		@Override
@@ -177,16 +183,16 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 
 		@Override
 		public void finish(LoadPlan loadPlan) {
-			entityAliasStack.clear();
-			collectionAliasStack.clear();
+			entityReferenceStack.clear();
+			collectionReferenceStack.clear();
 		}
 
-		private String getCurrentEntitySuffix() {
-			return entityAliasStack.peekFirst() == null ? null : entityAliasStack.peekFirst().getSuffix();
+		private EntityReference getCurrentEntityReference() {
+			return entityReferenceStack.peekFirst() == null ? null : entityReferenceStack.peekFirst();
 		}
 
-		private String getCurrentCollectionSuffix() {
-			return collectionAliasStack.peekFirst() == null ? null : collectionAliasStack.peekFirst().getSuffix();
+		private CollectionReference getCurrentCollectionReference() {
+			return collectionReferenceStack.peekFirst() == null ? null : collectionReferenceStack.peekFirst();
 		}
 
 		private <T> void pushToStack(Deque<T> stack, T value) {

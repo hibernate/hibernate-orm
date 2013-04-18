@@ -30,7 +30,6 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
@@ -89,18 +88,13 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 	}
 
 	@Override
-	public String getAlias() {
-		return null;
-	}
-
-	@Override
-	public String getSqlTableAlias() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
 	public LockMode getLockMode() {
 		return null;
+	}
+
+	@Override
+	public EntityReference getEntityReference() {
+		return this;
 	}
 
 	@Override
@@ -111,11 +105,6 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 	@Override
 	public IdentifierDescription getIdentifierDescription() {
 		return identifierDescription;
-	}
-
-	@Override
-	public EntityAliases getEntityAliases() {
-		return null;
 	}
 
 	@Override
@@ -162,13 +151,11 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
-				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}

@@ -46,6 +46,7 @@ import org.hibernate.loader.plan.spi.visit.LoadPlanVisitor;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.loader.spi.LoadPlanAdvisor;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.ScrollableResultSetProcessor;
 import org.hibernate.loader.spi.ResultSetProcessor;
@@ -84,6 +85,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			final SessionImplementor session,
 			QueryParameters queryParameters,
 			NamedParameterContext namedParameterContext,
+			LoadQueryAliasResolutionContext aliasResolutionContext,
 			boolean returnProxies,
 			boolean readOnly,
 			ResultTransformer forcedResultTransformer,
@@ -115,6 +117,7 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 				false, // use optional entity key?  actually for now always say no since in the simple test cases true causes failures because there is no optional key
 				queryParameters,
 				namedParameterContext,
+				aliasResolutionContext,
 				hadSubselectFetches
 		);
 

@@ -42,12 +42,11 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 
 	public AbstractSingularAttributeFetch(
 			SessionFactoryImplementor factory,
-			String alias,
 			LockMode lockMode,
 			FetchOwner owner,
 			String ownerProperty,
 			FetchStrategy fetchStrategy) {
-		super( factory, alias, lockMode );
+		super( factory, lockMode );
 		this.owner = owner;
 		this.ownerProperty = ownerProperty;
 		this.fetchStrategy = fetchStrategy;

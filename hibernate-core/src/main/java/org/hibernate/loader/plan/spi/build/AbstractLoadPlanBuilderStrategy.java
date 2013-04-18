@@ -42,10 +42,6 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.DefaultEntityAliases;
-import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.GeneratedCollectionAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
 import org.hibernate.loader.plan.spi.CollectionFetch;
@@ -60,9 +56,7 @@ import org.hibernate.loader.plan.spi.FetchOwner;
 import org.hibernate.loader.plan.spi.IdentifierDescription;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -89,9 +83,8 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	private ArrayDeque<FetchOwner> fetchOwnerStack = new ArrayDeque<FetchOwner>();
 	private ArrayDeque<CollectionReference> collectionReferenceStack = new ArrayDeque<CollectionReference>();
 
-	protected AbstractLoadPlanBuilderStrategy(SessionFactoryImplementor sessionFactory, int suffixSeed) {
+	protected AbstractLoadPlanBuilderStrategy(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
-		this.currentSuffixBase = suffixSeed;
 	}
 
 	public SessionFactoryImplementor sessionFactory() {
@@ -416,7 +409,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 			associationFetch = fetchOwner.buildEntityFetch(
 					attributeDefinition,
 					fetchStrategy,
-					generateEntityFetchSqlTableAlias( attributeDefinition.toEntityDefinition().getEntityPersister().getEntityName() ),
 					this
 			);
 		}
@@ -482,58 +474,9 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 	// LoadPlanBuildingContext impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private int currentSuffixBase;
-	private int implicitAliasUniqueness = 0;
-
-	private String createImplicitAlias() {
-		return "ia" + implicitAliasUniqueness++;
-	}
-
 	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory();
-	}
-
-	protected String generateEntityFetchSqlTableAlias(String entityName) {
-		return StringHelper.generateAlias( StringHelper.unqualifyEntityName( entityName ), currentDepth() );
-	}
-
-	@Override
-	public EntityAliases resolveEntityColumnAliases(AssociationAttributeDefinition attributeDefinition) {
-		return generateEntityColumnAliases( attributeDefinition.toEntityDefinition().getEntityPersister() );
-	}
-
-	protected EntityAliases generateEntityColumnAliases(EntityPersister persister) {
-		return new DefaultEntityAliases( (Loadable) persister, Integer.toString( currentSuffixBase++ ) + '_' );
-	}
-
-	@Override
-	public CollectionAliases resolveCollectionColumnAliases(AssociationAttributeDefinition attributeDefinition) {
-		return generateCollectionColumnAliases( attributeDefinition.toCollectionDefinition().getCollectionPersister() );
-	}
-
-	protected CollectionAliases generateCollectionColumnAliases(CollectionPersister persister) {
-		return new GeneratedCollectionAliases( persister, Integer.toString( currentSuffixBase++ ) + '_' );
-	}
-
-	@Override
-	public String resolveRootSourceAlias(EntityDefinition definition) {
-		return createImplicitAlias();
-	}
-
-	@Override
-	public String resolveRootSourceAlias(CollectionDefinition definition) {
-		return createImplicitAlias();
-	}
-
-	@Override
-	public String resolveFetchSourceAlias(AssociationAttributeDefinition attributeDefinition) {
-		return createImplicitAlias();
-	}
-
-	@Override
-	public String resolveFetchSourceAlias(CompositionDefinition compositionDefinition) {
-		return createImplicitAlias();
 	}
 
 	public static interface FetchStackAware {
@@ -556,18 +499,13 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 		@Override
-		public String getAlias() {
-			return entityReference.getAlias();
-		}
-
-		@Override
-		public String getSqlTableAlias() {
-			return entityReference.getSqlTableAlias();
-		}
-
-		@Override
 		public LockMode getLockMode() {
 			return entityReference.getLockMode();
+		}
+
+		@Override
+		public EntityReference getEntityReference() {
+			return this;
 		}
 
 		@Override
@@ -592,7 +530,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		public EntityFetch buildEntityFetch(
 				AssociationAttributeDefinition attributeDefinition,
 				FetchStrategy fetchStrategy,
-				String sqlTableAlias,
 				LoadPlanBuildingContext loadPlanBuildingContext) {
 			// we have a key-many-to-one
 			//
@@ -602,7 +539,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 					this,
 					attributeDefinition,
 					fetchStrategy,
-					sqlTableAlias,
 					loadPlanBuildingContext
 			);
 			fetchToHydratedStateExtractorMap.put( fetch, attributeDefinition.getHydratedCompoundValueExtractor() );
@@ -655,11 +591,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		@Override
 		public PropertyPath getPropertyPath() {
 			return propertyPath;
-		}
-
-		@Override
-		public EntityAliases getEntityAliases() {
-			return entityReference.getEntityAliases();
 		}
 
 		@Override
@@ -749,7 +680,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 			final Object hydratedIdentifierState = entityReference.getEntityPersister().getIdentifierType().hydrate(
 					resultSet,
-					entityReference.getEntityAliases().getSuffixedKeyAliases(),
+					context.getLoadQueryAliasResolutionContext().resolveEntityColumnAliases( entityReference ).getSuffixedKeyAliases(),
 					context.getSession(),
 					null
 			);

@@ -21,13 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi.build;
+package org.hibernate.loader.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import java.util.Map;
+
+import org.hibernate.Filter;
+import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan.spi.CollectionReference;
+import org.hibernate.loader.plan.spi.EntityReference;
+import org.hibernate.loader.plan.spi.Fetch;
+import org.hibernate.persister.entity.Joinable;
+import org.hibernate.sql.JoinType;
+import org.hibernate.type.AssociationType;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface LoadPlanBuildingContext {
-	public SessionFactoryImplementor getSessionFactory();
+public interface JoinableAssociation {
+	PropertyPath getPropertyPath();
+
+	JoinType getJoinType();
+
+	Fetch getCurrentFetch();
+
+	EntityReference getCurrentEntityReference();
+
+	CollectionReference getCurrentCollectionReference();
+
+	AssociationType getJoinableType();
+
+	Joinable getJoinable();
+
+	boolean isCollection();
+
+	public String[] getRhsColumns();
+
+	boolean hasRestriction();
+
+	boolean isManyToManyWith(JoinableAssociation other);
+
+	String getWithClause();
+
+	Map<String,Filter> getEnabledFilters();
 }

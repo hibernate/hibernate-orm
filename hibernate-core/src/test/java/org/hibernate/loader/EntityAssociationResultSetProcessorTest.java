@@ -28,6 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -45,10 +46,12 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
+import org.hibernate.loader.internal.LoadQueryAliasResolutionContextImpl;
 import org.hibernate.loader.internal.ResultSetProcessorImpl;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -89,15 +92,20 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 		{
 			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
 					sessionFactory(),
-					LoadQueryInfluencers.NONE,
-					"abc",
-					0
+					LoadQueryInfluencers.NONE
 			);
 			final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+			final LoadQueryAliasResolutionContext aliasResolutionContext =
+					new LoadQueryAliasResolutionContextImpl(
+							sessionFactory(),
+							0,
+							Collections.singletonMap( plan.getReturns().get( 0 ), new String[] { "abc" } )
+					);
 			final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
 					sessionFactory(),
 					LoadQueryInfluencers.NONE,
-					plan
+					plan,
+					aliasResolutionContext
 			);
 			final String sql = queryBuilder.generateSql( 1 );
 
@@ -125,6 +133,7 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 													return new int[0];
 												}
 											},
+											aliasResolutionContext,
 											true,
 											false,
 											null,
@@ -183,15 +192,20 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 		{
 			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
 					sessionFactory(),
-					LoadQueryInfluencers.NONE,
-					"abc",
-					0
+					LoadQueryInfluencers.NONE
 			);
 			final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+			final LoadQueryAliasResolutionContext aliasResolutionContext =
+					new LoadQueryAliasResolutionContextImpl(
+							sessionFactory(),
+							0,
+							Collections.singletonMap( plan.getReturns().get( 0 ), new String[] { "abc" } )
+					);
 			final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
 					sessionFactory(),
 					LoadQueryInfluencers.NONE,
-					plan
+					plan,
+					aliasResolutionContext
 			);
 			final String sql = queryBuilder.generateSql( 1 );
 
@@ -219,6 +233,7 @@ public class EntityAssociationResultSetProcessorTest extends BaseCoreFunctionalT
 													return new int[0];
 												}
 											},
+											aliasResolutionContext,
 											true,
 											false,
 											null,

@@ -27,6 +27,11 @@ import java.util.List;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.CollectionAliases;
+import org.hibernate.loader.EntityAliases;
+import org.hibernate.loader.spi.JoinableAssociation;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.sql.ConditionFragment;
@@ -62,8 +67,8 @@ public abstract class AbstractLoadQueryImpl {
 		return factory.getDialect();
 	}
 
-	protected String orderBy(final String orderBy) {
-		return mergeOrderings( orderBy( associations ), orderBy );
+	protected String orderBy(final String orderBy, LoadQueryAliasResolutionContext aliasResolutionContext) {
+		return mergeOrderings( orderBy( associations, aliasResolutionContext ), orderBy );
 	}
 
 	protected static String mergeOrderings(String ordering1, String ordering2) {
@@ -81,53 +86,56 @@ public abstract class AbstractLoadQueryImpl {
 	/**
 	 * Generate a sequence of <tt>LEFT OUTER JOIN</tt> clauses for the given associations.
 	 */
-	protected final JoinFragment mergeOuterJoins()
+	protected final JoinFragment mergeOuterJoins(LoadQueryAliasResolutionContext aliasResolutionContext)
 	throws MappingException {
-		JoinFragment outerjoin = getDialect().createOuterJoinFragment();
-		JoinableAssociationImpl last = null;
-		for ( JoinableAssociationImpl oj : associations ) {
-			if ( last != null && last.isManyToManyWith( oj ) ) {
-				oj.addManyToManyJoin( outerjoin, ( QueryableCollection ) last.getJoinable() );
+		JoinFragment joinFragment = getDialect().createOuterJoinFragment();
+		JoinableAssociation previous = null;
+		for ( JoinableAssociation association : associations ) {
+			if ( previous != null && previous.isManyToManyWith( association ) ) {
+				addManyToManyJoin( joinFragment, association, ( QueryableCollection ) previous.getJoinable(), aliasResolutionContext );
 			}
 			else {
-				oj.addJoins(outerjoin);
+				addJoins( joinFragment, association, aliasResolutionContext);
 			}
-			last = oj;
+			previous = association;
 		}
-		return outerjoin;
+		return joinFragment;
 	}
 
 	/**
 	 * Get the order by string required for collection fetching
 	 */
-	protected static String orderBy(List<JoinableAssociationImpl> associations)
+	protected static String orderBy(
+			List<JoinableAssociationImpl> associations,
+			LoadQueryAliasResolutionContext aliasResolutionContext)
 	throws MappingException {
 		StringBuilder buf = new StringBuilder();
-		JoinableAssociationImpl last = null;
-		for ( JoinableAssociationImpl oj : associations ) {
-			if ( oj.getJoinType() == JoinType.LEFT_OUTER_JOIN ) { // why does this matter?
-				if ( oj.getJoinable().isCollection() ) {
-					final QueryableCollection queryableCollection = (QueryableCollection) oj.getJoinable();
+		JoinableAssociation previous = null;
+		for ( JoinableAssociation association : associations ) {
+			final String rhsAlias = aliasResolutionContext.resolveRhsAlias( association );
+			if ( association.getJoinType() == JoinType.LEFT_OUTER_JOIN ) { // why does this matter?
+				if ( association.getJoinable().isCollection() ) {
+					final QueryableCollection queryableCollection = (QueryableCollection) association.getJoinable();
 					if ( queryableCollection.hasOrdering() ) {
-						final String orderByString = queryableCollection.getSQLOrderByString( oj.getRHSAlias() );
+						final String orderByString = queryableCollection.getSQLOrderByString( rhsAlias );
 						buf.append( orderByString ).append(", ");
 					}
 				}
 				else {
 					// it might still need to apply a collection ordering based on a
 					// many-to-many defined order-by...
-					if ( last != null && last.getJoinable().isCollection() ) {
-						final QueryableCollection queryableCollection = (QueryableCollection) last.getJoinable();
-						if ( queryableCollection.isManyToMany() && last.isManyToManyWith( oj ) ) {
+					if ( previous != null && previous.getJoinable().isCollection() ) {
+						final QueryableCollection queryableCollection = (QueryableCollection) previous.getJoinable();
+						if ( queryableCollection.isManyToMany() && previous.isManyToManyWith( association ) ) {
 							if ( queryableCollection.hasManyToManyOrdering() ) {
-								final String orderByString = queryableCollection.getManyToManyOrderByString( oj.getRHSAlias() );
+								final String orderByString = queryableCollection.getManyToManyOrderByString( rhsAlias );
 								buf.append( orderByString ).append(", ");
 							}
 						}
 					}
 				}
 			}
-			last = oj;
+			previous = association;
 		}
 		if ( buf.length() > 0 ) {
 			buf.setLength( buf.length() - 2 );
@@ -176,7 +184,7 @@ public abstract class AbstractLoadQueryImpl {
 	/**
 	 * Generate a select list of columns containing all properties of the entity classes
 	 */
-	protected final String associationSelectString()
+	protected final String associationSelectString(LoadQueryAliasResolutionContext aliasResolutionContext)
 	throws MappingException {
 
 		if ( associations.size() == 0 ) {
@@ -185,24 +193,100 @@ public abstract class AbstractLoadQueryImpl {
 		else {
 			StringBuilder buf = new StringBuilder( associations.size() * 100 );
 			for ( int i=0; i<associations.size(); i++ ) {
-				JoinableAssociationImpl join = associations.get(i);
-				JoinableAssociationImpl next = (i == associations.size() - 1)
+				JoinableAssociation association = associations.get( i );
+				JoinableAssociation next = ( i == associations.size() - 1 )
 				        ? null
 				        : associations.get( i + 1 );
-				final Joinable joinable = join.getJoinable();
+				final Joinable joinable = association.getJoinable();
+				final EntityAliases currentEntityAliases = aliasResolutionContext.resolveCurrentEntityAliases( association );
+				final CollectionAliases currentCollectionAliases = aliasResolutionContext.resolveCurrentCollectionAliases( association );
 				final String selectFragment = joinable.selectFragment(
 						next == null ? null : next.getJoinable(),
-						next == null ? null : next.getRHSAlias(),
-						join.getRHSAlias(),
-						associations.get( i ).getCurrentEntitySuffix(),
-						associations.get( i ).getCurrentCollectionSuffix(),
-						join.getJoinType()==JoinType.LEFT_OUTER_JOIN
+						next == null ? null : aliasResolutionContext.resolveRhsAlias( next ),
+						aliasResolutionContext.resolveRhsAlias( association ),
+						currentEntityAliases == null ? null : currentEntityAliases.getSuffix(),
+						currentCollectionAliases == null ? null : currentCollectionAliases.getSuffix(),
+						association.getJoinType()==JoinType.LEFT_OUTER_JOIN
 				);
 				if (selectFragment.trim().length() > 0) {
-					buf.append(", ").append(selectFragment);
+					// TODO: shouldn't the append of selectFragment be outside this if statement???
+					buf.append(", ").append( selectFragment );
 				}
 			}
 			return buf.toString();
 		}
+	}
+
+	private void addJoins(
+			JoinFragment joinFragment,
+			JoinableAssociation association,
+			LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
+		final String rhsAlias = aliasResolutionContext.resolveRhsAlias( association );
+		joinFragment.addJoin(
+				association.getJoinable().getTableName(),
+				rhsAlias,
+				aliasResolutionContext.resolveAliasedLhsColumnNames( association ),
+				association.getRhsColumns(),
+				association.getJoinType(),
+				resolveOnCondition( association, aliasResolutionContext )
+		);
+		joinFragment.addJoins(
+				association.getJoinable().fromJoinFragment( rhsAlias, false, true ),
+				association.getJoinable().whereJoinFragment( rhsAlias, false, true )
+		);
+	}
+
+	private String resolveOnCondition(JoinableAssociation joinableAssociation,
+									  LoadQueryAliasResolutionContext aliasResolutionContext) {
+		final String withClause = StringHelper.isEmpty( joinableAssociation.getWithClause() ) ?
+				"" :
+				" and ( " + joinableAssociation.getWithClause() + " )";
+		return joinableAssociation.getJoinableType().getOnCondition(
+				aliasResolutionContext.resolveRhsAlias( joinableAssociation ),
+				factory,
+				joinableAssociation.getEnabledFilters()
+		) + withClause;
+	}
+
+
+
+	/*
+	public void validateJoin(String path) throws MappingException {
+		if ( rhsColumns==null || lhsColumns==null
+				|| lhsColumns.length!=rhsColumns.length || lhsColumns.length==0 ) {
+			throw new MappingException("invalid join columns for association: " + path);
+		}
+	}
+	*/
+
+	private void addManyToManyJoin(
+			JoinFragment outerjoin,
+			JoinableAssociation association,
+			QueryableCollection collection,
+			LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
+		final String rhsAlias = aliasResolutionContext.resolveRhsAlias( association );
+		final String[] aliasedLhsColumnNames = aliasResolutionContext.resolveAliasedLhsColumnNames( association );
+		final String manyToManyFilter = collection.getManyToManyFilterFragment(
+				rhsAlias,
+				association.getEnabledFilters()
+		);
+		final String on = resolveOnCondition( association, aliasResolutionContext );
+		String condition = "".equals( manyToManyFilter )
+				? on
+				: "".equals( on )
+				? manyToManyFilter
+				: on + " and " + manyToManyFilter;
+		outerjoin.addJoin(
+				association.getJoinable().getTableName(),
+				rhsAlias,
+				aliasedLhsColumnNames,
+				association.getRhsColumns(),
+				association.getJoinType(),
+				condition
+		);
+		outerjoin.addJoins(
+				association.getJoinable().fromJoinFragment( rhsAlias, false, true ),
+				association.getJoinable().whereJoinFragment( rhsAlias, false, true )
+		);
 	}
 }

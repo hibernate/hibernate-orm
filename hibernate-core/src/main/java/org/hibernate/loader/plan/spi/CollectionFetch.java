@@ -29,9 +29,8 @@ import java.sql.SQLException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.type.CollectionType;
 
 /**
  * @author Steve Ebersole
@@ -42,27 +41,20 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 
 	public CollectionFetch(
 			SessionFactoryImplementor sessionFactory,
-			String alias,
 			LockMode lockMode,
 			FetchOwner fetchOwner,
 			FetchStrategy fetchStrategy,
-			String ownerProperty,
-			CollectionAliases collectionAliases,
-			EntityAliases elementEntityAliases) {
+			String ownerProperty) {
 		super(
 				sessionFactory,
-				alias,
 				lockMode,
 				sessionFactory.getCollectionPersister(
 						fetchOwner.retrieveFetchSourcePersister().getEntityName() + '.' + ownerProperty
 				),
-				fetchOwner.getPropertyPath().append( ownerProperty ),
-				collectionAliases,
-				elementEntityAliases
+				fetchOwner.getPropertyPath().append( ownerProperty )
 		);
 		this.fetchOwner = fetchOwner;
 		this.fetchStrategy = fetchStrategy;
-
 		fetchOwner.addFetch( this );
 	}
 

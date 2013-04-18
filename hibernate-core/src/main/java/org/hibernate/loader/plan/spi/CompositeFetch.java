@@ -45,10 +45,9 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 
 	public CompositeFetch(
 			SessionFactoryImplementor sessionFactory,
-			String alias,
 			FetchOwner owner,
 			String ownerProperty) {
-		super( sessionFactory, alias, LockMode.NONE, owner, ownerProperty, FETCH_PLAN );
+		super( sessionFactory, LockMode.NONE, owner, ownerProperty, FETCH_PLAN );
 	}
 
 	public CompositeFetch(CompositeFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
@@ -72,7 +71,7 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			String sqlTableAlias, LoadPlanBuildingContext loadPlanBuildingContext) {
+			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 

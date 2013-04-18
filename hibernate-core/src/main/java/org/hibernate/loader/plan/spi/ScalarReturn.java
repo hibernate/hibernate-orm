@@ -27,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.internal.ResultSetProcessingContextImpl;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.type.Type;
 
@@ -39,12 +38,10 @@ import org.hibernate.type.Type;
  */
 public class ScalarReturn extends AbstractPlanNode implements Return {
 	private final Type type;
-	private final String[] columnAliases;
 
-	public ScalarReturn(SessionFactoryImplementor factory, Type type, String[] columnAliases) {
+	public ScalarReturn(SessionFactoryImplementor factory, Type type) {
 		super( factory );
 		this.type = type;
-		this.columnAliases = columnAliases;
 	}
 
 	public Type getType() {
@@ -63,6 +60,10 @@ public class ScalarReturn extends AbstractPlanNode implements Return {
 
 	@Override
 	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		return type.nullSafeGet( resultSet, columnAliases, context.getSession(), null );
+		return type.nullSafeGet(
+				resultSet,
+				context.getLoadQueryAliasResolutionContext().resolveScalarReturnAliases( this ),
+				context.getSession(),
+				null );
 	}
 }

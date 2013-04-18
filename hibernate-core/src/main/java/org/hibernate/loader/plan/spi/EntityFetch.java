@@ -32,7 +32,6 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
@@ -45,8 +44,6 @@ import org.hibernate.type.EntityType;
  * @author Steve Ebersole
  */
 public class EntityFetch extends AbstractSingularAttributeFetch implements EntityReference {
-	private final String sqlTableAlias;
-	private final EntityAliases entityAliases;
 
 	private final EntityType associationType;
 	private final EntityPersister persister;
@@ -55,16 +52,11 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 
 	public EntityFetch(
 			SessionFactoryImplementor sessionFactory,
-			String alias,
 			LockMode lockMode,
 			FetchOwner owner,
 			String ownerProperty,
-			FetchStrategy fetchStrategy,
-			String sqlTableAlias,
-			EntityAliases entityAliases) {
-		super( sessionFactory, alias, lockMode, owner, ownerProperty, fetchStrategy );
-		this.sqlTableAlias = sqlTableAlias;
-		this.entityAliases = entityAliases;
+			FetchStrategy fetchStrategy) {
+		super( sessionFactory, lockMode, owner, ownerProperty, fetchStrategy );
 
 		this.associationType = (EntityType) owner.retrieveFetchSourcePersister().getPropertyType( ownerProperty );
 		this.persister = sessionFactory.getEntityPersister( associationType.getAssociatedEntityName() );
@@ -78,14 +70,17 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 	 */
 	protected EntityFetch(EntityFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
 		super( original, copyContext, fetchOwnerCopy );
-		this.sqlTableAlias = original.sqlTableAlias;
-		this.entityAliases = original.entityAliases;
 		this.associationType = original.associationType;
 		this.persister = original.persister;
 	}
 
 	public EntityType getAssociationType() {
 		return associationType;
+	}
+
+	@Override
+	public EntityReference getEntityReference() {
+		return this;
 	}
 
 	@Override
@@ -96,16 +91,6 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 	@Override
 	public IdentifierDescription getIdentifierDescription() {
 		return identifierDescription;
-	}
-
-	@Override
-	public String getSqlTableAlias() {
-		return sqlTableAlias;
-	}
-
-	@Override
-	public EntityAliases getEntityAliases() {
-		return entityAliases;
 	}
 
 	@Override
@@ -131,13 +116,11 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
-				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}
@@ -224,7 +207,7 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 					context.checkVersion(
 							resultSet,
 							persister,
-							entityAliases,
+							context.getLoadQueryAliasResolutionContext().resolveEntityColumnAliases( this ),
 							entityKey,
 							existing
 					);
@@ -237,7 +220,7 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 			final String concreteEntityTypeName = context.getConcreteEntityTypeName(
 					resultSet,
 					persister,
-					entityAliases,
+					context.getLoadQueryAliasResolutionContext().resolveEntityColumnAliases( this ),
 					entityKey
 			);
 
@@ -258,7 +241,7 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 					entityInstance,
 					concreteEntityTypeName,
 					entityKey,
-					entityAliases,
+					context.getLoadQueryAliasResolutionContext().resolveEntityColumnAliases( this ),
 					acquiredLockMode,
 					persister,
 					getFetchStrategy().getTiming() == FetchTiming.IMMEDIATE,

@@ -24,8 +24,6 @@
 package org.hibernate.loader.plan.spi;
 
 import org.hibernate.LockMode;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 
@@ -35,12 +33,6 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Steve Ebersole
  */
 public interface CollectionReference {
-	/**
-	 * Retrieve the alias associated with the persister (entity/collection).
-	 *
-	 * @return The alias
-	 */
-	public String getAlias();
 
 	/**
 	 * Retrieve the lock mode associated with this return.
@@ -63,20 +55,4 @@ public interface CollectionReference {
 	public PropertyPath getPropertyPath();
 
 	public boolean hasEntityElements();
-
-	/**
-	 * Returns the description of the aliases in the JDBC ResultSet that identify values "belonging" to the
-	 * this collection.
-	 *
-	 * @return The ResultSet alias descriptor for the collection
-	 */
-	public CollectionAliases getCollectionAliases();
-
-	/**
-	 * If the elements of this collection are entities, this methods returns the JDBC ResultSet alias descriptions
-	 * for that entity; {@code null} indicates a non-entity collection.
-	 *
-	 * @return The ResultSet alias descriptor for the collection's entity element, or {@code null}
-	 */
-	public EntityAliases getElementEntityAliases();
 }

@@ -28,8 +28,6 @@ import java.sql.SQLException;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 
@@ -42,20 +40,14 @@ public class CollectionReturn extends AbstractCollectionReference implements Ret
 
 	public CollectionReturn(
 			SessionFactoryImplementor sessionFactory,
-			String alias,
 			LockMode lockMode,
 			String ownerEntityName,
-			String ownerProperty,
-			CollectionAliases collectionAliases,
-			EntityAliases elementEntityAliases) {
+			String ownerProperty) {
 		super(
 				sessionFactory,
-				alias,
 				lockMode,
 				sessionFactory.getCollectionPersister( ownerEntityName + '.' + ownerProperty ),
-				new PropertyPath(), // its a root
-				collectionAliases,
-				elementEntityAliases
+				new PropertyPath() // its a root
 		);
 		this.ownerEntityName = ownerEntityName;
 		this.ownerProperty = ownerProperty;

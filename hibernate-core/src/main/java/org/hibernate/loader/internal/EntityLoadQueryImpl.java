@@ -30,6 +30,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 
 /**
  * A walker for loaders that fetch entities
@@ -46,11 +47,15 @@ public class EntityLoadQueryImpl extends AbstractEntityLoadQueryImpl {
 		super( factory, entityReturn, associations );
 	}
 
-	public String generateSql(String[] uniqueKey, int batchSize, LockMode lockMode) {
-		StringBuilder whereCondition = whereString( getAlias(), uniqueKey, batchSize )
+	public String generateSql(
+			String[] uniqueKey,
+			int batchSize,
+			LockMode lockMode,
+			LoadQueryAliasResolutionContext aliasResolutionContext) {
+		StringBuilder whereCondition = whereString( getAlias( aliasResolutionContext ), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
-				.append( getPersister().filterFragment( getAlias(), Collections.EMPTY_MAP ) );
-		return generateSql( whereCondition.toString(), "",  new LockOptions().setLockMode( lockMode ) );
+				.append( getPersister().filterFragment( getAlias( aliasResolutionContext ), Collections.EMPTY_MAP ) );
+		return generateSql( whereCondition.toString(), "",  new LockOptions().setLockMode( lockMode ), aliasResolutionContext );
 	}
 
 	public String getComment() {

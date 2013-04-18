@@ -29,6 +29,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
@@ -54,8 +55,9 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 	protected final String generateSql(
 			final String whereString,
 			final String orderByString,
-			final LockOptions lockOptions) throws MappingException {
-		return generateSql( null, whereString, orderByString, "", lockOptions );
+			final LockOptions lockOptions,
+			final LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
+		return generateSql( null, whereString, orderByString, "", lockOptions, aliasResolutionContext );
 	}
 
 	private String generateSql(
@@ -63,9 +65,10 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 			final String condition,
 			final String orderBy,
 			final String groupBy,
-			final LockOptions lockOptions) throws MappingException {
+			final LockOptions lockOptions,
+			final LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
 
-		JoinFragment ojf = mergeOuterJoins();
+		JoinFragment ojf = mergeOuterJoins( aliasResolutionContext );
 
 		// If no projection, then the last suffix should be for the entity return.
 		// TODO: simplify how suffixes are generated/processed.
@@ -75,19 +78,22 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 				.setLockOptions( lockOptions )
 				.setSelectClause(
 						projection == null ?
-								getPersister().selectFragment( getAlias(), entityReturn.getEntityAliases().getSuffix() ) + associationSelectString() :
+								getPersister().selectFragment(
+										getAlias( aliasResolutionContext ),
+										aliasResolutionContext.resolveEntityColumnAliases( entityReturn ).getSuffix()
+								) + associationSelectString( aliasResolutionContext ) :
 								projection
 				)
 				.setFromClause(
-						getDialect().appendLockHint( lockOptions, getPersister().fromTableFragment( getAlias() ) ) +
-								getPersister().fromJoinFragment( getAlias(), true, true )
+						getDialect().appendLockHint( lockOptions, getPersister().fromTableFragment( getAlias( aliasResolutionContext ) ) ) +
+								getPersister().fromJoinFragment( getAlias( aliasResolutionContext), true, true )
 				)
 				.setWhereClause( condition )
 				.setOuterJoins(
 						ojf.toFromFragmentString(),
-						ojf.toWhereFragmentString() + getWhereFragment()
+						ojf.toWhereFragmentString() + getWhereFragment( aliasResolutionContext )
 				)
-				.setOrderByClause( orderBy( orderBy ) )
+				.setOrderByClause( orderBy( orderBy, aliasResolutionContext ) )
 				.setGroupByClause( groupBy );
 
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
@@ -96,9 +102,9 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 		return select.toStatementString();
 	}
 
-	protected String getWhereFragment() throws MappingException {
+	protected String getWhereFragment(LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
 		// here we do not bother with the discriminator.
-		return getPersister().whereJoinFragment( getAlias(), true, true );
+		return getPersister().whereJoinFragment( getAlias( aliasResolutionContext ), true, true );
 	}
 
 	public abstract String getComment();
@@ -107,8 +113,8 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 		return (OuterJoinLoadable) entityReturn.getEntityPersister();
 	}
 
-	public final String getAlias() {
-		return entityReturn.getSqlTableAlias();
+	public final String getAlias(LoadQueryAliasResolutionContext aliasResolutionContext) {
+		return aliasResolutionContext.resolveEntitySqlTableAlias( entityReturn );
 	}
 
 	public String toString() {

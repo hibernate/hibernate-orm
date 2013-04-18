@@ -90,6 +90,9 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 			List<AfterLoadAction> afterLoadActionList) throws SQLException {
 
 		final LoadPlan loadPlan = loadPlanAdvisor.advise( this.baseLoadPlan );
+		if ( loadPlan == null ) {
+			throw new IllegalStateException( "LoadPlanAdvisor returned null" );
+		}
 
 		handlePotentiallyEmptyCollectionRootReturns( loadPlan, queryParameters.getCollectionKeys(), resultSet, session );
 

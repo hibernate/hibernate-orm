@@ -21,29 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.spi;
+package org.hibernate.jpa.graph.internal.advisor;
 
-import org.hibernate.loader.plan.spi.LoadPlan;
-
-/**
- * An advisor that can be made available to the {@link ResultSetProcessor} and {@link ScrollableResultSetProcessor}.
- *
- * The processors consult with the advisor, if one is provided, as a means to influence the load plan, meaning that
- * the advisor might add fetches.  A caveat is that any added fetches cannot be join fetches (they cannot alter the
- * SQL); if a fetch is added as {@link org.hibernate.engine.FetchTiming#IMMEDIATE}, it must be a "subsequent form":
- * {@link org.hibernate.engine.FetchStyle#SELECT}, {@link org.hibernate.engine.FetchStyle#SUBSELECT},
- * {@link org.hibernate.engine.FetchStyle#BATCH}.
+/** The style of advice.  This is defined by the JPA spec.  See tha values for details.
  *
  * @author Steve Ebersole
  */
-public interface LoadPlanAdvisor {
+public enum AdviceStyle {
 	/**
-	 * Advise on the given LoadPlan, returning a new LoadPlan if any additions are needed.  It is the responsibility
-	 * of the advisor to return the original load plan if no additions were needed
-	 *
-	 * @param loadPlan The load plan to advise on.
-	 *
-	 * @return The original or advised load plan.
+	 * Indicates a graph specified by the {@code javax.persistence.fetchgraph} setting.
 	 */
-	public LoadPlan advise(LoadPlan loadPlan);
+	FETCH,
+	/**
+	 * Indicates a graph specified by the {@code javax.persistence.loadgraph} setting.
+	 */
+	LOAD
 }

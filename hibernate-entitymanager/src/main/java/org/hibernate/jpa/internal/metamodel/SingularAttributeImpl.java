@@ -1,8 +1,10 @@
 /*
- * Copyright (c) 2009, Red Hat Middleware LLC or third-party contributors as
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2009, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jpa.internal.metamodel;
+
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import javax.persistence.metamodel.SingularAttribute;
@@ -86,58 +89,43 @@ public class SingularAttributeImpl<X, Y>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isId() {
 		return isIdentifier;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isVersion() {
 		return isVersion;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isOptional() {
 		return isOptional;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type<Y> getType() {
 		return attributeType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isAssociation() {
-		return false;
+		return getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
+				|| getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isCollection() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public BindableType getBindableType() {
 		return BindableType.SINGULAR_ATTRIBUTE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<Y> getBindableJavaType() {
 		return attributeType.getJavaType();
 	}

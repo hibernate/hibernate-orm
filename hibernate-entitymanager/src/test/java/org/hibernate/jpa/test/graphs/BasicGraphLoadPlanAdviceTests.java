@@ -46,7 +46,7 @@ import org.hibernate.persister.entity.Loadable;
 
 import org.junit.Test;
 
-import static org.hibernate.jpa.graph.internal.advisor.EntityGraphBasedLoadPlanAdvisor.AdviceStyle;
+import org.hibernate.jpa.graph.internal.advisor.AdviceStyle;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;

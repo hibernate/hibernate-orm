@@ -46,7 +46,7 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 	public CompositeFetch(
 			SessionFactoryImplementor sessionFactory,
 			String alias,
-			AbstractFetchOwner owner,
+			FetchOwner owner,
 			String ownerProperty) {
 		super( sessionFactory, alias, LockMode.NONE, owner, ownerProperty, FETCH_PLAN );
 	}

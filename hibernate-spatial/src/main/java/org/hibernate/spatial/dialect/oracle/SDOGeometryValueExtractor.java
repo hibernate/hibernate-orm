@@ -21,6 +21,9 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +31,7 @@ import java.util.List;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.CoordinateSequence;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.MultiLineString;
@@ -36,18 +40,46 @@ import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 
-import org.hibernate.spatial.dialect.AbstractGeometryValueExtractor;
 import org.hibernate.spatial.jts.Circle;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicExtractor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/22/11
  */
-public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor<X> {
+public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
+
+	private static GeometryFactory geometryFactory = new GeometryFactory();
+
 
 	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor) {
 		super( javaDescriptor, SDOGeometryTypeDescriptor.INSTANCE );
+	}
+
+	@Override
+	protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+		Object geomObj = rs.getObject( name );
+		return getJavaDescriptor().wrap( toJTS( geomObj ), options );
+	}
+
+	@Override
+	protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+		Object geomObj = statement.getObject( index );
+		return getJavaDescriptor().wrap( toJTS( geomObj ), options );
+	}
+
+	@Override
+	protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+		Object geomObj = statement.getObject( name );
+		return getJavaDescriptor().wrap( toJTS( geomObj ), options );
+	}
+
+	//TODO Clean up below this point
+
+	protected GeometryFactory getGeometryFactory() {
+		return geometryFactory;
 	}
 
 	public Geometry toJTS(Object struct) {
@@ -155,17 +187,19 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 		}
 
 
-		if (lrs)
+		if ( lrs ) {
 			throw new UnsupportedOperationException();
-		else
+		}
+		else {
 			return getGeometryFactory().createLineString( cs );
+		}
 
 	}
 
 	private MultiLineString convertSDOMultiLine(int dim, int lrsDim,
 												SDOGeometry SDOGeom) {
 		boolean lrs = SDOGeom.isLRSGeometry();
-		if (lrs) {
+		if ( lrs ) {
 			throw new UnsupportedOperationException();
 		}
 		ElemInfo info = SDOGeom.getInfo();
@@ -438,7 +472,6 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 		);
 	}
 
-
 	/**
 	 * Linearizes arcs and circles.
 	 *
@@ -481,7 +514,7 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 				coords = Circle.linearizeCircle( x1, y1, x2, y2, x3, y3 );
 			}
 			else {
-				coords = Circle.linearizeArc(x1, y1, x2, y2, x3, y3);
+				coords = Circle.linearizeArc( x1, y1, x2, y2, x3, y3 );
 			}
 
 			// if this is an LRS geometry, fill the measure values into
@@ -528,4 +561,5 @@ public class SDOGeometryValueExtractor<X> extends AbstractGeometryValueExtractor
 		}
 		return linearizedCoords;
 	}
+
 }

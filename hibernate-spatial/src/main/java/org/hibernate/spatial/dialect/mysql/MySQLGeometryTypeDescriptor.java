@@ -34,19 +34,19 @@ import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 1/17/12
  */
-public class MySQLGeometryTypeDescriptor extends GeometrySqlTypeDescriptor {
+public class MySQLGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	public static final MySQLGeometryTypeDescriptor INSTANCE = new MySQLGeometryTypeDescriptor();
 
@@ -54,17 +54,16 @@ public class MySQLGeometryTypeDescriptor extends GeometrySqlTypeDescriptor {
 	public int getSqlType() {
 		return Types.ARRAY;
 	}
-
-	@Override
-	public String getTypeName() {
-		return "GEOMETRY";
-	}
+//
+//	@Override
+//	public String getTypeName() {
+//		return "GEOMETRY";
+//	}
 
 	@Override
 	public boolean canBeRemapped() {
 		return false;
 	}
-
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

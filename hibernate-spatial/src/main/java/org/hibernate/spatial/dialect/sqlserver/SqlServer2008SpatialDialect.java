@@ -22,15 +22,16 @@
 package org.hibernate.spatial.dialect.sqlserver;
 
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * The <code>SpatialDialect</code> for Microsoft SQL Server (2008).
@@ -46,7 +47,7 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 
 		registerColumnType(
 				SqlServer2008GeometryTypeDescriptor.INSTANCE.getSqlType(),
-				SqlServer2008GeometryTypeDescriptor.INSTANCE.getTypeName()
+				"GEOMETRY"
 		);
 
 		// registering OGC functions
@@ -103,21 +104,14 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		);
 	}
 
-	//Temporary Fix for HHH-6074
 	@Override
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		if ( code == 3000 ) {
-			return SqlServer2008GeometryTypeDescriptor.INSTANCE.getTypeName();
-		}
-		return super.getTypeName( code, length, precision, scale );
-	}
-
-	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor ) {
-			return SqlServer2008GeometryTypeDescriptor.INSTANCE;
-		}
-		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(
+				typeContributions,
+				serviceRegistry
+		);
+		typeContributions.contributeType( new GeolatteGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
 	}
 
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {

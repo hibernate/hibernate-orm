@@ -5,6 +5,8 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.MySQL5InnoDBDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -22,11 +24,16 @@ public class MySQL5SpatialInnoDBDialect extends MySQL5InnoDBDialect implements S
 		super();
 		registerColumnType(
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				MySQLGeometryTypeDescriptor.INSTANCE.getTypeName()
+				"GEOMETRY"
 		);
 		for ( Map.Entry<String, StandardSQLFunction> entry : new MySQLSpatialFunctions() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		dialectDelegate.contributeTypes( typeContributions, serviceRegistry );
 	}
 
 	@Override

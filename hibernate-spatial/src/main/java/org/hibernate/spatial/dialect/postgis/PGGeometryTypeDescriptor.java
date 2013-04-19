@@ -35,19 +35,19 @@ import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 import org.postgresql.util.PGobject;
 
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class PGGeometryTypeDescriptor extends GeometrySqlTypeDescriptor {
+public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 
 	public static final PGGeometryTypeDescriptor INSTANCE = new PGGeometryTypeDescriptor();
@@ -55,11 +55,6 @@ public class PGGeometryTypeDescriptor extends GeometrySqlTypeDescriptor {
 	@Override
 	public int getSqlType() {
 		return Types.OTHER;
-	}
-
-	@Override
-	public String getTypeName() {
-		return "GEOMETRY";
 	}
 
 	@Override

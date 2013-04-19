@@ -35,6 +35,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
@@ -159,7 +160,9 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 			@SkipForDialect( value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497." ), 
 			@SkipForDialect( value = { SQLServer2005Dialect.class } ),
 			@SkipForDialect( value = { Oracle8iDialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ),
-			@SkipForDialect( value = { DB2Dialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ) } )
+			@SkipForDialect( value = { DB2Dialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ),
+			@SkipForDialect( value = {TeradataDialect.class }, comment = "Teradata doesn't support substring(?,?,?). \"substr\" would work." ),
+	} )
 	public void testManyToOneFromNonPkToNonPk() throws Exception {
 		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
 		Session s = openSession();

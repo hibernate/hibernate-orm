@@ -33,7 +33,7 @@ import javax.persistence.Table;
  * @author Saša Obradović
  */
 @Entity
-@Table(name = "ACCOUNT")
+@Table(name = "`ACCOUNT`")
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Account extends AccountBase {
 	public Account() {

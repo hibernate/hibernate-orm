@@ -1,5 +1,6 @@
 // $Id: Employee.java 5899 2005-02-24 20:08:04Z steveebersole $
 package org.hibernate.test.subclassfilter;
+import javax.persistence.Column;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class Employee extends Person {
+	@Column(name="`title`")
     private String title;
 	private String department;
 	private Employee manager;

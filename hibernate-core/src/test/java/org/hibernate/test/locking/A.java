@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.locking;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -57,6 +58,7 @@ public class A {
 		this.id = id;
 	}
 
+	@Column(name="`value`")
 	public String getValue() {
 		return value;
 	}

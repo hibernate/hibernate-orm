@@ -1,4 +1,5 @@
 package org.hibernate.test.annotations.collectionelement;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 @Embeddable
@@ -8,6 +9,7 @@ public class Bug {
 	private Person reportedBy;
 	private String summary;
 
+	@Column(name="`summary`")
 	public String getSummary() {
 		return summary;
 	}

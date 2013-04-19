@@ -19,7 +19,7 @@
 		<property name="region"/>
 
 		<subclass name="Employee" discriminator-value="1">
-			<property name="title"/>
+			<property name="title" column="`title`"/>
 			<property name="department" column="dept"/>
 			<many-to-one name="manager" column="mgr_id" class="Employee" cascade="none"/>
 			<set name="minions" inverse="true" lazy="true" cascade="all">

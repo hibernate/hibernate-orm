@@ -18,7 +18,7 @@
 		<joined-subclass name="Employee" table="JEmployee">
 			<key column="person_id"/>
 
-			<property name="title"/>
+			<property name="title" column="`title`"/>
 			<property name="department" column="dept"/>
 			<many-to-one name="manager" class="Employee" column="mgr_id" cascade="none"/>
 			<set name="minions" inverse="true" cascade="all" lazy="true">

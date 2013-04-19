@@ -25,7 +25,8 @@ package org.hibernate.test.annotations.referencedcolumnname;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
-
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -100,6 +101,11 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+		@SkipForDialect(
+						value = TeradataDialect.class,
+						jiraKey = "HHH-8190",
+						comment = "uses Teradata reserved word - type"
+				)
 	public void testUnidirectionalOneToMany() throws Exception {
 		Session s;
 		Transaction tx;

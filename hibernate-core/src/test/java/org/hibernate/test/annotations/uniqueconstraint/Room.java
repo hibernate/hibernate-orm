@@ -1,5 +1,6 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -8,7 +9,6 @@ import javax.persistence.Id;
  */
 @Entity
 public class Room {
-
     private Long id;
 
     private String name;
@@ -22,6 +22,7 @@ public class Room {
     }
 
     @Id
+	@Column(nullable = false)
     public Long getId() {
         return id;
     }

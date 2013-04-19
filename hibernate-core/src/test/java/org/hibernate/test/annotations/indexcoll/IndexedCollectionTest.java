@@ -29,7 +29,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -375,6 +376,11 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "uses Teradata reserved word - title"
+	)
 	public void testMapKeyOnManyToMany() throws Exception {
 		Session s;
 		s = openSession();
@@ -404,6 +410,11 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "uses Teradata reserved word - title"
+	)
 	public void testMapKeyOnManyToManyOnId() throws Exception {
 		Session s;
 		s = openSession();

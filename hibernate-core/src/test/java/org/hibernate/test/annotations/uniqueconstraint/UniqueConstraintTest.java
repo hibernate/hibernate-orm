@@ -14,6 +14,8 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -34,7 +36,11 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
-    public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			comment = "Requires House.room_id to be non null"
+	)
+	public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();
         Room livingRoom = new Room();

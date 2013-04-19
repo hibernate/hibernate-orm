@@ -11,7 +11,6 @@ import javax.persistence.Column;
 @Entity
 public class CorpType {
 	private Integer id;
-    @Column(name = "`type`")
 	private String type;
 
 	@Id
@@ -24,6 +23,7 @@ public class CorpType {
 		this.id = id;
 	}
 
+	@Column(name = "`type`")
 	public String getType() {
 		return type;
 	}

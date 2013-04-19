@@ -26,6 +26,8 @@ package org.hibernate.test.unionsubclass2;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -51,6 +53,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "SQL uses Teradata reserved word: title"
+	)
 	public void testUnionSubclass() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -127,6 +134,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "SQL uses Teradata reserved word: title"
+	)
 	public void testQuerySubclassAttribute() {
 		if ( getDialect() instanceof HSQLDialect ) {
 			return; // TODO : why??
@@ -169,6 +181,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "SQL uses Teradata reserved word: title"
+	)
 	public void testCustomColumnReadAndWrite() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

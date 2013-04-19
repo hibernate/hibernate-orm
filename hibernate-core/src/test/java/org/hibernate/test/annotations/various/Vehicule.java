@@ -35,6 +35,7 @@ public class Vehicule {
 	@Index(name = "thirdone")
 	private Conductor currentConductor;
 	@Index(name = "year_idx")
+	@Column(name = "`year`")
 	private Integer year;
 	@ManyToOne(optional = true)
 	@Index(name = "forthone")

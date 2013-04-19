@@ -2627,4 +2627,35 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsNotNullUnique() {
 		return true;
 	}
+
+
+	/**
+	 * Does this dialect require a special function for Constraint processing ?
+	 *
+	 * @return boolean
+	 *
+	 */
+	public boolean constraintRequiresFunction() {
+		return false;
+	}
+
+	/**
+	 * create the text of the special function needed for constraint processing
+	 *
+	 * @return String
+	 *
+	 */
+	public String[] generateConstraintFunctionSql(String alter, String tableName, String constraintName) {
+		return null;
+	}
+
+	/**
+	 * Do column names need to be specified when creating an Index ?
+	 *
+	 * @return boolean
+	 *
+	 */
+	public boolean doesIndexNameRequireColumnNames() {
+		return false;
+	}
 }

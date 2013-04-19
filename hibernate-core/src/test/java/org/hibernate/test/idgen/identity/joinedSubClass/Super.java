@@ -43,6 +43,6 @@ public class Super {
 	@GeneratedValue(strategy = IDENTITY)
 	private Long id;
 
-	@Column
+	@Column(name="`value`")
 	private Long value;
 }

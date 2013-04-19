@@ -21,7 +21,7 @@
 	
 	<class name="User" table="users">
 		<id name="name"/>
-		<property name="password"/>
+		<property name="password" column="`password`"/>
 		<map name="session" lazy="extra" 
 				cascade="persist,save-update,delete,delete-orphan">
 			<key column="userName" not-null="true"/>
@@ -36,7 +36,7 @@
 	</class>
 	
 	<class name="Document" table="documents">
-		<id name="title"/>
+		<id name="title" column="`title`"/>
 		<property name="content" type="text"/>
 		<many-to-one name="owner" not-null="true"/>
 	</class>
@@ -55,7 +55,7 @@
 		<return alias="u" class="User"/>
 		<return-join alias="s" property="u.session"/>
 		select 
-			lower(u.name) as {u.name}, lower(u.password) as {u.password}, 
+			lower(u.name) as {u.name}, lower(u."password") as {u.password}, 
 			lower(s.userName) as {s.key}, lower(s.name) as {s.index}, s.id as {s.element}, 
 			{s.element.*}
 		from users u 

@@ -12,7 +12,6 @@ public class CharProperty implements Property {
 
 	private String name;
 
-    @Column(name = "`value`")
 	private Character value;
 
 	public CharProperty() {
@@ -43,6 +42,7 @@ public class CharProperty implements Property {
 		this.id = id;
 	}
 
+	@Column(name = "`value`")
 	public Character getValue() {
 		return value;
 	}

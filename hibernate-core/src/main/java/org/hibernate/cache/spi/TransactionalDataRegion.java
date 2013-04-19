@@ -50,5 +50,11 @@ public interface TransactionalDataRegion extends Region {
 	 */
 	public boolean isTransactionAware();
 
+	/**
+	 * Get the description of the type of data to be stored here, which would have been given to the RegionFactory
+	 * when creating this region
+	 *
+	 * @return The data descriptor.
+	 */
 	public CacheDataDescription getCacheDataDescription();
 }

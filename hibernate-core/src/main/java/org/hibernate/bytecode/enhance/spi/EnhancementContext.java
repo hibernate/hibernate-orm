@@ -27,8 +27,18 @@ import javassist.CtClass;
 import javassist.CtField;
 
 /**
- * todo : not sure its a great idea to expose Javassist classes this way.
- * 		maybe wrap them in our own contracts?
+ * The context for performing an enhancement.  Enhancement can happen in any number of ways:<ul>
+ *     <li>Build time, via Ant</li>
+ *     <li>Build time, via Maven</li>
+ *     <li>Build time, via Gradle</li>
+ *     <li>Runtime, via agent</li>
+ *     <li>Runtime, via JPA constructs</li>
+ * </ul>
+ *
+ * This interface isolates the code that actually does the enhancement from the underlying context in which
+ * the enhancement is being performed.
+ *
+ * @todo Not sure its a great idea to expose Javassist classes this way.  maybe wrap them in our own contracts?
  *
  * @author Steve Ebersole
  */
@@ -37,6 +47,8 @@ public interface EnhancementContext {
 	 * Obtain access to the ClassLoader that can be used to load Class references.  In JPA SPI terms, this
 	 * should be a "temporary class loader" as defined by
 	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}
+	 *
+	 * @return The class loader that the enhancer can use.
 	 */
 	public ClassLoader getLoadingClassLoader();
 
@@ -68,6 +80,13 @@ public interface EnhancementContext {
 	 */
 	public boolean doDirtyCheckingInline(CtClass classDescriptor);
 
+	/**
+	 * Does the given class define any lazy loadable attributes?
+	 *
+	 * @param classDescriptor The class to check
+	 *
+	 * @return true/false
+	 */
 	public boolean hasLazyLoadableAttributes(CtClass classDescriptor);
 
 	// todo : may be better to invert these 2 such that the context is asked for an ordered list of persistent fields for an entity/composite
@@ -75,14 +94,14 @@ public interface EnhancementContext {
 	/**
 	 * Does the field represent persistent state?  Persistent fields will be "enhanced".
 	 * <p/>
-	 // 		may be better to perform basic checks in the caller (non-static, etc) and call out with just the
-	 // 		Class name and field name...
-
+	 * may be better to perform basic checks in the caller (non-static, etc) and call out with just the
+	 * Class name and field name...
+	 *
 	 * @param ctField The field reference.
 	 *
 	 * @return {@code true} if the field is ; {@code false} otherwise.
 	 */
- 	public boolean isPersistentField(CtField ctField);
+	public boolean isPersistentField(CtField ctField);
 
 	/**
 	 * For fields which are persistent (according to {@link #isPersistentField}), determine the corresponding ordering
@@ -94,5 +113,12 @@ public interface EnhancementContext {
 	 */
 	public CtField[] order(CtField[] persistentFields);
 
+	/**
+	 * Determine if a field is lazy loadable.
+	 *
+	 * @param field The field to check
+	 *
+	 * @return {@code true} if the field is lazy loadable; {@code false} otherwise.
+	 */
 	public boolean isLazyLoadable(CtField field);
 }

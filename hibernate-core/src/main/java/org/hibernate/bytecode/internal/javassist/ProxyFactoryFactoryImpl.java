@@ -53,6 +53,14 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 		return new JavassistProxyFactory();
 	}
 
+	/**
+	 * Constructs a BasicProxyFactoryImpl
+	 *
+	 * @param superClass The abstract super class (or null if none).
+	 * @param interfaces Interfaces to be proxied (or null if none).
+	 *
+	 * @return The constructed BasicProxyFactoryImpl
+	 */
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
 		return new BasicProxyFactoryImpl( superClass, interfaces );
 	}
@@ -64,7 +72,8 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 			if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
 				throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
 			}
-			javassist.util.proxy.ProxyFactory factory = new javassist.util.proxy.ProxyFactory();
+
+			final javassist.util.proxy.ProxyFactory factory = new javassist.util.proxy.ProxyFactory();
 			factory.setFilter( FINALIZE_FILTER );
 			if ( superClass != null ) {
 				factory.setSuperclass( superClass );
@@ -77,7 +86,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
 		public Object getProxy() {
 			try {
-				ProxyObject proxy = ( ProxyObject ) proxyClass.newInstance();
+				final ProxyObject proxy = (ProxyObject) proxyClass.newInstance();
 				proxy.setHandler( new PassThroughHandler( proxy, proxyClass.getName() ) );
 				return proxy;
 			}
@@ -108,12 +117,13 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 			this.proxiedClassName = proxiedClassName;
 		}
 
+		@SuppressWarnings("unchecked")
 		public Object invoke(
 				Object object,
-		        Method method,
-		        Method method1,
-		        Object[] args) throws Exception {
-			String name = method.getName();
+				Method method,
+				Method method1,
+				Object[] args) throws Exception {
+			final String name = method.getName();
 			if ( "toString".equals( name ) ) {
 				return proxiedClassName + "@" + System.identityHashCode( object );
 			}
@@ -123,18 +133,22 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 			else if ( "hashCode".equals( name ) ) {
 				return System.identityHashCode( object );
 			}
-			boolean hasGetterSignature = method.getParameterTypes().length == 0 && method.getReturnType() != null;
-			boolean hasSetterSignature = method.getParameterTypes().length == 1 && ( method.getReturnType() == null || method.getReturnType() == void.class );
+
+			final boolean hasGetterSignature = method.getParameterTypes().length == 0
+					&& method.getReturnType() != null;
+			final boolean hasSetterSignature = method.getParameterTypes().length == 1
+					&& ( method.getReturnType() == null || method.getReturnType() == void.class );
+
 			if ( name.startsWith( "get" ) && hasGetterSignature ) {
-				String propName = name.substring( 3 );
+				final String propName = name.substring( 3 );
 				return data.get( propName );
 			}
 			else if ( name.startsWith( "is" ) && hasGetterSignature ) {
-				String propName = name.substring( 2 );
+				final String propName = name.substring( 2 );
 				return data.get( propName );
 			}
 			else if ( name.startsWith( "set" ) && hasSetterSignature) {
-				String propName = name.substring( 3 );
+				final String propName = name.substring( 3 );
 				data.put( propName, args[0] );
 				return null;
 			}

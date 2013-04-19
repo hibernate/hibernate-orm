@@ -46,6 +46,6 @@ public class ObjectNotFoundException extends UnresolvableObjectException {
 	 * @param entityName The name of the entity
 	 */
 	public ObjectNotFoundException(Serializable identifier, String entityName) {
-		super(identifier, entityName);
+		super( identifier, entityName );
 	}
 }

@@ -37,13 +37,24 @@ import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
 
 /**
- * Hibernate implementation of the standard service registry.
+ * Standard Hibernate implementation of the standard service registry.
  *
  * @author Steve Ebersole
  */
 public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl implements StandardServiceRegistry {
 	private final Map configurationValues;
 
+	/**
+	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
+	 * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder} instead
+	 *
+	 * @param bootstrapServiceRegistry The bootstrap service registry.
+	 * @param serviceInitiators Any StandardServiceInitiators provided by the user to the builder
+	 * @param providedServices Any standard services provided directly to the builder
+	 * @param configurationValues Configuration values
+	 *
+	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
+	 */
 	@SuppressWarnings( {"unchecked"})
 	public StandardServiceRegistryImpl(
 			BootstrapServiceRegistry bootstrapServiceRegistry,

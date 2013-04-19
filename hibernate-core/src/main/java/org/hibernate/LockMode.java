@@ -57,7 +57,7 @@ public enum LockMode {
 	 *
 	 * @deprecated instead use PESSIMISTIC_WRITE
 	 */
-    @Deprecated
+	@Deprecated
 	UPGRADE( 10 ),
 	/**
 	 * Attempt to obtain an upgrade lock, using an Oracle-style
@@ -89,7 +89,7 @@ public enum LockMode {
 	 *
 	 * @deprecated instead use PESSIMISTIC_FORCE_INCREMENT
 	 */
-    @Deprecated
+	@Deprecated
 	FORCE( 15 ),
 
 	/**
@@ -151,6 +151,4 @@ public enum LockMode {
 	public boolean lessThan(LockMode mode) {
 		return level < mode.level;
 	}
-
-
 }

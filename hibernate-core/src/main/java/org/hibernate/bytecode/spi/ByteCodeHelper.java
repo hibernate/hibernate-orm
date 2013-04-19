@@ -37,12 +37,15 @@ import java.util.zip.ZipInputStream;
  * @author Steve Ebersole
  */
 public class ByteCodeHelper {
+	/**
+	 * Disallow instantiation (its a helper)
+	 */
 	private ByteCodeHelper() {
 	}
 
 	/**
 	 * Reads class byte array info from the given input stream.
-	 * <p/>
+	 *
 	 * The stream is closed within this method!
 	 *
 	 * @param inputStream The stream containing the class binary; null will lead to an {@link IOException}
@@ -56,13 +59,13 @@ public class ByteCodeHelper {
 			throw new IOException( "null input stream" );
 		}
 
-		byte[] buffer = new byte[409600];
+		final byte[] buffer = new byte[409600];
 		byte[] classBytes = new byte[0];
 
 		try {
 			int r = inputStream.read( buffer );
 			while ( r >= buffer.length ) {
-				byte[] temp = new byte[ classBytes.length + buffer.length ];
+				final byte[] temp = new byte[ classBytes.length + buffer.length ];
 				// copy any previously read bytes into the temp array
 				System.arraycopy( classBytes, 0, temp, 0, classBytes.length );
 				// copy the just read bytes into the temp array (after the previously read)
@@ -72,7 +75,7 @@ public class ByteCodeHelper {
 				r = inputStream.read( buffer );
 			}
 			if ( r != -1 ) {
-				byte[] temp = new byte[ classBytes.length + r ];
+				final byte[] temp = new byte[ classBytes.length + r ];
 				// copy any previously read bytes into the temp array
 				System.arraycopy( classBytes, 0, temp, 0, classBytes.length );
 				// copy the just read bytes into the temp array (after the previously read)
@@ -109,18 +112,18 @@ public class ByteCodeHelper {
 	 * Read class definition a zip (jar) file entry.
 	 *
 	 * @param zip The zip entry stream.
-	 * 
+	 *
 	 * @return The class bytes
 	 *
 	 * @throws IOException Indicates a problem accessing the given stream.
 	 */
 	public static byte[] readByteCode(ZipInputStream zip) throws IOException {
-        ByteArrayOutputStream bout = new ByteArrayOutputStream();
-        InputStream in = new BufferedInputStream( zip );
-        int b;
-        while ( ( b = in.read() ) != -1 ) {
-            bout.write( b );
-        }
-        return bout.toByteArray();
-    }
+		final ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		final InputStream in = new BufferedInputStream( zip );
+		int b;
+		while ( ( b = in.read() ) != -1 ) {
+			bout.write( b );
+		}
+		return bout.toByteArray();
+	}
 }

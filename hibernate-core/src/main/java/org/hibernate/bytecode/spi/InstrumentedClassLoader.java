@@ -26,39 +26,45 @@ package org.hibernate.bytecode.spi;
 import java.io.InputStream;
 
 /**
- * A specialized classloader which performs bytecode enhancement on class
- * definitions as they are loaded into the classloader scope.
+ * A specialized ClassLoader which performs bytecode enhancement on class definitions as they are loaded
+ * into the ClassLoader scope.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
 public class InstrumentedClassLoader extends ClassLoader {
+	private final ClassTransformer classTransformer;
 
-	private ClassTransformer classTransformer;
-
+	/**
+	 * Constructs an InstrumentedClassLoader.
+	 *
+	 * @param parent The parent ClassLoader
+	 * @param classTransformer The transformer to use for applying enhancement
+	 */
 	public InstrumentedClassLoader(ClassLoader parent, ClassTransformer classTransformer) {
 		super( parent );
 		this.classTransformer = classTransformer;
 	}
 
+	@Override
 	public Class loadClass(String name) throws ClassNotFoundException {
 		if ( name.startsWith( "java." ) || classTransformer == null ) {
 			return getParent().loadClass( name );
 		}
 
-		Class c = findLoadedClass( name );
+		final Class c = findLoadedClass( name );
 		if ( c != null ) {
 			return c;
 		}
 
-		InputStream is = this.getResourceAsStream( name.replace( '.', '/' ) + ".class" );
+		final InputStream is = this.getResourceAsStream( name.replace( '.', '/' ) + ".class" );
 		if ( is == null ) {
 			throw new ClassNotFoundException( name + " not found" );
 		}
 
 		try {
-			byte[] originalBytecode = ByteCodeHelper.readByteCode( is );
-			byte[] transformedBytecode = classTransformer.transform( getParent(), name, null, null, originalBytecode );
+			final byte[] originalBytecode = ByteCodeHelper.readByteCode( is );
+			final byte[] transformedBytecode = classTransformer.transform( getParent(), name, null, null, originalBytecode );
 			if ( originalBytecode == transformedBytecode ) {
 				// no transformations took place, so handle it as we would a
 				// non-instrumented class

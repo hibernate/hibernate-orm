@@ -38,15 +38,19 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public class DelayedPostInsertIdentifier implements Serializable {
-	private static long SEQUENCE = 0;
-	private final long sequence;
+	private static long sequence;
 
+	private final long identifier;
+
+	/**
+	 * Constructs a DelayedPostInsertIdentifier
+	 */
 	public DelayedPostInsertIdentifier() {
 		synchronized( DelayedPostInsertIdentifier.class ) {
-			if ( SEQUENCE == Long.MAX_VALUE ) {
-				SEQUENCE = 0;
+			if ( sequence == Long.MAX_VALUE ) {
+				sequence = 0;
 			}
-			this.sequence = SEQUENCE++;
+			this.identifier = sequence++;
 		}
 	}
 
@@ -58,18 +62,18 @@ public class DelayedPostInsertIdentifier implements Serializable {
 		if ( o == null || getClass() != o.getClass() ) {
 			return false;
 		}
-		final DelayedPostInsertIdentifier that = ( DelayedPostInsertIdentifier ) o;
-		return sequence == that.sequence;
+		final DelayedPostInsertIdentifier that = (DelayedPostInsertIdentifier) o;
+		return identifier == that.identifier;
 	}
 
 	@Override
 	public int hashCode() {
-		return ( int ) ( sequence ^ ( sequence >>> 32 ) );
+		return (int) ( identifier ^ ( identifier >>> 32 ) );
 	}
 
 	@Override
 	public String toString() {
-		return "<delayed:" + sequence + ">";
+		return "<delayed:" + identifier + ">";
 
 	}
 }

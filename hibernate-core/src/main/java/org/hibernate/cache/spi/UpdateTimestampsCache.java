@@ -46,14 +46,25 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Mikheil Kapanadze
  */
 public class UpdateTimestampsCache {
-
-	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, UpdateTimestampsCache.class.getName() );
+
+	/**
+	 * The region name of the update-timestamps cache.
+	 */
+	public static final String REGION_NAME = UpdateTimestampsCache.class.getName();
+
 
 	private final SessionFactoryImplementor factory;
 	private final TimestampsRegion region;
 
-	public UpdateTimestampsCache(Settings settings, Properties props, final SessionFactoryImplementor factory) throws HibernateException {
+	/**
+	 * Constructs an UpdateTimestampsCache.
+	 *
+	 * @param settings The SessionFactory settings
+	 * @param props Any properties
+	 * @param factory The SessionFactory
+	 */
+	public UpdateTimestampsCache(Settings settings, Properties props, final SessionFactoryImplementor factory) {
 		this.factory = factory;
 		final String prefix = settings.getCacheRegionPrefix();
 		final String regionName = prefix == null ? REGION_NAME : prefix + '.' + REGION_NAME;
@@ -62,11 +73,24 @@ public class UpdateTimestampsCache {
 		this.region = settings.getRegionFactory().buildTimestampsRegion( regionName, props );
 	}
 
-    @SuppressWarnings({"UnusedDeclaration"})
-    public UpdateTimestampsCache(Settings settings, Properties props) throws HibernateException {
-        this( settings, props, null );
-    }
+	/**
+	 * Constructs an UpdateTimestampsCache.
+	 *
+	 * @param settings The SessionFactory settings
+	 * @param props Any properties
+	 */
+	@SuppressWarnings({"UnusedDeclaration"})
+	public UpdateTimestampsCache(Settings settings, Properties props) {
+		this( settings, props, null );
+	}
 
+	/**
+	 * Perform pre-invalidation.
+	 *
+	 * @param spaces The spaces to pre-invalidate
+	 *
+	 * @throws CacheException Indicated problem delegating to underlying region.
+	 */
 	@SuppressWarnings({"UnnecessaryBoxing"})
 	public void preinvalidate(Serializable[] spaces) throws CacheException {
 		final boolean debug = LOG.isDebugEnabled();
@@ -87,12 +111,19 @@ public class UpdateTimestampsCache {
 		}
 	}
 
+	/**
+	 * Perform invalidation.
+	 *
+	 * @param spaces The spaces to pre-invalidate
+	 *
+	 * @throws CacheException Indicated problem delegating to underlying region.
+	 */
 	@SuppressWarnings({"UnnecessaryBoxing"})
 	public void invalidate(Serializable[] spaces) throws CacheException {
-		 final boolean debug = LOG.isDebugEnabled();
-		 final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
+		final boolean debug = LOG.isDebugEnabled();
+		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
-		 final Long ts = region.nextTimestamp();
+		final Long ts = region.nextTimestamp();
 
 		for (Serializable space : spaces) {
 			if ( debug ) {
@@ -107,13 +138,23 @@ public class UpdateTimestampsCache {
 		}
 	}
 
+	/**
+	 * Perform an up-to-date check for the given set of query spaces.
+	 *
+	 * @param spaces The spaces to check
+	 * @param timestamp The timestamp against which to check.
+	 *
+	 * @return Whether all those spaces are up-to-date
+	 *
+	 * @throws CacheException Indicated problem delegating to underlying region.
+	 */
 	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
-	public boolean isUpToDate(Set spaces, Long timestamp) throws HibernateException {
+	public boolean isUpToDate(Set spaces, Long timestamp) throws CacheException {
 		final boolean debug = LOG.isDebugEnabled();
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		for ( Serializable space : (Set<Serializable>) spaces ) {
-			Long lastUpdate = (Long) region.get( space );
+			final Long lastUpdate = (Long) region.get( space );
 			if ( lastUpdate == null ) {
 				if ( stats ) {
 					factory.getStatisticsImplementor().updateTimestampsCacheMiss();
@@ -142,10 +183,20 @@ public class UpdateTimestampsCache {
 		return true;
 	}
 
+	/**
+	 * Clear the update-timestamps data.
+	 *
+	 * @throws CacheException Indicates problem delegating call to underlying region.
+	 */
 	public void clear() throws CacheException {
 		region.evictAll();
 	}
 
+	/**
+	 * Destroys the cache.
+	 *
+	 * @throws CacheException Indicates problem delegating call to underlying region.
+	 */
 	public void destroy() {
 		try {
 			region.destroy();
@@ -155,12 +206,17 @@ public class UpdateTimestampsCache {
 		}
 	}
 
+	/**
+	 * Get the underlying cache region where data is stored..
+	 *
+	 * @return The underlying region.
+	 */
 	public TimestampsRegion getRegion() {
 		return region;
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return "UpdateTimestampsCache";
 	}
 

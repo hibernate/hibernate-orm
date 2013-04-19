@@ -46,7 +46,7 @@ public class PropertyValueException extends HibernateException {
 	 * @param propertyName The name of the property being accessed.
 	 */
 	public PropertyValueException(String message, String entityName, String propertyName) {
-		super(message);
+		super( message );
 		this.entityName = entityName;
 		this.propertyName = propertyName;
 	}
@@ -60,7 +60,7 @@ public class PropertyValueException extends HibernateException {
 	}
 
 	@Override
-    public String getMessage() {
+	public String getMessage() {
 		return super.getMessage() + " : " + StringHelper.qualify( entityName, propertyName );
 	}
 }

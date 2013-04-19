@@ -49,10 +49,17 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Dustin Schultz
  */
 public class JavassistClassTransformer extends AbstractClassTransformerImpl {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			JavassistClassTransformer.class.getName()
+	);
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       JavassistClassTransformer.class.getName());
-
+	/**
+	 * Constructs the JavassistClassTransformer
+	 *
+	 * @param classFilter The filter used to determine which classes to transform
+	 * @param fieldFilter The filter used to determine which fields to transform
+	 */
 	public JavassistClassTransformer(ClassFilter classFilter, org.hibernate.bytecode.buildtime.spi.FieldFilter fieldFilter) {
 		super( classFilter, fieldFilter );
 	}
@@ -73,23 +80,27 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 			LOG.unableToBuildEnhancementMetamodel( className );
 			return classfileBuffer;
 		}
-		// This is the same as ClassPool.getDefault() but ensures a new ClassPool per
-		ClassPool cp = new ClassPool();
+
+		final ClassPool cp = new ClassPool();
 		cp.appendSystemPath();
-		cp.appendClassPath(new ClassClassPath(this.getClass()));
-		cp.appendClassPath(new ClassClassPath(classfile.getClass()));
+		cp.appendClassPath( new ClassClassPath( this.getClass() ) );
+		cp.appendClassPath( new ClassClassPath( classfile.getClass() ) );
+
 		try {
-			cp.makeClassIfNew(new ByteArrayInputStream(classfileBuffer));
-		} catch (IOException e) {
-			throw new RuntimeException(e.getMessage(), e);
+			cp.makeClassIfNew( new ByteArrayInputStream( classfileBuffer ) );
 		}
-		FieldTransformer transformer = getFieldTransformer( classfile, cp );
+		catch (IOException e) {
+			throw new RuntimeException( e.getMessage(), e );
+		}
+
+		final FieldTransformer transformer = getFieldTransformer( classfile, cp );
 		if ( transformer != null ) {
 			LOG.debugf( "Enhancing %s", className );
+
 			DataOutputStream out = null;
 			try {
 				transformer.transform( classfile );
-				ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+				final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 				out = new DataOutputStream( byteStream );
 				classfile.write( out );
 				return byteStream.toByteArray();
@@ -100,7 +111,9 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 			}
 			finally {
 				try {
-					if ( out != null ) out.close();
+					if ( out != null ) {
+						out.close();
+					}
 				}
 				catch (IOException e) {
 					//swallow
@@ -131,14 +144,15 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 					public boolean handleWriteAccess(String fieldOwnerClassName, String fieldName) {
 						return fieldFilter.shouldTransformFieldAccess( classfile.getName(), fieldOwnerClassName, fieldName );
 					}
-				}, classPool
+				},
+				classPool
 		);
 	}
 
 	private boolean alreadyInstrumented(ClassFile classfile) {
-		String[] intfs = classfile.getInterfaces();
-		for ( int i = 0; i < intfs.length; i++ ) {
-			if ( FieldHandled.class.getName().equals( intfs[i] ) ) {
+		final String[] interfaces = classfile.getInterfaces();
+		for ( String anInterface : interfaces ) {
+			if ( FieldHandled.class.getName().equals( anInterface ) ) {
 				return true;
 			}
 		}

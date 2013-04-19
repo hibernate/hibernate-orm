@@ -29,10 +29,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -65,35 +63,15 @@ import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.mapping.PersistentClass;
 
 /**
+ * Class responsible for performing enhancement.
+ *
  * @author Steve Ebersole
  * @author Jason Greene
  */
 public class Enhancer  {
 	private static final CoreMessageLogger log = Logger.getMessageLogger( CoreMessageLogger.class, Enhancer.class.getName() );
-
-	public static final String PERSISTENT_FIELD_READER_PREFIX = "$$_hibernate_read_";
-	public static final String PERSISTENT_FIELD_WRITER_PREFIX = "$$_hibernate_write_";
-
-	public static final String ENTITY_INSTANCE_GETTER_NAME = "$$_hibernate_getEntityInstance";
-
-	public static final String ENTITY_ENTRY_FIELD_NAME = "$$_hibernate_entityEntryHolder";
-	public static final String ENTITY_ENTRY_GETTER_NAME = "$$_hibernate_getEntityEntry";
-	public static final String ENTITY_ENTRY_SETTER_NAME = "$$_hibernate_setEntityEntry";
-
-	public static final String PREVIOUS_FIELD_NAME = "$$_hibernate_previousManagedEntity";
-	public static final String PREVIOUS_GETTER_NAME = "$$_hibernate_getPreviousManagedEntity";
-	public static final String PREVIOUS_SETTER_NAME = "$$_hibernate_setPreviousManagedEntity";
-
-	public static final String NEXT_FIELD_NAME = "$$_hibernate_nextManagedEntity";
-	public static final String NEXT_GETTER_NAME = "$$_hibernate_getNextManagedEntity";
-	public static final String NEXT_SETTER_NAME = "$$_hibernate_setNextManagedEntity";
-
-	public static final String INTERCEPTOR_FIELD_NAME = "$$_hibernate_attributeInterceptor";
-	public static final String INTERCEPTOR_GETTER_NAME = "$$_hibernate_getInterceptor";
-	public static final String INTERCEPTOR_SETTER_NAME = "$$_hibernate_setInterceptor";
 
 	private final EnhancementContext enhancementContext;
 
@@ -105,6 +83,12 @@ public class Enhancer  {
 	private final CtClass entityEntryCtClass;
 	private final CtClass objectCtClass;
 
+	/**
+	 * Constructs the Enhancer, using the given context.
+	 *
+	 * @param enhancementContext Describes the context in which enhancement will occur so as to give access
+	 * to contextual/environmental information.
+	 */
 	public Enhancer(EnhancementContext enhancementContext) {
 		this.enhancementContext = enhancementContext;
 		this.classPool = buildClassPool( enhancementContext );
@@ -154,8 +138,8 @@ public class Enhancer  {
 	}
 
 	private ClassPool buildClassPool(EnhancementContext enhancementContext) {
-		ClassPool classPool = new ClassPool( false );
-		ClassLoader loadingClassLoader = enhancementContext.getLoadingClassLoader();
+		final ClassPool classPool = new ClassPool( false );
+		final ClassLoader loadingClassLoader = enhancementContext.getLoadingClassLoader();
 		if ( loadingClassLoader != null ) {
 			classPool.appendClassPath( new LoaderClassPath( loadingClassLoader ) );
 		}
@@ -171,7 +155,7 @@ public class Enhancer  {
 	 * @return The enhanced bytecode.  Could be the same as the original bytecode if the original was
 	 * already enhanced or we could not enhance it for some reason.
 	 *
-	 * @throws EnhancementException
+	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
 	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		final CtClass managedCtClass;
@@ -185,26 +169,26 @@ public class Enhancer  {
 
 		enhance( managedCtClass );
 
-		DataOutputStream out = null;
+		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		final DataOutputStream out;
 		try {
-			ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 			out = new DataOutputStream( byteStream );
-			managedCtClass.toBytecode( out );
-			return byteStream.toByteArray();
+			try {
+				managedCtClass.toBytecode( out );
+				return byteStream.toByteArray();
+			}
+			finally {
+				try {
+					out.close();
+				}
+				catch (IOException e) {
+					//swallow
+				}
+			}
 		}
 		catch (Exception e) {
 			log.unableToTransformClass( e.getMessage() );
 			throw new HibernateException( "Unable to transform class: " + e.getMessage() );
-		}
-		finally {
-			try {
-				if ( out != null ) {
-					out.close();
-				}
-			}
-			catch (IOException e) {
-				//swallow
-			}
 		}
 	}
 
@@ -261,7 +245,7 @@ public class Enhancer  {
 			managedCtClass.addMethod(
 					CtNewMethod.make(
 							objectCtClass,
-							ENTITY_INSTANCE_GETTER_NAME,
+							EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME,
 							new CtClass[0],
 							new CtClass[0],
 							"{ return this; }",
@@ -284,9 +268,9 @@ public class Enhancer  {
 		addFieldWithGetterAndSetter(
 				managedCtClass,
 				entityEntryCtClass,
-				ENTITY_ENTRY_FIELD_NAME,
-				ENTITY_ENTRY_GETTER_NAME,
-				ENTITY_ENTRY_SETTER_NAME
+				EnhancerConstants.ENTITY_ENTRY_FIELD_NAME,
+				EnhancerConstants.ENTITY_ENTRY_GETTER_NAME,
+				EnhancerConstants.ENTITY_ENTRY_SETTER_NAME
 		);
 	}
 
@@ -294,9 +278,9 @@ public class Enhancer  {
 		addFieldWithGetterAndSetter(
 				managedCtClass,
 				managedEntityCtClass,
-				PREVIOUS_FIELD_NAME,
-				PREVIOUS_GETTER_NAME,
-				PREVIOUS_SETTER_NAME
+				EnhancerConstants.PREVIOUS_FIELD_NAME,
+				EnhancerConstants.PREVIOUS_GETTER_NAME,
+				EnhancerConstants.PREVIOUS_SETTER_NAME
 		);
 	}
 
@@ -304,9 +288,9 @@ public class Enhancer  {
 		addFieldWithGetterAndSetter(
 				managedCtClass,
 				managedEntityCtClass,
-				NEXT_FIELD_NAME,
-				NEXT_GETTER_NAME,
-				NEXT_SETTER_NAME
+				EnhancerConstants.NEXT_FIELD_NAME,
+				EnhancerConstants.NEXT_GETTER_NAME,
+				EnhancerConstants.NEXT_SETTER_NAME
 		);
 	}
 
@@ -400,9 +384,9 @@ public class Enhancer  {
 		addFieldWithGetterAndSetter(
 				managedCtClass,
 				attributeInterceptorCtClass,
-				INTERCEPTOR_FIELD_NAME,
-				INTERCEPTOR_GETTER_NAME,
-				INTERCEPTOR_SETTER_NAME
+				EnhancerConstants.INTERCEPTOR_FIELD_NAME,
+				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
+				EnhancerConstants.INTERCEPTOR_SETTER_NAME
 		);
 	}
 
@@ -445,7 +429,8 @@ public class Enhancer  {
 			theField.setModifiers( theField.getModifiers() | Modifier.TRANSIENT );
 		}
 		theField.setModifiers( Modifier.setPrivate( theField.getModifiers() ) );
-		AnnotationsAttribute annotationsAttribute = getVisibleAnnotations( theField.getFieldInfo() );
+
+		final AnnotationsAttribute annotationsAttribute = getVisibleAnnotations( theField.getFieldInfo() );
 		annotationsAttribute.addAnnotation( new Annotation( Transient.class.getName(), constPool ) );
 		return theField;
 	}
@@ -490,7 +475,7 @@ public class Enhancer  {
 
 		final FieldInfo fieldInfo = persistentField.getFieldInfo();
 		final String fieldName = fieldInfo.getName();
-		final String readerName = PERSISTENT_FIELD_READER_PREFIX + fieldName;
+		final String readerName = EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX + fieldName;
 
 		// read attempts only have to deal lazy-loading support, not dirty checking; so if the field
 		// is not enabled as lazy-loadable return a plain simple getter as the reader
@@ -498,7 +483,7 @@ public class Enhancer  {
 			// not lazy-loadable...
 			// EARLY RETURN!!!
 			try {
-				CtMethod reader = CtNewMethod.getter( readerName, persistentField );
+				final CtMethod reader = CtNewMethod.getter( readerName, persistentField );
 				managedCtClass.addMethod( reader );
 				return reader;
 			}
@@ -515,11 +500,11 @@ public class Enhancer  {
 		}
 
 		// temporary solution...
-		String methodBody = typeDescriptor.buildReadInterceptionBodyFragment( fieldName )
+		final String methodBody = typeDescriptor.buildReadInterceptionBodyFragment( fieldName )
 				+ " return this." + fieldName + ";";
 
 		try {
-			CtMethod reader = CtNewMethod.make(
+			final CtMethod reader = CtNewMethod.make(
 					Modifier.PRIVATE,
 					persistentField.getType(),
 					readerName,
@@ -550,7 +535,7 @@ public class Enhancer  {
 
 		final FieldInfo fieldInfo = persistentField.getFieldInfo();
 		final String fieldName = fieldInfo.getName();
-		final String writerName = PERSISTENT_FIELD_WRITER_PREFIX + fieldName;
+		final String writerName = EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + fieldName;
 
 		final CtMethod writer;
 
@@ -560,7 +545,7 @@ public class Enhancer  {
 				writer = CtNewMethod.setter( writerName, persistentField );
 			}
 			else {
-				String methodBody = typeDescriptor.buildWriteInterceptionBodyFragment( fieldName );
+				final String methodBody = typeDescriptor.buildWriteInterceptionBodyFragment( fieldName );
 				writer = CtNewMethod.make(
 						Modifier.PRIVATE,
 						CtClass.voidType,
@@ -602,15 +587,15 @@ public class Enhancer  {
 			final String methodName = methodInfo.getName();
 
 			// skip methods added by enhancement
-			if ( methodName.startsWith( PERSISTENT_FIELD_READER_PREFIX )
-					|| methodName.startsWith( PERSISTENT_FIELD_WRITER_PREFIX )
-					|| methodName.equals( ENTITY_INSTANCE_GETTER_NAME )
-					|| methodName.equals( ENTITY_ENTRY_GETTER_NAME )
-					|| methodName.equals( ENTITY_ENTRY_SETTER_NAME )
-					|| methodName.equals( PREVIOUS_GETTER_NAME )
-					|| methodName.equals( PREVIOUS_SETTER_NAME )
-					|| methodName.equals( NEXT_GETTER_NAME )
-					|| methodName.equals( NEXT_SETTER_NAME ) ) {
+			if ( methodName.startsWith( EnhancerConstants.PERSISTENT_FIELD_READER_PREFIX )
+					|| methodName.startsWith( EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX )
+					|| methodName.equals( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME )
+					|| methodName.equals( EnhancerConstants.ENTITY_ENTRY_GETTER_NAME )
+					|| methodName.equals( EnhancerConstants.ENTITY_ENTRY_SETTER_NAME )
+					|| methodName.equals( EnhancerConstants.PREVIOUS_GETTER_NAME )
+					|| methodName.equals( EnhancerConstants.PREVIOUS_SETTER_NAME )
+					|| methodName.equals( EnhancerConstants.NEXT_GETTER_NAME )
+					|| methodName.equals( EnhancerConstants.NEXT_SETTER_NAME ) ) {
 				continue;
 			}
 
@@ -621,15 +606,15 @@ public class Enhancer  {
 			}
 
 			try {
-				CodeIterator itr = codeAttr.iterator();
+				final CodeIterator itr = codeAttr.iterator();
 				while ( itr.hasNext() ) {
-					int index = itr.next();
-					int op = itr.byteAt( index );
+					final int index = itr.next();
+					final int op = itr.byteAt( index );
 					if ( op != Opcode.PUTFIELD && op != Opcode.GETFIELD ) {
 						continue;
 					}
 
-					int constIndex = itr.u16bitAt( index+1 );
+					final int constIndex = itr.u16bitAt( index+1 );
 
 					final String fieldName = constPool.getFieldrefName( constIndex );
 					final PersistentAttributeDescriptor attributeDescriptor = attributeDescriptorMap.get( fieldName );
@@ -646,27 +631,27 @@ public class Enhancer  {
 					);
 
 					if ( op == Opcode.GETFIELD ) {
-						int read_method_index = constPool.addMethodrefInfo(
+						final int readMethodIndex = constPool.addMethodrefInfo(
 								constPool.getThisClassInfo(),
 								attributeDescriptor.getReader().getName(),
 								attributeDescriptor.getReader().getSignature()
 						);
 						itr.writeByte( Opcode.INVOKESPECIAL, index );
-						itr.write16bit( read_method_index, index+1 );
+						itr.write16bit( readMethodIndex, index+1 );
 					}
 					else {
-						int write_method_index = constPool.addMethodrefInfo(
+						final int writeMethodIndex = constPool.addMethodrefInfo(
 								constPool.getThisClassInfo(),
 								attributeDescriptor.getWriter().getName(),
 								attributeDescriptor.getWriter().getSignature()
 						);
 						itr.writeByte( Opcode.INVOKESPECIAL, index );
-						itr.write16bit( write_method_index, index+1 );
+						itr.write16bit( writeMethodIndex, index+1 );
 					}
 				}
 
-				StackMapTable smt = MapMaker.make( classPool, methodInfo );
-				methodInfo.getCodeAttribute().setAttribute(smt);
+				final StackMapTable smt = MapMaker.make( classPool, methodInfo );
+				methodInfo.getCodeAttribute().setAttribute( smt );
 			}
 			catch (BadBytecode e) {
 				throw new EnhancementException(
@@ -748,7 +733,7 @@ public class Enhancer  {
 		}
 	}
 
-	private static abstract class AbstractAttributeTypeDescriptor implements AttributeTypeDescriptor {
+	private abstract static class AbstractAttributeTypeDescriptor implements AttributeTypeDescriptor {
 		@Override
 		public String buildInLineDirtyCheckingBodyFragment(String fieldName) {
 			// for now...

@@ -48,7 +48,7 @@ import org.hibernate.bytecode.spi.ClassTransformer;
 public abstract class AbstractInstrumenter implements Instrumenter {
 	private static final int ZIP_MAGIC = 0x504B0304;
 	private static final int CLASS_MAGIC = 0xCAFEBABE;
-	
+
 	protected final Logger logger;
 	protected final Options options;
 
@@ -92,7 +92,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 * @param files The files.
 	 */
 	public void execute(Set<File> files) {
-		Set<String> classNames = new HashSet<String>();
+		final Set<String> classNames = new HashSet<String>();
 
 		if ( options.performExtendedInstrumentation() ) {
 			logger.debug( "collecting class names for extended instrumentation determination" );
@@ -136,26 +136,26 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 * @throws Exception indicates problems accessing the file or its contents.
 	 */
 	private void collectClassNames(File file, final Set<String> classNames) throws Exception {
-	    if ( isClassFile( file ) ) {
-			byte[] bytes = ByteCodeHelper.readByteCode( file );
-			ClassDescriptor descriptor = getClassDescriptor( bytes );
-		    classNames.add( descriptor.getName() );
-	    }
-	    else if ( isJarFile( file ) ) {
-		    ZipEntryHandler collector = new ZipEntryHandler() {
-			    public void handleEntry(ZipEntry entry, byte[] byteCode) throws Exception {
+		if ( isClassFile( file ) ) {
+			final byte[] bytes = ByteCodeHelper.readByteCode( file );
+			final ClassDescriptor descriptor = getClassDescriptor( bytes );
+			classNames.add( descriptor.getName() );
+		}
+		else if ( isJarFile( file ) ) {
+			final ZipEntryHandler collector = new ZipEntryHandler() {
+				public void handleEntry(ZipEntry entry, byte[] byteCode) throws Exception {
 					if ( !entry.isDirectory() ) {
 						// see if the entry represents a class file
-						DataInputStream din = new DataInputStream( new ByteArrayInputStream( byteCode ) );
+						final DataInputStream din = new DataInputStream( new ByteArrayInputStream( byteCode ) );
 						if ( din.readInt() == CLASS_MAGIC ) {
-				            classNames.add( getClassDescriptor( byteCode ).getName() );
+							classNames.add( getClassDescriptor( byteCode ).getName() );
 						}
 					}
-			    }
-		    };
-			ZipFileProcessor processor = new ZipFileProcessor( collector );
-		    processor.process( file );
-	    }
+				}
+			};
+			final ZipFileProcessor processor = new ZipFileProcessor( collector );
+			processor.process( file );
+		}
 	}
 
 	/**
@@ -168,8 +168,8 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 * @throws IOException Indicates problem access the file.
 	 */
 	protected final boolean isClassFile(File file) throws IOException {
-        return checkMagic( file, CLASS_MAGIC );
-    }
+		return checkMagic( file, CLASS_MAGIC );
+	}
 
 	/**
 	 * Does this file represent a zip file of some format?
@@ -180,20 +180,20 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 *
 	 * @throws IOException Indicates problem access the file.
 	 */
-    protected final boolean isJarFile(File file) throws IOException {
-        return checkMagic(file, ZIP_MAGIC);
-    }
+	protected final boolean isJarFile(File file) throws IOException {
+		return checkMagic( file, ZIP_MAGIC );
+	}
 
 	protected final boolean checkMagic(File file, long magic) throws IOException {
-        DataInputStream in = new DataInputStream( new FileInputStream( file ) );
-        try {
-            int m = in.readInt();
-            return magic == m;
-        }
-        finally {
-            in.close();
-        }
-    }
+		final DataInputStream in = new DataInputStream( new FileInputStream( file ) );
+		try {
+			final int m = in.readInt();
+			return magic == m;
+		}
+		finally {
+			in.close();
+		}
+	}
 
 	/**
 	 * Actually process the file by applying instrumentation transformations to any classes it contains.
@@ -207,17 +207,17 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 * @throws Exception Indicates an issue either access files or applying the transformations.
 	 */
 	protected void processFile(File file, Set<String> classNames) throws Exception {
-	    if ( isClassFile( file ) ) {
+		if ( isClassFile( file ) ) {
 			logger.debug( "processing class file : " + file.getAbsolutePath() );
-	        processClassFile( file, classNames );
-	    }
-	    else if ( isJarFile( file ) ) {
+			processClassFile( file, classNames );
+		}
+		else if ( isJarFile( file ) ) {
 			logger.debug( "processing jar file : " + file.getAbsolutePath() );
-	        processJarFile( file, classNames );
-	    }
-	    else {
-		    logger.debug( "ignoring file : " + file.getAbsolutePath() );
-	    }
+			processJarFile( file, classNames );
+		}
+		else {
+			logger.debug( "ignoring file : " + file.getAbsolutePath() );
+		}
 	}
 
 	/**
@@ -230,16 +230,16 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 * @throws Exception Indicates an issue either access files or applying the transformations.
 	 */
 	protected void processClassFile(File file, Set<String> classNames) throws Exception {
-		byte[] bytes = ByteCodeHelper.readByteCode( file );
-		ClassDescriptor descriptor = getClassDescriptor( bytes );
-		ClassTransformer transformer = getClassTransformer( descriptor, classNames );
+		final byte[] bytes = ByteCodeHelper.readByteCode( file );
+		final ClassDescriptor descriptor = getClassDescriptor( bytes );
+		final ClassTransformer transformer = getClassTransformer( descriptor, classNames );
 		if ( transformer == null ) {
 			logger.debug( "no trasformer for class file : " + file.getAbsolutePath() );
 			return;
 		}
 
 		logger.info( "processing class : " + descriptor.getName() + ";  file = " + file.getAbsolutePath() );
-		byte[] transformedBytes = transformer.transform(
+		final byte[] transformedBytes = transformer.transform(
 				getClass().getClassLoader(),
 				descriptor.getName(),
 				null,
@@ -247,7 +247,7 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 				descriptor.getBytes()
 		);
 
-		OutputStream out = new FileOutputStream( file );
+		final OutputStream out = new FileOutputStream( file );
 		try {
 			out.write( transformedBytes );
 			out.flush();
@@ -272,61 +272,62 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 	 * @throws Exception Indicates an issue either access files or applying the transformations.
 	 */
 	protected void processJarFile(final File file, final Set<String> classNames) throws Exception {
-        File tempFile = File.createTempFile(
-		        file.getName(),
-		        null,
-		        new File( file.getAbsoluteFile().getParent() )
-        );
+		final File tempFile = File.createTempFile(
+				file.getName(),
+				null,
+				new File( file.getAbsoluteFile().getParent() )
+		);
 
-        try {
-			FileOutputStream fout = new FileOutputStream( tempFile, false );
+		try {
+			final FileOutputStream fout = new FileOutputStream( tempFile, false );
 			try {
 				final ZipOutputStream out = new ZipOutputStream( fout );
-				ZipEntryHandler transformer = new ZipEntryHandler() {
+				final ZipEntryHandler transformer = new ZipEntryHandler() {
 					public void handleEntry(ZipEntry entry, byte[] byteCode) throws Exception {
-								logger.debug( "starting zip entry : " + entry.toString() );
-								if ( !entry.isDirectory() ) {
-									// see if the entry represents a class file
-									DataInputStream din = new DataInputStream( new ByteArrayInputStream( byteCode ) );
-									if ( din.readInt() == CLASS_MAGIC ) {
-										ClassDescriptor descriptor = getClassDescriptor( byteCode );
-										ClassTransformer transformer = getClassTransformer( descriptor, classNames );
-										if ( transformer == null ) {
-											logger.debug( "no transformer for zip entry :  " + entry.toString() );
-										}
-										else {
-											logger.info( "processing class : " + descriptor.getName() + ";  entry = " + file.getAbsolutePath() );
-											byteCode = transformer.transform(
-													getClass().getClassLoader(),
-													descriptor.getName(),
-													null,
-													null,
-													descriptor.getBytes()
-											);
-										}
-									}
-									else {
-										logger.debug( "ignoring zip entry : " + entry.toString() );
-									}
+						logger.debug( "starting zip entry : " + entry.toString() );
+						if ( !entry.isDirectory() ) {
+							// see if the entry represents a class file
+							final DataInputStream din = new DataInputStream( new ByteArrayInputStream( byteCode ) );
+							if ( din.readInt() == CLASS_MAGIC ) {
+								final ClassDescriptor descriptor = getClassDescriptor( byteCode );
+								final ClassTransformer transformer = getClassTransformer( descriptor, classNames );
+								if ( transformer == null ) {
+									logger.debug( "no transformer for zip entry :  " + entry.toString() );
 								}
-
-								ZipEntry outEntry = new ZipEntry( entry.getName() );
-								outEntry.setMethod( entry.getMethod() );
-								outEntry.setComment( entry.getComment() );
-								outEntry.setSize( byteCode.length );
-
-								if ( outEntry.getMethod() == ZipEntry.STORED ){
-									CRC32 crc = new CRC32();
-									crc.update( byteCode );
-									outEntry.setCrc( crc.getValue() );
-									outEntry.setCompressedSize( byteCode.length );
+								else {
+									logger.info( "processing class : " + descriptor.getName() + ";  entry = " + file.getAbsolutePath() );
+									byteCode = transformer.transform(
+											getClass().getClassLoader(),
+											descriptor.getName(),
+											null,
+											null,
+											descriptor.getBytes()
+									);
 								}
-								out.putNextEntry( outEntry );
-								out.write( byteCode );
-								out.closeEntry();
+							}
+							else {
+								logger.debug( "ignoring zip entry : " + entry.toString() );
+							}
+						}
+
+						final ZipEntry outEntry = new ZipEntry( entry.getName() );
+						outEntry.setMethod( entry.getMethod() );
+						outEntry.setComment( entry.getComment() );
+						outEntry.setSize( byteCode.length );
+
+						if ( outEntry.getMethod() == ZipEntry.STORED ){
+							final CRC32 crc = new CRC32();
+							crc.update( byteCode );
+							outEntry.setCrc( crc.getValue() );
+							outEntry.setCompressedSize( byteCode.length );
+						}
+						out.putNextEntry( outEntry );
+						out.write( byteCode );
+						out.closeEntry();
 					}
 				};
-				ZipFileProcessor processor = new ZipFileProcessor( transformer );
+
+				final ZipFileProcessor processor = new ZipFileProcessor( transformer );
 				processor.process( file );
 				out.close();
 			}
@@ -334,21 +335,21 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 				fout.close();
 			}
 
-            if ( file.delete() ) {
-	            File newFile = new File( tempFile.getAbsolutePath() );
-                if( !newFile.renameTo( file ) ) {
-	                throw new IOException( "can not rename " + tempFile + " to " + file );
-                }
-            }
-            else {
-	            throw new IOException( "can not delete " + file );
-            }
-        }
-        finally {
-	        if ( ! tempFile.delete() ) {
+			if ( file.delete() ) {
+				final File newFile = new File( tempFile.getAbsolutePath() );
+				if( ! newFile.renameTo( file ) ) {
+					throw new IOException( "can not rename " + tempFile + " to " + file );
+				}
+			}
+			else {
+				throw new IOException( "can not delete " + file );
+			}
+		}
+		finally {
+			if ( ! tempFile.delete() ) {
 				logger.info( "Unable to cleanup temporary jar file : " + tempFile.getAbsolutePath() );
 			}
-        }
+		}
 	}
 
 	/**
@@ -419,19 +420,19 @@ public abstract class AbstractInstrumenter implements Instrumenter {
 		}
 
 		public void process(File file) throws Exception {
-			ZipInputStream zip = new ZipInputStream( new FileInputStream( file ) );
+			final ZipInputStream zip = new ZipInputStream( new FileInputStream( file ) );
 
 			try {
 				ZipEntry entry;
 				while ( (entry = zip.getNextEntry()) != null ) {
-					byte bytes[] = ByteCodeHelper.readByteCode( zip );
+					final byte[] bytes = ByteCodeHelper.readByteCode( zip );
 					entryHandler.handleEntry( entry, bytes );
 					zip.closeEntry();
 				}
-            }
-            finally {
-	            zip.close();
-            }
+			}
+			finally {
+				zip.close();
+			}
 		}
 	}
 }

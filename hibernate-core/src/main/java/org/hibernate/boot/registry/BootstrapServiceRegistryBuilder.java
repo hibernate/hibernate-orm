@@ -202,9 +202,9 @@ public class BootstrapServiceRegistryBuilder {
 			// the providedClassLoaders and the overridenClassLoader.
 			final Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
 
-            if ( providedClassLoaders != null )  {
-                classLoaders.addAll( providedClassLoaders );
-            }
+			if ( providedClassLoaders != null )  {
+				classLoaders.addAll( providedClassLoaders );
+			}
 			
 			classLoaderService = new ClassLoaderServiceImpl( classLoaders );
 		}

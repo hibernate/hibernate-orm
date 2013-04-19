@@ -40,6 +40,6 @@ public class StaleStateException extends HibernateException {
 	 * @param message The message explaining the exception condition
 	 */
 	public StaleStateException(String message) {
-		super(message);
+		super( message );
 	}
 }

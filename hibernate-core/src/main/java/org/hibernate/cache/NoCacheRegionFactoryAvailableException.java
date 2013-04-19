@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,21 +20,30 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.cache;
+
 import org.hibernate.cfg.Environment;
 
 /**
- * Implementation of NoCacheRegionFactoryAvailableException.
+ * Indicates a condition where a second-level cache implementation was expected to be to available, but
+ * none was found on the classpath.
  *
  * @author Steve Ebersole
  */
 public class NoCacheRegionFactoryAvailableException extends CacheException {
-	private static final String MSG = "Second-level cache is used in the application, but property "
-			+ Environment.CACHE_REGION_FACTORY + " is not given, please either disable second level cache" +
-			" or set correct region factory class name to property "+Environment.CACHE_REGION_FACTORY+
-			" (and make sure the second level cache provider, hibernate-infinispan, for example, is available in the classpath).";
+	private static final String MSG = String.format(
+			"Second-level cache is used in the application, but property %s is not given; " +
+					"please either disable second level cache or set correct region factory using the %s setting " +
+					"and make sure the second level cache provider (hibernate-infinispan, e.g.) is available on the " +
+					"classpath.",
+			Environment.CACHE_REGION_FACTORY,
+			Environment.CACHE_REGION_FACTORY
+	);
+
+	/**
+	 * Constructs a NoCacheRegionFactoryAvailableException with a standard message.
+	 */
 	public NoCacheRegionFactoryAvailableException() {
 		super( MSG );
 	}

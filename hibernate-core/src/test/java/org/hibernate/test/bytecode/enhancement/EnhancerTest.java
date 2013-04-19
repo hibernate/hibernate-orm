@@ -36,12 +36,11 @@ import org.hibernate.EntityMode;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.mapping.PersistentClass;
 
 import org.junit.Test;
 
@@ -123,30 +122,30 @@ public class EnhancerTest extends BaseUnitTestCase {
 
 		// call the new methods
 		//
-		Method setter = entityClass.getMethod( Enhancer.ENTITY_ENTRY_SETTER_NAME, EntityEntry.class );
-		Method getter = entityClass.getMethod( Enhancer.ENTITY_ENTRY_GETTER_NAME );
+		Method setter = entityClass.getMethod( EnhancerConstants.ENTITY_ENTRY_SETTER_NAME, EntityEntry.class );
+		Method getter = entityClass.getMethod( EnhancerConstants.ENTITY_ENTRY_GETTER_NAME );
 		assertNull( getter.invoke( entityInstance ) );
 		setter.invoke( entityInstance, makeEntityEntry() );
 		assertNotNull( getter.invoke( entityInstance ) );
 		setter.invoke( entityInstance, new Object[] {null} );
 		assertNull( getter.invoke( entityInstance ) );
 
-		Method entityInstanceGetter = entityClass.getMethod( Enhancer.ENTITY_INSTANCE_GETTER_NAME );
+		Method entityInstanceGetter = entityClass.getMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME );
 		assertSame( entityInstance, entityInstanceGetter.invoke( entityInstance ) );
 
-		Method previousGetter = entityClass.getMethod( Enhancer.PREVIOUS_GETTER_NAME );
-		Method previousSetter = entityClass.getMethod( Enhancer.PREVIOUS_SETTER_NAME, ManagedEntity.class );
+		Method previousGetter = entityClass.getMethod( EnhancerConstants.PREVIOUS_GETTER_NAME );
+		Method previousSetter = entityClass.getMethod( EnhancerConstants.PREVIOUS_SETTER_NAME, ManagedEntity.class );
 		previousSetter.invoke( entityInstance, entityInstance );
 		assertSame( entityInstance, previousGetter.invoke( entityInstance ) );
 
-		Method nextGetter = entityClass.getMethod( Enhancer.PREVIOUS_GETTER_NAME );
-		Method nextSetter = entityClass.getMethod( Enhancer.PREVIOUS_SETTER_NAME, ManagedEntity.class );
+		Method nextGetter = entityClass.getMethod( EnhancerConstants.PREVIOUS_GETTER_NAME );
+		Method nextSetter = entityClass.getMethod( EnhancerConstants.PREVIOUS_SETTER_NAME, ManagedEntity.class );
 		nextSetter.invoke( entityInstance, entityInstance );
 		assertSame( entityInstance, nextGetter.invoke( entityInstance ) );
 
 		// add an attribute interceptor...
-		Method interceptorGetter = entityClass.getMethod( Enhancer.INTERCEPTOR_GETTER_NAME );
-		Method interceptorSetter = entityClass.getMethod( Enhancer.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class );
+		Method interceptorGetter = entityClass.getMethod( EnhancerConstants.INTERCEPTOR_GETTER_NAME );
+		Method interceptorSetter = entityClass.getMethod( EnhancerConstants.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class );
 
 		assertNull( interceptorGetter.invoke( entityInstance ) );
 		entityClass.getMethod( "getId" ).invoke( entityInstance );

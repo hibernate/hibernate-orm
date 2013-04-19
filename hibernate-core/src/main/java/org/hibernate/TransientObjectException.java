@@ -35,7 +35,7 @@ public class TransientObjectException extends HibernateException {
 	 * @param message The message explaining the exception condition
 	 */
 	public TransientObjectException(String message) {
-		super(message);
+		super( message );
 	}
 
 }

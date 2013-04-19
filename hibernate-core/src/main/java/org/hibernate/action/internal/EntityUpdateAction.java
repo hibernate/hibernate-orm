@@ -46,6 +46,9 @@ import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
+/**
+ * The action for performing entity updates.
+ */
 public final class EntityUpdateAction extends EntityAction {
 	private final Object[] state;
 	private final Object[] previousState;
@@ -58,18 +61,33 @@ public final class EntityUpdateAction extends EntityAction {
 	private Object cacheEntry;
 	private SoftLock lock;
 
+	/**
+	 * Constructs an EntityUpdateAction
+	 *
+	 * @param id The entity identifier
+	 * @param state The current (extracted) entity state
+	 * @param dirtyProperties The indexes (in reference to state) properties with dirty state
+	 * @param hasDirtyCollection Were any collections dirty?
+	 * @param previousState The previous (stored) state
+	 * @param previousVersion The previous (stored) version
+	 * @param nextVersion The incremented version
+	 * @param instance The entity instance
+	 * @param rowId The entity's rowid
+	 * @param persister The entity's persister
+	 * @param session The session
+	 */
 	public EntityUpdateAction(
-	        final Serializable id,
-	        final Object[] state,
-	        final int[] dirtyProperties,
-	        final boolean hasDirtyCollection,
-	        final Object[] previousState,
-	        final Object previousVersion,
-	        final Object nextVersion,
-	        final Object instance,
-	        final Object rowId,
-	        final EntityPersister persister,
-	        final SessionImplementor session) throws HibernateException {
+			final Serializable id,
+			final Object[] state,
+			final int[] dirtyProperties,
+			final boolean hasDirtyCollection,
+			final Object[] previousState,
+			final Object previousVersion,
+			final Object nextVersion,
+			final Object instance,
+			final Object rowId,
+			final EntityPersister persister,
+			final SessionImplementor session) {
 		super( session, id, instance, persister );
 		this.state = state;
 		this.previousState = previousState;
@@ -107,12 +125,12 @@ public final class EntityUpdateAction extends EntityAction {
 
 	@Override
 	public void execute() throws HibernateException {
-		Serializable id = getId();
-		EntityPersister persister = getPersister();
-		SessionImplementor session = getSession();
-		Object instance = getInstance();
+		final Serializable id = getId();
+		final EntityPersister persister = getPersister();
+		final SessionImplementor session = getSession();
+		final Object instance = getInstance();
 
-		boolean veto = preUpdate();
+		final boolean veto = preUpdate();
 
 		final SessionFactoryImplementor factory = getSession().getFactory();
 		Object previousVersion = this.previousVersion;
@@ -150,7 +168,7 @@ public final class EntityUpdateAction extends EntityAction {
 			);
 		}
 
-		EntityEntry entry = getSession().getPersistenceContext().getEntry( instance );
+		final EntityEntry entry = getSession().getPersistenceContext().getEntry( instance );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible nonthreadsafe access to session" );
 		}
@@ -185,9 +203,9 @@ public final class EntityUpdateAction extends EntityAction {
 			}
 			else {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
+				final CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
-				boolean put = persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
+				final boolean put = persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
 				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 					factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 				}
@@ -205,14 +223,13 @@ public final class EntityUpdateAction extends EntityAction {
 		postUpdate();
 
 		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatisticsImplementor()
-					.updateEntity( getPersister().getEntityName() );
+			factory.getStatisticsImplementor().updateEntity( getPersister().getEntityName() );
 		}
 	}
 
 	private boolean preUpdate() {
 		boolean veto = false;
-		EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
+		final EventListenerGroup<PreUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -231,7 +248,7 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 	private void postUpdate() {
-		EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
+		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
@@ -250,7 +267,7 @@ public final class EntityUpdateAction extends EntityAction {
 	}
 
 	private void postCommitUpdate() {
-		EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
+		final EventListenerGroup<PostUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
@@ -282,17 +299,17 @@ public final class EntityUpdateAction extends EntityAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws CacheException {
-		EntityPersister persister = getPersister();
+		final EntityPersister persister = getPersister();
 		if ( persister.hasCache() ) {
 			
 			final CacheKey ck = getSession().generateCacheKey(
-					getId(), 
+					getId(),
 					persister.getIdentifierType(), 
 					persister.getRootEntityName()
-				);
+			);
 			
 			if ( success && cacheEntry!=null /*!persister.isCacheInvalidationRequired()*/ ) {
-				boolean put = persister.getCacheAccessStrategy().afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
+				final boolean put = persister.getCacheAccessStrategy().afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
 				
 				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
 					getSession().getFactory().getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );

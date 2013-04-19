@@ -42,8 +42,9 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
- * <li>{@link ClassLoaderService}</li>
- * <li>{@link IntegratorService}</li>
+ *     <li>{@link ClassLoaderService}</li>
+ *     <li>{@link IntegratorService}</li>
+ *     <li>{@link StrategySelector}</li>
  * </ul>
  *
  * IMPL NOTE : Currently implements the deprecated {@link org.hibernate.service.BootstrapServiceRegistry} contract
@@ -61,10 +62,29 @@ public class BootstrapServiceRegistryImpl
 	private final ServiceBinding<StrategySelector> strategySelectorBinding;
 	private final ServiceBinding<IntegratorService> integratorServiceBinding;
 
+	/**
+	 * Constructs a BootstrapServiceRegistryImpl.
+	 *
+	 * Do not use directly generally speaking.  Use {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder}
+	 * instead.
+	 *
+	 * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+	 */
 	public BootstrapServiceRegistryImpl() {
 		this( new ClassLoaderServiceImpl(), NO_INTEGRATORS );
 	}
 
+	/**
+	 * Constructs a BootstrapServiceRegistryImpl.
+	 *
+	 * Do not use directly generally speaking.  Use {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder}
+	 * instead.
+	 *
+	 * @param classLoaderService The ClassLoaderService to use
+	 * @param providedIntegrators The group of explicitly provided integrators
+	 *
+	 * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+	 */
 	public BootstrapServiceRegistryImpl(
 			ClassLoaderService classLoaderService,
 			LinkedHashSet<Integrator> providedIntegrators) {
@@ -88,6 +108,19 @@ public class BootstrapServiceRegistryImpl
 		);
 	}
 
+
+	/**
+	 * Constructs a BootstrapServiceRegistryImpl.
+	 *
+	 * Do not use directly generally speaking.  Use {@link org.hibernate.boot.registry.BootstrapServiceRegistryBuilder}
+	 * instead.
+	 *
+	 * @param classLoaderService The ClassLoaderService to use
+	 * @param strategySelector The StrategySelector to use
+	 * @param integratorService The IntegratorService to use
+	 *
+	 * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+	 */
 	public BootstrapServiceRegistryImpl(
 			ClassLoaderService classLoaderService,
 			StrategySelector strategySelector,

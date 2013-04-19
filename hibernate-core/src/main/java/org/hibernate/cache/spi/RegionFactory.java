@@ -135,7 +135,7 @@ public interface RegionFactory extends Service {
 			throws CacheException;
 
 	/**
-	 * Build a cache region specialized for storing query results
+	 * Build a cache region specialized for storing query results.
 	 *
 	 * @param regionName The name of the region.
 	 * @param properties Configuration properties.

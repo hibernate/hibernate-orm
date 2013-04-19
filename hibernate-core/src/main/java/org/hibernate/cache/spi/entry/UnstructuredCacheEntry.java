@@ -32,14 +32,21 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class UnstructuredCacheEntry implements CacheEntryStructure {
+	/**
+	 * Access to the singleton instance.
+	 */
 	public static final UnstructuredCacheEntry INSTANCE = new UnstructuredCacheEntry();
 
+	@Override
 	public Object structure(Object item) {
 		return item;
 	}
 
-	public Object destructure(Object map, SessionFactoryImplementor factory) {
-		return map;
+	@Override
+	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+		return structured;
 	}
 
+	private UnstructuredCacheEntry() {
+	}
 }

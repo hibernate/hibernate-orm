@@ -36,6 +36,6 @@ public class PropertyNotFoundException extends MappingException {
 	 * @param message A message explaining the exception condition
 	 */
 	public PropertyNotFoundException(String message) {
-		super(message);
+		super( message );
 	}
 }

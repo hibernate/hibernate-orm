@@ -315,8 +315,14 @@ subprojects { subProject ->
         task checkstylePublicSources(type: Checkstyle) {
             checkstyleClasspath = checkstyleMain.checkstyleClasspath
             classpath = checkstyleMain.classpath
-            configFile = rootProject.file( 'shared/config/checkstyle/public_checks.xml' )
+            configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
             source subProject.sourceSets.main.originalJavaSrcDirs
+            // exclude generated sources
+            exclude '**/generated-src/**'
+            // because cfg package is a mess mainly from annotation stuff
+            exclude '**/org/hibernate/cfg/**'
+            exclude '**/org/hibernate/cfg/*'
+            // because this should only report on api/spi
             exclude '**/internal/**'
             exclude '**/internal/*'
             ignoreFailures = false
@@ -331,13 +337,21 @@ subprojects { subProject ->
 
         // Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         checkstyle {
+            sourceSets = [ subProject.sourceSets.main ]
             configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
             showViolations = false
             ignoreFailures = true
         }
+        // exclude generated sources
+        checkstyleMain.exclude '**/generated-src/**'
+        // because cfg package is a mess mainly from annotation stuff
+        checkstyleMain.exclude '**/org/hibernate/cfg/**'
+        checkstyleMain.exclude '**/org/hibernate/cfg/*'
+
         findbugs {
             ignoreFailures = true
         }
+
         buildDashboard.dependsOn check
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

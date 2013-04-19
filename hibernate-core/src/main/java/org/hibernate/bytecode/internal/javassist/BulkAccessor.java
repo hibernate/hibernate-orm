@@ -26,22 +26,36 @@ package org.hibernate.bytecode.internal.javassist;
 import java.io.Serializable;
 
 /**
- * A JavaBean accessor.
- * <p/>
- * <p>This object provides methods that set/get multiple properties
- * of a JavaBean at once.  This class and its support classes have been
- * developed for the comaptibility with cglib
- * (<tt>http://cglib.sourceforge.net/</tt>).
+ * A JavaBean bulk accessor, which provides methods capable of getting/setting multiple properties
+ * of a JavaBean at once.
  *
  * @author Muga Nishizawa
- * @author modified by Shigeru Chiba
+ * @author Shigeru Chiba
  */
 public abstract class BulkAccessor implements Serializable {
 	protected Class target;
 	protected String[] getters, setters;
 	protected Class[] types;
 
-	protected BulkAccessor() {
+	/**
+	 * Creates a new instance of BulkAccessor.  The created instance provides methods for setting/getting
+	 * specified properties at once.
+	 *
+	 * @param beanClass the class of the JavaBeans accessed
+	 *                  through the created object.
+	 * @param getters   the names of setter methods for specified properties.
+	 * @param setters   the names of getter methods for specified properties.
+	 * @param types     the types of specified properties.
+	 *
+	 * @return The created bulk accessor
+	 */
+	public static BulkAccessor create(
+			Class beanClass,
+			String[] getters,
+			String[] setters,
+			Class[] types) {
+		final BulkAccessorFactory factory = new BulkAccessorFactory( beanClass, getters, setters, types );
+		return factory.create();
 	}
 
 	/**
@@ -64,15 +78,19 @@ public abstract class BulkAccessor implements Serializable {
 	 * Returns the values of properties of a given bean.
 	 *
 	 * @param bean JavaBean.
+	 *
+	 * @return The property values
 	 */
 	public Object[] getPropertyValues(Object bean) {
-		Object[] values = new Object[getters.length];
+		final Object[] values = new Object[getters.length];
 		getPropertyValues( bean, values );
 		return values;
 	}
 
 	/**
 	 * Returns the types of properties.
+	 *
+	 * @return The property types
 	 */
 	public Class[] getPropertyTypes() {
 		return types.clone();
@@ -80,6 +98,8 @@ public abstract class BulkAccessor implements Serializable {
 
 	/**
 	 * Returns the setter names of properties.
+	 *
+	 * @return The getter names
 	 */
 	public String[] getGetters() {
 		return getters.clone();
@@ -87,28 +107,13 @@ public abstract class BulkAccessor implements Serializable {
 
 	/**
 	 * Returns the getter names of the properties.
+	 *
+	 * @return The setter names
 	 */
 	public String[] getSetters() {
 		return setters.clone();
 	}
 
-	/**
-	 * Creates a new instance of <code>BulkAccessor</code>.
-	 * The created instance provides methods for setting/getting
-	 * specified properties at once.
-	 *
-	 * @param beanClass the class of the JavaBeans accessed
-	 *                  through the created object.
-	 * @param getters   the names of setter methods for specified properties.
-	 * @param setters   the names of getter methods for specified properties.
-	 * @param types     the types of specified properties.
-	 */
-	public static BulkAccessor create(
-			Class beanClass,
-	        String[] getters,
-	        String[] setters,
-	        Class[] types) {
-		BulkAccessorFactory factory = new BulkAccessorFactory( beanClass, getters, setters, types );
-		return factory.create();
+	private BulkAccessor() {
 	}
 }

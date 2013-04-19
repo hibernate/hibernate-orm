@@ -51,17 +51,23 @@ public class JavassistInstrumenter extends AbstractInstrumenter {
 
 	private final BytecodeProviderImpl provider = new BytecodeProviderImpl();
 
+	/**
+	 * Constructs the Javassist-based instrumenter.
+	 *
+	 * @param logger Logger to use
+	 * @param options Instrumentation options
+	 */
 	public JavassistInstrumenter(Logger logger, Options options) {
 		super( logger, options );
 	}
 
 	@Override
-    protected ClassDescriptor getClassDescriptor(byte[] bytecode) throws IOException {
+	protected ClassDescriptor getClassDescriptor(byte[] bytecode) throws IOException {
 		return new CustomClassDescriptor( bytecode );
 	}
 
 	@Override
-    protected ClassTransformer getClassTransformer(ClassDescriptor descriptor, Set classNames) {
+	protected ClassTransformer getClassTransformer(ClassDescriptor descriptor, Set classNames) {
 		if ( descriptor.isInstrumented() ) {
 			logger.debug( "class [" + descriptor.getName() + "] already instrumented" );
 			return null;
@@ -85,7 +91,7 @@ public class JavassistInstrumenter extends AbstractInstrumenter {
 		}
 
 		public boolean isInstrumented() {
-			String[] interfaceNames = classFile.getInterfaces();
+			final String[] interfaceNames = classFile.getInterfaces();
 			for ( String interfaceName : interfaceNames ) {
 				if ( FieldHandled.class.getName().equals( interfaceName ) ) {
 					return true;

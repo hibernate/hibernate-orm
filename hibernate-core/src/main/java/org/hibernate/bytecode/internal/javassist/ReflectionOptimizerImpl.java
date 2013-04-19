@@ -33,21 +33,28 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
  * @author Steve Ebersole
  */
 public class ReflectionOptimizerImpl implements ReflectionOptimizer, Serializable {
-
 	private final InstantiationOptimizer instantiationOptimizer;
 	private final AccessOptimizer accessOptimizer;
 
+	/**
+	 * Constructs a ReflectionOptimizerImpl
+	 *
+	 * @param instantiationOptimizer The instantiation optimizer to use
+	 * @param accessOptimizer The property access optimizer to use.
+	 */
 	public ReflectionOptimizerImpl(
 			InstantiationOptimizer instantiationOptimizer,
-	        AccessOptimizer accessOptimizer) {
+			AccessOptimizer accessOptimizer) {
 		this.instantiationOptimizer = instantiationOptimizer;
 		this.accessOptimizer = accessOptimizer;
 	}
 
+	@Override
 	public InstantiationOptimizer getInstantiationOptimizer() {
 		return instantiationOptimizer;
 	}
 
+	@Override
 	public AccessOptimizer getAccessOptimizer() {
 		return accessOptimizer;
 	}

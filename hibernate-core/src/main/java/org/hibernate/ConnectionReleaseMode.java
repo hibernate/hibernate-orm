@@ -60,7 +60,7 @@ public enum ConnectionReleaseMode{
 	 *
 	 * @return The matched enum value.
 	 */
-	public static ConnectionReleaseMode parse(final String name){
+	public static ConnectionReleaseMode parse(final String name) {
 		return ConnectionReleaseMode.valueOf( name.toUpperCase() );
 	}
 }

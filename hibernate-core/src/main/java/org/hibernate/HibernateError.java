@@ -28,16 +28,23 @@ package org.hibernate;
  *
  * @author Steve Ebersole
  */
-public abstract class HibernateError extends HibernateException {
+public class HibernateError extends HibernateException {
+	/**
+	 * Constructs HibernateError with the condition message.
+	 *
+	 * @param message Message explaining the exception/error condition
+	 */
 	public HibernateError(String message) {
 		super( message );
 	}
 
-	public HibernateError(Throwable root) {
-		super( root );
-	}
-
-	public HibernateError(String message, Throwable root) {
-		super( message, root );
+	/**
+	 * Constructs HibernateError with the condition message and cause.
+	 *
+	 * @param message Message explaining the exception/error condition
+	 * @param cause The underlying cause.
+	 */
+	public HibernateError(String message, Throwable cause) {
+		super( message, cause );
 	}
 }

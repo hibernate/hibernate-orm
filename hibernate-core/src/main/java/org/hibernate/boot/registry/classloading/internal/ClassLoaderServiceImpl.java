@@ -53,14 +53,27 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private final ClassLoader aggregatedClassLoader;
 
+	/**
+	 * Constructs a ClassLoaderServiceImpl with standard set-up
+	 */
 	public ClassLoaderServiceImpl() {
 		this( ClassLoaderServiceImpl.class.getClassLoader() );
 	}
 
+	/**
+	 * Constructs a ClassLoaderServiceImpl with the given ClassLoader
+	 *
+	 * @param classLoader The ClassLoader to use
+	 */
 	public ClassLoaderServiceImpl(ClassLoader classLoader) {
 		this( Collections.singletonList( classLoader ) );
 	}
 
+	/**
+	 * Constructs a ClassLoaderServiceImpl with the given ClassLoader instances
+	 *
+	 * @param providedClassLoaders The ClassLoader instances to use
+	 */
 	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
 
@@ -91,22 +104,31 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		this.aggregatedClassLoader = new AggregatedClassLoader( orderedClassLoaderSet );
 	}
 
-	@SuppressWarnings({"UnusedDeclaration", "unchecked", "deprecation"})
+	/**
+	 * No longer used/supported!
+	 *
+	 * @param configValues The config values
+	 *
+	 * @return The built service
+	 *
+	 * @deprecated No longer used/supported!
+	 */
 	@Deprecated
-	public static ClassLoaderServiceImpl fromConfigSettings(Map configVales) {
+	@SuppressWarnings({"UnusedDeclaration", "unchecked", "deprecation"})
+	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
 		final List<ClassLoader> providedClassLoaders = new ArrayList<ClassLoader>();
 
-		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configVales.get( AvailableSettings.CLASSLOADERS );
+		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
 		if ( classLoaders != null ) {
 			for ( ClassLoader classLoader : classLoaders ) {
 				providedClassLoaders.add( classLoader );
 			}
 		}
 
-		addIfSet( providedClassLoaders, AvailableSettings.APP_CLASSLOADER, configVales );
-		addIfSet( providedClassLoaders, AvailableSettings.RESOURCES_CLASSLOADER, configVales );
-		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configVales );
-		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configVales );
+		addIfSet( providedClassLoaders, AvailableSettings.APP_CLASSLOADER, configValues );
+		addIfSet( providedClassLoaders, AvailableSettings.RESOURCES_CLASSLOADER, configValues );
+		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
+		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
 
 		if ( providedClassLoaders.isEmpty() ) {
 			log.debugf( "Incoming config yielded no classloaders; adding standard SE ones" );
@@ -244,7 +266,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		try {
 			log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
-			InputStream stream =  aggregatedClassLoader.getResourceAsStream( name );
+			final InputStream stream =  aggregatedClassLoader.getResourceAsStream( name );
 			if ( stream != null ) {
 				return stream;
 			}
@@ -252,7 +274,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		catch ( Exception ignore ) {
 		}
 
-		final String stripped = name.startsWith( "/" ) ? name.substring(1) : null;
+		final String stripped = name.startsWith( "/" ) ? name.substring( 1 ) : null;
 
 		if ( stripped != null ) {
 			try {
@@ -264,7 +286,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 			try {
 				log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
-				InputStream stream = aggregatedClassLoader.getResourceAsStream( stripped );
+				final InputStream stream = aggregatedClassLoader.getResourceAsStream( stripped );
 				if ( stream != null ) {
 					return stream;
 				}
@@ -278,9 +300,9 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public List<URL> locateResources(String name) {
-		ArrayList<URL> urls = new ArrayList<URL>();
+		final ArrayList<URL> urls = new ArrayList<URL>();
 		try {
-			Enumeration<URL> urlEnumeration = aggregatedClassLoader.getResources( name );
+			final Enumeration<URL> urlEnumeration = aggregatedClassLoader.getResources( name );
 			if ( urlEnumeration != null && urlEnumeration.hasMoreElements() ) {
 				while ( urlEnumeration.hasMoreElements() ) {
 					urls.add( urlEnumeration.nextElement() );
@@ -308,10 +330,28 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	// completely temporary !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+	/**
+	 * Hack around continued (temporary) need to sometimes set the TCCL for code we call that expects it.
+	 *
+	 * @param <T> The result type
+	 */
 	public static interface Work<T> {
+		/**
+		 * The work to be performed with the TCCL set
+		 *
+		 * @return The result of the work
+		 */
 		public T perform();
 	}
 
+	/**
+	 * Perform some discrete work with with the TCCL set to our aggregated ClassLoader
+	 *
+	 * @param work The discrete work to be done
+	 * @param <T> The type of the work result
+	 *
+	 * @return The work result.
+	 */
 	public <T> T withTccl(Work<T> work) {
 		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 

@@ -38,31 +38,39 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Steve Ebersole
  */
 public class StructuredCacheEntry implements CacheEntryStructure {
-
 	private EntityPersister persister;
 
+	/**
+	 * Constructs a StructuredCacheEntry strategy
+	 *
+	 * @param persister The persister whose data needs to be structured.
+	 */
 	public StructuredCacheEntry(EntityPersister persister) {
 		this.persister = persister;
 	}
-	
-	public Object destructure(Object item, SessionFactoryImplementor factory) {
-		Map map = (Map) item;
-		boolean lazyPropertiesUnfetched = ( (Boolean) map.get("_lazyPropertiesUnfetched") ).booleanValue();
-		String subclass = (String) map.get("_subclass");
-		Object version = map.get("_version");
-		EntityPersister subclassPersister = factory.getEntityPersister(subclass);
-		String[] names = subclassPersister.getPropertyNames();
-		Serializable[] state = new Serializable[names.length];
-		for ( int i=0; i<names.length; i++ ) {
+
+	@Override
+	@SuppressWarnings("UnnecessaryUnboxing")
+	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+		final Map map = (Map) structured;
+		final boolean lazyPropertiesUnfetched = ( (Boolean) map.get( "_lazyPropertiesUnfetched" ) ).booleanValue();
+		final String subclass = (String) map.get( "_subclass" );
+		final Object version = map.get( "_version" );
+		final EntityPersister subclassPersister = factory.getEntityPersister( subclass );
+		final String[] names = subclassPersister.getPropertyNames();
+		final Serializable[] state = new Serializable[names.length];
+		for ( int i = 0; i < names.length; i++ ) {
 			state[i] = (Serializable) map.get( names[i] );
 		}
 		return new StandardCacheEntryImpl( state, subclass, lazyPropertiesUnfetched, version );
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object structure(Object item) {
-		CacheEntry entry = (CacheEntry) item;
-		String[] names = persister.getPropertyNames();
-		Map map = new HashMap(names.length+2);
+		final CacheEntry entry = (CacheEntry) item;
+		final String[] names = persister.getPropertyNames();
+		final Map map = new HashMap(names.length+2);
 		map.put( "_subclass", entry.getSubclass() );
 		map.put( "_version", entry.getVersion() );
 		map.put( "_lazyPropertiesUnfetched", entry.areLazyPropertiesUnfetched() );

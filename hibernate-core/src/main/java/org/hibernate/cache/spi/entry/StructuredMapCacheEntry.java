@@ -25,7 +25,6 @@ package org.hibernate.cache.spi.entry;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,28 +35,35 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Gavin King
  */
 public class StructuredMapCacheEntry implements CacheEntryStructure {
+	/**
+	 * Access to the singleton reference
+	 */
+	public static final StructuredMapCacheEntry INSTANCE = new StructuredMapCacheEntry();
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object structure(Object item) {
-		CollectionCacheEntry entry = (CollectionCacheEntry) item;
-		Serializable[] state = entry.getState();
-		Map map = new HashMap(state.length);
+		final CollectionCacheEntry entry = (CollectionCacheEntry) item;
+		final Serializable[] state = entry.getState();
+		final Map map = new HashMap(state.length);
 		for ( int i=0; i<state.length; ) {
 			map.put( state[i++], state[i++] );
 		}
 		return map;
 	}
-	
-	public Object destructure(Object item, SessionFactoryImplementor factory) {
-		Map map = (Map) item;
-		Serializable[] state = new Serializable[ map.size()*2 ];
-		int i=0;
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
+
+	@Override
+	public Object destructure(Object structured, SessionFactoryImplementor factory) {
+		final Map<?,?> map = (Map<?,?>) structured;
+		final Serializable[] state = new Serializable[ map.size()*2 ];
+		int i = 0;
+		for ( Map.Entry me : map.entrySet() ) {
 			state[i++] = (Serializable) me.getKey();
 			state[i++] = (Serializable) me.getValue();
 		}
 		return new CollectionCacheEntry(state);
 	}
 
+	private StructuredMapCacheEntry() {
+	}
 }

@@ -455,13 +455,9 @@ public final class StringHelper {
 
 	public static String qualify(String prefix, String name) {
 		if ( name == null || prefix == null ) {
-			throw new NullPointerException();
+			throw new NullPointerException( "prefix or name were null attempting to build qualified name" );
 		}
-		return new StringBuilder( prefix.length() + name.length() + 1 )
-				.append(prefix)
-				.append('.')
-				.append(name)
-				.toString();
+		return prefix + '.' + name;
 	}
 
 	public static String[] qualify(String prefix, String[] names) {

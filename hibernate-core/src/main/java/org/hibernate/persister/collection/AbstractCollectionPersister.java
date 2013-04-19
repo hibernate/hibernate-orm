@@ -245,12 +245,12 @@ public abstract class AbstractCollectionPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
-			cacheEntryStructure = collection.isMap() ?
-					new StructuredMapCacheEntry() :
-					new StructuredCollectionCacheEntry();
+			cacheEntryStructure = collection.isMap()
+					? StructuredMapCacheEntry.INSTANCE
+					: StructuredCollectionCacheEntry.INSTANCE;
 		}
 		else {
-			cacheEntryStructure = new UnstructuredCacheEntry();
+			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
 
 		dialect = factory.getDialect();

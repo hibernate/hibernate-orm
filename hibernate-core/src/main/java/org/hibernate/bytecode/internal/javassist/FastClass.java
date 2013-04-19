@@ -30,34 +30,66 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 /**
+ * Fast access to class information
+ *
  * @author Muga Nishizawa
  */
 public class FastClass implements Serializable {
-
 	private static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
 
-	private Class type;
+	private final Class type;
 
-	private FastClass() {
+	/**
+	 * Constructs a FastClass
+	 *
+	 * @param type The class to optimize
+	 *
+	 * @return The fast class access to the given class
+	 */
+	public static FastClass create(Class type) {
+		return new FastClass( type );
 	}
 
 	private FastClass(Class type) {
 		this.type = type;
 	}
 
+	/**
+	 * Access to invoke a method on the class that this fast class handles
+	 *
+	 * @param name The name of the method to invoke,
+	 * @param parameterTypes The method parameter types
+	 * @param obj The instance on which to invoke the method
+	 * @param args The parameter arguments
+	 *
+	 * @return The method result
+	 *
+	 * @throws InvocationTargetException Indicates a problem performing invocation
+	 */
 	public Object invoke(
 			String name,
-	        Class[] parameterTypes,
-	        Object obj,
-	        Object[] args) throws InvocationTargetException {
+			Class[] parameterTypes,
+			Object obj,
+			Object[] args) throws InvocationTargetException {
 		return this.invoke( this.getIndex( name, parameterTypes ), obj, args );
 	}
 
+	/**
+	 * Access to invoke a method on the class that this fast class handles by its index
+	 *
+	 * @param index The method index
+	 * @param obj The instance on which to invoke the method
+	 * @param args The parameter arguments
+	 *
+	 * @return The method result
+	 *
+	 * @throws InvocationTargetException Indicates a problem performing invocation
+	 */
 	public Object invoke(
 			int index,
-	        Object obj,
-	        Object[] args) throws InvocationTargetException {
-		Method[] methods = this.type.getMethods();
+			Object obj,
+			Object[] args) throws InvocationTargetException {
+		final Method[] methods = this.type.getMethods();
 		try {
 			return methods[index].invoke( obj, args );
 		}
@@ -71,22 +103,49 @@ public class FastClass implements Serializable {
 		}
 	}
 
+	/**
+	 * Invoke the default constructor
+	 *
+	 * @return The constructed instance
+	 *
+	 * @throws InvocationTargetException Indicates a problem performing invocation
+	 */
 	public Object newInstance() throws InvocationTargetException {
 		return this.newInstance( this.getIndex( EMPTY_CLASS_ARRAY ), null );
 	}
 
+	/**
+	 * Invoke a parameterized constructor
+	 *
+	 * @param parameterTypes The parameter types
+	 * @param args The parameter arguments to pass along
+	 *
+	 * @return The constructed instance
+	 *
+	 * @throws InvocationTargetException Indicates a problem performing invocation
+	 */
 	public Object newInstance(
 			Class[] parameterTypes,
-	        Object[] args) throws InvocationTargetException {
+			Object[] args) throws InvocationTargetException {
 		return this.newInstance( this.getIndex( parameterTypes ), args );
 	}
 
+	/**
+	 * Invoke a constructor by its index
+	 *
+	 * @param index The constructor index
+	 * @param args The parameter arguments to pass along
+	 *
+	 * @return The constructed instance
+	 *
+	 * @throws InvocationTargetException Indicates a problem performing invocation
+	 */
 	public Object newInstance(
 			int index,
-	        Object[] args) throws InvocationTargetException {
-		Constructor[] conss = this.type.getConstructors();
+			Object[] args) throws InvocationTargetException {
+		final Constructor[] constructors = this.type.getConstructors();
 		try {
-			return conss[index].newInstance( args );
+			return constructors[index].newInstance( args );
 		}
 		catch ( ArrayIndexOutOfBoundsException e ) {
 			throw new IllegalArgumentException( "Cannot find matching method/constructor" );
@@ -99,9 +158,18 @@ public class FastClass implements Serializable {
 		}
 	}
 
+	/**
+	 * Locate the index of a method
+	 *
+	 * @param name The method name
+	 * @param parameterTypes The method parameter types
+	 *
+	 * @return The index
+	 */
 	public int getIndex(String name, Class[] parameterTypes) {
-		Method[] methods = this.type.getMethods();
-		boolean eq = true;
+		final Method[] methods = this.type.getMethods();
+		boolean eq;
+
 		for ( int i = 0; i < methods.length; ++i ) {
 			if ( !Modifier.isPublic( methods[i].getModifiers() ) ) {
 				continue;
@@ -109,7 +177,7 @@ public class FastClass implements Serializable {
 			if ( !methods[i].getName().equals( name ) ) {
 				continue;
 			}
-			Class[] params = methods[i].getParameterTypes();
+			final Class[] params = methods[i].getParameterTypes();
 			if ( params.length != parameterTypes.length ) {
 				continue;
 			}
@@ -127,14 +195,22 @@ public class FastClass implements Serializable {
 		return -1;
 	}
 
+	/**
+	 * Locate the index of a constructor
+	 *
+	 * @param parameterTypes The constructor parameter types
+	 *
+	 * @return The index
+	 */
 	public int getIndex(Class[] parameterTypes) {
-		Constructor[] conss = this.type.getConstructors();
-		boolean eq = true;
-		for ( int i = 0; i < conss.length; ++i ) {
-			if ( !Modifier.isPublic( conss[i].getModifiers() ) ) {
+		final Constructor[] constructors = this.type.getConstructors();
+		boolean eq;
+
+		for ( int i = 0; i < constructors.length; ++i ) {
+			if ( !Modifier.isPublic( constructors[i].getModifiers() ) ) {
 				continue;
 			}
-			Class[] params = conss[i].getParameterTypes();
+			final Class[] params = constructors[i].getParameterTypes();
 			if ( params.length != parameterTypes.length ) {
 				continue;
 			}
@@ -152,42 +228,37 @@ public class FastClass implements Serializable {
 		return -1;
 	}
 
-	public int getMaxIndex() {
-		Method[] methods = this.type.getMethods();
-		int count = 0;
-		for ( int i = 0; i < methods.length; ++i ) {
-			if ( Modifier.isPublic( methods[i].getModifiers() ) ) {
-				count++;
-			}
-		}
-		return count;
-	}
-
+	/**
+	 * Get the wrapped class name
+	 *
+	 * @return The class name
+	 */
 	public String getName() {
 		return this.type.getName();
 	}
 
+	/**
+	 * Get the wrapped java class reference
+	 *
+	 * @return The class reference
+	 */
 	public Class getJavaClass() {
 		return this.type;
 	}
 
+	@Override
 	public String toString() {
 		return this.type.toString();
 	}
 
+	@Override
 	public int hashCode() {
 		return this.type.hashCode();
 	}
 
+	@Override
 	public boolean equals(Object o) {
-		if (! ( o instanceof FastClass ) ) {
-			return false;
-		}
-		return this.type.equals( ( ( FastClass ) o ).type );
-	}
-
-	public static FastClass create(Class type) {
-		FastClass fc = new FastClass( type );
-		return fc;
+		return o instanceof FastClass
+				&& this.type.equals( ((FastClass) o).type );
 	}
 }

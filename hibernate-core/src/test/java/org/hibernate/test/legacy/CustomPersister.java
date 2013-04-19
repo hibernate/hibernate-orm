@@ -568,7 +568,7 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public CacheEntryStructure getCacheEntryStructure() {
-		return new UnstructuredCacheEntry();
+		return UnstructuredCacheEntry.INSTANCE;
 	}
 
 	@Override

@@ -39,10 +39,19 @@ public class BasicClassFilter implements ClassFilter {
 	private final Set<String> includedClassNames = new HashSet<String>();
 	private final boolean isAllEmpty;
 
+	/**
+	 * Constructs a BasicClassFilter with given configuration.
+	 */
 	public BasicClassFilter() {
 		this( null, null );
 	}
 
+	/**
+	 * Constructs a BasicClassFilter with standard set of configuration.
+	 *
+	 * @param includedPackages Name of packages whose classes should be accepted.
+	 * @param includedClassNames Name of classes that should be accepted.
+	 */
 	public BasicClassFilter(String[] includedPackages, String[] includedClassNames) {
 		this.includedPackages = includedPackages;
 		if ( includedClassNames != null ) {
@@ -50,9 +59,10 @@ public class BasicClassFilter implements ClassFilter {
 		}
 
 		isAllEmpty = ( this.includedPackages == null || this.includedPackages.length == 0 )
-		             && ( this.includedClassNames.isEmpty() );
+				&& ( this.includedClassNames.isEmpty() );
 	}
 
+	@Override
 	public boolean shouldInstrumentClass(String className) {
 		return isAllEmpty ||
 				includedClassNames.contains( className ) ||

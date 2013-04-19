@@ -35,7 +35,6 @@ import org.hibernate.bytecode.buildtime.spi.FieldFilter;
  * @author Steve Ebersole
  */
 public abstract class AbstractClassTransformerImpl implements ClassTransformer {
-
 	protected final ClassFilter classFilter;
 	protected final FieldFilter fieldFilter;
 
@@ -44,6 +43,7 @@ public abstract class AbstractClassTransformerImpl implements ClassTransformer {
 		this.fieldFilter = fieldFilter;
 	}
 
+	@Override
 	public byte[] transform(
 			ClassLoader loader,
 			String className,
@@ -60,6 +60,17 @@ public abstract class AbstractClassTransformerImpl implements ClassTransformer {
 		}
 	}
 
+	/**
+	 * Delegate the transformation call from {@link #transform}
+	 *
+	 * @param loader The class loader to use
+	 * @param className The name of the class to transform
+	 * @param classBeingRedefined If an already loaded class is being redefined, then pass this as a parameter
+	 * @param protectionDomain The protection domain of the class being (re)defined
+	 * @param classfileBuffer The bytes of the class file.
+	 *
+	 * @return The transformed (enhanced/instrumented) bytes.
+	 */
 	protected abstract byte[] doTransform(
 			ClassLoader loader,
 			String className,

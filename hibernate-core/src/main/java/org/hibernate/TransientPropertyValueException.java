@@ -50,7 +50,7 @@ public class TransientPropertyValueException extends TransientObjectException {
 			String transientEntityName, 
 			String propertyOwnerEntityName, 
 			String propertyName) {
-		super(message);
+		super( message );
 		this.transientEntityName = transientEntityName;
 		this.propertyOwnerEntityName = propertyOwnerEntityName;
 		this.propertyName = propertyName;

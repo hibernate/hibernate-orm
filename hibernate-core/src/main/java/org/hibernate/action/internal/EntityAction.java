@@ -84,7 +84,7 @@ public abstract class EntityAction
 
 	protected abstract boolean hasPostCommitEventListeners();
 
-	public boolean needsAfterTransactionCompletion() {
+	protected boolean needsAfterTransactionCompletion() {
 		return persister.hasCache() || hasPostCommitEventListeners();
 	}
 
@@ -104,16 +104,16 @@ public abstract class EntityAction
 	 */
 	public final Serializable getId() {
 		if ( id instanceof DelayedPostInsertIdentifier ) {
-			Serializable eeId = session.getPersistenceContext().getEntry( instance ).getId();
+			final Serializable eeId = session.getPersistenceContext().getEntry( instance ).getId();
 			return eeId instanceof DelayedPostInsertIdentifier ? null : eeId;
 		}
 		return id;
 	}
 
 	public final DelayedPostInsertIdentifier getDelayedId() {
-		return DelayedPostInsertIdentifier.class.isInstance( id ) ?
-				DelayedPostInsertIdentifier.class.cast( id ) :
-				null;
+		return DelayedPostInsertIdentifier.class.isInstance( id )
+				? DelayedPostInsertIdentifier.class.cast( id )
+				: null;
 	}
 
 	/**
@@ -160,9 +160,9 @@ public abstract class EntityAction
 
 	@Override
 	public int compareTo(Object other) {
-		EntityAction action = ( EntityAction ) other;
+		final EntityAction action = (EntityAction) other;
 		//sort first by entity name
-		int roleComparison = entityName.compareTo( action.entityName );
+		final int roleComparison = entityName.compareTo( action.entityName );
 		if ( roleComparison != 0 ) {
 			return roleComparison;
 		}

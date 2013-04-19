@@ -119,7 +119,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * @return this (for method chaining)
 	 */
 	public Criteria add(Criterion criterion);
-	
+
 	/**
 	 * Add an {@link Order ordering} to the result set.
 	 *
@@ -393,7 +393,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * @return this (for method chaining)
 	 */
 	public Criteria setMaxResults(int maxResults);
-	
+
 	/**
 	 * Set the first result to be retrieved.
 	 *
@@ -531,7 +531,7 @@ public interface Criteria extends CriteriaSpecification {
 	 * exeucting the SQL or processing the SQL results.
 	 */
 	public List list() throws HibernateException;
-	
+
 	/**
 	 * Get the results as an instance of {@link ScrollableResults}.
 	 *

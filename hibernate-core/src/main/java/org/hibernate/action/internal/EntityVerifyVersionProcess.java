@@ -31,15 +31,21 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Verify/Increment the entity version
+ * A BeforeTransactionCompletionProcess impl to verify an entity version as part of
+ * before-transaction-completion processing
  *
  * @author Scott Marlow
  */
 public class EntityVerifyVersionProcess implements BeforeTransactionCompletionProcess {
-	@SuppressWarnings( {"FieldCanBeLocal", "UnusedDeclaration"})
 	private final Object object;
 	private final EntityEntry entry;
 
+	/**
+	 * Constructs an EntityVerifyVersionProcess
+	 *
+	 * @param object The entity instance
+	 * @param entry The entity's referenced EntityEntry
+	 */
 	public EntityVerifyVersionProcess(Object object, EntityEntry entry) {
 		this.object = object;
 		this.entry = entry;
@@ -49,7 +55,7 @@ public class EntityVerifyVersionProcess implements BeforeTransactionCompletionPr
 	public void doBeforeTransactionCompletion(SessionImplementor session) {
 		final EntityPersister persister = entry.getPersister();
 
-		Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
+		final Object latestVersion = persister.getCurrentVersion( entry.getId(), session );
 		if ( !entry.getVersion().equals( latestVersion ) ) {
 			throw new OptimisticLockException(
 					object,

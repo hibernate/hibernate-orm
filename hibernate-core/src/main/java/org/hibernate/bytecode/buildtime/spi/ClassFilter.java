@@ -30,7 +30,7 @@ package org.hibernate.bytecode.buildtime.spi;
  */
 public interface ClassFilter {
 	/**
-	 * Should this class be included in instrumentation
+	 * Should this class be included in instrumentation.
 	 *
 	 * @param className The name of the class to check
 	 *

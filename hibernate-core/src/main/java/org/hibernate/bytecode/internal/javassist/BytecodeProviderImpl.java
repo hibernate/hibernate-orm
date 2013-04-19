@@ -48,8 +48,10 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class BytecodeProviderImpl implements BytecodeProvider {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BytecodeProviderImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			BytecodeProviderImpl.class.getName()
+	);
 
 	@Override
 	public ProxyFactoryFactory getProxyFactoryFactory() {
@@ -59,9 +61,9 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 	@Override
 	public ReflectionOptimizer getReflectionOptimizer(
 			Class clazz,
-	        String[] getterNames,
-	        String[] setterNames,
-	        Class[] types) {
+			String[] getterNames,
+			String[] setterNames,
+			Class[] types) {
 		FastClass fastClass;
 		BulkAccessor bulkAccessor;
 		try {
@@ -73,7 +75,7 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 				}
 				else {
 					//test out the optimizer:
-					Object instance = fastClass.newInstance();
+					final Object instance = fastClass.newInstance();
 					bulkAccessor.setPropertyValues( instance, bulkAccessor.getPropertyValues( instance ) );
 				}
 			}
@@ -81,28 +83,39 @@ public class BytecodeProviderImpl implements BytecodeProvider {
 		catch ( Throwable t ) {
 			fastClass = null;
 			bulkAccessor = null;
-            if (LOG.isDebugEnabled()) {
-                int index = 0;
-                if (t instanceof BulkAccessorException) index = ((BulkAccessorException)t).getIndex();
-                if (index >= 0) LOG.debugf("Reflection optimizer disabled for: %s [%s: %s (property %s)",
-                                           clazz.getName(),
-                                           StringHelper.unqualify(t.getClass().getName()),
-                                           t.getMessage(),
-                                           setterNames[index]);
-                else LOG.debugf("Reflection optimizer disabled for: %s [%s: %s",
-                                clazz.getName(),
-                                StringHelper.unqualify(t.getClass().getName()),
-                                t.getMessage());
-            }
+			if ( LOG.isDebugEnabled() ) {
+				int index = 0;
+				if (t instanceof BulkAccessorException) {
+					index = ( (BulkAccessorException) t ).getIndex();
+				}
+				if ( index >= 0 ) {
+					LOG.debugf(
+							"Reflection optimizer disabled for %s [%s: %s (property %s)]",
+							clazz.getName(),
+							StringHelper.unqualify( t.getClass().getName() ),
+							t.getMessage(),
+							setterNames[index]
+					);
+				}
+				else {
+					LOG.debugf(
+							"Reflection optimizer disabled for %s [%s: %s]",
+							clazz.getName(),
+							StringHelper.unqualify( t.getClass().getName() ),
+							t.getMessage()
+					);
+				}
+			}
 		}
 
 		if ( fastClass != null && bulkAccessor != null ) {
 			return new ReflectionOptimizerImpl(
 					new InstantiationOptimizerAdapter( fastClass ),
-			        new AccessOptimizerAdapter( bulkAccessor, clazz )
+					new AccessOptimizerAdapter( bulkAccessor, clazz )
 			);
 		}
-        return null;
+
+		return null;
 	}
 
 	@Override

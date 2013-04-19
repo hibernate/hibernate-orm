@@ -37,18 +37,25 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 public class InstantiationOptimizerAdapter implements ReflectionOptimizer.InstantiationOptimizer, Serializable {
 	private final FastClass fastClass;
 
+	/**
+	 * Constructs the InstantiationOptimizerAdapter
+	 *
+	 * @param fastClass The fast class for the class to be instantiated here.
+	 */
 	public InstantiationOptimizerAdapter(FastClass fastClass) {
 		this.fastClass = fastClass;
 	}
 
+	@Override
 	public Object newInstance() {
 		try {
 			return fastClass.newInstance();
 		}
-		catch ( Throwable t ) {
+		catch ( Exception e ) {
 			throw new InstantiationException(
 					"Could not instantiate entity with Javassist optimizer: ",
-			        fastClass.getJavaClass(), t
+					fastClass.getJavaClass(),
+					e
 			);
 		}
 	}

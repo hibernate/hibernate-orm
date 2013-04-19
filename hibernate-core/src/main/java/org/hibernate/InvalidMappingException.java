@@ -61,7 +61,7 @@ public class InvalidMappingException extends MappingException {
 	 * @param path The path (type specific) of the invalid mapping document
 	 */
 	public InvalidMappingException(String customMessage, String type, String path) {
-		super(customMessage);
+		super( customMessage );
 		this.type=type;
 		this.path=path;
 	}
@@ -104,7 +104,7 @@ public class InvalidMappingException extends MappingException {
 	 * @param path The path (type specific) of the invalid mapping document
 	 */
 	public InvalidMappingException(String type, String path) {
-		this("Could not parse mapping document from " + type + (path==null?"":" " + path), type, path);
+		this( "Could not parse mapping document from " + type + (path==null?"":" " + path), type, path );
 	}
 
 	/**
@@ -115,7 +115,7 @@ public class InvalidMappingException extends MappingException {
 	 * @param cause The underlying cause
 	 */
 	public InvalidMappingException(String type, String path, Throwable cause) {
-		this("Could not parse mapping document from " + type + (path==null?"":" " + path), type, path, cause);		
+		this( "Could not parse mapping document from " + type + (path==null?"":" " + path), type, path, cause );
 	}
 
 	/**

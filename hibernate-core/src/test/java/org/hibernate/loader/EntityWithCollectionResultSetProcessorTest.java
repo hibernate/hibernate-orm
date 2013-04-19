@@ -90,12 +90,6 @@ public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunction
 		session.getTransaction().commit();
 		session.close();
 
-		session = openSession();
-		session.beginTransaction();
-		session.get( Person.class, person.id );
-		session.getTransaction().commit();
-		session.close();
-
 		{
 			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
 					sessionFactory(),
@@ -109,12 +103,10 @@ public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunction
 							Collections.singletonMap( plan.getReturns().get( 0 ), new String[] { "abc" } )
 					);
 			final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
-					sessionFactory(),
 					LoadQueryInfluencers.NONE,
-					plan,
-					aliasResolutionContext
+					plan
 			);
-			final String sql = queryBuilder.generateSql( 1 );
+			final String sql = queryBuilder.generateSql( 1, sessionFactory(), aliasResolutionContext );
 
 			final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan );
 			final List results = new ArrayList();

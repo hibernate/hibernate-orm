@@ -40,6 +40,7 @@ import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.visit.LoadPlanVisitationStrategyAdapter;
 import org.hibernate.loader.plan.spi.visit.LoadPlanVisitor;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.loader.spi.JoinableAssociation;
 import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.LoadQueryBuilder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -49,40 +50,52 @@ import org.hibernate.persister.walking.spi.WalkingException;
  * @author Gail Badner
  */
 public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
-	private final SessionFactoryImplementor sessionFactory;
 	private final LoadQueryInfluencers loadQueryInfluencers;
 	private final LoadPlan loadPlan;
-	private final LoadQueryAliasResolutionContext aliasResolutionContext;
-	private final List<JoinableAssociationImpl> associations;
+	private final List<JoinableAssociation> associations;
 
 	public EntityLoadQueryBuilderImpl(
-			SessionFactoryImplementor sessionFactory,
 			LoadQueryInfluencers loadQueryInfluencers,
-			LoadPlan loadPlan,
-			LoadQueryAliasResolutionContext aliasResolutionContext) {
-		this.sessionFactory = sessionFactory;
+			LoadPlan loadPlan) {
 		this.loadQueryInfluencers = loadQueryInfluencers;
 		this.loadPlan = loadPlan;
 
-		// TODO: remove reliance on aliasResolutionContext; it should only be needed when generating the SQL.
-		this.aliasResolutionContext = aliasResolutionContext;
+	    // TODO: the whole point of the following is to build associations.
+		// this could be done while building loadPlan (and be a part of the LoadPlan).
+		// Should it be?
 		LocalVisitationStrategy strategy = new LocalVisitationStrategy();
 		LoadPlanVisitor.visit( loadPlan, strategy );
 		this.associations = strategy.associations;
 	}
 
 	@Override
-	public String generateSql(int batchSize) {
-		return generateSql( batchSize, getOuterJoinLoadable().getKeyColumnNames() );
+	public String generateSql(
+			int batchSize,
+			SessionFactoryImplementor sessionFactory,
+			LoadQueryAliasResolutionContext aliasResolutionContext) {
+		return generateSql(
+				batchSize,
+				getOuterJoinLoadable().getKeyColumnNames(),
+				sessionFactory,
+				aliasResolutionContext
+		);
 	}
 
-	public String generateSql(int batchSize, String[] uniqueKey) {
+	public String generateSql(
+			int batchSize,
+			String[] uniqueKey,
+			SessionFactoryImplementor sessionFactory,
+			LoadQueryAliasResolutionContext aliasResolutionContext) {
 		final EntityLoadQueryImpl loadQuery = new EntityLoadQueryImpl(
-				sessionFactory,
 				getRootEntityReturn(),
 				associations
 		);
-		return loadQuery.generateSql( uniqueKey, batchSize, getRootEntityReturn().getLockMode(), aliasResolutionContext );
+		return loadQuery.generateSql(
+				uniqueKey,
+				batchSize,
+				getRootEntityReturn().getLockMode(),
+				sessionFactory,
+				aliasResolutionContext );
 	}
 
 	private EntityReturn getRootEntityReturn() {
@@ -92,8 +105,9 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 	private OuterJoinLoadable getOuterJoinLoadable() {
 		return (OuterJoinLoadable) getRootEntityReturn().getEntityPersister();
 	}
+
 	private class LocalVisitationStrategy extends LoadPlanVisitationStrategyAdapter {
-		private final List<JoinableAssociationImpl> associations = new ArrayList<JoinableAssociationImpl>();
+		private final List<JoinableAssociation> associations = new ArrayList<JoinableAssociation>();
 		private Deque<EntityReference> entityReferenceStack = new ArrayDeque<EntityReference>();
 		private Deque<CollectionReference> collectionReferenceStack = new ArrayDeque<CollectionReference>();
 
@@ -135,12 +149,11 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 
 		@Override
 		public void startingEntityFetch(EntityFetch entityFetch) {
-			JoinableAssociationImpl assoc = new JoinableAssociationImpl(
+			EntityJoinableAssociationImpl assoc = new EntityJoinableAssociationImpl(
 					entityFetch,
 					getCurrentCollectionReference(),
 					"",    // getWithClause( entityFetch.getPropertyPath() )
 					false, // hasRestriction( entityFetch.getPropertyPath() )
-					sessionFactory,
 					loadQueryInfluencers.getEnabledFilters()
 			);
 			associations.add( assoc );
@@ -154,12 +167,11 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 
 		@Override
 		public void startingCollectionFetch(CollectionFetch collectionFetch) {
-			JoinableAssociationImpl assoc = new JoinableAssociationImpl(
+			CollectionJoinableAssociationImpl assoc = new CollectionJoinableAssociationImpl(
 					collectionFetch,
 					getCurrentEntityReference(),
 					"",    // getWithClause( entityFetch.getPropertyPath() )
 					false, // hasRestriction( entityFetch.getPropertyPath() )
-					sessionFactory,
 					loadQueryInfluencers.getEnabledFilters()
 			);
 			associations.add( assoc );

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -30,36 +30,39 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.spi.JoinableAssociation;
 import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 
 /**
- * A walker for loaders that fetch entities
+ * Represents an load query for fetching an entity, used for generating SQL.
  *
- * @see org.hibernate.loader.entity.EntityLoader
+ * This code is based on the SQL generation code originally in
+ * org.hibernate.loader.EntityJoinWalker.
+ *
  * @author Gavin King
+ * @author Gail Badner
  */
 public class EntityLoadQueryImpl extends AbstractEntityLoadQueryImpl {
 
 	public EntityLoadQueryImpl(
-			final SessionFactoryImplementor factory,
 			EntityReturn entityReturn,
-			List<JoinableAssociationImpl> associations) throws MappingException {
-		super( factory, entityReturn, associations );
+			List<JoinableAssociation> associations) throws MappingException {
+		super( entityReturn, associations );
 	}
 
 	public String generateSql(
 			String[] uniqueKey,
 			int batchSize,
 			LockMode lockMode,
+			SessionFactoryImplementor factory,
 			LoadQueryAliasResolutionContext aliasResolutionContext) {
-		StringBuilder whereCondition = whereString( getAlias( aliasResolutionContext ), uniqueKey, batchSize )
+		StringBuilder whereCondition = whereString( resolveEntityReturnAlias( aliasResolutionContext ), uniqueKey, batchSize )
 				//include the discriminator and class-level where, but not filters
-				.append( getPersister().filterFragment( getAlias( aliasResolutionContext ), Collections.EMPTY_MAP ) );
-		return generateSql( whereCondition.toString(), "",  new LockOptions().setLockMode( lockMode ), aliasResolutionContext );
+				.append( getPersister().filterFragment( resolveEntityReturnAlias( aliasResolutionContext ), Collections.EMPTY_MAP ) );
+		return generateSql( whereCondition.toString(), "",  new LockOptions().setLockMode( lockMode ), factory, aliasResolutionContext );
 	}
 
-	public String getComment() {
+	protected String getComment() {
 		return "load " + getPersister().getEntityName();
 	}
-
 }

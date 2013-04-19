@@ -32,32 +32,70 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.ScalarReturn;
 
 /**
+ * Provides aliases that are used by load queries and ResultSet processors.
+ *
  * @author Gail Badner
  */
 public interface LoadQueryAliasResolutionContext {
 
+	/**
+	 * Resolve the alias associated with the specified {@link EntityReturn}.
+	 *
+	 * @param entityReturn - the {@link EntityReturn}.
+	 *
+	 * @return the alias associated with the specified {@link EntityReturn}.
+	 */
 	public String resolveEntityReturnAlias(EntityReturn entityReturn);
 
+	/**
+	 * Resolve the alias associated with the specified {@link CollectionReturn}.
+	 *
+	 * @param collectionReturn - the {@link CollectionReturn}.
+	 *
+	 * @return the alias associated with {@link CollectionReturn}.
+	 */
 	public String resolveCollectionReturnAlias(CollectionReturn collectionReturn);
 
+	/**
+	 * Resolve the aliases associated with the specified {@link ScalarReturn}.
+	 *
+	 * @param scalarReturn - the {@link ScalarReturn}.
+	 *
+	 * @return the alias associated with {@link ScalarReturn}.
+	 */
 	String[] resolveScalarReturnAliases(ScalarReturn scalarReturn);
 
 	/**
-	 * Retrieve the SQL table alias.
+	 * Resolve the SQL table alias for the specified {@link EntityReference}.
 	 *
-	 * @return The SQL table alias
+	 * @param entityReference - the {@link EntityReference}.
+	 * @return The SQL table alias for the specified {@link EntityReference}.
 	 */
-	String resolveEntitySqlTableAlias(EntityReference entityReference);
-
-	EntityAliases resolveEntityColumnAliases(EntityReference entityReference);
-
-	String resolveCollectionSqlTableAlias(CollectionReference collectionReference);
+	String resolveEntityTableAlias(EntityReference entityReference);
 
 	/**
-	 * Returns the description of the aliases in the JDBC ResultSet that identify values "belonging" to the
-	 * this collection.
+	 * Returns the description of the aliases in the JDBC ResultSet that identify values "belonging" to
+	 * an entity.
 	 *
-	 * @return The ResultSet alias descriptor for the collection
+	 * @param entityReference - the {@link EntityReference} for the entity.
+	 *
+	 * @return The ResultSet alias descriptor for the {@link EntityReference}
+	 */
+	EntityAliases resolveEntityColumnAliases(EntityReference entityReference);
+
+	/**
+	 * Resolve the SQL table alias for the specified {@link CollectionReference}.
+	 *
+	 * @param collectionReference - the {@link CollectionReference}.
+	 * @return The SQL table alias for the specified {@link CollectionReference}.
+	 */
+	String resolveCollectionTableAlias(CollectionReference collectionReference);
+
+	/**
+	 * Returns the description of the aliases in the JDBC ResultSet that identify values "belonging" to
+	 * the specified {@link CollectionReference}.
+	 *
+	 * @return The ResultSet alias descriptor for the {@link CollectionReference}
 	 */
 	CollectionAliases resolveCollectionColumnAliases(CollectionReference collectionReference);
 
@@ -69,13 +107,28 @@ public interface LoadQueryAliasResolutionContext {
 	 */
 	EntityAliases resolveCollectionElementColumnAliases(CollectionReference collectionReference);
 
-	String resolveRhsAlias(JoinableAssociation joinableAssociation);
+	/**
+	 * Resolve the table alias on the right-hand-side of the specified association.
+	 *
+	 * @param association - the joinable association.
+	 *
+	 * @return the table alias on the right-hand-side of the specified association.
+	 */
+	String resolveAssociationRhsTableAlias(JoinableAssociation association);
 
-	String resolveLhsAlias(JoinableAssociation joinableAssociation);
+	/**
+	 * Resolve the table alias on the left-hand-side of the specified association.
+	 *
+	 * @param association - the joinable association.
+	 *
+	 * @return the table alias on the left-hand-side of the specified association.
+	 */
+	String resolveAssociationLhsTableAlias(JoinableAssociation association);
 
-	String[] resolveAliasedLhsColumnNames(JoinableAssociation joinableAssociation);
-
-	EntityAliases resolveCurrentEntityAliases(JoinableAssociation joinableAssociation);
-
-	CollectionAliases resolveCurrentCollectionAliases(JoinableAssociation joinableAssociation);
+	/**
+	 * Resolve the column aliases on the left-hand-side of the specified association.
+	 * @param association - the joinable association
+	 * @return the column aliases on the left-hand-side of the specified association.
+	 */
+	String[] resolveAssociationAliasedLhsColumnNames(JoinableAssociation association);
 }

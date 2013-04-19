@@ -50,6 +50,8 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.EntityType;
 
 /**
+ * Provides aliases that are used by load queries and ResultSet processors.
+ *
  * @author Gail Badner
  */
 public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolutionContext {
@@ -130,7 +132,7 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 	}
 
 	@Override
-	public String resolveEntitySqlTableAlias(EntityReference entityReference) {
+	public String resolveEntityTableAlias(EntityReference entityReference) {
 		return getOrGenerateLoadQueryEntityAliases( entityReference ).tableAlias;
 	}
 
@@ -140,7 +142,7 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 	}
 
 	@Override
-	public String resolveCollectionSqlTableAlias(CollectionReference collectionReference) {
+	public String resolveCollectionTableAlias(CollectionReference collectionReference) {
 		return getOrGenerateLoadQueryCollectionAliases( collectionReference ).tableAlias;
 	}
 
@@ -155,32 +157,18 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 	}
 
 	@Override
-	public String resolveRhsAlias(JoinableAssociation joinableAssociation) {
+	public String resolveAssociationRhsTableAlias(JoinableAssociation joinableAssociation) {
 		return getOrGenerateJoinAssocationAliases( joinableAssociation ).rhsAlias;
 	}
 
 	@Override
-	public String resolveLhsAlias(JoinableAssociation joinableAssociation) {
+	public String resolveAssociationLhsTableAlias(JoinableAssociation joinableAssociation) {
 		return getOrGenerateJoinAssocationAliases( joinableAssociation ).lhsAlias;
 	}
 
 	@Override
-	public String[] resolveAliasedLhsColumnNames(JoinableAssociation joinableAssociation) {
+	public String[] resolveAssociationAliasedLhsColumnNames(JoinableAssociation joinableAssociation) {
 		return getOrGenerateJoinAssocationAliases( joinableAssociation ).aliasedLhsColumnNames;
-	}
-
-	@Override
-	public EntityAliases resolveCurrentEntityAliases(JoinableAssociation joinableAssociation) {
-		return joinableAssociation.getCurrentEntityReference() == null ?
-				null:
-				resolveEntityColumnAliases( joinableAssociation.getCurrentEntityReference() );
-	}
-
-	@Override
-	public CollectionAliases resolveCurrentCollectionAliases(JoinableAssociation joinableAssociation) {
-		return joinableAssociation.getCurrentCollectionReference() == null ?
-				null:
-				resolveCollectionColumnAliases( joinableAssociation.getCurrentCollectionReference() );
 	}
 
 	protected SessionFactoryImplementor sessionFactory() {
@@ -224,17 +212,17 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 			final Fetch currentFetch = joinableAssociation.getCurrentFetch();
 			final String lhsAlias;
 			if ( EntityReference.class.isInstance( currentFetch.getOwner() ) ) {
-				lhsAlias = resolveEntitySqlTableAlias( (EntityReference) currentFetch.getOwner() );
+				lhsAlias = resolveEntityTableAlias( (EntityReference) currentFetch.getOwner() );
 			}
 			else {
 				throw new NotYetImplementedException( "Cannot determine LHS alias for a FetchOwner that is not an EntityReference yet." );
 			}
 			final String rhsAlias;
 			if ( EntityReference.class.isInstance( currentFetch ) ) {
-				rhsAlias = resolveEntitySqlTableAlias( (EntityReference) currentFetch );
+				rhsAlias = resolveEntityTableAlias( (EntityReference) currentFetch );
 			}
 			else if ( CollectionReference.class.isInstance( joinableAssociation.getCurrentFetch() ) ) {
-				rhsAlias = resolveCollectionSqlTableAlias( (CollectionReference) currentFetch );
+				rhsAlias = resolveCollectionTableAlias( (CollectionReference) currentFetch );
 			}
 			else {
 				throw new NotYetImplementedException( "Cannot determine RHS alis for a fetch that is not an EntityReference or CollectionReference." );
@@ -244,7 +232,7 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 			final OuterJoinLoadable fetchSourcePersister = (OuterJoinLoadable) currentFetch.getOwner().retrieveFetchSourcePersister();
 			final int propertyNumber = fetchSourcePersister.getEntityMetamodel().getPropertyIndex( currentFetch.getOwnerPropertyName() );
 			final String[] aliasedLhsColumnNames = JoinHelper.getAliasedLHSColumnNames(
-					joinableAssociation.getJoinableType(),
+					joinableAssociation.getAssociationType(),
 					lhsAlias,
 					propertyNumber,
 					fetchSourcePersister,

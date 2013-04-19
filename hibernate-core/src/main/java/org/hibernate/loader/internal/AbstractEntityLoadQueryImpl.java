@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.loader.internal;
 import java.util.List;
@@ -29,26 +28,28 @@ import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.spi.JoinableAssociation;
 import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Select;
 
 /**
- * Abstract walker for walkers which begin at an entity (criteria
- * queries and entity loaders).
+ * Represents an entity load query for criteria
+ * queries and entity loaders, used for generating SQL.
+ *
+ * This code is based on the SQL generation code originally in
+ * org.hibernate.loader.AbstractEntityJoinWalker.
  *
  * @author Gavin King
+ * @author Gail Badner
  */
 public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl {
 
 	private final EntityReturn entityReturn;
 
-	public AbstractEntityLoadQueryImpl(
-			SessionFactoryImplementor factory,
-			EntityReturn entityReturn,
-			List<JoinableAssociationImpl> associations) {
-		super( factory, associations );
+	public AbstractEntityLoadQueryImpl(EntityReturn entityReturn, List<JoinableAssociation> associations) {
+		super( associations );
 		this.entityReturn = entityReturn;
 	}
 
@@ -56,8 +57,9 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 			final String whereString,
 			final String orderByString,
 			final LockOptions lockOptions,
+			final SessionFactoryImplementor factory,
 			final LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
-		return generateSql( null, whereString, orderByString, "", lockOptions, aliasResolutionContext );
+		return generateSql( null, whereString, orderByString, "", lockOptions, factory, aliasResolutionContext );
 	}
 
 	private String generateSql(
@@ -66,27 +68,30 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 			final String orderBy,
 			final String groupBy,
 			final LockOptions lockOptions,
+			final SessionFactoryImplementor factory,
 			final LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
 
-		JoinFragment ojf = mergeOuterJoins( aliasResolutionContext );
+		JoinFragment ojf = mergeOuterJoins( factory, aliasResolutionContext );
 
 		// If no projection, then the last suffix should be for the entity return.
 		// TODO: simplify how suffixes are generated/processed.
 
-
-		Select select = new Select( getDialect() )
+		final String entityReturnAlias = resolveEntityReturnAlias( aliasResolutionContext );
+		Select select = new Select( factory.getDialect() )
 				.setLockOptions( lockOptions )
 				.setSelectClause(
 						projection == null ?
 								getPersister().selectFragment(
-										getAlias( aliasResolutionContext ),
+										entityReturnAlias,
 										aliasResolutionContext.resolveEntityColumnAliases( entityReturn ).getSuffix()
 								) + associationSelectString( aliasResolutionContext ) :
 								projection
 				)
 				.setFromClause(
-						getDialect().appendLockHint( lockOptions, getPersister().fromTableFragment( getAlias( aliasResolutionContext ) ) ) +
-								getPersister().fromJoinFragment( getAlias( aliasResolutionContext), true, true )
+						factory.getDialect().appendLockHint(
+								lockOptions,
+								getPersister().fromTableFragment( entityReturnAlias )
+						) + getPersister().fromJoinFragment( entityReturnAlias, true, true )
 				)
 				.setWhereClause( condition )
 				.setOuterJoins(
@@ -96,7 +101,7 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 				.setOrderByClause( orderBy( orderBy, aliasResolutionContext ) )
 				.setGroupByClause( groupBy );
 
-		if ( getFactory().getSettings().isCommentsEnabled() ) {
+		if ( factory.getSettings().isCommentsEnabled() ) {
 			select.setComment( getComment() );
 		}
 		return select.toStatementString();
@@ -104,17 +109,17 @@ public abstract class AbstractEntityLoadQueryImpl extends AbstractLoadQueryImpl 
 
 	protected String getWhereFragment(LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
 		// here we do not bother with the discriminator.
-		return getPersister().whereJoinFragment( getAlias( aliasResolutionContext ), true, true );
+		return getPersister().whereJoinFragment( resolveEntityReturnAlias( aliasResolutionContext ), true, true );
 	}
 
-	public abstract String getComment();
+	protected abstract String getComment();
 
-	public final OuterJoinLoadable getPersister() {
+	protected final OuterJoinLoadable getPersister() {
 		return (OuterJoinLoadable) entityReturn.getEntityPersister();
 	}
 
-	public final String getAlias(LoadQueryAliasResolutionContext aliasResolutionContext) {
-		return aliasResolutionContext.resolveEntitySqlTableAlias( entityReturn );
+	protected final String resolveEntityReturnAlias(LoadQueryAliasResolutionContext aliasResolutionContext) {
+		return aliasResolutionContext.resolveEntityTableAlias( entityReturn );
 	}
 
 	public String toString() {

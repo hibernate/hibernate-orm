@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -25,7 +25,7 @@ package org.hibernate.loader.internal;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.CollectionAliases;
@@ -41,30 +41,21 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 
 /**
- * Walks the metamodel, searching for joins, and collecting
- * together information needed by <tt>OuterJoinLoader</tt>.
- * 
- * @see org.hibernate.loader.OuterJoinLoader
- * @author Gavin King, Jon Lipsky
+ * Represents a generic load query used for generating SQL.
+ *
+ * This code is based on the SQL generation code originally in
+ * org.hibernate.loader.JoinWalker.
+ *
+ * @author Gavin King
+ * @author Jon Lipsky
+ * @author Gail Badner
  */
 public abstract class AbstractLoadQueryImpl {
 
-	private final SessionFactoryImplementor factory;
-	private final List<JoinableAssociationImpl> associations;
+	private final List<JoinableAssociation> associations;
 
-	protected AbstractLoadQueryImpl(
-			SessionFactoryImplementor factory,
-			List<JoinableAssociationImpl> associations) {
-		this.factory = factory;
+	protected AbstractLoadQueryImpl(List<JoinableAssociation> associations) {
 		this.associations = associations;
-	}
-
-	protected SessionFactoryImplementor getFactory() {
-		return factory;
-	}
-
-	protected Dialect getDialect() {
-		return factory.getDialect();
 	}
 
 	protected String orderBy(final String orderBy, LoadQueryAliasResolutionContext aliasResolutionContext) {
@@ -86,16 +77,37 @@ public abstract class AbstractLoadQueryImpl {
 	/**
 	 * Generate a sequence of <tt>LEFT OUTER JOIN</tt> clauses for the given associations.
 	 */
-	protected final JoinFragment mergeOuterJoins(LoadQueryAliasResolutionContext aliasResolutionContext)
+	protected final JoinFragment mergeOuterJoins(SessionFactoryImplementor factory, LoadQueryAliasResolutionContext aliasResolutionContext)
 	throws MappingException {
-		JoinFragment joinFragment = getDialect().createOuterJoinFragment();
+		JoinFragment joinFragment = factory.getDialect().createOuterJoinFragment();
 		JoinableAssociation previous = null;
 		for ( JoinableAssociation association : associations ) {
+			final String rhsAlias = aliasResolutionContext.resolveAssociationRhsTableAlias( association );
+			final String[] aliasedLhsColumnNames = aliasResolutionContext.resolveAssociationAliasedLhsColumnNames(
+					association
+			);
+			final String[] rhsColumnNames = JoinHelper.getRHSColumnNames( association.getAssociationType(), factory );
+			final String on = resolveOnCondition( factory, association, aliasResolutionContext );
 			if ( previous != null && previous.isManyToManyWith( association ) ) {
-				addManyToManyJoin( joinFragment, association, ( QueryableCollection ) previous.getJoinable(), aliasResolutionContext );
+				addManyToManyJoin(
+						joinFragment,
+						association,
+						( QueryableCollection ) previous.getJoinable(),
+						rhsAlias,
+						aliasedLhsColumnNames,
+						rhsColumnNames,
+						on
+				);
 			}
 			else {
-				addJoins( joinFragment, association, aliasResolutionContext);
+				addJoins(
+						joinFragment,
+						association,
+						rhsAlias,
+						aliasedLhsColumnNames,
+						rhsColumnNames,
+						on
+				);
 			}
 			previous = association;
 		}
@@ -105,14 +117,15 @@ public abstract class AbstractLoadQueryImpl {
 	/**
 	 * Get the order by string required for collection fetching
 	 */
+	// TODO: why is this static?
 	protected static String orderBy(
-			List<JoinableAssociationImpl> associations,
+			List<JoinableAssociation> associations,
 			LoadQueryAliasResolutionContext aliasResolutionContext)
 	throws MappingException {
 		StringBuilder buf = new StringBuilder();
 		JoinableAssociation previous = null;
 		for ( JoinableAssociation association : associations ) {
-			final String rhsAlias = aliasResolutionContext.resolveRhsAlias( association );
+			final String rhsAlias = aliasResolutionContext.resolveAssociationRhsTableAlias( association );
 			if ( association.getJoinType() == JoinType.LEFT_OUTER_JOIN ) { // why does this matter?
 				if ( association.getJoinable().isCollection() ) {
 					final QueryableCollection queryableCollection = (QueryableCollection) association.getJoinable();
@@ -198,12 +211,18 @@ public abstract class AbstractLoadQueryImpl {
 				        ? null
 				        : associations.get( i + 1 );
 				final Joinable joinable = association.getJoinable();
-				final EntityAliases currentEntityAliases = aliasResolutionContext.resolveCurrentEntityAliases( association );
-				final CollectionAliases currentCollectionAliases = aliasResolutionContext.resolveCurrentCollectionAliases( association );
+				final EntityAliases currentEntityAliases =
+						association.getCurrentEntityReference() == null ?
+								null :
+								aliasResolutionContext.resolveEntityColumnAliases( association.getCurrentEntityReference() );
+				final CollectionAliases currentCollectionAliases =
+						association.getCurrentCollectionReference() == null ?
+								null :
+								aliasResolutionContext.resolveCollectionColumnAliases( association.getCurrentCollectionReference() );
 				final String selectFragment = joinable.selectFragment(
 						next == null ? null : next.getJoinable(),
-						next == null ? null : aliasResolutionContext.resolveRhsAlias( next ),
-						aliasResolutionContext.resolveRhsAlias( association ),
+						next == null ? null : aliasResolutionContext.resolveAssociationRhsTableAlias( next ),
+						aliasResolutionContext.resolveAssociationRhsTableAlias( association ),
 						currentEntityAliases == null ? null : currentEntityAliases.getSuffix(),
 						currentCollectionAliases == null ? null : currentCollectionAliases.getSuffix(),
 						association.getJoinType()==JoinType.LEFT_OUTER_JOIN
@@ -220,15 +239,17 @@ public abstract class AbstractLoadQueryImpl {
 	private void addJoins(
 			JoinFragment joinFragment,
 			JoinableAssociation association,
-			LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
-		final String rhsAlias = aliasResolutionContext.resolveRhsAlias( association );
+			String rhsAlias,
+			String[] aliasedLhsColumnNames,
+			String[] rhsColumnNames,
+			String on) throws MappingException {
 		joinFragment.addJoin(
 				association.getJoinable().getTableName(),
 				rhsAlias,
-				aliasResolutionContext.resolveAliasedLhsColumnNames( association ),
-				association.getRhsColumns(),
+				aliasedLhsColumnNames,
+				rhsColumnNames,
 				association.getJoinType(),
-				resolveOnCondition( association, aliasResolutionContext )
+				on
 		);
 		joinFragment.addJoins(
 				association.getJoinable().fromJoinFragment( rhsAlias, false, true ),
@@ -236,19 +257,19 @@ public abstract class AbstractLoadQueryImpl {
 		);
 	}
 
-	private String resolveOnCondition(JoinableAssociation joinableAssociation,
-									  LoadQueryAliasResolutionContext aliasResolutionContext) {
+	private String resolveOnCondition(
+			SessionFactoryImplementor factory,
+			JoinableAssociation joinableAssociation,
+			LoadQueryAliasResolutionContext aliasResolutionContext) {
 		final String withClause = StringHelper.isEmpty( joinableAssociation.getWithClause() ) ?
 				"" :
 				" and ( " + joinableAssociation.getWithClause() + " )";
-		return joinableAssociation.getJoinableType().getOnCondition(
-				aliasResolutionContext.resolveRhsAlias( joinableAssociation ),
+		return joinableAssociation.getAssociationType().getOnCondition(
+				aliasResolutionContext.resolveAssociationRhsTableAlias( joinableAssociation ),
 				factory,
 				joinableAssociation.getEnabledFilters()
 		) + withClause;
 	}
-
-
 
 	/*
 	public void validateJoin(String path) throws MappingException {
@@ -263,14 +284,14 @@ public abstract class AbstractLoadQueryImpl {
 			JoinFragment outerjoin,
 			JoinableAssociation association,
 			QueryableCollection collection,
-			LoadQueryAliasResolutionContext aliasResolutionContext) throws MappingException {
-		final String rhsAlias = aliasResolutionContext.resolveRhsAlias( association );
-		final String[] aliasedLhsColumnNames = aliasResolutionContext.resolveAliasedLhsColumnNames( association );
+			String rhsAlias,
+			String[] aliasedLhsColumnNames,
+			String[] rhsColumnNames,
+			String on) throws MappingException {
 		final String manyToManyFilter = collection.getManyToManyFilterFragment(
 				rhsAlias,
 				association.getEnabledFilters()
 		);
-		final String on = resolveOnCondition( association, aliasResolutionContext );
 		String condition = "".equals( manyToManyFilter )
 				? on
 				: "".equals( on )
@@ -280,7 +301,7 @@ public abstract class AbstractLoadQueryImpl {
 				association.getJoinable().getTableName(),
 				rhsAlias,
 				aliasedLhsColumnNames,
-				association.getRhsColumns(),
+				rhsColumnNames,
 				association.getJoinType(),
 				condition
 		);

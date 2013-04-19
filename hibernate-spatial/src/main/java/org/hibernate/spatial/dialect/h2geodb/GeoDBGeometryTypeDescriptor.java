@@ -29,19 +29,19 @@ import java.sql.Types;
 
 import org.geolatte.geom.Geometry;
 
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 2/29/12
  */
-public class GeoDBGeometryTypeDescriptor extends GeometrySqlTypeDescriptor {
+public class GeoDBGeometryTypeDescriptor  implements SqlTypeDescriptor {
 
 	public static final GeoDBGeometryTypeDescriptor INSTANCE = new GeoDBGeometryTypeDescriptor();
 
@@ -50,10 +50,6 @@ public class GeoDBGeometryTypeDescriptor extends GeometrySqlTypeDescriptor {
 		return Types.ARRAY;
 	}
 
-	@Override
-	public String getTypeName() {
-		return "GEOMETRY";
-	}
 
 	@Override
 	public boolean canBeRemapped() {

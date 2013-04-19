@@ -23,6 +23,7 @@ package org.hibernate.spatial;
 import com.vividsolutions.jts.geom.Geometry;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * A {@link org.hibernate.type.BasicType BasicType} for JTS <code>Geometry</code>s.
@@ -30,8 +31,6 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
  * @author Karel Maesen
  */
 public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geometry> implements Spatial {
-
-	public static final JTSGeometryType INSTANCE = new JTSGeometryType();
 
 	@Override
 	public String[] getRegistrationKeys() {
@@ -48,8 +47,8 @@ public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geome
 		};
 	}
 
-	public JTSGeometryType() {
-		super( GeometrySqlTypeDescriptor.INSTANCE, JTSGeometryJavaTypeDescriptor.INSTANCE );
+	public JTSGeometryType(SqlTypeDescriptor sqlTypeDescriptor) {
+		super( sqlTypeDescriptor, JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -22,14 +22,15 @@ package org.hibernate.spatial.dialect.mysql;
 
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Extends the MySQLDialect by also including information on spatial operators,
@@ -44,29 +45,21 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 		super();
 		registerColumnType(
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				MySQLGeometryTypeDescriptor.INSTANCE.getTypeName()
+				"GEOMETRY"
 		);
 		for ( Map.Entry<String, StandardSQLFunction> entry : new MySQLSpatialFunctions() ) {
 			registerFunction( entry.getKey(), entry.getValue() );
 		}
 	}
 
-
-	//TODO the getTypeName() override is necessary in the absence of HHH-6074
 	@Override
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		if ( code == 3000 ) {
-			return "GEOMETRY";
-		}
-		return super.getTypeName( code, length, precision, scale );
-	}
-
-	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor ) {
-			return MySQLGeometryTypeDescriptor.INSTANCE;
-		}
-		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(
+				typeContributions,
+				serviceRegistry
+		);
+		typeContributions.contributeType( new GeolatteGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
 	}
 
 	/**

@@ -29,15 +29,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
-import org.hibernate.spatial.Spatial;
 import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -46,7 +47,6 @@ import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
 import org.hibernate.spatial.helper.PropertyFileReader;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Spatial Dialect for Oracle10g databases.
@@ -163,19 +163,13 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	}
 
 	@Override
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		if ( code == 3000 ) {
-			return "SDO_GEOMETRY";
-		}
-		return super.getTypeName( code, length, precision, scale );
-	}
-
-	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor ) {
-			return SDOGeometryTypeDescriptor.INSTANCE;
-		}
-		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(
+				typeContributions,
+				serviceRegistry
+		);
+		typeContributions.contributeType( new GeolatteGeometryType( SDOGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( SDOGeometryTypeDescriptor.INSTANCE ) );
 	}
 
 	public String getNativeSpatialRelateSQL(String arg1, String arg2,
@@ -503,10 +497,6 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		}
 	}
 
-	public boolean isTwoPhaseFiltering() {
-		return false;
-	}
-
 	public boolean supportsFiltering() {
 		return true;
 	}
@@ -583,9 +573,6 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 		private SpatialAnalysisFunction(String name, Type returnType, int analysis) {
 			super( name, returnType );
-			if (Spatial.class.isAssignableFrom( returnType.getClass() )) {
-				throw new IllegalArgumentException("This constructor is only valid for functions returning non-spatial values.");
-			}
 			this.analysis = analysis;
 		}
 

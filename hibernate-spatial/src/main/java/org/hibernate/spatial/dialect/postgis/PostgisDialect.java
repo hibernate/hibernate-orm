@@ -21,16 +21,17 @@
 package org.hibernate.spatial.dialect.postgis;
 
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialAggregate;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Extends the PostgreSQLDialect by also including information on spatial
@@ -43,14 +44,26 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 
 	public PostgisDialect() {
 		super();
+
 		registerTypesAndFunctions();
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(
+				typeContributions,
+				serviceRegistry
+		);
+
+		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE ) );
 	}
 
 	protected void registerTypesAndFunctions() {
 
 		registerColumnType(
 				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				PGGeometryTypeDescriptor.INSTANCE.getTypeName()
+				"GEOMETRY"
 		);
 
 		// registering OGC functions
@@ -192,11 +205,12 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		);
 		registerFunction(
 				"intersection", new StandardSQLFunction(
-				"st_intersection")
+				"st_intersection"
+		)
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSQLFunction( "st_symdifference")
+				new StandardSQLFunction( "st_symdifference" )
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
@@ -223,39 +237,6 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 				"st_transform"
 		)
 		);
-	}
-
-	//TODO the getTypeName() override is necessary in the absence of HHH-6074
-
-	/**
-	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode with the given storage specification
-	 * parameters. In the case of typecode == 3000, it returns this dialect's spatial type which is
-	 * <code>GEOMETRY</code>.
-	 *
-	 * @param code The {@link java.sql.Types} typecode
-	 * @param length The datatype length
-	 * @param precision The datatype precision
-	 * @param scale The datatype scale
-	 *
-	 * @return
-	 *
-	 * @throws HibernateException
-	 */
-	@Override
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		if ( code == 3000 ) {
-			return "GEOMETRY";
-		}
-		return super.getTypeName( code, length, precision, scale );
-	}
-
-	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor ) {
-			return PGGeometryTypeDescriptor.INSTANCE;
-		}
-		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {

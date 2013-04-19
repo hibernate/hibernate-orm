@@ -36,7 +36,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 
 		registerColumnType(
 				PGGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				PGGeometryTypeDescriptor.INSTANCE.getTypeName()
+				"GEOMETRY"
 		);
 
 		// registering OGC functions

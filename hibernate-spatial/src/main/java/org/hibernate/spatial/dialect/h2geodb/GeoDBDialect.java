@@ -21,15 +21,16 @@
 
 package org.hibernate.spatial.dialect.h2geodb;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Extends the H2Dialect by also including information on spatial functions.
@@ -83,6 +84,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		  CREATE ALIAS Version FOR "geodb.GeoDB.Version"
 		  */
 
+
 	/**
 	 * Constructor. Registers OGC simple feature functions (see
 	 * http://portal.opengeospatial.org/files/?artifact_id=829 for details).
@@ -97,7 +99,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		// Register Geometry column type
 		registerColumnType(
 				GeoDBGeometryTypeDescriptor.INSTANCE.getSqlType(),
-				GeoDBGeometryTypeDescriptor.INSTANCE.getTypeName()
+				"GEOMETRY"
 		);
 
 		// Register functions that operate on spatial types
@@ -240,37 +242,14 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
 	}
 
-	//TODO the getTypeName() override is necessary in the absence of HHH-6074
-
-	/**
-	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode with the given storage specification
-	 * parameters. In the case of typecode == 3000, it returns this dialect's spatial type which is
-	 * <code>GEOMETRY</code>.
-	 *
-	 * @param code The {@link java.sql.Types} typecode
-	 * @param length The datatype length
-	 * @param precision The datatype precision
-	 * @param scale The datatype scale
-	 *
-	 * @return
-	 *
-	 * @throws org.hibernate.HibernateException
-	 */
 	@Override
-	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
-		if ( code == 3000 ) {
-			return GeoDBGeometryTypeDescriptor.INSTANCE.getTypeName();
-		}
-		return super.getTypeName( code, length, precision, scale );
-	}
-
-	@Override
-	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor ) {
-			return GeoDBGeometryTypeDescriptor.INSTANCE;
-		}
-		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(
+				typeContributions,
+				serviceRegistry
+		);
+		typeContributions.contributeType( new GeolatteGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
 	}
 
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {

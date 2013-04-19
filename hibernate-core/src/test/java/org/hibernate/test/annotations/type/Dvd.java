@@ -37,6 +37,7 @@ public class Dvd {
 		this.id = id;
 	}
 
+	@Column(name="`title`")
 	public String getTitle() {
 		return title;
 	}

@@ -1,11 +1,21 @@
 package org.hibernate.test.hqlfetchscroll;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.hibernate.Hibernate;
+import org.hibernate.ScrollableResults;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.transform.DistinctRootEntityResultTransformer;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,21 +23,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Hibernate;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.transform.DistinctRootEntityResultTransformer;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @SkipForDialect( value = { Oracle8iDialect.class, AbstractHANADialect.class },
 		comment = "Oracle/HANA do not support the identity column used in the mapping. Extended by NoIdentityHQLScrollFetchTest" )
@@ -43,7 +44,8 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( { SQLServerDialect.class,  Oracle8iDialect.class, H2Dialect.class, DB2Dialect.class, AbstractHANADialect.class } )
+	@SkipForDialect( { SQLServerDialect.class,  Oracle8iDialect.class, H2Dialect.class, DB2Dialect.class,
+            AbstractHANADialect.class, TeradataDialect.class } )
 	public void testScroll() {
 		Session s = openSession();
 		ScrollableResults results = s.createQuery( QUERY ).scroll();

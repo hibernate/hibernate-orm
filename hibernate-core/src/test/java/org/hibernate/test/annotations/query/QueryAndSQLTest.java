@@ -243,6 +243,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );
+		stats.clear();
 		Query q = s.getNamedQuery( "night&areaCached" );
 		q.setCacheable( true );
 		List result = q.list();

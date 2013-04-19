@@ -25,6 +25,8 @@ package org.hibernate.test.locking;
 
 import java.util.concurrent.TimeoutException;
 
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,8 +53,10 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-5275")
+@SkipForDialects( {
 @SkipForDialect(value=SybaseASE15Dialect.class, strictMatching=true,
-		comment = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
+		comment = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820"),
+})
 public class LockModeTest extends BaseCoreFunctionalTestCase {
 	private Long id;
 

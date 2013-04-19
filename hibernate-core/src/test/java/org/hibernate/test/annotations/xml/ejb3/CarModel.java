@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.annotations.xml.ejb3;
+import javax.persistence.Column;
 import java.util.Date;
 
 /**
  * @author Emmanuel Bernard
  */
 public class CarModel extends Model {
+	@Column(name="`year`")
 	private Date year;
 
 	public Date getYear() {

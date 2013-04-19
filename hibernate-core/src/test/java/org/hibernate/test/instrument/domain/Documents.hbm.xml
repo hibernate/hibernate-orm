@@ -48,7 +48,7 @@
     	</id>
     	<property name="name" not-null="true" length="50"/>
     	<property name="upperCaseName" formula="upper(name)" lazy="true"/>
-    	<property name="summary" not-null="true" length="200" lazy="true"/>
+    	<property name="summary" column="`summary`" not-null="true" length="200" lazy="true"/>
     	<many-to-one name="folder" not-null="true" lazy="no-proxy"/>
     	<many-to-one name="owner" not-null="true" lazy="no-proxy" fetch="select"/>
     	<property name="text" not-null="true" length="2000" lazy="true"/>

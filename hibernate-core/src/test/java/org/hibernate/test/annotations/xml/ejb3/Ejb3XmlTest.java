@@ -33,8 +33,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.TeradataDialect;;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -45,8 +47,13 @@ import static org.junit.Assert.assertNotNull;
  */
 public class Ejb3XmlTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@SkipForDialects  ( {
 	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class },
-			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
+	comment = "postgresql jdbc driver does not implement the setQueryTimeout method"),
+	@SkipForDialect(value = TeradataDialect.class ,
+	jiraKey = "HHH-8190",
+	comment = "uses Teradata reserved word - year")
+} )
 	public void testEjb3Xml() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

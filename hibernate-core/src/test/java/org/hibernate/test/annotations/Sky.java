@@ -13,16 +13,16 @@ import javax.persistence.UniqueConstraint;
  */
 @Entity
 @Table(name = "tbl_sky",
-		uniqueConstraints = {@UniqueConstraint(columnNames = {"month", "day"})}
+		uniqueConstraints = {@UniqueConstraint(columnNames = {"`month`", "`day`"})}
 )
 public class Sky implements Serializable {
 	@Id
 	protected Long id;
 	@Column(unique = true, columnDefinition = "varchar(250)", nullable = false)
 	protected String color;
-	@Column(nullable = false)
+	@Column(name="`day`",nullable = false)
 	protected String day;
-	@Column(name = "MONTH", nullable = false)
+	@Column(name = "`MONTH`", nullable = false)
 	protected String month;
 	@Transient
 	protected String area;

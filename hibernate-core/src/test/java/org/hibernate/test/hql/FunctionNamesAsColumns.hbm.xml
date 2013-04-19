@@ -25,8 +25,8 @@
         <id name="id" column="ID" type="long">
             <generator class="increment"/>
         </id>
-        <property name="lower" column="lower" type="int"/>
-        <property name="upper" column="upper" type="string"/>
+        <property name="lower" column="`lower`" type="int"/>
+        <property name="upper" column="`upper`" type="string"/>
     </class>
 
     <class name="EntityWithNoArgFunctionAsColumn" table="ENTITY_WITH_NOARG_FN_AS_COL">

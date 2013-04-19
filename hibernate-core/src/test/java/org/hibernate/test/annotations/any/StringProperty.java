@@ -10,7 +10,6 @@ import javax.persistence.Column;
 public class StringProperty implements Property {
 	private Integer id;
 	private String name;
-    @Column(name = "`value`")
 	private String value;
 
 	public StringProperty() {
@@ -41,6 +40,7 @@ public class StringProperty implements Property {
 		return value;
 	}
 
+	@Column(name = "`value`")
 	public String getValue() {
 		return value;
 	}

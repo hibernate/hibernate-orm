@@ -25,6 +25,8 @@ package org.hibernate.test.lob;
 
 import java.sql.Clob;
 
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.LockMode;
@@ -57,6 +59,11 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-6637",
+			comment = "Teradata requires locator to be used in same session where it was created/retrieved"
+	)
 	public void testBoundedClobLocatorAccess() throws Throwable {
 		String original = buildString( CLOB_SIZE, 'x' );
 		String changed = buildString( CLOB_SIZE, 'y' );

@@ -21,7 +21,7 @@ public class Building {
         this.height = height;
     }
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     public Room getRoom() {
         return room;
     }

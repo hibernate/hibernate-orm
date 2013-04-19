@@ -1,6 +1,7 @@
 package org.hibernate.test.annotations.idmanytoone;
 
 import java.io.Serializable;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -26,6 +27,7 @@ public class CourseStudent implements Serializable {
     @JoinColumn(name = "student_id")
     private Student student;
 
+	@Column(name = "`value`")
     private String value;
 
     public CourseStudent() {

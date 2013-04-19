@@ -34,6 +34,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Criteria;
@@ -49,6 +50,7 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jdbc.AbstractWork;
@@ -1200,7 +1202,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	@Test
+	 @Test
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {
@@ -1221,6 +1223,10 @@ public class ParentChildTest extends LegacyTestCase {
 			fail();
 		}
 		catch(ObjectNotFoundException onfe) {
+			if (  getDialect() instanceof TeradataDialect ){
+				session.getTransaction().rollback();
+				session.getTransaction().begin();
+			}
 			// this is correct
 		}
 

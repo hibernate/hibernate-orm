@@ -12,7 +12,7 @@ import javax.persistence.Table;
  * @author Emmanuel Bernard
  */
 @Entity
-@Table(name = "ABs")
+@Table(name = "`ABs`")
 @IdClass( StoreCustomerPK.class)
 public class StoreCustomer implements Serializable {
 	StoreCustomer() {}

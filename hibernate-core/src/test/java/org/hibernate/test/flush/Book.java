@@ -24,6 +24,7 @@
 package org.hibernate.test.flush;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -59,6 +60,7 @@ public class Book {
 		this.id = id;
 	}
 
+	@Column(name="`title`")
 	public String getTitle() {
 		return title;
 	}

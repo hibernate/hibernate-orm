@@ -61,7 +61,7 @@ public class Area {
 		this.id = id;
 	}
 
-	@Column(unique = true)
+	@Column(unique = true, nullable=false)
 	public String getName() {
 		return name;
 	}

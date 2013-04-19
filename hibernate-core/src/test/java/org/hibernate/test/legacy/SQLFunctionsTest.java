@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.TeradataDialect;
 import org.jboss.logging.Logger;
 import org.junit.Test;
 
@@ -550,7 +551,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 	@Test
 	public void testBlobClob() throws Exception {
 		// Sybase does not support ResultSet.getBlob(String)
-		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect ) {
+		if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect  || getDialect() instanceof TeradataDialect) {
 			return;
 		}
 		Session s = openSession();

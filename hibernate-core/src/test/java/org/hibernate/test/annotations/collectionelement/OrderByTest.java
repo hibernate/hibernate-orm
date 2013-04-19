@@ -27,6 +27,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import junit.framework.Assert;
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -74,6 +76,11 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "uses Teradata reserved word - summary"
+	)
 	public void testOrderByWithDottedNotation() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

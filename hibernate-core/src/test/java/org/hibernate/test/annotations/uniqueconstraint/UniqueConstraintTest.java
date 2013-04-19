@@ -3,7 +3,6 @@ package org.hibernate.test.annotations.uniqueconstraint;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -24,7 +23,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Test
-    public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
+	public void testUniquenessConstraintWithSuperclassProperty() throws Exception {
         Session s = openSession();
         Transaction tx = s.beginTransaction();
         Room livingRoom = new Room();

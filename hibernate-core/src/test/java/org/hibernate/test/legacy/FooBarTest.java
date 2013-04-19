@@ -85,6 +85,7 @@ import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -593,7 +594,7 @@ public class FooBarTest extends LegacyTestCase {
 				"select foo.foo.foo.foo from Foo foo, Foo foo2 where"
 						+ " foo = foo2.foo and not not ( not foo.string='fizard' )"
 						+ " and foo2.string between 'a' and (foo.foo.string)"
-						+ ( ( getDialect() instanceof HSQLDialect || getDialect() instanceof InterbaseDialect || getDialect() instanceof TimesTenDialect ) ?
+						+ ( ( getDialect() instanceof HSQLDialect || getDialect() instanceof InterbaseDialect || getDialect() instanceof TimesTenDialect || getDialect() instanceof TeradataDialect) ?
 						" and ( foo2.string in ( 'fiz', 'blah') or 1=1 )"
 						:
 						" and ( foo2.string in ( 'fiz', 'blah', foo.foo.string, foo.string, foo2.string ) )"
@@ -618,7 +619,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.save(bar);
 		s.save(baz);
 		list = s.createQuery(
-				" from Bar bar where bar.baz.count=667 and bar.baz.count!=123 and not bar.baz.name='1-E-1'"
+				" from Bar bar where bar.baz.count=667 and bar.baz.count<>123 and not bar.baz.name='1-E-1'"
 		).list();
 		assertTrue( "query many-to-one", list.size()==1 );
 		list = s.createQuery( " from Bar i where i.baz.name='Bazza'" ).list();

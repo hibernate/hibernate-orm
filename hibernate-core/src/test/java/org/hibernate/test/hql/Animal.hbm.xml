@@ -114,7 +114,7 @@
         <property name="classification" type="org.hibernate.test.hql.ClassificationType"/>
         <map name="directors">
 			<key column="directorZoo_id"/>
-			<index type="string" column="title"/>
+			<index type="string" column="`title`"/>
 			<many-to-many class="Human"/>
 		</map>
         <map name="mammals">

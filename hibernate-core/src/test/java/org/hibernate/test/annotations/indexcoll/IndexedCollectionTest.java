@@ -23,24 +23,25 @@
  */
 package org.hibernate.test.annotations.indexcoll;
 
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.Column;
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -375,6 +376,11 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "uses Teradata reserved word - title"
+	)
 	public void testMapKeyOnManyToMany() throws Exception {
 		Session s;
 		s = openSession();
@@ -404,6 +410,11 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-8190",
+			comment = "uses Teradata reserved word - title"
+	)
 	public void testMapKeyOnManyToManyOnId() throws Exception {
 		Session s;
 		s = openSession();

@@ -92,7 +92,10 @@ public class Select {
 		}
 		
 		if (lockOptions.getLockMode()!=LockMode.NONE) {
-			buf.append( dialect.getForUpdateString(lockOptions) );
+			if (dialect.isLockAppended())
+				buf.append( dialect.getForUpdateString(lockOptions) );
+			else
+				buf.insert(0,dialect.getForUpdateString(lockOptions));
 		}
 		
 		return dialect.transformSelectString( buf.toString() );

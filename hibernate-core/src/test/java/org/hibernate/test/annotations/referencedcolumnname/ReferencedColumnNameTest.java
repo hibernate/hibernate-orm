@@ -23,17 +23,18 @@
  */
 package org.hibernate.test.annotations.referencedcolumnname;
 
-import java.math.BigDecimal;
-import java.util.Iterator;
-
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
-
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.util.Iterator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -102,6 +103,11 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+		@SkipForDialect(
+						value = TeradataDialect.class,
+						jiraKey = "HHH-8190",
+						comment = "uses Teradata reserved word - type"
+				)
 	public void testUnidirectionalOneToMany() throws Exception {
 		Session s;
 		Transaction tx;

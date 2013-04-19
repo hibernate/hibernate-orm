@@ -23,19 +23,6 @@
  */
 package org.hibernate.cfg;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import javax.persistence.AttributeConverter;
-import javax.persistence.SharedCacheMode;
-
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -76,6 +63,19 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
+
+import javax.persistence.AttributeConverter;
+import javax.persistence.SharedCacheMode;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Represents one approach for bootstrapping Hibernate.  In fact, historically this was

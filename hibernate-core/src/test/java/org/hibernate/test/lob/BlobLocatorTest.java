@@ -25,6 +25,8 @@ package org.hibernate.test.lob;
 import java.sql.Blob;
 
 import junit.framework.AssertionFailedError;
+import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -54,6 +56,11 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TeradataDialect.class,
+			jiraKey = "HHH-6637",
+			comment = "Teradata requires locator to be used in same session where it was created/retrieved"
+	)
 	public void testBoundedBlobLocatorAccess() throws Throwable {
 		byte[] original = buildByteArray( BLOB_SIZE, true );
 		byte[] changed = buildByteArray( BLOB_SIZE, false );

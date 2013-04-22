@@ -48,14 +48,13 @@ import org.hibernate.type.TypeHelper;
 /**
  * The standard implementation of the Hibernate QueryCache interface.  This
  * implementation is very good at recognizing stale query results and
- * and re-running queries when it detects this condition, recaching the new
+ * and re-running queries when it detects this condition, re-caching the new
  * results.
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
 public class StandardQueryCache implements QueryCache {
-
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			StandardQueryCache.class.getName()
@@ -67,28 +66,54 @@ public class StandardQueryCache implements QueryCache {
 	private QueryResultsRegion cacheRegion;
 	private UpdateTimestampsCache updateTimestampsCache;
 
-	public void clear() throws CacheException {
-		cacheRegion.evictAll();
-	}
-
+	/**
+	 * Constructs a StandardQueryCache instance
+	 *
+	 * @param settings The SessionFactory settings.
+	 * @param props Any properties
+	 * @param updateTimestampsCache The update-timestamps cache to use.
+	 * @param regionName The base query cache region name
+	 */
 	public StandardQueryCache(
 			final Settings settings,
 			final Properties props,
 			final UpdateTimestampsCache updateTimestampsCache,
-			String regionName) throws HibernateException {
-		if ( regionName == null ) {
-			regionName = StandardQueryCache.class.getName();
+			final String regionName) {
+		String regionNameToUse = regionName;
+		if ( regionNameToUse == null ) {
+			regionNameToUse = StandardQueryCache.class.getName();
 		}
-		String prefix = settings.getCacheRegionPrefix();
+		final String prefix = settings.getCacheRegionPrefix();
 		if ( prefix != null ) {
-			regionName = prefix + '.' + regionName;
+			regionNameToUse = prefix + '.' + regionNameToUse;
 		}
-		LOG.startingQueryCache( regionName );
+		LOG.startingQueryCache( regionNameToUse );
 
-		this.cacheRegion = settings.getRegionFactory().buildQueryResultsRegion( regionName, props );
+		this.cacheRegion = settings.getRegionFactory().buildQueryResultsRegion( regionNameToUse, props );
 		this.updateTimestampsCache = updateTimestampsCache;
 	}
 
+	@Override
+	public QueryResultsRegion getRegion() {
+		return cacheRegion;
+	}
+
+	@Override
+	public void destroy() {
+		try {
+			cacheRegion.destroy();
+		}
+		catch ( Exception e ) {
+			LOG.unableToDestroyQueryCache( cacheRegion.getName(), e.getMessage() );
+		}
+	}
+
+	@Override
+	public void clear() throws CacheException {
+		cacheRegion.evictAll();
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public boolean put(
 			final QueryKey key,
@@ -99,20 +124,21 @@ public class StandardQueryCache implements QueryCache {
 		if ( isNaturalKeyLookup && result.isEmpty() ) {
 			return false;
 		}
-		long ts = cacheRegion.nextTimestamp();
+		final long ts = cacheRegion.nextTimestamp();
 
-		if ( DEBUGGING ) LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
+		if ( DEBUGGING ) {
+			LOG.debugf( "Caching query results in region: %s; timestamp=%s", cacheRegion.getName(), ts );
+		}
 
-		List cacheable = new ArrayList( result.size() + 1 );
+		final List cacheable = new ArrayList( result.size() + 1 );
 		logCachedResultDetails( key, null, returnTypes, cacheable );
 		cacheable.add( ts );
-		final boolean singleResult = returnTypes.length == 1;
+
+		final boolean isSingleResult = returnTypes.length == 1;
 		for ( Object aResult : result ) {
-			Serializable cacheItem = singleResult ? returnTypes[0].disassemble(
-					aResult,
-					session,
-					null
-			) : TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
+			final Serializable cacheItem = isSingleResult
+					? returnTypes[0].disassemble( aResult, session, null )
+					: TypeHelper.disassemble( (Object[]) aResult, returnTypes, null, session, null );
 			cacheable.add( cacheItem );
 			logCachedResultRowDetails( returnTypes, aResult );
 		}
@@ -121,6 +147,7 @@ public class StandardQueryCache implements QueryCache {
 		return true;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public List get(
 			final QueryKey key,
@@ -128,23 +155,31 @@ public class StandardQueryCache implements QueryCache {
 			final boolean isNaturalKeyLookup,
 			final Set spaces,
 			final SessionImplementor session) throws HibernateException {
-		if ( DEBUGGING ) LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+		if ( DEBUGGING ) {
+			LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
+		}
 
-		List cacheable = (List) cacheRegion.get( key );
+		final List cacheable = (List) cacheRegion.get( key );
 		logCachedResultDetails( key, spaces, returnTypes, cacheable );
 
 		if ( cacheable == null ) {
-			if ( DEBUGGING ) LOG.debug( "Query results were not found in cache" );
+			if ( DEBUGGING ) {
+				LOG.debug( "Query results were not found in cache" );
+			}
 			return null;
 		}
 
-		Long timestamp = (Long) cacheable.get( 0 );
+		final Long timestamp = (Long) cacheable.get( 0 );
 		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp ) ) {
-			if ( DEBUGGING ) LOG.debug( "Cached query results were not up-to-date" );
+			if ( DEBUGGING ) {
+				LOG.debug( "Cached query results were not up-to-date" );
+			}
 			return null;
 		}
 
-		if ( DEBUGGING ) LOG.debug( "Returning cached query results" );
+		if ( DEBUGGING ) {
+			LOG.debug( "Returning cached query results" );
+		}
 		final boolean singleResult = returnTypes.length == 1;
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			if ( singleResult ) {
@@ -154,7 +189,8 @@ public class StandardQueryCache implements QueryCache {
 				TypeHelper.beforeAssemble( (Serializable[]) cacheable.get( i ), returnTypes, session );
 			}
 		}
-		List result = new ArrayList( cacheable.size() - 1 );
+
+		final List result = new ArrayList( cacheable.size() - 1 );
 		for ( int i = 1; i < cacheable.size(); i++ ) {
 			try {
 				if ( singleResult ) {
@@ -168,16 +204,18 @@ public class StandardQueryCache implements QueryCache {
 				logCachedResultRowDetails( returnTypes, result.get( i - 1 ) );
 			}
 			catch ( RuntimeException ex ) {
-				if ( isNaturalKeyLookup &&
-						( UnresolvableObjectException.class.isInstance( ex ) ||
-								EntityNotFoundException.class.isInstance( ex ) ) ) {
-					//TODO: not really completely correct, since
-					//      the uoe could occur while resolving
-					//      associations, leaving the PC in an
-					//      inconsistent state
-					if ( DEBUGGING ) LOG.debug( "Unable to reassemble cached result set" );
-					cacheRegion.evict( key );
-					return null;
+				if ( isNaturalKeyLookup ) {
+					// potentially perform special handling for natural-id look ups.
+					if ( UnresolvableObjectException.class.isInstance( ex )
+							|| EntityNotFoundException.class.isInstance( ex ) ) {
+						if ( DEBUGGING ) {
+							LOG.debug( "Unable to reassemble cached natural-id query result" );
+						}
+						cacheRegion.evict( key );
+
+						// EARLY EXIT !!!!!
+						return null;
+					}
 				}
 				throw ex;
 			}
@@ -186,21 +224,10 @@ public class StandardQueryCache implements QueryCache {
 	}
 
 	protected boolean isUpToDate(final Set spaces, final Long timestamp) {
-		if ( DEBUGGING ) LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
+		if ( DEBUGGING ) {
+			LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
+		}
 		return updateTimestampsCache.isUpToDate( spaces, timestamp );
-	}
-
-	public void destroy() {
-		try {
-			cacheRegion.destroy();
-		}
-		catch ( Exception e ) {
-			LOG.unableToDestroyQueryCache( cacheRegion.getName(), e.getMessage() );
-		}
-	}
-
-	public QueryResultsRegion getRegion() {
-		return cacheRegion;
 	}
 
 	@Override
@@ -222,12 +249,13 @@ public class StandardQueryCache implements QueryCache {
 			);
 		}
 		else {
-			StringBuilder returnTypeInfo = new StringBuilder();
-			for ( int i = 0; i < returnTypes.length; i++ ) {
+			final StringBuilder returnTypeInfo = new StringBuilder();
+			for ( Type returnType : returnTypes ) {
 				returnTypeInfo.append( "typename=" )
-						.append( returnTypes[i].getName() )
+						.append( returnType.getName() )
 						.append( " class=" )
-						.append( returnTypes[i].getReturnedClass().getName() ).append( ' ' );
+						.append( returnType.getReturnedClass().getName() )
+						.append( ' ' );
 			}
 			LOG.trace( "unexpected returnTypes is " + returnTypeInfo.toString() + "! result" );
 		}
@@ -248,7 +276,10 @@ public class StandardQueryCache implements QueryCache {
 			return;
 		}
 		if ( tuple == null ) {
-			LOG.trace( " tuple is null; returnTypes is " + returnTypes == null ? "null" : "Type[" + returnTypes.length + "]" );
+			LOG.tracef(
+					"tuple is null; returnTypes is %s",
+					returnTypes == null ? "null" : "Type[" + returnTypes.length + "]"
+			);
 			if ( returnTypes != null && returnTypes.length > 1 ) {
 				LOG.trace(
 						"Unexpected result tuple! tuple is null; should be Object["
@@ -263,8 +294,12 @@ public class StandardQueryCache implements QueryCache {
 								+ ( returnTypes == null ? "null" : "empty" )
 				);
 			}
-			LOG.trace( " tuple is Object[" + tuple.length + "]; returnTypes is Type[" + returnTypes.length + "]" );
-			if ( tuple.length != returnTypes.length ) {
+			LOG.tracef(
+					"tuple is Object[%s]; returnTypes is %s",
+					tuple.length,
+					returnTypes == null ? "null" : "Type[" + returnTypes.length + "]"
+			);
+			if ( returnTypes != null && tuple.length != returnTypes.length ) {
 				LOG.trace(
 						"Unexpected tuple length! transformer= expected="
 								+ returnTypes.length + " got=" + tuple.length
@@ -272,7 +307,8 @@ public class StandardQueryCache implements QueryCache {
 			}
 			else {
 				for ( int j = 0; j < tuple.length; j++ ) {
-					if ( tuple[j] != null && !returnTypes[j].getReturnedClass().isInstance( tuple[j] ) ) {
+					if ( tuple[j] != null && returnTypes != null
+							&& ! returnTypes[j].getReturnedClass().isInstance( tuple[j] ) ) {
 						LOG.trace(
 								"Unexpected tuple value type! transformer= expected="
 										+ returnTypes[j].getReturnedClass().getName()

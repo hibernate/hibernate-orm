@@ -28,8 +28,6 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -38,6 +36,9 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Hardy Ferentschik
  */
 public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
+	/**
+	 * Singleton access
+	 */
 	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
 
 	/**
@@ -59,35 +60,17 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 				setting,
 				NoCachingRegionFactory.INSTANCE
 		);
-//		if ( setting == null ) {
-//			return new NoCachingRegionFactory();
-//		}
-//
-//		if ( getServiceInitiated().isInstance( setting ) ) {
-//			return (RegionFactory) setting;
-//		}
-//
-//		Class<? extends RegionFactory> customImplClass = null;
-//		if ( Class.class.isInstance( setting ) ) {
-//			customImplClass = (Class<? extends RegionFactory>) setting;
-//		}
-//		else {
-//			customImplClass = registry.getService( ClassLoaderService.class )
-//					.classForName( mapLegacyNames( setting.toString() ) );
-//		}
-//
-//		try {
-//			return customImplClass.newInstance();
-//		}
-//		catch ( Exception e ) {
-//			throw new ServiceException(
-//					"Could not initialize custom RegionFactory impl [" + customImplClass.getName() + "]", e
-//			);
-//		}
 	}
 
-	// todo this shouldn't be public (nor really static):
-	// hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
+	/**
+	 * Map legacy names unto the new corollary.
+	 *
+	 * todo this shouldn't be public, nor really static.  hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
+	 *
+	 * @param name The (possibly legacy) factory name
+	 *
+	 * @return The factory name to use.
+	 */
 	public static String mapLegacyNames(final String name) {
 		if ( "org.hibernate.cache.EhCacheRegionFactory".equals( name ) ) {
 			return "org.hibernate.cache.ehcache.EhCacheRegionFactory";

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,27 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.internal;
-
-import java.util.Properties;
-
-import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.QueryCache;
-import org.hibernate.cache.spi.QueryCacheFactory;
-import org.hibernate.cache.spi.UpdateTimestampsCache;
-import org.hibernate.cfg.Settings;
 
 /**
- * Standard Hibernate implementation of the QueryCacheFactory interface.  Returns instances of
- * {@link StandardQueryCache}.
+ * SPI definitions for persistent collections
  */
-public class StandardQueryCacheFactory implements QueryCacheFactory {
-	@Override
-	public QueryCache getQueryCache(
-			final String regionName,
-			final UpdateTimestampsCache updateTimestampsCache,
-			final Settings settings,
-			final Properties props) throws HibernateException {
-		return new StandardQueryCache(settings, props, updateTimestampsCache, regionName);
-	}
-}
+package org.hibernate.collection.spi;

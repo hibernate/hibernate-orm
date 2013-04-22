@@ -26,7 +26,6 @@ package org.hibernate.collection.internal;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -45,167 +44,212 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
  */
 public class PersistentSortedMap extends PersistentMap implements SortedMap {
-
 	protected Comparator comparator;
 
+	/**
+	 * Constructs a PersistentSortedMap.  This form needed for SOAP libraries, etc
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public PersistentSortedMap() {
+	}
+
+	/**
+	 * Constructs a PersistentSortedMap.
+	 *
+	 * @param session The session
+	 */
+	public PersistentSortedMap(SessionImplementor session) {
+		super( session );
+	}
+
+	/**
+	 * Constructs a PersistentSortedMap.
+	 *
+	 * @param session The session
+	 * @param map The underlying map data
+	 */
+	public PersistentSortedMap(SessionImplementor session, SortedMap map) {
+		super( session, map );
+		comparator = map.comparator();
+	}
+
+	@SuppressWarnings({"unchecked", "UnusedParameters"})
 	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode) throws HibernateException {
-		TreeMap clonedMap = new TreeMap(comparator);
-		Iterator iter = map.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry e = (Map.Entry) iter.next();
+		final TreeMap clonedMap = new TreeMap( comparator );
+		for ( Object o : map.entrySet() ) {
+			final Entry e = (Entry) o;
 			clonedMap.put( e.getKey(), persister.getElementType().deepCopy( e.getValue(), persister.getFactory() ) );
 		}
 		return clonedMap;
-	}
-
-	public PersistentSortedMap(SessionImplementor session) {
-		super(session);
 	}
 
 	public void setComparator(Comparator comparator) {
 		this.comparator = comparator;
 	}
 
-	public PersistentSortedMap(SessionImplementor session, SortedMap map) {
-		super(session, map);
-		comparator = map.comparator();
-	}
-
-	public PersistentSortedMap() {} //needed for SOAP libraries, etc
-
-	/**
-	 * @see PersistentSortedMap#comparator()
-	 */
+	@Override
 	public Comparator comparator() {
 		return comparator;
 	}
 
-	/**
-	 * @see PersistentSortedMap#subMap(Object, Object)
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public SortedMap subMap(Object fromKey, Object toKey) {
 		read();
-		SortedMap m = ( (SortedMap) map ).subMap(fromKey, toKey);
-		return new SortedSubMap(m);
+		final SortedMap subMap = ( (SortedMap) map ).subMap( fromKey, toKey );
+		return new SortedSubMap( subMap );
 	}
 
-	/**
-	 * @see PersistentSortedMap#headMap(Object)
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public SortedMap headMap(Object toKey) {
 		read();
-		SortedMap m;
-		m = ( (SortedMap) map ).headMap(toKey);
-		return new SortedSubMap(m);
+		final SortedMap headMap = ( (SortedMap) map ).headMap( toKey );
+		return new SortedSubMap( headMap );
 	}
 
-	/**
-	 * @see PersistentSortedMap#tailMap(Object)
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public SortedMap tailMap(Object fromKey) {
 		read();
-		SortedMap m;
-		m = ( (SortedMap) map ).tailMap(fromKey);
-		return new SortedSubMap(m);
+		final SortedMap tailMap = ( (SortedMap) map ).tailMap( fromKey );
+		return new SortedSubMap( tailMap );
 	}
 
-	/**
-	 * @see PersistentSortedMap#firstKey()
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object firstKey() {
 		read();
 		return ( (SortedMap) map ).firstKey();
 	}
 
-	/**
-	 * @see PersistentSortedMap#lastKey()
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object lastKey() {
 		read();
 		return ( (SortedMap) map ).lastKey();
 	}
 
 	class SortedSubMap implements SortedMap {
+		SortedMap subMap;
 
-		SortedMap submap;
-
-		SortedSubMap(SortedMap m) {
-			this.submap = m;
+		SortedSubMap(SortedMap subMap) {
+			this.subMap = subMap;
 		}
-		// from Map
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public int size() {
-			return submap.size();
+			return subMap.size();
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public boolean isEmpty() {
-			return submap.isEmpty();
+			return subMap.isEmpty();
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public boolean containsKey(Object key) {
-			return submap.containsKey(key);
+			return subMap.containsKey( key );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public boolean containsValue(Object key) {
-			return submap.containsValue(key) ;
+			return subMap.containsValue( key ) ;
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object get(Object key) {
-			return submap.get(key);
+			return subMap.get( key );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object put(Object key, Object value) {
 			write();
-			return submap.put(key,  value);
+			return subMap.put( key,  value );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object remove(Object key) {
 			write();
-			return submap.remove(key);
+			return subMap.remove( key );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public void putAll(Map other) {
 			write();
-			submap.putAll(other);
+			subMap.putAll( other );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public void clear() {
 			write();
-			submap.clear();
+			subMap.clear();
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Set keySet() {
-			return new SetProxy( submap.keySet() );
+			return new SetProxy( subMap.keySet() );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Collection values() {
-			return new SetProxy( submap.values() );
+			return new SetProxy( subMap.values() );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Set entrySet() {
-			return new EntrySetProxy( submap.entrySet() );
+			return new EntrySetProxy( subMap.entrySet() );
 		}
-		// from SortedMap
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Comparator comparator() {
-			return submap.comparator();
+			return subMap.comparator();
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public SortedMap subMap(Object fromKey, Object toKey) {
-			SortedMap m;
-			m = submap.subMap(fromKey, toKey);
-			return new SortedSubMap( m );
+			final SortedMap subMap = this.subMap.subMap( fromKey, toKey );
+			return new SortedSubMap( subMap );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public SortedMap headMap(Object toKey) {
-			SortedMap m;
-			m = submap.headMap(toKey);
-			return new SortedSubMap(m);
+			final SortedMap headMap = subMap.headMap( toKey );
+			return new SortedSubMap( headMap );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public SortedMap tailMap(Object fromKey) {
-			SortedMap m;
-			m = submap.tailMap(fromKey);
-			return new SortedSubMap(m);
+			final SortedMap tailMap = subMap.tailMap( fromKey );
+			return new SortedSubMap( tailMap );
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object firstKey() {
-			return  submap.firstKey();
+			return subMap.firstKey();
 		}
+
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object lastKey() {
-			return submap.lastKey();
+			return subMap.lastKey();
 		}
-
 	}
-
 }
-
-
-
-
-
-
-

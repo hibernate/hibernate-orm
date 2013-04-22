@@ -57,16 +57,52 @@ import org.hibernate.type.XmlRepresentableType;
 @Deprecated
 public abstract class PersistentIndexedElementHolder extends AbstractPersistentCollection {
 	protected Element element;
-	
+
+	/**
+	 * Constructs a PersistentIndexedElementHolder.
+	 *
+	 * @param session The session
+	 * @param element The DOM element being wrapped
+	 */
 	public PersistentIndexedElementHolder(SessionImplementor session, Element element) {
-		super(session);
+		super( session );
 		this.element = element;
 		setInitialized();
 	}
-	
+
+	/**
+	 * Constructs a PersistentIndexedElementHolder.
+	 *
+	 * @param session The session
+	 * @param persister The collection persister
+	 * @param key The collection key (fk value)@throws HibernateException
+	 */
+	public PersistentIndexedElementHolder(SessionImplementor session, CollectionPersister persister, Serializable key) {
+		super( session );
+		final Element owner = (Element) session.getPersistenceContext().getCollectionOwner( key, persister );
+		if ( owner == null ) {
+			throw new AssertionFailure( "null owner" );
+		}
+
+		final String nodeName = persister.getNodeName();
+		if ( ".".equals( nodeName ) ) {
+			element = owner;
+		}
+		else {
+			element = owner.element( nodeName );
+			if ( element == null ) {
+				element = owner.addElement( nodeName );
+			}
+		}
+	}
+
+	/**
+	 * A struct representing the index/value pair.
+	 */
 	public static final class IndexedValue {
-		String index;
-		Object value;
+		final String index;
+		final Object value;
+
 		IndexedValue(String index, Object value) {
 			this.index = index;
 			this.value = value;
@@ -74,182 +110,189 @@ public abstract class PersistentIndexedElementHolder extends AbstractPersistentC
 	}
 	
 	protected static String getIndex(Element element, String indexNodeName, int i) {
-		if (indexNodeName!=null) {
-			return element.attributeValue(indexNodeName);
+		if ( indexNodeName != null ) {
+			return element.attributeValue( indexNodeName );
 		}
 		else {
-			return Integer.toString(i);
+			return Integer.toString( i );
 		}
 	}
 	
 	protected static void setIndex(Element element, String indexNodeName, String index) {
-		if (indexNodeName!=null) element.addAttribute(indexNodeName, index);
+		if ( indexNodeName != null ) {
+			element.addAttribute( indexNodeName, index );
+		}
 	}
-	
+
 	protected static String getIndexAttributeName(CollectionPersister persister) {
-		String node = persister.getIndexNodeName();
-		return node==null ? null : node.substring(1);
+		final String node = persister.getIndexNodeName();
+		return node == null ? null : node.substring( 1 );
 	}
-	
-	public Serializable getSnapshot(CollectionPersister persister) 
-	throws HibernateException {
-		
+
+	@Override
+	@SuppressWarnings({"unchecked", "deprecation"})
+	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
 		final Type elementType = persister.getElementType();
-		String indexNode = getIndexAttributeName(persister);		
-		List elements = element.elements( persister.getElementNodeName() );
-		HashMap snapshot = new HashMap( elements.size() );
+		final String indexNode = getIndexAttributeName( persister );
+		final List elements = element.elements( persister.getElementNodeName() );
+		final HashMap snapshot = new HashMap( elements.size() );
 		for ( int i=0; i<elements.size(); i++ ) {
-			Element elem = (Element) elements.get(i);
-			Object value = elementType.fromXMLNode( elem, persister.getFactory() );
-			Object copy = elementType.deepCopy( value, persister.getFactory() );
-			snapshot.put( getIndex(elem, indexNode, i), copy );
+			final Element elem = (Element) elements.get( i );
+			final Object value = elementType.fromXMLNode( elem, persister.getFactory() );
+			final Object copy = elementType.deepCopy( value, persister.getFactory() );
+			snapshot.put( getIndex( elem, indexNode, i ), copy );
 		}
 		return snapshot;
 		
 	}
 
-	public Collection getOrphans(Serializable snapshot, String entityName) 
-	throws HibernateException {
+	@Override
+	public Collection getOrphans(Serializable snapshot, String entityName) {
 		//orphan delete not supported for EntityMode.DOM4J
 		return Collections.EMPTY_LIST;
 	}
 
-	public PersistentIndexedElementHolder(SessionImplementor session, CollectionPersister persister, Serializable key) 
-	throws HibernateException {
-		super(session);
-		Element owner = (Element) session.getPersistenceContext().getCollectionOwner(key, persister);
-		if (owner==null) throw new AssertionFailure("null owner");
-		//element = XMLHelper.generateDom4jElement( persister.getNodeName() );
-		final String nodeName = persister.getNodeName();
-		if ( ".".equals(nodeName) ) {
-			element = owner;
-		}
-		else {
-			element = owner.element( nodeName );
-			if (element==null) element = owner.addElement( nodeName );
-		}
-	}
-
+	@Override
 	public boolean isWrapper(Object collection) {
 		return element==collection;
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		Type elementType = persister.getElementType();
-		String indexNode = getIndexAttributeName(persister);		
-		HashMap snapshot = (HashMap) getSnapshot();
-		List elements = element.elements( persister.getElementNodeName() );
-		if ( snapshot.size()!= elements.size() ) return false;
+		final Type elementType = persister.getElementType();
+		final String indexNode = getIndexAttributeName( persister );
+		final HashMap snapshot = (HashMap) getSnapshot();
+		final List elements = element.elements( persister.getElementNodeName() );
+
+		if ( snapshot.size() !=  elements.size() ) {
+			return false;
+		}
+
 		for ( int i=0; i<snapshot.size(); i++ ) {
-			Element elem = (Element) elements.get(i);
-			Object old = snapshot.get( getIndex(elem, indexNode, i) );
-			Object current = elementType.fromXMLNode( elem, persister.getFactory() );
-			if ( elementType.isDirty( old, current, getSession() ) ) return false;
+			final Element elem = (Element) elements.get( i );
+			final Object old = snapshot.get( getIndex( elem, indexNode, i ) );
+			final Object current = elementType.fromXMLNode( elem, persister.getFactory() );
+			if ( elementType.isDirty( old, current, getSession() ) ) {
+				return false;
+			}
 		}
 		return true;
 	}
 
+	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return ( (HashMap) snapshot ).isEmpty();
 	}
-	
+
+	@Override
 	public boolean empty() {
 		return !element.elementIterator().hasNext();
 	}
 
+	@Override
+	@SuppressWarnings({"deprecation", "unchecked"})
 	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
-	throws HibernateException, SQLException {
-		Object object = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+			throws HibernateException, SQLException {
+		final Object object = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
 		final Type elementType = persister.getElementType();
 		final SessionFactoryImplementor factory = persister.getFactory();
-		String indexNode = getIndexAttributeName(persister);
+		final String indexNode = getIndexAttributeName( persister );
 
-		Element elem = element.addElement( persister.getElementNodeName() );
+		final Element elem = element.addElement( persister.getElementNodeName() );
 		elementType.setToXMLNode( elem, object, factory ); 
-		
+
 		final Type indexType = persister.getIndexType();
 		final Object indexValue = persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 		final String index = ( (XmlRepresentableType) indexType ).toXMLString( indexValue, factory );
-		setIndex(elem, indexNode, index);
+		setIndex( elem, indexNode, index );
 		return object;
 	}
 
+	@Override
+	@SuppressWarnings({"deprecation", "unchecked"})
 	public Iterator entries(CollectionPersister persister) {
-		
 		final Type elementType = persister.getElementType();
-		String indexNode = getIndexAttributeName(persister);
-		List elements =  element.elements( persister.getElementNodeName() );
-		int length = elements.size();
-		List result = new ArrayList(length);
+		final String indexNode = getIndexAttributeName( persister );
+		final List elements =  element.elements( persister.getElementNodeName() );
+		final int length = elements.size();
+		final List result = new ArrayList( length );
 		for ( int i=0; i<length; i++ ) {
-			Element elem = (Element) elements.get(i);
-			Object object = elementType.fromXMLNode( elem, persister.getFactory() );
-			result.add( new IndexedValue( getIndex(elem, indexNode, i), object ) );
+			final Element elem = (Element) elements.get( i );
+			final Object object = elementType.fromXMLNode( elem, persister.getFactory() );
+			result.add( new IndexedValue( getIndex( elem, indexNode, i ), object ) );
 		}
 		return result.iterator();
 	}
 
-	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {}
+	@Override
+	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
+	}
 
+	@Override
 	public boolean isDirectlyAccessible() {
 		return true;
 	}
 
+	@Override
 	public Object getValue() {
 		return element;
 	}
 
-	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) 
-	throws HibernateException {
-		
+	@Override
+	@SuppressWarnings({"deprecation", "unchecked"})
+	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
 		final Type indexType = persister.getIndexType();
-		HashMap snapshot = (HashMap) getSnapshot();
-		HashMap deletes = (HashMap) snapshot.clone();
-		deletes.keySet().removeAll( ( (HashMap) getSnapshot(persister) ).keySet() );
-		ArrayList deleteList = new ArrayList( deletes.size() );
+		final HashMap snapshot = (HashMap) getSnapshot();
+		final HashMap deletes = (HashMap) snapshot.clone();
+		deletes.keySet().removeAll( ( (HashMap) getSnapshot( persister ) ).keySet() );
+		final ArrayList deleteList = new ArrayList( deletes.size() );
 		for ( Object o : deletes.entrySet() ) {
-			Map.Entry me = (Map.Entry) o;
-			final Object object = indexIsFormula ?
-					me.getValue() :
-					( (XmlRepresentableType) indexType ).fromXMLString( (String) me.getKey(), persister.getFactory() );
+			final Map.Entry me = (Map.Entry) o;
+			final Object object = indexIsFormula
+					? me.getValue()
+					: ( (XmlRepresentableType) indexType ).fromXMLString( (String) me.getKey(), persister.getFactory() );
 			if ( object != null ) {
 				deleteList.add( object );
 			}
 		}
-		
 		return deleteList.iterator();
-		
 	}
 
-	public boolean needsInserting(Object entry, int i, Type elementType) 
-	throws HibernateException {
-		HashMap snapshot = (HashMap) getSnapshot();
-		IndexedValue iv = (IndexedValue) entry;
+	@Override
+	public boolean needsInserting(Object entry, int i, Type elementType) throws HibernateException {
+		final HashMap snapshot = (HashMap) getSnapshot();
+		final IndexedValue iv = (IndexedValue) entry;
 		return iv.value!=null && snapshot.get( iv.index )==null;
 	}
 
-	public boolean needsUpdating(Object entry, int i, Type elementType) 
-	throws HibernateException {
-		HashMap snapshot = (HashMap) getSnapshot();
-		IndexedValue iv = (IndexedValue) entry;
-		Object old = snapshot.get( iv.index );
+	@Override
+	public boolean needsUpdating(Object entry, int i, Type elementType) throws HibernateException {
+		final HashMap snapshot = (HashMap) getSnapshot();
+		final IndexedValue iv = (IndexedValue) entry;
+		final Object old = snapshot.get( iv.index );
 		return old!=null && elementType.isDirty( old, iv.value, getSession() );
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		String index = ( (IndexedValue) entry ).index;
+		final String index = ( (IndexedValue) entry ).index;
 		final Type indexType = persister.getIndexType();
 		return ( (XmlRepresentableType) indexType ).fromXMLString( index, persister.getFactory() );
 	}
 
+	@Override
 	public Object getElement(Object entry) {
 		return ( (IndexedValue) entry ).value;
 	}
 
+	@Override
 	public Object getSnapshotElement(Object entry, int i) {
 		return ( (HashMap) getSnapshot() ).get( ( (IndexedValue) entry ).index );
 	}
 
+	@Override
 	public boolean entryExists(Object entry, int i) {
 		return entry!=null;
 	}

@@ -35,6 +35,8 @@ import org.hibernate.type.IntegerType;
 import org.hibernate.type.Type;
 
 /**
+ * Wraps a collection of DOM sub-elements as a List
+ *
  * @author Gavin King
  *
  * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.  See Jira issues
@@ -42,43 +44,59 @@ import org.hibernate.type.Type;
  * <a href="https://hibernate.onjira.com/browse/HHH-7783">HHH-7783</a> for more information.
  */
 @Deprecated
+@SuppressWarnings({"UnusedDeclaration", "deprecation"})
 public class PersistentListElementHolder extends PersistentIndexedElementHolder {
 
+	/**
+	 * Constructs a PersistentListElementHolder.
+	 *
+	 * @param session The session
+	 * @param element The owning DOM element
+	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public PersistentListElementHolder(SessionImplementor session, Element element) {
 		super( session, element );
 	}
 
-	public PersistentListElementHolder(SessionImplementor session, CollectionPersister persister,
-			Serializable key) throws HibernateException {
+	/**
+	 * Constructs a PersistentListElementHolder.
+	 *
+	 * @param session The session
+	 * @param persister The collection persister
+	 * @param key The collection key (fk value)
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public PersistentListElementHolder(SessionImplementor session, CollectionPersister persister, Serializable key) {
 		super( session, persister, key );
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
 	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
-	throws HibernateException {
-		
-		Type elementType = persister.getElementType();
-		final String indexNodeName = getIndexAttributeName(persister);
-		Serializable[] cached = (Serializable[]) disassembled;
+			throws HibernateException {
+		final Type elementType = persister.getElementType();
+		final String indexNodeName = getIndexAttributeName( persister );
+		final Serializable[] cached = (Serializable[]) disassembled;
 		for ( int i=0; i<cached.length; i++ ) {
-			Object object = elementType.assemble( cached[i], getSession(), owner );
-			Element subelement = element.addElement( persister.getElementNodeName() );
+			final Object object = elementType.assemble( cached[i], getSession(), owner );
+			final Element subelement = element.addElement( persister.getElementNodeName() );
 			elementType.setToXMLNode( subelement, object, persister.getFactory() );
-			setIndex( subelement, indexNodeName, Integer.toString(i) );
+			setIndex( subelement, indexNodeName, Integer.toString( i ) );
 		}
-		
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
 	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
-				
-		Type elementType = persister.getElementType();
-		final String indexNodeName = getIndexAttributeName(persister);
-		List elements =  element.elements( persister.getElementNodeName() );
-		int length = elements.size();
-		Serializable[] result = new Serializable[length];
+		final Type elementType = persister.getElementType();
+		final String indexNodeName = getIndexAttributeName( persister );
+		final List elements =  element.elements( persister.getElementNodeName() );
+		final int length = elements.size();
+		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			Element elem = (Element) elements.get(i);
-			Object object = elementType.fromXMLNode( elem, persister.getFactory() );
-			Integer index = IntegerType.INSTANCE.fromString( getIndex(elem, indexNodeName, i) );
+			final Element elem = (Element) elements.get( i );
+			final Object object = elementType.fromXMLNode( elem, persister.getFactory() );
+			final Integer index = IntegerType.INSTANCE.fromString( getIndex( elem, indexNodeName, i ) );
 			result[index] = elementType.disassemble( object, getSession(), null );
 		}
 		return result;

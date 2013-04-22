@@ -30,10 +30,11 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
 import org.hibernate.metamodel.binding.PluralAttributeBinding;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
 
 /**
+ * Standard CacheDataDescription implementation.
+ *
  * @author Steve Ebersole
  */
 public class CacheDataDescriptionImpl implements CacheDataDescription {
@@ -41,48 +42,87 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 	private final boolean versioned;
 	private final Comparator versionComparator;
 
+	/**
+	 * Constructs a CacheDataDescriptionImpl instance.  Generally speaking, code should use one of the
+	 * overloaded {@link #decode} methods rather than direct instantiation.
+	 *
+	 * @param mutable Is the described data mutable?
+	 * @param versioned Is the described data versioned?
+	 * @param versionComparator The described data's version value comparator (if versioned).
+	 */
 	public CacheDataDescriptionImpl(boolean mutable, boolean versioned, Comparator versionComparator) {
 		this.mutable = mutable;
 		this.versioned = versioned;
 		this.versionComparator = versionComparator;
 	}
 
+	@Override
 	public boolean isMutable() {
 		return mutable;
 	}
 
+	@Override
 	public boolean isVersioned() {
 		return versioned;
 	}
 
+	@Override
 	public Comparator getVersionComparator() {
 		return versionComparator;
 	}
 
+	/**
+	 * Builds a CacheDataDescriptionImpl from the mapping model of an entity class.
+	 *
+	 * @param model The mapping model.
+	 *
+	 * @return The constructed CacheDataDescriptionImpl
+	 */
 	public static CacheDataDescriptionImpl decode(PersistentClass model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
 				model.isVersioned(),
-				model.isVersioned() ? ( ( VersionType ) model.getVersion().getType() ).getComparator() : null
+				model.isVersioned()
+						? ( (VersionType) model.getVersion().getType() ).getComparator()
+						: null
 		);
 	}
 
+	/**
+	 * Builds a CacheDataDescriptionImpl from the mapping model of an entity class (using the new metamodel code).
+	 *
+	 * @param model The mapping model.
+	 *
+	 * @return The constructed CacheDataDescriptionImpl
+	 */
 	public static CacheDataDescriptionImpl decode(EntityBinding model) {
-		return new CacheDataDescriptionImpl(
-				model.isMutable(),
-				model.isVersioned(),
-				getVersionComparator( model )
-		);
+		return new CacheDataDescriptionImpl( model.isMutable(), model.isVersioned(), getVersionComparator( model ) );
 	}
 
+	/**
+	 * Builds a CacheDataDescriptionImpl from the mapping model of a collection
+	 *
+	 * @param model The mapping model.
+	 *
+	 * @return The constructed CacheDataDescriptionImpl
+	 */
 	public static CacheDataDescriptionImpl decode(Collection model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
 				model.getOwner().isVersioned(),
-				model.getOwner().isVersioned() ? ( ( VersionType ) model.getOwner().getVersion().getType() ).getComparator() : null
+				model.getOwner().isVersioned()
+						? ( (VersionType) model.getOwner().getVersion().getType() ).getComparator()
+						: null
 		);
 	}
 
+	/**
+	 * Builds a CacheDataDescriptionImpl from the mapping model of a collection (using the new metamodel code).
+	 *
+	 * @param model The mapping model.
+	 *
+	 * @return The constructed CacheDataDescriptionImpl
+	 */
 	public static CacheDataDescriptionImpl decode(PluralAttributeBinding model) {
 		return new CacheDataDescriptionImpl(
 				model.isMutable(),
@@ -91,24 +131,16 @@ public class CacheDataDescriptionImpl implements CacheDataDescription {
 		);
 	}
 
-    public static CacheDataDescriptionImpl decode(EntityPersister persister) {
-        return new CacheDataDescriptionImpl(
-                !persister.getEntityMetamodel().hasImmutableNaturalId(),
-                false,
-                null
-        );
-    }
-
 	private static Comparator getVersionComparator(EntityBinding model ) {
-		Comparator versionComparator = null;
 		if ( model.isVersioned() ) {
-			versionComparator = (
-					( VersionType ) model.getHierarchyDetails()
-							.getVersioningAttributeBinding()
-							.getHibernateTypeDescriptor()
-							.getResolvedTypeMapping()
-			).getComparator();
+			final VersionType versionType = (VersionType) model.getHierarchyDetails()
+					.getVersioningAttributeBinding()
+					.getHibernateTypeDescriptor()
+					.getResolvedTypeMapping();
+
+			return versionType.getComparator();
 		}
-		return versionComparator;
+
+		return null;
 	}
 }

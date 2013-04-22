@@ -43,48 +43,64 @@ import org.hibernate.cfg.Settings;
  * @author Steve Ebersole
  */
 public class NoCachingRegionFactory implements RegionFactory {
+	/**
+	 * Singleton access
+	 */
 	public static final NoCachingRegionFactory INSTANCE = new NoCachingRegionFactory();
 
+	/**
+	 * Constructs a NoCachingRegionFactory.  Although access should generally use {@link #INSTANCE}
+	 */
 	public NoCachingRegionFactory() {
 	}
 
+	@Override
 	public void start(Settings settings, Properties properties) throws CacheException {
 	}
 
+	@Override
 	public void stop() {
 	}
 
+	@Override
 	public boolean isMinimalPutsEnabledByDefault() {
 		return false;
 	}
 
+	@Override
 	public AccessType getDefaultAccessType() {
 		return null;
 	}
 
+	@Override
 	public long nextTimestamp() {
 		return System.currentTimeMillis() / 100;
 	}
 
+	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
-	
+
+	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
+	@Override
 	public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
+	@Override
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties) throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}
 
+	@Override
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties) throws CacheException {
 		throw new NoCacheRegionFactoryAvailableException();
 	}

@@ -63,7 +63,7 @@ public class TransformingClassLoader extends ClassLoader {
 		try {
 			final CtClass cc = classPool.get( name );
 			// todo : modify the class definition if not already transformed...
-			byte[] b = cc.toBytecode();
+			final byte[] b = cc.toBytecode();
 			return defineClass( name, b, 0, b.length );
 		}
 		catch (NotFoundException e) {

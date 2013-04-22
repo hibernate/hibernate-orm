@@ -1,0 +1,234 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.loader;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+import org.junit.Test;
+
+import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.jdbc.Work;
+import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
+import org.hibernate.loader.internal.LoadQueryAliasResolutionContextImpl;
+import org.hibernate.loader.internal.ResultSetProcessorImpl;
+import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
+import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
+import org.hibernate.loader.spi.NamedParameterContext;
+import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.ExtraAssertions;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+/**
+ * @author Gail Badner
+ */
+public class EntityWithOneToManyResultSetProcessorTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Poster.class, Message.class };
+	}
+
+	@Test
+	public void testEntityWithSet() throws Exception {
+		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
+
+		// create some test data
+		Session session = openSession();
+		session.beginTransaction();
+		Poster poster = new Poster();
+		poster.pid = 0;
+		poster.name = "John Doe";
+		Message message1 = new Message();
+		message1.mid = 1;
+		message1.msgTxt = "Howdy!";
+		message1.poster = poster;
+		poster.messages.add( message1 );
+		Message message2 = new Message();
+		message2.mid = 2;
+		message2.msgTxt = "Bye!";
+		message2.poster = poster;
+		poster.messages.add( message2 );
+		session.save( poster );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		Poster posterGotten = (Poster) session.get( Poster.class, poster.pid );
+		assertEquals( 0, posterGotten.pid.intValue() );
+		assertEquals( poster.name, posterGotten.name );
+		assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
+		assertEquals( 2, posterGotten.messages.size() );
+		for ( Message message : posterGotten.messages ) {
+			if ( message.mid == 1 ) {
+				assertEquals( message1.msgTxt, message.msgTxt );
+			}
+			else if ( message.mid == 2 ) {
+				assertEquals( message2.msgTxt, message.msgTxt );
+			}
+			else {
+				fail( "unexpected message id." );
+			}
+			assertSame( posterGotten, message.poster );
+		}
+		session.getTransaction().commit();
+		session.close();
+
+		{
+			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
+					sessionFactory(),
+					LoadQueryInfluencers.NONE
+			);
+			final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+			final LoadQueryAliasResolutionContext aliasResolutionContext =
+					new LoadQueryAliasResolutionContextImpl(
+							sessionFactory(),
+							0,
+							Collections.singletonMap( plan.getReturns().get( 0 ), new String[] { "abc" } )
+					);
+			final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
+					LoadQueryInfluencers.NONE,
+					plan
+			);
+			final String sql = queryBuilder.generateSql( 1, sessionFactory(), aliasResolutionContext );
+
+			final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan );
+			final List results = new ArrayList();
+
+			final Session workSession = openSession();
+			workSession.beginTransaction();
+			workSession.doWork(
+					new Work() {
+						@Override
+						public void execute(Connection connection) throws SQLException {
+							PreparedStatement ps = connection.prepareStatement( sql );
+							ps.setInt( 1, 0 );
+							ResultSet resultSet = ps.executeQuery();
+							results.addAll(
+									resultSetProcessor.extractResults(
+											NoOpLoadPlanAdvisor.INSTANCE,
+											resultSet,
+											(SessionImplementor) workSession,
+											new QueryParameters(),
+											new NamedParameterContext() {
+												@Override
+												public int[] getNamedParameterLocations(String name) {
+													return new int[0];
+												}
+											},
+											aliasResolutionContext,
+											true,
+											false,
+											null,
+											null
+									)
+							);
+							resultSet.close();
+							ps.close();
+						}
+					}
+			);
+			assertEquals( 2, results.size() );
+			Object result1 = results.get( 0 );
+			assertNotNull( result1 );
+			assertSame( result1, results.get( 1 ) );
+
+			Poster workPoster = ExtraAssertions.assertTyping( Poster.class, result1 );
+			assertEquals( 0, workPoster.pid.intValue() );
+			assertEquals( poster.name, workPoster.name );
+			assertTrue( Hibernate.isInitialized( workPoster.messages ) );
+			assertEquals( 2, workPoster.messages.size() );
+			assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
+			assertEquals( 2, workPoster.messages.size() );
+			for ( Message message : workPoster.messages ) {
+				if ( message.mid == 1 ) {
+					assertEquals( message1.msgTxt, message.msgTxt );
+				}
+				else if ( message.mid == 2 ) {
+					assertEquals( message2.msgTxt, message.msgTxt );
+				}
+				else {
+					fail( "unexpected message id." );
+				}
+				assertSame( workPoster, message.poster );
+			}
+			workSession.getTransaction().commit();
+			workSession.close();
+		}
+
+		// clean up test data
+		session = openSession();
+		session.beginTransaction();
+		session.delete( poster );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Entity( name = "Message" )
+	public static class Message {
+		@Id
+		private Integer mid;
+		private String msgTxt;
+		@ManyToOne
+		@JoinColumn
+		private Poster poster;
+	}
+
+	@Entity( name = "Poster" )
+	public static class Poster {
+		@Id
+		private Integer pid;
+		private String name;
+		@OneToMany(mappedBy = "poster", fetch = FetchType.EAGER, cascade = CascadeType.ALL )
+		private Set<Message> messages = new HashSet<Message>();
+	}
+}

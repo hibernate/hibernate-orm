@@ -25,6 +25,7 @@ package org.hibernate.osgi;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
@@ -33,8 +34,11 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.HibernatePersistence;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.osgi.util.OsgiServiceUtil;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
 
 /**
@@ -46,27 +50,32 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 	private OsgiClassLoader osgiClassLoader;
 
 	private OsgiJtaPlatform osgiJtaPlatform;
-	
+
 	private Bundle requestingBundle;
-	
-	public OsgiPersistenceProvider (OsgiClassLoader osgiClassLoader,
-			OsgiJtaPlatform osgiJtaPlatform,
-			Bundle requestingBundle ) {
+
+	private BundleContext context;
+
+	public OsgiPersistenceProvider(OsgiClassLoader osgiClassLoader, OsgiJtaPlatform osgiJtaPlatform,
+			Bundle requestingBundle, BundleContext context) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.requestingBundle = requestingBundle;
+		this.context = context;
 	}
+	
+	// TODO: Does "hibernate.classloaders" and osgiClassLoader need added to the
+	// EMFBuilder somehow?
 
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		if ( properties == null ) {
-			properties = new HashMap();
-		}
-		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+		generateProperties( properties );
+
 		// TODO: This needs tested.
-		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
-				new OsgiScanner( requestingBundle ) );
-		
+		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
+		// TODO: This is temporary -- for PersistenceXmlParser's use of
+		// ClassLoaderServiceImpl#fromConfigSettings
+		properties.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
+
 		osgiClassLoader.addBundle( requestingBundle );
 
 		Ejb3Configuration cfg = new Ejb3Configuration();
@@ -76,11 +85,9 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		if ( properties == null ) {
-			properties = new HashMap();
-		}
-		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
-		// OSGi ClassLoaders must implement BundleReference 
+		generateProperties( properties );
+
+		// OSGi ClassLoaders must implement BundleReference
 		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
 				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() ) );
 
@@ -93,6 +100,7 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 
 	private BootstrapServiceRegistryBuilder getBuilder(Map properties) {
 		BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
+		
 		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) properties
 				.get( AvailableSettings.CLASSLOADERS );
 		if ( classLoaders != null ) {
@@ -101,6 +109,22 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 			}
 		}
 		builder.with( osgiClassLoader );
+		
+		final List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		for ( Integrator integrator : integrators ) {
+			builder.with( integrator );
+		}
+		
+		// TODO: other types of services?
+		
 		return builder;
+	}
+
+	private void generateProperties(Map properties) {
+		if ( properties == null ) {
+			properties = new HashMap();
+		}
+
+		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 	}
 }

@@ -1618,4 +1618,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Exception while loading a class or resource found during scanning", id = 449)
 	void unableToLoadScannedClassOrResource(@Cause Exception e);
+	
+	@LogMessage(level = WARN)
+	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 450)
+	void unableToDiscoverOsgiService(String service, @Cause Exception e);
 }

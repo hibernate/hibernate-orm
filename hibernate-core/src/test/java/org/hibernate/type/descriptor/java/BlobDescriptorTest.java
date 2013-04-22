@@ -22,13 +22,18 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.type.descriptor.java;
+
+import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.junit.Test;
 
+import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
+import org.hibernate.testing.TestForIssue;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -80,5 +85,15 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 		catch ( SQLException e ) {
 			fail( "SQLException accessing blob : " + e.getMessage() );
 		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8193" )
+	public void testStreamResetOnAccess() throws IOException {
+		byte[] bytes = new byte[] { 1, 2, 3, 4 };
+		BlobImplementer blob = (BlobImplementer) BlobProxy.generateProxy( bytes );
+		int value = blob.getUnderlyingStream().getInputStream().read();
+		// Call to BlobImplementer#getUnderlyingStream() should mark input stream for reset.
+		assertEquals( bytes.length, blob.getUnderlyingStream().getInputStream().available() );
 	}
 }

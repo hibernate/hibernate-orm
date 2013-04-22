@@ -78,10 +78,10 @@ public class HibernateBundleActivator implements BundleActivator {
 		// using the legacy provider name.
 		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
 		context.registerService( PersistenceProvider.class.getName(), 
-				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform ), properties );
+				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ), properties );
 		
 		context.registerService( SessionFactory.class.getName(),
-				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform ), new Hashtable());
+				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ), new Hashtable());
 	}
 
 	@Override

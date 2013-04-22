@@ -18,43 +18,36 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.osgi;
+package org.hibernate.osgi.util;
 
-import org.osgi.framework.Bundle;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.ServiceReference;
 
 /**
- * See the description on {@link #OsgiSessionFactoryService}.  This class
- * is similar, providing an PersistenceProvider as an OSGi Service.
- * 
  * @author Brett Meyer
- * @author Tim Ward
  */
-public class OsgiPersistenceProviderService implements ServiceFactory {
-	
-	private OsgiClassLoader osgiClassLoader;
+public class OsgiServiceUtil {
 
-	private OsgiJtaPlatform osgiJtaPlatform;
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
+			OsgiServiceUtil.class.getName() );
 
-	private BundleContext context;
-
-	public OsgiPersistenceProviderService( OsgiClassLoader osgiClassLoader,
-			OsgiJtaPlatform osgiJtaPlatform, BundleContext context ) {
-		this.osgiClassLoader = osgiClassLoader;
-		this.osgiJtaPlatform = osgiJtaPlatform;
-		this.context = context;
+	public static <T> List<T> getServiceImpls(Class<T> contract, BundleContext context) {
+		List<T> serviceImpls = new ArrayList<T>();
+		try {
+			Collection<ServiceReference<T>> serviceRefs = context.getServiceReferences( contract, null );
+			for ( ServiceReference<T> serviceRef : serviceRefs ) {
+				serviceImpls.add( context.getService( serviceRef ) );
+			}
+		}
+		catch ( Exception e ) {
+			LOG.unableToDiscoverOsgiService( contract.getName(), e );
+		}
+		return serviceImpls;
 	}
-
-	@Override
-	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
-		return new OsgiPersistenceProvider(osgiClassLoader, osgiJtaPlatform, requestingBundle, context);
-	}
-
-	@Override
-	public void ungetService(Bundle requestingBundle, ServiceRegistration registration, Object service) {
-		// ?
-	}
-
 }

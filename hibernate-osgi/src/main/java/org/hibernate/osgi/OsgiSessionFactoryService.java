@@ -20,13 +20,18 @@
  */
 package org.hibernate.osgi;
 
+import java.util.List;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.osgi.util.OsgiServiceUtil;
 import org.hibernate.service.ServiceRegistry;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
@@ -54,9 +59,13 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 
 	private OsgiJtaPlatform osgiJtaPlatform;
 
-	public OsgiSessionFactoryService( OsgiClassLoader osgiClassLoader, OsgiJtaPlatform osgiJtaPlatform ) {
+	private BundleContext context;
+
+	public OsgiSessionFactoryService( OsgiClassLoader osgiClassLoader, OsgiJtaPlatform osgiJtaPlatform,
+			BundleContext context ) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
+		this.context = context;
 	}
 
 	@Override
@@ -69,6 +78,11 @@ public class OsgiSessionFactoryService implements ServiceFactory {
         
         BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
         builder.with( osgiClassLoader );
+        
+        List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+        for (Integrator integrator : integrators) {
+        	builder.with( integrator );
+        }
         
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
         		.applySettings(configuration.getProperties()).build();        

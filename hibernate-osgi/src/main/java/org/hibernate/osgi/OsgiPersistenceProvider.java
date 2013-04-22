@@ -24,14 +24,20 @@
 package org.hibernate.osgi;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.IntegratorProvider;
+import org.hibernate.osgi.util.OsgiServiceUtil;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
 
 /**
@@ -43,50 +49,66 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	private OsgiClassLoader osgiClassLoader;
 
 	private OsgiJtaPlatform osgiJtaPlatform;
-	
+
 	private Bundle requestingBundle;
-	
-	public OsgiPersistenceProvider (OsgiClassLoader osgiClassLoader,
-			OsgiJtaPlatform osgiJtaPlatform,
-			Bundle requestingBundle ) {
+
+	private BundleContext context;
+
+	public OsgiPersistenceProvider(OsgiClassLoader osgiClassLoader, OsgiJtaPlatform osgiJtaPlatform,
+			Bundle requestingBundle, BundleContext context) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.requestingBundle = requestingBundle;
+		this.context = context;
 	}
-	
+
 	// TODO: Does "hibernate.classloaders" and osgiClassLoader need added to the
 	// EMFBuilder somehow?
 
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		if ( properties == null ) {
-			properties = new HashMap();
-		}
-		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+		generateProperties( properties );
+
 		// TODO: This needs tested.
-		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER,
-				new OsgiScanner( requestingBundle ) );
+		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
 		// TODO: This is temporary -- for PersistenceXmlParser's use of
 		// ClassLoaderServiceImpl#fromConfigSettings
 		properties.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
-		
+
 		osgiClassLoader.addBundle( requestingBundle );
 
 		return super.createEntityManagerFactory( persistenceUnitName, properties );
 	}
-	
+
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		if ( properties == null ) {
-			properties = new HashMap();
-		}
-		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
-		// OSGi ClassLoaders must implement BundleReference 
+		generateProperties( properties );
+
+		// OSGi ClassLoaders must implement BundleReference
 		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER,
 				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() ) );
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
 
 		return super.createContainerEntityManagerFactory( info, properties );
+	}
+
+	private void generateProperties(Map properties) {
+		if ( properties == null ) {
+			properties = new HashMap();
+		}
+
+		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+
+		final List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		IntegratorProvider integratorProvider = new IntegratorProvider() {
+			@Override
+			public List<Integrator> getIntegrators() {
+				return integrators;
+			}
+		};
+		properties.put( EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, integratorProvider );
+
+		// TODO: other types of services?
 	}
 }

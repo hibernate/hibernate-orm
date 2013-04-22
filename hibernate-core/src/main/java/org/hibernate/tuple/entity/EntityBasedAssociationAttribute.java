@@ -93,7 +93,7 @@ public class EntityBasedAssociationAttribute
 				lhsColumnNames = collectionPersister.getElementColumnNames();
 			}
 			else {
-				final OuterJoinLoadable entityPersister = (OuterJoinLoadable) joinable;
+				final OuterJoinLoadable entityPersister = (OuterJoinLoadable) source();
 				lhsTableName = getLHSTableName( type, attributeNumber(), entityPersister );
 				lhsColumnNames = getLHSColumnNames( type, attributeNumber(), entityPersister, sessionFactory() );
 			}

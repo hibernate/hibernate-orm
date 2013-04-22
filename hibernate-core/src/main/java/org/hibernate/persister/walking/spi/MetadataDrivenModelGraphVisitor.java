@@ -113,7 +113,15 @@ public class MetadataDrivenModelGraphVisitor {
 		final PropertyPath subPath = currentPropertyPath.append( attributeDefinition.getName() );
 		log.debug( "Visiting attribute path : " + subPath.getFullPath() );
 
-		final boolean continueWalk = strategy.startingAttribute( attributeDefinition );
+		final boolean continueWalk;
+		if ( attributeDefinition.getType().isAssociationType() ) {
+			continueWalk =
+					! isDuplicateAssociation( ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey() ) &&
+					strategy.startingAttribute( attributeDefinition );
+		}
+		else {
+			continueWalk = strategy.startingAttribute( attributeDefinition );
+		}
 		if ( continueWalk ) {
 			final PropertyPath old = currentPropertyPath;
 			currentPropertyPath = subPath;
@@ -134,11 +142,6 @@ public class MetadataDrivenModelGraphVisitor {
 
 	private void visitAssociation(AssociationAttributeDefinition attribute) {
 		// todo : do "too deep" checks; but see note about adding depth to PropertyPath
-
-		if ( isDuplicateAssociation( attribute.getAssociationKey() ) ) {
-			log.debug( "Property path deemed to be circular : " + currentPropertyPath.getFullPath() );
-			return;
-		}
 
 		if ( attribute.isCollection() ) {
 			visitCollectionDefinition( attribute.toCollectionDefinition() );
@@ -210,7 +213,14 @@ public class MetadataDrivenModelGraphVisitor {
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();
 
 	protected boolean isDuplicateAssociation(AssociationKey associationKey) {
-		return !visitedAssociationKeys.add( associationKey );
+		boolean isDuplicate = !visitedAssociationKeys.add( associationKey );
+		if ( isDuplicate ) {
+			log.debug( "Property path deemed to be circular : " + currentPropertyPath.getFullPath() );
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 }

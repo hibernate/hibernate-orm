@@ -47,7 +47,7 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
-public final class FieldInterceptorImpl extends AbstractFieldInterceptor implements FieldHandler, Serializable {
+final class FieldInterceptorImpl extends AbstractFieldInterceptor implements FieldHandler, Serializable {
 
 	FieldInterceptorImpl(SessionImplementor session, Set uninitializedFields, String entityName) {
 		super( session, uninitializedFields, entityName );
@@ -57,46 +57,41 @@ public final class FieldInterceptorImpl extends AbstractFieldInterceptor impleme
 	// FieldHandler impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public boolean readBoolean(Object target, String name, boolean oldValue) {
-		return ( ( Boolean ) intercept( target, name, oldValue ) )
-				.booleanValue();
+		return ( (Boolean) intercept( target, name, oldValue ) ).booleanValue();
 	}
 
 	public byte readByte(Object target, String name, byte oldValue) {
-		return ( ( Byte ) intercept( target, name, Byte.valueOf( oldValue ) ) ).byteValue();
+		return ( (Byte) intercept( target, name, Byte.valueOf( oldValue ) ) ).byteValue();
 	}
 
 	public char readChar(Object target, String name, char oldValue) {
-		return ( ( Character ) intercept( target, name, Character.valueOf( oldValue ) ) )
-				.charValue();
+		return ( (Character) intercept( target, name, Character.valueOf( oldValue ) ) ).charValue();
 	}
 
 	public double readDouble(Object target, String name, double oldValue) {
-		return ( ( Double ) intercept( target, name, Double.valueOf( oldValue ) ) )
-				.doubleValue();
+		return ( (Double) intercept( target, name, Double.valueOf( oldValue ) ) ).doubleValue();
 	}
 
 	public float readFloat(Object target, String name, float oldValue) {
-		return ( ( Float ) intercept( target, name, Float.valueOf( oldValue ) ) )
-				.floatValue();
+		return ( (Float) intercept( target, name, Float.valueOf( oldValue ) ) ).floatValue();
 	}
 
 	public int readInt(Object target, String name, int oldValue) {
-		return ( ( Integer ) intercept( target, name, Integer.valueOf( oldValue ) ) );
+		return ( (Integer) intercept( target, name, Integer.valueOf( oldValue ) ) );
 	}
 
 	public long readLong(Object target, String name, long oldValue) {
-		return ( ( Long ) intercept( target, name, Long.valueOf( oldValue ) ) ).longValue();
+		return ( (Long) intercept( target, name, Long.valueOf( oldValue ) ) ).longValue();
 	}
 
 	public short readShort(Object target, String name, short oldValue) {
-		return ( ( Short ) intercept( target, name, Short.valueOf( oldValue ) ) )
-				.shortValue();
+		return ( (Short) intercept( target, name, Short.valueOf( oldValue ) ) ).shortValue();
 	}
 
 	public Object readObject(Object target, String name, Object oldValue) {
 		Object value = intercept( target, name, oldValue );
-		if (value instanceof HibernateProxy) {
-			LazyInitializer li = ( (HibernateProxy) value ).getHibernateLazyInitializer();
+		if ( value instanceof HibernateProxy ) {
+			final LazyInitializer li = ( (HibernateProxy) value ).getHibernateLazyInitializer();
 			if ( li.isUnwrap() ) {
 				value = li.getImplementation();
 			}
@@ -159,11 +154,10 @@ public final class FieldInterceptorImpl extends AbstractFieldInterceptor impleme
 	}
 
 	public String toString() {
-		return "FieldInterceptorImpl(" +
-		       "entityName=" + getEntityName() +
-		       ",dirty=" + isDirty() +
-		       ",uninitializedFields=" + getUninitializedFields() +
-		       ')';
+		return "FieldInterceptorImpl(entityName=" + getEntityName() +
+				",dirty=" + isDirty() +
+				",uninitializedFields=" + getUninitializedFields() +
+				')';
 	}
 
 }

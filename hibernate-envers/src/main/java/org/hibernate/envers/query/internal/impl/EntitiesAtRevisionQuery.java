@@ -91,9 +91,9 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 
         // (selecting e entities at revision :revision)
         // --> based on auditStrategy (see above)
-        verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, revisionPropertyPath, 
-        		verEntCfg.getRevisionEndFieldName(), true, referencedIdData, 
-				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR);
+        verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, qb.getRootParameters(),
+				revisionPropertyPath, verEntCfg.getRevisionEndFieldName(), true, referencedIdData,
+				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR, true);
 
         if (!includeDeletions) {
             // e.revision_type != DEL

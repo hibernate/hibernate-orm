@@ -41,9 +41,9 @@ public class MappingNotFoundException extends MappingException {
 	 * @param cause The underlying cause
 	 */
 	public MappingNotFoundException(String customMessage, String type, String path, Throwable cause) {
-		super(customMessage, cause);
-		this.type=type;
-		this.path=path;
+		super( customMessage, cause );
+		this.type = type;
+		this.path = path;
 	}
 
 	/**
@@ -54,9 +54,9 @@ public class MappingNotFoundException extends MappingException {
 	 * @param path The path (type specific) of the mapping that could not be found
 	 */
 	public MappingNotFoundException(String customMessage, String type, String path) {
-		super(customMessage);
-		this.type=type;
-		this.path=path;
+		super( customMessage );
+		this.type = type;
+		this.path = path;
 	}
 
 	/**
@@ -66,7 +66,7 @@ public class MappingNotFoundException extends MappingException {
 	 * @param path The path (type specific) of the mapping that could not be found
 	 */
 	public MappingNotFoundException(String type, String path) {
-		this(type + ": " + path + " not found", type, path);
+		this( type + ": " + path + " not found", type, path );
 	}
 
 	/**
@@ -77,7 +77,7 @@ public class MappingNotFoundException extends MappingException {
 	 * @param cause The underlying cause
 	 */
 	public MappingNotFoundException(String type, String path, Throwable cause) {
-		this(type + ": " + path + " not found", type, path, cause);
+		this( type + ": " + path + " not found", type, path, cause );
 	}
 
 	public String getType() {

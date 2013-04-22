@@ -26,6 +26,7 @@ package org.hibernate.loader.plan.internal;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
 
@@ -45,6 +46,10 @@ public class LoadPlanImpl implements LoadPlan {
 
 	public LoadPlanImpl(boolean hasScalars, Return rootReturn) {
 		this( hasScalars, Collections.singletonList( rootReturn ) );
+	}
+
+	public LoadPlanImpl(EntityReturn entityReturn) {
+		this( false, entityReturn );
 	}
 
 	@Override

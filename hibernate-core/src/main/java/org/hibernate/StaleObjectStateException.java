@@ -44,7 +44,7 @@ public class StaleObjectStateException extends StaleStateException {
 	 * @param identifier The identifier of the entity
 	 */
 	public StaleObjectStateException(String entityName, Serializable identifier) {
-		super("Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)");
+		super( "Row was updated or deleted by another transaction (or unsaved-value mapping was incorrect)" );
 		this.entityName = entityName;
 		this.identifier = identifier;
 	}

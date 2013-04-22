@@ -26,7 +26,6 @@ package org.hibernate.action.internal;
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
-import org.hibernate.cache.CacheException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
@@ -37,13 +36,24 @@ import org.hibernate.event.spi.PreCollectionRecreateEvent;
 import org.hibernate.event.spi.PreCollectionRecreateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 
+/**
+ * The action for recreating a collection
+ */
 public final class CollectionRecreateAction extends CollectionAction {
 
+	/**
+	 * Constructs a CollectionRecreateAction
+	 *
+	 * @param collection The collection being recreated
+	 * @param persister The collection persister
+	 * @param id The collection key
+	 * @param session The session
+	 */
 	public CollectionRecreateAction(
 			final PersistentCollection collection,
 			final CollectionPersister persister,
 			final Serializable id,
-			final SessionImplementor session) throws CacheException {
+			final SessionImplementor session) {
 		super( persister, collection, id, session );
 	}
 
@@ -54,25 +64,18 @@ public final class CollectionRecreateAction extends CollectionAction {
 		final PersistentCollection collection = getCollection();
 		
 		preRecreate();
-
 		getPersister().recreate( collection, getKey(), getSession() );
-		
-		getSession().getPersistenceContext()
-				.getCollectionEntry(collection)
-				.afterAction(collection);
-		
+		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
 		evict();
-
 		postRecreate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatisticsImplementor()
-					.recreateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatisticsImplementor().recreateCollection( getPersister().getRole() );
 		}
 	}
 
 	private void preRecreate() {
-		EventListenerGroup<PreCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_RECREATE );
+		final EventListenerGroup<PreCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_RECREATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
@@ -83,7 +86,7 @@ public final class CollectionRecreateAction extends CollectionAction {
 	}
 
 	private void postRecreate() {
-		EventListenerGroup<PostCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_RECREATE );
+		final EventListenerGroup<PostCollectionRecreateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_RECREATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}

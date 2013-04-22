@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,79 +23,64 @@
  */
 package org.hibernate.bytecode.internal.javassist;
 
+import org.hibernate.HibernateException;
+
 /**
  * An exception thrown while generating a bulk accessor.
- * 
+ *
  * @author Muga Nishizawa
  * @author modified by Shigeru Chiba
  */
-public class BulkAccessorException extends RuntimeException {
-    private Throwable myCause;
+public class BulkAccessorException extends HibernateException {
+	private final int index;
 
-    /**
-     * Gets the cause of this throwable.
-     * It is for JDK 1.3 compatibility.
-     */
-    public Throwable getCause() {
-        return (myCause == this ? null : myCause);
-    }
+	/**
+	 * Constructs an exception.
+	 *
+	 * @param message Message explaining the exception condition
+	 */
+	public BulkAccessorException(String message) {
+		this( message, -1 );
+	}
 
-    /**
-     * Initializes the cause of this throwable.
-     * It is for JDK 1.3 compatibility.
-     */
-    public synchronized Throwable initCause(Throwable cause) {
-        myCause = cause;
-        return this;
-    }
+	/**
+	 * Constructs an exception.
+	 *
+	 * @param message Message explaining the exception condition
+	 * @param index The index of the property that causes an exception.
+	 */
+	public BulkAccessorException(String message, int index) {
+		this( message, index, null );
+	}
 
-    private int index;
+	/**
+	 * Constructs an exception.
+	 *
+	 * @param message Message explaining the exception condition
+	 * @param cause The underlying cause
+	 */
+	public BulkAccessorException(String message, Exception cause) {
+		this( message, -1, cause );
+	}
 
-    /**
-     * Constructs an exception.
-     */
-    public BulkAccessorException(String message) {
-        super(message);
-        index = -1;
-        initCause(null);
-    }
+	/**
+	 * Constructs an exception.
+	 *
+	 * @param message Message explaining the exception condition
+	 * @param index The index of the property that causes an exception.
+	 * @param cause The underlying cause
+	 */
+	public BulkAccessorException(String message, int index, Exception cause) {
+		super( message + " : @" + index, cause );
+		this.index = index;
+	}
 
-    /**
-     * Constructs an exception.
-     *
-     * @param index     the index of the property that causes an exception.
-     */
-    public BulkAccessorException(String message, int index) {
-        this(message + ": " + index);
-        this.index = index;
-    }
-
-    /**
-     * Constructs an exception.
-     */
-    public BulkAccessorException(String message, Throwable cause) {
-        super(message);
-        index = -1;
-        initCause(cause);
-    }
-
-    /**
-     * Constructs an exception.
-     *
-     * @param index     the index of the property that causes an exception.
-     */
-    public BulkAccessorException(Throwable cause, int index) {
-        this("Property " + index);
-        this.index = index;
-        initCause(cause);
-    }
-
-    /**
-     * Returns the index of the property that causes this exception.
-     *
-     * @return -1 if the index is not specified.
-     */
-    public int getIndex() {
-        return this.index;
-    }
+	/**
+	 * Returns the index of the property that causes this exception.
+	 *
+	 * @return -1 if the index is not specified.
+	 */
+	public int getIndex() {
+		return this.index;
+	}
 }

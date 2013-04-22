@@ -39,7 +39,6 @@ public class QueryTimeoutException extends JDBCException {
 	 * @param sql The sql being executed when the exception occurred.
 	 */
 	public QueryTimeoutException(String message, SQLException sqlException, String sql) {
-		super(message, sqlException, sql);
+		super( message, sqlException, sql );
 	}
-
 }

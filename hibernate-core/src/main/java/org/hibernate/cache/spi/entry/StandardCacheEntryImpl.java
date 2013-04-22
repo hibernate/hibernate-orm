@@ -40,6 +40,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.TypeHelper;
 
 /**
+ * Standard representation of entity cached data using the "disassembled state".
+ *
  * @author Steve Ebersole
  */
 public class StandardCacheEntryImpl implements CacheEntry {
@@ -47,6 +49,48 @@ public class StandardCacheEntryImpl implements CacheEntry {
 	private final String subclass;
 	private final boolean lazyPropertiesAreUnfetched;
 	private final Object version;
+
+	/**
+	 * Constructs a StandardCacheEntryImpl
+	 *
+	 * @param state The extracted state
+	 * @param persister The entity persister
+	 * @param unfetched Are any values present in state unfetched?
+	 * @param version The current version (if versioned)
+	 * @param session The originating session
+	 * @param owner The owner
+	 *
+	 * @throws HibernateException Generally indicates a problem performing the dis-assembly.
+	 */
+	public StandardCacheEntryImpl(
+			final Object[] state,
+			final EntityPersister persister,
+			final boolean unfetched,
+			final Object version,
+			final SessionImplementor session,
+			final Object owner)
+			throws HibernateException {
+		// disassembled state gets put in a new array (we write to cache by value!)
+		this.disassembledState = TypeHelper.disassemble(
+				state,
+				persister.getPropertyTypes(),
+				persister.isLazyPropertiesCacheable() ? null : persister.getPropertyLaziness(),
+				session,
+				owner
+		);
+		subclass = persister.getEntityName();
+		lazyPropertiesAreUnfetched = unfetched || !persister.isLazyPropertiesCacheable();
+		this.version = version;
+	}
+
+	StandardCacheEntryImpl(Serializable[] state, String subclass, boolean unfetched, Object version) {
+		this.disassembledState = state;
+		this.subclass = subclass;
+		this.lazyPropertiesAreUnfetched = unfetched;
+		this.version = version;
+	}
+
+
 
 	@Override
 	public boolean isReferenceEntry() {
@@ -76,76 +120,57 @@ public class StandardCacheEntryImpl implements CacheEntry {
 		return version;
 	}
 
-	public StandardCacheEntryImpl(
-			final Object[] state,
-			final EntityPersister persister,
-			final boolean unfetched,
-			final Object version,
-			final SessionImplementor session,
-			final Object owner)
-			throws HibernateException {
-		//disassembled state gets put in a new array (we write to cache by value!)
-		this.disassembledState = TypeHelper.disassemble(
-				state,
-				persister.getPropertyTypes(),
-				persister.isLazyPropertiesCacheable() ?
-						null : persister.getPropertyLaziness(),
-				session,
-				owner
-		);
-		subclass = persister.getEntityName();
-		lazyPropertiesAreUnfetched = unfetched || !persister.isLazyPropertiesCacheable();
-		this.version = version;
-	}
-
-	StandardCacheEntryImpl(Serializable[] state, String subclass, boolean unfetched, Object version) {
-		this.disassembledState = state;
-		this.subclass = subclass;
-		this.lazyPropertiesAreUnfetched = unfetched;
-		this.version = version;
-	}
-
+	/**
+	 * After assembly, is a copy of the array needed?
+	 *
+	 * @return true/false
+	 */
 	public boolean isDeepCopyNeeded() {
 		// for now always return true.
 		// todo : See discussion on HHH-7872
 		return true;
 	}
 
+	/**
+	 * Assemble the previously disassembled state represented by this entry into the given entity instance.
+	 *
+	 * Additionally manages the PreLoadEvent callbacks.
+	 *
+	 * @param instance The entity instance
+	 * @param id The entity identifier
+	 * @param persister The entity persister
+	 * @param interceptor (currently unused)
+	 * @param session The session
+	 *
+	 * @return The assembled state
+	 *
+	 * @throws HibernateException Indicates a problem performing assembly or calling the PreLoadEventListeners.
+	 *
+	 * @see org.hibernate.type.Type#assemble
+	 * @see org.hibernate.type.Type#disassemble
+	 */
 	public Object[] assemble(
 			final Object instance,
 			final Serializable id,
 			final EntityPersister persister,
 			final Interceptor interceptor,
-			final EventSource session)
-			throws HibernateException {
-
-		if ( !persister.getEntityName().equals(subclass) ) {
-			throw new AssertionFailure("Tried to assemble a different subclass instance");
+			final EventSource session) throws HibernateException {
+		if ( !persister.getEntityName().equals( subclass ) ) {
+			throw new AssertionFailure( "Tried to assemble a different subclass instance" );
 		}
 
-		return assemble(disassembledState, instance, id, persister, interceptor, session);
-	}
-
-	private static Object[] assemble(
-			final Serializable[] values,
-			final Object result,
-			final Serializable id,
-			final EntityPersister persister,
-			final Interceptor interceptor,
-			final EventSource session) throws HibernateException {
-
 		//assembled state gets put in a new array (we read from cache by value!)
-		Object[] assembledProps = TypeHelper.assemble(
-				values,
+		final Object[] assembledProps = TypeHelper.assemble(
+				disassembledState,
 				persister.getPropertyTypes(),
-				session, result
+				session, instance
 		);
 
-		//persister.setIdentifier(result, id); //before calling interceptor, for consistency with normal load
+		//persister.setIdentifier(instance, id); //before calling interceptor, for consistency with normal load
 
 		//TODO: reuse the PreLoadEvent
 		final PreLoadEvent preLoadEvent = new PreLoadEvent( session )
-				.setEntity( result )
+				.setEntity( instance )
 				.setState( assembledProps )
 				.setId( id )
 				.setPersister( persister );
@@ -159,11 +184,12 @@ public class StandardCacheEntryImpl implements CacheEntry {
 			listener.onPreLoad( preLoadEvent );
 		}
 
-		persister.setPropertyValues( result, assembledProps );
+		persister.setPropertyValues( instance, assembledProps );
 
 		return assembledProps;
 	}
 
+	@Override
 	public String toString() {
 		return "CacheEntry(" + subclass + ')' + ArrayHelper.toString( disassembledState );
 	}

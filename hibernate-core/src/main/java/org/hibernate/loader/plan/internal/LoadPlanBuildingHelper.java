@@ -25,8 +25,6 @@ package org.hibernate.loader.plan.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.plan.spi.AbstractFetchOwner;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CompositeFetch;
@@ -34,7 +32,6 @@ import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
@@ -46,22 +43,12 @@ public class LoadPlanBuildingHelper {
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
-		final CollectionAliases collectionAliases = loadPlanBuildingContext.resolveCollectionColumnAliases( attributeDefinition );
-		final CollectionDefinition collectionDefinition = attributeDefinition.toCollectionDefinition();
-		final EntityAliases elementEntityAliases =
-				collectionDefinition.getElementDefinition().getType().isEntityType() ?
-						loadPlanBuildingContext.resolveEntityColumnAliases( attributeDefinition ) :
-						null;
-
 		return new CollectionFetch(
 				loadPlanBuildingContext.getSessionFactory(),
-				loadPlanBuildingContext.resolveFetchSourceAlias( attributeDefinition ),
 				LockMode.NONE, // todo : for now
 				fetchOwner,
 				fetchStrategy,
-				attributeDefinition.getName(),
-				collectionAliases,
-				elementEntityAliases
+				attributeDefinition.getName()
 		);
 	}
 
@@ -69,18 +56,14 @@ public class LoadPlanBuildingHelper {
 			FetchOwner fetchOwner,
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 
 		return new EntityFetch(
 				loadPlanBuildingContext.getSessionFactory(),
-				loadPlanBuildingContext.resolveFetchSourceAlias( attributeDefinition ),
 				LockMode.NONE, // todo : for now
 				fetchOwner,
 				attributeDefinition.getName(),
-				fetchStrategy,
-				sqlTableAlias,
-				loadPlanBuildingContext.resolveEntityColumnAliases( attributeDefinition )
+				fetchStrategy
 		);
 	}
 
@@ -90,7 +73,6 @@ public class LoadPlanBuildingHelper {
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return new CompositeFetch(
 				loadPlanBuildingContext.getSessionFactory(),
-				loadPlanBuildingContext.resolveFetchSourceAlias( attributeDefinition ),
 				(AbstractFetchOwner) fetchOwner,
 				attributeDefinition.getName()
 		);

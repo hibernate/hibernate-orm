@@ -37,18 +37,19 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
     private final AuditReaderImplementor versionsReader;
     private final RelationQueryGenerator queryGenerator;
     private final Object primaryKey;
-    
     protected final Number revision;
+	protected final boolean removed;
     protected final EntityInstantiator entityInstantiator;
 
     public AbstractCollectionInitializor(AuditConfiguration verCfg,
                                          AuditReaderImplementor versionsReader,
                                          RelationQueryGenerator queryGenerator,
-                                         Object primaryKey, Number revision) {
+                                         Object primaryKey, Number revision, boolean removed) {
         this.versionsReader = versionsReader;
         this.queryGenerator = queryGenerator;
         this.primaryKey = primaryKey;
         this.revision = revision;
+		this.removed = removed;
 
         entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
     }
@@ -58,7 +59,7 @@ public abstract class AbstractCollectionInitializor<T> implements Initializor<T>
     protected abstract void addToCollection(T collection, Object collectionRow);
 
     public T initialize() {
-        List<?> collectionContent = queryGenerator.getQuery(versionsReader, primaryKey, revision).list();
+        List<?> collectionContent = queryGenerator.getQuery(versionsReader, primaryKey, revision, removed).list();
 
         T collection = initializeCollection(collectionContent.size());
 

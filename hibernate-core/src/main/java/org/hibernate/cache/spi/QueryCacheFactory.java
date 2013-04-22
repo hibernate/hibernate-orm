@@ -24,6 +24,9 @@
 package org.hibernate.cache.spi;
 
 import org.hibernate.HibernateException;
+import java.util.Properties;
+
+import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -33,6 +36,16 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public interface QueryCacheFactory {
+	/**
+	 * Builds a named query cache.
+	 *
+	 * @param regionName The cache region name
+	 * @param updateTimestampsCache The cache of timestamp values to use to perform up-to-date checks.
+	 * @param settings The Hibernate SessionFactory settings.
+	 * @param props Any properties.
+	 *
+	 * @return The cache.
+	 */
 	public QueryCache getQueryCache(
 			String regionName,
 			UpdateTimestampsCache updateTimestampsCache,

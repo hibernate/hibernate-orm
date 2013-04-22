@@ -51,8 +51,8 @@ public abstract class BaseUnitTestCase {
 	 */
 	protected static final String OUTPUT_PREFIX = SqlStatementLogger.OUTPUT_PREFIX;
 
-	@Rule
-	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
+//	@Rule
+//	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
 
 	@After
 	public void releaseTransactions() {

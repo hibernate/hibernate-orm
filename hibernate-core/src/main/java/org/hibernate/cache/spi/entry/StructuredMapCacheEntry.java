@@ -35,6 +35,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Gavin King
  */
 public class StructuredMapCacheEntry implements CacheEntryStructure<CollectionCacheEntry, Map<Serializable,Serializable>> {
+	/**
+	 * Access to the singleton reference
+	 */
+	public static final StructuredMapCacheEntry INSTANCE = new StructuredMapCacheEntry();
+
 	@Override
 	public Map<Serializable, Serializable> structure(CollectionCacheEntry entry) {
 		final Serializable[] states = entry.getState();
@@ -56,4 +61,6 @@ public class StructuredMapCacheEntry implements CacheEntryStructure<CollectionCa
 		return new CollectionCacheEntry( states );
 	}
 
+	private StructuredMapCacheEntry() {
+	}
 }

@@ -21,43 +21,19 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.schemagen;
+package org.hibernate.jpa.graph.internal.advisor;
 
-import java.io.Reader;
-import java.util.Arrays;
-import java.util.Collections;
-
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
-
-/**
- * SqlScriptReader implementation for explicitly given Readers.  The readers are not released by this class.
+/** The style of advice.  This is defined by the JPA spec.  See tha values for details.
  *
  * @author Steve Ebersole
  */
-class ReaderScriptSource implements SqlScriptReader {
-	private final Reader reader;
-
-	public ReaderScriptSource(Reader reader) {
-		this.reader = reader;
-	}
-
-	@Override
-	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor) {
-		final String[] commands = commandExtractor.extractCommands( reader );
-		if ( commands == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Arrays.asList( commands );
-		}
-	}
-
-	@Override
-	public void release() {
-		// nothing to do here
-	}
-
-	protected Reader reader() {
-		return reader;
-	}
+public enum AdviceStyle {
+	/**
+	 * Indicates a graph specified by the {@code javax.persistence.fetchgraph} setting.
+	 */
+	FETCH,
+	/**
+	 * Indicates a graph specified by the {@code javax.persistence.loadgraph} setting.
+	 */
+	LOAD
 }

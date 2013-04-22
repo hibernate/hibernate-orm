@@ -93,6 +93,23 @@ public class QueryBuilder {
         addFrom(entityName, alias);
     }
 
+	// Only for deep copy purpose.
+	private QueryBuilder(QueryBuilder other) {
+		this.entityName = other.entityName;
+		this.alias = other.alias;
+		this.aliasCounter = other.aliasCounter.deepCopy();
+		this.paramCounter = other.paramCounter.deepCopy();
+		this.rootParameters = other.rootParameters.deepCopy();
+
+		froms = new ArrayList<Pair<String, String>>( other.froms );
+		orders = new ArrayList<Pair<String, Boolean>>( other.orders );
+		projections = new ArrayList<String>( other.projections );
+	}
+
+	public QueryBuilder deepCopy() {
+		return new QueryBuilder( this );
+	}
+
     /**
      * Add an entity from which to select.
      * @param entityName Name of the entity from which to select.

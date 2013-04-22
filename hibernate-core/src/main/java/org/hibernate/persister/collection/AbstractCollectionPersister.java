@@ -262,12 +262,12 @@ public abstract class AbstractCollectionPersister
 		this.factory = factory;
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
-			cacheEntryStructure = collection.isMap() ?
-					new StructuredMapCacheEntry() :
-					new StructuredCollectionCacheEntry();
+			cacheEntryStructure = collection.isMap()
+					? StructuredMapCacheEntry.INSTANCE
+					: StructuredCollectionCacheEntry.INSTANCE;
 		}
 		else {
-			cacheEntryStructure = new UnstructuredCacheEntry();
+			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
 
 		dialect = factory.getDialect();
@@ -675,12 +675,13 @@ public abstract class AbstractCollectionPersister
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		if ( factory.getSettings().isStructuredCacheEntriesEnabled() ) {
 			cacheEntryStructure = collection.getAttribute().getNature() == PluralAttribute.Nature.MAP ?
-					new StructuredMapCacheEntry() :
-					new StructuredCollectionCacheEntry();
+					StructuredMapCacheEntry.INSTANCE
+					: StructuredCollectionCacheEntry.INSTANCE;
 		}
 		else {
-			cacheEntryStructure = new UnstructuredCacheEntry();
+			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
+
 
 		dialect = factory.getDialect();
 		sqlExceptionHelper = factory.getSQLExceptionHelper();

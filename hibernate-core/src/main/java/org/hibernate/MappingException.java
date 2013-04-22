@@ -46,7 +46,7 @@ public class MappingException extends HibernateException {
 	 * @param cause The underlying cause
 	 */
 	public MappingException(Throwable cause) {
-		super(cause);
+		super( cause );
 	}
 
 	/**
@@ -55,7 +55,7 @@ public class MappingException extends HibernateException {
 	 * @param message A message explaining the exception condition
 	 */
 	public MappingException(String message) {
-		super(message);
+		super( message );
 	}
 
 }

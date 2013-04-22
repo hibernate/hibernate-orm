@@ -32,6 +32,11 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 public interface CacheEntry extends Serializable {
+	/**
+	 * Does this entry represent a direct entity reference (rather than disassembled state)?
+	 *
+	 * @return true/false
+	 */
 	public boolean isReferenceEntry();
 
 	/**
@@ -49,18 +54,22 @@ public interface CacheEntry extends Serializable {
 	 */
 	public Object getVersion();
 
+	/**
+	 * Does the represented data contain any un-fetched attribute values?
+	 *
+	 * @return true/false
+	 */
 	public boolean areLazyPropertiesUnfetched();
 
-
-	// todo: this was added to support initializing an entity's EntityEntry snapshot during reattach;
-	// this should be refactored to instead expose a method to assemble a EntityEntry based on this
-	// state for return.
+	/**
+	 * Get the underlying disassembled state
+	 *
+	 * todo : this was added to support initializing an entity's EntityEntry snapshot during reattach;
+	 * this should be refactored to instead expose a method to assemble a EntityEntry based on this
+	 * state for return.
+	 *
+	 * @return The disassembled state
+	 */
 	public Serializable[] getDisassembledState();
 
 }
-
-
-
-
-
-

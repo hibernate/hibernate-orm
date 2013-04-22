@@ -72,8 +72,7 @@ public class QueryKey implements Serializable {
 	 * @param queryParameters The query parameters
 	 * @param filterKeys The keys of any enabled filters.
 	 * @param session The current session.
-	 * @param customTransformer The result transformer; should be
-	 *            null if data is not transformed before being cached.
+	 * @param customTransformer The result transformer; should be null if data is not transformed before being cached.
 	 *
 	 * @return The generate query cache key.
 	 */
@@ -223,11 +222,12 @@ public class QueryKey implements Serializable {
 	}
 
 	@Override
-    public boolean equals(Object other) {
+	public boolean equals(Object other) {
 		if ( !( other instanceof QueryKey ) ) {
 			return false;
 		}
-		QueryKey that = ( QueryKey ) other;
+
+		final QueryKey that = (QueryKey) other;
 		if ( !sqlQueryString.equals( that.sqlQueryString ) ) {
 			return false;
 		}
@@ -265,13 +265,13 @@ public class QueryKey implements Serializable {
 	}
 
 	@Override
-    public int hashCode() {
+	public int hashCode() {
 		return hashCode;
 	}
 
 	@Override
-    public String toString() {
-		StringBuilder buffer = new StringBuilder( "sql: " ).append( sqlQueryString );
+	public String toString() {
+		final StringBuilder buffer = new StringBuilder( "sql: " ).append( sqlQueryString );
 		if ( positionalParameterValues != null ) {
 			buffer.append( "; parameters: " );
 			for ( Object positionalParameterValue : positionalParameterValues ) {

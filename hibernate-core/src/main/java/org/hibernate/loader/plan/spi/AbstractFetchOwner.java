@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -35,22 +34,17 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public abstract class AbstractFetchOwner extends AbstractPlanNode implements FetchOwner {
-	private final String alias;
 	private final LockMode lockMode;
 
 	private List<Fetch> fetches;
 
-	public AbstractFetchOwner(SessionFactoryImplementor factory, String alias, LockMode lockMode) {
+	public AbstractFetchOwner(SessionFactoryImplementor factory, LockMode lockMode) {
 		super( factory );
-		this.alias = alias;
 		this.lockMode = lockMode;
 		validate();
 	}
 
 	private void validate() {
-		if ( alias == null ) {
-			throw new HibernateException( "alias must be specified" );
-		}
 	}
 
 	/**
@@ -60,7 +54,6 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 	 */
 	protected AbstractFetchOwner(AbstractFetchOwner original, CopyContext copyContext) {
 		super( original );
-		this.alias = original.alias;
 		this.lockMode = original.lockMode;
 		validate();
 
@@ -76,10 +69,6 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 			this.fetches = fetchesCopy;
 		}
 		copyContext.getReturnGraphVisitationStrategy().finishingFetches( original );
-	}
-
-	public String getAlias() {
-		return alias;
 	}
 
 	public LockMode getLockMode() {

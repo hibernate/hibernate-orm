@@ -57,7 +57,7 @@ public class PropertyAccessException extends HibernateException {
 			boolean wasSetter,
 			Class persistentClass,
 			String propertyName) {
-		super(message, cause);
+		super( message, cause );
 		this.persistentClass = persistentClass;
 		this.wasSetter = wasSetter;
 		this.propertyName = propertyName;
@@ -72,15 +72,9 @@ public class PropertyAccessException extends HibernateException {
 	}
 
 	@Override
-    public String getMessage() {
-		return super.getMessage() +
-		( wasSetter ? " setter of " : " getter of ") +
-		StringHelper.qualify( persistentClass.getName(), propertyName );
+	public String getMessage() {
+		return super.getMessage()
+				+ ( wasSetter ? " setter of " : " getter of " )
+				+ StringHelper.qualify( persistentClass.getName(), propertyName );
 	}
 }
-
-
-
-
-
-

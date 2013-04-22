@@ -66,6 +66,7 @@ public interface ResultSetProcessor {
 			SessionImplementor session,
 			QueryParameters queryParameters,
 			NamedParameterContext namedParameterContext,
+			LoadQueryAliasResolutionContext aliasResolutionContext,
 			boolean returnProxies,
 			boolean readOnly,
 			ResultTransformer forcedResultTransformer,

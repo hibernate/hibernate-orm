@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
+import org.hibernate.jpa.graph.spi.AttributeNodeImplementor;
 import org.hibernate.jpa.graph.spi.GraphNodeImplementor;
 
 /**
@@ -49,7 +50,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	private final HibernateEntityManagerFactory entityManagerFactory;
 	private final boolean mutable;
 
-	private Map<String, AttributeNode<?>> attributeNodeMap;
+	private Map<String, AttributeNodeImplementor<?>> attributeNodeMap;
 
 	protected AbstractGraphNode(HibernateEntityManagerFactory entityManagerFactory, boolean mutable) {
 		this.entityManagerFactory = entityManagerFactory;
@@ -62,14 +63,14 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 		this.attributeNodeMap = makeSafeMapCopy( original.attributeNodeMap );
 	}
 
-	private static Map<String, AttributeNode<?>> makeSafeMapCopy(Map<String, AttributeNode<?>> attributeNodeMap) {
+	private static Map<String, AttributeNodeImplementor<?>> makeSafeMapCopy(Map<String, AttributeNodeImplementor<?>> attributeNodeMap) {
 		if ( attributeNodeMap == null ) {
 			return null;
 		}
 
 		final int properSize = CollectionHelper.determineProperSizing( attributeNodeMap );
-		final HashMap<String,AttributeNode<?>> copy = new HashMap<String,AttributeNode<?>>( properSize );
-		for ( Map.Entry<String,AttributeNode<?>> attributeNodeEntry : attributeNodeMap.entrySet() ) {
+		final HashMap<String,AttributeNodeImplementor<?>> copy = new HashMap<String,AttributeNodeImplementor<?>>( properSize );
+		for ( Map.Entry<String,AttributeNodeImplementor<?>> attributeNodeEntry : attributeNodeMap.entrySet() ) {
 			copy.put(
 					attributeNodeEntry.getKey(),
 					( ( AttributeNodeImpl ) attributeNodeEntry.getValue() ).makeImmutableCopy()
@@ -81,6 +82,16 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	@Override
 	public HibernateEntityManagerFactory entityManagerFactory() {
 		return entityManagerFactory;
+	}
+
+	@Override
+	public List<AttributeNodeImplementor<?>> attributeImplementorNodes() {
+		if ( attributeNodeMap == null ) {
+			return Collections.emptyList();
+		}
+		else {
+			return new ArrayList<AttributeNodeImplementor<?>>( attributeNodeMap.values() );
+		}
 	}
 
 	@Override
@@ -120,7 +131,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 		}
 
 		if ( attributeNodeMap == null ) {
-			attributeNodeMap = new HashMap<String, AttributeNode<?>>();
+			attributeNodeMap = new HashMap<String, AttributeNodeImplementor<?>>();
 		}
 		else {
 			final AttributeNode old = attributeNodeMap.get( attributeNode.getRegistrationName() );

@@ -1,40 +1,7 @@
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
- * indicated by the @author tags or express copyright attribution
- * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Inc.
- *
- * This copyrighted material is made available to anyone wishing to use, modify,
- * copy, or redistribute it subject to the terms and conditions of the GNU
- * Lesser General Public License, as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
- * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
- * for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this distribution; if not, write to:
- * Free Software Foundation, Inc.
- * 51 Franklin Street, Fifth Floor
- * Boston, MA  02110-1301  USA
+/**
+ * Hibernate O/RM Java 7 compliant JavaDoc stylesheet.
  */
-
-/* Javadoc style sheet */
-/*
-Overall document style
-*/
-
 body {
-    /*
-        background-color:#ffffff;
-        color:#353833;
-        font-family:Arial, Helvetica, sans-serif;
-        font-size:76%;
-        margin:0;
-    */
     background: #FFFFFF url(images/bkg_gradient.gif) repeat-x;
     margin:0 auto;
     font-family:'Lucida Grande', Geneva, Verdana, Arial, sans-serif;
@@ -45,7 +12,7 @@ body {
 
 a:link, a:visited {
     text-decoration:none;
-    color:#4c6b87;
+    color:#455e60;
 }
 a:hover, a:focus {
     text-decoration:none;
@@ -53,7 +20,7 @@ a:hover, a:focus {
 }
 a:active {
     text-decoration:none;
-    color:#4c6b87;
+    color:#455e60;
 }
 a[name] {
     color:#353833;
@@ -63,23 +30,18 @@ a[name]:hover {
     color:#353833;
 }
 pre {
-    font-size:1.3em;
+    font-size:11pt;
 }
 
 h1 {
     background: url(images/h1_hdr.png) no-repeat;
     line-height:1.2em;
     color:#586464;
-    font-size:2em;
-    padding:1.5em;
+    font-size:16pt;
+    padding:17pt;
     margin-top: 0;
     text-align:left;
 }
-/*
-h1 {
-    font-size:1.8em;
-}
-*/
 
 h2 {
     color:#586464;
@@ -113,9 +75,10 @@ table tr td dt code {
 sup {
     font-size:.6em;
 }
-/*
-Document title and Copyright styles
-*/
+
+/**
+ * Document title and Copyright styles
+ */
 .clear {
     clear:both;
     height:0px;
@@ -140,7 +103,6 @@ Document title and Copyright styles
 }
 .tab {
     background-color:#0066FF;
-    /*    background-image:url(resources/titlebar.gif); */
     background-image:url(images/bkgheader.png);
     background-position:left top;
     background-repeat:no-repeat;
@@ -149,11 +111,11 @@ Document title and Copyright styles
     width:5em;
     font-weight:bold;
 }
+
 /*
-Navigation bar styles
-*/
+ * Navigation bar styles
+ */
 .bar {
-    /*    background-image:url(resources/background.gif);*/
     background-image:url(images/bkgheader.png);
     background-repeat:repeat-x;
     color:#FFFFFF;
@@ -163,7 +125,6 @@ Navigation bar styles
     margin:0;
 }
 .topNav {
-    /*    background-image:url(resources/background.gif);*/
     background-image:url(images/bkgheader.png);
     background-repeat:repeat-x;
     color:#FFFFFF;
@@ -177,7 +138,6 @@ Navigation bar styles
 }
 .bottomNav {
     margin-top:10px;
-    /*    background-image:url(resources/background.gif);*/
     background-image:url(images/bkgheader.png);
     background-repeat:repeat-x;
     color:#FFFFFF;
@@ -190,8 +150,8 @@ Navigation bar styles
     overflow:hidden;
 }
 .subNav {
-    background-color:#dee3e9;
-    border-bottom:1px solid #9eadc0;
+    background-color:#cccdc7;
+    border-bottom:1px solid #949c9c;
     float:left;
     width:100%;
     overflow:hidden;
@@ -225,15 +185,16 @@ ul.subNavList li{
     color:#BCAE79;
 }
 .navBarCell1Rev {
-    background-image:url(resources/tab.gif);
-    background-color:#a88834;
+    background-image:url(images/tab.gif);
+    background-color:#ab9d69;
     color:#FFFFFF;
     margin: auto 5px;
-    border:1px solid #c9aa44;
+    border:1px solid #ab9d69;
 }
+
 /*
-Page header and footer styles
-*/
+ * Page header and footer styles
+ */
 .header, .footer {
     clear:both;
     margin:0 20px;
@@ -264,20 +225,21 @@ Page header and footer styles
     list-style:none;
     font-size:1.2em;
 }
+
 /*
-Heading styles
-*/
+ * Heading styles
+ */
 div.details ul.blockList ul.blockList ul.blockList li.blockList h4, div.details ul.blockList ul.blockList ul.blockListLast li.blockList h4 {
-    background-color:#dee3e9;
-    border-top:1px solid #9eadc0;
-    border-bottom:1px solid #9eadc0;
+    background-color:#cccdc7;
+    border-top:1px solid #949c9c;
+    border-bottom:1px solid #949c9c;
     margin:0 0 6px -8px;
     padding:2px 5px;
 }
 ul.blockList ul.blockList ul.blockList li.blockList h3 {
-    background-color:#dee3e9;
-    border-top:1px solid #9eadc0;
-    border-bottom:1px solid #9eadc0;
+    background-color:#cccdc7;
+    border-top:1px solid #949c9c;
+    border-bottom:1px solid #949c9c;
     margin:0 0 6px -8px;
     padding:2px 5px;
 }
@@ -288,9 +250,10 @@ ul.blockList ul.blockList li.blockList h3 {
 ul.blockList li.blockList h2 {
     padding:0px 0 20px 0;
 }
+
 /*
-Page layout container styles
-*/
+ * Page layout container styles
+ */
 .contentContainer, .sourceContainer, .classUseContainer, .serializedFormContainer, .constantValuesContainer {
     clear:both;
     padding:10px 20px;
@@ -332,9 +295,10 @@ Page layout container styles
     font-size:1.1em;
     display:inline;
 }
+
 /*
-List styles
-*/
+ * List styles
+ */
 ul.horizontal li {
     display:inline;
     font-size:0.9em;
@@ -362,13 +326,13 @@ ul.blockList li.blockList, ul.blockListLast li.blockList {
 }
 ul.blockList ul.blockList li.blockList, ul.blockList ul.blockListLast li.blockList {
     padding:0px 20px 5px 10px;
-    border:1px solid #9eadc0;
+    border:1px solid #949c9c;
     background-color:#f9f9f9;
 }
 ul.blockList ul.blockList ul.blockList li.blockList, ul.blockList ul.blockList ul.blockListLast li.blockList {
     padding:0 0 5px 8px;
     background-color:#ffffff;
-    border:1px solid #9eadc0;
+    border:1px solid #949c9c;
     border-top:none;
 }
 ul.blockList ul.blockList ul.blockList ul.blockList li.blockList {
@@ -376,7 +340,7 @@ ul.blockList ul.blockList ul.blockList ul.blockList li.blockList {
     padding-left:0;
     padding-bottom:15px;
     border:none;
-    border-bottom:1px solid #9eadc0;
+    border-bottom:1px solid #949c9c;
 }
 ul.blockList ul.blockList ul.blockList ul.blockList li.blockListLast {
     list-style:none;
@@ -387,11 +351,12 @@ table tr td dl, table tr td dl dt, table tr td dl dd {
     margin-top:0;
     margin-bottom:1px;
 }
+
 /*
-Table styles
-*/
+ * Table styles
+ */
 .contentContainer table, .classUseContainer table, .constantValuesContainer table {
-    border-bottom:1px solid #9eadc0;
+    border-bottom:1px solid #949c9c;
     width:100%;
 }
 .contentContainer ul li table, .classUseContainer ul li table, .constantValuesContainer ul li table {
@@ -430,12 +395,12 @@ caption a:link, caption a:hover, caption a:active, caption a:visited {
     padding-left:8px;
     display:block;
     float:left;
-    background-image:url(resources/titlebar.gif);
+    background-image:url(images/titlebar.gif);
     height:18px;
 }
 .overviewSummary .tabEnd, .packageSummary .tabEnd, .contentContainer ul.blockList li.blockList .tabEnd, .summary .tabEnd, .classUseContainer .tabEnd, .constantValuesContainer .tabEnd {
     width:10px;
-    background-image:url(resources/titlebar_end.gif);
+    background-image:url(images/titlebar_end.gif);
     background-repeat:no-repeat;
     background-position:top right;
     position:relative;
@@ -449,19 +414,19 @@ ul.blockList ul.blockList li.blockList table {
     background-color: #EEEEFF;
 }
 .altColor {
-    background-color:#eeeeef;
+    background-color:#dad7ce;
 }
 .rowColor {
-    background-color:#ffffff;
+    background-color:#e8e6e0;
 }
 .overviewSummary td, .packageSummary td, .contentContainer ul.blockList li.blockList td, .summary td, .classUseContainer td, .constantValuesContainer td {
     text-align:left;
     padding:3px 3px 3px 7px;
 }
 th.colFirst, th.colLast, th.colOne, .constantValuesContainer th {
-    background:#dee3e9;
-    border-top:1px solid #9eadc0;
-    border-bottom:1px solid #9eadc0;
+    background:#cccdc7;
+    border-top:1px solid #949c9c;
+    border-bottom:1px solid #949c9c;
     text-align:left;
     padding:3px 3px 3px 7px;
 }
@@ -469,15 +434,15 @@ td.colOne a:link, td.colOne a:active, td.colOne a:visited, td.colOne a:hover, td
     font-weight:bold;
 }
 td.colFirst, th.colFirst {
-    border-left:1px solid #9eadc0;
+    border-left:1px solid #949c9c;
     white-space:nowrap;
 }
 td.colLast, th.colLast {
-    border-right:1px solid #9eadc0;
+    border-right:1px solid #949c9c;
 }
 td.colOne, th.colOne {
-    border-right:1px solid #9eadc0;
-    border-left:1px solid #9eadc0;
+    border-right:1px solid #949c9c;
+    border-left:1px solid #949c9c;
 }
 table.overviewSummary  {
     padding:0px;
@@ -492,9 +457,10 @@ table.packageSummary td.colFirst, table.overviewSummary th.colFirst {
     width:25%;
     vertical-align:middle;
 }
+
 /*
-Content styles
-*/
+ * Content styles
+ */
 .description pre {
     margin-top:0;
 }
@@ -505,9 +471,10 @@ Content styles
 .docSummary {
     padding:0;
 }
+
 /*
-Formatting effect styles
-*/
+ * Formatting effect styles
+ */
 .sourceLineNo {
     color:green;
     padding:0 30px 0 0;
@@ -528,7 +495,7 @@ h1.hidden {
 
 
 
-table.overviewSummary td.colFirst, table.overviewSummary th.colFirst, table.overviewSummary td.colOne, table.overviewSummary
+table.overviewSummary td.colFirst, table.overviewSummary th.colFirst, table.overviewSummary td.colOne, table.overviewSummary  
 th.colOne {
     width: 5%;
 }
@@ -550,7 +517,7 @@ table.overviewSummary, table.packageSummary {
 }
 
 table.overviewSummary td, table.packageSummary td {
-    border: 1px solid #9EADC0;
+    border: 1px solid #949c9c;
 }
 
 td.colOne a:link, td.colOne a:active, td.colOne a:visited, td.colOne a:hover, td.colFirst a:link, td.colFirst a:active,
@@ -558,7 +525,7 @@ td.colFirst a:visited, td.colFirst a:hover, td.colLast a:link, td.colLast a:acti
     font-weight: normal;
 }
 
-td.colOne strong a:link, td.colOne strong a:active, td.colOne strong a:visited, td.colOne strong a:hover, td.colFirst strong
+td.colOne strong a:link, td.colOne strong a:active, td.colOne strong a:visited, td.colOne strong a:hover, td.colFirst strong 
 a:link, td.colFirst strong a:active, td.colFirst strong a:visited, td.colFirst strong a:hover, td.colLast strong a:link,
 td.colLast strong a:active, td.colLast strong a:visited, td.colLast strong a:hover {
     font-weight: bold;

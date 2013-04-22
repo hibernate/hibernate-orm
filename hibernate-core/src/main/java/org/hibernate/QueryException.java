@@ -39,7 +39,7 @@ public class QueryException extends HibernateException {
 	 * @param message A message explaining the exception condition
 	 */
 	public QueryException(String message) {
-		super(message);
+		super( message );
 	}
 
 	/**
@@ -49,7 +49,7 @@ public class QueryException extends HibernateException {
 	 * @param cause The underlying cause
 	 */
 	public QueryException(String message, Throwable cause) {
-		super(message, cause);
+		super( message, cause );
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class QueryException extends HibernateException {
 	 * @param queryString The query being evaluated when the exception occurred
 	 */
 	public QueryException(String message, String queryString) {
-		super(message);
+		super( message );
 		this.queryString = queryString;
 	}
 
@@ -69,7 +69,7 @@ public class QueryException extends HibernateException {
 	 * @param cause The underlying cause
 	 */
 	public QueryException(Exception cause) {
-		super(cause);
+		super( cause );
 	}
 
 	/**

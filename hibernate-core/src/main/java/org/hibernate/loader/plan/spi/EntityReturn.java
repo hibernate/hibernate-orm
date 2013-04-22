@@ -31,7 +31,6 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
@@ -47,9 +46,6 @@ import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierReso
  */
 public class EntityReturn extends AbstractFetchOwner implements Return, EntityReference, CopyableReturn {
 
-	private final EntityAliases entityAliases;
-	private final String sqlTableAlias;
-
 	private final EntityPersister persister;
 
 	private final PropertyPath propertyPath = new PropertyPath(); // its a root
@@ -58,38 +54,25 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 
 	public EntityReturn(
 			SessionFactoryImplementor sessionFactory,
-			String alias,
 			LockMode lockMode,
-			String entityName,
-			String sqlTableAlias,
-			EntityAliases entityAliases) {
-		super( sessionFactory, alias, lockMode );
-		this.entityAliases = entityAliases;
-		this.sqlTableAlias = sqlTableAlias;
+			String entityName) {
+		super( sessionFactory, lockMode );
 
 		this.persister = sessionFactory.getEntityPersister( entityName );
 	}
 
 	protected EntityReturn(EntityReturn original, CopyContext copyContext) {
 		super( original, copyContext );
-		this.entityAliases = original.entityAliases;
-		this.sqlTableAlias = original.sqlTableAlias;
 		this.persister = original.persister;
 	}
-
-	@Override
-	public String getAlias() {
-		return super.getAlias();
-	}
-
-	@Override
-	public String getSqlTableAlias() {
-		return sqlTableAlias;
-	}
-
 	@Override
 	public LockMode getLockMode() {
 		return super.getLockMode();
+	}
+
+	@Override
+	public EntityReference getEntityReference() {
+		return this;
 	}
 
 	@Override
@@ -100,11 +83,6 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	@Override
 	public IdentifierDescription getIdentifierDescription() {
 		return identifierDescription;
-	}
-
-	@Override
-	public EntityAliases getEntityAliases() {
-		return entityAliases;
 	}
 
 	@Override
@@ -138,13 +116,11 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			String sqlTableAlias,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return LoadPlanBuildingHelper.buildStandardEntityFetch(
 				this,
 				attributeDefinition,
 				fetchStrategy,
-				sqlTableAlias,
 				loadPlanBuildingContext
 		);
 	}

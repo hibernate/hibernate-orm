@@ -79,6 +79,28 @@ public class Parameters {
         localQueryParamValues = new HashMap<String, Object>();
     }
 
+	// Only for deep copy purpose.
+	private Parameters(Parameters other) {
+		this.alias = other.alias;
+		this.connective = other.connective;
+		this.queryParamCounter = other.queryParamCounter.deepCopy();
+
+		subParameters = new ArrayList<Parameters>( other.subParameters.size() );
+		for ( Parameters p : other.subParameters ) {
+			subParameters.add( p.deepCopy() );
+		}
+		negatedParameters = new ArrayList<Parameters>( other.negatedParameters.size() );
+		for ( Parameters p : other.negatedParameters ) {
+			negatedParameters.add( p.deepCopy() );
+		}
+		expressions = new ArrayList<String>( other.expressions );
+		localQueryParamValues = new HashMap<String, Object>( other.localQueryParamValues );
+	}
+
+	public Parameters deepCopy() {
+		return new Parameters( this );
+	}
+
     private String generateQueryParam() {
         return "_p" + queryParamCounter.getAndIncrease();
     }

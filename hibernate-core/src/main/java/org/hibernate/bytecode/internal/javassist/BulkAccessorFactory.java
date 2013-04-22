@@ -54,7 +54,8 @@ class BulkAccessorFactory {
 	private static final String GET_SETTER_DESC = "(Ljava/lang/Object;[Ljava/lang/Object;)V";
 	private static final String THROWABLE_CLASS_NAME = Throwable.class.getName();
 	private static final String BULKEXCEPTION_CLASS_NAME = BulkAccessorException.class.getName();
-	private static int counter = 0;
+
+	private static int counter;
 
 	private Class targetBean;
 	private String[] getterNames;
@@ -64,9 +65,9 @@ class BulkAccessorFactory {
 
 	BulkAccessorFactory(
 			Class target,
-	        String[] getterNames,
-	        String[] setterNames,
-	        Class[] types) {
+			String[] getterNames,
+			String[] setterNames,
+			Class[] types) {
 		this.targetBean = target;
 		this.getterNames = getterNames;
 		this.setterNames = setterNames;
@@ -75,20 +76,20 @@ class BulkAccessorFactory {
 	}
 
 	BulkAccessor create() {
-		Method[] getters = new Method[getterNames.length];
-		Method[] setters = new Method[setterNames.length];
+		final Method[] getters = new Method[getterNames.length];
+		final Method[] setters = new Method[setterNames.length];
 		findAccessors( targetBean, getterNames, setterNames, types, getters, setters );
 
-		Class beanClass;
+		final Class beanClass;
 		try {
-			ClassFile classfile = make( getters, setters );
-			ClassLoader loader = this.getClassLoader();
+			final ClassFile classfile = make( getters, setters );
+			final ClassLoader loader = this.getClassLoader();
 			if ( writeDirectory != null ) {
 				FactoryHelper.writeFile( classfile, writeDirectory );
 			}
 
 			beanClass = FactoryHelper.toClass( classfile, loader, getDomain() );
-			return ( BulkAccessor ) this.newInstance( beanClass );
+			return (BulkAccessor) this.newInstance( beanClass );
 		}
 		catch ( Exception e ) {
 			throw new BulkAccessorException( e.getMessage(), e );
@@ -96,7 +97,7 @@ class BulkAccessorFactory {
 	}
 
 	private ProtectionDomain getDomain() {
-		Class cl;
+		final Class cl;
 		if ( this.targetBean != null ) {
 			cl = this.targetBean;
 		}
@@ -111,10 +112,10 @@ class BulkAccessorFactory {
 		// set the name of bulk accessor.
 		className = className + "_$$_bulkaccess_" + counter++;
 		if ( className.startsWith( "java." ) ) {
-			className = "org.javassist.tmp." + className;
+			className = PACKAGE_NAME_PREFIX + className;
 		}
 
-		ClassFile classfile = new ClassFile( false, className, BULKACESSOR_CLASS_NAME );
+		final ClassFile classfile = new ClassFile( false, className, BULKACESSOR_CLASS_NAME );
 		classfile.setAccessFlags( AccessFlag.PUBLIC );
 		addDefaultConstructor( classfile );
 		addGetter( classfile, getters );
@@ -132,9 +133,9 @@ class BulkAccessorFactory {
 	}
 
 	private Object newInstance(Class type) throws Exception {
-		BulkAccessor instance = ( BulkAccessor ) type.newInstance();
+		final BulkAccessor instance = (BulkAccessor) type.newInstance();
 		instance.target = targetBean;
-		int len = getterNames.length;
+		final int len = getterNames.length;
 		instance.getters = new String[len];
 		instance.setters = new String[len];
 		instance.types = new Class[len];
@@ -150,34 +151,35 @@ class BulkAccessorFactory {
 	/**
 	 * Declares a constructor that takes no parameter.
 	 *
-	 * @param classfile
-	 * @throws CannotCompileException
+	 * @param classfile The class descriptor
+	 *
+	 * @throws CannotCompileException Indicates trouble with the underlying Javassist calls
 	 */
 	private void addDefaultConstructor(ClassFile classfile) throws CannotCompileException {
-		ConstPool cp = classfile.getConstPool();
-		String cons_desc = "()V";
-		MethodInfo mi = new MethodInfo( cp, MethodInfo.nameInit, cons_desc );
+		final ConstPool constPool = classfile.getConstPool();
+		final String constructorSignature = "()V";
+		final MethodInfo constructorMethodInfo = new MethodInfo( constPool, MethodInfo.nameInit, constructorSignature );
 
-		Bytecode code = new Bytecode( cp, 0, 1 );
+		final Bytecode code = new Bytecode( constPool, 0, 1 );
 		// aload_0
 		code.addAload( 0 );
 		// invokespecial
-		code.addInvokespecial( BulkAccessor.class.getName(), MethodInfo.nameInit, cons_desc );
+		code.addInvokespecial( BulkAccessor.class.getName(), MethodInfo.nameInit, constructorSignature );
 		// return
 		code.addOpcode( Opcode.RETURN );
 
-		mi.setCodeAttribute( code.toCodeAttribute() );
-		mi.setAccessFlags( AccessFlag.PUBLIC );
-		classfile.addMethod( mi );
+		constructorMethodInfo.setCodeAttribute( code.toCodeAttribute() );
+		constructorMethodInfo.setAccessFlags( AccessFlag.PUBLIC );
+		classfile.addMethod( constructorMethodInfo );
 	}
 
 	private void addGetter(ClassFile classfile, final Method[] getters) throws CannotCompileException {
-		ConstPool cp = classfile.getConstPool();
-		int target_type_index = cp.addClassInfo( this.targetBean.getName() );
-		String desc = GET_SETTER_DESC;
-		MethodInfo mi = new MethodInfo( cp, GENERATED_GETTER_NAME, desc );
+		final ConstPool constPool = classfile.getConstPool();
+		final int targetBeanConstPoolIndex = constPool.addClassInfo( this.targetBean.getName() );
+		final String desc = GET_SETTER_DESC;
+		final MethodInfo getterMethodInfo = new MethodInfo( constPool, GENERATED_GETTER_NAME, desc );
 
-		Bytecode code = new Bytecode( cp, 6, 4 );
+		final Bytecode code = new Bytecode( constPool, 6, 4 );
 		/* | this | bean | args | raw bean | */
 		if ( getters.length >= 0 ) {
 			// aload_1 // load bean
@@ -188,12 +190,13 @@ class BulkAccessorFactory {
 			code.addAstore( 3 );
 			for ( int i = 0; i < getters.length; ++i ) {
 				if ( getters[i] != null ) {
-					Method getter = getters[i];
+					final Method getter = getters[i];
 					// aload_2 // args
 					code.addAload( 2 );
 					// iconst_i // continue to aastore
-					code.addIconst( i ); // growing stack is 1
-					Class returnType = getter.getReturnType();
+					// growing stack is 1
+					code.addIconst( i );
+					final Class returnType = getter.getReturnType();
 					int typeIndex = -1;
 					if ( returnType.isPrimitive() ) {
 						typeIndex = FactoryHelper.typeIndex( returnType );
@@ -205,23 +208,24 @@ class BulkAccessorFactory {
 
 					// aload_3 // load the raw bean
 					code.addAload( 3 );
-					String getter_desc = RuntimeSupport.makeDescriptor( getter );
-					String getterName = getter.getName();
+					final String getterSignature = RuntimeSupport.makeDescriptor( getter );
+					final String getterName = getter.getName();
 					if ( this.targetBean.isInterface() ) {
 						// invokeinterface
-						code.addInvokeinterface( target_type_index, getterName, getter_desc, 1 );
+						code.addInvokeinterface( targetBeanConstPoolIndex, getterName, getterSignature, 1 );
 					}
 					else {
 						// invokevirtual
-						code.addInvokevirtual( target_type_index, getterName, getter_desc );
+						code.addInvokevirtual( targetBeanConstPoolIndex, getterName, getterSignature );
 					}
 
-					if ( typeIndex >= 0 ) {       // is a primitive type
+					if ( typeIndex >= 0 ) {
+						// is a primitive type
 						// invokespecial
 						code.addInvokespecial(
 								FactoryHelper.wrapperTypes[typeIndex],
-						        MethodInfo.nameInit,
-						        FactoryHelper.wrapperDesc[typeIndex]
+								MethodInfo.nameInit,
+								FactoryHelper.wrapperDesc[typeIndex]
 						);
 					}
 
@@ -234,22 +238,24 @@ class BulkAccessorFactory {
 		// return
 		code.addOpcode( Opcode.RETURN );
 
-		mi.setCodeAttribute( code.toCodeAttribute() );
-		mi.setAccessFlags( AccessFlag.PUBLIC );
-		classfile.addMethod( mi );
+		getterMethodInfo.setCodeAttribute( code.toCodeAttribute() );
+		getterMethodInfo.setAccessFlags( AccessFlag.PUBLIC );
+		classfile.addMethod( getterMethodInfo );
 	}
 
 	private void addSetter(ClassFile classfile, final Method[] setters) throws CannotCompileException {
-		ConstPool cp = classfile.getConstPool();
-		int target_type_index = cp.addClassInfo( this.targetBean.getName() );
-		String desc = GET_SETTER_DESC;
-		MethodInfo mi = new MethodInfo( cp, GENERATED_SETTER_NAME, desc );
+		final ConstPool constPool = classfile.getConstPool();
+		final int targetTypeConstPoolIndex = constPool.addClassInfo( this.targetBean.getName() );
+		final String desc = GET_SETTER_DESC;
+		final MethodInfo setterMethodInfo = new MethodInfo( constPool, GENERATED_SETTER_NAME, desc );
 
-		Bytecode code = new Bytecode( cp, 4, 6 );
+		final Bytecode code = new Bytecode( constPool, 4, 6 );
 		StackMapTable stackmap = null;
 		/* | this | bean | args | i | raw bean | exception | */
 		if ( setters.length > 0 ) {
-			int start, end; // required to exception table
+			// required to exception table
+			int start;
+			int end;
 			// iconst_0 // i
 			code.addIconst( 0 );
 			// istore_3 // store i
@@ -266,7 +272,7 @@ class BulkAccessorFactory {
 			int lastIndex = 0;
 			for ( int i = 0; i < setters.length; ++i ) {
 				if ( setters[i] != null ) {
-					int diff = i - lastIndex;
+					final int diff = i - lastIndex;
 					if ( diff > 0 ) {
 						// iinc 3, 1
 						code.addOpcode( Opcode.IINC );
@@ -285,26 +291,26 @@ class BulkAccessorFactory {
 				// aaload
 				code.addOpcode( Opcode.AALOAD );
 				// checkcast
-				Class[] setterParamTypes = setters[i].getParameterTypes();
-				Class setterParamType = setterParamTypes[0];
+				final Class[] setterParamTypes = setters[i].getParameterTypes();
+				final Class setterParamType = setterParamTypes[0];
 				if ( setterParamType.isPrimitive() ) {
 					// checkcast (case of primitive type)
 					// invokevirtual (case of primitive type)
-					this.addUnwrapper( classfile, code, setterParamType );
+					this.addUnwrapper( code, setterParamType );
 				}
 				else {
 					// checkcast (case of reference type)
 					code.addCheckcast( setterParamType.getName() );
 				}
 				/* current stack len = 2 */
-				String rawSetterMethod_desc = RuntimeSupport.makeDescriptor( setters[i] );
+				final String rawSetterMethodDesc = RuntimeSupport.makeDescriptor( setters[i] );
 				if ( !this.targetBean.isInterface() ) {
 					// invokevirtual
-					code.addInvokevirtual( target_type_index, setters[i].getName(), rawSetterMethod_desc );
+					code.addInvokevirtual( targetTypeConstPoolIndex, setters[i].getName(), rawSetterMethodDesc );
 				}
 				else {
 					// invokeinterface
-					Class[] params = setters[i].getParameterTypes();
+					final Class[] params = setters[i].getParameterTypes();
 					int size;
 					if ( params[0].equals( Double.TYPE ) || params[0].equals( Long.TYPE ) ) {
 						size = 3;
@@ -313,7 +319,7 @@ class BulkAccessorFactory {
 						size = 2;
 					}
 
-					code.addInvokeinterface( target_type_index, setters[i].getName(), rawSetterMethod_desc, size );
+					code.addInvokeinterface( targetTypeConstPoolIndex, setters[i].getName(), rawSetterMethodDesc, size );
 				}
 			}
 
@@ -323,9 +329,9 @@ class BulkAccessorFactory {
 			code.addOpcode( Opcode.RETURN );
 			/* current stack len = 0 */
 			// register in exception table
-			int throwableType_index = cp.addClassInfo( THROWABLE_CLASS_NAME );
-			int handler_pc = code.currentPc();
-			code.addExceptionHandler( start, end, handler_pc, throwableType_index );
+			final int throwableTypeIndex = constPool.addClassInfo( THROWABLE_CLASS_NAME );
+			final int handlerPc = code.currentPc();
+			code.addExceptionHandler( start, end, handlerPc, throwableTypeIndex );
 			// astore 5 // store exception
 			code.addAstore( 5 );
 			// new // BulkAccessorException
@@ -337,38 +343,48 @@ class BulkAccessorFactory {
 			// iload_3 // i
 			code.addIload( 3 );
 			// invokespecial // BulkAccessorException.<init>
-			String cons_desc = "(Ljava/lang/Throwable;I)V";
-			code.addInvokespecial( BULKEXCEPTION_CLASS_NAME, MethodInfo.nameInit, cons_desc );
+			final String consDesc = "(Ljava/lang/Throwable;I)V";
+			code.addInvokespecial( BULKEXCEPTION_CLASS_NAME, MethodInfo.nameInit, consDesc );
 			// athrow
 			code.addOpcode( Opcode.ATHROW );
-			StackMapTable.Writer writer = new StackMapTable.Writer(32);
-			int[] localTags = { StackMapTable.OBJECT, StackMapTable.OBJECT, StackMapTable.OBJECT, StackMapTable.INTEGER };
-			int[] localData = { cp.getThisClassInfo(), cp.addClassInfo("java/lang/Object"),
-                        	cp.addClassInfo("[Ljava/lang/Object;"), 0};
-			int[] stackTags = { StackMapTable.OBJECT };
-			int[] stackData = { throwableType_index };
-			writer.fullFrame(handler_pc, localTags, localData, stackTags, stackData);
-			stackmap = writer.toStackMapTable(cp);
+			final StackMapTable.Writer writer = new StackMapTable.Writer(32);
+			final int[] localTags = {
+					StackMapTable.OBJECT,
+					StackMapTable.OBJECT,
+					StackMapTable.OBJECT,
+					StackMapTable.INTEGER
+			};
+			final int[] localData = {
+					constPool.getThisClassInfo(),
+					constPool.addClassInfo( "java/lang/Object" ),
+					constPool.addClassInfo( "[Ljava/lang/Object;" ),
+					0
+			};
+			final int[] stackTags = {
+					StackMapTable.OBJECT
+			};
+			final int[] stackData = {
+					throwableTypeIndex
+			};
+			writer.fullFrame( handlerPc, localTags, localData, stackTags, stackData );
+			stackmap = writer.toStackMapTable( constPool );
 		}
 		else {
 			// return
 			code.addOpcode( Opcode.RETURN );
 		}
-		CodeAttribute ca = code.toCodeAttribute();
-		if (stackmap != null) {
-			ca.setAttribute(stackmap);
+		final CodeAttribute ca = code.toCodeAttribute();
+		if ( stackmap != null ) {
+			ca.setAttribute( stackmap );
 		}
-		mi.setCodeAttribute( ca );
-		mi.setAccessFlags( AccessFlag.PUBLIC );
-		classfile.addMethod( mi );
+		setterMethodInfo.setCodeAttribute( ca );
+		setterMethodInfo.setAccessFlags( AccessFlag.PUBLIC );
+		classfile.addMethod( setterMethodInfo );
 	}
 
-	private void addUnwrapper(
-			ClassFile classfile,
-	        Bytecode code,
-	        Class type) {
-		int index = FactoryHelper.typeIndex( type );
-		String wrapperType = FactoryHelper.wrapperTypes[index];
+	private void addUnwrapper(Bytecode code, Class type) {
+		final int index = FactoryHelper.typeIndex( type );
+		final String wrapperType = FactoryHelper.wrapperTypes[index];
 		// checkcast
 		code.addCheckcast( wrapperType );
 		// invokevirtual
@@ -377,21 +393,21 @@ class BulkAccessorFactory {
 
 	private static void findAccessors(
 			Class clazz,
-	        String[] getterNames,
-	        String[] setterNames,
-	        Class[] types,
-	        Method[] getters,
-	        Method[] setters) {
-		int length = types.length;
+			String[] getterNames,
+			String[] setterNames,
+			Class[] types,
+			Method[] getters,
+			Method[] setters) {
+		final int length = types.length;
 		if ( setterNames.length != length || getterNames.length != length ) {
 			throw new BulkAccessorException( "bad number of accessors" );
 		}
 
-		Class[] getParam = new Class[0];
-		Class[] setParam = new Class[1];
+		final Class[] getParam = new Class[0];
+		final Class[] setParam = new Class[1];
 		for ( int i = 0; i < length; i++ ) {
 			if ( getterNames[i] != null ) {
-				Method getter = findAccessor( clazz, getterNames[i], getParam, i );
+				final Method getter = findAccessor( clazz, getterNames[i], getParam, i );
 				if ( getter.getReturnType() != types[i] ) {
 					throw new BulkAccessorException( "wrong return type: " + getterNames[i], i );
 				}
@@ -406,13 +422,11 @@ class BulkAccessorFactory {
 		}
 	}
 
-	private static Method findAccessor(
-			Class clazz,
-	        String name,
-	        Class[] params,
-	        int index) throws BulkAccessorException {
+	@SuppressWarnings("unchecked")
+	private static Method findAccessor(Class clazz, String name, Class[] params, int index)
+			throws BulkAccessorException {
 		try {
-			Method method = clazz.getDeclaredMethod( name, params );
+			final Method method = clazz.getDeclaredMethod( name, params );
 			if ( Modifier.isPrivate( method.getModifiers() ) ) {
 				throw new BulkAccessorException( "private property", index );
 			}

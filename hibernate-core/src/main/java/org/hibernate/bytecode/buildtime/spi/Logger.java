@@ -30,13 +30,38 @@ package org.hibernate.bytecode.buildtime.spi;
  * @author Steve Ebersole
  */
 public interface Logger {
+	/**
+	 * Log a message with TRACE semantics.
+	 *
+	 * @param message The message to log.
+	 */
 	public void trace(String message);
 
+	/**
+	 * Log a message with DEBUG semantics.
+	 *
+	 * @param message The message to log.
+	 */
 	public void debug(String message);
 
+	/**
+	 * Log a message with INFO semantics.
+	 *
+	 * @param message The message to log.
+	 */
 	public void info(String message);
 
+	/**
+	 * Log a message with WARN semantics.
+	 *
+	 * @param message The message to log.
+	 */
 	public void warn(String message);
 
+	/**
+	 * Log a message with ERROR semantics.
+	 *
+	 * @param message The message to log.
+	 */
 	public void error(String message);
 }

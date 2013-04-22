@@ -25,8 +25,6 @@ package org.hibernate.loader.plan.spi;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
@@ -35,33 +33,22 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public abstract class AbstractCollectionReference extends AbstractPlanNode implements CollectionReference {
-	private final String alias;
 	private final LockMode lockMode;
 	private final CollectionPersister collectionPersister;
 	private final PropertyPath propertyPath;
-
-	private final CollectionAliases collectionAliases;
-	private final EntityAliases elementEntityAliases;
 
 	private final FetchableCollectionIndex indexGraph;
 	private final FetchableCollectionElement elementGraph;
 
 	protected AbstractCollectionReference(
 			SessionFactoryImplementor sessionFactory,
-			String alias,
 			LockMode lockMode,
 			CollectionPersister collectionPersister,
-			PropertyPath propertyPath,
-			CollectionAliases collectionAliases,
-			EntityAliases elementEntityAliases) {
+			PropertyPath propertyPath) {
 		super( sessionFactory );
-		this.alias = alias;
 		this.lockMode = lockMode;
 		this.collectionPersister = collectionPersister;
 		this.propertyPath = propertyPath;
-
-		this.collectionAliases = collectionAliases;
-		this.elementEntityAliases = elementEntityAliases;
 
 		this.indexGraph = buildIndexGraph( getCollectionPersister() );
 		this.elementGraph = buildElementGraph( getCollectionPersister() );
@@ -99,13 +86,9 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 
 	protected AbstractCollectionReference(AbstractCollectionReference original, CopyContext copyContext) {
 		super( original );
-		this.alias = original.alias;
 		this.lockMode = original.lockMode;
 		this.collectionPersister = original.collectionPersister;
 		this.propertyPath = original.propertyPath;
-
-		this.collectionAliases = original.collectionAliases;
-		this.elementEntityAliases = original.elementEntityAliases;
 
 		this.indexGraph = original.indexGraph == null ? null : original.indexGraph.makeCopy( copyContext );
 		this.elementGraph = original.elementGraph == null ? null : original.elementGraph.makeCopy( copyContext );
@@ -117,23 +100,8 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 	}
 
 	@Override
-	public String getAlias() {
-		return alias;
-	}
-
-	@Override
 	public LockMode getLockMode() {
 		return lockMode;
-	}
-
-	@Override
-	public CollectionAliases getCollectionAliases() {
-		return collectionAliases;
-	}
-
-	@Override
-	public EntityAliases getElementEntityAliases() {
-		return elementEntityAliases;
 	}
 
 	@Override

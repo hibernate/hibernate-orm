@@ -23,14 +23,36 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import java.util.Arrays;
+
+import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 
 /**
- * Contract for handling Reader/File differences
+ * Handle schema generation source from (annotation/xml) metadata.
  *
  * @author Steve Ebersole
  */
-public interface SqlScriptReader {
-	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor);
-	public void release();
+public class GenerationSourceFromMetadata implements GenerationSource {
+	private final Configuration hibernateConfiguration;
+	private final Dialect dialect;
+	private final boolean creation;
+
+	public GenerationSourceFromMetadata(Configuration hibernateConfiguration, Dialect dialect, boolean creation) {
+		this.hibernateConfiguration = hibernateConfiguration;
+		this.dialect = dialect;
+		this.creation = creation;
+	}
+
+	@Override
+	public Iterable<String> getCommands() {
+		return creation
+				? Arrays.asList( hibernateConfiguration.generateSchemaCreationScript( dialect ) )
+				: Arrays.asList( hibernateConfiguration.generateDropSchemaScript( dialect ) );
+	}
+
+	@Override
+	public void release() {
+		// nothing to do
+	}
 }

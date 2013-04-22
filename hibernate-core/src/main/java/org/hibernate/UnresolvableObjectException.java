@@ -48,7 +48,7 @@ public class UnresolvableObjectException extends HibernateException {
 	}
 
 	protected UnresolvableObjectException(String message, Serializable identifier, String clazz) {
-		super(message);
+		super( message );
 		this.identifier = identifier;
 		this.entityName = clazz;
 	}
@@ -79,8 +79,7 @@ public class UnresolvableObjectException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + ": " +
-			MessageHelper.infoString(entityName, identifier);
+		return super.getMessage() + ": " + MessageHelper.infoString( entityName, identifier );
 	}
 
 }

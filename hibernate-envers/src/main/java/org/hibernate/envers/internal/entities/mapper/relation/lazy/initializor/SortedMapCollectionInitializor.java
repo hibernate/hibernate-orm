@@ -44,11 +44,11 @@ public class SortedMapCollectionInitializor extends MapCollectionInitializor<Sor
 	public SortedMapCollectionInitializor(AuditConfiguration verCfg,
 										  AuditReaderImplementor versionsReader,
 										  RelationQueryGenerator queryGenerator,
-										  Object primaryKey, Number revision,
+										  Object primaryKey, Number revision, boolean removed,
 										  Class<? extends SortedMap> collectionClass,
 										  MiddleComponentData elementComponentData,
 										  MiddleComponentData indexComponentData, Comparator comparator) {
-		super(verCfg, versionsReader, queryGenerator, primaryKey, revision, collectionClass, elementComponentData, indexComponentData);
+		super(verCfg, versionsReader, queryGenerator, primaryKey, revision, removed, collectionClass, elementComponentData, indexComponentData);
 		this.comparator = comparator;
 	}
 

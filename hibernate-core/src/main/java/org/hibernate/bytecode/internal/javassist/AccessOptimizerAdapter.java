@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,6 +27,7 @@ import java.io.Serializable;
 
 import org.hibernate.PropertyAccessException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.cfg.AvailableSettings;
 
 /**
  * The {@link org.hibernate.bytecode.spi.ReflectionOptimizer.AccessOptimizer} implementation for Javassist
@@ -36,24 +37,36 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
  */
 public class AccessOptimizerAdapter implements ReflectionOptimizer.AccessOptimizer, Serializable {
 
-	public static final String PROPERTY_GET_EXCEPTION =
-		"exception getting property value with Javassist (set hibernate.bytecode.use_reflection_optimizer=false for more info)";
+	private static final String PROPERTY_GET_EXCEPTION = String.format(
+			"exception getting property value with Javassist (set %s to false for more info)",
+			AvailableSettings.USE_REFLECTION_OPTIMIZER
+	);
 
-	public static final String PROPERTY_SET_EXCEPTION =
-		"exception setting property value with Javassist (set hibernate.bytecode.use_reflection_optimizer=false for more info)";
+	private static final String PROPERTY_SET_EXCEPTION =  String.format(
+			"exception setting property value with Javassist (set %s to false for more info)",
+			AvailableSettings.USE_REFLECTION_OPTIMIZER
+	);
 
 	private final BulkAccessor bulkAccessor;
 	private final Class mappedClass;
 
+	/**
+	 * Constructs an AccessOptimizerAdapter
+	 *
+	 * @param bulkAccessor The bulk accessor to use
+	 * @param mappedClass The mapped class
+	 */
 	public AccessOptimizerAdapter(BulkAccessor bulkAccessor, Class mappedClass) {
 		this.bulkAccessor = bulkAccessor;
 		this.mappedClass = mappedClass;
 	}
 
+	@Override
 	public String[] getPropertyNames() {
 		return bulkAccessor.getGetters();
 	}
 
+	@Override
 	public Object[] getPropertyValues(Object object) {
 		try {
 			return bulkAccessor.getPropertyValues( object );
@@ -61,14 +74,15 @@ public class AccessOptimizerAdapter implements ReflectionOptimizer.AccessOptimiz
 		catch ( Throwable t ) {
 			throw new PropertyAccessException(
 					t,
-			        PROPERTY_GET_EXCEPTION,
-			        false,
-			        mappedClass,
-			        getterName( t, bulkAccessor )
-				);
+					PROPERTY_GET_EXCEPTION,
+					false,
+					mappedClass,
+					getterName( t, bulkAccessor )
+			);
 		}
 	}
 
+	@Override
 	public void setPropertyValues(Object object, Object[] values) {
 		try {
 			bulkAccessor.setPropertyValues( object, values );
@@ -76,10 +90,10 @@ public class AccessOptimizerAdapter implements ReflectionOptimizer.AccessOptimiz
 		catch ( Throwable t ) {
 			throw new PropertyAccessException(
 					t,
-			        PROPERTY_SET_EXCEPTION,
-			        true,
-			        mappedClass,
-			        setterName( t, bulkAccessor )
+					PROPERTY_SET_EXCEPTION,
+					true,
+					mappedClass,
+					setterName( t, bulkAccessor )
 			);
 		}
 	}

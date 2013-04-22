@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.graph.spi;
 
+import javax.persistence.AttributeNode;
 import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.jpa.HibernateEntityManagerFactory;
@@ -30,7 +31,7 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
 /**
  * @author Steve Ebersole
  */
-public interface AttributeNodeImplementor<T> {
+public interface AttributeNodeImplementor<T> extends AttributeNode<T> {
 	public HibernateEntityManagerFactory entityManagerFactory();
 
 	public Attribute<?,T> getAttribute();

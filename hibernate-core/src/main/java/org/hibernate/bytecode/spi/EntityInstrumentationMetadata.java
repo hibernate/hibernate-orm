@@ -42,15 +42,15 @@ public interface EntityInstrumentationMetadata {
 	public String getEntityName();
 
 	/**
-     * Has the entity class been bytecode instrumented?
+	 * Has the entity class been bytecode instrumented?
 	 *
 	 * @return {@code true} indicates the entity class is instrumented for Hibernate use; {@code false}
 	 * indicates it is not
 	 */
-    public boolean isInstrumented();
+	public boolean isInstrumented();
 
-    /**
-     * Build and inject a field interceptor instance into the instrumented entity.
+	/**
+	 * Build and inject a field interceptor instance into the instrumented entity.
 	 *
 	 * @param entity The entity into which built interceptor should be injected
 	 * @param entityName The name of the entity
@@ -60,15 +60,15 @@ public interface EntityInstrumentationMetadata {
 	 * @return The built and injected interceptor
 	 *
 	 * @throws NotInstrumentedException Thrown if {@link #isInstrumented()} returns {@code false}
-     */
-    public FieldInterceptor injectInterceptor(
-            Object entity,
-            String entityName,
-            Set uninitializedFieldNames,
-            SessionImplementor session) throws NotInstrumentedException;
+	 */
+	public FieldInterceptor injectInterceptor(
+			Object entity,
+			String entityName,
+			Set uninitializedFieldNames,
+			SessionImplementor session) throws NotInstrumentedException;
 
-    /**
-     * Extract the field interceptor instance from the instrumented entity.
+	/**
+	 * Extract the field interceptor instance from the instrumented entity.
 	 *
 	 * @param entity The entity from which to extract the interceptor
 	 *
@@ -76,5 +76,5 @@ public interface EntityInstrumentationMetadata {
 	 *
 	 * @throws NotInstrumentedException Thrown if {@link #isInstrumented()} returns {@code false}
 	 */
-    public FieldInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
+	public FieldInterceptor extractInterceptor(Object entity) throws NotInstrumentedException;
 }

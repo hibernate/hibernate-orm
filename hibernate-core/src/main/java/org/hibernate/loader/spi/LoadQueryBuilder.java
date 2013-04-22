@@ -23,10 +23,22 @@
  */
 package org.hibernate.loader.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 /**
+ * Builds a load query for generating SQL.
+ *
  * @author Gail Badner
  */
 public interface LoadQueryBuilder {
 
-	String generateSql(int batchSize);
+	/**
+	 * Generates SQL for the performing the load.
+	 * @param batchSize - the batch size.
+	 * @param factory - the session factory.
+	 * @param aliasResolutionContext - the alias resolution context.
+	 *
+	 * @return the SQL string for performing the load
+	 */
+	String generateSql(int batchSize, SessionFactoryImplementor factory, LoadQueryAliasResolutionContext aliasResolutionContext);
 }

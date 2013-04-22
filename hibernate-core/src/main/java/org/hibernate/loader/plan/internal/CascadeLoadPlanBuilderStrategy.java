@@ -46,10 +46,8 @@ public class CascadeLoadPlanBuilderStrategy extends SingleRootReturnLoadPlanBuil
 	public CascadeLoadPlanBuilderStrategy(
 			CascadingAction cascadeActionToMatch,
 			SessionFactoryImplementor sessionFactory,
-			LoadQueryInfluencers loadQueryInfluencers,
-			String rootAlias,
-			int suffixSeed) {
-		super( sessionFactory, loadQueryInfluencers, rootAlias, suffixSeed );
+			LoadQueryInfluencers loadQueryInfluencers) {
+		super( sessionFactory, loadQueryInfluencers );
 		this.cascadeActionToMatch = cascadeActionToMatch;
 	}
 

@@ -24,25 +24,10 @@
 package org.hibernate.loader.plan.spi.build;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.EntityDefinition;
 
 /**
  * @author Steve Ebersole
  */
 public interface LoadPlanBuildingContext {
 	public SessionFactoryImplementor getSessionFactory();
-
-	public CollectionAliases resolveCollectionColumnAliases(AssociationAttributeDefinition attributeDefinition);
-	public EntityAliases resolveEntityColumnAliases(AssociationAttributeDefinition attributeDefinition);
-
-	public String resolveRootSourceAlias(EntityDefinition definition);
-	public String resolveRootSourceAlias(CollectionDefinition definition);
-
-	public String resolveFetchSourceAlias(AssociationAttributeDefinition attributeDefinition);
-	public String resolveFetchSourceAlias(CompositionDefinition compositionDefinition);
 }

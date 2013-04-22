@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,7 +23,6 @@
  */
 package org.hibernate.bytecode.internal.javassist;
 
-
 /**
  * Contract for deciding whether fields should be read and/or write intercepted.
  *
@@ -34,8 +33,9 @@ public interface FieldFilter {
 	/**
 	 * Should the given field be read intercepted?
 	 *
-	 * @param desc
-	 * @param name
+	 * @param desc The field descriptor
+	 * @param name The field name
+	 *
 	 * @return true if the given field should be read intercepted; otherwise
 	 * false.
 	 */
@@ -44,14 +44,33 @@ public interface FieldFilter {
 	/**
 	 * Should the given field be write intercepted?
 	 *
-	 * @param desc
-	 * @param name
+	 * @param desc The field descriptor
+	 * @param name The field name
+	 *
 	 * @return true if the given field should be write intercepted; otherwise
 	 * false.
 	 */
 	boolean handleWrite(String desc, String name);
 
+	/**
+	 * Should read access to the given field be intercepted?
+	 *
+	 * @param fieldOwnerClassName The class where the field being accessed is defined
+	 * @param fieldName The name of the field being accessed
+	 *
+	 * @return true if the given field read access should be write intercepted; otherwise
+	 * false.
+	 */
 	boolean handleReadAccess(String fieldOwnerClassName, String fieldName);
 
+	/**
+	 * Should write access to the given field be intercepted?
+	 *
+	 * @param fieldOwnerClassName The class where the field being accessed is defined
+	 * @param fieldName The name of the field being accessed
+	 *
+	 * @return true if the given field write access should be write intercepted; otherwise
+	 * false.
+	 */
 	boolean handleWriteAccess(String fieldOwnerClassName, String fieldName);
 }

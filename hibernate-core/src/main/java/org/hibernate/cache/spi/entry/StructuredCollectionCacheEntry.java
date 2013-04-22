@@ -35,6 +35,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Gavin King
  */
 public class StructuredCollectionCacheEntry implements CacheEntryStructure<CollectionCacheEntry, List<Serializable>> {
+	/**
+	 * Access to the singleton reference.
+	 */
+	public static final StructuredCollectionCacheEntry INSTANCE = new StructuredCollectionCacheEntry();
+
 	@Override
 	public List<Serializable> structure(CollectionCacheEntry entry) {
 		return Arrays.asList( entry.getState() );
@@ -44,4 +49,6 @@ public class StructuredCollectionCacheEntry implements CacheEntryStructure<Colle
 		return new CollectionCacheEntry( list.toArray( new Serializable[list.size()] ) );
 	}
 
+	private StructuredCollectionCacheEntry() {
+	}
 }

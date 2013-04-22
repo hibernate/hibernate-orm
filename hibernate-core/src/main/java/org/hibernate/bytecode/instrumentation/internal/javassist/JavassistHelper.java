@@ -30,23 +30,42 @@ import org.hibernate.bytecode.internal.javassist.FieldHandled;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
+ * Javassist specific helper
+ *
  * @author Steve Ebersole
  */
 public class JavassistHelper {
 	private JavassistHelper() {
 	}
 
+	/**
+	 * Perform the Javassist-specific field interceptor extraction
+	 *
+	 * @param entity The entity from which to extract the interceptor
+	 *
+	 * @return The extracted interceptor
+	 */
 	public static FieldInterceptor extractFieldInterceptor(Object entity) {
-		return ( FieldInterceptor ) ( ( FieldHandled ) entity ).getFieldHandler();
+		return (FieldInterceptor) ( (FieldHandled) entity ).getFieldHandler();
 	}
 
+	/**
+	 * Perform the Javassist-specific field interceptor injection
+	 *
+	 * @param entity The entity instance
+	 * @param entityName The entity name
+	 * @param uninitializedFieldNames The names of any uninitialized fields
+	 * @param session The session
+	 *
+	 * @return The generated and injected interceptor
+	 */
 	public static FieldInterceptor injectFieldInterceptor(
 			Object entity,
-	        String entityName,
-	        Set uninitializedFieldNames,
-	        SessionImplementor session) {
-		FieldInterceptorImpl fieldInterceptor = new FieldInterceptorImpl( session, uninitializedFieldNames, entityName );
-		( ( FieldHandled ) entity ).setFieldHandler( fieldInterceptor );
+			String entityName,
+			Set uninitializedFieldNames,
+			SessionImplementor session) {
+		final FieldInterceptorImpl fieldInterceptor = new FieldInterceptorImpl( session, uninitializedFieldNames, entityName );
+		( (FieldHandled) entity ).setFieldHandler( fieldInterceptor );
 		return fieldInterceptor;
 	}
 }

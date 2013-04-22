@@ -26,8 +26,24 @@ package org.hibernate.loader.spi;
 import org.hibernate.loader.plan.spi.LoadPlan;
 
 /**
+ * An advisor that can be made available to the {@link ResultSetProcessor} and {@link ScrollableResultSetProcessor}.
+ *
+ * The processors consult with the advisor, if one is provided, as a means to influence the load plan, meaning that
+ * the advisor might add fetches.  A caveat is that any added fetches cannot be join fetches (they cannot alter the
+ * SQL); if a fetch is added as {@link org.hibernate.engine.FetchTiming#IMMEDIATE}, it must be a "subsequent form":
+ * {@link org.hibernate.engine.FetchStyle#SELECT}, {@link org.hibernate.engine.FetchStyle#SUBSELECT},
+ * {@link org.hibernate.engine.FetchStyle#BATCH}.
+ *
  * @author Steve Ebersole
  */
 public interface LoadPlanAdvisor {
+	/**
+	 * Advise on the given LoadPlan, returning a new LoadPlan if any additions are needed.  It is the responsibility
+	 * of the advisor to return the original load plan if no additions were needed
+	 *
+	 * @param loadPlan The load plan to advise on.
+	 *
+	 * @return The original or advised load plan.
+	 */
 	public LoadPlan advise(LoadPlan loadPlan);
 }

@@ -26,6 +26,8 @@ package org.hibernate.cache.spi.access;
 import org.hibernate.cache.CacheException;
 
 /**
+ * Base access strategy for all regions.
+ *
  * @author Gail Badner
  */
 public interface RegionAccessStrategy {

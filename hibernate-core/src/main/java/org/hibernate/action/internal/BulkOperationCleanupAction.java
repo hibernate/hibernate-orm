@@ -73,8 +73,8 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 * @param affectedQueryables The affected entity persisters.
 	 */
 	public BulkOperationCleanupAction(SessionImplementor session, Queryable... affectedQueryables) {
-		SessionFactoryImplementor factory = session.getFactory();
-		LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
+		final SessionFactoryImplementor factory = session.getFactory();
+		final LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
 		for ( Queryable persister : affectedQueryables ) {
 			spacesList.addAll( Arrays.asList( (String[]) persister.getQuerySpaces() ) );
 
@@ -85,10 +85,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 				naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy() ) );
 			}
 
-			Set<String> roles = factory.getCollectionRolesByEntityParticipant( persister.getEntityName() );
+			final Set<String> roles = factory.getCollectionRolesByEntityParticipant( persister.getEntityName() );
 			if ( roles != null ) {
 				for ( String role : roles ) {
-					CollectionPersister collectionPersister = factory.getCollectionPersister( role );
+					final CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 					if ( collectionPersister.hasCache() ) {
 						collectionCleanups.add( new CollectionCleanup( collectionPersister.getCacheAccessStrategy() ) );
 					}
@@ -113,10 +113,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 	 */
 	@SuppressWarnings({ "unchecked" })
 	public BulkOperationCleanupAction(SessionImplementor session, Set tableSpaces) {
-		LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
+		final LinkedHashSet<String> spacesList = new LinkedHashSet<String>();
 		spacesList.addAll( tableSpaces );
 
-		SessionFactoryImplementor factory = session.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 		for ( String entityName : factory.getAllClassMetadata().keySet() ) {
 			final EntityPersister persister = factory.getEntityPersister( entityName );
 			final String[] entitySpaces = (String[]) persister.getQuerySpaces();
@@ -130,10 +130,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 					naturalIdCleanups.add( new NaturalIdCleanup( persister.getNaturalIdCacheAccessStrategy() ) );
 				}
 
-				Set<String> roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
+				final Set<String> roles = session.getFactory().getCollectionRolesByEntityParticipant( persister.getEntityName() );
 				if ( roles != null ) {
 					for ( String role : roles ) {
-						CollectionPersister collectionPersister = factory.getCollectionPersister( role );
+						final CollectionPersister collectionPersister = factory.getCollectionPersister( role );
 						if ( collectionPersister.hasCache() ) {
 							collectionCleanups.add(
 									new CollectionCleanup( collectionPersister.getCacheAccessStrategy() )

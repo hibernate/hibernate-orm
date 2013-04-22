@@ -35,19 +35,21 @@ import org.hibernate.engine.spi.SessionImplementor;
 public interface LazyPropertyInitializer {
 
 	/**
-	 * Marker value for uninitialized properties
+	 * Marker value for uninitialized properties.
 	 */
 	public static final Serializable UNFETCHED_PROPERTY = new Serializable() {
+		@Override
 		public String toString() {
 			return "<lazy>";
 		}
+
 		public Object readResolve() {
 			return UNFETCHED_PROPERTY;
 		}
 	};
 
 	/**
-	 * Initialize the property, and return its new value
+	 * Initialize the property, and return its new value.
 	 *
 	 * @param fieldName The name of the field being initialized
 	 * @param entity The entity on which the initialization is occurring

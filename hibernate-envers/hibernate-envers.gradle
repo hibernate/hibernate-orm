@@ -10,6 +10,14 @@ dependencies {
     testRuntime( libraries.javassist )
 }
 
+def pomName() {
+    return 'Entity versioning support'
+}
+
+def pomDescription() {
+    return 'Entity versioning support'
+}
+
 sourceSets {
     main {
         ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
@@ -59,7 +67,6 @@ jar {
             'javax.persistence;version="2.1.0"',
             'javax.persistence.criteria;version="2.1.0"',
             'javax.persistence.metamodel;version="2.1.0"',
-            'javax.persistence.spi;version="2.1.0"',
-            '*'
+            'javax.persistence.spi;version="2.1.0"'
     }
 }

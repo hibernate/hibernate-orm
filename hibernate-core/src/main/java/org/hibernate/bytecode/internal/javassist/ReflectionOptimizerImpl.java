@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -33,20 +33,27 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
  * @author Steve Ebersole
  */
 public class ReflectionOptimizerImpl implements ReflectionOptimizer, Serializable {
-
 	private final InstantiationOptimizer instantiationOptimizer;
 	private final AccessOptimizer accessOptimizer;
 
+	/**
+	 * Constructs a ReflectionOptimizerImpl
+	 *
+	 * @param instantiationOptimizer The instantiation optimizer to use
+	 * @param accessOptimizer The property access optimizer to use.
+	 */
 	public ReflectionOptimizerImpl(
 			InstantiationOptimizer instantiationOptimizer,
-	        AccessOptimizer accessOptimizer) {
+			AccessOptimizer accessOptimizer) {
 		this.instantiationOptimizer = instantiationOptimizer;
 		this.accessOptimizer = accessOptimizer;
 	}
+
 	@Override
 	public InstantiationOptimizer getInstantiationOptimizer() {
 		return instantiationOptimizer;
 	}
+
 	@Override
 	public AccessOptimizer getAccessOptimizer() {
 		return accessOptimizer;

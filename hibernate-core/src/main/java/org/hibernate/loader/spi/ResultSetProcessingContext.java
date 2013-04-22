@@ -62,12 +62,14 @@ public interface ResultSetProcessingContext {
 
 	public Set<IdentifierResolutionContext> getIdentifierResolutionContexts();
 
+	public LoadQueryAliasResolutionContext getLoadQueryAliasResolutionContext();
+
 	public void registerHydratedEntity(EntityPersister persister, EntityKey entityKey, Object entityInstance);
 
 	public static interface EntityKeyResolutionContext {
 		public EntityPersister getEntityPersister();
 		public LockMode getLockMode();
-		public EntityAliases getEntityAliases();
+		public EntityReference getEntityReference();
 	}
 
 	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext);

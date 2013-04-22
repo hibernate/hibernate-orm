@@ -42,6 +42,8 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.internal.util.StringHelper;
 
 /**
+ * No idea.
+ *
  * @author Emmanuel Bernard
  */
 public abstract class AbstractPropertyHolder implements PropertyHolder {
@@ -57,7 +59,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Boolean isInIdClass;
 
 
-	public AbstractPropertyHolder(
+	AbstractPropertyHolder(
 			String path,
 			PropertyHolder parent,
 			XClass clazzToProcess,
@@ -68,25 +70,34 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		buildHierarchyColumnOverride( clazzToProcess );
 	}
 
-
+	@Override
 	public boolean isInIdClass() {
 		return isInIdClass != null ? isInIdClass : parent != null ? parent.isInIdClass() : false;
 	}
 
+	@Override
 	public void setInIdClass(Boolean isInIdClass) {
 		this.isInIdClass = isInIdClass;
 	}
 
+	@Override
 	public String getPath() {
 		return path;
 	}
 
+	/**
+	 * Get the mappings
+	 *
+	 * @return The mappings
+	 */
 	protected Mappings getMappings() {
 		return mappings;
 	}
 
 	/**
-	 * property can be null
+	 * Set the property be processed.  property can be null
+	 *
+	 * @param property The property
 	 */
 	protected void setCurrentProperty(XProperty property) {
 		if ( property == null ) {
@@ -124,8 +135,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * replace the placeholder 'collection&&element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
-	 *
 	 */
+	@Override
 	public Column[] getOverriddenColumn(String propertyName) {
 		Column[] result = getExactOverriddenColumn( propertyName );
 		if (result == null) {
@@ -192,8 +203,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * replace the placeholder 'collection&&element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
-	 *
 	 */
+	@Override
 	public JoinColumn[] getOverriddenJoinColumn(String propertyName) {
 		JoinColumn[] result = getExactOverriddenJoinColumn( propertyName );
 		if ( result == null && propertyName.contains( ".collection&&element." ) ) {
@@ -226,8 +237,8 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * replace the placeholder 'collection&&element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
-	 *
 	 */
+	@Override
 	public JoinTable getJoinTable(XProperty property) {
 		final String propertyName = StringHelper.qualify( getPath(), property.getName() );
 		JoinTable result = getOverriddenJoinTable( propertyName );
@@ -242,7 +253,6 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	 * replace the placeholder 'collection&&element' with nothing
 	 *
 	 * These rules are here to support both JPA 2 and legacy overriding rules.
-	 *
 	 */
 	public JoinTable getOverriddenJoinTable(String propertyName) {
 		JoinTable result = getExactOverriddenJoinTable( propertyName );
@@ -384,6 +394,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return tableOverride;
 	}
 
+	@Override
 	public void setParentProperty(String parentProperty) {
 		throw new AssertionFailure( "Setting the parent property to a non component" );
 	}

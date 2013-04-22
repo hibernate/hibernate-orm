@@ -34,5 +34,5 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface RelationQueryGenerator {
-    Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision);
+    Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision, boolean removed);
 }

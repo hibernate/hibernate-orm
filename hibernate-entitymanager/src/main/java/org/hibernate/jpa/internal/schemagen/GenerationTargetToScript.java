@@ -39,14 +39,14 @@ import org.hibernate.jpa.SchemaGenAction;
  *
  * @author Steve Ebersole
  */
-class ScriptsTarget implements GenerationTarget {
-	private static final Logger log = Logger.getLogger( ScriptsTarget.class );
+class GenerationTargetToScript implements GenerationTarget {
+	private static final Logger log = Logger.getLogger( GenerationTargetToScript.class );
 
 	private final ScriptTargetTarget createScriptTarget;
 	private final ScriptTargetTarget dropScriptTarget;
 	private final SchemaGenAction scriptsAction;
 
-	public ScriptsTarget(
+	public GenerationTargetToScript(
 			Object createScriptTargetSetting,
 			Object dropScriptTargetSetting,
 			SchemaGenAction scriptsAction) {

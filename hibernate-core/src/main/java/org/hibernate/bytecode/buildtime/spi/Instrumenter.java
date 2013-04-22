@@ -27,20 +27,20 @@ import java.io.File;
 import java.util.Set;
 
 /**
- * Basic contract for performing instrumentation
+ * Basic contract for performing instrumentation.
  *
  * @author Steve Ebersole
  */
 public interface Instrumenter {
 	/**
-	 * Perform the instrumentation
+	 * Perform the instrumentation.
 	 *
 	 * @param files The file on which to perform instrumentation
 	 */
 	public void execute(Set<File> files);
 
 	/**
-	 * Instrumentation options
+	 * Instrumentation options.
 	 */
 	public static interface Options {
 		/**

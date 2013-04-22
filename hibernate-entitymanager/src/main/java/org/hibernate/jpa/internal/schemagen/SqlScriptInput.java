@@ -23,36 +23,14 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import java.io.Reader;
-
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 
 /**
+ * Contract for handling Reader/File differences
+ *
  * @author Steve Ebersole
  */
-public class ScriptSource implements GenerationSource {
-	private final SqlScriptReader reader;
-	private final ImportSqlCommandExtractor scriptCommandExtractor;
-
-	public ScriptSource(Object scriptSourceSetting, ImportSqlCommandExtractor scriptCommandExtractor) {
-		this.scriptCommandExtractor = scriptCommandExtractor;
-
-		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
-			reader = new ReaderScriptSource( (Reader) scriptSourceSetting );
-		}
-		else {
-			reader = new FileScriptSource( scriptSourceSetting.toString() );
-		}
-	}
-
-	@Override
-	public Iterable<String> getCommands() {
-		return reader.read( scriptCommandExtractor );
-	}
-
-	@Override
-	public void release() {
-		reader.release();
-	}
-
+public interface SqlScriptInput {
+	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor);
+	public void release();
 }

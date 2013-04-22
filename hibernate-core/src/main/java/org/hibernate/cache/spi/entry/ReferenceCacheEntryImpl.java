@@ -26,15 +26,32 @@ package org.hibernate.cache.spi.entry;
 import java.io.Serializable;
 
 /**
+ * Specialized CacheEntry for storing direct references to entity instances.
+ *
  * @author Steve Ebersole
  */
 public class ReferenceCacheEntryImpl implements CacheEntry {
 	private final Object reference;
 	private final String subclass;
 
+	/**
+	 * Constructs a ReferenceCacheEntryImpl
+	 *
+	 * @param reference The reference entity instance
+	 * @param subclass The specific subclass
+	 */
 	public ReferenceCacheEntryImpl(Object reference, String subclass) {
 		this.reference = reference;
 		this.subclass = subclass;
+	}
+
+	/**
+	 * Provides access to the stored reference.
+	 *
+	 * @return The stored reference
+	 */
+	public Object getReference() {
+		return reference;
 	}
 
 	@Override
@@ -63,9 +80,5 @@ public class ReferenceCacheEntryImpl implements CacheEntry {
 	public Serializable[] getDisassembledState() {
 		// reference data is not disassembled into the cache
 		return null;
-	}
-
-	public Object getReference() {
-		return reference;
 	}
 }

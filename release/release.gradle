@@ -67,8 +67,8 @@ task aggregateJavadocs(type: Javadoc) {
     maxMemory = '512m'
     destinationDir = javadocBuildDir
     configure( options ) {
-        overview = new File( projectDir, 'src/javadoc/overview.html' )
-        stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
+        overview = rootProject.file( 'shared/javadoc/overview.html' )
+        stylesheetFile = rootProject.file( 'shared/javadoc/stylesheet.css' )
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
         bottom = "Copyright &copy; 2001-$copyRightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
@@ -87,7 +87,7 @@ task aggregateJavadocs(type: Javadoc) {
 
 aggregateJavadocs.doLast {
     copy {
-        from new File( projectDir, 'src/javadoc/images' )
+        from rootProject.file( 'shared/javadoc/images' )
         into new File( javadocBuildDir, "/images" )
     }
 }

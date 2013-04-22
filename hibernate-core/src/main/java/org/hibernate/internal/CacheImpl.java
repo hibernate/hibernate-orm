@@ -67,7 +67,7 @@ public class CacheImpl implements CacheImplementor {
 	private transient RegionFactory regionFactory;
 	private transient UpdateTimestampsCache updateTimestampsCache;
 	private transient ConcurrentMap<String, QueryCache> queryCaches;
-	private transient ConcurrentMap<String, Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
+	private final transient ConcurrentMap<String, Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
 
 	public CacheImpl(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -264,9 +264,7 @@ public class CacheImpl implements CacheImplementor {
 		if ( isQueryCacheEnabled ) {
 			queryCache.destroy();
 
-			Iterator iter = queryCaches.values().iterator();
-			while ( iter.hasNext() ) {
-				QueryCache cache = (QueryCache) iter.next();
+			for ( QueryCache cache : queryCaches.values() ) {
 				cache.destroy();
 			}
 			updateTimestampsCache.destroy();

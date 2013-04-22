@@ -38,10 +38,21 @@ import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 
+/**
+ * The action for updating a collection
+ */
 public final class CollectionUpdateAction extends CollectionAction {
-
 	private final boolean emptySnapshot;
 
+	/**
+	 * Constructs a CollectionUpdateAction
+	 *
+	 * @param collection The collection to update
+	 * @param persister The collection persister
+	 * @param id The collection key
+	 * @param emptySnapshot Indicates if the snapshot is empty
+	 * @param session The session
+	 */
 	public CollectionUpdateAction(
 				final PersistentCollection collection,
 				final CollectionPersister persister,
@@ -58,26 +69,31 @@ public final class CollectionUpdateAction extends CollectionAction {
 		final SessionImplementor session = getSession();
 		final CollectionPersister persister = getPersister();
 		final PersistentCollection collection = getCollection();
-		boolean affectedByFilters = persister.isAffectedByEnabledFilters(session);
+		final boolean affectedByFilters = persister.isAffectedByEnabledFilters( session );
 
 		preUpdate();
 
 		if ( !collection.wasInitialized() ) {
-			if ( !collection.hasQueuedOperations() ) throw new AssertionFailure( "no queued adds" );
+			if ( !collection.hasQueuedOperations() ) {
+				throw new AssertionFailure( "no queued adds" );
+			}
 			//do nothing - we only need to notify the cache...
 		}
 		else if ( !affectedByFilters && collection.empty() ) {
-			if ( !emptySnapshot ) persister.remove( id, session );
+			if ( !emptySnapshot ) {
+				persister.remove( id, session );
+			}
 		}
-		else if ( collection.needsRecreate(persister) ) {
-			if (affectedByFilters) {
+		else if ( collection.needsRecreate( persister ) ) {
+			if ( affectedByFilters ) {
 				throw new HibernateException(
-					"cannot recreate collection while filter is enabled: " + 
-					MessageHelper.collectionInfoString(persister, collection,
-							id, session )
+						"cannot recreate collection while filter is enabled: " +
+								MessageHelper.collectionInfoString( persister, collection, id, session )
 				);
 			}
-			if ( !emptySnapshot ) persister.remove( id, session );
+			if ( !emptySnapshot ) {
+				persister.remove( id, session );
+			}
 			persister.recreate( collection, id, session );
 		}
 		else {
@@ -86,22 +102,17 @@ public final class CollectionUpdateAction extends CollectionAction {
 			persister.insertRows( collection, id, session );
 		}
 
-		getSession().getPersistenceContext()
-			.getCollectionEntry(collection)
-			.afterAction(collection);
-
+		getSession().getPersistenceContext().getCollectionEntry( collection ).afterAction( collection );
 		evict();
-
 		postUpdate();
 
 		if ( getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-			getSession().getFactory().getStatisticsImplementor().
-					updateCollection( getPersister().getRole() );
+			getSession().getFactory().getStatisticsImplementor().updateCollection( getPersister().getRole() );
 		}
 	}
 	
 	private void preUpdate() {
-		EventListenerGroup<PreCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_UPDATE );
+		final EventListenerGroup<PreCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.PRE_COLLECTION_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
@@ -116,7 +127,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 	}
 
 	private void postUpdate() {
-		EventListenerGroup<PostCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_UPDATE );
+		final EventListenerGroup<PostCollectionUpdateEventListener> listenerGroup = listenerGroup( EventType.POST_COLLECTION_UPDATE );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}

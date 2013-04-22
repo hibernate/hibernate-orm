@@ -37,17 +37,23 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SuppressWarnings("unchecked")
 public class StructuredCacheEntry implements CacheEntryStructure<CacheEntry, Map> {
 
 	private final EntityPersister persister;
 
+	/**
+	 * Constructs a StructuredCacheEntry strategy
+	 *
+	 * @param persister The persister whose data needs to be structured.
+	 */
 	public StructuredCacheEntry(EntityPersister persister) {
 		this.persister = persister;
 	}
 
 	@Override
 	public CacheEntry destructure(Map map, SessionFactoryImplementor factory) {
-		boolean lazyPropertiesUnfetched = ( (Boolean) map.get( "_lazyPropertiesUnfetched" ) ).booleanValue();
+		boolean lazyPropertiesUnfetched = (Boolean) map.get( "_lazyPropertiesUnfetched" );
 		String subclass = (String) map.get( "_subclass" );
 		Object version = map.get( "_version" );
 		EntityPersister subclassPersister = factory.getEntityPersister( subclass );

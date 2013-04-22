@@ -42,11 +42,27 @@ import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
+/**
+ * The action for performing an entity insertion, for entities not defined to use IDENTITY generation.
+ *
+ * @see EntityIdentityInsertAction
+ */
 public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	private Object version;
 	private Object cacheEntry;
 
+	/**
+	 * Constructs an EntityInsertAction.
+	 *
+	 * @param id The entity identifier
+	 * @param state The current (extracted) entity state
+	 * @param instance The entity instance
+	 * @param version The current entity version value
+	 * @param persister The entity's persister
+	 * @param isVersionIncrementDisabled Whether version incrementing is disabled.
+	 * @param session The session
+	 */
 	public EntityInsertAction(
 			Serializable id,
 			Object[] state,
@@ -54,7 +70,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			Object version,
 			EntityPersister persister,
 			boolean isVersionIncrementDisabled,
-			SessionImplementor session) throws HibernateException {
+			SessionImplementor session) {
 		super( id, state, instance, isVersionIncrementDisabled, persister, session );
 		this.version = version;
 	}
@@ -73,12 +89,12 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	public void execute() throws HibernateException {
 		nullifyTransientReferencesIfNotAlready();
 
-		EntityPersister persister = getPersister();
-		SessionImplementor session = getSession();
-		Object instance = getInstance();
-		Serializable id = getId();
+		final EntityPersister persister = getPersister();
+		final SessionImplementor session = getSession();
+		final Object instance = getInstance();
+		final Serializable id = getId();
 
-		boolean veto = preInsert();
+		final boolean veto = preInsert();
 
 		// Don't need to lock the cache here, since if someone
 		// else inserted the same pk first, the insert would fail
@@ -86,8 +102,8 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			
 			persister.insert( id, getState(), instance, session );
-		
-			EntityEntry entry = session.getPersistenceContext().getEntry( instance );
+
+			final EntityEntry entry = session.getPersistenceContext().getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non-threadsafe access to session" );
 			}
@@ -99,7 +115,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 				if ( persister.isVersionPropertyGenerated() ) {
 					version = Versioning.getVersion( getState(), persister );
 				}
-				entry.postUpdate(instance, getState(), version);
+				entry.postUpdate( instance, getState(), version );
 			}
 
 			getSession().getPersistenceContext().registerInsertedKey( getPersister(), getId() );
@@ -108,7 +124,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		final SessionFactoryImplementor factory = getSession().getFactory();
 
 		if ( isCachePutEnabled( persister, session ) ) {
-			CacheEntry ce = persister.buildCacheEntry(
+			final CacheEntry ce = persister.buildCacheEntry(
 					instance,
 					getState(),
 					version,
@@ -116,14 +132,14 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			);
 			cacheEntry = persister.getCacheEntryStructure().structure(ce);
 			final CacheKey ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
-			boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
+			final boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
 			
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 			}
 		}
 
-		handleNaturalIdPostSaveNotifications(id);
+		handleNaturalIdPostSaveNotifications( id );
 
 		postInsert();
 
@@ -136,7 +152,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private void postInsert() {
-		EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
+		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
@@ -153,7 +169,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	private void postCommitInsert() {
-		EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
+		final EventListenerGroup<PostInsertEventListener> listenerGroup = listenerGroup( EventType.POST_COMMIT_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return;
 		}
@@ -172,7 +188,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 	private boolean preInsert() {
 		boolean veto = false;
 
-		EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
+		final EventListenerGroup<PreInsertEventListener> listenerGroup = listenerGroup( EventType.PRE_INSERT );
 		if ( listenerGroup.isEmpty() ) {
 			return veto;
 		}
@@ -185,10 +201,10 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 
 	@Override
 	public void doAfterTransactionCompletion(boolean success, SessionImplementor session) throws HibernateException {
-		EntityPersister persister = getPersister();
+		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final CacheKey ck = getSession().generateCacheKey( getId(), persister.getIdentifierType(), persister.getRootEntityName() );
-			boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
+			final boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
 			
 			if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
 				getSession().getFactory().getStatisticsImplementor()

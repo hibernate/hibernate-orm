@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008-2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -33,46 +33,53 @@ import javassist.NotFoundException;
 import org.hibernate.HibernateException;
 
 /**
+ * A ClassLoader implementation applying Class transformations as they are being loaded.
+ *
  * @author Steve Ebersole
  */
+@SuppressWarnings("UnusedDeclaration")
 public class TransformingClassLoader extends ClassLoader {
 	private ClassLoader parent;
 	private ClassPool classPool;
 
-	/*package*/ TransformingClassLoader(ClassLoader parent, String[] classpath) {
+	TransformingClassLoader(ClassLoader parent, String[] classpaths) {
 		this.parent = parent;
-		classPool = new ClassPool( true );
-		for ( int i = 0; i < classpath.length; i++ ) {
+		this.classPool = new ClassPool( true );
+		for ( String classpath : classpaths ) {
 			try {
-				classPool.appendClassPath( classpath[i] );
+				classPool.appendClassPath( classpath );
 			}
-			catch ( NotFoundException e ) {
+			catch (NotFoundException e) {
 				throw new HibernateException(
 						"Unable to resolve requested classpath for transformation [" +
-						classpath[i] + "] : " + e.getMessage()
+								classpath + "] : " + e.getMessage()
 				);
 			}
 		}
 	}
 
+	@Override
 	protected Class findClass(String name) throws ClassNotFoundException {
-        try {
-            CtClass cc = classPool.get( name );
-	        // todo : modify the class definition if not already transformed...
-            byte[] b = cc.toBytecode();
-            return defineClass( name, b, 0, b.length );
-        }
-        catch ( NotFoundException e ) {
-            throw new ClassNotFoundException();
-        }
-        catch ( IOException e ) {
-            throw new ClassNotFoundException();
-        }
-        catch ( CannotCompileException e ) {
-            throw new ClassNotFoundException();
-        }
-    }
+		try {
+			final CtClass cc = classPool.get( name );
+			// todo : modify the class definition if not already transformed...
+			byte[] b = cc.toBytecode();
+			return defineClass( name, b, 0, b.length );
+		}
+		catch (NotFoundException e) {
+			throw new ClassNotFoundException();
+		}
+		catch (IOException e) {
+			throw new ClassNotFoundException();
+		}
+		catch (CannotCompileException e) {
+			throw new ClassNotFoundException();
+		}
+	}
 
+	/**
+	 * Used to release resources.  Call when done with the ClassLoader
+	 */
 	public void release() {
 		classPool = null;
 		parent = null;

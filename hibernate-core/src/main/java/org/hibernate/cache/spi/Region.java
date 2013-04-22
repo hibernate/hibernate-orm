@@ -96,8 +96,21 @@ public interface Region {
 	 */
 	public Map toMap();
 
+	/**
+	 * Get the next timestamp according to the underlying cache implementor.
+	 *
+	 * @todo Document the usages of this method so providers know exactly what is expected.
+	 *
+	 * @return The next timestamp
+	 */
 	public long nextTimestamp();
 
-	//we really should change this return type to `long` instead of `int`
+	/**
+	 * Get a timeout value.
+	 *
+	 * @todo Again, document the usages of this method so providers know exactly what is expected.
+	 *
+	 * @return The time out value
+	 */
 	public int getTimeout();
 }

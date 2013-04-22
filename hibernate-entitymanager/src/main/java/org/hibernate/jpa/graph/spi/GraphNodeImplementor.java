@@ -35,5 +35,6 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
  */
 public interface GraphNodeImplementor {
 	public HibernateEntityManagerFactory entityManagerFactory();
+	public List<AttributeNodeImplementor<?>> attributeImplementorNodes();
 	public List<AttributeNode<?>> attributeNodes();
 }

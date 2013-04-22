@@ -24,6 +24,8 @@
 package org.hibernate.cache;
 
 /**
+ * Legacy (deprecated) namespace for the RegionFactory contract.
+ *
  * @author Steve Ebersole
  *
  * @deprecated Moved, but still need this definition for ehcache 

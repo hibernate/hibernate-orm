@@ -29,9 +29,23 @@ package org.hibernate.cache.spi.access;
  * @author Steve Ebersole
  */
 public enum AccessType {
+	/**
+	 * Read-only access.  Data may be added and removed, but not mutated.
+	 */
 	READ_ONLY( "read-only" ),
+	/**
+	 * Read and write access (strict).  Data may be added, removed and mutated.
+	 */
 	READ_WRITE( "read-write" ),
+	/**
+	 * Read and write access (non-strict).  Data may be added, removed and mutated.  The non-strictness comes from
+	 * the fact that locks are not maintained as tightly as in {@link #READ_WRITE}, which leads to better throughput
+	 * but may also lead to inconsistencies.
+	 */
 	NONSTRICT_READ_WRITE( "nonstrict-read-write" ),
+	/**
+	 * A read and write strategy where isolation/locking is maintained in conjunction with a JTA transaction.
+	 */
 	TRANSACTIONAL( "transactional" );
 
 	private final String externalName;
@@ -40,14 +54,31 @@ public enum AccessType {
 		this.externalName = externalName;
 	}
 
+	/**
+	 * Get the corresponding externalized name for this value.
+	 *
+	 * @return The corresponding externalized name.
+	 */
 	public String getExternalName() {
 		return externalName;
 	}
 
+	@Override
 	public String toString() {
 		return "AccessType[" + externalName + "]";
 	}
 
+	/**
+	 * Resolve an AccessType from its external name.
+	 *
+	 * @param externalName The external representation to resolve
+	 *
+	 * @return The access type.
+	 *
+	 * @throws UnknownAccessTypeException If the externalName was not recognized.
+	 *
+	 * @see #getExternalName()
+	 */
 	public static AccessType fromExternalName(String externalName) {
 		if ( externalName == null ) {
 			return null;

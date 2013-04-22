@@ -26,6 +26,7 @@ package org.hibernate.testing.junit4;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.MetadataSources;
@@ -78,6 +79,7 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 		private final Description description;
 		private Throwable setupError;
 		private boolean expectedException;
+		private StandardServiceRegistry serviceRegistry;
 
 		KeepSetupFailureStatement(Statement statement, Description description) {
 			this.origStatement = statement;
@@ -103,11 +105,16 @@ public abstract class BaseAnnotationBindingTestCase extends BaseUnitTestCase {
 					}
 				}
 			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( serviceRegistry );
+				serviceRegistry = null;
+			}
 		}
 
 		private void createBindings() {
 			try {
-				sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
+				serviceRegistry = new StandardServiceRegistryBuilder(  ).build();
+				sources = new MetadataSources( serviceRegistry );
 				MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 				Resources resourcesAnnotation = description.getAnnotation( Resources.class );
 				if ( resourcesAnnotation != null ) {

@@ -41,8 +41,11 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 public class SortedSetCollectionInitializor extends BasicCollectionInitializor<SortedSet> {
 	private final Comparator comparator;
 
-	public SortedSetCollectionInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, RelationQueryGenerator queryGenerator, Object primaryKey, Number revision, Class<? extends SortedSet> collectionClass, MiddleComponentData elementComponentData, Comparator comparator) {
-		super(verCfg, versionsReader, queryGenerator, primaryKey, revision, collectionClass, elementComponentData);
+	public SortedSetCollectionInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+										  RelationQueryGenerator queryGenerator, Object primaryKey, Number revision, boolean removed,
+										  Class<? extends SortedSet> collectionClass, MiddleComponentData elementComponentData,
+										  Comparator comparator) {
+		super(verCfg, versionsReader, queryGenerator, primaryKey, revision, removed, collectionClass, elementComponentData);
 		this.comparator = comparator;
 	}
 

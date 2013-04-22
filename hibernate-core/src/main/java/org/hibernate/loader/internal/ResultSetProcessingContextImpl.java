@@ -60,6 +60,7 @@ import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.visit.LoadPlanVisitationStrategyAdapter;
 import org.hibernate.loader.plan.spi.visit.LoadPlanVisitor;
 import org.hibernate.loader.spi.AfterLoadAction;
+import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -83,6 +84,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private final boolean readOnly;
 	private final QueryParameters queryParameters;
 	private final NamedParameterContext namedParameterContext;
+	private final LoadQueryAliasResolutionContext aliasResolutionContext;
 	private final boolean hadSubselectFetches;
 
 	private final EntityKey dictatedRootEntityKey;
@@ -100,6 +102,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			boolean useOptionalEntityKey,
 			QueryParameters queryParameters,
 			NamedParameterContext namedParameterContext,
+			LoadQueryAliasResolutionContext aliasResolutionContext,
 			boolean hadSubselectFetches) {
 		this.resultSet = resultSet;
 		this.session = session;
@@ -107,6 +110,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		this.readOnly = readOnly;
 		this.queryParameters = queryParameters;
 		this.namedParameterContext = namedParameterContext;
+		this.aliasResolutionContext = aliasResolutionContext;
 		this.hadSubselectFetches = hadSubselectFetches;
 
 		if ( useOptionalEntityKey ) {
@@ -190,6 +194,11 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		return Collections.unmodifiableSet(
 				new HashSet<IdentifierResolutionContext>( identifierResolutionContextMap.values() )
 		);
+	}
+
+	@Override
+	public LoadQueryAliasResolutionContext getLoadQueryAliasResolutionContext() {
+		return aliasResolutionContext;
 	}
 
 	@Override
@@ -300,7 +309,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 					checkVersion(
 							resultSet,
 							entityKeyContext.getEntityPersister(),
-							entityKeyContext.getEntityAliases(),
+							aliasResolutionContext.resolveEntityColumnAliases( entityKeyContext.getEntityReference() ),
 							entityKey,
 							existing
 					);
@@ -315,7 +324,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			final String concreteEntityTypeName = getConcreteEntityTypeName(
 					resultSet,
 					entityKeyContext.getEntityPersister(),
-					entityKeyContext.getEntityAliases(),
+					aliasResolutionContext.resolveEntityColumnAliases( entityKeyContext.getEntityReference() ),
 					entityKey
 			);
 
@@ -341,7 +350,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 					entityInstance,
 					concreteEntityTypeName,
 					entityKey,
-					entityKeyContext.getEntityAliases(),
+					aliasResolutionContext.resolveEntityColumnAliases( entityKeyContext.getEntityReference() ),
 					acquiredLockMode,
 					entityKeyContext.getEntityPersister(),
 					true,
@@ -476,7 +485,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 									null,
 									null,
 									rootCollectionReturn.getCollectionPersister(),
-									rootCollectionReturn.getCollectionAliases(),
+									aliasResolutionContext.resolveCollectionColumnAliases( rootCollectionReturn ),
 									resultSet,
 									session
 							);
@@ -490,7 +499,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 									owner,
 									collectionFetch.getCollectionPersister().getCollectionType().getKeyOfOwner( owner, session ),
 									collectionFetch.getCollectionPersister(),
-									collectionFetch.getCollectionAliases(),
+									aliasResolutionContext.resolveCollectionColumnAliases( collectionFetch ),
 									resultSet,
 									session
 							);

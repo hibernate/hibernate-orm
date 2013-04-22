@@ -44,6 +44,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class UsesInputStreamToInsertBlob implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.useInputStreamToInsertBlob();
+		}
+	}
+
 	public static class SupportsIdentityColumns implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsIdentityColumns();

@@ -57,16 +57,20 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class ManagedSessionContext extends AbstractCurrentSessionContext {
+	private static final ThreadLocal<Map<SessionFactory,Session>> CONTEXT_TL = new ThreadLocal<Map<SessionFactory,Session>>();
 
-	private static final ThreadLocal<Map<SessionFactory,Session>> context = new ThreadLocal<Map<SessionFactory,Session>>();
-
+	/**
+	 * Constructs a new ManagedSessionContext
+	 *
+	 * @param factory The factory this context will service
+	 */
 	public ManagedSessionContext(SessionFactoryImplementor factory) {
 		super( factory );
 	}
 
 	@Override
 	public Session currentSession() {
-		Session current = existingSession( factory() );
+		final Session current = existingSession( factory() );
 		if ( current == null ) {
 			throw new HibernateException( "No session currently bound to execution context" );
 		}
@@ -106,8 +110,8 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	 * @return The bound session if one, else null.
 	 */
 	public static Session unbind(SessionFactory factory) {
+		final Map<SessionFactory,Session> sessionMap = sessionMap();
 		Session existing = null;
-		Map<SessionFactory,Session> sessionMap = sessionMap();
 		if ( sessionMap != null ) {
 			existing = sessionMap.remove( factory );
 			doCleanup();
@@ -116,12 +120,12 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static Session existingSession(SessionFactory factory) {
-		Map sessionMap = sessionMap();
+		final Map sessionMap = sessionMap();
 		if ( sessionMap == null ) {
 			return null;
 		}
 		else {
-			return ( Session ) sessionMap.get( factory );
+			return (Session) sessionMap.get( factory );
 		}
 	}
 
@@ -130,19 +134,19 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static synchronized Map<SessionFactory,Session> sessionMap(boolean createMap) {
-		Map<SessionFactory,Session> sessionMap = context.get();
+		Map<SessionFactory,Session> sessionMap = CONTEXT_TL.get();
 		if ( sessionMap == null && createMap ) {
 			sessionMap = new HashMap<SessionFactory,Session>();
-			context.set( sessionMap );
+			CONTEXT_TL.set( sessionMap );
 		}
 		return sessionMap;
 	}
 
 	private static synchronized void doCleanup() {
-		Map<SessionFactory,Session> sessionMap = sessionMap( false );
+		final Map<SessionFactory,Session> sessionMap = sessionMap( false );
 		if ( sessionMap != null ) {
 			if ( sessionMap.isEmpty() ) {
-				context.set( null );
+				CONTEXT_TL.set( null );
 			}
 		}
 	}

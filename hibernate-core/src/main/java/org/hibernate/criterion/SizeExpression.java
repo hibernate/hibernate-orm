@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008, 2011, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -24,7 +24,6 @@
 package org.hibernate.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -33,10 +32,12 @@ import org.hibernate.sql.ConditionFragment;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
+ * Used to define a restriction on a collection property based on its size.
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class SizeExpression implements Criterion {
-	
 	private final String propertyName;
 	private final int size;
 	private final String op;
@@ -47,38 +48,35 @@ public class SizeExpression implements Criterion {
 		this.op = op;
 	}
 
+	@Override
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final String entityName =criteriaQuery.getEntityName( criteria, propertyName );
+		final String role = entityName + '.' + criteriaQuery.getPropertyName( propertyName );
+		final QueryableCollection cp = (QueryableCollection) criteriaQuery.getFactory().getCollectionPersister( role );
+
+		final String[] fk = cp.getKeyColumnNames();
+		final String[] pk = ( (Loadable) cp.getOwnerEntityPersister() ).getIdentifierColumnNames();
+
+		final ConditionFragment subQueryRestriction = new ConditionFragment()
+				.setTableAlias( criteriaQuery.getSQLAlias( criteria, propertyName ) )
+				.setCondition( pk, fk );
+
+		return String.format(
+				"? %s (select count(*) from %s where %s)",
+				op,
+				cp.getTableName(),
+				subQueryRestriction.toFragmentString()
+		);
+	}
+
+	@Override
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return new TypedValue[] { new TypedValue( StandardBasicTypes.INTEGER, size ) };
+	}
+
+	@Override
 	public String toString() {
 		return propertyName + ".size" + op + size;
-	}
-
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-		String role = criteriaQuery.getEntityName(criteria, propertyName) + 
-				'.' +  
-				criteriaQuery.getPropertyName(propertyName);
-		QueryableCollection cp = (QueryableCollection) criteriaQuery.getFactory()
-				.getCollectionPersister(role);
-		//String[] fk = StringHelper.qualify( "collection_", cp.getKeyColumnNames() );
-		String[] fk = cp.getKeyColumnNames();
-		String[] pk = ( (Loadable) cp.getOwnerEntityPersister() ).getIdentifierColumnNames(); //TODO: handle property-ref
-		return "? " + 
-				op + 
-				" (select count(*) from " +
-				cp.getTableName() +
-				//" collection_ where " +
-				" where " +
-				new ConditionFragment()
-						.setTableAlias( criteriaQuery.getSQLAlias(criteria, propertyName) )
-						.setCondition(pk, fk)
-						.toFragmentString() +
-				")";
-	}
-
-	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
-		return new TypedValue[] {
-			new TypedValue( StandardBasicTypes.INTEGER, size, EntityMode.POJO )
-		};
 	}
 
 }

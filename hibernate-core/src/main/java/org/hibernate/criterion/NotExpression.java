@@ -28,29 +28,37 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.TypedValue;
 
 /**
- * Negates another criterion
+ * A criterion that is a wrapper for another, negating the wrapped one.
+ *
  * @author Gavin King
- * @author Brett Meyer
  */
 public class NotExpression implements Criterion {
-
 	private Criterion criterion;
 
+	/**
+	 * Constructs a NotExpression
+	 *
+	 * @param criterion The expression to wrap and negate
+	 *
+	 * @see Restrictions#not
+	 */
 	protected NotExpression(Criterion criterion) {
 		this.criterion = criterion;
 	}
 
+	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return criteriaQuery.getFactory().getDialect().getNotExpression(
-				criterion.toSqlString( criteria, criteriaQuery ) );
+				criterion.toSqlString( criteria, criteriaQuery )
+		);
 	}
 
-	public TypedValue[] getTypedValues(
-		Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-		return criterion.getTypedValues(criteria, criteriaQuery);
+	@Override
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return criterion.getTypedValues( criteria, criteriaQuery );
 	}
 
+	@Override
 	public String toString() {
 		return "not " + criterion.toString();
 	}

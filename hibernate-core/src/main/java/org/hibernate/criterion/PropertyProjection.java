@@ -30,62 +30,66 @@ import org.hibernate.type.Type;
 
 /**
  * A property value, or grouped property value
+ *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class PropertyProjection extends SimpleProjection {
-
 	private String propertyName;
 	private boolean grouped;
-	
+
 	protected PropertyProjection(String prop, boolean grouped) {
 		this.propertyName = prop;
 		this.grouped = grouped;
 	}
-	
+
 	protected PropertyProjection(String prop) {
 		this(prop, false);
+	}
+
+	@Override
+	public boolean isGrouped() {
+		return grouped;
 	}
 
 	public String getPropertyName() {
 		return propertyName;
 	}
-	
-	public String toString() {
-		return propertyName;
+
+	@Override
+	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return new Type[] { criteriaQuery.getType( criteria, propertyName ) };
 	}
 
-	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
-		return new Type[] { criteriaQuery.getType(criteria, propertyName) };
-	}
-
-	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
-		StringBuilder buf = new StringBuilder();
-		String[] cols = criteriaQuery.getColumns( propertyName, criteria );
+	@Override
+	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) throws HibernateException {
+		final StringBuilder buf = new StringBuilder();
+		final String[] cols = criteriaQuery.getColumns( propertyName, criteria );
 		for ( int i=0; i<cols.length; i++ ) {
 			buf.append( cols[i] )
-				.append(" as y")
-				.append(position + i)
-				.append('_');
-			if (i < cols.length -1)
-			   buf.append(", ");
+					.append( " as y" )
+					.append( position + i )
+					.append( '_' );
+			if (i < cols.length -1) {
+				buf.append( ", " );
+			}
 		}
 		return buf.toString();
 	}
 
-	public boolean isGrouped() {
-		return grouped;
-	}
-	
-	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
-		if (!grouped) {
-			return super.toGroupSqlString(criteria, criteriaQuery);
+	@Override
+	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		if ( !grouped ) {
+			return super.toGroupSqlString( criteria, criteriaQuery );
 		}
 		else {
 			return StringHelper.join( ", ", criteriaQuery.getColumns( propertyName, criteria ) );
 		}
+	}
+
+	@Override
+	public String toString() {
+		return propertyName;
 	}
 
 }

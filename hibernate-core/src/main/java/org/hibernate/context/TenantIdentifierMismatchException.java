@@ -33,11 +33,22 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class TenantIdentifierMismatchException extends HibernateException{
+	/**
+	 * Constructs a TenantIdentifierMismatchException.
+	 *
+	 * @param message Message explaining the exception condition
+	 */
 	public TenantIdentifierMismatchException(String message) {
 		super( message );
 	}
 
-	public TenantIdentifierMismatchException(String message, Throwable root) {
-		super( message, root );
+	/**
+	 * Constructs a TenantIdentifierMismatchException.
+	 *
+	 * @param message Message explaining the exception condition
+	 * @param cause The underlying cause
+	 */
+	public TenantIdentifierMismatchException(String message, Throwable cause) {
+		super( message, cause );
 	}
 }

@@ -90,7 +90,7 @@ public final class StringHelper {
 	}
 
 	public static String[] add(String[] x, String sep, String[] y) {
-		String[] result = new String[x.length];
+		final String[] result = new String[x.length];
 		for ( int i = 0; i < x.length; i++ ) {
 			result[i] = x[i] + sep + y[i];
 		}

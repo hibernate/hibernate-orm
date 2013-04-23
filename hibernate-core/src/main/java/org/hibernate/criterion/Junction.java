@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.criterion;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -38,6 +38,7 @@ import org.hibernate.internal.util.StringHelper;
  * associative logical operator
  *
  * @author Gavin King
+ * @author Steve Ebersole
  */
 public class Junction implements Criterion {
 	private final Nature nature;
@@ -46,7 +47,19 @@ public class Junction implements Criterion {
 	protected Junction(Nature nature) {
 		this.nature = nature;
 	}
-	
+
+	protected Junction(Nature nature, Criterion... criterion) {
+		this( nature );
+		Collections.addAll( conditions, criterion );
+	}
+
+	/**
+	 * Adds a criterion to the junction (and/or)
+	 *
+	 * @param criterion The criterion to add
+	 *
+	 * @return {@code this}, for method chaining
+	 */
 	public Junction add(Criterion criterion) {
 		conditions.add( criterion );
 		return this;
@@ -56,15 +69,20 @@ public class Junction implements Criterion {
 		return nature;
 	}
 
+	/**
+	 * Access the conditions making up the junction
+	 *
+	 * @return the criterion
+	 */
 	public Iterable<Criterion> conditions() {
 		return conditions;
 	}
 
 	@Override
 	public TypedValue[] getTypedValues(Criteria crit, CriteriaQuery criteriaQuery) throws HibernateException {
-		ArrayList<TypedValue> typedValues = new ArrayList<TypedValue>();
+		final ArrayList<TypedValue> typedValues = new ArrayList<TypedValue>();
 		for ( Criterion condition : conditions ) {
-			TypedValue[] subValues = condition.getTypedValues( crit, criteriaQuery );
+			final TypedValue[] subValues = condition.getTypedValues( crit, criteriaQuery );
 			Collections.addAll( typedValues, subValues );
 		}
 		return typedValues.toArray( new TypedValue[ typedValues.size() ] );
@@ -76,15 +94,18 @@ public class Junction implements Criterion {
 			return "1=1";
 		}
 
-		StringBuilder buffer = new StringBuilder().append( '(' );
-		Iterator itr = conditions.iterator();
+		final StringBuilder buffer = new StringBuilder().append( '(' );
+		final Iterator itr = conditions.iterator();
 		while ( itr.hasNext() ) {
 			buffer.append( ( (Criterion) itr.next() ).toSqlString( crit, criteriaQuery ) );
 			if ( itr.hasNext() ) {
-				buffer.append(' ').append( nature.getOperator() ).append(' ');
+				buffer.append( ' ' )
+						.append( nature.getOperator() )
+						.append( ' ' );
 			}
 		}
-		return buffer.append(')').toString();
+
+		return buffer.append( ')' ).toString();
 	}
 
 	@Override
@@ -92,11 +113,24 @@ public class Junction implements Criterion {
 		return '(' + StringHelper.join( ' ' + nature.getOperator() + ' ', conditions.iterator() ) + ')';
 	}
 
+	/**
+	 * The type of junction
+	 */
 	public static enum Nature {
+		/**
+		 * An AND
+		 */
 		AND,
-		OR
-		;
+		/**
+		 * An OR
+		 */
+		OR;
 
+		/**
+		 * The corresponding SQL operator
+		 *
+		 * @return SQL operator
+		 */
 		public String getOperator() {
 			return name().toLowerCase();
 		}

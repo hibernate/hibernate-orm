@@ -24,10 +24,22 @@
 package org.hibernate.criterion;
 
 /**
+ * Defines a disjunction (OR series).
+ *
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @see Conjunction
  */
 public class Disjunction extends Junction {
+	/**
+	 * Constructs a Disjunction
+	 */
 	protected Disjunction() {
 		super( Nature.OR );
+	}
+
+	protected Disjunction(Criterion[] conditions) {
+		super( Nature.OR, conditions );
 	}
 }

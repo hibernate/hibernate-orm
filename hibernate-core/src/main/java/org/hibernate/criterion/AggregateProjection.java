@@ -52,13 +52,7 @@ public class AggregateProjection extends SimpleProjection {
 		return propertyName;
 	}
 
-	public String toString() {
-		return functionName + "(" + propertyName + ')';
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new Type[] {
 				getFunction( criteriaQuery ).getReturnType(
@@ -68,9 +62,7 @@ public class AggregateProjection extends SimpleProjection {
 		};
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String toSqlString(Criteria criteria, int loc, CriteriaQuery criteriaQuery) throws HibernateException {
 		final String functionFragment = getFunction( criteriaQuery ).render(
 				criteriaQuery.getType( criteria, getPropertyName() ),
@@ -85,7 +77,7 @@ public class AggregateProjection extends SimpleProjection {
 	}
 
 	protected SQLFunction getFunction(String functionName, CriteriaQuery criteriaQuery) {
-		SQLFunction function = criteriaQuery.getFactory()
+		final SQLFunction function = criteriaQuery.getFactory()
 				.getSqlFunctionRegistry()
 				.findSQLFunction( functionName );
 		if ( function == null ) {
@@ -101,4 +93,10 @@ public class AggregateProjection extends SimpleProjection {
 	protected List buildFunctionParameterList(String column) {
 		return Collections.singletonList( column );
 	}
+
+	@Override
+	public String toString() {
+		return functionName + "(" + propertyName + ')';
+	}
+
 }

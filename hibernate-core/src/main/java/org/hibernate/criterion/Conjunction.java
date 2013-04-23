@@ -24,10 +24,22 @@
 package org.hibernate.criterion;
 
 /**
+ * Defines a conjunction (AND series).
+ *
  * @author Gavin King
+ * @author Steve Ebersole
+ *
+ * @see Disjunction
  */
 public class Conjunction extends Junction {
+	/**
+	 * Constructs a Conjunction
+	 */
 	public Conjunction() {
 		super( Nature.AND );
+	}
+
+	protected Conjunction(Criterion... criterion) {
+		super( Nature.AND, criterion );
 	}
 }

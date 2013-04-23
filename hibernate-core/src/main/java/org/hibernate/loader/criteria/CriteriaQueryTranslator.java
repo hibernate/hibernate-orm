@@ -498,18 +498,18 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		}
 	}
 
-	public String[] getIdentifierColumns(Criteria subcriteria) {
+	public String[] getIdentifierColumns(Criteria criteria) {
 		String[] idcols =
-				( ( Loadable ) getPropertyMapping( getEntityName( subcriteria ) ) ).getIdentifierColumnNames();
-		return StringHelper.qualify( getSQLAlias( subcriteria ), idcols );
+				( ( Loadable ) getPropertyMapping( getEntityName( criteria ) ) ).getIdentifierColumnNames();
+		return StringHelper.qualify( getSQLAlias( criteria ), idcols );
 	}
 
-	public Type getIdentifierType(Criteria subcriteria) {
-		return ( ( Loadable ) getPropertyMapping( getEntityName( subcriteria ) ) ).getIdentifierType();
+	public Type getIdentifierType(Criteria criteria) {
+		return ( ( Loadable ) getPropertyMapping( getEntityName( criteria ) ) ).getIdentifierType();
 	}
 
-	public TypedValue getTypedIdentifierValue(Criteria subcriteria, Object value) {
-		final Loadable loadable = ( Loadable ) getPropertyMapping( getEntityName( subcriteria ) );
+	public TypedValue getTypedIdentifierValue(Criteria criteria, Object value) {
+		final Loadable loadable = ( Loadable ) getPropertyMapping( getEntityName( criteria ) );
 		return new TypedValue(
 				loadable.getIdentifierType(),
 		        value,
@@ -616,19 +616,11 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				else {
 					throw new QueryException( "Unsupported discriminator type " + type );
 				}
-				return new TypedValue(
-						type,
-				        value,
-				        EntityMode.POJO
-				);
+				return new TypedValue( type, value );
 			}
 		}
 		// Otherwise, this is an ordinary value.
-		return new TypedValue(
-				getTypeUsingProjection( subcriteria, propertyName ),
-		        value,
-		        EntityMode.POJO
-		);
+		return new TypedValue( getTypeUsingProjection( subcriteria, propertyName ), value );
 	}
 
 	private PropertyMapping getPropertyMapping(String entityName)

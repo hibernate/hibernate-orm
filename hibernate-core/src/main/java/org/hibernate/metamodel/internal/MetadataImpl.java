@@ -27,10 +27,12 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
@@ -62,6 +64,7 @@ import org.hibernate.metamodel.MetadataSourceProcessingOrder;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationMetadataSourceProcessorImpl;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.hbm.HbmMetadataSourceProcessorImpl;
 import org.hibernate.metamodel.spi.AdditionalJaxbRootProducer;
 import org.hibernate.metamodel.spi.MetadataContributor;
@@ -169,7 +172,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final IndexView jandexView = options.getJandexView() != null
 				? metadataSources.wrapJandexView( options.getJandexView() )
 				: metadataSources.buildJandexView();
-
+		Collection<AnnotationInstance> tables = jandexView.getAnnotations( JPADotNames.TABLE );
 		final MetadataSourceProcessor[] metadataSourceProcessors;
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {

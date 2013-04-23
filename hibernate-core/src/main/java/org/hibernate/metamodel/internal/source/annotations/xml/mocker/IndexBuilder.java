@@ -90,17 +90,19 @@ public class IndexBuilder {
 				//this class has been overrided by orm.xml
 				continue;
 			}
-			if ( ci.annotations() != null && !ci.annotations().isEmpty() ) {
+			ClassInfo mockedClassInfo = createClassInfo( name.toString() );
+			if ( CollectionHelper.isNotEmpty( ci.annotations() ) ) {
 				Map<DotName, List<AnnotationInstance>> tmp = new HashMap<DotName, List<AnnotationInstance>>( ci.annotations() );
 				DefaultConfigurationHelper.INSTANCE.applyDefaults( tmp, globalDefaults );
 				mergeAnnotationMap( tmp, annotations );
-				classes.put( name, ci );
-				if ( ci.superName() != null ) {
-					addSubClasses( ci.superName(), ci );
-				}
-				if ( ci.interfaces() != null && ci.interfaces().length > 0 ) {
-					addImplementors( ci.interfaces(), ci );
-				}
+				classInfoAnnotationsMap.get( name ).putAll( tmp );
+//				classes.put( name, ci );
+//				if ( ci.superName() != null ) {
+//					addSubClasses( ci.superName(), ci );
+//				}
+//				if ( CollectionHelper.isNotEmpty( ci.interfaces() ) ) {
+//					addImplementors( ci.interfaces(), ci );
+//				}
 			}
 		}
 		return Index.create(

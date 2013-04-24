@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import java.util.List;
 
 import org.hibernate.QueryException;
@@ -73,35 +74,26 @@ public class VarArgsSQLFunction implements SQLFunction {
 		this( null, begin, sep, end );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * Always returns true here.
-	 */
+	@Override
 	public boolean hasArguments() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * Always returns true here.
-	 */
+	@Override
 	public boolean hasParenthesesIfNoArguments() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
 		return registeredType == null ? firstArgumentType : registeredType;
 	}
 
+	@Override
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) {
-		StringBuilder buf = new StringBuilder().append( begin );
+		final StringBuilder buf = new StringBuilder().append( begin );
 		for ( int i = 0; i < arguments.size(); i++ ) {
-			buf.append( transformArgument( ( String ) arguments.get( i ) ) );
+			buf.append( transformArgument( (String) arguments.get( i ) ) );
 			if ( i < arguments.size() - 1 ) {
 				buf.append( sep );
 			}

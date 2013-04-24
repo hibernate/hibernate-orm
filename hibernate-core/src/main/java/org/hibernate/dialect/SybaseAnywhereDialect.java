@@ -28,13 +28,15 @@ package org.hibernate.dialect;
  * SQL Dialect for Sybase Anywhere
  * extending Sybase (Enterprise) Dialect
  * (Tested on ASA 8.x)
- * @author ?
  */
 public class SybaseAnywhereDialect extends SybaseDialect {
 	/**
 	 * Sybase Anywhere syntax would require a "DEFAULT" for each column specified,
 	 * but I suppose Hibernate use this syntax only with tables with just 1 column
+	 * <p/>
+	 * {@inheritDoc}
 	 */
+	@Override
 	public String getNoColumnsInsertString() {
 		return "values (default)";
 	}
@@ -44,11 +46,15 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	 * <p/>
 	 * NOTE : Also, the DROP statement syntax used by Hibernate to drop constraints is 
 	 * not compatible with ASA.
+	 * <p/>
+	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsInsertSelectIdentity() {
 		return false;
 	}

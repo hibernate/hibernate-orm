@@ -132,7 +132,7 @@ public class Order implements Serializable {
 			final StringBuilder expression = new StringBuilder();
 			boolean lower = false;
 			if ( ignoreCase ) {
-				int sqlType = sqlTypes[i];
+				final int sqlType = sqlTypes[i];
 				lower = sqlType == Types.VARCHAR
 						|| sqlType == Types.CHAR
 						|| sqlType == Types.LONGVARCHAR;

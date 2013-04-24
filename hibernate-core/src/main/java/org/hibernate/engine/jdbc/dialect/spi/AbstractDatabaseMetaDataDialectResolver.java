@@ -30,7 +30,6 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.JDBCException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.internal.CoreMessageLogger;
 

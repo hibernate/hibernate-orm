@@ -25,122 +25,126 @@ import org.hibernate.metamodel.relational.Table;
 import org.hibernate.metamodel.relational.UniqueKey;
 
 /**
- * Dialect-level delegate in charge of applying "uniqueness" to a column.
- * Uniqueness can be defined in 1 of 3 ways:
- * 
- * 1.) Add a unique constraint via separate alter table statements.
- * 2.) Add a unique constraint via dialect-specific syntax in table create statement.
- * 3.) Add "unique" syntax to the column itself.
- * 
- * #1 & #2 are preferred, if possible -- #3 should be solely a fall-back.
- * 
- * TODO: This could eventually be simplified.  With AST, 1 "applyUniqueness"
- * method might be possible. But due to .cfg and .mapping still resolving
- * around StringBuilders, separate methods were needed.
+ * Dialect-level delegate in charge of applying "uniqueness" to a column.  Uniqueness can be defined
+ * in 1 of 3 ways:<ol>
+ *     <li>
+ *         Add a unique constraint via separate alter table statements.  See {@link #getAlterTableToAddUniqueKeyCommand}.
+ *         Also, see {@link #getAlterTableToDropUniqueKeyCommand}
+ *     </li>
+ *     <li>
+ *			Add a unique constraint via dialect-specific syntax in table create statement.  See
+ *			{@link #getTableCreationUniqueConstraintsFragment}
+ *     </li>
+ *     <li>
+ *         Add "unique" syntax to the column itself.  See {@link #getColumnDefinitionUniquenessFragment}
+ *     </li>
+ * </ol>
+ *
+ * #1 & #2 are preferred, if possible; #3 should be solely a fall-back.
  * 
  * See HHH-7797.
  * 
  * @author Brett Meyer
  */
 public interface UniqueDelegate {
+	/**
+	 * Get the fragment that can be used to make a column unique as part of its column definition.
+	 * <p/>
+	 * This is intended for dialects which do not support unique constraints
+	 * 
+	 * @param column The column to which to apply the unique
+	 *
+	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
+	 * different approach
+	 */
+	public String getColumnDefinitionUniquenessFragment(org.hibernate.mapping.Column column);
+
+	/**
+	 * Get the fragment that can be used to make a column unique as part of its column definition.
+	 * <p/>
+	 * This is intended for dialects which do not support unique constraints
+	 *
+	 * @param column The column to which to apply the unique
+	 *
+	 * @return The fragment (usually "unique"), empty string indicates the uniqueness will be indicated using a
+	 * different approach
+	 */
+	public String getColumnDefinitionUniquenessFragment(Column column);
+
+	/**
+	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
+	 * should iterate over the {@link org.hibernate.mapping.UniqueKey} instances for the given table (see
+	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for all
+	 * unique keys
+	 * <p/>
+	 * Intended for Dialects which support unique constraint definitions, but just not in separate ALTER statements.
+	 *
+	 * @param table The table for which to generate the unique constraints fragment
+	 *
+	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
+	 * comma is important!
+	 */
+	public String getTableCreationUniqueConstraintsFragment(org.hibernate.mapping.Table table);
 	
 	/**
-	 * If the dialect does not supports unique constraints, this method should
-	 * return the syntax necessary to mutate the column definition
-	 * (usually "unique").
-	 * 
-	 * @param column
-	 * @return String
+	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
+	 * should iterate over the {@link org.hibernate.mapping.UniqueKey} instances for the given table (see
+	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for all
+	 * unique keys
+	 * <p/>
+	 * Intended for Dialects which support unique constraint definitions, but just not in separate ALTER statements.
+	 *
+	 * @param table The table for which to generate the unique constraints fragment
+	 *
+	 * @return The fragment, typically in the form {@code ", unique(col1, col2), unique( col20)"}.  NOTE: The leading
+	 * comma is important!
 	 */
-	public String applyUniqueToColumn( org.hibernate.mapping.Column column );
-	
+	public String getTableCreationUniqueConstraintsFragment(Table table);
+
 	/**
-	 * If the dialect does not supports unique constraints, this method should
-	 * return the syntax necessary to mutate the column definition
-	 * (usually "unique").
-	 * 
-	 * @param column
-	 * @return String
+	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
+	 *
+	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
+	 * @param defaultCatalog The default catalog
+	 * @param defaultSchema The default schema
+	 *
+	 * @return The ALTER TABLE command
 	 */
-	public String applyUniqueToColumn( Column column );
-	
+	public String getAlterTableToAddUniqueKeyCommand(
+			org.hibernate.mapping.UniqueKey uniqueKey,
+			String defaultCatalog,
+			String defaultSchema);
+
 	/**
-	 * If constraints are supported, but not in seperate alter statements,
-	 * return uniqueConstraintSql in order to add the constraint to the
-	 * original table definition.
-	 * 
-	 * @param table
-	 * @return String
+	 * Get the SQL ALTER TABLE command to be used to create the given UniqueKey.
+	 *
+	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns, as well as
+	 * schema/catalog
+	 *
+	 * @return The ALTER TABLE command
 	 */
-	public String applyUniquesToTable( org.hibernate.mapping.Table table );
-	
+	public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey);
+
 	/**
-	 * If constraints are supported, but not in seperate alter statements,
-	 * return uniqueConstraintSql in order to add the constraint to the
-	 * original table definition.
-	 * 
-	 * @param table
-	 * @return String
+	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
+	 *
+	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns
+	 * @param defaultCatalog The default catalog
+	 * @param defaultSchema The default schema
+	 *
+	 * @return The ALTER TABLE command
 	 */
-	public String applyUniquesToTable( Table table );
-	
+	public String getAlterTableToDropUniqueKeyCommand(
+			org.hibernate.mapping.UniqueKey uniqueKey,
+			String defaultCatalog, String defaultSchema);
+
 	/**
-	 * If creating unique constraints in separate alter statements is
-	 * supported, generate the necessary "alter" syntax for the given key.
-	 * 
-	 * @param uniqueKey
-	 * @param defaultCatalog
-	 * @param defaultSchema
-	 * @return String
+	 * Get the SQL ALTER TABLE command to be used to drop the given UniqueKey.
+	 *
+	 * @param uniqueKey The UniqueKey instance.  Contains all information about the columns, as well as
+	 * schema/catalog
+	 *
+	 * @return The ALTER TABLE command
 	 */
-	public String applyUniquesOnAlter( org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog, String defaultSchema );
-	
-	/**
-	 * If creating unique constraints in separate alter statements is
-	 * supported, generate the necessary "alter" syntax for the given key.
-	 * 
-	 * @param uniqueKey
-	 * @return String
-	 */
-	public String applyUniquesOnAlter( UniqueKey uniqueKey );
-	
-	/**
-	 * If dropping unique constraints in separate alter statements is
-	 * supported, generate the necessary "alter" syntax for the given key.
-	 * 
-	 * @param uniqueKey
-	 * @param defaultCatalog
-	 * @param defaultSchema
-	 * @return String
-	 */
-	public String dropUniquesOnAlter( org.hibernate.mapping.UniqueKey uniqueKey,
-			String defaultCatalog, String defaultSchema );
-	
-	/**
-	 * If dropping unique constraints in separate alter statements is
-	 * supported, generate the necessary "alter" syntax for the given key.
-	 * 
-	 * @param uniqueKey
-	 * @return String
-	 */
-	public String dropUniquesOnAlter( UniqueKey uniqueKey );
-	
-	/**
-	 * Generates the syntax necessary to create the unique constraint (reused
-	 * by all methods).  Ex: "unique (column1, column2, ...)"
-	 * 
-	 * @param uniqueKey
-	 * @return String
-	 */
-	public String uniqueConstraintSql( org.hibernate.mapping.UniqueKey uniqueKey );
-	
-	/**
-	 * Generates the syntax necessary to create the unique constraint (reused
-	 * by all methods).  Ex: "unique (column1, column2, ...)"
-	 * 
-	 * @param uniqueKey
-	 * @return String
-	 */
-	public String uniqueConstraintSql( UniqueKey uniqueKey );
+	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey);
 }

@@ -34,28 +34,39 @@ import org.hibernate.type.Type;
  * @author Jonathan Levinson
  */
 public class ConditionalParenthesisFunction extends StandardSQLFunction {
-
+	/**
+	 * Constructs a ConditionalParenthesisFunction with the given name
+	 *
+	 * @param name The function name
+	 */
 	public ConditionalParenthesisFunction(String name) {
 		super( name );
 	}
 
+	/**
+	 * Constructs a ConditionalParenthesisFunction with the given name
+	 *
+	 * @param name The function name
+	 * @param type The function return type
+	 */
 	public ConditionalParenthesisFunction(String name, Type type) {
 		super( name, type );
 	}
 
+	@Override
 	public boolean hasParenthesesIfNoArguments() {
 		return false;
 	}
 
-	public String render(List args, SessionFactoryImplementor factory) {
-		final boolean hasArgs = !args.isEmpty();
-		StringBuilder buf = new StringBuilder();
-		buf.append( getName() );
+	@Override
+	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
+		final boolean hasArgs = !arguments.isEmpty();
+		final StringBuilder buf = new StringBuilder( getName() );
 		if ( hasArgs ) {
 			buf.append( "(" );
-			for ( int i = 0; i < args.size(); i++ ) {
-				buf.append( args.get( i ) );
-				if ( i < args.size() - 1 ) {
+			for ( int i = 0; i < arguments.size(); i++ ) {
+				buf.append( arguments.get( i ) );
+				if ( i < arguments.size() - 1 ) {
 					buf.append( ", " );
 				}
 			}

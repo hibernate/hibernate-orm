@@ -204,7 +204,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 						.encloseInQuotesIfQuoted( dialect ) + '_' );
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
-						.applyUniqueToColumn( col ) );
+						.getColumnDefinitionUniquenessFragment( col ) );
 			}
 
 			if ( col.getCheckCondition() != null && dialect.supportsColumnCheck() ) {
@@ -223,7 +223,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 					.append( getPrimaryKey().sqlConstraintStringInCreateTable( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( this ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			for ( CheckConstraint checkConstraint : checkConstraints ) {

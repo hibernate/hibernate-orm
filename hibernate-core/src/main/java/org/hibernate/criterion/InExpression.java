@@ -109,7 +109,7 @@ public class InExpression implements Criterion {
 
 	@Override
 	public String toString() {
-		return propertyName + " in (" + StringHelper.toString(values) + ')';
+		return propertyName + " in (" + StringHelper.toString( values ) + ')';
 	}
 
 }

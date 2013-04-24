@@ -36,7 +36,11 @@ import org.hibernate.dialect.function.DerbyConcatFunction;
  * @author Simon Johnston
  * @author Scott Marlow
  */
+@SuppressWarnings("deprecation")
 public class DerbyTenFiveDialect extends DerbyDialect {
+	/**
+	 * Constructs a DerbyTenFiveDialect
+	 */
 	public DerbyTenFiveDialect() {
 		super();
 		registerFunction( "concat", new DerbyConcatFunction() );

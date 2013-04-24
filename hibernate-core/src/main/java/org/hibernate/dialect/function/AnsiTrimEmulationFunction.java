@@ -34,20 +34,51 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Ebersole
  */
 public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction {
+	/**
+	 * The default {@code ltrim} function name
+	 */
 	public static final String LTRIM = "ltrim";
+
+	/**
+	 * The default {@code rtrim} function name
+	 */
 	public static final String RTRIM = "rtrim";
+
+	/**
+	 * The default {@code replace} function name
+	 */
 	public static final String REPLACE = "replace";
+
+	/**
+	 * The placeholder used to represent whitespace
+	 */
 	public static final String SPACE_PLACEHOLDER = "${space}$";
 
+	/**
+	 * The SQLFunctionTemplate pattern for the trimming leading spaces
+	 */
 	public static final String LEADING_SPACE_TRIM_TEMPLATE = LTRIM + "(?1)";
+
+	/**
+	 * The SQLFunctionTemplate pattern for the trimming trailing spaces
+	 */
 	public static final String TRAILING_SPACE_TRIM_TEMPLATE = RTRIM + "(?1)";
+
+	/**
+	 * The SQLFunctionTemplate pattern for the trimming both leading and trailing spaces
+	 */
 	public static final String BOTH_SPACE_TRIM_TEMPLATE = LTRIM + "(" + RTRIM + "(?1))";
-	public static final String BOTH_SPACE_TRIM_FROM_TEMPLATE = LTRIM + "(" + RTRIM + "(?2))"; //skip the FROM keyword in params
+
+	/**
+	 * The SQLFunctionTemplate pattern for the trimming both leading and trailing spaces, with the optional FROM keyword.
+	 * Different because we need to skip the FROM keyword in the SQLFunctionTemplate processing
+	 */
+	public static final String BOTH_SPACE_TRIM_FROM_TEMPLATE = LTRIM + "(" + RTRIM + "(?2))";
 
 	/**
 	 * A template for the series of calls required to trim non-space chars from the beginning of text.
 	 * <p/>
-	 * NOTE : essentially we:</ol>
+	 * NOTE : essentially we:<ol>
 	 * <li>replace all space chars with the text '${space}$'</li>
 	 * <li>replace all the actual replacement chars with space chars</li>
 	 * <li>perform left-trimming (that removes any of the space chars we just added which occur at the beginning of the text)</li>
@@ -206,6 +237,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveBothSpaceTrimFunction() {
 		return bothSpaceTrim;
 	}
@@ -213,6 +245,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveBothSpaceTrimFromFunction() {
 		return bothSpaceTrimFrom;
 	}
@@ -220,6 +253,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveLeadingSpaceTrimFunction() {
 		return leadingSpaceTrim;
 	}
@@ -227,6 +261,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveTrailingSpaceTrimFunction() {
 		return trailingSpaceTrim;
 	}
@@ -234,6 +269,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveBothTrimFunction() {
 		return bothTrim;
 	}
@@ -241,6 +277,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveLeadingTrimFunction() {
 		return leadingTrim;
 	}
@@ -248,6 +285,7 @@ public class AnsiTrimEmulationFunction extends AbstractAnsiTrimEmulationFunction
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	protected SQLFunction resolveTrailingTrimFunction() {
 		return trailingTrim;
 	}

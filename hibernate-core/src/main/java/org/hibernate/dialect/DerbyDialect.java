@@ -48,28 +48,36 @@ import org.hibernate.sql.DerbyCaseFragment;
  */
 @Deprecated
 public class DerbyDialect extends DB2Dialect {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DerbyDialect.class.getName());
+	@SuppressWarnings("deprecation")
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			DerbyDialect.class.getName()
+	);
 
 	private int driverVersionMajor;
 	private int driverVersionMinor;
 
+	/**
+	 * Constructs a DerbyDialect
+	 */
+	@SuppressWarnings("deprecation")
 	public DerbyDialect() {
 		super();
-		if (this.getClass() == DerbyDialect.class) {
+		if ( this.getClass() == DerbyDialect.class ) {
 			LOG.deprecatedDerbyDialect();
 		}
+
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new AnsiTrimFunction() );
-        registerColumnType( Types.BLOB, "blob" );
-        determineDriverVersion();
+		registerColumnType( Types.BLOB, "blob" );
+		determineDriverVersion();
 
-        if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
-            registerColumnType( Types.BOOLEAN, "boolean" );
-        }
+		if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
+			registerColumnType( Types.BOOLEAN, "boolean" );
+		}
 	}
 
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@SuppressWarnings({"UnnecessaryUnboxing", "unchecked"})
 	private void determineDriverVersion() {
 		try {
 			// locate the derby sysinfo class and query its version info
@@ -91,25 +99,22 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-    public String getCrossJoinSeparator() {
+	public String getCrossJoinSeparator() {
 		return ", ";
 	}
 
-	/**
-	 * Return the case statement modified for Cloudscape.
-	 */
 	@Override
-    public CaseFragment createCaseFragment() {
+	public CaseFragment createCaseFragment() {
 		return new DerbyCaseFragment();
 	}
 
 	@Override
-    public boolean dropConstraints() {
-	      return true;
+	public boolean dropConstraints() {
+		return true;
 	}
 
 	@Override
-    public boolean supportsSequences() {
+	public boolean supportsSequences() {
 		// technically sequence support was added in 10.6.1.0...
 		//
 		// The problem though is that I am not exactly sure how to differentiate 10.6.1.0 from any other 10.6.x release.
@@ -134,33 +139,34 @@ public class DerbyDialect extends DB2Dialect {
 	}
 
 	@Override
-    public boolean supportsLimit() {
+	public boolean supportsLimit() {
 		return isTenPointFiveReleaseOrNewer();
 	}
 
-	//HHH-4531
 	@Override
-    public boolean supportsCommentOn() {
+	public boolean supportsCommentOn() {
+		//HHH-4531
 		return false;
 	}
 
 	@Override
-    public boolean supportsLimitOffset() {
+	@SuppressWarnings("deprecation")
+	public boolean supportsLimitOffset() {
 		return isTenPointFiveReleaseOrNewer();
 	}
 
-   @Override
-public String getForUpdateString() {
-		return " for update with rs";
-   }
-
 	@Override
-    public String getWriteLockString(int timeout) {
+	public String getForUpdateString() {
 		return " for update with rs";
 	}
 
 	@Override
-    public String getReadLockString(int timeout) {
+	public String getWriteLockString(int timeout) {
+		return " for update with rs";
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
 		return " for read only with rs";
 	}
 
@@ -179,9 +185,8 @@ public String getForUpdateString() {
 	 * </pre>
 	 */
 	@Override
-    public String getLimitString(String query, final int offset, final int limit) {
-		StringBuilder sb = new StringBuilder(query.length() + 50);
-
+	public String getLimitString(String query, final int offset, final int limit) {
+		final StringBuilder sb = new StringBuilder(query.length() + 50);
 		final String normalizedSelect = query.toLowerCase().trim();
 		final int forUpdateIndex = normalizedSelect.lastIndexOf( "for update") ;
 
@@ -215,7 +220,7 @@ public String getForUpdateString() {
 	}
 
 	@Override
-    public boolean supportsVariableLimit() {
+	public boolean supportsVariableLimit() {
 		// we bind the limit and offset values directly into the sql...
 		return false;
 	}
@@ -237,20 +242,20 @@ public String getForUpdateString() {
 	}
 
 	@Override
-    public String getQuerySequencesString() {
-	   return null ;
+	public String getQuerySequencesString() {
+		return null ;
 	}
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-    public boolean supportsLobValueChangePropogation() {
+	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
 
 	@Override
-    public boolean supportsUnboundedLobLocatorMaterialization() {
+	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
 	}
 }

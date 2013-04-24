@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.dialect.resolver;
+package org.hibernate.engine.jdbc.dialect.spi;
 import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
@@ -33,13 +33,25 @@ import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A helper to centralize conversion of {@link java.sql.SQLException}s to {@link org.hibernate.JDBCException}s.
+ * <p/>
+ * Used while querying JDBC metadata during bootstrapping
  *
  * @author Steve Ebersole
  */
 public class BasicSQLExceptionConverter {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			BasicSQLExceptionConverter.class.getName()
+	);
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicSQLExceptionConverter.class.getName() );
+	/**
+	 * Singleton access
+	 */
 	public static final BasicSQLExceptionConverter INSTANCE = new BasicSQLExceptionConverter();
+
+	/**
+	 *
+	 */
 	public static final String MSG = LOG.unableToQueryDatabaseMetadata();
 
 	private static final SQLStateConverter CONVERTER = new SQLStateConverter( new ConstraintNameExtracter() );

@@ -102,7 +102,7 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 	@SuppressWarnings("unchecked")
 	public SortedSet headSet(Object toElement) {
 		read();
-		final SortedSet headSet = ( (SortedSet) set ).headSet(toElement);
+		final SortedSet headSet = ( (SortedSet) set ).headSet( toElement );
 		return new SubSetProxy( headSet );
 	}
 

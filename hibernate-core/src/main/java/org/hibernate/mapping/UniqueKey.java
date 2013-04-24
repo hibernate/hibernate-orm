@@ -51,15 +51,17 @@ public class UniqueKey extends Constraint {
 	@Override
     public String sqlCreateString(Dialect dialect, Mapping p,
     		String defaultCatalog, String defaultSchema) {
-		return dialect.getUniqueDelegate().applyUniquesOnAlter(
-				this, defaultCatalog, defaultSchema );
+		return dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand(
+				this, defaultCatalog, defaultSchema
+		);
 	}
 
 	@Override
     public String sqlDropString(Dialect dialect, String defaultCatalog,
     		String defaultSchema) {
-		return dialect.getUniqueDelegate().dropUniquesOnAlter(
-				this, defaultCatalog, defaultSchema );
+		return dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand(
+				this, defaultCatalog, defaultSchema
+		);
 	}
 
 	public void addColumn(Column column, String order) {

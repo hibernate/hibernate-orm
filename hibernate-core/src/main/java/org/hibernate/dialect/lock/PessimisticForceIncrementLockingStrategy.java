@@ -64,9 +64,9 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
 		final EntityPersister persister = entry.getPersister();
-		Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
 		entry.forceLocked( object, nextVersion );
 	}
 

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
 
 /**
@@ -41,6 +42,9 @@ import java.sql.Types;
  *
  */
 public class ProgressDialect extends Dialect {
+	/**
+	 * Constructs a ProgressDialect
+	 */
 	public ProgressDialect() {
 		super();
 		registerColumnType( Types.BIT, "bit" );
@@ -59,14 +63,17 @@ public class ProgressDialect extends Dialect {
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
 	}
 
+	@Override
 	public boolean hasAlterTable(){
 		return false;
 	}
 
+	@Override
 	public String getAddColumnString() {
 		return "add column";
 	}
 
+	@Override
 	public boolean qualifyIndexName() {
 		return false;
 	}

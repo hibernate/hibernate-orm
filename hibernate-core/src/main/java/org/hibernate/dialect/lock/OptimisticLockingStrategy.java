@@ -43,7 +43,6 @@ import org.hibernate.persister.entity.Lockable;
  * @since 3.5
  */
 public class OptimisticLockingStrategy implements LockingStrategy {
-
 	private final Lockable lockable;
 	private final LockMode lockMode;
 
@@ -66,11 +65,9 @@ public class OptimisticLockingStrategy implements LockingStrategy {
 		if ( !lockable.isVersioned() ) {
 			throw new OptimisticLockException( object, "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		EntityEntry entry = session.getPersistenceContext().getEntry(object);
-		EventSource source = (EventSource)session;
-		EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess(object, entry);
+		final EntityEntry entry = session.getPersistenceContext().getEntry(object);
 		// Register the EntityVerifyVersionProcess action to run just prior to transaction commit.
-		source.getActionQueue().registerProcess(verifyVersion);
+		( (EventSource) session ).getActionQueue().registerProcess( new EntityVerifyVersionProcess( object, entry ) );
 	}
 
 	protected LockMode getLockMode() {

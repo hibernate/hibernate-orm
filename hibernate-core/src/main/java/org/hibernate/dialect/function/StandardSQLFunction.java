@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import java.util.List;
 
 import org.hibernate.engine.spi.Mapping;
@@ -84,32 +85,24 @@ public class StandardSQLFunction implements SQLFunction {
 		return registeredType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean hasArguments() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean hasParenthesesIfNoArguments() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getReturnType(Type firstArgumentType, Mapping mapping) {
 		return registeredType == null ? firstArgumentType : registeredType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
-		StringBuilder buf = new StringBuilder();
+		final StringBuilder buf = new StringBuilder();
 		buf.append( name ).append( '(' );
 		for ( int i = 0; i < arguments.size(); i++ ) {
 			buf.append( arguments.get( i ) );
@@ -120,6 +113,7 @@ public class StandardSQLFunction implements SQLFunction {
 		return buf.append( ')' ).toString();
 	}
 
+	@Override
 	public String toString() {
 		return name;
 	}

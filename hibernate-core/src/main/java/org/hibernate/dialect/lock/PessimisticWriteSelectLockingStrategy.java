@@ -69,10 +69,10 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 	@Override
 	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session) {
 		final String sql = determineSql( timeout );
-		SessionFactoryImplementor factory = session.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 		try {
 			try {
-				PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+				final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
 					getLockable().getIdentifierType().nullSafeSet( st, id, 1, session );
 					if ( getLockable().isVersioned() ) {
@@ -84,7 +84,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 						);
 					}
 
-					ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+					final ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 					try {
 						if ( !rs.next() ) {
 							if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -116,10 +116,10 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 	}
 
 	protected String generateLockString(int lockTimeout) {
-		SessionFactoryImplementor factory = getLockable().getFactory();
-		LockOptions lockOptions = new LockOptions( getLockMode() );
+		final SessionFactoryImplementor factory = getLockable().getFactory();
+		final LockOptions lockOptions = new LockOptions( getLockMode() );
 		lockOptions.setTimeOut( lockTimeout );
-		SimpleSelect select = new SimpleSelect( factory.getDialect() )
+		final SimpleSelect select = new SimpleSelect( factory.getDialect() )
 				.setLockOptions( lockOptions )
 				.setTableName( getLockable().getRootTableName() )
 				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )

@@ -101,7 +101,7 @@ public class PersistentMapElementHolder extends PersistentIndexedElementHolder {
 		final Serializable[] result = new Serializable[length*2];
 		int i = 0;
 		while ( i < length*2 ) {
-			final Element elem = (Element) elements.get(i/2);
+			final Element elem = (Element) elements.get( i/2 );
 			final Object object = elementType.fromXMLNode( elem, persister.getFactory() );
 			final String indexString = getIndex( elem, indexNodeName, i );
 			final Object index = ( (XmlRepresentableType) indexType ).fromXMLString( indexString, persister.getFactory() );

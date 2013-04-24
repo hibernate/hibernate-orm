@@ -29,11 +29,24 @@ package org.hibernate.dialect.lock;
  * @author Steve Ebersole
  */
 public class OptimisticEntityLockException extends LockingStrategyException {
+	/**
+	 * Constructs a OptimisticEntityLockException
+	 *
+	 * @param entity The entity we were trying to lock
+	 * @param message Message explaining the condition
+	 */
 	public OptimisticEntityLockException(Object entity, String message) {
 		super( entity, message );
 	}
 
-	public OptimisticEntityLockException(Object entity, String message, Throwable root) {
-		super( entity, message, root );
+	/**
+	 * Constructs a OptimisticEntityLockException
+	 *
+	 * @param entity The entity we were trying to lock
+	 * @param message Message explaining the condition
+	 * @param cause The underlying cause
+	 */
+	public OptimisticEntityLockException(Object entity, String message, Throwable cause) {
+		super( entity, message, cause );
 	}
 }

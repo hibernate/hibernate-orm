@@ -65,11 +65,9 @@ public class OptimisticForceIncrementLockingStrategy implements LockingStrategy 
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "[" + lockMode + "] not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		EntityEntry entry = session.getPersistenceContext().getEntry( object );
-		EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess( object, entry );
-		EventSource source = (EventSource) session;
-		// Register the EntityIncrementVersionProcess action to run just prior to transaction commit. 
-		source.getActionQueue().registerProcess( incrementVersion );
+		final EntityEntry entry = session.getPersistenceContext().getEntry( object );
+		// Register the EntityIncrementVersionProcess action to run just prior to transaction commit.
+		( (EventSource) session ).getActionQueue().registerProcess( new EntityIncrementVersionProcess( object, entry ) );
 	}
 
 	protected LockMode getLockMode() {

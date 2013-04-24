@@ -36,21 +36,28 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class TemplateRenderer {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TemplateRenderer.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			TemplateRenderer.class.getName()
+	);
 
 	private final String template;
 	private final String[] chunks;
 	private final int[] paramIndexes;
 
+	/**
+	 * Constructs a template renderer
+	 *
+	 * @param template The template
+	 */
 	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	public TemplateRenderer(String template) {
 		this.template = template;
 
-		List<String> chunkList = new ArrayList<String>();
-		List<Integer> paramList = new ArrayList<Integer>();
-		StringBuilder chunk = new StringBuilder( 10 );
-		StringBuilder index = new StringBuilder( 2 );
+		final List<String> chunkList = new ArrayList<String>();
+		final List<Integer> paramList = new ArrayList<Integer>();
+		final StringBuilder chunk = new StringBuilder( 10 );
+		final StringBuilder index = new StringBuilder( 2 );
 
 		for ( int i = 0; i < template.length(); ++i ) {
 			char c = template.charAt( i );
@@ -96,13 +103,21 @@ public class TemplateRenderer {
 		return paramIndexes.length;
 	}
 
+	/**
+	 * The rendering code.
+	 *
+	 * @param args The arguments to inject into the template
+	 * @param factory The SessionFactory
+	 *
+	 * @return The rendered template with replacements
+	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
 	public String render(List args, SessionFactoryImplementor factory) {
-		int numberOfArguments = args.size();
+		final int numberOfArguments = args.size();
 		if ( getAnticipatedNumberOfArguments() > 0 && numberOfArguments != getAnticipatedNumberOfArguments() ) {
 			LOG.missingArguments( getAnticipatedNumberOfArguments(), numberOfArguments );
 		}
-		StringBuilder buf = new StringBuilder();
+		final StringBuilder buf = new StringBuilder();
 		for ( int i = 0; i < chunks.length; ++i ) {
 			if ( i < paramIndexes.length ) {
 				final int index = paramIndexes[i] - 1;

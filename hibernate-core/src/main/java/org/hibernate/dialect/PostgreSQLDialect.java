@@ -23,7 +23,6 @@
  */
 package org.hibernate.dialect;
 
-
 /**
  * An SQL dialect for Postgres
  * <p/>
@@ -32,6 +31,7 @@ package org.hibernate.dialect;
  * For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
  *
  * @author Gavin King
+ *
  * @deprecated use {@link PostgreSQL82Dialect} instead
  */
 @Deprecated

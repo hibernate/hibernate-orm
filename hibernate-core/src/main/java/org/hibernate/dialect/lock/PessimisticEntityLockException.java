@@ -31,7 +31,14 @@ import org.hibernate.JDBCException;
  * @author Steve Ebersole
  */
 public class PessimisticEntityLockException extends LockingStrategyException {
-	public PessimisticEntityLockException(Object entity, String message, JDBCException root) {
-		super( entity, message, root );
+	/**
+	 * Constructs a PessimisticEntityLockException
+	 *
+	 * @param entity The entity we were trying to lock
+	 * @param message Message explaining the condition
+	 * @param cause The underlying cause
+	 */
+	public PessimisticEntityLockException(Object entity, String message, JDBCException cause) {
+		super( entity, message, cause );
 	}
 }

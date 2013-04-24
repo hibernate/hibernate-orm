@@ -27,16 +27,11 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.JDBCException;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.QueryTimeoutException;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
-import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.type.StandardBasicTypes;
@@ -49,6 +44,9 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SybaseASE157Dialect extends SybaseASE15Dialect {
 
+	/**
+	 * Constructs a SybaseASE157Dialect
+	 */
 	public SybaseASE157Dialect() {
 		super();
 
@@ -60,40 +58,43 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 		registerFunction( "charindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "charindex(?1, ?2, ?3)" ) );
 	}
 
-	//HHH-7298 I don't know if this would break something or cause some side affects
-	//but it is required to use 'select for update'
 	@Override
 	public String getTableTypeString() {
+		//HHH-7298 I don't know if this would break something or cause some side affects
+		//but it is required to use 'select for update'
 		return " lock datarows";
 	}
 
-	// support Lob Locator
 	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		return true;
 	}
+
 	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
 
-	// support 'select ... for update [of columns]'
 	@Override
 	public boolean forUpdateOfColumns() {
 		return true;
 	}
+
 	@Override
 	public String getForUpdateString() {
 		return " for update";
 	}
+
 	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
+
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		return tableName;
 	}
+
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
@@ -118,6 +119,4 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 			}
 		};
 	}
-
-
 }

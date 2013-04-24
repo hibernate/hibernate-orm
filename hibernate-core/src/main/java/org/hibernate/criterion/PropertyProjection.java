@@ -44,7 +44,7 @@ public class PropertyProjection extends SimpleProjection {
 	}
 
 	protected PropertyProjection(String prop) {
-		this(prop, false);
+		this( prop, false );
 	}
 
 	@Override

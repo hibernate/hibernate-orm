@@ -29,9 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -65,12 +63,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
  */
-public class EntityWithOneToManyResultSetProcessorTest extends BaseCoreFunctionalTestCase {
+public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -78,7 +75,7 @@ public class EntityWithOneToManyResultSetProcessorTest extends BaseCoreFunctiona
 	}
 
 	@Test
-	public void testEntityWithSet() throws Exception {
+	public void testEntityWithList() throws Exception {
 		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
 
 		// create some test data
@@ -108,18 +105,10 @@ public class EntityWithOneToManyResultSetProcessorTest extends BaseCoreFunctiona
 		assertEquals( poster.name, posterGotten.name );
 		assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
 		assertEquals( 2, posterGotten.messages.size() );
-		for ( Message message : posterGotten.messages ) {
-			if ( message.mid == 1 ) {
-				assertEquals( message1.msgTxt, message.msgTxt );
-			}
-			else if ( message.mid == 2 ) {
-				assertEquals( message2.msgTxt, message.msgTxt );
-			}
-			else {
-				fail( "unexpected message id." );
-			}
-			assertSame( posterGotten, message.poster );
-		}
+		assertEquals( message1.msgTxt, posterGotten.messages.get( 0 ).msgTxt );
+		assertEquals( message2.msgTxt, posterGotten.messages.get( 1 ).msgTxt );
+		assertSame( posterGotten, posterGotten.messages.get( 0 ).poster );
+		assertSame( posterGotten, posterGotten.messages.get( 1 ).poster );
 		session.getTransaction().commit();
 		session.close();
 
@@ -189,18 +178,10 @@ public class EntityWithOneToManyResultSetProcessorTest extends BaseCoreFunctiona
 			assertEquals( 2, workPoster.messages.size() );
 			assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
 			assertEquals( 2, workPoster.messages.size() );
-			for ( Message message : workPoster.messages ) {
-				if ( message.mid == 1 ) {
-					assertEquals( message1.msgTxt, message.msgTxt );
-				}
-				else if ( message.mid == 2 ) {
-					assertEquals( message2.msgTxt, message.msgTxt );
-				}
-				else {
-					fail( "unexpected message id." );
-				}
-				assertSame( workPoster, message.poster );
-			}
+			assertEquals( message1.msgTxt, workPoster.messages.get( 0 ).msgTxt );
+			assertEquals( message2.msgTxt, workPoster.messages.get( 1 ).msgTxt );
+			assertSame( workPoster, workPoster.messages.get( 0 ).poster );
+			assertSame( workPoster, workPoster.messages.get( 1 ).poster );
 			workSession.getTransaction().commit();
 			workSession.close();
 		}
@@ -229,6 +210,6 @@ public class EntityWithOneToManyResultSetProcessorTest extends BaseCoreFunctiona
 		private Integer pid;
 		private String name;
 		@OneToMany(mappedBy = "poster", fetch = FetchType.EAGER, cascade = CascadeType.ALL )
-		private Set<Message> messages = new HashSet<Message>();
+		private List<Message> messages = new ArrayList<Message>();
 	}
 }

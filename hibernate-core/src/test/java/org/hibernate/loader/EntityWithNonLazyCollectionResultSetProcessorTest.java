@@ -67,7 +67,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gail Badner
  */
-public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunctionalTestCase {
+public class EntityWithNonLazyCollectionResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

@@ -72,21 +72,21 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 			public Iterator<AttributeDefinition> iterator() {
 				return new Iterator<AttributeDefinition>() {
 					private final int numberOfAttributes = getType().getSubtypes().length;
-					private int currentAttributeNumber = 0;
+					private int currentSubAttributeNumber = 0;
 					private int currentColumnPosition = 0;
 
 					@Override
 					public boolean hasNext() {
-						return currentAttributeNumber < numberOfAttributes;
+						return currentSubAttributeNumber < numberOfAttributes;
 					}
 
 					@Override
 					public AttributeDefinition next() {
-						final int attributeNumber = currentAttributeNumber;
-						currentAttributeNumber++;
+						final int subAttributeNumber = currentSubAttributeNumber;
+						currentSubAttributeNumber++;
 
-						final String name = getType().getPropertyNames()[attributeNumber];
-						final Type type = getType().getSubtypes()[attributeNumber];
+						final String name = getType().getPropertyNames()[subAttributeNumber];
+						final Type type = getType().getSubtypes()[subAttributeNumber];
 
 						int columnPosition = currentColumnPosition;
 						currentColumnPosition += type.getColumnSpan( sessionFactory() );
@@ -122,7 +122,7 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 							return new CompositeBasedAssociationAttribute(
 									AbstractCompositionDefinition.this,
 									sessionFactory(),
-									currentAttributeNumber,
+									subAttributeNumber,
 									name,
 									(AssociationType) type,
 									new BaselineAttributeInformation.Builder()
@@ -130,11 +130,11 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 											.setUpdateable( AbstractCompositionDefinition.this.isUpdateable() )
 											.setInsertGenerated( AbstractCompositionDefinition.this.isInsertGenerated() )
 											.setUpdateGenerated( AbstractCompositionDefinition.this.isUpdateGenerated() )
-											.setNullable( getType().getPropertyNullability()[currentAttributeNumber] )
+											.setNullable( getType().getPropertyNullability()[subAttributeNumber] )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionDefinition.this.isVersionable() )
-											.setCascadeStyle( getType().getCascadeStyle( currentAttributeNumber ) )
-											.setFetchMode( getType().getFetchMode( currentAttributeNumber ) )
+											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
+											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
 											.createInformation(),
 									AbstractCompositionDefinition.this.attributeNumber(),
 									associationKey
@@ -144,7 +144,7 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 							return new CompositionBasedCompositionAttribute(
 									AbstractCompositionDefinition.this,
 									sessionFactory(),
-									currentAttributeNumber,
+									subAttributeNumber,
 									name,
 									(CompositeType) type,
 									new BaselineAttributeInformation.Builder()
@@ -152,11 +152,11 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 											.setUpdateable( AbstractCompositionDefinition.this.isUpdateable() )
 											.setInsertGenerated( AbstractCompositionDefinition.this.isInsertGenerated() )
 											.setUpdateGenerated( AbstractCompositionDefinition.this.isUpdateGenerated() )
-											.setNullable( getType().getPropertyNullability()[currentAttributeNumber] )
+											.setNullable( getType().getPropertyNullability()[subAttributeNumber] )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionDefinition.this.isVersionable() )
-											.setCascadeStyle( getType().getCascadeStyle( currentAttributeNumber ) )
-											.setFetchMode( getType().getFetchMode( currentAttributeNumber ) )
+											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
+											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
 											.createInformation()
 							);
 						}
@@ -164,7 +164,7 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 							return new CompositeBasedBasicAttribute(
 									AbstractCompositionDefinition.this,
 									sessionFactory(),
-									currentAttributeNumber,
+									subAttributeNumber,
 									name,
 									type,
 									new BaselineAttributeInformation.Builder()
@@ -172,11 +172,11 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 											.setUpdateable( AbstractCompositionDefinition.this.isUpdateable() )
 											.setInsertGenerated( AbstractCompositionDefinition.this.isInsertGenerated() )
 											.setUpdateGenerated( AbstractCompositionDefinition.this.isUpdateGenerated() )
-											.setNullable( getType().getPropertyNullability()[currentAttributeNumber] )
+											.setNullable( getType().getPropertyNullability()[subAttributeNumber] )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionDefinition.this.isVersionable() )
-											.setCascadeStyle( getType().getCascadeStyle( currentAttributeNumber ) )
-											.setFetchMode( getType().getFetchMode( currentAttributeNumber ) )
+											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
+											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
 											.createInformation()
 							);
 						}

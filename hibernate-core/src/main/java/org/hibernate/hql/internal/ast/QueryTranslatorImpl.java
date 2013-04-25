@@ -211,7 +211,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 		catch ( QueryException qe ) {
 			if ( qe.getQueryString() == null ) {
-				throw new QueryException( qe.getMessage(), hql, qe );
+				throw qe.wrapWithQueryString( hql );
 			}
 			else {
 				throw qe;

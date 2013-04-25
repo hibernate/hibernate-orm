@@ -90,11 +90,31 @@ public class QueryException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		String msg = super.getMessage();
+		String msg = getOriginalMessage();
 		if ( queryString != null ) {
 			msg += " [" + queryString + ']';
 		}
 		return msg;
 	}
 
+	protected final String getOriginalMessage() {
+		return super.getMessage();
+	}
+
+	/**
+	 *
+	 * @param queryString
+	 * @return
+	 */
+	public final QueryException wrapWithQueryString(String queryString) {
+		if ( this.getQueryString() != null ) {
+			return this;
+		}
+
+		return doWrapWithQueryString( queryString );
+	}
+
+	protected QueryException doWrapWithQueryString(String queryString) {
+		return new QueryException( getOriginalMessage(), queryString, this );
+	}
 }

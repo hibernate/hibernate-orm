@@ -37,4 +37,20 @@ public class QueryParameterException extends QueryException {
 	public QueryParameterException(String message) {
 		super( message );
 	}
+
+	/**
+	 * Constructs a QueryParameterException
+	 *
+	 * @param message The message explaining the exception condition
+	 * @param queryString The query that led to the exception
+	 * @param cause The underlying cause
+	 */
+	public QueryParameterException(String message, String queryString, Exception cause) {
+		super( message, queryString, cause );
+	}
+
+	@Override
+	protected QueryException doWrapWithQueryString(String queryString) {
+		return new QueryParameterException( super.getOriginalMessage(), queryString, this );
+	}
 }

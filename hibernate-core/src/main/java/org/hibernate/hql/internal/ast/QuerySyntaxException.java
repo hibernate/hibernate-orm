@@ -42,6 +42,10 @@ public class QuerySyntaxException extends QueryException {
 		super( message, hql );
 	}
 
+	protected QuerySyntaxException(String message, String queryString, Exception cause) {
+		super( message, queryString, cause );
+	}
+
 	public static QuerySyntaxException convert(RecognitionException e) {
 		return convert( e, null );
 	}
@@ -53,4 +57,8 @@ public class QuerySyntaxException extends QueryException {
 		return new QuerySyntaxException( e.getMessage() + positionInfo, hql );
 	}
 
+	@Override
+	protected QueryException doWrapWithQueryString(String queryString) {
+		return new QuerySyntaxException( getOriginalMessage(), queryString, this );
+	}
 }

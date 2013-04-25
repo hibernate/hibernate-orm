@@ -410,7 +410,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			AST hqlSqlWithNode = returnAST;
             if (LOG.isDebugEnabled()) LOG.debugf("handleWithFragment() : %s",
                                                  getASTPrinter().showAsString(hqlSqlWithNode, "-- with clause --"));
-			WithClauseVisitor visitor = new WithClauseVisitor( fromElement );
+			WithClauseVisitor visitor = new WithClauseVisitor( fromElement, queryTranslatorImpl );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
 
@@ -421,7 +421,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			else {
 				FromElement referencedFromElement = visitor.getReferencedFromElement();
 				if ( referencedFromElement != fromElement ) {
-					throw new InvalidWithClauseException( "with-clause expressions did not reference from-clause element to which the with-clause was associated" );
+					throw new InvalidWithClauseException(
+							"with-clause expressions did not reference from-clause element to which the with-clause was associated",
+							queryTranslatorImpl.getQueryString()
+					);
 				}
 			}
 
@@ -443,11 +446,14 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	private static class WithClauseVisitor implements NodeTraverser.VisitationStrategy {
 		private final FromElement joinFragment;
+		private final QueryTranslatorImpl queryTranslatorImpl;
+
 		private FromElement referencedFromElement;
 		private String joinAlias;
 
-		public WithClauseVisitor(FromElement fromElement) {
+		public WithClauseVisitor(FromElement fromElement, QueryTranslatorImpl queryTranslatorImpl) {
 			this.joinFragment = fromElement;
+			this.queryTranslatorImpl = queryTranslatorImpl;
 		}
 
 		public void visit(AST node) {
@@ -477,7 +483,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
                     // creates and renders the join fragments for inheritance
 					//      hierarchies...
 					if ( !joinAlias.equals( referencedFromElement.getTableAlias() ) ) {
-						throw new InvalidWithClauseException( "with clause can only reference columns in the driving table" );
+						throw new InvalidWithClauseException(
+								"with clause can only reference columns in the driving table",
+								queryTranslatorImpl.getQueryString()
+						);
 					}
 				}
 			}

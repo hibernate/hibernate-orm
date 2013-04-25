@@ -26,6 +26,7 @@ package org.hibernate.service.jdbc.connections.internal;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.logging.Logger;
@@ -41,13 +42,15 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * A connection provider that uses a Proxool connection pool. Hibernate will use this by
  * default if the <tt>hibernate.proxool.*</tt> properties are set.
  * @see ConnectionProvider
  */
-public class ProxoolConnectionProvider implements ConnectionProvider {
+public class ProxoolConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
 
     public static final ProxoolMessageLogger LOG = Logger.getMessageLogger(ProxoolMessageLogger.class, ProxoolConnectionProvider.class.getName());
 
@@ -69,12 +72,13 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 	 * @return a JDBC connection
 	 * @throws SQLException
 	 */
+	@Override
 	public Connection getConnection() throws SQLException {
 	    // get a connection from the pool (thru DriverManager, cfr. Proxool doc)
 		Connection c = DriverManager.getConnection(proxoolAlias);
 
 		// set the Transaction Isolation if defined
-		if (isolation!=null) c.setTransactionIsolation( isolation.intValue() );
+		if (isolation!=null) c.setTransactionIsolation( isolation );
 
 		// toggle autoCommit to false if set
 		if ( c.getAutoCommit()!=autocommit ) c.setAutoCommit(autocommit);
@@ -106,6 +110,7 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 	 * @param conn a JDBC connection
 	 * @throws SQLException
 	 */
+	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		conn.close();
 	}
@@ -114,15 +119,16 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 	 * Initialize the connection provider from given properties.
 	 * @param props <tt>SessionFactory</tt> properties
 	 */
-	public void configure(Properties props) throws HibernateException {
+	@Override
+	public void configure(Map props)  {
 
 		// Get the configurator files (if available)
-		String jaxpFile = props.getProperty(Environment.PROXOOL_XML);
-		String propFile = props.getProperty(Environment.PROXOOL_PROPERTIES);
-		String externalConfig = props.getProperty(Environment.PROXOOL_EXISTING_POOL);
+		String jaxpFile = (String)props.get(Environment.PROXOOL_XML);
+		String propFile = (String)props.get(Environment.PROXOOL_PROPERTIES);
+		String externalConfig = (String)props.get(Environment.PROXOOL_EXISTING_POOL);
 
 		// Default the Proxool alias setting
-		proxoolAlias = props.getProperty(Environment.PROXOOL_POOL_ALIAS);
+		proxoolAlias = (String)props.get(Environment.PROXOOL_POOL_ALIAS);
 
 		// Configured outside of Hibernate (i.e. Servlet container, or Java Bean Container
 		// already has Proxool pools running, and this provider is to just borrow one of these
@@ -235,8 +241,14 @@ public class ProxoolConnectionProvider implements ConnectionProvider {
 	/**
 	 * @see ConnectionProvider#supportsAggressiveRelease()
 	 */
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}
 
+
+	@Override
+	public void stop() {
+		close();
+	}
 }

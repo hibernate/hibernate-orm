@@ -169,4 +169,41 @@ public class Order implements Serializable {
 				+ ( ascending ? "asc" : "desc" )
 				+ ( nullPrecedence != null ? ' ' + nullPrecedence.name().toLowerCase() : "" );
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (ascending ? 1231 : 1237);
+		result = prime * result + (ignoreCase ? 1231 : 1237);
+		result = prime * result
+				+ ((nullPrecedence == null) ? 0 : nullPrecedence.hashCode());
+		result = prime * result
+				+ ((propertyName == null) ? 0 : propertyName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Order other = (Order) obj;
+		if (ascending != other.ascending)
+			return false;
+		if (ignoreCase != other.ignoreCase)
+			return false;
+		if (nullPrecedence != other.nullPrecedence)
+			return false;
+		if (propertyName == null) {
+			if (other.propertyName != null)
+				return false;
+		} else if (!propertyName.equals(other.propertyName))
+			return false;
+		return true;
+	}
+	
 }

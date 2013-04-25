@@ -279,8 +279,8 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 			IllegalArgumentException deserializedException = ( IllegalArgumentException ) in.readObject();
 			in.close();
 			byteIn.close();
-			assertNull( deserializedException.getCause().getCause() );
-			assertNull( e.getCause().getCause() );
+			assertNull( deserializedException.getCause().getCause().getCause() );
+			assertNull( e.getCause().getCause().getCause() );
 		}
 		em.getTransaction().rollback();
 		em.close();

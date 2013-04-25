@@ -100,24 +100,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
         return isAllTestsIgnored;
     }
 
-
-	@Override
-	public void run(RunNotifier notifier) {
-		super.run( notifier );
-
-		cleanup();
-	}
-
-	private void cleanup() {
-		if ( computedTestMethods != null && !computedTestMethods.isEmpty() ) {
-			computedTestMethods.clear();
-			computedTestMethods = null;
-		}
-		testInstance = null;
-		testClassMetadata = null;
-	}
-
-	@Override
+    @Override
     protected Statement withBeforeClasses(Statement statement) {
         if ( isAllTestsIgnored() ) {
             return super.withBeforeClasses( statement );

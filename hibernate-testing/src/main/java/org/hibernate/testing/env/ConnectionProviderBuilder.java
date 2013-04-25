@@ -77,6 +77,6 @@ public class ConnectionProviderBuilder {
 	}
 
 	public static Dialect getCorrespondingDialect() {
-		return new H2Dialect();
+		return TestingDatabaseInfo.DIALECT;
 	}
 }

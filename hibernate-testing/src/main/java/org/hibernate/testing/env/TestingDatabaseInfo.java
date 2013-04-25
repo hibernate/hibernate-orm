@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate;
+package org.hibernate.testing.env;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;

@@ -5,6 +5,7 @@ import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServerDialect;
@@ -23,12 +24,13 @@ public class NullablePrimaryKeyTest {
 	public void testGeneratedSql() {
 
 		ServiceRegistry serviceRegistry = null;
+		SessionFactory sf = null;
 		try {
 			AnnotationConfiguration config = new AnnotationConfiguration();
 			config.addAnnotatedClass(Address.class);
 			config.addAnnotatedClass(Person.class);
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
-			config.buildSessionFactory( serviceRegistry );
+			sf = config.buildSessionFactory( serviceRegistry );
 			String[] schema = config
 					.generateSchemaCreationScript(new SQLServerDialect());
 			for (String s : schema) {
@@ -41,9 +43,13 @@ public class NullablePrimaryKeyTest {
 			Assert.fail(e.getMessage());
 		}
 		finally {
+			if ( sf != null ) {
+				sf.close();
+			}
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
+
 		}
 	}
 }

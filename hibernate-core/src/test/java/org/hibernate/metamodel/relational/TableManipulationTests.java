@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -133,7 +134,7 @@ public class TableManipulationTests extends BaseUnitTestCase {
 
 	@Test
 	public void testQualifiedName() {
-		Dialect dialect = new H2Dialect();
+		Dialect dialect = TestingDatabaseInfo.DIALECT;
 		Schema schema = new Schema( Identifier.toIdentifier( "schema" ), Identifier.toIdentifier( "`catalog`" ) );
 		Table table = schema.createTable( Identifier.toIdentifier( "my_table" ) );
 		assertEquals( "my_table", table.getTableName().getName() );

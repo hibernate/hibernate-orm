@@ -40,9 +40,9 @@ public class ErrorCounter implements ParseErrorHandler {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ErrorCounter.class.getName());
 
-	private List errorList = new ArrayList();
-	private List warningList = new ArrayList();
-	private List recognitionExceptions = new ArrayList();
+	private List<String> errorList = new ArrayList<String>();
+	private List<String> warningList = new ArrayList<String>();
+	private List<RecognitionException> recognitionExceptions = new ArrayList<RecognitionException>();
 
 	public void reportError(RecognitionException e) {
 		reportError( e.toString() );
@@ -66,8 +66,8 @@ public class ErrorCounter implements ParseErrorHandler {
 
 	private String getErrorString() {
 		StringBuilder buf = new StringBuilder();
-		for ( Iterator iterator = errorList.iterator(); iterator.hasNext(); ) {
-			buf.append( ( String ) iterator.next() );
+		for ( Iterator<String> iterator = errorList.iterator(); iterator.hasNext(); ) {
+			buf.append( iterator.next() );
 			if ( iterator.hasNext() ) buf.append( "\n" );
 
 		}
@@ -76,7 +76,7 @@ public class ErrorCounter implements ParseErrorHandler {
 
 	public void throwQueryException() throws QueryException {
 		if ( getErrorCount() > 0 ) {
-            if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert((RecognitionException)recognitionExceptions.get(0));
+            if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert(recognitionExceptions.get(0));
             throw new QueryException(getErrorString());
         }
 		LOG.debug("throwQueryException() : no errors");

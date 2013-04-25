@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -55,7 +56,7 @@ public class ObjectNameTests extends BaseUnitTestCase {
 
 	@Test
 	public void testIdentifierBuilding() {
-		Dialect dialect = new H2Dialect();
+		Dialect dialect = TestingDatabaseInfo.DIALECT;
 		ObjectName on = new ObjectName( "schema", "catalog", "name" );
 		assertEquals( "schema.catalog.name", on.toText() );
 		on = new ObjectName( "schema", null, "name" );

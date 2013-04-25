@@ -29,10 +29,11 @@ import java.util.List;
 import org.junit.Test;
 import org.logicalcobwebs.proxool.ProxoolFacade;
 
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.ServiceRegistryBuilder;
+import org.hibernate.service.internal.StandardServiceRegistryImpl;
+import org.hibernate.service.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -50,19 +51,18 @@ public class ProxoolConnectionProviderTest extends BaseUnitTestCase {
 	@Test
 	public void testPoolsClosed() {
 		assertDefinedPools(); // zero-length-vararg used as parameter
-		StandardServiceRegistry serviceRegistry = buildServiceRegistry( "pool-one" );
+		StandardServiceRegistryImpl serviceRegistry = (StandardServiceRegistryImpl)buildServiceRegistry( "pool-one" );
 		ConnectionProvider providerOne = serviceRegistry.getService( ConnectionProvider.class );
 		assertDefinedPools( "pool-one" );
 
 
-		StandardServiceRegistry serviceRegistryTwo = buildServiceRegistry( "pool-two" );
+		StandardServiceRegistryImpl serviceRegistryTwo = (StandardServiceRegistryImpl)buildServiceRegistry( "pool-two" );
 		ConnectionProvider providerTwo = serviceRegistryTwo.getService( ConnectionProvider.class );
 		assertDefinedPools( "pool-one", "pool-two" );
-		
-		StandardServiceRegistryBuilder.destroy( serviceRegistry );
+		serviceRegistry.destroy();
 		assertDefinedPools( "pool-two" );
 
-		StandardServiceRegistryBuilder.destroy( serviceRegistryTwo );
+		serviceRegistryTwo.destroy();
 		assertDefinedPools();
 	}
 
@@ -75,13 +75,13 @@ public class ProxoolConnectionProviderTest extends BaseUnitTestCase {
 	}
 
 
-	private StandardServiceRegistry buildServiceRegistry(String poolName){
+	private ServiceRegistry buildServiceRegistry(String poolName){
 
-		return new StandardServiceRegistryBuilder(  )
+		return new ServiceRegistryBuilder(  )
 				.applySetting( Environment.PROXOOL_POOL_ALIAS, poolName )
 				.applySetting( Environment.PROXOOL_PROPERTIES, poolName + ".properties" )
 				.applySetting( Environment.CONNECTION_PROVIDER, ProxoolConnectionProvider.class.getName() )
-				.build();
+				.buildServiceRegistry();
 
 	}
 }

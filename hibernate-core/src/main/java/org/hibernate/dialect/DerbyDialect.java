@@ -210,7 +210,7 @@ public class DerbyDialect extends DB2Dialect {
 		sb.append( limit ).append( " rows only" );
 
 		if ( hasForUpdateClause( forUpdateIndex ) ) {
-			sb.append(' ');
+			sb.append( ' ' );
 			sb.append( query.substring( forUpdateIndex ) );
 		}
 		else if ( hasWithClause( normalizedSelect ) ) {

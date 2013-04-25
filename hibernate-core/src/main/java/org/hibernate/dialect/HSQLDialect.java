@@ -65,6 +65,7 @@ import org.jboss.logging.Logger;
  * @author Phillip Baird
  * @author Fred Toussi
  */
+@SuppressWarnings("deprecation")
 public class HSQLDialect extends Dialect {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -158,7 +159,8 @@ public class HSQLDialect extends Dialect {
 		// datetime functions
 		if ( hsqldbVersion < 20 ) {
 			registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.DATE, false ) );
-		} else {
+		}
+		else {
 			registerFunction( "sysdate", new NoArgSQLFunction( "sysdate", StandardBasicTypes.TIMESTAMP, false ) );
 		}
 		registerFunction( "current_date", new NoArgSQLFunction( "current_date", StandardBasicTypes.DATE, false ) );

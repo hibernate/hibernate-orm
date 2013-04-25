@@ -310,7 +310,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 			pos = lowercase.indexOf( search, cur );
 			if ( pos != -1 ) {
 				for ( int iter = cur; iter < pos; iter++ ) {
-					char c = sb.charAt( iter );
+					final char c = sb.charAt( iter );
 					if ( c == '(' ) {
 						depth = depth + 1;
 					}

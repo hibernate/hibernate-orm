@@ -693,7 +693,7 @@ public abstract class Dialect implements ConversionContext {
 	// keyword support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	protected void registerKeyword(String word) {
-		sqlKeywords.add(word);
+		sqlKeywords.add( word );
 	}
 
 	public Set<String> getKeywords() {

@@ -122,7 +122,7 @@ public class Oracle9iDialect extends Oracle8iDialect {
 		else if ( timeout > 0 ) {
 			// convert from milliseconds to seconds
 			final float seconds = timeout / 1000.0f;
-			timeout = Math.round(seconds);
+			timeout = Math.round( seconds );
 			return " for update wait " + timeout;
 		}
 		else {

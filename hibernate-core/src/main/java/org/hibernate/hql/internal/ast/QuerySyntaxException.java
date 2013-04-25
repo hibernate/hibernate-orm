@@ -39,8 +39,7 @@ public class QuerySyntaxException extends QueryException {
 	}
 
 	public QuerySyntaxException(String message, String hql) {
-		this( message );
-		setQueryString( hql );
+		super( message, hql );
 	}
 
 	public static QuerySyntaxException convert(RecognitionException e) {

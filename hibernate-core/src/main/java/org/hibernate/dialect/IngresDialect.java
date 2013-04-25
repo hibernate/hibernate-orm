@@ -298,7 +298,7 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsExpectedLobUsagePattern () {
+	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}
 

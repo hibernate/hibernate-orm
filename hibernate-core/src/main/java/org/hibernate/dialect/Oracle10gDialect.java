@@ -54,7 +54,7 @@ public class Oracle10gDialect extends Oracle9iDialect {
 			return  getForUpdateSkipLockedString();
 		}
 		else {
-			return super.getWriteLockString(timeout);
+			return super.getWriteLockString( timeout );
 		}
 	}
 

@@ -35,6 +35,7 @@ import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
@@ -437,8 +438,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	) {
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), Cascade.BEFORE_MERGE, source )
-					.cascade(persister, entity, copyCache);
+			new Cascade( getCascadeAction(), CascadePoint.BEFORE_MERGE, source ).cascade( persister, entity, copyCache );
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

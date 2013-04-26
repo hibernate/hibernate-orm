@@ -32,6 +32,7 @@ import org.hibernate.LockMode;
 import org.hibernate.ReplicationMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityKey;
@@ -209,8 +210,11 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			EventSource source) {
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( CascadingActions.REPLICATE, Cascade.AFTER_UPDATE, source )
-					.cascade( persister, entity, replicationMode );
+			new Cascade( CascadingActions.REPLICATE, CascadePoint.AFTER_UPDATE, source ).cascade(
+					persister,
+					entity,
+					replicationMode
+			);
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

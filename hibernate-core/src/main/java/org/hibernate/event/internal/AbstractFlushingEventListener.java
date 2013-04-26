@@ -34,6 +34,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.Collections;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CascadingAction;
@@ -159,8 +160,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	throws HibernateException {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadingAction(), Cascade.BEFORE_FLUSH, session )
-			.cascade( persister, object, anything );
+			new Cascade( getCascadingAction(), CascadePoint.BEFORE_FLUSH, session ).cascade( persister, object, anything );
 		}
 		finally {
 			session.getPersistenceContext().decrementCascadeLevel();

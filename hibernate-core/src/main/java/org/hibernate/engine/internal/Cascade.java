@@ -37,11 +37,9 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -59,65 +57,26 @@ import org.hibernate.type.Type;
  * @see org.hibernate.engine.spi.CascadingAction
  */
 public final class Cascade {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			Cascade.class.getName()
+	);
+
+	private final CascadingAction action;
+	private final EventSource eventSource;
+	private CascadePoint cascadePoint;
 
 	/**
-	 * A cascade point that occurs just after the insertion of the parent entity and
-	 * just before deletion
+	 * Constructs a Cascade
+	 *
+	 * @param action The action we are cascading
+	 * @param cascadePoint The point in the action at which we are trying to cascade currently
+	 * @param eventSource The session
 	 */
-	public static final int AFTER_INSERT_BEFORE_DELETE = 1;
-	/**
-	 * A cascade point that occurs just before the insertion of the parent entity and
-	 * just after deletion
-	 */
-	public static final int BEFORE_INSERT_AFTER_DELETE = 2;
-	/**
-	 * A cascade point that occurs just after the insertion of the parent entity and
-	 * just before deletion, inside a collection
-	 */
-	public static final int AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION = 3;
-	/**
-	 * A cascade point that occurs just after update of the parent entity
-	 */
-	public static final int AFTER_UPDATE = 0;
-	/**
-	 * A cascade point that occurs just before the session is flushed
-	 */
-	public static final int BEFORE_FLUSH = 0;
-	/**
-	 * A cascade point that occurs just after eviction of the parent entity from the
-	 * session cache
-	 */
-	public static final int AFTER_EVICT = 0;
-	/**
-	 * A cascade point that occurs just after locking a transient parent entity into the
-	 * session cache
-	 */
-	public static final int BEFORE_REFRESH = 0;
-	/**
-	 * A cascade point that occurs just after refreshing a parent entity
-	 */
-	public static final int AFTER_LOCK = 0;
-	/**
-	 * A cascade point that occurs just before merging from a transient parent entity into
-	 * the object in the session cache
-	 */
-	public static final int BEFORE_MERGE = 0;
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Cascade.class.getName());
-
-
-	private int cascadeTo;
-	private EventSource eventSource;
-	private CascadingAction action;
-
-	public Cascade(final CascadingAction action, final int cascadeTo, final EventSource eventSource) {
-		this.cascadeTo = cascadeTo;
+	public Cascade(final CascadingAction action, final CascadePoint cascadePoint, final EventSource eventSource) {
+		this.cascadePoint = cascadePoint;
 		this.eventSource = eventSource;
 		this.action = action;
-	}
-
-	private SessionFactoryImplementor getFactory() {
-		return eventSource.getFactory();
 	}
 
 	/**
@@ -125,10 +84,8 @@ public final class Cascade {
 	 *
 	 * @param persister The parent's entity persister
 	 * @param parent The parent reference.
-	 * @throws HibernateException
 	 */
-	public void cascade(final EntityPersister persister, final Object parent)
-	throws HibernateException {
+	public void cascade(final EntityPersister persister, final Object parent) {
 		cascade( persister, parent, null );
 	}
 
@@ -140,20 +97,18 @@ public final class Cascade {
 	 * @param parent The parent reference.
 	 * @param anything Anything ;)   Typically some form of cascade-local cache
 	 * which is specific to each CascadingAction type
-	 * @throws HibernateException
 	 */
-	public void cascade(final EntityPersister persister, final Object parent, final Object anything)
-			throws HibernateException {
-
-		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) { // performance opt
+	public void cascade(final EntityPersister persister, final Object parent, final Object anything) {
+		if ( persister.hasCascades() || action.requiresNoCascadeChecking() ) {
+			// performance opt
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 
-			Type[] types = persister.getPropertyTypes();
-			CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
-			boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
+			final Type[] types = persister.getPropertyTypes();
+			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
+			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
 			for ( int i=0; i<types.length; i++) {
 				final CascadeStyle style = cascadeStyles[i];
 				final String propertyName = persister.getPropertyNames()[i];
@@ -164,13 +119,13 @@ public final class Cascade {
 
 				if ( style.doCascade( action ) ) {
 					cascadeProperty(
-						    parent,
-					        persister.getPropertyValue( parent, i ),
-					        types[i],
-					        style,
+							parent,
+							persister.getPropertyValue( parent, i ),
+							types[i],
+							style,
 							propertyName,
-					        anything,
-					        false
+							anything,
+							false
 					);
 				}
 				else if ( action.requiresNoCascadeChecking() ) {
@@ -204,7 +159,7 @@ public final class Cascade {
 
 		if (child!=null) {
 			if ( type.isAssociationType() ) {
-				AssociationType associationType = (AssociationType) type;
+				final AssociationType associationType = (AssociationType) type;
 				if ( cascadeAssociationNow( associationType ) ) {
 					cascadeAssociation(
 							parent,
@@ -287,10 +242,10 @@ public final class Cascade {
 		return type.isEntityType() && ( (EntityType) type ).isLogicalOneToOne();
 	}
 
-	private Stack componentPathStack = new Stack();
+	private Stack<String> componentPathStack = new Stack<String>();
 
 	private boolean cascadeAssociationNow(AssociationType associationType) {
-		return associationType.getForeignKeyDirection().cascadeNow(cascadeTo);
+		return associationType.getForeignKeyDirection().cascadeNow( cascadePoint );
 	}
 
 	private void cascadeComponent(
@@ -300,12 +255,12 @@ public final class Cascade {
 			final String componentPropertyName,
 			final Object anything) {
 		componentPathStack.push( componentPropertyName );
-		Object[] children = componentType.getPropertyValues( child, eventSource );
-		Type[] types = componentType.getSubtypes();
+		final Object[] children = componentType.getPropertyValues( child, eventSource );
+		final Type[] types = componentType.getSubtypes();
 		for ( int i=0; i<types.length; i++ ) {
 			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle(i);
 			final String subPropertyName = componentType.getPropertyNames()[i];
-			if ( componentPropertyStyle.doCascade(action) ) {
+			if ( componentPropertyStyle.doCascade( action ) ) {
 				cascadeProperty(
 						parent,
 						children[i],
@@ -344,13 +299,12 @@ public final class Cascade {
 			final CascadeStyle style,
 			final Object anything,
 			final CollectionType type) {
-		CollectionPersister persister = eventSource.getFactory()
-				.getCollectionPersister( type.getRole() );
-		Type elemType = persister.getElementType();
+		final CollectionPersister persister = eventSource.getFactory().getCollectionPersister( type.getRole() );
+		final Type elemType = persister.getElementType();
 
-		final int oldCascadeTo = cascadeTo;
-		if ( cascadeTo==AFTER_INSERT_BEFORE_DELETE) {
-			cascadeTo = AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION;
+		final CascadePoint originalCascadePoint = cascadePoint;
+		if ( cascadePoint == CascadePoint.AFTER_INSERT_BEFORE_DELETE) {
+			cascadePoint = CascadePoint.AFTER_INSERT_BEFORE_DELETE_VIA_COLLECTION;
 		}
 
 		//cascade to current collection elements
@@ -366,7 +320,7 @@ public final class Cascade {
 			);
 		}
 
-		cascadeTo = oldCascadeTo;
+		cascadePoint = originalCascadePoint;
 	}
 
 	/**
@@ -382,13 +336,14 @@ public final class Cascade {
 		final String entityName = type.isEntityType()
 				? ( (EntityType) type ).getAssociatedEntityName()
 				: null;
-		if ( style.reallyDoCascade(action) ) { //not really necessary, but good for consistency...
-			eventSource.getPersistenceContext().addChildParent(child, parent);
+		if ( style.reallyDoCascade( action ) ) {
+			//not really necessary, but good for consistency...
+			eventSource.getPersistenceContext().addChildParent( child, parent );
 			try {
-				action.cascade(eventSource, child, entityName, anything, isCascadeDeleteEnabled);
+				action.cascade( eventSource, child, entityName, anything, isCascadeDeleteEnabled );
 			}
 			finally {
-				eventSource.getPersistenceContext().removeChildParent(child);
+				eventSource.getPersistenceContext().removeChildParent( child );
 			}
 		}
 	}
@@ -404,26 +359,25 @@ public final class Cascade {
 			final Type elemType,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-
-		boolean reallyDoCascade = style.reallyDoCascade(action) && child!=CollectionType.UNFETCHED_COLLECTION;
+		final boolean reallyDoCascade = style.reallyDoCascade( action ) && child != CollectionType.UNFETCHED_COLLECTION;
 
 		if ( reallyDoCascade ) {
-            final boolean traceEnabled = LOG.isTraceEnabled();
+			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
 				LOG.tracev( "Cascade {0} for collection: {1}", action, collectionType.getRole() );
 			}
 
-			Iterator iter = action.getCascadableChildrenIterator(eventSource, collectionType, child);
-			while ( iter.hasNext() ) {
+			final Iterator itr = action.getCascadableChildrenIterator( eventSource, collectionType, child );
+			while ( itr.hasNext() ) {
 				cascadeProperty(
 						parent,
-						iter.next(),
+						itr.next(),
 						elemType,
 						style,
 						null,
 						anything,
 						isCascadeDeleteEnabled
-					);
+				);
 			}
 
 			if ( traceEnabled ) {
@@ -431,12 +385,13 @@ public final class Cascade {
 			}
 		}
 
-		final boolean deleteOrphans = style.hasOrphanDelete() &&
-				action.deleteOrphans() &&
-				elemType.isEntityType() &&
-				child instanceof PersistentCollection; //a newly instantiated collection can't have orphans
+		final boolean deleteOrphans = style.hasOrphanDelete()
+				&& action.deleteOrphans()
+				&& elemType.isEntityType()
+				// a newly instantiated collection can't have orphans
+				&& child instanceof PersistentCollection;
 
-		if ( deleteOrphans ) { // handle orphaned entities!!
+		if ( deleteOrphans ) {
 			final boolean traceEnabled = LOG.isTraceEnabled();
 			if ( traceEnabled ) {
 				LOG.tracev( "Deleting orphans for collection: {0}", collectionType.getRole() );
@@ -460,19 +415,17 @@ public final class Cascade {
 		//TODO: suck this logic into the collection!
 		final Collection orphans;
 		if ( pc.wasInitialized() ) {
-			CollectionEntry ce = eventSource.getPersistenceContext().getCollectionEntry(pc);
-			orphans = ce==null ?
-					java.util.Collections.EMPTY_LIST :
-					ce.getOrphans(entityName, pc);
+			final CollectionEntry ce = eventSource.getPersistenceContext().getCollectionEntry( pc );
+			orphans = ce==null
+					? java.util.Collections.EMPTY_LIST
+					: ce.getOrphans( entityName, pc );
 		}
 		else {
-			orphans = pc.getQueuedOrphans(entityName);
+			orphans = pc.getQueuedOrphans( entityName );
 		}
 
-		final Iterator orphanIter = orphans.iterator();
-		while ( orphanIter.hasNext() ) {
-			Object orphan = orphanIter.next();
-			if (orphan!=null) {
+		for ( Object orphan : orphans ) {
+			if ( orphan != null ) {
 				LOG.tracev( "Deleting orphaned entity instance: {0}", entityName );
 				eventSource.delete( entityName, orphan, false, new HashSet() );
 			}

@@ -34,6 +34,7 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.bytecode.instrumentation.spi.FieldInterceptor;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.CascadingAction;
@@ -421,8 +422,11 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// cascade-save to many-to-one BEFORE the parent is saved
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), Cascade.BEFORE_INSERT_AFTER_DELETE, source )
-					.cascade( persister, entity, anything );
+			new Cascade( getCascadeAction(), CascadePoint.BEFORE_INSERT_AFTER_DELETE, source ).cascade(
+					persister,
+					entity,
+					anything
+			);
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();
@@ -446,8 +450,11 @@ public abstract class AbstractSaveEventListener extends AbstractReassociateEvent
 		// cascade-save to collections AFTER the collection owner was saved
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), Cascade.AFTER_INSERT_BEFORE_DELETE, source )
-					.cascade( persister, entity, anything );
+			new Cascade( getCascadeAction(), CascadePoint.AFTER_INSERT_BEFORE_DELETE, source ).cascade(
+					persister,
+					entity,
+					anything
+			);
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

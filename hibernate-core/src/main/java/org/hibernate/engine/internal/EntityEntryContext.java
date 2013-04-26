@@ -31,7 +31,6 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
@@ -56,22 +55,31 @@ public class EntityEntryContext {
 
 	private transient ManagedEntity head;
 	private transient ManagedEntity tail;
-	private transient int count = 0;
+	private transient int count;
 
 	private transient IdentityHashMap<Object,ManagedEntity> nonEnhancedEntityXref;
 
 	@SuppressWarnings( {"unchecked"})
 	private transient Map.Entry<Object,EntityEntry>[] reentrantSafeEntries = new Map.Entry[0];
-	private transient boolean dirty = false;
+	private transient boolean dirty;
 
+	/**
+	 * Constructs a EntityEntryContext
+	 */
 	public EntityEntryContext() {
 	}
 
+	/**
+	 * Adds the entity and entry to this context, associating them together
+	 *
+	 * @param entity The entity
+	 * @param entityEntry The entry
+	 */
 	public void addEntityEntry(Object entity, EntityEntry entityEntry) {
 		// IMPORTANT!!!!!
 		//		add is called more than once of some entities.  In such cases the first
 		//		call is simply setting up a "marker" to avoid infinite looping from reentrancy
-		//
+
 		// any addition (even the double one described above) should invalidate the cross-ref array
 		dirty = true;
 
@@ -127,11 +135,26 @@ public class EntityEntryContext {
 		}
 	}
 
+	/**
+	 * Does this entity exist in this context, associated with an EntityEntry?
+	 *
+	 * @param entity The entity to check
+	 *
+	 * @return {@code true} if it is associated with this context
+	 */
 	public boolean hasEntityEntry(Object entity) {
 		return getEntityEntry( entity ) != null;
 	}
 
+	/**
+	 * Retrieve the associated EntityEntry for the entity
+	 *
+	 * @param entity The entity to retrieve the EntityEntry for
+	 *
+	 * @return The associated EntityEntry
+	 */
 	public EntityEntry getEntityEntry(Object entity) {
+		// essentially resolve the entity to a ManagedEntity...
 		final ManagedEntity managedEntity;
 		if ( ManagedEntity.class.isInstance( entity ) ) {
 			managedEntity = (ManagedEntity) entity;
@@ -143,14 +166,23 @@ public class EntityEntryContext {
 			managedEntity = nonEnhancedEntityXref.get( entity );
 		}
 
+		// and get/return the EntityEntry from the ManagedEntry
 		return managedEntity == null
 				? null
 				: managedEntity.$$_hibernate_getEntityEntry();
 	}
 
+	/**
+	 * Remove an entity from the context, returning the EntityEntry which was associated with it
+	 *
+	 * @param entity The entity to remove
+	 *
+	 * @return Tjee EntityEntry
+	 */
 	public EntityEntry removeEntityEntry(Object entity) {
 		dirty = true;
 
+		// again, resolve the entity to a ManagedEntity (which may not be possible for non-enhanced)...
 		final ManagedEntity managedEntity;
 		if ( ManagedEntity.class.isInstance( entity ) ) {
 			managedEntity = (ManagedEntity) entity;
@@ -162,16 +194,18 @@ public class EntityEntryContext {
 			managedEntity = nonEnhancedEntityXref.remove( entity );
 		}
 
+		// if we could not resolve it, just return (it was not associated with this context)
 		if ( managedEntity == null ) {
 			return null;
 		}
 
 		// prepare for re-linking...
-		ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
-		ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
+		final ManagedEntity previous = managedEntity.$$_hibernate_getPreviousManagedEntity();
+		final ManagedEntity next = managedEntity.$$_hibernate_getNextManagedEntity();
 		managedEntity.$$_hibernate_setPreviousManagedEntity( null );
 		managedEntity.$$_hibernate_setNextManagedEntity( null );
 
+		// re-link
 		count--;
 
 		if ( count == 0 ) {
@@ -203,11 +237,20 @@ public class EntityEntryContext {
 			}
 		}
 
-		EntityEntry theEntityEntry = managedEntity.$$_hibernate_getEntityEntry();
+		// finally clean out the ManagedEntity and return the associated EntityEntry
+		final EntityEntry theEntityEntry = managedEntity.$$_hibernate_getEntityEntry();
 		managedEntity.$$_hibernate_setEntityEntry( null );
 		return theEntityEntry;
 	}
 
+	/**
+	 * The main bugaboo with IdentityMap that warranted this class in the first place.
+	 *
+	 * Return an array of all the entity/EntityEntry pairs in this context.  The array is to make sure
+	 * that the iterators built off of it are safe from concurrency/reentrancy
+	 *
+	 * @return The safe array
+	 */
 	public Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
 		if ( dirty ) {
 			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
@@ -225,6 +268,9 @@ public class EntityEntryContext {
 		return reentrantSafeEntries;
 	}
 
+	/**
+	 * Clear this context of all managed entities
+	 */
 	public void clear() {
 		dirty = true;
 
@@ -250,6 +296,9 @@ public class EntityEntryContext {
 		reentrantSafeEntries = null;
 	}
 
+	/**
+	 * Down-grade locks to NONE for all entities in this context
+	 */
 	public void downgradeLocks() {
 		if ( head == null ) {
 			return;
@@ -263,6 +312,13 @@ public class EntityEntryContext {
 		}
 	}
 
+	/**
+	 * JDK serialization hook for serializing
+	 *
+	 * @param oos The stream to write ourselves to
+	 *
+	 * @throws IOException Indicates an IO exception accessing the given stream
+	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		log.tracef( "Starting serialization of [%s] EntityEntry entries", count );
 		oos.writeInt( count );
@@ -281,7 +337,17 @@ public class EntityEntryContext {
 		}
 	}
 
-	public static EntityEntryContext deserialize(ObjectInputStream ois, StatefulPersistenceContext rtn) throws IOException, ClassNotFoundException {
+	/**
+	 * JDK serialization hook for deserializing
+	 *
+	 * @param ois The stream to read ourselves from
+	 * @param rtn The persistence context we belong to
+	 *
+	 * @throws IOException Indicates an IO exception accessing the given stream
+	 * @throws ClassNotFoundException Problem reading stream data
+	 */
+	public static EntityEntryContext deserialize(ObjectInputStream ois, StatefulPersistenceContext rtn)
+			throws IOException, ClassNotFoundException {
 		final int count = ois.readInt();
 		log.tracef( "Starting deserialization of [%s] EntityEntry entries", count );
 
@@ -332,6 +398,9 @@ public class EntityEntryContext {
 		return count;
 	}
 
+	/**
+	 * The wrapper for entity classes which do not implement ManagedEntity
+	 */
 	private static class ManagedEntityImpl implements ManagedEntity {
 		private final Object entityInstance;
 		private EntityEntry entityEntry;
@@ -378,6 +447,28 @@ public class EntityEntryContext {
 		}
 	}
 
+	/**
+	 * Used in building the {@link #reentrantSafeEntityEntries()} entries
+	 */
+	public static interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
+		/**
+		 * The entity
+		 *
+		 * @return The entity
+		 */
+		public Object getEntity();
+
+		/**
+		 * The associated EntityEntry
+		 *
+		 * @return The EntityEntry associated with the entity in this context
+		 */
+		public EntityEntry getEntityEntry();
+	}
+
+	/**
+	 * Implementation of the EntityEntryCrossRef interface
+	 */
 	private static class EntityEntryCrossRefImpl implements EntityEntryCrossRef {
 		private final Object entity;
 		private EntityEntry entityEntry;
@@ -413,10 +504,5 @@ public class EntityEntryContext {
 			this.entityEntry = entityEntry;
 			return old;
 		}
-	}
-
-	public static interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
-		public Object getEntity();
-		public EntityEntry getEntityEntry();
 	}
 }

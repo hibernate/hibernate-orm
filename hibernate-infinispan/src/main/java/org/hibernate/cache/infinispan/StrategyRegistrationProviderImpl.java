@@ -21,14 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.ehcache;
+package org.hibernate.cache.infinispan;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.boot.registry.selector.Availability;
-import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
-import org.hibernate.boot.registry.selector.SimpleAvailabilityImpl;
+import org.hibernate.boot.registry.selector.StrategyRegistration;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.cache.spi.RegionFactory;
 
 /**
@@ -37,32 +37,29 @@ import org.hibernate.cache.spi.RegionFactory;
  *
  * @author Steve Ebersole
  */
-public class AvailabilityAnnouncerImpl implements AvailabilityAnnouncer {
+public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
 	@Override
-	@SuppressWarnings("unchecked")
-	public Iterable<Availability> getAvailabilities() {
-		final List<Availability> availabilities = new ArrayList<Availability>();
+	public Iterable<StrategyRegistration> getStrategyRegistrations() {
+		final List<StrategyRegistration> strategyRegistrations = new ArrayList<StrategyRegistration>();
 
-		availabilities.add(
-				new SimpleAvailabilityImpl(
+		strategyRegistrations.add(
+				new SimpleStrategyRegistrationImpl(
 						RegionFactory.class,
-						EhCacheRegionFactory.class,
-						"ehcache",
-						EhCacheRegionFactory.class.getSimpleName(),
-						"org.hibernate.cache.EhCacheRegionFactory" // legacy impl class name
+						InfinispanRegionFactory.class,
+						"infinispan",
+						InfinispanRegionFactory.class.getSimpleName()
 				)
 		);
 
-		availabilities.add(
-				new SimpleAvailabilityImpl(
+		strategyRegistrations.add(
+				new SimpleStrategyRegistrationImpl(
 						RegionFactory.class,
-						SingletonEhCacheRegionFactory.class,
-						"ehcache-singleton",
-						SingletonEhCacheRegionFactory.class.getSimpleName(),
-						"org.hibernate.cache.SingletonEhCacheRegionFactory" // legacy impl class name
+						JndiInfinispanRegionFactory.class,
+						"infinispan-jndi",
+						JndiInfinispanRegionFactory.class.getSimpleName()
 				)
 		);
 
-		return availabilities;
+		return strategyRegistrations;
 	}
 }

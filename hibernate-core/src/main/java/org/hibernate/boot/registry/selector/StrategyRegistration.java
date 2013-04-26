@@ -24,16 +24,14 @@
 package org.hibernate.boot.registry.selector;
 
 /**
- * Describes the availability of a named strategy implementation.  A strategy + selector name should resolve
+ * Describes the registration of a named strategy implementation.  A strategy + selector name should resolve
  * to a single implementation.
  *
- * todo : better name?
- *
- * @param <T> The type of the strategy described by this implementation availability.
+ * @param <T> The type of the strategy described by this implementation registration.
  *
  * @author Steve Ebersole
  */
-public interface Availability<T> {
+public interface StrategyRegistration<T> {
 	/**
 	 * The strategy role.  Best practice says this should be an interface.
 	 *
@@ -42,7 +40,7 @@ public interface Availability<T> {
 	public Class<T> getStrategyRole();
 
 	/**
-	 * Any registered names for this strategy availability.
+	 * Any registered names for this strategy registration.
 	 *
 	 * @return The registered selection names.
 	 */

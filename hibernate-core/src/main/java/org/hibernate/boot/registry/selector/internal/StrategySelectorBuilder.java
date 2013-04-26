@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.selector.Availability;
-import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
-import org.hibernate.boot.registry.selector.SimpleAvailabilityImpl;
+import org.hibernate.boot.registry.selector.StrategyRegistration;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.CUBRIDDialect;
@@ -105,10 +105,10 @@ import org.jboss.logging.Logger;
 public class StrategySelectorBuilder {
 	private static final Logger log = Logger.getLogger( StrategySelectorBuilder.class );
 
-	private final List<Availability> explicitAvailabilities = new ArrayList<Availability>();
+	private final List<StrategyRegistration> explicitStrategyRegistrations = new ArrayList<StrategyRegistration>();
 
 	/**
-	 * Adds an explicit (as opposed to discovered) strategy availability.
+	 * Adds an explicit (as opposed to discovered) strategy registration.
 	 *
 	 * @param strategy The strategy
 	 * @param implementation The strategy implementation
@@ -117,31 +117,31 @@ public class StrategySelectorBuilder {
 	 * compatible.
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> void addExplicitAvailability(Class<T> strategy, Class<? extends T> implementation, String name) {
-		addExplicitAvailability( new SimpleAvailabilityImpl<T>( strategy, implementation, name ) );
+	public <T> void addExplicitStrategyRegistration(Class<T> strategy, Class<? extends T> implementation, String name) {
+		addExplicitStrategyRegistration( new SimpleStrategyRegistrationImpl<T>( strategy, implementation, name ) );
 	}
 
 	/**
-	 * Adds an explicit (as opposed to discovered) strategy availability.
+	 * Adds an explicit (as opposed to discovered) strategy registration.
 	 *
-	 * @param availability The strategy implementation availability.
+	 * @param strategyRegistration The strategy implementation registration.
 	 * @param <T> The type of the strategy.  Used to make sure that the strategy and implementation are type
 	 * compatible.
 	 */
-	public <T> void addExplicitAvailability(Availability<T> availability) {
-		if ( !availability.getStrategyRole().isInterface() ) {
+	public <T> void addExplicitStrategyRegistration(StrategyRegistration<T> strategyRegistration) {
+		if ( !strategyRegistration.getStrategyRole().isInterface() ) {
 			// not good form...
-			log.debug( "Registering non-interface strategy : " + availability.getStrategyRole().getName()  );
+			log.debug( "Registering non-interface strategy : " + strategyRegistration.getStrategyRole().getName()  );
 		}
 
-		if ( ! availability.getStrategyRole().isAssignableFrom( availability.getStrategyImplementation() ) ) {
+		if ( ! strategyRegistration.getStrategyRole().isAssignableFrom( strategyRegistration.getStrategyImplementation() ) ) {
 			throw new StrategySelectionException(
-					"Implementation class [" + availability.getStrategyImplementation().getName()
+					"Implementation class [" + strategyRegistration.getStrategyImplementation().getName()
 							+ "] does not implement strategy interface ["
-							+ availability.getStrategyRole().getName() + "]"
+							+ strategyRegistration.getStrategyRole().getName() + "]"
 			);
 		}
-		explicitAvailabilities.add( availability );
+		explicitStrategyRegistrations.add( strategyRegistration );
 	}
 
 	/**
@@ -162,27 +162,27 @@ public class StrategySelectorBuilder {
 		addMultiTableBulkIdStrategies( strategySelector );
 
 		// apply auto-discovered registrations
-		for ( AvailabilityAnnouncer announcer : classLoaderService.loadJavaServices( AvailabilityAnnouncer.class ) ) {
-			for ( Availability discoveredAvailability : announcer.getAvailabilities() ) {
-				applyFromAvailability( strategySelector, discoveredAvailability );
+		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
+			for ( StrategyRegistration discoveredStrategyRegistration : provider.getStrategyRegistrations() ) {
+				applyFromStrategyRegistration( strategySelector, discoveredStrategyRegistration );
 			}
 		}
 
 		// apply customizations
-		for ( Availability explicitAvailability : explicitAvailabilities ) {
-			applyFromAvailability( strategySelector, explicitAvailability );
+		for ( StrategyRegistration explicitStrategyRegistration : explicitStrategyRegistrations ) {
+			applyFromStrategyRegistration( strategySelector, explicitStrategyRegistration );
 		}
 
 		return strategySelector;
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> void applyFromAvailability(StrategySelectorImpl strategySelector, Availability<T> availability) {
-		for ( String name : availability.getSelectorNames() ) {
+	private <T> void applyFromStrategyRegistration(StrategySelectorImpl strategySelector, StrategyRegistration<T> strategyRegistration) {
+		for ( String name : strategyRegistration.getSelectorNames() ) {
 			strategySelector.registerStrategyImplementor(
-					availability.getStrategyRole(),
+					strategyRegistration.getStrategyRole(),
 					name,
-					availability.getStrategyImplementation()
+					strategyRegistration.getStrategyImplementation()
 			);
 		}
 	}

@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.service.jdbc.connections.internal;
+package org.hibernate.proxool.internal;
 
 import org.jboss.logging.LogMessage;
 import org.jboss.logging.Message;

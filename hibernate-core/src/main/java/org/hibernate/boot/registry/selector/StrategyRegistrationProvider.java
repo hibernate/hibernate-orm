@@ -24,18 +24,16 @@
 package org.hibernate.boot.registry.selector;
 
 /**
- * Responsible for announcing the availability of strategy selector(s).  Can be registered directly with the
+ * Responsible for providing the registrations of strategy selector(s).  Can be registered directly with the
  * {@link org.hibernate.boot.registry.BootstrapServiceRegistry} or located via discovery.
- *
- * todo : better name?
  *
  * @author Steve Ebersole
  */
-public interface AvailabilityAnnouncer {
+public interface StrategyRegistrationProvider {
 	/**
-	 * Get all availabilities announced by this announcer.
+	 * Get all StrategyRegistrations announced by this provider.
 	 *
-	 * @return All announced availabilities
+	 * @return All StrategyRegistrations
 	 */
-	public Iterable<Availability> getAvailabilities();
+	public Iterable<StrategyRegistration> getStrategyRegistrations();
 }

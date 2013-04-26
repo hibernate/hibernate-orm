@@ -32,35 +32,33 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Instantiates and configures an appropriate {@link ConnectionProvider}.
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
 	public static final ConnectionProviderInitiator INSTANCE = new ConnectionProviderInitiator();
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        ConnectionProviderInitiator.class.getName());
-	public static final String C3P0_PROVIDER_CLASS_NAME =
-			"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider";
+	public static final String C3P0_STRATEGY = "c3p0";
 
-	public static final String PROXOOL_PROVIDER_CLASS_NAME =
-			"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider";
+	public static final String PROXOOL_STRATEGY = "proxool";
 
 	public static final String INJECTION_DATA = "hibernate.connection_provider.injection_data";
 
@@ -83,14 +81,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				"org.hibernate.connection.UserSuppliedConnectionProvider",
 				UserSuppliedConnectionProviderImpl.class.getName()
 		);
-		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
-				"org.hibernate.connection.C3P0ConnectionProvider",
-				C3P0_PROVIDER_CLASS_NAME
-		);
-		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
-				"org.hibernate.connection.ProxoolConnectionProvider",
-				PROXOOL_PROVIDER_CLASS_NAME
-		);
 	}
 
 	@Override
@@ -106,30 +96,26 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
-		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
+		final StrategySelector strategySelector = registry.getService( StrategySelector.class );
 
 		ConnectionProvider connectionProvider = null;
-		String providerClassName = getConfiguredConnectionProviderName( configurationValues );
-		if ( providerClassName != null ) {
-			connectionProvider = instantiateExplicitConnectionProvider( providerClassName, classLoaderService );
+		String providerName = getConfiguredConnectionProviderName( configurationValues );
+		if ( providerName != null ) {
+			connectionProvider = instantiateExplicitConnectionProvider( providerName, strategySelector );
 		}
 		else if ( configurationValues.get( Environment.DATASOURCE ) != null ) {
 			connectionProvider = new DatasourceConnectionProviderImpl();
 		}
 
 		if ( connectionProvider == null ) {
-			if ( c3p0ConfigDefined( configurationValues ) && c3p0ProviderPresent( classLoaderService ) ) {
-				connectionProvider = instantiateExplicitConnectionProvider( C3P0_PROVIDER_CLASS_NAME,
-						classLoaderService
-				);
+			if ( c3p0ConfigDefined( configurationValues ) ) {
+				connectionProvider = instantiateC3p0Provider( strategySelector );
 			}
 		}
 
 		if ( connectionProvider == null ) {
-			if ( proxoolConfigDefined( configurationValues ) && proxoolProviderPresent( classLoaderService ) ) {
-				connectionProvider = instantiateExplicitConnectionProvider( PROXOOL_PROVIDER_CLASS_NAME,
-						classLoaderService
-				);
+			if ( proxoolConfigDefined( configurationValues ) ) {
+				connectionProvider = instantiateProxoolProvider( strategySelector );
 			}
 		}
 
@@ -172,36 +158,38 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private String getConfiguredConnectionProviderName( Map configurationValues ) {
-		String providerClassName = ( String ) configurationValues.get( Environment.CONNECTION_PROVIDER );
-		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerClassName ) ) {
-			String actualProviderClassName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerClassName );
-            LOG.providerClassDeprecated(providerClassName, actualProviderClassName);
-			providerClassName = actualProviderClassName;
+		String providerName = ( String ) configurationValues.get( Environment.CONNECTION_PROVIDER );
+		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
+			String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
+            LOG.providerClassDeprecated(providerName, actualProviderName);
+			providerName = actualProviderName;
 		}
-		return providerClassName;
+		return providerName;
 	}
 
 	private ConnectionProvider instantiateExplicitConnectionProvider(
-			String providerClassName,
-			ClassLoaderService classLoaderService) {
+			String providerName,
+			StrategySelector strategySelector) {
 		try {
-            LOG.instantiatingExplicitConnectionProvider( providerClassName );
-			return (ConnectionProvider) classLoaderService.classForName( providerClassName ).newInstance();
+            LOG.instantiatingExplicitConnectionProvider( providerName );
+            // This relies on selectStrategyImplementor trying
+            // classLoaderService.classForName( name ).
+            // TODO: Maybe we shouldn't rely on that here and do it manually?
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, providerName ).newInstance();
 		}
 		catch ( Exception e ) {
-			throw new HibernateException( "Could not instantiate connection provider [" + providerClassName + "]", e );
+			throw new HibernateException( "Could not instantiate connection provider [" + providerName + "]", e );
 		}
 	}
 
-	private boolean c3p0ProviderPresent(ClassLoaderService classLoaderService) {
+	private ConnectionProvider instantiateC3p0Provider(StrategySelector strategySelector) {
 		try {
-			classLoaderService.classForName( C3P0_PROVIDER_CLASS_NAME );
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, C3P0_STRATEGY ).newInstance();
 		}
 		catch ( Exception e ) {
-            LOG.c3p0ProviderClassNotFound(C3P0_PROVIDER_CLASS_NAME);
-			return false;
+            LOG.c3p0ProviderClassNotFound(C3P0_STRATEGY);
+			return null;
 		}
-		return true;
 	}
 
 	private static boolean c3p0ConfigDefined(Map configValues) {
@@ -214,15 +202,14 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		return false;
 	}
 
-	private boolean proxoolProviderPresent(ClassLoaderService classLoaderService) {
+	private ConnectionProvider instantiateProxoolProvider(StrategySelector strategySelector) {
 		try {
-			classLoaderService.classForName( PROXOOL_PROVIDER_CLASS_NAME );
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, PROXOOL_STRATEGY ).newInstance();
 		}
 		catch ( Exception e ) {
-            LOG.proxoolProviderClassNotFound(PROXOOL_PROVIDER_CLASS_NAME);
-			return false;
+            LOG.proxoolProviderClassNotFound(PROXOOL_STRATEGY);
+			return null;
 		}
-		return true;
 	}
 
 	private static boolean proxoolConfigDefined(Map configValues) {

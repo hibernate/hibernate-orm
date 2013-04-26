@@ -21,45 +21,37 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cache.infinispan;
+package org.hibernate.c3p0.internal;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.boot.registry.selector.Availability;
-import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
-import org.hibernate.boot.registry.selector.SimpleAvailabilityImpl;
-import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
+import org.hibernate.boot.registry.selector.StrategyRegistration;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 /**
- * Makes the 2 contained region factory implementations available to the Hibernate
+ * Provides the {@link C3P0ConnectionProvider} to the
  * {@link org.hibernate.boot.registry.selector.spi.StrategySelector} service.
  *
- * @author Steve Ebersole
+ * @author Brett Meyer
  */
-public class AvailabilityAnnouncerImpl implements AvailabilityAnnouncer {
+public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
+	
+	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
+			(StrategyRegistration) new SimpleStrategyRegistrationImpl(
+					ConnectionProvider.class,
+					C3P0ConnectionProvider.class,
+					"c3p0",
+					C3P0ConnectionProvider.class.getSimpleName(),
+					"org.hibernate.connection.C3P0ConnectionProvider", // legacy
+					"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider" // legacy
+			) );
+	
 	@Override
-	public Iterable<Availability> getAvailabilities() {
-		final List<Availability> availabilities = new ArrayList<Availability>();
-
-		availabilities.add(
-				new SimpleAvailabilityImpl(
-						RegionFactory.class,
-						InfinispanRegionFactory.class,
-						"infinispan",
-						InfinispanRegionFactory.class.getSimpleName()
-				)
-		);
-
-		availabilities.add(
-				new SimpleAvailabilityImpl(
-						RegionFactory.class,
-						JndiInfinispanRegionFactory.class,
-						"infinispan-jndi",
-						JndiInfinispanRegionFactory.class.getSimpleName()
-				)
-		);
-
-		return availabilities;
+	@SuppressWarnings("unchecked")
+	public Iterable<StrategyRegistration> getStrategyRegistrations() {
+		return REGISTRATIONS;
 	}
 }

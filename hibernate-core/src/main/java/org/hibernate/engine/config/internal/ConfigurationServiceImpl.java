@@ -36,6 +36,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * The standard ConfigurationService implementation
+ *
  * @author Steve Ebersole
  */
 public class ConfigurationServiceImpl implements ConfigurationService, ServiceRegistryAwareService {
@@ -43,9 +45,15 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 			CoreMessageLogger.class,
 			ConfigurationServiceImpl.class.getName()
 	);
+
 	private final Map settings;
 	private ServiceRegistryImplementor serviceRegistry;
 
+	/**
+	 * Constructs a ConfigurationServiceImpl
+	 *
+	 * @param settings The map of settings
+	 */
 	@SuppressWarnings( "unchecked" )
 	public ConfigurationServiceImpl(Map settings) {
 		this.settings = Collections.unmodifiableMap( settings );
@@ -75,18 +83,25 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 
 		return converter.convert( value );
 	}
+
 	@Override
 	public <T> T getSetting(String name, Class<T> expected, T defaultValue) {
-		Object value = settings.get( name );
-		T target = cast( expected, value );
+		final Object value = settings.get( name );
+		final T target = cast( expected, value );
 		return target !=null ? target : defaultValue;
 	}
+
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T cast(Class<T> expected, Object candidate){
-		if(candidate == null) return null;
+		if (candidate == null) {
+			return null;
+		}
+
 		if ( expected.isInstance( candidate ) ) {
 			return (T) candidate;
 		}
+
 		Class<T> target;
 		if ( Class.class.isInstance( candidate ) ) {
 			target = Class.class.cast( candidate );

@@ -24,6 +24,8 @@
 package org.hibernate.engine;
 
 /**
+ * Describes how an entity should be optimistically locked.
+ *
  * @author Steve Ebersole
  */
 public enum OptimisticLockStyle {

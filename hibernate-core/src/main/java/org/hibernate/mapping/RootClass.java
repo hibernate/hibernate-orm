@@ -31,6 +31,7 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -351,10 +352,4 @@ public class RootClass extends PersistentClass implements TableOwner {
     public Object accept(PersistentClassVisitor mv) {
 		return mv.accept(this);
 	}
-
-	@Override
-    public int getOptimisticLockMode() {
-		return optimisticLockMode;
-	}
-
 }

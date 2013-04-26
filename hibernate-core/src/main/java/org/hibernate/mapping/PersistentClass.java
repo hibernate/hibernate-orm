@@ -33,6 +33,8 @@ import java.util.StringTokenizer;
 import org.hibernate.EntityMode;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.lock.OptimisticLockingStrategy;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
@@ -100,9 +102,9 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 
 	private java.util.Map tuplizerImpls;
 
-	protected int optimisticLockMode;
 	private MappedSuperclass superMappedSuperclass;
 	private Component declaredIdentifierMapper;
+	private OptimisticLockStyle optimisticLockStyle;
 
 	public String getClassName() {
 		return className;
@@ -456,10 +458,22 @@ public abstract class PersistentClass implements Serializable, Filterable, MetaA
 		}
 	}
 
-	abstract public int getOptimisticLockMode();
+	@Deprecated
+	public int getOptimisticLockMode() {
+		return getOptimisticLockStyle().getOldCode();
+	}
 
+	@Deprecated
 	public void setOptimisticLockMode(int optimisticLockMode) {
-		this.optimisticLockMode = optimisticLockMode;
+		setOptimisticLockStyle( OptimisticLockStyle.interpretOldCode( optimisticLockMode ) );
+	}
+
+	public OptimisticLockStyle getOptimisticLockStyle() {
+		return optimisticLockStyle;
+	}
+
+	public void setOptimisticLockStyle(OptimisticLockStyle optimisticLockStyle) {
+		this.optimisticLockStyle = optimisticLockStyle;
 	}
 
 	public void validate(Mapping mapping) throws MappingException {

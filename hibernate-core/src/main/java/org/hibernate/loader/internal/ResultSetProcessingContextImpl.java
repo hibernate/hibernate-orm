@@ -664,7 +664,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		}
 
 		// now finish loading the entities (2-phase load)
-		performTwoPhaseLoad( preLoadEvent, postLoadEvent );
+		performTwoPhaseLoad( preLoadEvent );
 
 		// now we can finalize loading collections
 		finishLoadingCollections();
@@ -699,7 +699,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		);
 	}
 
-	private void performTwoPhaseLoad(PreLoadEvent preLoadEvent, PostLoadEvent postLoadEvent) {
+	private void performTwoPhaseLoad(PreLoadEvent preLoadEvent) {
 		final int numberOfHydratedObjects = hydratedEntityRegistrationList == null
 				? 0
 				: hydratedEntityRegistrationList.size();
@@ -710,7 +710,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		}
 
 		for ( HydratedEntityRegistration registration : hydratedEntityRegistrationList ) {
-			TwoPhaseLoad.initializeEntity( registration.instance, readOnly, session, preLoadEvent, postLoadEvent );
+			TwoPhaseLoad.initializeEntity( registration.instance, readOnly, session, preLoadEvent );
 		}
 	}
 

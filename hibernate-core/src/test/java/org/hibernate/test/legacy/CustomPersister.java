@@ -309,7 +309,7 @@ public class CustomPersister implements EntityPersister {
 					LockMode.NONE,
 					false,
 					session
-				);
+			);
 			TwoPhaseLoad.postHydrate(
 					this, id,
 					new String[] { obj.getName() },
@@ -318,14 +318,14 @@ public class CustomPersister implements EntityPersister {
 					LockMode.NONE,
 					false,
 					session
-				);
+			);
 			TwoPhaseLoad.initializeEntity(
 					clone,
 					false,
 					session,
-					new PreLoadEvent( (EventSource) session ),
-					new PostLoadEvent( (EventSource) session )
-				);
+					new PreLoadEvent( (EventSource) session )
+			);
+			TwoPhaseLoad.postLoad( clone, session, new PostLoadEvent( (EventSource) session ) );
 		}
 		return clone;
 	}

@@ -84,6 +84,7 @@ import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -289,7 +290,7 @@ public class EntityBinder {
 				LOG.immutableAnnotationOnNonRoot(annotatedClass.getName());
 			}
 		}
-		persistentClass.setOptimisticLockMode( getVersioning( optimisticLockType ) );
+		persistentClass.setOptimisticLockStyle( getVersioning( optimisticLockType ) );
 		persistentClass.setSelectBeforeUpdate( selectBeforeUpdate );
 
 		//set persister if needed
@@ -428,16 +429,16 @@ public class EntityBinder {
 		}
 	}
 
-	int getVersioning(OptimisticLockType type) {
+	OptimisticLockStyle getVersioning(OptimisticLockType type) {
 		switch ( type ) {
 			case VERSION:
-				return Versioning.OPTIMISTIC_LOCK_VERSION;
+				return OptimisticLockStyle.VERSION;
 			case NONE:
-				return Versioning.OPTIMISTIC_LOCK_NONE;
+				return OptimisticLockStyle.NONE;
 			case DIRTY:
-				return Versioning.OPTIMISTIC_LOCK_DIRTY;
+				return OptimisticLockStyle.DIRTY;
 			case ALL:
-				return Versioning.OPTIMISTIC_LOCK_ALL;
+				return OptimisticLockStyle.ALL;
 			default:
 				throw new AssertionFailure( "optimistic locking not supported: " + type );
 		}

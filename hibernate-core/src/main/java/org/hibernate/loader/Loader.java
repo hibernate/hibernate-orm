@@ -1099,7 +1099,7 @@ public abstract class Loader {
 			if ( LOG.isTraceEnabled() )
 			   LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 			for ( int i = 0; i < hydratedObjectsSize; i++ ) {
-				TwoPhaseLoad.initializeEntity( hydratedObjects.get(i), readOnly, session, pre, post );
+				TwoPhaseLoad.initializeEntity( hydratedObjects.get(i), readOnly, session, pre );
 			}
 		}
 

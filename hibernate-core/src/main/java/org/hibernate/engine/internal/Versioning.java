@@ -36,38 +36,16 @@ import org.hibernate.type.VersionType;
  * @author Gavin King
  */
 public final class Versioning {
-
-	// todo : replace these constants with references to org.hibernate.annotations.OptimisticLockType enum
-
-	/**
-	 * Apply no optimistic locking
-	 */
-	public static final int OPTIMISTIC_LOCK_NONE = -1;
-
-	/**
-	 * Apply optimistic locking based on the defined version or timestamp
-	 * property.
-	 */
-	public static final int OPTIMISTIC_LOCK_VERSION = 0;
-
-	/**
-	 * Apply optimistic locking based on the a current vs. snapshot comparison
-	 * of <b>all</b> properties.
-	 */
-	public static final int OPTIMISTIC_LOCK_ALL = 2;
-
-	/**
-	 * Apply optimistic locking based on the a current vs. snapshot comparison
-	 * of <b>dirty</b> properties.
-	 */
-	public static final int OPTIMISTIC_LOCK_DIRTY = 1;
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Versioning.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			Versioning.class.getName()
+	);
 
 	/**
 	 * Private constructor disallowing instantiation.
 	 */
-	private Versioning() {}
+	private Versioning() {
+	}
 
 	/**
 	 * Create an initial optimistic locking value according the {@link VersionType}
@@ -78,8 +56,8 @@ public final class Versioning {
 	 * @return The initial optimistic locking value
 	 */
 	private static Object seed(VersionType versionType, SessionImplementor session) {
-		Object seed = versionType.seed( session );
-		LOG.tracev( "Seeding: {0}", seed );
+		final Object seed = versionType.seed( session );
+		LOG.tracef( "Seeding: %s", seed );
 		return seed;
 	}
 
@@ -96,11 +74,11 @@ public final class Versioning {
 	 * otherwise.
 	 */
 	public static boolean seedVersion(
-	        Object[] fields,
-	        int versionProperty,
-	        VersionType versionType,
-	        SessionImplementor session) {
-		Object initialVersion = fields[versionProperty];
+			Object[] fields,
+			int versionProperty,
+			VersionType versionType,
+			SessionImplementor session) {
+		final Object initialVersion = fields[versionProperty];
 		if (
 			initialVersion==null ||
 			// This next bit is to allow for both unsaved-value="negative"
@@ -126,11 +104,15 @@ public final class Versioning {
 	 * @param session The originating session
 	 * @return The incremented optimistic locking value.
 	 */
+	@SuppressWarnings("unchecked")
 	public static Object increment(Object version, VersionType versionType, SessionImplementor session) {
-		Object next = versionType.next( version, session );
+		final Object next = versionType.next( version, session );
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Incrementing: {0} to {1}", versionType.toLoggableString( version, session.getFactory() ),
-					versionType.toLoggableString( next, session.getFactory() ) );
+			LOG.tracef(
+					"Incrementing: %s to %s",
+					versionType.toLoggableString( version, session.getFactory() ),
+					versionType.toLoggableString( next, session.getFactory() )
+			);
 		}
 		return next;
 	}
@@ -178,8 +160,8 @@ public final class Versioning {
 		if ( hasDirtyCollections ) {
 			return true;
 		}
-		for ( int i = 0; i < dirtyProperties.length; i++ ) {
-			if ( propertyVersionability[ dirtyProperties[i] ] ) {
+		for ( int dirtyProperty : dirtyProperties ) {
+			if ( propertyVersionability[dirtyProperty] ) {
 				return true;
 			}
 		}

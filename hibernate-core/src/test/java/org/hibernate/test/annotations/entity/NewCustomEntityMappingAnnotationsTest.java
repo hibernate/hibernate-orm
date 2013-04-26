@@ -52,7 +52,7 @@ public class NewCustomEntityMappingAnnotationsTest extends BaseCoreFunctionalTes
 		assertEquals( forest.useDynamicInsert(), forest2.useDynamicInsert() );
 		assertEquals( forest.useDynamicUpdate(), forest2.useDynamicUpdate() );
 		assertEquals( forest.hasSelectBeforeUpdate(), forest2.hasSelectBeforeUpdate() );
-		assertEquals( forest.getOptimisticLockMode(), forest2.getOptimisticLockMode() );
+		assertEquals( forest.getOptimisticLockStyle(), forest2.getOptimisticLockStyle() );
 		assertEquals( forest.isExplicitPolymorphism(), forest2.isExplicitPolymorphism() );
 	}
 }

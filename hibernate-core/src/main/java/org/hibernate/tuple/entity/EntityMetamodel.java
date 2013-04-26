@@ -325,7 +325,7 @@ public class EntityMetamodel implements Serializable {
 				null;
 		hasSubclasses = persistentClass.hasSubclasses();
 
-		optimisticLockStyle = interpretOptLockMode( persistentClass.getOptimisticLockMode() );
+		optimisticLockStyle = persistentClass.getOptimisticLockStyle();
 		final boolean isAllOrDirty =
 				optimisticLockStyle == OptimisticLockStyle.ALL
 						|| optimisticLockStyle == OptimisticLockStyle.DIRTY;
@@ -362,23 +362,6 @@ public class EntityMetamodel implements Serializable {
 		}
 		else {
 			entityTuplizer = entityTuplizerFactory.constructTuplizer( tuplizerClassName, this, persistentClass );
-		}
-	}
-
-	private OptimisticLockStyle interpretOptLockMode(int optimisticLockMode) {
-		switch ( optimisticLockMode ) {
-			case Versioning.OPTIMISTIC_LOCK_NONE: {
-				return OptimisticLockStyle.NONE;
-			}
-			case Versioning.OPTIMISTIC_LOCK_DIRTY: {
-				return OptimisticLockStyle.DIRTY;
-			}
-			case Versioning.OPTIMISTIC_LOCK_ALL: {
-				return OptimisticLockStyle.ALL;
-			}
-			default: {
-				return OptimisticLockStyle.VERSION;
-			}
 		}
 	}
 

@@ -24,7 +24,6 @@
 package org.hibernate.cfg;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,7 +40,7 @@ import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
-import org.hibernate.engine.internal.Versioning;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -688,7 +687,7 @@ public final class HbmBinder {
 
 		// OPTIMISTIC LOCK MODE
 		Attribute olNode = node.attribute( "optimistic-lock" );
-		entity.setOptimisticLockMode( getOptimisticLockMode( olNode ) );
+		entity.setOptimisticLockStyle( getOptimisticLockStyle( olNode ) );
 
 		entity.setMetaAttributes( getMetas( node, inheritedMetas ) );
 
@@ -2932,21 +2931,23 @@ public final class HbmBinder {
 		}
 	}
 
-	private static int getOptimisticLockMode(Attribute olAtt) throws MappingException {
+	private static OptimisticLockStyle getOptimisticLockStyle(Attribute olAtt) throws MappingException {
+		if ( olAtt == null ) {
+			return OptimisticLockStyle.VERSION;
+		}
 
-		if ( olAtt == null ) return Versioning.OPTIMISTIC_LOCK_VERSION;
-		String olMode = olAtt.getValue();
+		final String olMode = olAtt.getValue();
 		if ( olMode == null || "version".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_VERSION;
+			return OptimisticLockStyle.VERSION;
 		}
 		else if ( "dirty".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_DIRTY;
+			return OptimisticLockStyle.DIRTY;
 		}
 		else if ( "all".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_ALL;
+			return OptimisticLockStyle.ALL;
 		}
 		else if ( "none".equals( olMode ) ) {
-			return Versioning.OPTIMISTIC_LOCK_NONE;
+			return OptimisticLockStyle.NONE;
 		}
 		else {
 			throw new MappingException( "Unsupported optimistic-lock style: " + olMode );

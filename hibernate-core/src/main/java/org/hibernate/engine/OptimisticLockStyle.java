@@ -32,17 +32,47 @@ public enum OptimisticLockStyle {
 	/**
 	 * no optimistic locking
 	 */
-	NONE,
+	NONE( -1 ),
 	/**
 	 * use a dedicated version column
 	 */
-	VERSION,
+	VERSION( 0 ),
 	/**
 	 * dirty columns are compared
 	 */
-	DIRTY,
+	DIRTY( 1 ),
 	/**
 	 * all columns are compared
 	 */
-	ALL
+	ALL( 2 );
+
+	private final int oldCode;
+
+	private OptimisticLockStyle(int oldCode) {
+		this.oldCode = oldCode;
+	}
+
+	public int getOldCode() {
+		return oldCode;
+	}
+
+	public static OptimisticLockStyle interpretOldCode(int oldCode) {
+		switch ( oldCode ) {
+			case -1: {
+				return NONE;
+			}
+			case 0: {
+				return VERSION;
+			}
+			case 1: {
+				return DIRTY;
+			}
+			case 2: {
+				return ALL;
+			}
+			default: {
+				throw new IllegalArgumentException( "Illegal legacy optimistic lock style code :" + oldCode );
+			}
+		}
+	}
 }

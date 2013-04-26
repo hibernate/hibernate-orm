@@ -42,10 +42,14 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public final class Nullability {
-	
 	private final SessionImplementor session;
 	private final boolean checkNullability;
 
+	/**
+	 * Constructs a Nullability
+	 *
+	 * @param session The session
+	 */
 	public Nullability(SessionImplementor session) {
 		this.session = session;
 		this.checkNullability = session.getFactory().getSettings().isCheckNullability();
@@ -56,14 +60,14 @@ public final class Nullability {
 	 * @param values entity properties
 	 * @param persister class persister
 	 * @param isUpdate whether it is intended to be updated or saved
-	 * @throws org.hibernate.PropertyValueException Break the nullability of one property
+	 *
+	 * @throws PropertyValueException Break the nullability of one property
 	 * @throws HibernateException error while getting Component values
 	 */
 	public void checkNullability(
 			final Object[] values,
 			final EntityPersister persister,
-			final boolean isUpdate) 
-	throws PropertyValueException, HibernateException {
+			final boolean isUpdate) throws HibernateException {
 		/*
 		 * Typically when Bean Validation is on, we don't want to validate null values
 		 * at the Hibernate Core level. Hence the checkNullability setting.
@@ -108,9 +112,8 @@ public final class Nullability {
 
 					}
 					else if ( value != null ) {
-
 						//values is not null and is checkable, we'll look deeper
-						String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
+						final String breakProperties = checkSubElementsNullability( propertyTypes[i], value );
 						if ( breakProperties != null ) {
 							throw new PropertyValueException(
 								"not-null property references a null or transient value",
@@ -136,8 +139,8 @@ public final class Nullability {
 	 * @return property path
 	 * @throws HibernateException error while getting subcomponent values
 	 */
-	private String checkSubElementsNullability(final Type propertyType, final Object value) 
-	throws HibernateException {
+	private String checkSubElementsNullability(final Type propertyType, final Object value)
+			throws HibernateException {
 		//for non null args, check for components and elements containing components
 		if ( propertyType.isComponentType() ) {
 			return checkComponentNullability( value, (CompositeType) propertyType );
@@ -145,17 +148,17 @@ public final class Nullability {
 		else if ( propertyType.isCollectionType() ) {
 
 			//persistent collections may have components
-			CollectionType collectionType = (CollectionType) propertyType;
-			Type collectionElementType = collectionType.getElementType( session.getFactory() );
+			final CollectionType collectionType = (CollectionType) propertyType;
+			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
 			if ( collectionElementType.isComponentType() ) {
 				//check for all components values in the collection
 
-				CompositeType componentType = (CompositeType) collectionElementType;
-				Iterator iter = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
-				while ( iter.hasNext() ) {
-					Object compValue = iter.next();
-					if (compValue != null) {
-						return checkComponentNullability(compValue, componentType);
+				final CompositeType componentType = (CompositeType) collectionElementType;
+				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
+				while ( itr.hasNext() ) {
+					Object compValue = itr.next();
+					if ( compValue != null ) {
+						return checkComponentNullability( compValue, componentType );
 					}
 				}
 			}
@@ -174,11 +177,11 @@ public final class Nullability {
 	 * @throws HibernateException error while getting subcomponent values
 	 */
 	private String checkComponentNullability(final Object value, final CompositeType compType)
-	throws HibernateException {
+			throws HibernateException {
 		/* will check current level if some of them are not null
 		 * or sublevels if they exist
 		 */
-		boolean[] nullability = compType.getPropertyNullability();
+		final boolean[] nullability = compType.getPropertyNullability();
 		if ( nullability!=null ) {
 			//do the test
 			final Object[] values = compType.getPropertyValues( value, EntityMode.POJO );
@@ -189,27 +192,26 @@ public final class Nullability {
 					return compType.getPropertyNames()[i];
 				}
 				else if ( subvalue != null ) {
-					String breakProperties = checkSubElementsNullability( propertyTypes[i], subvalue );
+					final String breakProperties = checkSubElementsNullability( propertyTypes[i], subvalue );
 					if ( breakProperties != null ) {
 						return buildPropertyPath( compType.getPropertyNames()[i], breakProperties );
 					}
-	 			}
-	 		}
+				}
+			}
 		}
 		return null;
 	}
 
 	/**
-	 * Return a well formed property path.
-	 * Basically, it will return parent.child
+	 * Return a well formed property path. Basically, it will return parent.child
 	 *
 	 * @param parent parent in path
 	 * @param child child in path
+	 *
 	 * @return parent-child path
 	 */
 	private static String buildPropertyPath(String parent, String child) {
-		return new StringBuilder( parent.length() + child.length() + 1 )
-			.append(parent).append('.').append(child).toString();
+		return parent + '.' + child;
 	}
 
 }

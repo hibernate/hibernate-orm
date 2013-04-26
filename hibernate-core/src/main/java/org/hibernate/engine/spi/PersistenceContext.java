@@ -33,6 +33,7 @@ import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.loading.internal.LoadContexts;
+import org.hibernate.internal.util.MarkerObject;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -52,7 +53,11 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 @SuppressWarnings( {"JavaDoc"})
 public interface PersistenceContext {
-	
+	/**
+	 * Marker object used to indicate (via reference checking) that no row was returned.
+	 */
+	public static final Object NO_ROW = new MarkerObject( "NO_ROW" );
+
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public boolean isStateless();
 
@@ -135,11 +140,15 @@ public interface PersistenceContext {
 	public Object[] getDatabaseSnapshot(Serializable id, EntityPersister persister);
 
 	/**
-	 * Get the current database state of the entity, using the cached state snapshot if one is available.
-	 *
-	 * @param key The entity key
-	 *
-	 * @return The entity's (non-cached) snapshot
+	 * Retrieve the cached database snapshot for the requested entity key.
+	 * <p/>
+	 * This differs from {@link #getDatabaseSnapshot} is two important respects:<ol>
+	 * <li>no snapshot is obtained from the database if not already cached</li>
+	 * <li>an entry of {@link #NO_ROW} here is interpretet as an exception</li>
+	 * </ol>
+	 * @param key The entity key for which to retrieve the cached snapshot
+	 * @return The cached snapshot
+	 * @throws IllegalStateException if the cached snapshot was == {@link #NO_ROW}.
 	 */
 	public Object[] getCachedDatabaseSnapshot(EntityKey key);
 
@@ -316,7 +325,9 @@ public interface PersistenceContext {
 	/**
 	 * Attempts to check whether the given key represents an entity already loaded within the
 	 * current session.
+	 *
 	 * @param object The entity reference against which to perform the uniqueness check.
+	 *
 	 * @throws HibernateException
 	 */
 	public void checkUniqueness(EntityKey key, Object object) throws HibernateException;
@@ -467,7 +478,13 @@ public interface PersistenceContext {
 	public void addProxy(EntityKey key, Object proxy);
 
 	/**
-	 * Remove a proxy from the session cache
+	 * Remove a proxy from the session cache.
+	 * <p/>
+	 * Additionally, ensure that any load optimization references
+	 * such as batch or subselect loading get cleaned up as well.
+	 *
+	 * @param key The key of the entity proxy to be removed
+	 * @return The proxy reference.
 	 */
 	public Object removeProxy(EntityKey key);
 
@@ -559,10 +576,27 @@ public interface PersistenceContext {
 	public String toString();
 
 	/**
-	 * Search the persistence context for an owner for the child object,
-	 * given a collection role
+	 * Search <tt>this</tt> persistence context for an associated entity instance which is considered the "owner" of
+	 * the given <tt>childEntity</tt>, and return that owner's id value.  This is performed in the scenario of a
+	 * uni-directional, non-inverse one-to-many collection (which means that the collection elements do not maintain
+	 * a direct reference to the owner).
+	 * <p/>
+	 * As such, the processing here is basically to loop over every entity currently associated with this persistence
+	 * context and for those of the correct entity (sub) type to extract its collection role property value and see
+	 * if the child is contained within that collection.  If so, we have found the owner; if not, we go on.
+	 * <p/>
+	 * Also need to account for <tt>mergeMap</tt> which acts as a local copy cache managed for the duration of a merge
+	 * operation.  It represents a map of the detached entity instances pointing to the corresponding managed instance.
+	 *
+	 * @param entityName The entity name for the entity type which would own the child
+	 * @param propertyName The name of the property on the owning entity type which would name this child association.
+	 * @param childEntity The child entity instance for which to locate the owner instance id.
+	 * @param mergeMap A map of non-persistent instances from an on-going merge operation (possibly null).
+	 *
+	 * @return The id of the entityName instance which is said to own the child; null if an appropriate owner not
+	 * located.
 	 */
-	public Serializable getOwnerId(String entity, String property, Object childObject, Map mergeMap);
+	public Serializable getOwnerId(String entityName, String propertyName, Object childEntity, Map mergeMap);
 
 	/**
 	 * Search the persistence context for an index of the child object,

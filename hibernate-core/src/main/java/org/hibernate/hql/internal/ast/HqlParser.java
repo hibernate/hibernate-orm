@@ -52,25 +52,35 @@ import org.hibernate.internal.util.StringHelper;
  * @author Joshua Davis (pgmjsd@sourceforge.net)
  */
 public final class HqlParser extends HqlBaseParser {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			HqlParser.class.getName()
+	);
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, HqlParser.class.getName());
-
-	private ParseErrorHandler parseErrorHandler;
-	private ASTPrinter printer = getASTPrinter();
+	private final ParseErrorHandler parseErrorHandler;
+	private final ASTPrinter printer = getASTPrinter();
 
 	private static ASTPrinter getASTPrinter() {
 		return new ASTPrinter( org.hibernate.hql.internal.antlr.HqlTokenTypes.class );
 	}
 
+	/**
+	 * Get a HqlParser instance for the given HQL string.
+	 *
+	 * @param hql The HQL query string
+	 *
+	 * @return The parser.
+	 */
 	public static HqlParser getInstance(String hql) {
-        // [jsd] The fix for HHH-558...
-        HqlLexer lexer = new HqlLexer( new StringReader( hql ) );
-		return new HqlParser( lexer );
+		return new HqlParser( hql );
 	}
 
-	private HqlParser(TokenStream lexer) {
-		super( lexer );
-		initialize();
+	private HqlParser(String hql) {
+		// The fix for HHH-558...
+		super( new HqlLexer( new StringReader( hql ) ) );
+		parseErrorHandler = new ErrorCounter( hql );
+		// Create nodes that track line and column number.
+		setASTFactory( new HqlASTFactory() );
 	}
 
 
@@ -324,12 +334,6 @@ public final class HqlParser extends HqlBaseParser {
 
 	private void showAst(AST ast, PrintWriter pw) {
 		printer.showAst( ast, pw );
-	}
-
-	private void initialize() {
-		// Initialize the error handling delegate.
-		parseErrorHandler = new ErrorCounter();
-		setASTFactory(new HqlASTFactory());	// Create nodes that track line and column number.
 	}
 
 	@Override

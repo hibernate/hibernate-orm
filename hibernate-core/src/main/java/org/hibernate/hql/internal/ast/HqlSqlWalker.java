@@ -170,7 +170,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			String collectionRole) {
 		setASTFactory( new SqlASTFactory( this ) );
 		// Initialize the error handling delegate.
-		this.parseErrorHandler = new ErrorCounter();
+		this.parseErrorHandler = new ErrorCounter( qti.getQueryString() );
 		this.queryTranslatorImpl = qti;
 		this.sessionFactoryHelper = new SessionFactoryHelper( sfi );
 		this.literalProcessor = new LiteralProcessor( this );

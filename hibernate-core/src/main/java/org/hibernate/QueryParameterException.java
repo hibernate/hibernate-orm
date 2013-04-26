@@ -50,7 +50,7 @@ public class QueryParameterException extends QueryException {
 	}
 
 	@Override
-	protected QueryException doWrapWithQueryString(String queryString) {
+	protected QueryException generateQueryException(String queryString) {
 		return new QueryParameterException( super.getOriginalMessage(), queryString, this );
 	}
 }

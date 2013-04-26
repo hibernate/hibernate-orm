@@ -102,19 +102,38 @@ public class QueryException extends HibernateException {
 	}
 
 	/**
+	 * Wraps this exception with another, of same kind, with the specified queryString.  If this exception already
+	 * has a queryString defined, the same exception ({@code this}) is returned.  Otherwise the protected
+	 * {@link #generateQueryException(String)} is called, to allow subclasses to properly create the correct
+	 * subclass for return.
 	 *
-	 * @param queryString
-	 * @return
+	 * @param queryString The query string that led to the QueryException
+	 *
+	 * @return {@code this}, if {@code this} has {@code null} for {@link #getQueryString()}; otherwise a new
+	 * QueryException (or subclass) is returned.
 	 */
 	public final QueryException wrapWithQueryString(String queryString) {
 		if ( this.getQueryString() != null ) {
 			return this;
 		}
 
-		return doWrapWithQueryString( queryString );
+		return generateQueryException( queryString );
 	}
 
-	protected QueryException doWrapWithQueryString(String queryString) {
+	/**
+	 * Called from {@link #wrapWithQueryString(String)} when we really need to generate a new QueryException
+	 * (or subclass).
+	 * <p/>
+	 * NOTE : implementors should take care to use {@link #getOriginalMessage()} for the message, not
+	 * {@link #getMessage()}
+	 *
+	 * @param queryString The query string
+	 *
+	 * @return The generated QueryException (or subclass)
+	 *
+	 * @see #getOriginalMessage()
+	 */
+	protected QueryException generateQueryException(String queryString) {
 		return new QueryException( getOriginalMessage(), queryString, this );
 	}
 }

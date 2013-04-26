@@ -37,48 +37,77 @@ import org.hibernate.internal.CoreMessageLogger;
  * An error handler that counts parsing errors and warnings.
  */
 public class ErrorCounter implements ParseErrorHandler {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ErrorCounter.class.getName()
+	);
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ErrorCounter.class.getName());
+	private final String hql;
 
 	private List<String> errorList = new ArrayList<String>();
-	private List<String> warningList = new ArrayList<String>();
 	private List<RecognitionException> recognitionExceptions = new ArrayList<RecognitionException>();
 
+	/**
+	 * Constructs an ErrorCounter without knowledge of the HQL, meaning that generated QueryException
+	 * instances *will not* contain the HQL (and will need to be wrapped at a higher level in another
+	 * QueryException).
+	 */
+	public ErrorCounter() {
+		this( null );
+	}
+
+	/**
+	 * Constructs an ErrorCounter with knowledge of the HQL, meaning that generated QueryException
+	 * instances *will* contain the HQL.
+	 */
+	public ErrorCounter(String hql) {
+		this.hql = hql;
+	}
+
+	@Override
 	public void reportError(RecognitionException e) {
 		reportError( e.toString() );
 		recognitionExceptions.add( e );
-        LOG.error(e.toString(), e);
+		LOG.error( e.toString(), e );
 	}
 
+	@Override
 	public void reportError(String message) {
-        LOG.error(message);
+		LOG.error( message );
 		errorList.add( message );
 	}
 
+	@Override
 	public int getErrorCount() {
 		return errorList.size();
 	}
 
+	@Override
 	public void reportWarning(String message) {
-		LOG.debug(message);
-		warningList.add( message );
+		LOG.debug( message );
 	}
 
 	private String getErrorString() {
-		StringBuilder buf = new StringBuilder();
-		for ( Iterator<String> iterator = errorList.iterator(); iterator.hasNext(); ) {
+		final StringBuilder buf = new StringBuilder();
+		final Iterator<String> iterator = errorList.iterator();
+		while ( iterator.hasNext() ) {
 			buf.append( iterator.next() );
-			if ( iterator.hasNext() ) buf.append( "\n" );
+			if ( iterator.hasNext() ) {
+				buf.append( "\n" );
+			}
 
 		}
 		return buf.toString();
 	}
 
+	@Override
 	public void throwQueryException() throws QueryException {
 		if ( getErrorCount() > 0 ) {
-            if (recognitionExceptions.size() > 0) throw QuerySyntaxException.convert(recognitionExceptions.get(0));
-            throw new QueryException(getErrorString());
-        }
-		LOG.debug("throwQueryException() : no errors");
+		if ( recognitionExceptions.size() > 0 ) {
+				throw QuerySyntaxException.convert( recognitionExceptions.get( 0 ), hql );
+		}
+			throw new QueryException( getErrorString(), hql );
+		}
+		LOG.debug( "throwQueryException() : no errors" );
 	}
 }

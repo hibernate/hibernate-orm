@@ -60,8 +60,8 @@ public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
 
 	public Locale fromString(String string) {
 		StringTokenizer tokens = new StringTokenizer( string, "_" );
-		String language = tokens.hasMoreTokens() ? tokens.nextToken() : "";
-		String country = tokens.hasMoreTokens() ? tokens.nextToken() : "";
+	        String language = tokens.hasMoreTokens() && string.charAt(0) != '_' ? tokens.nextToken() : "";
+	        String country = tokens.hasMoreTokens() && string.charAt(string.indexOf(language) + language.length() + 1) != '_' ? tokens.nextToken() : "";
 		// Need to account for allowable '_' within the variant
 		String variant = "";
 		String sep = "";

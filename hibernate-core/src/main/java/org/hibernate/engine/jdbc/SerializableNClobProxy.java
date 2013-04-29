@@ -35,6 +35,16 @@ import java.sql.NClob;
 public class SerializableNClobProxy extends SerializableClobProxy {
 	private static final Class[] PROXY_INTERFACES = new Class[] { NClob.class, WrappedNClob.class };
 
+	/**
+	 * Deprecated.
+	 *
+	 * @param clob The possible NClob reference
+	 *
+	 * @return {@code true} if the the Clob is a NClob as well
+	 *
+	 * @deprecated ORM baselines on JDK 1.6, so optional support for NClob (JDK 1,6 addition) is no longer needed.
+	 */
+	@Deprecated
 	public static boolean isNClob(Clob clob) {
 		return NClob.class.isInstance( clob );
 	}
@@ -57,11 +67,7 @@ public class SerializableNClobProxy extends SerializableClobProxy {
 	 * @return The generated proxy.
 	 */
 	public static NClob generateProxy(NClob nclob) {
-		return ( NClob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new SerializableNClobProxy( nclob )
-		);
+		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new SerializableNClobProxy( nclob ) );
 	}
 
 	/**

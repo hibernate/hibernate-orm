@@ -37,6 +37,9 @@ import java.sql.NClob;
  * @author Gail Badner
  */
 public class NonContextualLobCreator extends AbstractLobCreator implements LobCreator {
+	/**
+	 * Singleton access
+	 */
 	public static final NonContextualLobCreator INSTANCE = new NonContextualLobCreator();
 
 	private NonContextualLobCreator() {

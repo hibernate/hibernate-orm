@@ -202,7 +202,10 @@
         <module name="LocalFinalVariableName" />
         <module name="LocalVariableName" />
         <module name="MemberName" />
+        <!--
+        The org.hibernate.engine.spi.ManagedEntity method names (prefixed with '&&_') muck with this
         <module name="MethodName" />
+        -->
         <module name="MethodTypeParameterName" />
         <module name="PackageName" />
         <module name="ParameterName" />

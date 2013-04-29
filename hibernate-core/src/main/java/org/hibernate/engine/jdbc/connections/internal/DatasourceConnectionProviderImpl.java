@@ -49,7 +49,6 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  */
 public class DatasourceConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
-
 	private DataSource dataSource;
 	private String user;
 	private String pass;
@@ -67,6 +66,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	}
 
 	@InjectService( required = false )
+	@SuppressWarnings("UnusedDeclaration")
 	public void setJndiService(JndiService jndiService) {
 		this.jndiService = jndiService;
 	}
@@ -93,9 +93,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void configure(Map configValues) {
 		if ( this.dataSource == null ) {
 			final Object dataSource = configValues.get( Environment.DATASOURCE );
@@ -126,14 +124,13 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 		available = true;
 	}
 
+	@Override
 	public void stop() {
 		available = false;
 		dataSource = null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Connection getConnection() throws SQLException {
 		if ( !available ) {
 			throw new HibernateException( "Provider is closed!" );
@@ -141,16 +138,12 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 		return useCredentials ? dataSource.getConnection( user, pass ) : dataSource.getConnection();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void closeConnection(Connection connection) throws SQLException {
 		connection.close();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return true;
 	}

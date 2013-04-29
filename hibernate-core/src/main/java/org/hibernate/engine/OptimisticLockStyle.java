@@ -56,6 +56,15 @@ public enum OptimisticLockStyle {
 		return oldCode;
 	}
 
+	/**
+	 * Given an old code (one of the int constants from Cascade), interpret it as one of the new enums.
+	 *
+	 * @param oldCode The old int constant code
+	 *
+	 * @return The interpreted enum value
+	 *
+	 * @throws IllegalArgumentException If the code did not match any legacy constant.
+	 */
 	public static OptimisticLockStyle interpretOldCode(int oldCode) {
 		switch ( oldCode ) {
 			case -1: {

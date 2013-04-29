@@ -22,18 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc;
-import java.io.IOException;
+
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Reader;
-import java.io.Writer;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 
 /**
@@ -46,6 +43,11 @@ import org.hibernate.JDBCException;
 public class ContextualLobCreator extends AbstractLobCreator implements LobCreator {
 	private LobCreationContext lobCreationContext;
 
+	/**
+	 * Constructs a ContextualLobCreator
+	 *
+	 * @param lobCreationContext The context for performing LOB creation
+	 */
 	public ContextualLobCreator(LobCreationContext lobCreationContext) {
 		this.lobCreationContext = lobCreationContext;
 	}
@@ -62,7 +64,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	@Override
 	public Blob createBlob(byte[] bytes) {
 		try {
-			Blob blob = createBlob();
+			final Blob blob = createBlob();
 			blob.setBytes( 1, bytes );
 			return blob;
 		}
@@ -90,7 +92,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	@Override
 	public Clob createClob(String string) {
 		try {
-			Clob clob = createClob();
+			final Clob clob = createClob();
 			clob.setString( 1, string );
 			return clob;
 		}
@@ -118,7 +120,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	@Override
 	public NClob createNClob(String string) {
 		try {
-			NClob nclob = createNClob();
+			final NClob nclob = createNClob();
 			nclob.setString( 1, string );
 			return nclob;
 		}
@@ -134,19 +136,31 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 		return NonContextualLobCreator.INSTANCE.createNClob( reader, length );
 	}
 
+	/**
+	 * Callback for performing contextual BLOB creation
+	 */
 	public static final LobCreationContext.Callback<Blob> CREATE_BLOB_CALLBACK = new LobCreationContext.Callback<Blob>() {
+		@Override
 		public Blob executeOnConnection(Connection connection) throws SQLException {
 			return connection.createBlob();
 		}
 	};
 
+	/**
+	 * Callback for performing contextual CLOB creation
+	 */
 	public static final LobCreationContext.Callback<Clob> CREATE_CLOB_CALLBACK = new LobCreationContext.Callback<Clob>() {
+		@Override
 		public Clob executeOnConnection(Connection connection) throws SQLException {
 			return connection.createClob();
 		}
 	};
 
+	/**
+	 * Callback for performing contextual NCLOB creation
+	 */
 	public static final LobCreationContext.Callback<NClob> CREATE_NCLOB_CALLBACK = new LobCreationContext.Callback<NClob>() {
+		@Override
 		public NClob executeOnConnection(Connection connection) throws SQLException {
 			return connection.createNClob();
 		}

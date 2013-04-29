@@ -52,14 +52,29 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public class ConnectionProviderInitiator implements StandardServiceInitiator<ConnectionProvider> {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ConnectionProviderInitiator.class.getName()
+	);
+
+	/**
+	 * Singleton access
+	 */
 	public static final ConnectionProviderInitiator INSTANCE = new ConnectionProviderInitiator();
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       ConnectionProviderInitiator.class.getName());
+	/**
+	 * The strategy for c3p0 connection pooling
+	 */
 	public static final String C3P0_STRATEGY = "c3p0";
 
+	/**
+	 * The strategy for proxool connection pooling
+	 */
 	public static final String PROXOOL_STRATEGY = "proxool";
 
+	/**
+	 * No idea.  Is this even still used?
+	 */
 	public static final String INJECTION_DATA = "hibernate.connection_provider.injection_data";
 
 	// mapping from legacy connection provider name to actual
@@ -99,7 +114,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		final StrategySelector strategySelector = registry.getService( StrategySelector.class );
 
 		ConnectionProvider connectionProvider = null;
-		String providerName = getConfiguredConnectionProviderName( configurationValues );
+		final String providerName = getConfiguredConnectionProviderName( configurationValues );
 		if ( providerName != null ) {
 			connectionProvider = instantiateExplicitConnectionProvider( providerName, strategySelector );
 		}
@@ -126,7 +141,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		if ( connectionProvider == null ) {
-            LOG.noAppropriateConnectionProvider();
+			LOG.noAppropriateConnectionProvider();
 			connectionProvider = new UserSuppliedConnectionProviderImpl();
 		}
 
@@ -138,11 +153,11 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 					connectionProvider,
 					new BeanInfoHelper.BeanInfoDelegate() {
 						public void processBeanInfo(BeanInfo beanInfo) throws Exception {
-							PropertyDescriptor[] descritors = beanInfo.getPropertyDescriptors();
-							for ( int i = 0, size = descritors.length; i < size; i++ ) {
-								String propertyName = descritors[i].getName();
+							final PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+							for ( PropertyDescriptor descriptor : descriptors ) {
+								final String propertyName = descriptor.getName();
 								if ( injectionData.containsKey( propertyName ) ) {
-									Method method = descritors[i].getWriteMethod();
+									final Method method = descriptor.getWriteMethod();
 									method.invoke(
 											theConnectionProvider,
 											injectionData.get( propertyName )
@@ -158,10 +173,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	private String getConfiguredConnectionProviderName( Map configurationValues ) {
-		String providerName = ( String ) configurationValues.get( Environment.CONNECTION_PROVIDER );
+		String providerName = (String) configurationValues.get( Environment.CONNECTION_PROVIDER );
 		if ( LEGACY_CONNECTION_PROVIDER_MAPPING.containsKey( providerName ) ) {
-			String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
-            LOG.providerClassDeprecated(providerName, actualProviderName);
+			final String actualProviderName = LEGACY_CONNECTION_PROVIDER_MAPPING.get( providerName );
+			LOG.providerClassDeprecated( providerName, actualProviderName );
 			providerName = actualProviderName;
 		}
 		return providerName;
@@ -171,7 +186,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			String providerName,
 			StrategySelector strategySelector) {
 		try {
-            LOG.instantiatingExplicitConnectionProvider( providerName );
+			LOG.instantiatingExplicitConnectionProvider( providerName );
             // This relies on selectStrategyImplementor trying
             // classLoaderService.classForName( name ).
             // TODO: Maybe we shouldn't rely on that here and do it manually?
@@ -187,7 +202,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, C3P0_STRATEGY ).newInstance();
 		}
 		catch ( Exception e ) {
-            LOG.c3p0ProviderClassNotFound(C3P0_STRATEGY);
+			LOG.c3p0ProviderClassNotFound(C3P0_STRATEGY);
 			return null;
 		}
 	}
@@ -207,7 +222,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, PROXOOL_STRATEGY ).newInstance();
 		}
 		catch ( Exception e ) {
-            LOG.proxoolProviderClassNotFound(PROXOOL_STRATEGY);
+			LOG.proxoolProviderClassNotFound( PROXOOL_STRATEGY );
 			return null;
 		}
 	}
@@ -233,7 +248,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 * @return The connection properties.
 	 */
 	public static Properties getConnectionProperties(Map<?,?> properties) {
-		Properties result = new Properties();
+		final Properties result = new Properties();
 		for ( Map.Entry entry : properties.entrySet() ) {
 			if ( ! ( String.class.isInstance( entry.getKey() ) ) || ! String.class.isInstance( entry.getValue() ) ) {
 				continue;

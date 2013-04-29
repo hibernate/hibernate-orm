@@ -39,7 +39,14 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class BatchBuilderInitiator implements StandardServiceInitiator<BatchBuilder> {
+	/**
+	 * Singleton access
+	 */
 	public static final BatchBuilderInitiator INSTANCE = new BatchBuilderInitiator();
+
+	/**
+	 * Names the BatchBuilder implementation to use.
+	 */
 	public static final String BUILDER = "hibernate.jdbc.batch.builder";
 
 	@Override

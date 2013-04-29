@@ -156,7 +156,7 @@ public final class Nullability {
 				final CompositeType componentType = (CompositeType) collectionElementType;
 				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
 				while ( itr.hasNext() ) {
-					Object compValue = itr.next();
+					final Object compValue = itr.next();
 					if ( compValue != null ) {
 						return checkComponentNullability( compValue, componentType );
 					}

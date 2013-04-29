@@ -56,6 +56,9 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl
 		implements ServiceRegistryAwareService, Stoppable {
 
+	/**
+	 * Identifies the DataSource name to use for {@link #selectAnyDataSource} handling
+	 */
 	public static final String TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY = "hibernate.multi_tenant.datasource.identifier_for_any";
 
 	private Map<String,DataSource> dataSourceMap;
@@ -100,13 +103,13 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 			throw new HibernateException( "Could not locate JndiService from DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
 
-		Object namedObject = jndiService.locate( jndiName );
+		final Object namedObject = jndiService.locate( jndiName );
 		if ( namedObject == null ) {
 			throw new HibernateException( "JNDI name [" + jndiName + "] could not be resolved" );
 		}
 
 		if ( DataSource.class.isInstance( namedObject ) ) {
-			int loc = jndiName.lastIndexOf( "/" );
+			final int loc = jndiName.lastIndexOf( "/" );
 			this.baseJndiNamespace = jndiName.substring( 0, loc );
 			this.tenantIdentifierForAny = jndiName.substring( loc + 1 );
 			dataSourceMap().put( tenantIdentifierForAny, (DataSource) namedObject );

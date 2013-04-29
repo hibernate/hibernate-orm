@@ -95,10 +95,11 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
+	@Override
 	public void configure(Map configurationValues) {
 		LOG.usingHibernateBuiltInConnectionPool();
 
-		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
 		if ( driverClassName == null ) {
 			LOG.jdbcDriverNotSpecified( AvailableSettings.DRIVER );
 		}
@@ -131,19 +132,21 @@ public class DriverManagerConnectionProviderImpl
 			}
 		}
 
-		poolSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 ); // default pool size 20
+		// default pool size 20
+		poolSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
 		LOG.hibernateConnectionPoolSize( poolSize );
 
 		autocommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
 		LOG.autoCommitMode( autocommit );
 
 		isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
-		if ( isolation != null )
+		if ( isolation != null ) {
 			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation.intValue() ) );
+		}
 
 		url = (String) configurationValues.get( AvailableSettings.URL );
 		if ( url == null ) {
-			String msg = LOG.jdbcUrlNotSpecified( AvailableSettings.URL );
+			final String msg = LOG.jdbcUrlNotSpecified( AvailableSettings.URL );
 			LOG.error( msg );
 			throw new HibernateException( msg );
 		}
@@ -152,12 +155,15 @@ public class DriverManagerConnectionProviderImpl
 
 		LOG.usingDriver( driverClassName, url );
 		// if debug level is enabled, then log the password, otherwise mask it
-		if ( LOG.isDebugEnabled() )
+		if ( LOG.isDebugEnabled() ) {
 			LOG.connectionProperties( connectionProps );
-		else
+		}
+		else {
 			LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
+		}
 	}
 
+	@Override
 	public void stop() {
 		LOG.cleaningUpConnectionPool( url );
 
@@ -173,16 +179,21 @@ public class DriverManagerConnectionProviderImpl
 		stopped = true;
 	}
 
+	@Override
 	public Connection getConnection() throws SQLException {
 		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) LOG.tracev( "Total checked-out connections: {0}", checkedOut.intValue() );
+		if ( traceEnabled ) {
+			LOG.tracev( "Total checked-out connections: {0}", checkedOut.intValue() );
+		}
 
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
 			if ( !pool.isEmpty() ) {
 				int last = pool.size() - 1;
-				if ( traceEnabled ) LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
-				Connection pooled = pool.remove( last );
+				if ( traceEnabled ) {
+					LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
+				}
+				final Connection pooled = pool.remove( last );
 				if ( isolation != null ) {
 					pooled.setTransactionIsolation( isolation.intValue() );
 				}
@@ -196,9 +207,11 @@ public class DriverManagerConnectionProviderImpl
 
 		// otherwise we open a new connection...
 		final boolean debugEnabled = LOG.isDebugEnabled();
-		if ( debugEnabled ) LOG.debug( "Opening new JDBC connection" );
+		if ( debugEnabled ) {
+			LOG.debug( "Opening new JDBC connection" );
+		}
 		
-		Connection conn;
+		final Connection conn;
 		if ( driver != null ) {
 			// If a Driver is available, completely circumvent
 			// DriverManager#getConnection.  It attempts to double check
@@ -215,7 +228,7 @@ public class DriverManagerConnectionProviderImpl
 			conn.setTransactionIsolation( isolation.intValue() );
 		}
 		if ( conn.getAutoCommit() != autocommit ) {
-			conn.setAutoCommit(autocommit);
+			conn.setAutoCommit( autocommit );
 		}
 
 		if ( debugEnabled ) {
@@ -226,15 +239,18 @@ public class DriverManagerConnectionProviderImpl
 		return conn;
 	}
 
+	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		checkedOut.decrementAndGet();
 
 		final boolean traceEnabled = LOG.isTraceEnabled();
 		// add to the pool if the max size is not yet reached.
 		synchronized ( pool ) {
-			int currentSize = pool.size();
+			final int currentSize = pool.size();
 			if ( currentSize < poolSize ) {
-				if ( traceEnabled ) LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
+				if ( traceEnabled ) {
+					LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
+				}
 				pool.add( conn );
 				return;
 			}
@@ -252,6 +268,7 @@ public class DriverManagerConnectionProviderImpl
 		super.finalize();
 	}
 
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}

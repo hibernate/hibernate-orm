@@ -44,10 +44,12 @@ import org.hibernate.internal.util.ClassLoaderHelper;
  * @author Gail Badner
  */
 public class ResultSetWrapperProxy implements InvocationHandler {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ResultSetWrapperProxy.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ResultSetWrapperProxy.class.getName()
+	);
 	private static final Class[] PROXY_INTERFACES = new Class[] { ResultSet.class };
-	private static final SqlExceptionHelper sqlExceptionHelper = new SqlExceptionHelper();
+	private static final SqlExceptionHelper SQL_EXCEPTION_HELPER = new SqlExceptionHelper();
 
 	private final ResultSet rs;
 	private final ColumnNameCache columnNameCache;
@@ -65,7 +67,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @return The generated proxy.
 	 */
 	public static ResultSet generateProxy(ResultSet resultSet, ColumnNameCache columnNameCache) {
-		return ( ResultSet ) Proxy.newProxyInstance(
+		return (ResultSet) Proxy.newProxyInstance(
 				getProxyClassLoader(),
 				PROXY_INTERFACES,
 				new ResultSetWrapperProxy( resultSet, columnNameCache )
@@ -90,26 +92,22 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( "findColumn".equals( method.getName() ) ) {
-			return Integer.valueOf( findColumn( ( String ) args[0] ) );
+			return Integer.valueOf( findColumn( (String) args[0] ) );
 		}
 
 		if ( isFirstArgColumnLabel( method, args ) ) {
 			try {
-				int columnIndex = findColumn( ( String ) args[0] );
+				final int columnIndex = findColumn( (String) args[0] );
 				return invokeMethod(
-						locateCorrespondingColumnIndexMethod( method ), buildColumnIndexMethodArgs( args, columnIndex )
+						locateCorrespondingColumnIndexMethod( method ),
+						buildColumnIndexMethodArgs( args, columnIndex )
 				);
 			}
 			catch ( SQLException ex ) {
-				StringBuilder buf = new StringBuilder()
-						.append( "Exception getting column index for column: [" )
-						.append( args[0] )
-						.append( "].\nReverting to using: [" )
-						.append( args[0] )
-						.append( "] as first argument for method: [" )
-						.append( method )
-						.append( "]" );
-				sqlExceptionHelper.logExceptions( ex, buf.toString() );
+				final String msg = "Exception getting column index for column: [" + args[0] +
+						"].\nReverting to using: [" + args[0] +
+						"] as first argument for method: [" + method + "]";
+				SQL_EXCEPTION_HELPER.logExceptions( ex, msg );
 			}
 			catch ( NoSuchMethodException ex ) {
 				LOG.unableToSwitchToMethodUsingColumnIndex( method );
@@ -158,7 +156,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @throws NoSuchMethodException Should never happen, but...
 	 */
 	private Method locateCorrespondingColumnIndexMethod(Method columnNameMethod) throws NoSuchMethodException {
-		Class actualParameterTypes[] = new Class[columnNameMethod.getParameterTypes().length];
+		final Class[] actualParameterTypes = new Class[columnNameMethod.getParameterTypes().length];
 		actualParameterTypes[0] = int.class;
 		System.arraycopy(
 				columnNameMethod.getParameterTypes(),
@@ -172,13 +170,13 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 
 	@SuppressWarnings( {"UnnecessaryBoxing"})
 	private Object[] buildColumnIndexMethodArgs(Object[] incomingArgs, int columnIndex) {
-		Object actualArgs[] = new Object[incomingArgs.length];
+		final Object[] actualArgs = new Object[incomingArgs.length];
 		actualArgs[0] = Integer.valueOf( columnIndex );
 		System.arraycopy( incomingArgs, 1, actualArgs, 1, incomingArgs.length - 1 );
 		return actualArgs;
 	}
 
-	private Object invokeMethod(Method method, Object args[]) throws Throwable {
+	private Object invokeMethod(Method method, Object[] args) throws Throwable {
 		try {
 			return method.invoke( rs, args );
 		}

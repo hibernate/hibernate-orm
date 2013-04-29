@@ -82,7 +82,7 @@ public class UnsavedValueFactory {
 		if ( unsavedValue == null ) {
 			if ( identifierGetter != null && constructor != null ) {
 				// use the id value of a newly instantiated instance as the unsaved-value
-				final Serializable defaultValue = (Serializable) identifierGetter.get( instantiate(constructor) );
+				final Serializable defaultValue = (Serializable) identifierGetter.get( instantiate( constructor ) );
 				return new IdentifierValue( defaultValue );
 			}
 			else if ( identifierGetter != null && (identifierType instanceof PrimitiveType) ) {

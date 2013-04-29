@@ -404,7 +404,7 @@ public class NaturalIdXrefDelegate {
 			}
 
 			final CachedNaturalId other = (CachedNaturalId) obj;
-			return persister.equals( other.persister ) && isSame(other.values );
+			return persister.equals( other.persister ) && isSame( other.values );
 		}
 
 		private boolean isSame(Object[] otherValues) {

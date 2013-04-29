@@ -94,7 +94,7 @@ public final class TwoPhaseLoad {
 			final Object object,
 			final LockMode lockMode,
 			final boolean lazyPropertiesAreUnFetched,
-			final SessionImplementor session) throws HibernateException {
+			final SessionImplementor session) {
 		final Object version = Versioning.getVersion( values, persister );
 		session.getPersistenceContext().addEntry(
 				object,

@@ -33,12 +33,21 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.AssociationType;
 
 /**
+ * Helper for dealing with joins.
+ *
  * @author Gavin King
  */
 public final class JoinHelper {
 	/**
-	 * Get the aliased columns of the owning entity which are to
-	 * be used in the join
+	 * Get the qualified (prefixed by alias) names of the columns of the owning entity which are to be used in the join
+	 *
+	 * @param type The association type for the association that represents the join
+	 * @param alias The left-hand side table alias
+	 * @param property The index of the property that represents the association/join
+	 * @param lhsPersister The persister for the left-hand side of the association/join
+	 * @param mapping The mapping (typically the SessionFactory).
+	 *
+	 * @return The qualified column names.
 	 */
 	public static String[] getAliasedLHSColumnNames(
 			AssociationType type,
@@ -50,8 +59,14 @@ public final class JoinHelper {
 	}
 
 	/**
-	 * Get the columns of the owning entity which are to
-	 * be used in the join
+	 * Get the unqualified names of the columns of the owning entity which are to be used in the join.
+	 *
+	 * @param type The association type for the association that represents the join
+	 * @param property The name of the property that represents the association/join
+	 * @param lhsPersister The persister for the left-hand side of the association/join
+	 * @param mapping The mapping (typically the SessionFactory).
+	 *
+	 * @return The unqualified column names.
 	 */
 	public static String[] getLHSColumnNames(
 			AssociationType type,
@@ -62,8 +77,19 @@ public final class JoinHelper {
 	}
 
 	/**
-	 * Get the aliased columns of the owning entity which are to
-	 * be used in the join
+	 *
+	 */
+	/**
+	 * Get the qualified (prefixed by alias) names of the columns of the owning entity which are to be used in the join
+	 *
+	 * @param associationType The association type for the association that represents the join
+	 * @param columnQualifier The left-hand side table alias
+	 * @param propertyIndex The index of the property that represents the association/join
+	 * @param begin The index for any nested (composites) attributes
+	 * @param lhsPersister The persister for the left-hand side of the association/join
+	 * @param mapping The mapping (typically the SessionFactory).
+	 *
+	 * @return The qualified column names.
 	 */
 	public static String[] getAliasedLHSColumnNames(
 			AssociationType associationType,
@@ -76,7 +102,7 @@ public final class JoinHelper {
 			return StringHelper.qualify( columnQualifier, lhsPersister.getIdentifierColumnNames() );
 		}
 		else {
-			String propertyName = associationType.getLHSPropertyName();
+			final String propertyName = associationType.getLHSPropertyName();
 			if ( propertyName == null ) {
 				return ArrayHelper.slice(
 						toColumns( lhsPersister, columnQualifier, propertyIndex ),

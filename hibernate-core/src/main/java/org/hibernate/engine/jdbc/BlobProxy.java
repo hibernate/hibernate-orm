@@ -47,7 +47,7 @@ public class BlobProxy implements InvocationHandler {
 	private static final Class[] PROXY_INTERFACES = new Class[] { Blob.class, BlobImplementer.class };
 
 	private BinaryStream binaryStream;
-	private boolean needsReset = false;
+	private boolean needsReset;
 
 	/**
 	 * Constructor used to build {@link Blob} from byte array.
@@ -75,7 +75,7 @@ public class BlobProxy implements InvocationHandler {
 	}
 
 	private InputStream getStream() throws SQLException {
-		InputStream stream = binaryStream.getInputStream();
+		final InputStream stream = binaryStream.getInputStream();
 		try {
 			if ( needsReset ) {
 				stream.reset();
@@ -92,8 +92,7 @@ public class BlobProxy implements InvocationHandler {
 	 * {@inheritDoc}
 	 *
 	 * @throws UnsupportedOperationException if any methods other than
-	 * {@link Blob#length}, {@link Blob#getUnderlyingStream},
-	 * {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
+	 * {@link Blob#length}, {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
 	 * or toString/equals/hashCode are invoked.
 	 */
 	@Override
@@ -120,7 +119,7 @@ public class BlobProxy implements InvocationHandler {
 				if ( start > getLength() ) {
 					throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
 				}
-				int length = (Integer) args[1];
+				final int length = (Integer) args[1];
 				if ( length < 0 ) {
 					// java docs specifically say for getBinaryStream(long,int) that the start+length must not exceed the
 					// total length, however that is at odds with the getBytes(long,int) behavior.
@@ -131,11 +130,11 @@ public class BlobProxy implements InvocationHandler {
 		}
 		if ( "getBytes".equals( methodName ) ) {
 			if ( argCount == 2 ) {
-				long start = (Long) args[0];
+				final long start = (Long) args[0];
 				if ( start < 1 ) {
 					throw new SQLException( "Start position 1-based; must be 1 or more." );
 				}
-				int length = (Integer) args[1];
+				final int length = (Integer) args[1];
 				if ( length < 0 ) {
 					throw new SQLException( "Length must be great-than-or-equal to zero." );
 				}
@@ -167,11 +166,7 @@ public class BlobProxy implements InvocationHandler {
 	 * @return The generated proxy.
 	 */
 	public static Blob generateProxy(byte[] bytes) {
-		return ( Blob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new BlobProxy( bytes )
-		);
+		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new BlobProxy( bytes ) );
 	}
 
 	/**
@@ -183,11 +178,7 @@ public class BlobProxy implements InvocationHandler {
 	 * @return The generated proxy.
 	 */
 	public static Blob generateProxy(InputStream stream, long length) {
-		return ( Blob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new BlobProxy( stream, length )
-		);
+		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new BlobProxy( stream, length ) );
 	}
 
 	/**

@@ -43,7 +43,7 @@ import org.hibernate.internal.util.ClassLoaderHelper;
 public class SerializableBlobProxy implements InvocationHandler, Serializable {
 	private static final Class[] PROXY_INTERFACES = new Class[] { Blob.class, WrappedBlob.class, Serializable.class };
 
-	private transient final Blob blob;
+	private final transient Blob blob;
 
 	/**
 	 * Builds a serializable {@link Blob} wrapper around the given {@link Blob}.
@@ -55,6 +55,11 @@ public class SerializableBlobProxy implements InvocationHandler, Serializable {
 		this.blob = blob;
 	}
 
+	/**
+	 * Access to the wrapped Blob reference
+	 *
+	 * @return The wrapped Blob reference
+	 */
 	public Blob getWrappedBlob() {
 		if ( blob == null ) {
 			throw new IllegalStateException( "Blobs may not be accessed after serialization" );
@@ -88,11 +93,7 @@ public class SerializableBlobProxy implements InvocationHandler, Serializable {
 	 * @return The generated proxy.
 	 */
 	public static Blob generateProxy(Blob blob) {
-		return ( Blob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new SerializableBlobProxy( blob )
-		);
+		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new SerializableBlobProxy( blob ) );
 	}
 
 	/**

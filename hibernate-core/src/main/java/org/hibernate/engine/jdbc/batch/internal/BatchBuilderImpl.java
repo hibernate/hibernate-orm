@@ -42,12 +42,24 @@ import org.hibernate.service.spi.Configurable;
  * @author Steve Ebersole
  */
 public class BatchBuilderImpl implements BatchBuilder, Configurable {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BatchBuilderImpl.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			BatchBuilderImpl.class.getName()
+	);
 
 	private int size;
 
+	/**
+	 * Constructs a BatchBuilderImpl
+	 */
 	public BatchBuilderImpl() {
+	}
+
+	/**
+	 * Constructs a BatchBuilderImpl
+	 */
+	public BatchBuilderImpl(int size) {
+		this.size = size;
 	}
 
 	@Override
@@ -55,10 +67,7 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable {
 		size = ConfigurationHelper.getInt( Environment.STATEMENT_BATCH_SIZE, configurationValues, size );
 	}
 
-	public BatchBuilderImpl(int size) {
-		this.size = size;
-	}
-
+	@SuppressWarnings("UnusedDeclaration")
 	public void setJdbcBatchSize(int size) {
 		this.size = size;
 	}
@@ -73,12 +82,14 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable {
 
 	@Override
 	public String getManagementDomain() {
-		return null; // use Hibernate default domain
+		// use Hibernate default domain
+		return null;
 	}
 
 	@Override
 	public String getManagementServiceType() {
-		return null;  // use Hibernate default scheme
+		// use Hibernate default scheme
+		return null;
 	}
 
 	@Override

@@ -26,7 +26,6 @@ package org.hibernate.engine.jdbc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -49,7 +48,7 @@ public class ClobProxy implements InvocationHandler {
 	private static final Class[] PROXY_INTERFACES = new Class[] { Clob.class, ClobImplementer.class };
 
 	private final CharacterStream characterStream;
-	private boolean needsReset = false;
+	private boolean needsReset;
 
 	/**
 	 * Constructor used to build {@link Clob} from string data.
@@ -89,8 +88,8 @@ public class ClobProxy implements InvocationHandler {
 	protected String getSubString(long start, int length) {
 		final String string = characterStream.asString();
 		// semi-naive implementation
-		int endIndex = Math.min( ((int)start)+length, string.length() );
-		return string.substring( (int)start, endIndex );
+		final int endIndex = Math.min( ( (int) start ) + length, string.length() );
+		return string.substring( (int) start, endIndex );
 	}
 
 	/**
@@ -119,14 +118,14 @@ public class ClobProxy implements InvocationHandler {
 				return getCharacterStream();
 			}
 			else if ( argCount == 2 ) {
-				long start = (Long) args[0];
+				final long start = (Long) args[0];
 				if ( start < 1 ) {
 					throw new SQLException( "Start position 1-based; must be 1 or more." );
 				}
 				if ( start > getLength() ) {
 					throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
 				}
-				int length = (Integer) args[1];
+				final int length = (Integer) args[1];
 				if ( length < 0 ) {
 					// java docs specifically say for getCharacterStream(long,int) that the start+length must not exceed the
 					// total length, however that is at odds with the getSubString(long,int) behavior.
@@ -136,14 +135,14 @@ public class ClobProxy implements InvocationHandler {
 			}
 		}
 		if ( "getSubString".equals( methodName ) && argCount == 2 ) {
-			long start = (Long) args[0];
+			final long start = (Long) args[0];
 			if ( start < 1 ) {
 				throw new SQLException( "Start position 1-based; must be 1 or more." );
 			}
 			if ( start > getLength() ) {
 				throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + getLength() + "]" );
 			}
-			int length = (Integer) args[1];
+			final int length = (Integer) args[1];
 			if ( length < 0 ) {
 				throw new SQLException( "Length must be great-than-or-equal to zero." );
 			}
@@ -186,11 +185,7 @@ public class ClobProxy implements InvocationHandler {
 	 * @return The generated proxy.
 	 */
 	public static Clob generateProxy(String string) {
-		return ( Clob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new ClobProxy( string )
-		);
+		return (Clob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( string ) );
 	}
 
 	/**
@@ -202,11 +197,7 @@ public class ClobProxy implements InvocationHandler {
 	 * @return The generated proxy.
 	 */
 	public static Clob generateProxy(Reader reader, long length) {
-		return ( Clob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new ClobProxy( reader, length )
-		);
+		return (Clob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( reader, length ) );
 	}
 
 	/**

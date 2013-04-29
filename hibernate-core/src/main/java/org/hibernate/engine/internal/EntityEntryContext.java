@@ -343,6 +343,8 @@ public class EntityEntryContext {
 	 * @param ois The stream to read ourselves from
 	 * @param rtn The persistence context we belong to
 	 *
+	 * @return The deserialized EntityEntryContext
+	 *
 	 * @throws IOException Indicates an IO exception accessing the given stream
 	 * @throws ClassNotFoundException Problem reading stream data
 	 */

@@ -55,23 +55,17 @@ public class UserSuppliedConnectionProviderImpl implements ConnectionProvider {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Connection getConnection() throws SQLException {
 		throw new UnsupportedOperationException( "The application must supply JDBC connections" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void closeConnection(Connection conn) throws SQLException {
 		throw new UnsupportedOperationException( "The application must supply JDBC connections" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean supportsAggressiveRelease() {
 		return false;
 	}

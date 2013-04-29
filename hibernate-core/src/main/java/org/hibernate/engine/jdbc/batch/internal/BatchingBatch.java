@@ -40,8 +40,10 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class BatchingBatch extends AbstractBatchImpl {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BatchingBatch.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			BatchingBatch.class.getName()
+	);
 
 	// IMPL NOTE : Until HHH-5797 is fixed, there will only be 1 statement in a batch
 
@@ -49,6 +51,13 @@ public class BatchingBatch extends AbstractBatchImpl {
 	private int batchPosition;
 	private int statementPosition;
 
+	/**
+	 * Constructs a BatchingBatch
+	 *
+	 * @param key The batch key
+	 * @param jdbcCoordinator The JDBC jdbcCoordinator
+	 * @param batchSize The batch size.
+	 */
 	public BatchingBatch(
 			BatchKey key,
 			JdbcCoordinator jdbcCoordinator,
@@ -125,7 +134,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 	}
 
 	private void checkRowCounts(int[] rowCounts, PreparedStatement ps) throws SQLException, HibernateException {
-		int numberOfRowCounts = rowCounts.length;
+		final int numberOfRowCounts = rowCounts.length;
 		if ( numberOfRowCounts != batchPosition ) {
 			LOG.unexpectedRowCounts();
 		}

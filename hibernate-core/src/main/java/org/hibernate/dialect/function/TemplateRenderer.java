@@ -59,7 +59,9 @@ public class TemplateRenderer {
 		final StringBuilder chunk = new StringBuilder( 10 );
 		final StringBuilder index = new StringBuilder( 2 );
 
-		for ( int i = 0; i < template.length(); ++i ) {
+		int i = 0;
+		final int len = template.length();
+		while ( i < len ) {
 			char c = template.charAt( i );
 			if ( c == '?' ) {
 				chunkList.add( chunk.toString() );
@@ -82,6 +84,7 @@ public class TemplateRenderer {
 			else {
 				chunk.append( c );
 			}
+			i++;
 		}
 
 		if ( chunk.length() > 0 ) {
@@ -90,7 +93,7 @@ public class TemplateRenderer {
 
 		chunks = chunkList.toArray( new String[chunkList.size()] );
 		paramIndexes = new int[paramList.size()];
-		for ( int i = 0; i < paramIndexes.length; ++i ) {
+		for ( i = 0; i < paramIndexes.length; ++i ) {
 			paramIndexes[i] = paramList.get( i );
 		}
 	}

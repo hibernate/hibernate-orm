@@ -146,7 +146,7 @@ public class ParameterBinder {
 				final Map.Entry e = (Map.Entry) iter.next();
 				final String name = (String) e.getKey();
 				final TypedValue typedVal = (TypedValue) e.getValue();
-				int[] locations = source.getNamedParameterLocations( name );
+				final int[] locations = source.getNamedParameterLocations( name );
 				for ( int location : locations ) {
 					if ( debugEnabled ) {
 						LOG.debugf(

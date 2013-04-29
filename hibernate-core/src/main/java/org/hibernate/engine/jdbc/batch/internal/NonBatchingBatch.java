@@ -39,8 +39,10 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, NonBatchingBatch.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			NonBatchingBatch.class.getName()
+	);
 
 	private JdbcCoordinator jdbcCoordinator;
 	

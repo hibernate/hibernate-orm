@@ -258,7 +258,7 @@ public final class Cascade {
 		final Object[] children = componentType.getPropertyValues( child, eventSource );
 		final Type[] types = componentType.getSubtypes();
 		for ( int i=0; i<types.length; i++ ) {
-			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle(i);
+			final CascadeStyle componentPropertyStyle = componentType.getCascadeStyle( i );
 			final String subPropertyName = componentType.getPropertyNames()[i];
 			if ( componentPropertyStyle.doCascade( action ) ) {
 				cascadeProperty(

@@ -25,7 +25,6 @@ package org.hibernate.engine.jdbc;
 
 import java.io.Reader;
 import java.lang.reflect.Proxy;
-import java.sql.Clob;
 import java.sql.NClob;
 
 import org.hibernate.internal.util.ClassLoaderHelper;
@@ -40,6 +39,9 @@ import org.hibernate.internal.util.ClassLoaderHelper;
  * @author Steve Ebersole
  */
 public class NClobProxy extends ClobProxy {
+	/**
+	 * The interfaces used to generate the proxy
+	 */
 	public static final Class[] PROXY_INTERFACES = new Class[] { NClob.class, NClobImplementer.class };
 
 	protected NClobProxy(String string) {
@@ -58,15 +60,11 @@ public class NClobProxy extends ClobProxy {
 	 * @return The generated proxy.
 	 */
 	public static NClob generateProxy(String string) {
-		return ( NClob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new ClobProxy( string )
-		);
+		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( string ) );
 	}
 
 	/**
-	 * Generates a {@link Clob} proxy using a character reader of given length.
+	 * Generates a {@link java.sql.NClob} proxy using a character reader of given length.
 	 *
 	 * @param reader The character reader
 	 * @param length The length of the character reader
@@ -74,11 +72,7 @@ public class NClobProxy extends ClobProxy {
 	 * @return The generated proxy.
 	 */
 	public static NClob generateProxy(Reader reader, long length) {
-		return ( NClob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new ClobProxy( reader, length )
-		);
+		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( reader, length ) );
 	}
 
 	/**

@@ -89,6 +89,8 @@ public final class ForeignKeys {
 		 *
 		 * @param value An entity attribute value
 		 * @param type An entity attribute type
+		 *
+		 * @return {@code null} if the argument is an unsaved entity; otherwise return the argument.
 		 */
 		private Object nullifyTransientReferences(final Object value, final Type type)
 				throws HibernateException {

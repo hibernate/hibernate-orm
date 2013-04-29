@@ -394,7 +394,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public boolean containsEntity(EntityKey key) {
-		return entitiesByKey.containsKey(key);
+		return entitiesByKey.containsKey( key );
 	}
 
 	@Override

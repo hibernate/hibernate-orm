@@ -45,11 +45,14 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractBatchImpl implements Batch {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, AbstractBatchImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AbstractBatchImpl.class.getName()
+	);
 
 	private final BatchKey key;
 	private final JdbcCoordinator jdbcCoordinator;
+
 	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
 	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
 
@@ -191,7 +194,7 @@ public abstract class AbstractBatchImpl implements Batch {
 
 	@Override
 	public void release() {
-        if ( getStatements() != null && !getStatements().isEmpty() ) {
+		if ( getStatements() != null && !getStatements().isEmpty() ) {
 			LOG.batchContainedStatementsOnRelease();
 		}
 		releaseStatements();

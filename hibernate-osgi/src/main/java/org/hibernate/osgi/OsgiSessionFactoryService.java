@@ -25,6 +25,7 @@ import java.util.List;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.integrator.spi.Integrator;
@@ -82,6 +83,12 @@ public class OsgiSessionFactoryService implements ServiceFactory {
         List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
         for (Integrator integrator : integrators) {
         	builder.with( integrator );
+        }
+        
+        List<StrategyRegistrationProvider> strategyRegistrationProviders
+        		= OsgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class, context );
+        for (StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders) {
+        	builder.withStrategySelectors( strategyRegistrationProvider );
         }
         
         ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )

@@ -35,6 +35,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.ejb.HibernatePersistence;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.osgi.util.OsgiServiceUtil;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.osgi.framework.Bundle;
@@ -68,7 +69,7 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 
 	@Override
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		generateProperties( properties );
+		properties = generateProperties( properties );
 
 		// TODO: This needs tested.
 		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
@@ -80,12 +81,12 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 
 		Ejb3Configuration cfg = new Ejb3Configuration();
 		Ejb3Configuration configured = cfg.configure( persistenceUnitName, properties );
-		return configured != null ? configured.buildEntityManagerFactory( getBuilder( properties ) ) : null;
+		return configured != null ? configured.buildEntityManagerFactory( getBuilder( cfg, properties ) ) : null;
 	}
 
 	@Override
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		generateProperties( properties );
+		properties = generateProperties( properties );
 
 		// OSGi ClassLoaders must implement BundleReference
 		properties.put( org.hibernate.ejb.AvailableSettings.SCANNER,
@@ -95,10 +96,10 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 
 		Ejb3Configuration cfg = new Ejb3Configuration();
 		Ejb3Configuration configured = cfg.configure( info, properties );
-		return configured != null ? configured.buildEntityManagerFactory( getBuilder( properties ) ) : null;
+		return configured != null ? configured.buildEntityManagerFactory( getBuilder( cfg, properties ) ) : null;
 	}
 
-	private BootstrapServiceRegistryBuilder getBuilder(Map properties) {
+	private BootstrapServiceRegistryBuilder getBuilder(Ejb3Configuration cfg, Map properties) {
 		BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		
 		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) properties
@@ -114,17 +115,22 @@ public class OsgiPersistenceProvider extends HibernatePersistence {
 		for ( Integrator integrator : integrators ) {
 			builder.with( integrator );
 		}
-		
-		// TODO: other types of services?
+        
+        List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+        for (TypeContributor typeContributor : typeContributors) {
+        	cfg.addTypeContributor( typeContributor );
+        }
 		
 		return builder;
 	}
 
-	private void generateProperties(Map properties) {
+	private Map generateProperties(Map properties) {
 		if ( properties == null ) {
 			properties = new HashMap();
 		}
 
 		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+		
+		return properties;
 	}
 }

@@ -26,6 +26,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.osgi.util.OsgiServiceUtil;
 import org.hibernate.service.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
@@ -82,6 +83,11 @@ public class OsgiSessionFactoryService implements ServiceFactory {
         List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
         for (Integrator integrator : integrators) {
         	builder.with( integrator );
+        }
+        
+        List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+        for (TypeContributor typeContributor : typeContributors) {
+        	configuration.registerTypeContributor( typeContributor );
         }
         
         ServiceRegistry serviceRegistry = new ServiceRegistryBuilder( builder.build() )

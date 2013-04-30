@@ -52,7 +52,7 @@ public interface C3P0MessageLogger extends CoreMessageLogger {
 	 */
 	@LogMessage(level = WARN)
 	@Message(value = "Both hibernate-style property '%1$s' and c3p0-style property '%2$s' have been set in Hibernate "
-			+ "properties.  Hibernate-style property '%1$s' will be used and c3p0-style property '2$%s' will be ignored!", id = 10001)
+			+ "properties.  Hibernate-style property '%1$s' will be used and c3p0-style property '%2$s' will be ignored!", id = 10001)
 	void bothHibernateAndC3p0StylesSet(String hibernateStyle,String c3p0Style);
 
 	/**

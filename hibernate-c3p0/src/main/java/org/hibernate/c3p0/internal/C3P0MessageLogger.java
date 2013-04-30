@@ -41,29 +41,54 @@ import static org.jboss.logging.Logger.Level.WARN;
  * <p/>
  * New messages must be added after the last message defined to ensure message codes are unique.
  */
-@MessageLogger( projectCode = "HHH" )
+@MessageLogger(projectCode = "HHH")
 public interface C3P0MessageLogger extends CoreMessageLogger {
 
-    @LogMessage( level = WARN )
-    @Message( value = "Both hibernate-style property '%s' and c3p0-style property '%s' have been set in hibernate.properties. "
-                      + "Hibernate-style property '%s' will be used and c3p0-style property '%s' will be ignored!", id = 10001 )
-    void bothHibernateAndC3p0StylesSet( String hibernateStyle,
-                                        String c3p0Style,
-                                        String hibernateStyle2,
-                                        String c3p0Style2 );
+	/**
+	 * Log a message (WARN) about conflicting {@code hibernate.c3p0.XYZ} and {@code c3p0.XYZ} settings
+	 *
+	 * @param hibernateStyle The {@code hibernate.c3p0} prefixed setting
+	 * @param c3p0Style The {@code c3p0.} prefixed setting
+	 */
+	@LogMessage(level = WARN)
+	@Message(value = "Both hibernate-style property '%1$s' and c3p0-style property '%2$s' have been set in Hibernate "
+			+ "properties.  Hibernate-style property '%1$s' will be used and c3p0-style property '2$%s' will be ignored!", id = 10001)
+	void bothHibernateAndC3p0StylesSet(String hibernateStyle,String c3p0Style);
 
-    @LogMessage( level = INFO )
-    @Message( value = "C3P0 using driver: %s at URL: %s", id = 10002 )
-    void c3p0UsingDriver( String jdbcDriverClass,
-                          String jdbcUrl );
+	/**
+	 * Log a message (INFO) about which Driver class is being used.
+	 *
+	 * @param jdbcDriverClass The JDBC Driver class
+	 * @param jdbcUrl The JDBC URL
+	 */
+	@LogMessage(level = INFO)
+	@Message(value = "C3P0 using driver: %s at URL: %s", id = 10002)
+	void c3p0UsingDriver(String jdbcDriverClass, String jdbcUrl);
 
-    @Message( value = "JDBC Driver class not found: %s", id = 10003 )
-    String jdbcDriverNotFound( String jdbcDriverClass );
+	/**
+	 * Build a message about not being able to find the JDBC driver class
+	 *
+	 * @param jdbcDriverClass The JDBC driver class we could not find
+	 *
+	 * @return The message
+	 */
+	@Message(value = "JDBC Driver class not found: %s", id = 10003)
+	String jdbcDriverNotFound(String jdbcDriverClass);
 
-    @LogMessage( level = WARN )
-    @Message( value = "Could not destroy C3P0 connection pool", id = 10004 )
-    void unableToDestroyC3p0ConnectionPool( @Cause SQLException e );
+	/**
+	 * Log a message (WARN) about not being able to stop the underlying c3p0 pool.
+	 *
+	 * @param e The exception when we tried to stop pool
+	 */
+	@LogMessage(level = WARN)
+	@Message(value = "Could not destroy C3P0 connection pool", id = 10004)
+	void unableToDestroyC3p0ConnectionPool(@Cause SQLException e);
 
-    @Message( value = "Could not instantiate C3P0 connection pool", id = 10005 )
-    String unableToInstantiateC3p0ConnectionPool();
+	/**
+	 * Build a message about not being able to start the underlying c3p0 pool.
+	 *
+	 * @return The message
+	 */
+	@Message(value = "Could not instantiate C3P0 connection pool", id = 10005)
+	String unableToInstantiateC3p0ConnectionPool();
 }

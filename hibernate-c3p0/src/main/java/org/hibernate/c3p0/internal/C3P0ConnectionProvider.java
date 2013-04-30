@@ -31,6 +31,7 @@ import java.util.Properties;
 import javax.sql.DataSource;
 
 import com.mchange.v2.c3p0.DataSources;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -53,25 +54,28 @@ import org.hibernate.service.spi.Stoppable;
  * @author various people
  * @see ConnectionProvider
  */
-public class C3P0ConnectionProvider 
+public class C3P0ConnectionProvider
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 
-    private static final C3P0MessageLogger LOG = Logger.getMessageLogger(C3P0MessageLogger.class, C3P0ConnectionProvider.class.getName());
+	private static final C3P0MessageLogger LOG = Logger.getMessageLogger(
+			C3P0MessageLogger.class,
+			C3P0ConnectionProvider.class.getName()
+	);
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for properties with
 	//                     hibernate-specific overrides to detect and warn about conflicting
 	//                     declarations
-	private final static String C3P0_STYLE_MIN_POOL_SIZE = "c3p0.minPoolSize";
-	private final static String C3P0_STYLE_MAX_POOL_SIZE = "c3p0.maxPoolSize";
-	private final static String C3P0_STYLE_MAX_IDLE_TIME = "c3p0.maxIdleTime";
-	private final static String C3P0_STYLE_MAX_STATEMENTS = "c3p0.maxStatements";
-	private final static String C3P0_STYLE_ACQUIRE_INCREMENT = "c3p0.acquireIncrement";
-	private final static String C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD = "c3p0.idleConnectionTestPeriod";
+	private static final String C3P0_STYLE_MIN_POOL_SIZE = "c3p0.minPoolSize";
+	private static final String C3P0_STYLE_MAX_POOL_SIZE = "c3p0.maxPoolSize";
+	private static final String C3P0_STYLE_MAX_IDLE_TIME = "c3p0.maxIdleTime";
+	private static final String C3P0_STYLE_MAX_STATEMENTS = "c3p0.maxStatements";
+	private static final String C3P0_STYLE_ACQUIRE_INCREMENT = "c3p0.acquireIncrement";
+	private static final String C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD = "c3p0.idleConnectionTestPeriod";
 
 	//swaldman 2006-08-28: define c3p0-style configuration parameters for initialPoolSize, which
 	//                     hibernate sensibly lets default to minPoolSize, but we'll let users
 	//                     override it with the c3p0-style property if they want.
-	private final static String C3P0_STYLE_INITIAL_POOL_SIZE = "c3p0.initialPoolSize";
+	private static final String C3P0_STYLE_INITIAL_POOL_SIZE = "c3p0.initialPoolSize";
 
 	private DataSource ds;
 	private Integer isolation;
@@ -105,7 +109,7 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public <T> T unwrap(Class<T> unwrapType) {
 		if ( ConnectionProvider.class.equals( unwrapType ) ||
 				C3P0ConnectionProvider.class.isAssignableFrom( unwrapType ) ) {
@@ -120,46 +124,46 @@ public class C3P0ConnectionProvider
 	}
 
 	@Override
-    @SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public void configure(Map props) {
-		String jdbcDriverClass = (String) props.get( Environment.DRIVER );
-		String jdbcUrl = (String) props.get( Environment.URL );
-		Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
+		final String jdbcDriverClass = (String) props.get( Environment.DRIVER );
+		final String jdbcUrl = (String) props.get( Environment.URL );
+		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
 
-        LOG.c3p0UsingDriver(jdbcDriverClass, jdbcUrl);
-        LOG.connectionProperties(ConfigurationHelper.maskOut(connectionProps, "password"));
+		LOG.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
+		LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 
 		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
-        LOG.autoCommitMode( autocommit );
+		LOG.autoCommitMode( autocommit );
 
-        if (jdbcDriverClass == null) {
-			LOG.jdbcDriverNotSpecified(Environment.DRIVER);
+		if ( jdbcDriverClass == null ) {
+			LOG.jdbcDriverNotSpecified( Environment.DRIVER );
 		}
 		else {
 			try {
 				serviceRegistry.getService( ClassLoaderService.class ).classForName( jdbcDriverClass );
 			}
-			catch ( ClassLoadingException e ) {
-				throw new ClassLoadingException( LOG.jdbcDriverNotFound(jdbcDriverClass), e );
+			catch (ClassLoadingException e) {
+				throw new ClassLoadingException( LOG.jdbcDriverNotFound( jdbcDriverClass ), e );
 			}
 		}
 
 		try {
 
 			//swaldman 2004-02-07: modify to allow null values to signify fall through to c3p0 PoolConfig defaults
-			Integer minPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MIN_SIZE, props );
-			Integer maxPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MAX_SIZE, props );
-			Integer maxIdleTime = ConfigurationHelper.getInteger( Environment.C3P0_TIMEOUT, props );
-			Integer maxStatements = ConfigurationHelper.getInteger( Environment.C3P0_MAX_STATEMENTS, props );
-			Integer acquireIncrement = ConfigurationHelper.getInteger( Environment.C3P0_ACQUIRE_INCREMENT, props );
-			Integer idleTestPeriod = ConfigurationHelper.getInteger( Environment.C3P0_IDLE_TEST_PERIOD, props );
+			final Integer minPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MIN_SIZE, props );
+			final Integer maxPoolSize = ConfigurationHelper.getInteger( Environment.C3P0_MAX_SIZE, props );
+			final Integer maxIdleTime = ConfigurationHelper.getInteger( Environment.C3P0_TIMEOUT, props );
+			final Integer maxStatements = ConfigurationHelper.getInteger( Environment.C3P0_MAX_STATEMENTS, props );
+			final Integer acquireIncrement = ConfigurationHelper.getInteger( Environment.C3P0_ACQUIRE_INCREMENT, props );
+			final Integer idleTestPeriod = ConfigurationHelper.getInteger( Environment.C3P0_IDLE_TEST_PERIOD, props );
 
-			Properties c3props = new Properties();
+			final Properties c3props = new Properties();
 
 			// turn hibernate.c3p0.* into c3p0.*, so c3p0
 			// gets a chance to see all hibernate.c3p0.*
 			for ( Object o : props.keySet() ) {
-				if ( ! String.class.isInstance( o ) ) {
+				if ( !String.class.isInstance( o ) ) {
 					continue;
 				}
 				final String key = (String) o;
@@ -182,48 +186,42 @@ public class C3P0ConnectionProvider
 					Environment.C3P0_ACQUIRE_INCREMENT, C3P0_STYLE_ACQUIRE_INCREMENT, props, c3props, acquireIncrement
 			);
 			setOverwriteProperty(
-					Environment.C3P0_IDLE_TEST_PERIOD, C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD, props, c3props, idleTestPeriod
+					Environment.C3P0_IDLE_TEST_PERIOD,
+					C3P0_STYLE_IDLE_CONNECTION_TEST_PERIOD,
+					props,
+					c3props,
+					idleTestPeriod
 			);
 
 			// revert to traditional hibernate behavior of setting initialPoolSize to minPoolSize
 			// unless otherwise specified with a c3p0.*-style parameter.
-			Integer initialPoolSize = ConfigurationHelper.getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
+			final Integer initialPoolSize = ConfigurationHelper.getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
 			if ( initialPoolSize == null && minPoolSize != null ) {
 				c3props.put( C3P0_STYLE_INITIAL_POOL_SIZE, String.valueOf( minPoolSize ).trim() );
 			}
 
-			/*DataSource unpooled = DataSources.unpooledDataSource(
-				jdbcUrl, props.getProperty(Environment.USER), props.getProperty(Environment.PASS)
-			);*/
-			DataSource unpooled = DataSources.unpooledDataSource( jdbcUrl, connectionProps );
+			final DataSource unpooled = DataSources.unpooledDataSource( jdbcUrl, connectionProps );
 
-			Map allProps = new HashMap();
+			final Map allProps = new HashMap();
 			allProps.putAll( props );
 			allProps.putAll( c3props );
 
 			ds = DataSources.pooledDataSource( unpooled, allProps );
 		}
-		catch ( Exception e ) {
-            LOG.error(LOG.unableToInstantiateC3p0ConnectionPool(), e);
-            throw new HibernateException(LOG.unableToInstantiateC3p0ConnectionPool(), e);
+		catch (Exception e) {
+			LOG.error( LOG.unableToInstantiateC3p0ConnectionPool(), e );
+			throw new HibernateException( LOG.unableToInstantiateC3p0ConnectionPool(), e );
 		}
 
-		String i = (String) props.get( Environment.ISOLATION );
-        if (i == null) isolation = null;
+		final String i = (String) props.get( Environment.ISOLATION );
+		if ( i == null ) {
+			isolation = null;
+		}
 		else {
 			isolation = Integer.valueOf( i );
-            LOG.jdbcIsolationLevel(Environment.isolationLevelToString(isolation));
+			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation ) );
 		}
 
-	}
-
-	public void close() {
-		try {
-			DataSources.destroy( ds );
-		}
-		catch ( SQLException sqle ) {
-            LOG.unableToDestroyC3p0ConnectionPool(sqle);
-		}
 	}
 
 	@Override
@@ -231,14 +229,19 @@ public class C3P0ConnectionProvider
 		return false;
 	}
 
-	private void setOverwriteProperty(String hibernateStyleKey, String c3p0StyleKey, Map hibp, Properties c3p, Integer value) {
+	private void setOverwriteProperty(
+			String hibernateStyleKey,
+			String c3p0StyleKey,
+			Map hibp,
+			Properties c3p,
+			Integer value) {
 		if ( value != null ) {
-            String peeledC3p0Key = c3p0StyleKey.substring(5);
+			final String peeledC3p0Key = c3p0StyleKey.substring( 5 );
 			c3p.put( peeledC3p0Key, String.valueOf( value ).trim() );
-			if ( hibp.containsKey( c3p0StyleKey )  ) {
+			if ( hibp.containsKey( c3p0StyleKey ) ) {
 				warnPropertyConflict( hibernateStyleKey, c3p0StyleKey );
 			}
-			String longC3p0StyleKey = "hibernate." + c3p0StyleKey;
+			final String longC3p0StyleKey = "hibernate." + c3p0StyleKey;
 			if ( hibp.containsKey( longC3p0StyleKey ) ) {
 				warnPropertyConflict( hibernateStyleKey, longC3p0StyleKey );
 			}
@@ -246,12 +249,27 @@ public class C3P0ConnectionProvider
 	}
 
 	private void warnPropertyConflict(String hibernateStyle, String c3p0Style) {
-        LOG.bothHibernateAndC3p0StylesSet(hibernateStyle, c3p0Style, hibernateStyle, c3p0Style);
+		LOG.bothHibernateAndC3p0StylesSet( hibernateStyle, c3p0Style, hibernateStyle, c3p0Style );
 	}
 
 	@Override
 	public void stop() {
-		close();
+		try {
+			DataSources.destroy( ds );
+		}
+		catch (SQLException sqle) {
+			LOG.unableToDestroyC3p0ConnectionPool( sqle );
+		}
+	}
+
+	/**
+	 * Close the provider.
+	 *
+	 * @deprecated Use {@link #stop} instead
+	 */
+	@Deprecated
+	public void close() {
+		stop();
 	}
 
 	@Override

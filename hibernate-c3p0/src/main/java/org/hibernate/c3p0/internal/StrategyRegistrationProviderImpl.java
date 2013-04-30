@@ -38,16 +38,18 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  * @author Brett Meyer
  */
 public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
-	
 	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
-			(StrategyRegistration) new SimpleStrategyRegistrationImpl(
+			(StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
 					ConnectionProvider.class,
 					C3P0ConnectionProvider.class,
 					"c3p0",
 					C3P0ConnectionProvider.class.getSimpleName(),
-					"org.hibernate.connection.C3P0ConnectionProvider", // legacy
-					"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider" // legacy
-			) );
+					// legacy
+					"org.hibernate.connection.C3P0ConnectionProvider",
+					// legacy
+					"org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider"
+			)
+	);
 	
 	@Override
 	@SuppressWarnings("unchecked")

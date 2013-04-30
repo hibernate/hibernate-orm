@@ -38,15 +38,16 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  * @author Brett Meyer
  */
 public class StrategyRegistrationProviderImpl implements StrategyRegistrationProvider {
-
 	private static final List<StrategyRegistration> REGISTRATIONS = Collections.singletonList(
-			(StrategyRegistration) new SimpleStrategyRegistrationImpl(
+			(StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
 					ConnectionProvider.class,
 					ProxoolConnectionProvider.class,
 					"proxool",
 					ProxoolConnectionProvider.class.getSimpleName(),
-					"org.hibernate.connection.ProxoolConnectionProvider", // legacy
-					"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider" // legacy
+					// legacy
+					"org.hibernate.connection.ProxoolConnectionProvider",
+					// legacy
+					"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider"
 			) );
 
 	@Override

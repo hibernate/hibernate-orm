@@ -26,22 +26,28 @@ import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
 /**
- * See the description on {@link #OsgiSessionFactoryService}.  This class
- * is similar, providing an PersistenceProvider as an OSGi Service.
+ * See the description on {@link OsgiSessionFactoryService}.  This class is similar, providing an
+ * PersistenceProvider as an OSGi Service.
  * 
  * @author Brett Meyer
  * @author Tim Ward
  */
 public class OsgiPersistenceProviderService implements ServiceFactory {
-	
 	private OsgiClassLoader osgiClassLoader;
-
 	private OsgiJtaPlatform osgiJtaPlatform;
-
 	private BundleContext context;
 
-	public OsgiPersistenceProviderService( OsgiClassLoader osgiClassLoader,
-			OsgiJtaPlatform osgiJtaPlatform, BundleContext context ) {
+	/**
+	 * Constructs a OsgiPersistenceProviderService
+	 *
+	 * @param osgiClassLoader The OSGi-specific ClassLoader created in HibernateBundleActivator
+	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform created in HibernateBundleActivator
+	 * @param context The OSGi context
+	 */
+	public OsgiPersistenceProviderService(
+			OsgiClassLoader osgiClassLoader,
+			OsgiJtaPlatform osgiJtaPlatform,
+			BundleContext context) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.context = context;

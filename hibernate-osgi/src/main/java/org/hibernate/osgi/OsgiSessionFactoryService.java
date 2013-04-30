@@ -22,6 +22,11 @@ package org.hibernate.osgi;
 
 import java.util.List;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -29,12 +34,7 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.osgi.util.OsgiServiceUtil;
 import org.hibernate.service.ServiceRegistry;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceRegistration;
 
 /**
  * Hibernate 4.2 and 4.3 still heavily rely on TCCL for ClassLoading.  Although
@@ -42,28 +42,34 @@ import org.osgi.framework.ServiceRegistration;
  * unfortunately not available during Configuration.  An OSGi
  * bundle manually creating a SessionFactory would require numerous ClassLoader
  * tricks (or may be impossible altogether).
- * 
+ * <p/>
  * In order to fully control the TCCL issues and shield users from the
  * knowledge, we're requiring that bundles use this OSGi ServiceFactory.  It
  * configures and provides a SessionFactory as an OSGi service.
- * 
+ * <p/>
  * Note that an OSGi ServiceFactory differs from a Service.  The ServiceFactory
  * allows individual instances of Services to be created and provided to
  * multiple client Bundles.
- * 
+ *
  * @author Brett Meyer
  * @author Tim Ward
  */
 public class OsgiSessionFactoryService implements ServiceFactory {
-	
 	private OsgiClassLoader osgiClassLoader;
-
 	private OsgiJtaPlatform osgiJtaPlatform;
-
 	private BundleContext context;
 
-	public OsgiSessionFactoryService( OsgiClassLoader osgiClassLoader, OsgiJtaPlatform osgiJtaPlatform,
-			BundleContext context ) {
+	/**
+	 * Constructs a OsgiSessionFactoryService
+	 *
+	 * @param osgiClassLoader The OSGi-specific ClassLoader created in HibernateBundleActivator
+	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform created in HibernateBundleActivator
+	 * @param context The OSGi context
+	 */
+	public OsgiSessionFactoryService(
+			OsgiClassLoader osgiClassLoader,
+			OsgiJtaPlatform osgiJtaPlatform,
+			BundleContext context) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.context = context;
@@ -72,33 +78,33 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 	@Override
 	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
 		osgiClassLoader.addBundle( requestingBundle );
-		
-		Configuration configuration = new Configuration();
+
+		final Configuration configuration = new Configuration();
 		configuration.getProperties().put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
-        configuration.configure();
-        
-        BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
-        builder.with( osgiClassLoader );
-        
-        List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
-        for (Integrator integrator : integrators) {
-        	builder.with( integrator );
-        }
-        
-        List<StrategyRegistrationProvider> strategyRegistrationProviders
-        		= OsgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class, context );
-        for (StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders) {
-        	builder.withStrategySelectors( strategyRegistrationProvider );
-        }
-        
-        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
-        		.applySettings(configuration.getProperties()).build();        
-        return configuration.buildSessionFactory(serviceRegistry);
+		configuration.configure();
+
+		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
+		builder.with( osgiClassLoader );
+
+		final List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		for ( Integrator integrator : integrators ) {
+			builder.with( integrator );
+		}
+
+		final List<StrategyRegistrationProvider> strategyRegistrationProviders
+				= OsgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class, context );
+		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
+			builder.withStrategySelectors( strategyRegistrationProvider );
+		}
+
+		final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
+				.applySettings( configuration.getProperties() ).build();
+		return configuration.buildSessionFactory( serviceRegistry );
 	}
 
 	@Override
 	public void ungetService(Bundle requestingBundle, ServiceRegistration registration, Object service) {
-		( (SessionFactory) service).close();
+		((SessionFactory) service).close();
 	}
 
 }

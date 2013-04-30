@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.osgi.util;
+package org.hibernate.osgi;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,17 +30,29 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 /**
+ * Utilities for dealing with OSGi environments
+ *
  * @author Brett Meyer
  */
 public class OsgiServiceUtil {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			OsgiServiceUtil.class.getName()
+	);
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			OsgiServiceUtil.class.getName() );
-
+	/**
+	 * Locate all implementors of the given service contract in the given OSGi buindle context
+	 *
+	 * @param contract The service contract for which to locate implementors
+	 * @param context The OSGi bundle context
+	 * @param <T> The Java type of the service to locate
+	 *
+	 * @return All know implementors
+	 */
 	public static <T> List<T> getServiceImpls(Class<T> contract, BundleContext context) {
-		List<T> serviceImpls = new ArrayList<T>();
+		final List<T> serviceImpls = new ArrayList<T>();
 		try {
-			Collection<ServiceReference<T>> serviceRefs = context.getServiceReferences( contract, null );
+			final Collection<ServiceReference<T>> serviceRefs = context.getServiceReferences( contract, null );
 			for ( ServiceReference<T> serviceRef : serviceRefs ) {
 				serviceImpls.add( context.getService( serviceRef ) );
 			}
@@ -49,5 +61,8 @@ public class OsgiServiceUtil {
 			LOG.unableToDiscoverOsgiService( contract.getName(), e );
 		}
 		return serviceImpls;
+	}
+
+	private OsgiServiceUtil() {
 	}
 }

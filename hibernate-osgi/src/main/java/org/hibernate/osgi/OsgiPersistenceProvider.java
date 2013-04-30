@@ -37,27 +37,36 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
-import org.hibernate.osgi.util.OsgiServiceUtil;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
 
 /**
+ * Acts as the PersistenceProvider service in OSGi environments
+ *
  * @author Brett Meyer
  * @author Tim Ward
  */
 public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
-
 	private OsgiClassLoader osgiClassLoader;
-
 	private OsgiJtaPlatform osgiJtaPlatform;
-
 	private Bundle requestingBundle;
-
 	private BundleContext context;
 
-	public OsgiPersistenceProvider(OsgiClassLoader osgiClassLoader, OsgiJtaPlatform osgiJtaPlatform,
-			Bundle requestingBundle, BundleContext context) {
+	/**
+	 * Constructs a OsgiPersistenceProvider
+	 *
+	 * @param osgiClassLoader The ClassLoader we built from OSGi Bundles
+	 * @param osgiJtaPlatform The OSGi-specific JtaPlatform impl we built
+	 * @param requestingBundle The OSGi Bundle requesting the PersistenceProvider
+	 * @param context The OSGi context
+	 */
+	public OsgiPersistenceProvider(
+			OsgiClassLoader osgiClassLoader,
+			OsgiJtaPlatform osgiJtaPlatform,
+			Bundle requestingBundle,
+			BundleContext context) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
 		this.requestingBundle = requestingBundle;
@@ -68,14 +77,15 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	// EMFBuilder somehow?
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
-		properties = generateProperties( properties );
+		final Map settings = generateSettings( properties );
 
 		// TODO: This needs tested.
-		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
+		settings.put( org.hibernate.jpa.AvailableSettings.SCANNER, new OsgiScanner( requestingBundle ) );
 		// TODO: This is temporary -- for PersistenceXmlParser's use of
 		// ClassLoaderServiceImpl#fromConfigSettings
-		properties.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
+		settings.put( AvailableSettings.ENVIRONMENT_CLASSLOADER, osgiClassLoader );
 
 		osgiClassLoader.addBundle( requestingBundle );
 
@@ -83,45 +93,49 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
-		properties = generateProperties( properties );
+		final Map settings = generateSettings( properties );
 
 		// OSGi ClassLoaders must implement BundleReference
-		properties.put( org.hibernate.jpa.AvailableSettings.SCANNER,
-				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() ) );
+		settings.put(
+				org.hibernate.jpa.AvailableSettings.SCANNER,
+				new OsgiScanner( ( (BundleReference) info.getClassLoader() ).getBundle() )
+		);
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
 
 		return super.createContainerEntityManagerFactory( info, properties );
 	}
 
-	private Map generateProperties(Map properties) {
-		if ( properties == null ) {
-			properties = new HashMap();
+	@SuppressWarnings("unchecked")
+	private Map generateSettings(Map properties) {
+		final Map settings = new HashMap();
+		if ( properties != null ) {
+			settings.putAll( properties );
 		}
 
-		properties.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
+		settings.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 
 		final List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
-		IntegratorProvider integratorProvider = new IntegratorProvider() {
+		final IntegratorProvider integratorProvider = new IntegratorProvider() {
 			@Override
 			public List<Integrator> getIntegrators() {
 				return integrators;
 			}
 		};
-		properties.put( EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, integratorProvider );
+		settings.put( EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, integratorProvider );
 
 		final List<StrategyRegistrationProvider> strategyRegistrationProviders = OsgiServiceUtil.getServiceImpls(
 				StrategyRegistrationProvider.class, context );
-		StrategyRegistrationProviderList strategyRegistrationProviderList = new StrategyRegistrationProviderList() {
+		final StrategyRegistrationProviderList strategyRegistrationProviderList = new StrategyRegistrationProviderList() {
 			@Override
 			public List<StrategyRegistrationProvider> getStrategyRegistrationProviders() {
 				return strategyRegistrationProviders;
 			}
 		};
-		properties.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS,
-				strategyRegistrationProviderList );
+		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
 		
-		return properties;
+		return settings;
 	}
 }

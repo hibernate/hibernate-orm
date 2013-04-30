@@ -51,37 +51,40 @@ import org.osgi.framework.FrameworkUtil;
  *     SessionFactory is registered as an OSGi ServiceFactory -- each requesting
  *     bundle gets its own instance of a SessionFactory.  The use of services,
  *     rather than direct use of Configuration, is necessary to shield users
- *     from ClassLoader issues.  See {@link #OsgiSessionFactoryService} for more
+ *     from ClassLoader issues.  See {@link OsgiSessionFactoryService} for more
  *     information.
  * 
  * @author Brett Meyer
  * @author Tim Ward
  */
+@SuppressWarnings("UnusedDeclaration")
 public class HibernateBundleActivator implements BundleActivator {
-
-	private OsgiClassLoader osgiClassLoader;
-
-	private OsgiJtaPlatform osgiJtaPlatform;
-
 	@Override
+	@SuppressWarnings("unchecked")
 	public void start(BundleContext context) throws Exception {
-
-		osgiClassLoader = new OsgiClassLoader();
+		// build a ClassLoader that uses all the necessary OSGi bundles, and place it into
+		// a well-known location so internals can access it
+		final OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( Session.class ) );
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernatePersistenceProvider.class ) );
 		ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
 
-		osgiJtaPlatform = new OsgiJtaPlatform( context );
+		// Build a JtaPlatform specific for this OSGi context
+		final OsgiJtaPlatform osgiJtaPlatform = new OsgiJtaPlatform( context );
 
-		Dictionary properties = new Hashtable();
-		// In order to support existing persistence.xml files, register
-		// using the legacy provider name.
+		final Dictionary properties = new Hashtable();
+		// In order to support existing persistence.xml files, register using the legacy provider name.
 		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
-		context.registerService( PersistenceProvider.class.getName(), 
-				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ), properties );
-		
-		context.registerService( SessionFactory.class.getName(),
-				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ), new Hashtable());
+		context.registerService(
+				PersistenceProvider.class.getName(),
+				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ),
+				properties
+		);
+		context.registerService(
+				SessionFactory.class.getName(),
+				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ),
+				new Hashtable()
+		);
 	}
 
 	@Override

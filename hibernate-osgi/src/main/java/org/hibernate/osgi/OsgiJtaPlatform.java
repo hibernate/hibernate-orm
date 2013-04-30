@@ -38,24 +38,28 @@ import org.osgi.framework.ServiceReference;
  * @author Brett Meyer
  */
 public class OsgiJtaPlatform implements JtaPlatform {
-
 	private static final long serialVersionUID = 1L;
 	
 	private BundleContext bundleContext;
 
+	/**
+	 * Constructs a OsgiJtaPlatform
+	 *
+	 * @param bundleContext The OSGi bundle context
+	 */
 	public OsgiJtaPlatform(BundleContext bundleContext) {
 		this.bundleContext = bundleContext;
 	}
 
 	@Override
 	public TransactionManager retrieveTransactionManager() {
-		ServiceReference sr = bundleContext.getServiceReference( TransactionManager.class.getName() );
+		final ServiceReference sr = bundleContext.getServiceReference( TransactionManager.class.getName() );
 		return (TransactionManager) bundleContext.getService( sr );
 	}
 
 	@Override
 	public UserTransaction retrieveUserTransaction() {
-		ServiceReference sr = bundleContext.getServiceReference( UserTransaction.class.getName() );
+		final ServiceReference sr = bundleContext.getServiceReference( UserTransaction.class.getName() );
 		return (UserTransaction) bundleContext.getService( sr );
 	}
 

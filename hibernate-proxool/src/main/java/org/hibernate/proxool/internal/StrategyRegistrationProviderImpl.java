@@ -48,7 +48,8 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 					"org.hibernate.connection.ProxoolConnectionProvider",
 					// legacy
 					"org.hibernate.service.jdbc.connections.internal.ProxoolConnectionProvider"
-			) );
+			)
+	);
 
 	@Override
 	@SuppressWarnings("unchecked")

@@ -249,7 +249,7 @@ public class C3P0ConnectionProvider
 	}
 
 	private void warnPropertyConflict(String hibernateStyle, String c3p0Style) {
-		LOG.bothHibernateAndC3p0StylesSet( hibernateStyle, c3p0Style, hibernateStyle, c3p0Style );
+		LOG.bothHibernateAndC3p0StylesSet( hibernateStyle, c3p0Style );
 	}
 
 	@Override

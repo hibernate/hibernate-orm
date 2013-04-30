@@ -40,29 +40,51 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
  *
  * @author Tomoto Shimizu Washio
  * @author Steve Ebersole
+ *
+ * @deprecated See deprecation on {@link DialectResolver}
  */
+@Deprecated
 public class DialectResolverSet implements DialectResolver {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DialectResolverSet.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			DialectResolverSet.class.getName()
+	);
 
 	private List<DialectResolver> resolvers;
 
+	/**
+	 * Deprecated
+	 */
 	public DialectResolverSet() {
 		this( new ArrayList<DialectResolver>() );
+		LOG.debug( "DialectResolverSet is deprecated" );
 	}
 
+	/**
+	 * Deprecated
+	 *
+	 * @param resolvers The delegate resolvers
+	 */
 	public DialectResolverSet(List<DialectResolver> resolvers) {
 		this.resolvers = resolvers;
+		LOG.debug( "DialectResolverSet is deprecated" );
 	}
 
+	/**
+	 * Deprecated
+	 *
+	 * @param resolvers The delegate resolvers
+	 */
 	public DialectResolverSet(DialectResolver... resolvers) {
 		this( Arrays.asList( resolvers ) );
+		LOG.debug( "DialectResolverSet is deprecated" );
 	}
 
+	@Override
 	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException {
 		for ( DialectResolver resolver : resolvers ) {
 			try {
-				Dialect dialect = resolver.resolveDialect( metaData );
+				final Dialect dialect = resolver.resolveDialect( metaData );
 				if ( dialect != null ) {
 					return dialect;
 				}

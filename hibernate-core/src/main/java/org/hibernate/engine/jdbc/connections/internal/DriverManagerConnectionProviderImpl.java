@@ -189,7 +189,7 @@ public class DriverManagerConnectionProviderImpl
 		// essentially, if we have available connections in the pool, use one...
 		synchronized (pool) {
 			if ( !pool.isEmpty() ) {
-				int last = pool.size() - 1;
+				final int last = pool.size() - 1;
 				if ( traceEnabled ) {
 					LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
 				}

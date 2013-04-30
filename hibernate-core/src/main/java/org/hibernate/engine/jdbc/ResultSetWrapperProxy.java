@@ -127,7 +127,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		return columnNameCache.getIndexForColumnName( columnName, rs );
 	}
 
-	private boolean isFirstArgColumnLabel(Method method, Object args[]) {
+	private boolean isFirstArgColumnLabel(Method method, Object[] args) {
 		// method name should start with either get or update
 		if ( ! ( method.getName().startsWith( "get" ) || method.getName().startsWith( "update" ) ) ) {
 			return false;

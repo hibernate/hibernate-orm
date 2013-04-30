@@ -112,7 +112,7 @@ public class BlobProxy implements InvocationHandler {
 				return getStream();
 			}
 			else if ( argCount == 2 ) {
-				long start = (Long) args[0];
+				final long start = (Long) args[0];
 				if ( start < 1 ) {
 					throw new SQLException( "Start position 1-based; must be 1 or more." );
 				}

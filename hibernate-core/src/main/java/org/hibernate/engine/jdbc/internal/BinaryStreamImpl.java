@@ -37,6 +37,11 @@ import org.hibernate.engine.jdbc.BinaryStream;
 public class BinaryStreamImpl extends ByteArrayInputStream implements BinaryStream {
 	private final int length;
 
+	/**
+	 * Constructs a BinaryStreamImpl
+	 *
+	 * @param bytes The bytes to use backing the stream
+	 */
 	public BinaryStreamImpl(byte[] bytes) {
 		super( bytes );
 		this.length = bytes.length;

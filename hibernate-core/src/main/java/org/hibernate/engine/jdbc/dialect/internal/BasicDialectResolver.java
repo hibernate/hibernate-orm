@@ -40,22 +40,39 @@ import org.hibernate.engine.jdbc.dialect.spi.AbstractDatabaseMetaDataDialectReso
  */
 @Deprecated
 public class BasicDialectResolver extends AbstractDatabaseMetaDataDialectResolver {
+	/**
+	 * Constant indicating no version info was given
+	 */
 	public static final int VERSION_INSENSITIVE_VERSION = -9999;
 
 	private final String matchingName;
 	private final int matchingVersion;
 	private final Class dialectClass;
 
+	/**
+	 * Constructs a BasicDialectResolver
+	 *
+	 * @param matchingName The name of the driver to match on
+	 * @param dialectClass The Dialect class to use on match
+	 */
 	public BasicDialectResolver(String matchingName, Class dialectClass) {
 		this( matchingName, VERSION_INSENSITIVE_VERSION, dialectClass );
 	}
 
+	/**
+	 * Constructs a BasicDialectResolver
+	 *
+	 * @param matchingName The name of the driver to match on
+	 * @param matchingVersion The version of the driver to match on
+	 * @param dialectClass The Dialect class to use on match
+	 */
 	public BasicDialectResolver(String matchingName, int matchingVersion, Class dialectClass) {
 		this.matchingName = matchingName;
 		this.matchingVersion = matchingVersion;
 		this.dialectClass = dialectClass;
 	}
 
+	@Override
 	protected final Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
 		final String databaseName = metaData.getDatabaseProductName();
 		final int databaseMajorVersion = metaData.getDatabaseMajorVersion();
@@ -63,7 +80,7 @@ public class BasicDialectResolver extends AbstractDatabaseMetaDataDialectResolve
 		if ( matchingName.equalsIgnoreCase( databaseName )
 				&& ( matchingVersion == VERSION_INSENSITIVE_VERSION || matchingVersion == databaseMajorVersion ) ) {
 			try {
-				return ( Dialect ) dialectClass.newInstance();
+				return (Dialect) dialectClass.newInstance();
 			}
 			catch ( HibernateException e ) {
 				// conceivable that the dialect ctor could throw HibernateExceptions, so don't re-wrap

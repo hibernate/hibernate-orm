@@ -50,7 +50,7 @@ public class BasicSQLExceptionConverter {
 	public static final BasicSQLExceptionConverter INSTANCE = new BasicSQLExceptionConverter();
 
 	/**
-	 *
+	 * Message
 	 */
 	public static final String MSG = LOG.unableToQueryDatabaseMetadata();
 
@@ -70,6 +70,7 @@ public class BasicSQLExceptionConverter {
 		/**
 		 * {@inheritDoc}
 		 */
+		@Override
 		public String extractConstraintName(SQLException sqle) {
 			return "???";
 		}

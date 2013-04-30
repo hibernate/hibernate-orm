@@ -69,7 +69,10 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareService, Configurable {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JdbcServicesImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			JdbcServicesImpl.class.getName()
+	);
 
 	private ServiceRegistryImplementor serviceRegistry;
 
@@ -105,7 +108,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		boolean lobLocatorUpdateCopy = false;
 		String catalogName = null;
 		String schemaName = null;
-		LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
+		final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
 
 		// 'hibernate.temp.use_jdbc_metadata_defaults' is a temporary magic value.
 		// The need for it is intended to be alleviated with future development, thus it is
@@ -114,10 +117,10 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		// it is used to control whether we should consult the JDBC metadata to determine
 		// certain Settings default values; it is useful to *not* do this when the database
 		// may not be available (mainly in tools usage).
-		boolean useJdbcMetadata = ConfigurationHelper.getBoolean( "hibernate.temp.use_jdbc_metadata_defaults", configValues, true );
+		final boolean useJdbcMetadata = ConfigurationHelper.getBoolean( "hibernate.temp.use_jdbc_metadata_defaults", configValues, true );
 		if ( useJdbcMetadata ) {
 			try {
-				Connection connection = jdbcConnectionAccess.obtainConnection();
+				final Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
 					DatabaseMetaData meta = connection.getMetaData();
 					if(LOG.isDebugEnabled()) {
@@ -151,7 +154,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 					dialect = dialectFactory.buildDialect( configValues, connection );
 
 					catalogName = connection.getCatalog();
-					SchemaNameResolver schemaNameResolver = determineExplicitSchemaNameResolver( configValues );
+					final SchemaNameResolver schemaNameResolver = determineExplicitSchemaNameResolver( configValues );
 					if ( schemaNameResolver == null ) {
 // todo : add dialect method
 //						schemaNameResolver = dialect.getSchemaNameResolver();
@@ -284,19 +287,23 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 
-	// todo : add to Environment
+	/**
+	 * A constant naming the setting used to identify the {@link SchemaNameResolver} to use
+	 * <p/>
+	 * TODO : add to Environment
+	 */
 	public static final String SCHEMA_NAME_RESOLVER = "hibernate.schema_name_resolver";
 
 	private SchemaNameResolver determineExplicitSchemaNameResolver(Map configValues) {
-		Object setting = configValues.get( SCHEMA_NAME_RESOLVER );
+		final Object setting = configValues.get( SCHEMA_NAME_RESOLVER );
 		if ( SchemaNameResolver.class.isInstance( setting ) ) {
 			return (SchemaNameResolver) setting;
 		}
 
-		String resolverClassName = (String) setting;
+		final String resolverClassName = (String) setting;
 		if ( resolverClassName != null ) {
 			try {
-				Class resolverClass = ReflectHelper.classForName( resolverClassName, getClass() );
+				final Class resolverClass = ReflectHelper.classForName( resolverClassName, getClass() );
 				return (SchemaNameResolver) ReflectHelper.getDefaultConstructor( resolverClass ).newInstance();
 			}
 			catch ( ClassNotFoundException e ) {
@@ -313,7 +320,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	}
 
 	private Set<String> parseKeywords(String extraKeywordsString) {
-		Set<String> keywordSet = new HashSet<String>();
+		final Set<String> keywordSet = new HashSet<String>();
 		keywordSet.addAll( Arrays.asList( extraKeywordsString.split( "," ) ) );
 		return keywordSet;
 	}

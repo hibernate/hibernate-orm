@@ -35,6 +35,9 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * @author Steve Ebersole
  */
 public class DialectFactoryInitiator implements StandardServiceInitiator<DialectFactory> {
+	/**
+	 * Singleton access
+	 */
 	public static final DialectFactoryInitiator INSTANCE = new DialectFactoryInitiator();
 
 	@Override

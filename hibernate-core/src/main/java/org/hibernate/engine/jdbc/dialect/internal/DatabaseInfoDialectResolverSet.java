@@ -31,19 +31,36 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 
 /**
+ * Implements the DatabaseInfoDialectResolver as a chain, allowing multiple delegate DatabaseInfoDialectResolver
+ * implementations to coordinate resolution
+ *
  * @author Steve Ebersole
  */
 public class DatabaseInfoDialectResolverSet implements DatabaseInfoDialectResolver {
 	private List<DatabaseInfoDialectResolver> delegateResolvers;
 
+	/**
+	 * Constructs a DatabaseInfoDialectResolverSet
+	 */
 	public DatabaseInfoDialectResolverSet() {
 		this( new ArrayList<DatabaseInfoDialectResolver>() );
 	}
 
+	/**
+	 * Constructs a DatabaseInfoDialectResolverSet
+	 *
+	 * @param delegateResolvers The set of delegate resolvers
+	 */
 	public DatabaseInfoDialectResolverSet(List<DatabaseInfoDialectResolver> delegateResolvers) {
 		this.delegateResolvers = delegateResolvers;
 	}
 
+	/**
+	 * Constructs a DatabaseInfoDialectResolverSet
+	 *
+	 * @param delegateResolvers The set of delegate resolvers
+	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public DatabaseInfoDialectResolverSet(DatabaseInfoDialectResolver... delegateResolvers) {
 		this( Arrays.asList( delegateResolvers ) );
 	}
@@ -51,7 +68,7 @@ public class DatabaseInfoDialectResolverSet implements DatabaseInfoDialectResolv
 	@Override
 	public Dialect resolve(DatabaseInfo databaseInfo) {
 		for ( DatabaseInfoDialectResolver resolver : delegateResolvers ) {
-			Dialect dialect = resolver.resolve( databaseInfo );
+			final Dialect dialect = resolver.resolve( databaseInfo );
 			if ( dialect != null ) {
 				return dialect;
 			}
@@ -75,6 +92,7 @@ public class DatabaseInfoDialectResolverSet implements DatabaseInfoDialectResolv
 	 *
 	 * @param resolver The resolver to add.
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public void addResolverAtFirst(DatabaseInfoDialectResolver resolver) {
 		delegateResolvers.add( 0, resolver );
 	}

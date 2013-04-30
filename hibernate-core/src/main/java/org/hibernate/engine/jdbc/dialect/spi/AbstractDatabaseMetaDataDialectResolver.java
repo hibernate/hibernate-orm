@@ -40,8 +40,7 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public abstract class AbstractDatabaseMetaDataDialectResolver implements DialectResolver {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			AbstractDatabaseMetaDataDialectResolver.class.getName()
 	);
@@ -52,21 +51,22 @@ public abstract class AbstractDatabaseMetaDataDialectResolver implements Dialect
 	 * Here we template the resolution, delegating to {@link #resolveDialectInternal} and handling
 	 * {@link java.sql.SQLException}s properly.
 	 */
+	@Override
 	public final Dialect resolveDialect(DatabaseMetaData metaData) {
 		try {
 			return resolveDialectInternal( metaData );
 		}
 		catch ( SQLException sqlException ) {
-			JDBCException jdbcException = BasicSQLExceptionConverter.INSTANCE.convert( sqlException );
-            if (jdbcException instanceof JDBCConnectionException) {
+			final JDBCException jdbcException = BasicSQLExceptionConverter.INSTANCE.convert( sqlException );
+			if (jdbcException instanceof JDBCConnectionException) {
 				throw jdbcException;
 			}
 
-            LOG.warnf( "%s : %s", BasicSQLExceptionConverter.MSG, sqlException.getMessage() );
-            return null;
+			LOG.warnf( "%s : %s", BasicSQLExceptionConverter.MSG, sqlException.getMessage() );
+			return null;
 		}
 		catch ( Throwable t ) {
-            LOG.unableToExecuteResolver( this, t.getMessage() );
+			LOG.unableToExecuteResolver( this, t.getMessage() );
 			return null;
 		}
 	}

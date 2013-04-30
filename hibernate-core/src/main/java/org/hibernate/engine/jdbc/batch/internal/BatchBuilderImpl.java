@@ -57,6 +57,8 @@ public class BatchBuilderImpl implements BatchBuilder, Configurable {
 
 	/**
 	 * Constructs a BatchBuilderImpl
+	 *
+	 * @param size The batch size to use.
 	 */
 	public BatchBuilderImpl(int size) {
 		this.size = size;

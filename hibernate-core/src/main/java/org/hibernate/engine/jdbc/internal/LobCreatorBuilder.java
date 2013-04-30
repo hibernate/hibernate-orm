@@ -45,15 +45,17 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
  * @author Steve Ebersole
  */
 public class LobCreatorBuilder {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			LobCreatorBuilder.class.getName()
+	);
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LobCreatorBuilder.class.getName());
-
-    private boolean useContextualLobCreation;
+	private boolean useContextualLobCreation;
 
 	/**
 	 * The public factory method for obtaining the appropriate (according to given JDBC {@link java.sql.Connection}.
 	 *
-	 *
+	 * @param configValues The map of settings
 	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
@@ -74,8 +76,9 @@ public class LobCreatorBuilder {
 	 *
 	 * @return True if the connection can be used to create LOBs; false otherwise.
 	 */
+	@SuppressWarnings("unchecked")
 	private static boolean useContextualLobCreation(Map configValues, Connection jdbcConnection) {
-		boolean isNonContextualLobCreationRequired =
+		final boolean isNonContextualLobCreationRequired =
 				ConfigurationHelper.getBoolean( Environment.NON_CONTEXTUAL_LOB_CREATION, configValues );
 		if ( isNonContextualLobCreationRequired ) {
 			LOG.disablingContextualLOBCreation( Environment.NON_CONTEXTUAL_LOB_CREATION );
@@ -88,7 +91,7 @@ public class LobCreatorBuilder {
 
 		try {
 			try {
-				DatabaseMetaData meta = jdbcConnection.getMetaData();
+				final DatabaseMetaData meta = jdbcConnection.getMetaData();
 				// if the jdbc driver version is less than 4, it shouldn't have createClob
 				if ( meta.getJDBCMajorVersion() < 4 ) {
 					LOG.disablingContextualLOBCreationSinceOldJdbcVersion( meta.getJDBCMajorVersion() );
@@ -99,16 +102,16 @@ public class LobCreatorBuilder {
 				// ignore exception and continue
 			}
 
-			Class connectionClass = Connection.class;
-			Method createClobMethod = connectionClass.getMethod( "createClob", NO_ARG_SIG );
+			final Class connectionClass = Connection.class;
+			final Method createClobMethod = connectionClass.getMethod( "createClob", NO_ARG_SIG );
 			if ( createClobMethod.getDeclaringClass().equals( Connection.class ) ) {
 				// If we get here we are running in a jdk 1.6 (jdbc 4) environment...
 				// Further check to make sure the driver actually implements the LOB creation methods.  We
 				// check against createClob() as indicative of all; should we check against all 3 explicitly?
 				try {
-					Object clob = createClobMethod.invoke( jdbcConnection, NO_ARGS );
+					final Object clob = createClobMethod.invoke( jdbcConnection, NO_ARGS );
 					try {
-						Method freeMethod = clob.getClass().getMethod( "free", NO_ARG_SIG );
+						final Method freeMethod = clob.getClass().getMethod( "free", NO_ARG_SIG );
 						freeMethod.invoke( clob, NO_ARGS );
 					}
 					catch ( Throwable ignore ) {
@@ -127,6 +130,13 @@ public class LobCreatorBuilder {
 		return false;
 	}
 
+	/**
+	 * Build a LobCreator using the given context
+	 *
+	 * @param lobCreationContext The LOB creation context
+	 *
+	 * @return The LobCreator
+	 */
 	public LobCreator buildLobCreator(LobCreationContext lobCreationContext) {
 		return useContextualLobCreation
 				? new ContextualLobCreator( lobCreationContext )

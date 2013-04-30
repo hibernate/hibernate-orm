@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
+
 import java.sql.ResultSet;
 
 import org.hibernate.engine.jdbc.ColumnNameCache;
@@ -35,14 +36,15 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
  * @author Gail Badner
  */
 public class ResultSetWrapperImpl implements ResultSetWrapper {
+	/**
+	 * Singleton access
+	 */
 	public static ResultSetWrapper INSTANCE = new ResultSetWrapperImpl();
 
 	private ResultSetWrapperImpl() {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache) {
 		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache );
 	}

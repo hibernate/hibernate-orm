@@ -54,8 +54,10 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  */
 public class LogicalConnectionImpl implements LogicalConnectionImplementor {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, LogicalConnectionImpl.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			LogicalConnectionImpl.class.getName()
+	);
 
 	private transient Connection physicalConnection;
 
@@ -68,6 +70,14 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 
 	private boolean isClosed;
 
+	/**
+	 * Constructs a LogicalConnectionImpl
+	 *
+	 * @param userSuppliedConnection The user-supplied connection
+	 * @param connectionReleaseMode The connection release mode to use
+	 * @param jdbcServices JdbcServices
+	 * @param jdbcConnectionAccess JDBC Connection access
+	 */
 	public LogicalConnectionImpl(
 			Connection userSuppliedConnection,
 			ConnectionReleaseMode connectionReleaseMode,
@@ -84,6 +94,9 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		this.physicalConnection = userSuppliedConnection;
 	}
 
+	/**
+	 * Constructs a LogicalConnectionImpl.  This for used from deserialization
+	 */
 	private LogicalConnectionImpl(
 			ConnectionReleaseMode connectionReleaseMode,
 			JdbcServices jdbcServices,
@@ -162,7 +175,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	@Override
 	public Connection close() {
 		LOG.trace( "Closing logical connection" );
-		Connection c = isUserSuppliedConnection ? physicalConnection : null;
+		final Connection c = isUserSuppliedConnection ? physicalConnection : null;
 		try {
 			if ( !isUserSuppliedConnection && physicalConnection != null ) {
 				releaseConnection();
@@ -255,7 +268,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 	}
 
 	private void releaseNonDurableObservers() {
-		Iterator observers = this.observers.iterator();
+		final Iterator observers = this.observers.iterator();
 		while ( observers.hasNext() ) {
 			if ( NonDurableConnectionObserver.class.isInstance( observers.next() ) ) {
 				observers.remove();
@@ -268,7 +281,7 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		if ( isClosed ) {
 			throw new IllegalStateException( "cannot manually disconnect because logical connection is already closed" );
 		}
-		Connection c = physicalConnection;
+		final Connection c = physicalConnection;
 		releaseConnection();
 		return c;
 	}
@@ -324,10 +337,17 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 	}
 
+	/**
+	 * Serialization hook
+	 *
+	 * @param oos The stream to write out state to
+	 *
+	 * @throws IOException Problem accessing stream
+	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeBoolean( isUserSuppliedConnection );
 		oos.writeBoolean( isClosed );
-		List<ConnectionObserver> durableConnectionObservers = new ArrayList<ConnectionObserver>();
+		final List<ConnectionObserver> durableConnectionObservers = new ArrayList<ConnectionObserver>();
 		for ( ConnectionObserver observer : observers ) {
 			if ( ! NonDurableConnectionObserver.class.isInstance( observer ) ) {
 				durableConnectionObservers.add( observer );
@@ -339,13 +359,24 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 		}
 	}
 
+	/**
+	 * Deserialization hook
+	 *
+	 * @param ois The stream to read our state from
+	 * @param transactionContext The transactionContext which owns this logical connection
+	 *
+	 * @return The deserialized LogicalConnectionImpl
+	 *
+	 * @throws IOException Trouble accessing the stream
+	 * @throws ClassNotFoundException Trouble reading the stream
+	 */
 	public static LogicalConnectionImpl deserialize(
 			ObjectInputStream ois,
 			TransactionContext transactionContext) throws IOException, ClassNotFoundException {
-		boolean isUserSuppliedConnection = ois.readBoolean();
-		boolean isClosed = ois.readBoolean();
-		int observerCount = ois.readInt();
-		List<ConnectionObserver> observers = CollectionHelper.arrayList( observerCount );
+		final boolean isUserSuppliedConnection = ois.readBoolean();
+		final boolean isClosed = ois.readBoolean();
+		final int observerCount = ois.readInt();
+		final List<ConnectionObserver> observers = CollectionHelper.arrayList( observerCount );
 		for ( int i = 0; i < observerCount; i++ ) {
 			observers.add( (ConnectionObserver) ois.readObject() );
 		}
@@ -357,5 +388,5 @@ public class LogicalConnectionImpl implements LogicalConnectionImplementor {
 				isClosed,
 				observers
 		);
- 	}
+	}
 }

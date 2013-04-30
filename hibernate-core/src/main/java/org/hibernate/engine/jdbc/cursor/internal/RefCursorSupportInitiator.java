@@ -30,9 +30,14 @@ import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * Service initiator for RefCursorSupport service
+ *
  * @author Steve Ebersole
  */
 public class RefCursorSupportInitiator implements StandardServiceInitiator<RefCursorSupport> {
+	/**
+	 * Singleton access
+	 */
 	public static final RefCursorSupportInitiator INSTANCE = new RefCursorSupportInitiator();
 
 	@Override

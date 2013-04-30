@@ -24,7 +24,6 @@
 package org.hibernate.engine.jdbc.internal;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -42,11 +41,22 @@ public class CharacterStreamImpl implements CharacterStream {
 	private Reader reader;
 	private String string;
 
+	/**
+	 * Constructs a CharacterStreamImpl
+	 *
+	 * @param chars The String of characters to use backing the CharacterStream
+	 */
 	public CharacterStreamImpl(String chars) {
 		this.string = chars;
 		this.length = chars.length();
 	}
 
+	/**
+	 * Constructs a CharacterStreamImpl
+	 *
+	 * @param reader The Reader containing the characters to use backing the CharacterStream
+	 * @param length The length of the stream
+	 */
 	public CharacterStreamImpl(Reader reader, long length) {
 		this.reader = reader;
 		this.length = length;

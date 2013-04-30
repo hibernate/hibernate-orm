@@ -202,7 +202,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, C3P0_STRATEGY ).newInstance();
 		}
 		catch ( Exception e ) {
-			LOG.c3p0ProviderClassNotFound(C3P0_STRATEGY);
+			LOG.c3p0ProviderClassNotFound( C3P0_STRATEGY );
 			return null;
 		}
 	}

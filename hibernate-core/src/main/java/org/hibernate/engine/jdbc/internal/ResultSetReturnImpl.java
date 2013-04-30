@@ -31,12 +31,18 @@ import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 
 /**
+ * Standard implementation of the ResultSetReturn contract
+ *
  * @author Brett Meyer
  */
 public class ResultSetReturnImpl implements ResultSetReturn {
-
 	private final JdbcCoordinator jdbcCoordinator;
 
+	/**
+	 * Constructs a ResultSetReturnImpl
+	 *
+	 * @param jdbcCoordinator The JdbcCoordinator
+	 */
 	public ResultSetReturnImpl(JdbcCoordinator jdbcCoordinator) {
 		this.jdbcCoordinator = jdbcCoordinator;
 	}
@@ -49,11 +55,11 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			// this seems needless, Oracle can return an
 			// OracleCallableStatementWrapper that finds its way to this method,
 			// rather than extract(CallableStatement).  See HHH-8022.
-			CallableStatement callableStatement = (CallableStatement) statement;
+			final CallableStatement callableStatement = (CallableStatement) statement;
 			return extract( callableStatement );
 		}
 		try {
-			ResultSet rs = statement.executeQuery();
+			final ResultSet rs = statement.executeQuery();
 			postExtract( rs, statement );
 			return rs;
 		}
@@ -66,8 +72,10 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	public ResultSet extract(CallableStatement statement) {
 		try {
 			// sql logged by StatementPreparerImpl
-			ResultSet rs = jdbcCoordinator.getLogicalConnection().getJdbcServices()
-					.getDialect().getResultSet( statement );
+			final ResultSet rs = jdbcCoordinator.getLogicalConnection()
+					.getJdbcServices()
+					.getDialect()
+					.getResultSet( statement );
 			postExtract( rs, statement );
 			return rs;
 		}
@@ -78,10 +86,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 
 	@Override
 	public ResultSet extract(Statement statement, String sql) {
-		jdbcCoordinator.getLogicalConnection().getJdbcServices()
-				.getSqlStatementLogger().logStatement( sql );
+		jdbcCoordinator.getLogicalConnection().getJdbcServices().getSqlStatementLogger().logStatement( sql );
 		try {
-			ResultSet rs = statement.executeQuery( sql );
+			final ResultSet rs = statement.executeQuery( sql );
 			postExtract( rs, statement );
 			return rs;
 		}
@@ -99,7 +106,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 					// do nothing until we hit the resultset
 				}
 			}
-			ResultSet rs = statement.getResultSet();
+			final ResultSet rs = statement.getResultSet();
 			postExtract( rs, statement );
 			return rs;
 		}
@@ -118,7 +125,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 					// do nothing until we hit the resultset
 				}
 			}
-			ResultSet rs = statement.getResultSet();
+			final ResultSet rs = statement.getResultSet();
 			postExtract( rs, statement );
 			return rs;
 		}
@@ -149,7 +156,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 	}
 
-	private final SqlExceptionHelper sqlExceptionHelper() {
+	private SqlExceptionHelper sqlExceptionHelper() {
 		return jdbcCoordinator.getTransactionCoordinator()
 				.getTransactionContext()
 				.getTransactionEnvironment()
@@ -158,7 +165,9 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	private void postExtract(ResultSet rs, Statement st) {
-		if ( rs != null ) jdbcCoordinator.register( rs, st );
+		if ( rs != null ) {
+			jdbcCoordinator.register( rs, st );
+		}
 	}
 
 }

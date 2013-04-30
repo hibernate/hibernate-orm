@@ -39,8 +39,8 @@ public class BasicBatchKey implements BatchKey {
 	/**
 	 * Constructs a BasicBatchKey
 	 *
-	 * @param comparison
-	 * @param expectation
+	 * @param comparison A string used to compare batch keys.
+	 * @param expectation The expectation for the batch
 	 */
 	public BasicBatchKey(String comparison, Expectation expectation) {
 		this.comparison = comparison;
@@ -68,12 +68,7 @@ public class BasicBatchKey implements BatchKey {
 		}
 
 		final BasicBatchKey that = (BasicBatchKey) o;
-
-		if ( !comparison.equals( that.comparison ) ) {
-			return false;
-		}
-
-		return true;
+		return comparison.equals( that.comparison );
 	}
 
 	@Override

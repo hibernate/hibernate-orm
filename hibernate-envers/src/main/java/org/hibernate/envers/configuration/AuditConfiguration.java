@@ -39,6 +39,7 @@ import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.envers.synchronization.AuditProcessManager;
 import org.hibernate.envers.tools.reflection.ReflectionTools;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -95,6 +96,11 @@ public class AuditConfiguration {
 	}
 
 	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
+		// TODO: Temporarily allow Envers to continuing using
+		// hibernate-commons-annotations' for reflection and class loading.
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
+		
 		Properties properties = cfg.getProperties();
 
 		ReflectionManager reflectionManager = cfg.getReflectionManager();
@@ -115,6 +121,8 @@ public class AuditConfiguration {
 				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy,
 				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
 		);
+		
+		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
 	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
@@ -123,11 +131,16 @@ public class AuditConfiguration {
 		try {
 
 			Class<?> auditStrategyClass = null;
-			if ( classLoaderService != null ) {
-				auditStrategyClass = classLoaderService.classForName( auditEntCfg.getAuditStrategyName() );
+			try {
+				auditStrategyClass = this.getClass().getClassLoader().loadClass( auditEntCfg.getAuditStrategyName() );
 			}
-			else {
-				auditStrategyClass = ReflectHelper.classForName( auditEntCfg.getAuditStrategyName() );
+			catch (Exception e) {
+				if ( classLoaderService != null ) {
+					auditStrategyClass = classLoaderService.classForName( auditEntCfg.getAuditStrategyName() );
+				}
+				else {
+					auditStrategyClass = ReflectHelper.classForName( auditEntCfg.getAuditStrategyName() );
+				}
 			}
 
 			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor(auditStrategyClass).newInstance();

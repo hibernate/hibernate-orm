@@ -31,10 +31,6 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
 
 /**
- * @author Alex Snaps
- */
-
-/**
  * Ehcache specific read-only entity region access strategy
  *
  * @author Chris Dennis
@@ -45,6 +41,9 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 
 	/**
 	 * Create a read-only access strategy accessing the given entity region.
+	 *
+	 * @param region The wrapped region
+	 * @param settings The Hibernate settings
 	 */
 	public ReadOnlyEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
 		super( region, settings );
@@ -54,14 +53,14 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * {@inheritDoc}
 	 */
 	public EntityRegion getRegion() {
-		return region;
+		return region();
 	}
 
 	/**
 	 * {@inheritDoc}
 	 */
 	public Object get(Object key, long txTimestamp) throws CacheException {
-		return region.get( key );
+		return region().get( key );
 	}
 
 	/**
@@ -69,11 +68,11 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 */
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
-		if ( minimalPutOverride && region.contains( key ) ) {
+		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
 		}
 		else {
-			region.put( key, value );
+			region().put( key, value );
 			return true;
 		}
 	}
@@ -100,7 +99,7 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 	 * {@inheritDoc}
 	 */
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-		region.put( key, value );
+		region().put( key, value );
 		return true;
 	}
 

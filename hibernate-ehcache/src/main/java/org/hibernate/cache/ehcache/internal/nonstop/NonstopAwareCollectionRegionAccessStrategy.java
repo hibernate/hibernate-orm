@@ -38,188 +38,139 @@ import org.hibernate.cache.spi.access.SoftLock;
  * @author Alex Snaps
  */
 public class NonstopAwareCollectionRegionAccessStrategy implements CollectionRegionAccessStrategy {
-
 	private final CollectionRegionAccessStrategy actualStrategy;
 	private final HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler;
 
 	/**
 	 * Constructor accepting the actual {@link CollectionRegionAccessStrategy} and the {@link HibernateNonstopCacheExceptionHandler}
 	 *
-	 * @param actualStrategy
-	 * @param hibernateNonstopExceptionHandler
+	 * @param actualStrategy The wrapped strategy
+	 * @param hibernateNonstopExceptionHandler The exception handler
 	 */
-	public NonstopAwareCollectionRegionAccessStrategy(CollectionRegionAccessStrategy actualStrategy,
-													  HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler) {
+	public NonstopAwareCollectionRegionAccessStrategy(
+			CollectionRegionAccessStrategy actualStrategy,
+			HibernateNonstopCacheExceptionHandler hibernateNonstopExceptionHandler) {
 		this.actualStrategy = actualStrategy;
 		this.hibernateNonstopExceptionHandler = hibernateNonstopExceptionHandler;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#getRegion()
-	 */
+	@Override
 	public CollectionRegion getRegion() {
 		return actualStrategy.getRegion();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#evict(java.lang.Object)
-	 */
+	@Override
 	public void evict(Object key) throws CacheException {
 		try {
 			actualStrategy.evict( key );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#evictAll()
-	 */
+	@Override
 	public void evictAll() throws CacheException {
 		try {
 			actualStrategy.evictAll();
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#get(java.lang.Object, long)
-	 */
+	@Override
 	public Object get(Object key, long txTimestamp) throws CacheException {
 		try {
 			return actualStrategy.get( key, txTimestamp );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 			return null;
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#lockItem(java.lang.Object, java.lang.Object)
-	 */
+	@Override
 	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		try {
 			return actualStrategy.lockItem( key, version );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 			return null;
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#lockRegion()
-	 */
+	@Override
 	public SoftLock lockRegion() throws CacheException {
 		try {
 			return actualStrategy.lockRegion();
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 			return null;
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object,
-	 *	  boolean)
-	 */
+	@Override
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( key, value, txTimestamp, version, minimalPutOverride );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 			return false;
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#putFromLoad(java.lang.Object, java.lang.Object, long, java.lang.Object)
-	 */
+	@Override
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) throws CacheException {
 		try {
 			return actualStrategy.putFromLoad( key, value, txTimestamp, version );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 			return false;
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#remove(java.lang.Object)
-	 */
+	@Override
 	public void remove(Object key) throws CacheException {
 		try {
 			actualStrategy.remove( key );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#removeAll()
-	 */
+	@Override
 	public void removeAll() throws CacheException {
 		try {
 			actualStrategy.removeAll();
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#unlockItem(java.lang.Object, org.hibernate.cache.spi.access.SoftLock)
-	 */
+	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		try {
 			actualStrategy.unlockItem( key, lock );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
-	 */
+	@Override
 	public void unlockRegion(SoftLock lock) throws CacheException {
 		try {
 			actualStrategy.unlockRegion( lock );
 		}
-		catch ( NonStopCacheException nonStopCacheException ) {
+		catch (NonStopCacheException nonStopCacheException) {
 			hibernateNonstopExceptionHandler.handleNonstopCacheException( nonStopCacheException );
 		}
 	}

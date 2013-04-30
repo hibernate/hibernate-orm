@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import javax.management.MBeanNotificationInfo;
 import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -42,7 +42,7 @@ import net.sf.ehcache.management.sampled.SampledCacheManager;
  *
  * @author <a href="mailto:asanoujam@terracottatech.com">Abhishek Sanoujam</a>
  */
-public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
+public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStats {
 	private static final long MILLIS_PER_SECOND = 1000;
 	private static final MBeanNotificationInfo NOTIFICATION_INFO;
 
@@ -156,7 +156,7 @@ public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
 	 */
 	public double getCacheHitRate() {
 		long now = System.currentTimeMillis();
-		double deltaSecs = (double) ( now - statsSince ) / MILLIS_PER_SECOND;
+		double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
 		return getCacheHitCount() / deltaSecs;
 	}
 
@@ -193,7 +193,7 @@ public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
 	 */
 	public double getCacheMissRate() {
 		long now = System.currentTimeMillis();
-		double deltaSecs = (double) ( now - statsSince ) / MILLIS_PER_SECOND;
+		double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
 		return getCacheMissCount() / deltaSecs;
 	}
 
@@ -230,7 +230,7 @@ public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
 	 */
 	public double getCachePutRate() {
 		long now = System.currentTimeMillis();
-		double deltaSecs = (double) ( now - statsSince ) / MILLIS_PER_SECOND;
+		double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
 		return getCachePutCount() / deltaSecs;
 	}
 
@@ -339,8 +339,8 @@ public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
 				rv.put(
 						name, new int[] {
 						(int) cache.getSampledCacheStatistics().getCacheHitMostRecentSample(),
-						(int) ( cache.getSampledCacheStatistics().getCacheMissNotFoundMostRecentSample()
-								+ cache.getSampledCacheStatistics().getCacheMissExpiredMostRecentSample() ),
+						(int) (cache.getSampledCacheStatistics().getCacheMissNotFoundMostRecentSample()
+								+ cache.getSampledCacheStatistics().getCacheMissExpiredMostRecentSample()),
 						(int) cache.getSampledCacheStatistics().getCacheElementPutMostRecentSample(),
 				}
 				);
@@ -388,7 +388,7 @@ public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
 				}
 			}
 		}
-		return rv.toArray( new String[] { } );
+		return rv.toArray( new String[] {} );
 	}
 
 	/**
@@ -680,10 +680,10 @@ public class EhcacheStatsImpl extends BaseEmitterBean implements EhcacheStats {
 	}
 
 	/**
-	 * @see BaseEmitterBean#getNotificationInfo()
+	 * @see AbstractEmitterBean#getNotificationInfo()
 	 */
 	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
-		return new MBeanNotificationInfo[] { NOTIFICATION_INFO };
+		return new MBeanNotificationInfo[] {NOTIFICATION_INFO};
 	}
 }

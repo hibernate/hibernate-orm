@@ -47,22 +47,26 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 public class EhcacheCollectionRegion extends EhcacheTransactionalDataRegion implements CollectionRegion {
+	/**
+	 * Constructs an EhcacheCollectionRegion around the given underlying cache.
+	 *
+	 * @param accessStrategyFactory The factory for building needed CollectionRegionAccessStrategy instance
+	 * @param underlyingCache The ehcache cache instance
+	 * @param settings The Hibernate settings
+	 * @param metadata Metadata about the data to be cached in this region
+	 * @param properties Any additional[ properties
+	 */
+	public EhcacheCollectionRegion(
+			EhcacheAccessStrategyFactory accessStrategyFactory,
+			Ehcache underlyingCache,
+			Settings settings,
+			CacheDataDescription metadata,
+			Properties properties) {
+		super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
+	}
 
-
-    /**
-     * Constructs an EhcacheCollectionRegion around the given underlying cache.
-     *
-     * @param accessStrategyFactory
-     */
-    public EhcacheCollectionRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Settings settings,
-                                   CacheDataDescription metadata, Properties properties) {
-        super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-        return accessStrategyFactory.createCollectionRegionAccessStrategy( this, accessType );
-    }
+	@Override
+	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
+		return getAccessStrategyFactory().createCollectionRegionAccessStrategy( this, accessType );
+	}
 }

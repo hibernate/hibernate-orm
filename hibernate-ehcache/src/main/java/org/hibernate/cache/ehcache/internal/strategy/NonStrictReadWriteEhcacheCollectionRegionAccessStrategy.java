@@ -42,58 +42,58 @@ public class NonStrictReadWriteEhcacheCollectionRegionAccessStrategy
 
 	/**
 	 * Create a non-strict read/write access strategy accessing the given collection region.
+	 *
+	 * @param region The wrapped region
+	 * @param settings The Hibernate settings
 	 */
 	public NonStrictReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region, Settings settings) {
 		super( region, settings );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public CollectionRegion getRegion() {
-		return region;
+		return region();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object get(Object key, long txTimestamp) throws CacheException {
-		return region.get( key );
+		return region().get( key );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
-		if ( minimalPutOverride && region.contains( key ) ) {
+		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
 		}
 		else {
-			region.put( key, value );
+			region().put( key, value );
 			return true;
 		}
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
+	@Override
 	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Since this is a non-strict read/write strategy item locking is not used.
 	 */
+	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		region.remove( key );
+		region().remove( key );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void remove(Object key) throws CacheException {
-		region.remove( key );
+		region().remove( key );
 	}
 }

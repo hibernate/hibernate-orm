@@ -47,20 +47,26 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 public class EhcacheNaturalIdRegion extends EhcacheTransactionalDataRegion implements NaturalIdRegion {
-
-
-    /**
-     * Constructs an EhcacheNaturalIdRegion around the given underlying cache.
-     *
-     * @param accessStrategyFactory
-     */
-    public EhcacheNaturalIdRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Settings settings,
-                                   CacheDataDescription metadata, Properties properties) {
-        super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
-    }
+	/**
+	 * Constructs an EhcacheNaturalIdRegion around the given underlying cache.
+	 *
+	 * @param accessStrategyFactory The factory for building needed NaturalIdRegionAccessStrategy instance
+	 * @param underlyingCache The ehcache cache instance
+	 * @param settings The Hibernate settings
+	 * @param metadata Metadata about the data to be cached in this region
+	 * @param properties Any additional[ properties
+	 */
+	public EhcacheNaturalIdRegion(
+			EhcacheAccessStrategyFactory accessStrategyFactory,
+			Ehcache underlyingCache,
+			Settings settings,
+			CacheDataDescription metadata,
+			Properties properties) {
+		super( accessStrategyFactory, underlyingCache, settings, metadata, properties );
+	}
 
 	@Override
 	public NaturalIdRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-		return accessStrategyFactory.createNaturalIdRegionAccessStrategy( this, accessType );
+		return getAccessStrategyFactory().createNaturalIdRegionAccessStrategy( this, accessType );
 	}
 }

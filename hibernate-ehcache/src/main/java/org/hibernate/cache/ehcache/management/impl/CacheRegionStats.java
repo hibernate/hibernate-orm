@@ -23,10 +23,6 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
@@ -36,10 +32,15 @@ import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.stat.SecondLevelCacheStatistics;
 
 /**
+ * Bean for exposing region stats
+ *
  * @author gkeim
  */
 public class CacheRegionStats implements Serializable {
@@ -61,7 +62,7 @@ public class CacheRegionStats implements Serializable {
 	private static final CompositeType COMPOSITE_TYPE;
 	private static final String TABULAR_TYPE_NAME = "Statistics by Cache-region";
 	private static final String TABULAR_TYPE_DESCRIPTION = "All Cache Region Statistics";
-	private static final String[] INDEX_NAMES = new String[] { "region", };
+	private static final String[] INDEX_NAMES = new String[] {"region",};
 	private static final TabularType TABULAR_TYPE;
 
 	static {
@@ -72,7 +73,7 @@ public class CacheRegionStats implements Serializable {
 			);
 			TABULAR_TYPE = new TabularType( TABULAR_TYPE_NAME, TABULAR_TYPE_DESCRIPTION, COMPOSITE_TYPE, INDEX_NAMES );
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -123,7 +124,9 @@ public class CacheRegionStats implements Serializable {
 	protected long elementCountTotal;
 
 	/**
-	 * @param region
+	 * Construct a CacheRegionStats
+	 *
+	 * @param region The region name
 	 */
 	public CacheRegionStats(String region) {
 		this.region = region;
@@ -131,8 +134,10 @@ public class CacheRegionStats implements Serializable {
 	}
 
 	/**
-	 * @param region
-	 * @param src
+	 * Construct a CacheRegionStats
+	 *
+	 * @param region The region name
+	 * @param src The SecondLevelCacheStatistics reference
 	 */
 	public CacheRegionStats(String region, SecondLevelCacheStatistics src) {
 		this( region );
@@ -146,15 +151,18 @@ public class CacheRegionStats implements Serializable {
 			this.elementCountOnDisk = BeanUtils.getLongBeanProperty( src, "elementCountOnDisk" );
 			this.elementCountTotal = BeanUtils.getLongBeanProperty( src, "elementCountOnDisk" );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException( "Exception retrieving statistics", e );
 		}
 	}
 
 	/**
-	 * @param cData
+	 * Construct a CacheRegionStats
+	 *
+	 * @param cData No idea
 	 */
+	@SuppressWarnings("UnusedAssignment")
 	public CacheRegionStats(final CompositeData cData) {
 		int i = 0;
 		region = (String) cData.get( ITEM_NAMES[i++] );
@@ -168,30 +176,15 @@ public class CacheRegionStats implements Serializable {
 		elementCountTotal = (Long) cData.get( ITEM_NAMES[i++] );
 	}
 
-	private static int safeParseInt(String s) {
-		try {
-			return Integer.parseInt( s );
-		}
-		catch ( Exception e ) {
-			return -1;
-		}
-	}
-
-	/**
-	 * @return hit ratio
-	 */
 	protected double determineHitRatio() {
+		final long readCount = getHitCount() + getMissCount();
 		double result = 0;
-		long readCount = getHitCount() + getMissCount();
 		if ( readCount > 0 ) {
-			result = getHitCount() / ( (double) readCount );
+			result = getHitCount() / ((double) readCount);
 		}
 		return result;
 	}
 
-	/**
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return "region=" + getRegion() + "shortName=" + getShortName() + ", hitCount=" + getHitCount() + ", missCount="
@@ -200,70 +193,45 @@ public class CacheRegionStats implements Serializable {
 				+ getElementCountTotal();
 	}
 
-	/**
-	 * @return region name
-	 */
 	public String getRegion() {
 		return region;
 	}
 
-	/**
-	 * @return short name
-	 */
 	public String getShortName() {
 		return shortName;
 	}
 
-	/**
-	 * @return hit count
-	 */
 	public long getHitCount() {
 		return hitCount;
 	}
 
-	/**
-	 * @return miss count
-	 */
 	public long getMissCount() {
 		return missCount;
 	}
 
-	/**
-	 * @return put count
-	 */
 	public long getPutCount() {
 		return putCount;
 	}
 
-	/**
-	 * @return hit ratio
-	 */
 	public double getHitRatio() {
 		return hitRatio;
 	}
 
-	/**
-	 * @return in-memory element count
-	 */
 	public long getElementCountInMemory() {
 		return elementCountInMemory;
 	}
 
-	/**
-	 * @return on-disk element count
-	 */
 	public long getElementCountOnDisk() {
 		return elementCountOnDisk;
 	}
 
-	/**
-	 * @return total element count
-	 */
 	public long getElementCountTotal() {
 		return elementCountTotal;
 	}
 
 	/**
+	 * Convert our state into a JMX CompositeData
+	 *
 	 * @return composite data
 	 */
 	public CompositeData toCompositeData() {
@@ -276,12 +244,14 @@ public class CacheRegionStats implements Serializable {
 			}
 			);
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}
 
 	/**
+	 * Convert our state into a JMX TabularData
+	 *
 	 * @return tabular data
 	 */
 	public static TabularData newTabularDataInstance() {
@@ -289,14 +259,17 @@ public class CacheRegionStats implements Serializable {
 	}
 
 	/**
-	 * @param tabularData
+	 * Re-build the CacheRegionStats from JMX tabular data
+	 *
+	 * @param tabularData The JMX tabular data
 	 *
 	 * @return array of region statistics
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public static CacheRegionStats[] fromTabularData(final TabularData tabularData) {
-		final List<CacheRegionStats> countList = new ArrayList( tabularData.size() );
-		for ( final Iterator pos = tabularData.values().iterator(); pos.hasNext(); ) {
-			countList.add( new CacheRegionStats( (CompositeData) pos.next() ) );
+		final List<CacheRegionStats> countList = new ArrayList<CacheRegionStats>( tabularData.size() );
+		for ( Object o : tabularData.values() ) {
+			countList.add( new CacheRegionStats( (CompositeData) o ) );
 		}
 		return countList.toArray( new CacheRegionStats[countList.size()] );
 	}

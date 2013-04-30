@@ -42,22 +42,26 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 
 	/**
 	 * Create a read/write access strategy accessing the given NaturalId region.
+	 *
+	 * @param region The wrapped region
+	 * @param settings The Hibernate settings
 	 */
 	public ReadWriteEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Settings settings) {
 		super( region, settings );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public NaturalIdRegion getRegion() {
-		return region;
+		return region();
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
-	public boolean insert(Object key, Object value ) throws CacheException {
+	@Override
+	public boolean insert(Object key, Object value) throws CacheException {
 		return false;
 	}
 
@@ -66,12 +70,13 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * <p/>
 	 * Inserts will only succeed if there is no existing value mapped to this key.
 	 */
-	public boolean afterInsert(Object key, Object value ) throws CacheException {
-		region.writeLock( key );
+	@Override
+	public boolean afterInsert(Object key, Object value) throws CacheException {
+		region().writeLock( key );
 		try {
-			Lockable item = (Lockable) region.get( key );
+			final Lockable item = (Lockable) region().get( key );
 			if ( item == null ) {
-				region.put( key, new Item( value, null, region.nextTimestamp() ) );
+				region().put( key, new Item( value, null, region().nextTimestamp() ) );
 				return true;
 			}
 			else {
@@ -79,15 +84,17 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 			}
 		}
 		finally {
-			region.writeUnlock( key );
+			region().writeUnlock( key );
 		}
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
-	public boolean update(Object key, Object value )
-			throws CacheException {
+	@Override
+	public boolean update(Object key, Object value) throws CacheException {
 		return false;
 	}
 
@@ -98,20 +105,21 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 	 * duration of this transaction.  It is important to also note that updates will fail if the soft-lock expired during
 	 * the course of this transaction.
 	 */
+	@Override
 	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws CacheException {
 		//what should we do with previousVersion here?
-		region.writeLock( key );
+		region().writeLock( key );
 		try {
-			Lockable item = (Lockable) region.get( key );
+			final Lockable item = (Lockable) region().get( key );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
-				Lock lockItem = (Lock) item;
+				final Lock lockItem = (Lock) item;
 				if ( lockItem.wasLockedConcurrently() ) {
 					decrementLock( key, lockItem );
 					return false;
 				}
 				else {
-					region.put( key, new Item( value, null, region.nextTimestamp() ) );
+					region().put( key, new Item( value, null, region().nextTimestamp() ) );
 					return true;
 				}
 			}
@@ -121,7 +129,7 @@ public class ReadWriteEhcacheNaturalIdRegionAccessStrategy
 			}
 		}
 		finally {
-			region.writeUnlock( key );
+			region().writeUnlock( key );
 		}
 	}
 }

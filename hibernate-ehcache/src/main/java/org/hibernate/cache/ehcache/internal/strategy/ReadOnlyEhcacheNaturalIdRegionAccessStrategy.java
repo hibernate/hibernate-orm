@@ -42,79 +42,87 @@ public class ReadOnlyEhcacheNaturalIdRegionAccessStrategy
 
 	/**
 	 * Create a read-only access strategy accessing the given NaturalId region.
+	 *
+	 * @param region THe wrapped region
+	 * @param settings The Hibermate settings
 	 */
 	public ReadOnlyEhcacheNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion region, Settings settings) {
 		super( region, settings );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public NaturalIdRegion getRegion() {
-		return region;
+		return region();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object get(Object key, long txTimestamp) throws CacheException {
-		return region.get( key );
+		return region().get( key );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
-		if ( minimalPutOverride && region.contains( key ) ) {
+		if ( minimalPutOverride && region().contains( key ) ) {
 			return false;
 		}
 		else {
-			region.put( key, value );
+			region().put( key, value );
 			return true;
 		}
 	}
 
+	@Override
 	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
 		return null;
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * A no-op since this cache is read-only
 	 */
+	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-		region.remove( key );
-	}
-
-	/**
-	 * This cache is asynchronous hence a no-op
-	 */
-	public boolean insert(Object key, Object value ) throws CacheException {
-		return false;
+		region().remove( key );
 	}
 
 	/**
 	 * {@inheritDoc}
+	 * <p/>
+	 * This cache is asynchronous hence a no-op
 	 */
-	public boolean afterInsert(Object key, Object value ) throws CacheException {
-		region.put( key, value );
+	@Override
+	public boolean insert(Object key, Object value) throws CacheException {
+		return false;
+	}
+
+	@Override
+	public boolean afterInsert(Object key, Object value) throws CacheException {
+		region().put( key, value );
 		return true;
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Throws UnsupportedOperationException since this cache is read-only
 	 *
 	 * @throws UnsupportedOperationException always
 	 */
-	public boolean update(Object key, Object value ) throws UnsupportedOperationException {
+	@Override
+	public boolean update(Object key, Object value) throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Throws UnsupportedOperationException since this cache is read-only
 	 *
 	 * @throws UnsupportedOperationException always
 	 */
+	@Override
 	public boolean afterUpdate(Object key, Object value, SoftLock lock) throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}

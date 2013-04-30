@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.MBeanNotificationInfo;
 import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.openmbean.TabularData;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.hibernate.management.api.EhcacheHibernateMBean;
@@ -44,7 +44,7 @@ import org.hibernate.SessionFactory;
  *
  * @author <a href="mailto:asanoujam@terracottatech.com">Abhishek Sanoujam</a>
  */
-public class EhcacheHibernate extends BaseEmitterBean implements EhcacheHibernateMBean {
+public class EhcacheHibernate extends AbstractEmitterBean implements EhcacheHibernateMBean {
 	private static final MBeanNotificationInfo NOTIFICATION_INFO;
 
 	private final AtomicBoolean statsEnabled = new AtomicBoolean( true );
@@ -52,7 +52,7 @@ public class EhcacheHibernate extends BaseEmitterBean implements EhcacheHibernat
 	private volatile HibernateStats hibernateStats = NullHibernateStats.INSTANCE;
 
 	static {
-		final String[] notifTypes = new String[] { };
+		final String[] notifTypes = new String[] {};
 		final String name = Notification.class.getName();
 		final String description = "Ehcache Hibernate Statistics Event";
 		NOTIFICATION_INFO = new MBeanNotificationInfo( notifTypes, name, description );
@@ -77,7 +77,7 @@ public class EhcacheHibernate extends BaseEmitterBean implements EhcacheHibernat
 		try {
 			hibernateStats = new HibernateStatsImpl( sessionFactory );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -588,10 +588,10 @@ public class EhcacheHibernate extends BaseEmitterBean implements EhcacheHibernat
 	}
 
 	/**
-	 * @see BaseEmitterBean#getNotificationInfo()
+	 * @see AbstractEmitterBean#getNotificationInfo()
 	 */
 	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
-		return new MBeanNotificationInfo[] { NOTIFICATION_INFO };
+		return new MBeanNotificationInfo[] {NOTIFICATION_INFO};
 	}
 }

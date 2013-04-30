@@ -32,42 +32,46 @@ import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 
 /**
- * Factory to create {@link EntityRegionAccessStrategy}
+ * Factory to create {@link org.hibernate.cache.spi.access.RegionAccessStrategy} instance
  *
  * @author Abhishek Sanoujam
  * @author Alex Snaps
  */
 public interface EhcacheAccessStrategyFactory {
-
 	/**
 	 * Create {@link EntityRegionAccessStrategy} for the input {@link EhcacheEntityRegion} and {@link AccessType}
 	 *
-	 * @param entityRegion
-	 * @param accessType
+	 * @param entityRegion The entity region being wrapped
+	 * @param accessType The type of access to allow to the region
 	 *
 	 * @return the created {@link EntityRegionAccessStrategy}
 	 */
-	public EntityRegionAccessStrategy createEntityRegionAccessStrategy(EhcacheEntityRegion entityRegion, AccessType accessType);
+	public EntityRegionAccessStrategy createEntityRegionAccessStrategy(
+			EhcacheEntityRegion entityRegion,
+			AccessType accessType);
 
 	/**
-	 * Create {@link CollectionRegionAccessStrategy} for the input {@link org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion} and {@link AccessType}
+	 * Create {@link CollectionRegionAccessStrategy} for the input {@link EhcacheCollectionRegion} and {@link AccessType}
 	 *
-	 * @param collectionRegion
-	 * @param accessType
+	 * @param collectionRegion The collection region being wrapped
+	 * @param accessType The type of access to allow to the region
 	 *
 	 * @return the created {@link CollectionRegionAccessStrategy}
 	 */
-	public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(EhcacheCollectionRegion collectionRegion,
-																			   AccessType accessType);
-    /**
-     * Create {@link NaturalIdRegionAccessStrategy} for the input {@link org.hibernate.cache.ehcache.internal.regions.EhcacheNaturalIdRegion} and {@link AccessType}
-     *
-     * @param naturalIdRegion
-     * @param accessType
-     *
-     * @return the created {@link NaturalIdRegionAccessStrategy}
-     */
-    public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion naturalIdRegion,
-                                                                               AccessType accessType);
+	public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(
+			EhcacheCollectionRegion collectionRegion,
+			AccessType accessType);
+
+	/**
+	 * Create {@link NaturalIdRegionAccessStrategy} for the input {@link EhcacheNaturalIdRegion} and {@link AccessType}
+	 *
+	 * @param naturalIdRegion The natural-id region being wrapped
+	 * @param accessType The type of access to allow to the region
+	 *
+	 * @return the created {@link NaturalIdRegionAccessStrategy}
+	 */
+	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(
+			EhcacheNaturalIdRegion naturalIdRegion,
+			AccessType accessType);
 
 }

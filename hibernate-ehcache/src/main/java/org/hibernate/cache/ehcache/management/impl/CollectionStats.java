@@ -23,10 +23,6 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
@@ -36,6 +32,9 @@ import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.stat.CollectionStatistics;
 
@@ -62,7 +61,7 @@ public class CollectionStats implements Serializable {
 	private static final CompositeType COMPOSITE_TYPE;
 	private static final String TABULAR_TYPE_NAME = "Statistics by Collection";
 	private static final String TABULAR_TYPE_DESCRIPTION = "All Collection Statistics";
-	private static final String[] INDEX_NAMES = new String[] { "roleName", };
+	private static final String[] INDEX_NAMES = new String[] {"roleName",};
 	private static final TabularType TABULAR_TYPE;
 
 	static {
@@ -73,7 +72,7 @@ public class CollectionStats implements Serializable {
 			);
 			TABULAR_TYPE = new TabularType( TABULAR_TYPE_NAME, TABULAR_TYPE_DESCRIPTION, COMPOSITE_TYPE, INDEX_NAMES );
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -115,19 +114,23 @@ public class CollectionStats implements Serializable {
 
 
 	/**
-	 * @param roleName
+	 * Constructs a CollectionsStats
+	 *
+	 * @param role The collection role
 	 */
-	public CollectionStats(String roleName) {
-		this.roleName = roleName;
-		this.shortName = CacheRegionUtils.determineShortName( roleName );
+	public CollectionStats(String role) {
+		this.roleName = role;
+		this.shortName = CacheRegionUtils.determineShortName( role );
 	}
 
 	/**
-	 * @param name
-	 * @param src
+	 * Constructs a CollectionsStats
+	 *
+	 * @param role The collection role
+	 * @param src The CollectionStatistics instance
 	 */
-	public CollectionStats(String name, CollectionStatistics src) {
-		this( name );
+	public CollectionStats(String role, CollectionStatistics src) {
+		this( role );
 
 		try {
 			this.loadCount = BeanUtils.getLongBeanProperty( src, "loadCount" );
@@ -136,15 +139,18 @@ public class CollectionStats implements Serializable {
 			this.removeCount = BeanUtils.getLongBeanProperty( src, "removeCount" );
 			this.recreateCount = BeanUtils.getLongBeanProperty( src, "recreateCount" );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException( "Exception retrieving statistics", e );
 		}
 	}
 
 	/**
-	 * @param cData
+	 * Constructs a CollectionsStats from a JMX CompositeData
+	 *
+	 * @param cData The JMX CompositeData
 	 */
+	@SuppressWarnings("UnusedAssignment")
 	public CollectionStats(final CompositeData cData) {
 		int i = 0;
 		roleName = (String) cData.get( ITEM_NAMES[i++] );
@@ -156,17 +162,10 @@ public class CollectionStats implements Serializable {
 		recreateCount = (Long) cData.get( ITEM_NAMES[i++] );
 	}
 
-	private static int safeParseInt(String s) {
-		try {
-			return Integer.parseInt( s );
-		}
-		catch ( Exception e ) {
-			return -1;
-		}
-	}
-
 	/**
-	 * @param stats
+	 * Update the internal stats
+	 *
+	 * @param stats The incoming stats
 	 */
 	public void add(CollectionStats stats) {
 		loadCount += stats.getLoadCount();
@@ -176,9 +175,6 @@ public class CollectionStats implements Serializable {
 		recreateCount += stats.getRecreateCount();
 	}
 
-	/**
-	 * toString
-	 */
 	@Override
 	public String toString() {
 		return "roleName=" + roleName + "shortName=" + shortName + ", loadCount=" + loadCount + ", fetchCount="
@@ -186,86 +182,75 @@ public class CollectionStats implements Serializable {
 				+ recreateCount;
 	}
 
-	/**
-	 * getRoleName
-	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public String getRoleName() {
 		return roleName;
 	}
 
-	/**
-	 * getShortName
-	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public String getShortName() {
 		return shortName;
 	}
 
-	/**
-	 * getLoadCount
-	 */
 	public long getLoadCount() {
 		return loadCount;
 	}
 
-	/**
-	 * getFetchCount
-	 */
 	public long getFetchCount() {
 		return fetchCount;
 	}
 
-	/**
-	 * getUpdateCount
-	 */
 	public long getUpdateCount() {
 		return updateCount;
 	}
 
-	/**
-	 * getRemoveCount
-	 */
 	public long getRemoveCount() {
 		return removeCount;
 	}
 
-	/**
-	 * getRecreateCount
-	 */
 	public long getRecreateCount() {
 		return recreateCount;
 	}
 
 	/**
-	 * toCompositeData
+	 * Builds a JMX CompositeData view of our state
+	 *
+	 * @return The JMX CompositeData
 	 */
 	public CompositeData toCompositeData() {
 		try {
 			return new CompositeDataSupport(
-					COMPOSITE_TYPE, ITEM_NAMES, new Object[] {
-					roleName, shortName, loadCount,
-					fetchCount, updateCount, removeCount, recreateCount,
-			}
+					COMPOSITE_TYPE,
+					ITEM_NAMES,
+					new Object[] { roleName, shortName, loadCount, fetchCount, updateCount, removeCount, recreateCount }
 			);
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}
 
 	/**
-	 * newTabularDataInstance
+	 * Builds a JMX TabularData
+	 *
+	 * @return JMX TabularData
 	 */
 	public static TabularData newTabularDataInstance() {
 		return new TabularDataSupport( TABULAR_TYPE );
 	}
 
 	/**
-	 * fromTabularData
+	 * Re-builds CollectionStats from JMX TabularData
+	 *
+	 * @param tabularData The JMX TabularData
+	 *
+	 * @return The CollectionsStats
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public static CollectionStats[] fromTabularData(final TabularData tabularData) {
-		final List<CollectionStats> countList = new ArrayList( tabularData.size() );
-		for ( final Iterator pos = tabularData.values().iterator(); pos.hasNext(); ) {
-			countList.add( new CollectionStats( (CompositeData) pos.next() ) );
+		final List<CollectionStats> countList = new ArrayList<CollectionStats>( tabularData.size() );
+		for ( Object o : tabularData.values() ) {
+			countList.add( new CollectionStats( (CompositeData) o ) );
 		}
 		return countList.toArray( new CollectionStats[countList.size()] );
 	}

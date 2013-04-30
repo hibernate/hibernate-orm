@@ -30,10 +30,11 @@ import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.ConfigurationFactory;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
+import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
 import org.hibernate.cfg.Settings;
 
 /**
@@ -47,85 +48,88 @@ import org.hibernate.cfg.Settings;
  */
 public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 
-    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
-            EhCacheMessageLogger.class,
-            EhCacheRegionFactory.class.getName()
-    );
+	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
+			EhCacheMessageLogger.class,
+			EhCacheRegionFactory.class.getName()
+	);
 
 
-    public EhCacheRegionFactory() {
-    }
+	/**
+	 * Creates a non-singleton EhCacheRegionFactory
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public EhCacheRegionFactory() {
+	}
 
-    /**
-     * Creates a non-singleton EhCacheRegionFactory
-     */
-    public EhCacheRegionFactory(Properties prop) {
-        super();
-    }
+	/**
+	 * Creates a non-singleton EhCacheRegionFactory
+	 *
+	 * @param prop Not used
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public EhCacheRegionFactory(Properties prop) {
+		super();
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public void start(Settings settings, Properties properties) throws CacheException {
-        this.settings = settings;
-        if ( manager != null ) {
-            LOG.attemptToRestartAlreadyStartedEhCacheProvider();
-            return;
-        }
+	@Override
+	public void start(Settings settings, Properties properties) throws CacheException {
+		this.settings = settings;
+		if ( manager != null ) {
+			LOG.attemptToRestartAlreadyStartedEhCacheProvider();
+			return;
+		}
 
-        try {
-            String configurationResourceName = null;
-            if ( properties != null ) {
-                configurationResourceName = (String) properties.get( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME );
-            }
-            if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
-                Configuration configuration = ConfigurationFactory.parseConfiguration();
-                manager = new CacheManager( configuration );
-            }
-            else {
-                URL url;
-                try {
-                    url = new URL( configurationResourceName );
-                }
-                catch ( MalformedURLException e ) {
-                    url = loadResource( configurationResourceName );
-                }
-                Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
-                manager = new CacheManager( configuration );
-            }
-            mbeanRegistrationHelper.registerMBean( manager, properties );
-        }
-        catch ( net.sf.ehcache.CacheException e ) {
-            if ( e.getMessage().startsWith(
-                    "Cannot parseConfiguration CacheManager. Attempt to create a new instance of " +
-                            "CacheManager using the diskStorePath"
-            ) ) {
-                throw new CacheException(
-                        "Attempt to restart an already started EhCacheRegionFactory. " +
-                                "Use sessionFactory.close() between repeated calls to buildSessionFactory. " +
-                                "Consider using SingletonEhCacheRegionFactory. Error from ehcache was: " + e.getMessage()
-                );
-            }
-            else {
-                throw new CacheException( e );
-            }
-        }
-    }
+		try {
+			String configurationResourceName = null;
+			if ( properties != null ) {
+				configurationResourceName = (String) properties.get( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME );
+			}
+			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
+				final Configuration configuration = ConfigurationFactory.parseConfiguration();
+				manager = new CacheManager( configuration );
+			}
+			else {
+				URL url;
+				try {
+					url = new URL( configurationResourceName );
+				}
+				catch (MalformedURLException e) {
+					url = loadResource( configurationResourceName );
+				}
+				final Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
+				manager = new CacheManager( configuration );
+			}
+			mbeanRegistrationHelper.registerMBean( manager, properties );
+		}
+		catch (net.sf.ehcache.CacheException e) {
+			if ( e.getMessage().startsWith(
+					"Cannot parseConfiguration CacheManager. Attempt to create a new instance of " +
+							"CacheManager using the diskStorePath"
+			) ) {
+				throw new CacheException(
+						"Attempt to restart an already started EhCacheRegionFactory. " +
+								"Use sessionFactory.close() between repeated calls to buildSessionFactory. " +
+								"Consider using SingletonEhCacheRegionFactory. Error from ehcache was: " + e.getMessage()
+				);
+			}
+			else {
+				throw new CacheException( e );
+			}
+		}
+	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public void stop() {
-        try {
-            if ( manager != null ) {
-                mbeanRegistrationHelper.unregisterMBean();
-                manager.shutdown();
-                manager = null;
-            }
-        }
-        catch ( net.sf.ehcache.CacheException e ) {
-            throw new CacheException( e );
-        }
-    }
+	@Override
+	public void stop() {
+		try {
+			if ( manager != null ) {
+				mbeanRegistrationHelper.unregisterMBean();
+				manager.shutdown();
+				manager = null;
+			}
+		}
+		catch (net.sf.ehcache.CacheException e) {
+			throw new CacheException( e );
+		}
+	}
 
 }

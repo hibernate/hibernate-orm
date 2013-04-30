@@ -23,10 +23,6 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
@@ -36,6 +32,10 @@ import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.stat.QueryStatistics;
 
@@ -75,7 +75,7 @@ public class QueryStats implements Serializable {
 	private static final CompositeType COMPOSITE_TYPE;
 	private static final String TABULAR_TYPE_NAME = "Statistics by Query";
 	private static final String TABULAR_TYPE_DESCRIPTION = "All Query Statistics";
-	private static final String[] INDEX_NAMES = new String[] { "query", };
+	private static final String[] INDEX_NAMES = new String[] {"query",};
 	private static final TabularType TABULAR_TYPE;
 
 	static {
@@ -86,7 +86,7 @@ public class QueryStats implements Serializable {
 			);
 			TABULAR_TYPE = new TabularType( TABULAR_TYPE_NAME, TABULAR_TYPE_DESCRIPTION, COMPOSITE_TYPE, INDEX_NAMES );
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -161,7 +161,7 @@ public class QueryStats implements Serializable {
 			this.executionMinTime =
 					BeanUtils.getLongBeanProperty( src, "executionMinTime" );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException( "Exception retrieving statistics", e );
 		}
@@ -187,7 +187,7 @@ public class QueryStats implements Serializable {
 		try {
 			return Integer.parseInt( s );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			return -1;
 		}
 	}
@@ -297,7 +297,7 @@ public class QueryStats implements Serializable {
 			}
 			);
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}

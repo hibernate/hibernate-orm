@@ -26,9 +26,9 @@ package org.hibernate.cache.ehcache;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
-import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.cache.spi.RegionFactory;
 
 /**
@@ -49,7 +49,8 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 						EhCacheRegionFactory.class,
 						"ehcache",
 						EhCacheRegionFactory.class.getSimpleName(),
-						"org.hibernate.cache.EhCacheRegionFactory" // legacy impl class name
+						// legacy impl class name
+						"org.hibernate.cache.EhCacheRegionFactory"
 				)
 		);
 
@@ -59,7 +60,8 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 						SingletonEhCacheRegionFactory.class,
 						"ehcache-singleton",
 						SingletonEhCacheRegionFactory.class.getSimpleName(),
-						"org.hibernate.cache.SingletonEhCacheRegionFactory" // legacy impl class name
+						// legacy impl class name
+						"org.hibernate.cache.SingletonEhCacheRegionFactory"
 				)
 		);
 

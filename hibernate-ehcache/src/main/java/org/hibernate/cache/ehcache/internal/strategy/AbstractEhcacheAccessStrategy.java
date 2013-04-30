@@ -37,22 +37,32 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataRegion> {
-
-	/**
-	 * The wrapped Hibernate cache region.
-	 */
-	protected final T region;
-	/**
-	 * The settings for this persistence unit.
-	 */
-	protected final Settings settings;
+	private final T region;
+	private final Settings settings;
 
 	/**
 	 * Create an access strategy wrapping the given region.
+	 *
+	 * @param region The wrapped region.  Accessible to subclasses via {@link #region()}
+	 * @param settings The Hibernate settings.  Accessible to subclasses via {@link #settings()}
 	 */
 	AbstractEhcacheAccessStrategy(T region, Settings settings) {
 		this.region = region;
 		this.settings = settings;
+	}
+
+	/**
+	 * The wrapped Hibernate cache region.
+	 */
+	protected T region() {
+		return region;
+	}
+
+	/**
+	 * The settings for this persistence unit.
+	 */
+	protected Settings settings() {
+		return settings;
 	}
 
 	/**
@@ -84,6 +94,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#lockRegion()
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#lockRegion()
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public final SoftLock lockRegion() {
 		return null;
 	}
@@ -94,6 +105,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#unlockRegion(org.hibernate.cache.spi.access.SoftLock)
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public final void unlockRegion(SoftLock lock) throws CacheException {
 		region.clear();
 	}
@@ -114,6 +126,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#removeAll()
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#removeAll()
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public final void removeAll() throws CacheException {
 		region.clear();
 	}
@@ -134,6 +147,7 @@ abstract class AbstractEhcacheAccessStrategy<T extends EhcacheTransactionalDataR
 	 * @see org.hibernate.cache.spi.access.EntityRegionAccessStrategy#evictAll()
 	 * @see org.hibernate.cache.spi.access.CollectionRegionAccessStrategy#evictAll()
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public final void evictAll() throws CacheException {
 		region.clear();
 	}

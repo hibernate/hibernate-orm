@@ -23,10 +23,6 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.CompositeDataSupport;
 import javax.management.openmbean.CompositeType;
@@ -36,6 +32,10 @@ import javax.management.openmbean.SimpleType;
 import javax.management.openmbean.TabularData;
 import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import org.hibernate.stat.EntityStatistics;
 
@@ -63,7 +63,7 @@ public class EntityStats implements Serializable {
 	private static final CompositeType COMPOSITE_TYPE;
 	private static final String TABULAR_TYPE_NAME = "Statistics by Entity";
 	private static final String TABULAR_TYPE_DESCRIPTION = "All Entity Statistics";
-	private static final String[] INDEX_NAMES = new String[] { "name", };
+	private static final String[] INDEX_NAMES = new String[] {"name",};
 	private static final TabularType TABULAR_TYPE;
 
 	static {
@@ -74,7 +74,7 @@ public class EntityStats implements Serializable {
 			);
 			TABULAR_TYPE = new TabularType( TABULAR_TYPE_NAME, TABULAR_TYPE_DESCRIPTION, COMPOSITE_TYPE, INDEX_NAMES );
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}
@@ -142,7 +142,7 @@ public class EntityStats implements Serializable {
 			this.fetchCount = BeanUtils.getLongBeanProperty( src, "fetchCount" );
 			this.optimisticFailureCount = BeanUtils.getLongBeanProperty( src, "optimisticFailureCount" );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			e.printStackTrace();
 			throw new RuntimeException( "Exception retrieving statistics", e );
 		}
@@ -167,7 +167,7 @@ public class EntityStats implements Serializable {
 		try {
 			return Integer.parseInt( s );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			return -1;
 		}
 	}
@@ -262,7 +262,7 @@ public class EntityStats implements Serializable {
 			}
 			);
 		}
-		catch ( OpenDataException e ) {
+		catch (OpenDataException e) {
 			throw new RuntimeException( e );
 		}
 	}

@@ -24,9 +24,6 @@
 
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 import javax.management.ListenerNotFoundException;
 import javax.management.MBeanNotificationInfo;
 import javax.management.NotCompliantMBeanException;
@@ -36,64 +33,61 @@ import javax.management.NotificationEmitter;
 import javax.management.NotificationFilter;
 import javax.management.NotificationListener;
 import javax.management.StandardMBean;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ * Base MBean impl
+ *
  * @author gkeim
  */
-public abstract class BaseEmitterBean extends StandardMBean implements NotificationEmitter {
-	/**
-	 * emitter
-	 */
-	protected final Emitter emitter = new Emitter();
-
-	/**
-	 * sequenceNumber
-	 */
-	protected final AtomicLong sequenceNumber = new AtomicLong();
-
+public abstract class AbstractEmitterBean extends StandardMBean implements NotificationEmitter {
+	private final Emitter emitter = new Emitter();
+	private final AtomicLong sequenceNumber = new AtomicLong();
 
 	private final List<NotificationListener> notificationListeners = new CopyOnWriteArrayList<NotificationListener>();
 
 	/**
-	 * BaseEmitterBean
+	 * Constructs a AbstractEmitterBean
 	 *
-	 * @param <T>
-	 * @param mbeanInterface
+	 * @param mbeanInterface The MBean contract
+	 * @param <T> Not used as far as I can see
 	 *
-	 * @throws javax.management.NotCompliantMBeanException
+	 * @throws javax.management.NotCompliantMBeanException thrown from JMX super ctor
 	 */
-	protected <T> BaseEmitterBean(Class<T> mbeanInterface) throws NotCompliantMBeanException {
+	protected <T> AbstractEmitterBean(Class<T> mbeanInterface) throws NotCompliantMBeanException {
 		super( mbeanInterface );
 	}
 
 	/**
-	 * sendNotification
+	 * Sends notification of an event
 	 *
-	 * @param eventType
+	 * @param eventType The type of event
 	 */
 	public void sendNotification(String eventType) {
 		sendNotification( eventType, null, null );
 	}
 
 	/**
-	 * sendNotification
+	 * Sends notification of an event
 	 *
-	 * @param eventType
-	 * @param data
+	 * @param eventType The type of event
+	 * @param data The event data
 	 */
 	public void sendNotification(String eventType, Object data) {
 		sendNotification( eventType, data, null );
 	}
 
 	/**
-	 * sendNotification
+	 * Sends notification of an event
 	 *
-	 * @param eventType
-	 * @param data
-	 * @param msg
+	 * @param eventType The type of event
+	 * @param data The event data
+	 * @param msg A message
 	 */
 	public void sendNotification(String eventType, Object data, String msg) {
-		Notification notif = new Notification(
+		final Notification notification = new Notification(
 				eventType,
 				this,
 				sequenceNumber.incrementAndGet(),
@@ -101,9 +95,9 @@ public abstract class BaseEmitterBean extends StandardMBean implements Notificat
 				msg
 		);
 		if ( data != null ) {
-			notif.setUserData( data );
+			notification.setUserData( data );
 		}
-		emitter.sendNotification( notif );
+		emitter.sendNotification( notification );
 	}
 
 	/**
@@ -119,61 +113,42 @@ public abstract class BaseEmitterBean extends StandardMBean implements Notificat
 	 */
 	protected abstract void doDispose();
 
-	/**
-	 * @author gkeim
-	 */
 	private class Emitter extends NotificationBroadcasterSupport {
-		/**
-		 * @see javax.management.NotificationBroadcasterSupport#getNotificationInfo()
-		 */
 		@Override
 		public MBeanNotificationInfo[] getNotificationInfo() {
-			return BaseEmitterBean.this.getNotificationInfo();
+			return AbstractEmitterBean.this.getNotificationInfo();
 		}
 	}
 
-	/**
-	 * @see javax.management.NotificationBroadcaster#addNotificationListener(javax.management.NotificationListener,
-	 *	  javax.management.NotificationFilter, java.lang.Object)
-	 */
+	@Override
 	public void addNotificationListener(NotificationListener notif, NotificationFilter filter, Object callBack) {
 		emitter.addNotificationListener( notif, filter, callBack );
 		notificationListeners.add( notif );
 	}
 
-	/**
-	 * remove all added notification listeners
-	 */
 	private void removeAllNotificationListeners() {
 		for ( NotificationListener listener : notificationListeners ) {
 			try {
 				emitter.removeNotificationListener( listener );
 			}
-			catch ( ListenerNotFoundException e ) {
+			catch (ListenerNotFoundException e) {
 				// ignore
 			}
 		}
 		notificationListeners.clear();
 	}
 
-	/**
-	 * @see javax.management.NotificationBroadcaster#getNotificationInfo()
-	 */
+	@Override
 	public abstract MBeanNotificationInfo[] getNotificationInfo();
 
 
-	/**
-	 * @see javax.management.NotificationBroadcaster#removeNotificationListener(javax.management.NotificationListener)
-	 */
+	@Override
 	public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
 		emitter.removeNotificationListener( listener );
 		notificationListeners.remove( listener );
 	}
 
-	/**
-	 * @see javax.management.NotificationEmitter#removeNotificationListener(javax.management.NotificationListener,
-	 *	  javax.management.NotificationFilter, java.lang.Object)
-	 */
+	@Override
 	public void removeNotificationListener(NotificationListener notif, NotificationFilter filter, Object callBack)
 			throws ListenerNotFoundException {
 		emitter.removeNotificationListener( notif, filter, callBack );

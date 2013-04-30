@@ -42,21 +42,25 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 
 	/**
 	 * Create a read/write access strategy accessing the given entity region.
+	 *
+	 * @param region The wrapped region
+	 * @param settings The Hibernate settings
 	 */
 	public ReadWriteEhcacheEntityRegionAccessStrategy(EhcacheEntityRegion region, Settings settings) {
 		super( region, settings );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public EntityRegion getRegion() {
-		return region;
+		return region();
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
+	@Override
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
@@ -66,12 +70,13 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * <p/>
 	 * Inserts will only succeed if there is no existing value mapped to this key.
 	 */
+	@Override
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-		region.writeLock( key );
+		region().writeLock( key );
 		try {
-			Lockable item = (Lockable) region.get( key );
+			final Lockable item = (Lockable) region().get( key );
 			if ( item == null ) {
-				region.put( key, new Item( value, version, region.nextTimestamp() ) );
+				region().put( key, new Item( value, version, region().nextTimestamp() ) );
 				return true;
 			}
 			else {
@@ -79,13 +84,16 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 			}
 		}
 		finally {
-			region.writeUnlock( key );
+			region().writeUnlock( key );
 		}
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * A no-op since this is an asynchronous cache access strategy.
 	 */
+	@Override
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		return false;
@@ -98,12 +106,13 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 	 * duration of this transaction.  It is important to also note that updates will fail if the soft-lock expired during
 	 * the course of this transaction.
 	 */
+	@Override
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws CacheException {
 		//what should we do with previousVersion here?
-		region.writeLock( key );
+		region().writeLock( key );
 		try {
-			Lockable item = (Lockable) region.get( key );
+			final Lockable item = (Lockable) region().get( key );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
 				Lock lockItem = (Lock) item;
@@ -112,7 +121,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 					return false;
 				}
 				else {
-					region.put( key, new Item( value, currentVersion, region.nextTimestamp() ) );
+					region().put( key, new Item( value, currentVersion, region().nextTimestamp() ) );
 					return true;
 				}
 			}
@@ -122,7 +131,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 			}
 		}
 		finally {
-			region.writeUnlock( key );
+			region().writeUnlock( key );
 		}
 	}
 }

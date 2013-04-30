@@ -41,49 +41,49 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
  */
 public class NonstopAccessStrategyFactory implements EhcacheAccessStrategyFactory {
 
-    private final EhcacheAccessStrategyFactory actualFactory;
-
-    /**
-     * Constructor accepting the actual factory
-     *
-     * @param actualFactory
-     */
-    public NonstopAccessStrategyFactory(EhcacheAccessStrategyFactory actualFactory) {
-        this.actualFactory = actualFactory;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public EntityRegionAccessStrategy createEntityRegionAccessStrategy(EhcacheEntityRegion entityRegion, AccessType accessType) {
-        return new NonstopAwareEntityRegionAccessStrategy(
-                actualFactory.createEntityRegionAccessStrategy( entityRegion, accessType ),
-                HibernateNonstopCacheExceptionHandler.getInstance()
-        );
-    }
-
-    @Override
-	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion naturalIdRegion,
-			AccessType accessType) {
-        return new NonstopAwareNaturalIdRegionAccessStrategy(
-        		actualFactory.createNaturalIdRegionAccessStrategy( 
-        				naturalIdRegion, 
-        				accessType
-				), HibernateNonstopCacheExceptionHandler.getInstance()
-        );
-	}
+	private final EhcacheAccessStrategyFactory actualFactory;
 
 	/**
-     * {@inheritDoc}
-     */
-    public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(EhcacheCollectionRegion collectionRegion,
-                                                                               AccessType accessType) {
-        return new NonstopAwareCollectionRegionAccessStrategy(
-                actualFactory.createCollectionRegionAccessStrategy(
-                        collectionRegion,
-                        accessType
-                ), HibernateNonstopCacheExceptionHandler.getInstance()
-        );
-    }
+	 * Constructor accepting the actual factory
+	 *
+	 * @param actualFactory The wrapped RegionAccessStrategy factory
+	 */
+	public NonstopAccessStrategyFactory(EhcacheAccessStrategyFactory actualFactory) {
+		this.actualFactory = actualFactory;
+	}
+
+	@Override
+	public EntityRegionAccessStrategy createEntityRegionAccessStrategy(
+			EhcacheEntityRegion entityRegion,
+			AccessType accessType) {
+		return new NonstopAwareEntityRegionAccessStrategy(
+				actualFactory.createEntityRegionAccessStrategy( entityRegion, accessType ),
+				HibernateNonstopCacheExceptionHandler.getInstance()
+		);
+	}
+
+	@Override
+	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(
+			EhcacheNaturalIdRegion naturalIdRegion,
+			AccessType accessType) {
+		return new NonstopAwareNaturalIdRegionAccessStrategy(
+				actualFactory.createNaturalIdRegionAccessStrategy(
+						naturalIdRegion,
+						accessType
+				), HibernateNonstopCacheExceptionHandler.getInstance()
+		);
+	}
+
+	@Override
+	public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(
+			EhcacheCollectionRegion collectionRegion,
+			AccessType accessType) {
+		return new NonstopAwareCollectionRegionAccessStrategy(
+				actualFactory.createCollectionRegionAccessStrategy(
+						collectionRegion,
+						accessType
+				), HibernateNonstopCacheExceptionHandler.getInstance()
+		);
+	}
 
 }

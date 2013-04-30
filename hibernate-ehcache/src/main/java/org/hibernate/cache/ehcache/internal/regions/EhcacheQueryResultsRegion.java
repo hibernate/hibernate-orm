@@ -37,13 +37,17 @@ import org.hibernate.cache.spi.QueryResultsRegion;
  * @author Alex Snaps
  */
 public class EhcacheQueryResultsRegion extends EhcacheGeneralDataRegion implements QueryResultsRegion {
-
 	/**
 	 * Constructs an EhcacheQueryResultsRegion around the given underlying cache.
 	 *
-	 * @param accessStrategyFactory
+	 * @param accessStrategyFactory The factory for building needed CollectionRegionAccessStrategy instance
+	 * @param underlyingCache The ehcache cache instance
+	 * @param properties Any additional[ properties
 	 */
-	public EhcacheQueryResultsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
+	public EhcacheQueryResultsRegion(
+			EhcacheAccessStrategyFactory accessStrategyFactory,
+			Ehcache underlyingCache,
+			Properties properties) {
 		super( accessStrategyFactory, underlyingCache, properties );
 	}
 

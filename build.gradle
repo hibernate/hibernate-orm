@@ -349,8 +349,12 @@ subprojects { subProject ->
         checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
         findbugs {
+            sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
             ignoreFailures = true
         }
+        // exclude generated sources
+        findbugsMain.exclude '**/generated-src/**'
+
 
         buildDashboard.dependsOn check
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

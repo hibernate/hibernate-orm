@@ -348,7 +348,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			// snapshot-cached.
 			final int[] props = persister.getNaturalIdentifierProperties();
 			final Object[] entitySnapshot = getDatabaseSnapshot( id, persister );
-			if ( entitySnapshot == NO_ROW ) {
+			if ( entitySnapshot == NO_ROW || entitySnapshot == null ) {
 				return null;
 			}
 

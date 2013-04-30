@@ -51,7 +51,7 @@ public class LoadQueryInfluencers implements Serializable {
 	 * outside the context of any influencers.  One such example is
 	 * anything created by the session factory.
 	 */
-	public static LoadQueryInfluencers NONE = new LoadQueryInfluencers();
+	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
 	private final SessionFactoryImplementor sessionFactory;
 	private String internalFetchProfile;

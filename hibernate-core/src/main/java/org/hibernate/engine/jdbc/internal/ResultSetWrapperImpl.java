@@ -33,13 +33,14 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
  * Standard Hibernate implementation for wrapping a {@link ResultSet} in a
  " column name cache" wrapper.
  *
+ * @author Steve Ebersole
  * @author Gail Badner
  */
 public class ResultSetWrapperImpl implements ResultSetWrapper {
 	/**
 	 * Singleton access
 	 */
-	public static ResultSetWrapper INSTANCE = new ResultSetWrapperImpl();
+	public static final ResultSetWrapper INSTANCE = new ResultSetWrapperImpl();
 
 	private ResultSetWrapperImpl() {
 	}

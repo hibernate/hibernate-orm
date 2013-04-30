@@ -35,19 +35,36 @@ import java.io.Serializable;
 public final class AssociationKey implements Serializable {
 	private EntityKey ownerKey;
 	private String propertyName;
-	
+
+	/**
+	 * Constructs an AssociationKey
+	 *
+	 * @param ownerKey The EntityKey of the association owner
+	 * @param propertyName The name of the property on the owner which defines the association
+	 */
 	public AssociationKey(EntityKey ownerKey, String propertyName) {
 		this.ownerKey = ownerKey;
 		this.propertyName = propertyName;
 	}
-	
-	public boolean equals(Object that) {
-		AssociationKey key = (AssociationKey) that;
-		return key.propertyName.equals(propertyName) && 
-			key.ownerKey.equals(ownerKey);
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		final AssociationKey that = (AssociationKey) o;
+		return ownerKey.equals( that.ownerKey )
+				&& propertyName.equals( that.propertyName );
 	}
-	
+
+	@Override
 	public int hashCode() {
-		return ownerKey.hashCode() + propertyName.hashCode();
+		int result = ownerKey.hashCode();
+		result = 31 * result + propertyName.hashCode();
+		return result;
 	}
 }

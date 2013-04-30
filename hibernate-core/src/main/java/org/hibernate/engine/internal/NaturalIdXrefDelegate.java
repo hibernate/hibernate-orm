@@ -354,7 +354,7 @@ public class NaturalIdXrefDelegate {
 	/**
 	 * Used to put natural id values into collections.  Useful mainly to apply equals/hashCode implementations.
 	 */
-	private static class CachedNaturalId {
+	private static class CachedNaturalId implements Serializable {
 		private final EntityPersister persister;
 		private final Object[] values;
 		private final Type[] naturalIdTypes;

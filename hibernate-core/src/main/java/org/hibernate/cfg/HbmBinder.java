@@ -2969,7 +2969,7 @@ public final class HbmBinder {
 			boolean inheritable = Boolean
 				.valueOf( metaNode.attributeValue( "inherit" ) )
 				.booleanValue();
-			if ( onlyInheritable & !inheritable ) {
+			if ( onlyInheritable && !inheritable ) {
 				continue;
 			}
 			String name = metaNode.attributeValue( "attribute" );

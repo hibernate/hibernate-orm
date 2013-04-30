@@ -82,7 +82,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	private final HashMap<Statement,Set<ResultSet>> xref = new HashMap<Statement,Set<ResultSet>>();
 	private final Set<ResultSet> unassociatedResultSets = new HashSet<ResultSet>();
-	private final SqlExceptionHelper exceptionHelper;
+	private final transient SqlExceptionHelper exceptionHelper;
 
 	private Statement lastQuery;
 

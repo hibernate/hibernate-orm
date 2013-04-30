@@ -217,7 +217,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		// nothing to do		
 	}
 
-	private static class EntityCleanup {
+	private static class EntityCleanup implements Serializable {
 		private final EntityRegionAccessStrategy cacheAccess;
 		private final SoftLock cacheLock;
 
@@ -232,7 +232,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 	}
 
-	private static class CollectionCleanup {
+	private static class CollectionCleanup implements Serializable {
 		private final CollectionRegionAccessStrategy cacheAccess;
 		private final SoftLock cacheLock;
 
@@ -247,7 +247,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 	}
 
-	private class NaturalIdCleanup {
+	private class NaturalIdCleanup implements Serializable {
 		private final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy;
 		private final SoftLock cacheLock;
 

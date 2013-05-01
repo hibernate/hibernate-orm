@@ -1,19 +1,15 @@
-package org.hibernate.test.collection.set.hhh8206;
+package org.hibernate.test.cache.l1.hhh7465;
 
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Basic;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -24,7 +20,7 @@ public class User implements Serializable {
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
-    private Contact contact;
+    private Set<Group> groups = new HashSet<Group>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -45,14 +41,13 @@ public class User implements Serializable {
         this.name = name;
     }
 
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "contact_id", nullable = true, unique = true)
-    public Contact getContact() {
-            return contact;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
+    public Set<Group> getGroups() {
+        return groups;
     }
 
-    public void setContact(Contact contact) {
-            this.contact = contact;
+    public void setGroups(Set<Group> groups) {
+        this.groups = groups;
     }
 
     @Override

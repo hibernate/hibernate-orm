@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
+package org.hibernate.test.type;
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,6 +33,15 @@ import org.junit.Test;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.CompositeCustomType;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.Type;
+import org.hibernate.type.UUIDBinaryType;
+import org.hibernate.type.UUIDCharType;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
 import org.hibernate.usertype.CompositeUserType;

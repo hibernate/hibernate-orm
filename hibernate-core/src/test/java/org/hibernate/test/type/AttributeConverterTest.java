@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
+package org.hibernate.test.type;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
@@ -37,6 +37,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.type.AbstractStandardBasicType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import org.junit.Test;
@@ -49,7 +52,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
 /**
- * Tests the principle of adding "AttributeConverter" to the mix of {@link Type} resolution
+ * Tests the principle of adding "AttributeConverter" to the mix of {@link org.hibernate.type.Type} resolution
  *
  * @author Steve Ebersole
  */

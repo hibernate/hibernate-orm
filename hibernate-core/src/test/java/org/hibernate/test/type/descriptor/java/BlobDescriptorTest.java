@@ -21,13 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.test.type.descriptor.java;
 import java.sql.Blob;
 import java.sql.SQLException;
 
 import org.junit.Test;
 
 import org.hibernate.engine.jdbc.BlobProxy;
+import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.java.DataHelper;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

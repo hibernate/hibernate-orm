@@ -21,24 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.test.type.descriptor.java;
+import java.math.BigDecimal;
 
+import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class BooleanDescriptorTest extends AbstractDescriptorTest<Boolean> {
-	final Boolean original = Boolean.TRUE;
-	final Boolean copy = new Boolean( true );
-	final Boolean different = Boolean.FALSE;
+public class BigDecimalDescriptorTest extends AbstractDescriptorTest<BigDecimal> {
+	final BigDecimal original = new BigDecimal( 100 );
+	final BigDecimal copy = new BigDecimal( 100 );
+	final BigDecimal different = new BigDecimal( 999 );
 
-	public BooleanDescriptorTest() {
-		super( BooleanTypeDescriptor.INSTANCE );
+	public BigDecimalDescriptorTest() {
+		super( BigDecimalTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	protected Data<Boolean> getTestData() {
-		return new Data<Boolean>( original, copy, different );
+	protected Data<BigDecimal> getTestData() {
+		return new Data<BigDecimal>( original, copy, different );
 	}
 
 	@Override

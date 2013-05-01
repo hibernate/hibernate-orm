@@ -45,6 +45,7 @@ import org.hibernate.envers.internal.synchronization.AuditProcessManager;
 import org.hibernate.envers.internal.tools.ReflectionTools;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.Getter;
 
@@ -104,6 +105,11 @@ public class AuditConfiguration {
 	}
 
 	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
+		// TODO: Temporarily allow Envers to continuing using
+		// hibernate-commons-annotations' for reflection and class loading.
+		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
+		
 		Properties properties = cfg.getProperties();
 
 		ReflectionManager reflectionManager = cfg.getReflectionManager();
@@ -124,13 +130,21 @@ public class AuditConfiguration {
 				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy, classLoaderService,
 				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
 		);
+		
+		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
 	private AuditStrategy initializeAuditStrategy(Class<?> revisionInfoClass, PropertyData revisionInfoTimestampData) {
 		AuditStrategy strategy;
 
 		try {
-			Class<?> auditStrategyClass = ReflectionTools.loadClass( auditEntCfg.getAuditStrategyName(), classLoaderService );
+			Class<?> auditStrategyClass = null;
+			try {
+				auditStrategyClass = this.getClass().getClassLoader().loadClass( auditEntCfg.getAuditStrategyName() );
+			}
+			catch (Exception e) {
+				auditStrategyClass = ReflectionTools.loadClass( auditEntCfg.getAuditStrategyName(), classLoaderService );
+			}
 			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor(auditStrategyClass).newInstance();
 		}
 		catch ( Exception e ) {

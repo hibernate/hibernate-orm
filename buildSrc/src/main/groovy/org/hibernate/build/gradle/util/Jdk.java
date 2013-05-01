@@ -129,10 +129,7 @@ public class Jdk {
 
 		try {
 			final File javaCommand = getJavaExecutable();
-			
-			// Fix build for e.g. windows when path to java command contains spaces
-			// Using the array for Runtime.exec will make sure that arguments with spaces get quoted
-			Process javaProcess = Runtime.getRuntime().exec( new String[]{javaCommand.getAbsolutePath(), "-version"} );
+			Process javaProcess = Runtime.getRuntime().exec( javaCommand.getAbsolutePath() + " -version" );
 
 			try {
 				version = extractVersion( new BufferedReader( new InputStreamReader( javaProcess.getErrorStream() ) ) );

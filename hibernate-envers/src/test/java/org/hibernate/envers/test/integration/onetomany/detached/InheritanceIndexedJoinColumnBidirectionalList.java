@@ -209,10 +209,10 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends BaseEnversJPA
         assertTrue(rev3.getOwner().equals(ing1));
         assertTrue(rev4.getOwner().equals(ing1));
 
-        assertEquals(rev1.getPosition(), new Integer(0));
-        assertEquals(rev2.getPosition(), new Integer(0));
-        assertEquals(rev3.getPosition(), new Integer(1));
-        assertEquals(rev4.getPosition(), new Integer(2));
+        assertEquals( rev1.getPosition(), Integer.valueOf( 0 ) );
+        assertEquals( rev2.getPosition(), Integer.valueOf( 0 ) );
+        assertEquals( rev3.getPosition(), Integer.valueOf( 1 ) );
+        assertEquals( rev4.getPosition(), Integer.valueOf( 2 ) );
     }
 
     @Test
@@ -230,10 +230,10 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends BaseEnversJPA
         assertTrue(rev3.getOwner().equals(ing2));
         assertTrue(rev4.getOwner().equals(ing1));
 
-        assertEquals(rev1.getPosition(), new Integer(1));
-        assertEquals(rev2.getPosition(), new Integer(0));
-        assertEquals(rev3.getPosition(), new Integer(0));
-        assertEquals(rev4.getPosition(), new Integer(0));
+        assertEquals( rev1.getPosition(), Integer.valueOf( 1 ) );
+        assertEquals( rev2.getPosition(), Integer.valueOf( 0 ) );
+        assertEquals( rev3.getPosition(), Integer.valueOf( 0 ) );
+        assertEquals( rev4.getPosition(), Integer.valueOf( 0 ) );
     }
 
     @Test
@@ -250,9 +250,9 @@ public class InheritanceIndexedJoinColumnBidirectionalList extends BaseEnversJPA
         assertTrue(rev3.getOwner().equals(ing1));
         assertTrue(rev4.getOwner().equals(ing1));
 
-        assertEquals(rev1.getPosition(), new Integer(2));
-        assertEquals(rev2.getPosition(), new Integer(1));
-        assertEquals(rev3.getPosition(), new Integer(0));
-        assertEquals(rev4.getPosition(), new Integer(1));
+        assertEquals( rev1.getPosition(), Integer.valueOf( 2 ) );
+        assertEquals( rev2.getPosition(), Integer.valueOf( 1 ) );
+        assertEquals( rev3.getPosition(), Integer.valueOf( 0 ) );
+        assertEquals( rev4.getPosition(), Integer.valueOf( 1 ) );
     }
 }

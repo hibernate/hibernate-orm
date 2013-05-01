@@ -135,7 +135,7 @@ public class Mocks {
 			}
 
 			if ( "hashCode".equals( methodName ) ) {
-				return new Integer( this.hashCode() );
+				return Integer.valueOf( this.hashCode() );
 			}
 
 			if ( canThrowSQLException( method ) ) {

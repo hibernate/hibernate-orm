@@ -561,7 +561,7 @@ public abstract class AbstractQueryImpl implements Query {
 	}
 
 	public Query setCharacter(int position, char val) {
-		setParameter(position, new Character(val), StandardBasicTypes.CHARACTER);
+		setParameter( position, Character.valueOf( val ), StandardBasicTypes.CHARACTER );
 		return this;
 	}
 

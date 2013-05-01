@@ -23,5 +23,5 @@ public class Sky implements Serializable {
 	protected String day;
 	@Column(name = "MONTH", nullable = false)
 	protected String month;
-	static protected String area;
+	protected String area;
 }

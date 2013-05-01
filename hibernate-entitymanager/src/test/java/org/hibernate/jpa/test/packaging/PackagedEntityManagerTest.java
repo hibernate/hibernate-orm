@@ -460,7 +460,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		em = emf.createEntityManager();
 		em.getTransaction().begin();
 		s = em.find( Scooter.class, s.getModel() );
-		assertEquals( new Long( 85 ), s.getSpeed() );
+		assertEquals( Long.valueOf( 85 ), s.getSpeed() );
 		em.remove( s );
 		em.getTransaction().commit();
 		em.close();

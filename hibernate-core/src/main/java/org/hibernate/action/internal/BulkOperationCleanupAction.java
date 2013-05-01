@@ -247,7 +247,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 	}
 
-	private class NaturalIdCleanup implements Serializable {
+	private static class NaturalIdCleanup implements Serializable {
 		private final NaturalIdRegionAccessStrategy naturalIdCacheAccessStrategy;
 		private final SoftLock cacheLock;
 

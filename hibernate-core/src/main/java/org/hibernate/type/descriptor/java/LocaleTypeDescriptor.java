@@ -59,10 +59,15 @@ public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
 	}
 
 	public Locale fromString(String string) {
-		StringTokenizer tokens = new StringTokenizer( string, "_" );
-	        String language = tokens.hasMoreTokens() && string.charAt(0) != '_' ? tokens.nextToken() : "";
-	        String country = tokens.hasMoreTokens() && string.charAt(string.indexOf(language) + language.length() + 1) != '_' ? tokens.nextToken() : "";
-		// Need to account for allowable '_' within the variant
+		// TODO : Ultimately switch to Locale.Builder for this.  However, Locale.Builder is Java 7
+
+		final StringTokenizer tokens = new StringTokenizer( string, "_" );
+		final String language = tokens.hasMoreTokens() && string.charAt(0) != '_' ? tokens.nextToken() : "";
+		final String country = tokens.hasMoreTokens() && string.charAt(string.indexOf(language) + language.length() + 1) != '_' ? tokens.nextToken() : "";
+
+		// Need to account for allowable '_' within the variant.  The underscore within the variant delimits "subtags".
+		// Technically the reference spec (IETF BCP 47) also allows dash ("-") as a variant subtag delimiter.
+		// Note that this code block supports both approaches...
 		String variant = "";
 		String sep = "";
 		while ( tokens.hasMoreTokens() ) {

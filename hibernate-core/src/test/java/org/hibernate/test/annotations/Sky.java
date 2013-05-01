@@ -5,6 +5,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 /**
@@ -23,5 +24,6 @@ public class Sky implements Serializable {
 	protected String day;
 	@Column(name = "MONTH", nullable = false)
 	protected String month;
+	@Transient
 	protected String area;
 }

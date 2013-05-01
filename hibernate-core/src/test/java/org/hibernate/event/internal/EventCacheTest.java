@@ -127,7 +127,7 @@ public class EventCacheTest extends BaseCoreFunctionalTestCase {
         Map<Object,Object> input = new HashMap<Object,Object>();
         Object entity1 = new Simple( 1 );
 		//
-        Object copy1 = Integer.valueOf( 2 );
+        Object copy1 = Integer.valueOf( 1 );
         input.put(entity1, copy1); 
         Object entity2 = new Simple( 3 );
         Object copy2 = Integer.valueOf( 2 );

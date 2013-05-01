@@ -26,9 +26,9 @@ package org.hibernate.cache.infinispan;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
-import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.cache.spi.RegionFactory;
 
 /**
@@ -43,7 +43,7 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 		final List<StrategyRegistration> strategyRegistrations = new ArrayList<StrategyRegistration>();
 
 		strategyRegistrations.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<RegionFactory>(
 						RegionFactory.class,
 						InfinispanRegionFactory.class,
 						"infinispan",
@@ -53,7 +53,7 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 		);
 
 		strategyRegistrations.add(
-				new SimpleStrategyRegistrationImpl(
+				new SimpleStrategyRegistrationImpl<RegionFactory>(
 						RegionFactory.class,
 						JndiInfinispanRegionFactory.class,
 						"infinispan-jndi",

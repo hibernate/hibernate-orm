@@ -23,7 +23,6 @@
  */
 package org.hibernate.cache.ehcache;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -47,12 +46,10 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
-
 	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
 			EhCacheMessageLogger.class,
 			EhCacheRegionFactory.class.getName()
 	);
-
 
 	/**
 	 * Creates a non-singleton EhCacheRegionFactory
@@ -89,7 +86,7 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 				manager = new CacheManager( configuration );
 			}
 			else {
-				URL url = loadResource( configurationResourceName );
+				final URL url = loadResource( configurationResourceName );
 				final Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
 				manager = new CacheManager( configuration );
 			}

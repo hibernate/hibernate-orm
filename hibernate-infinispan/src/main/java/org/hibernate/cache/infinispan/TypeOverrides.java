@@ -32,129 +32,135 @@ import org.infinispan.eviction.EvictionStrategy;
 import org.hibernate.cache.CacheException;
 
 /**
- * This class represents Infinispan cache parameters that can be configured via hibernate configuration properties 
- * for either general entity/collection/query/timestamp data type caches and overrides for individual entity or 
+ * This class represents Infinispan cache parameters that can be configured via hibernate configuration properties
+ * for either general entity/collection/query/timestamp data type caches and overrides for individual entity or
  * collection caches. Configuration these properties override previously defined properties in XML file.
- * 
+ *
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class TypeOverrides {
 
-   private final Set<String> overridden = new HashSet<String>();
+	private final Set<String> overridden = new HashSet<String>();
 
-   private String cacheName;
+	private String cacheName;
 
-   private EvictionStrategy evictionStrategy;
+	private EvictionStrategy evictionStrategy;
 
-   private long evictionWakeUpInterval;
+	private long evictionWakeUpInterval;
 
-   private int evictionMaxEntries;
+	private int evictionMaxEntries;
 
-   private long expirationLifespan;
+	private long expirationLifespan;
 
-   private long expirationMaxIdle;
+	private long expirationMaxIdle;
 
-   private boolean isExposeStatistics;
+	private boolean isExposeStatistics;
 
-   public String getCacheName() {
-      return cacheName;
-   }
+	public String getCacheName() {
+		return cacheName;
+	}
 
-   public void setCacheName(String cacheName) {
-      this.cacheName = cacheName;
-   }
+	public void setCacheName(String cacheName) {
+		this.cacheName = cacheName;
+	}
 
-   public EvictionStrategy getEvictionStrategy() {
-      return evictionStrategy;
-   }
+	public EvictionStrategy getEvictionStrategy() {
+		return evictionStrategy;
+	}
 
-   public void setEvictionStrategy(String evictionStrategy) {
-      markAsOverriden("evictionStrategy");
-      this.evictionStrategy = EvictionStrategy.valueOf(uc(evictionStrategy));
-   }
+	public void setEvictionStrategy(String evictionStrategy) {
+		markAsOverriden( "evictionStrategy" );
+		this.evictionStrategy = EvictionStrategy.valueOf( uc( evictionStrategy ) );
+	}
 
-   public long getEvictionWakeUpInterval() {
-      return evictionWakeUpInterval;
-   }
+	public long getEvictionWakeUpInterval() {
+		return evictionWakeUpInterval;
+	}
 
-   public void setEvictionWakeUpInterval(long evictionWakeUpInterval) {
-      markAsOverriden("evictionWakeUpInterval");
-      this.evictionWakeUpInterval = evictionWakeUpInterval;
-   }
+	public void setEvictionWakeUpInterval(long evictionWakeUpInterval) {
+		markAsOverriden( "evictionWakeUpInterval" );
+		this.evictionWakeUpInterval = evictionWakeUpInterval;
+	}
 
-   public int getEvictionMaxEntries() {
-      return evictionMaxEntries;
-   }
+	public int getEvictionMaxEntries() {
+		return evictionMaxEntries;
+	}
 
-   public void setEvictionMaxEntries(int evictionMaxEntries) {
-      markAsOverriden("evictionMaxEntries");
-      this.evictionMaxEntries = evictionMaxEntries;
-   }
+	public void setEvictionMaxEntries(int evictionMaxEntries) {
+		markAsOverriden( "evictionMaxEntries" );
+		this.evictionMaxEntries = evictionMaxEntries;
+	}
 
-   public long getExpirationLifespan() {
-      return expirationLifespan;
-   }
+	public long getExpirationLifespan() {
+		return expirationLifespan;
+	}
 
-   public void setExpirationLifespan(long expirationLifespan) {
-      markAsOverriden("expirationLifespan");
-      this.expirationLifespan = expirationLifespan;
-   }
+	public void setExpirationLifespan(long expirationLifespan) {
+		markAsOverriden( "expirationLifespan" );
+		this.expirationLifespan = expirationLifespan;
+	}
 
-   public long getExpirationMaxIdle() {
-      return expirationMaxIdle;
-   }
+	public long getExpirationMaxIdle() {
+		return expirationMaxIdle;
+	}
 
-   public void setExpirationMaxIdle(long expirationMaxIdle) {
-      markAsOverriden("expirationMaxIdle");
-      this.expirationMaxIdle = expirationMaxIdle;
-   }
+	public void setExpirationMaxIdle(long expirationMaxIdle) {
+		markAsOverriden( "expirationMaxIdle" );
+		this.expirationMaxIdle = expirationMaxIdle;
+	}
 
-   public boolean isExposeStatistics() {
-      return isExposeStatistics;
-   }
+	public boolean isExposeStatistics() {
+		return isExposeStatistics;
+	}
 
-   public void setExposeStatistics(boolean isExposeStatistics) {
-      markAsOverriden("isExposeStatistics");
-      this.isExposeStatistics = isExposeStatistics;
-   }
+	public void setExposeStatistics(boolean isExposeStatistics) {
+		markAsOverriden( "isExposeStatistics" );
+		this.isExposeStatistics = isExposeStatistics;
+	}
 
-   public void applyTo(ConfigurationBuilder builder) {
-      if (overridden.contains("evictionStrategy"))
-         builder.eviction().strategy(evictionStrategy);
-      if (overridden.contains("evictionWakeUpInterval"))
-         builder.expiration().wakeUpInterval(evictionWakeUpInterval);
-      if (overridden.contains("evictionMaxEntries"))
-         builder.eviction().maxEntries(evictionMaxEntries);
-      if (overridden.contains("expirationLifespan"))
-         builder.expiration().lifespan(expirationLifespan);
-      if (overridden.contains("expirationMaxIdle"))
-         builder.expiration().maxIdle(expirationMaxIdle);
-      if (overridden.contains("isExposeStatistics") && isExposeStatistics)
-         builder.jmxStatistics().enable();
-   }
+	public void applyTo(ConfigurationBuilder builder) {
+		if ( overridden.contains( "evictionStrategy" ) ) {
+			builder.eviction().strategy( evictionStrategy );
+		}
+		if ( overridden.contains( "evictionWakeUpInterval" ) ) {
+			builder.expiration().wakeUpInterval( evictionWakeUpInterval );
+		}
+		if ( overridden.contains( "evictionMaxEntries" ) ) {
+			builder.eviction().maxEntries( evictionMaxEntries );
+		}
+		if ( overridden.contains( "expirationLifespan" ) ) {
+			builder.expiration().lifespan( expirationLifespan );
+		}
+		if ( overridden.contains( "expirationMaxIdle" ) ) {
+			builder.expiration().maxIdle( expirationMaxIdle );
+		}
+		if ( overridden.contains( "isExposeStatistics" ) && isExposeStatistics ) {
+			builder.jmxStatistics().enable();
+		}
+	}
 
-   public void validateInfinispanConfiguration(Configuration cfg) throws CacheException {
-      // no-op, method overriden
-   }
+	public void validateInfinispanConfiguration(Configuration cfg) throws CacheException {
+		// no-op, method overriden
+	}
 
-   @Override
-   public String toString() {
-      return new StringBuilder().append(getClass().getSimpleName()).append('{')
-         .append("cache=").append(cacheName)
-         .append(", strategy=").append(evictionStrategy)
-         .append(", wakeUpInterval=").append(evictionWakeUpInterval)
-         .append(", maxEntries=").append(evictionMaxEntries)
-         .append(", lifespan=").append(expirationLifespan)
-         .append(", maxIdle=").append(expirationMaxIdle)
-         .append('}').toString();
-   }
+	@Override
+	public String toString() {
+		return getClass().getSimpleName()
+				+ '{' + "cache=" + cacheName
+				+ ", strategy=" + evictionStrategy
+				+ ", wakeUpInterval=" + evictionWakeUpInterval
+				+ ", maxEntries=" + evictionMaxEntries
+				+ ", lifespan=" + expirationLifespan
+				+ ", maxIdle=" + expirationMaxIdle
+				+ '}';
+	}
 
-   private String uc(String s) {
-      return s == null ? null : s.toUpperCase(Locale.ENGLISH);
-   }
+	private String uc(String s) {
+		return s == null ? null : s.toUpperCase( Locale.ENGLISH );
+	}
 
-   private void markAsOverriden(String fieldName) {
-      overridden.add(fieldName);
-   }
+	private void markAsOverriden(String fieldName) {
+		overridden.add( fieldName );
+	}
 }

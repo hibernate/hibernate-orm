@@ -49,23 +49,17 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 		super( region, settings );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public EntityRegion getRegion() {
 		return region();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object get(Object key, long txTimestamp) throws CacheException {
 		return region().get( key );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( minimalPutOverride && region().contains( key ) ) {
@@ -77,47 +71,58 @@ public class ReadOnlyEhcacheEntityRegionAccessStrategy extends AbstractEhcacheAc
 		}
 	}
 
+	@Override
 	public SoftLock lockItem(Object key, Object version) throws UnsupportedOperationException {
 		return null;
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * A no-op since this cache is read-only
 	 */
+	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		evict( key );
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * This cache is asynchronous hence a no-op
 	 */
+	@Override
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
 		region().put( key, value );
 		return true;
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Throws UnsupportedOperationException since this cache is read-only
 	 *
 	 * @throws UnsupportedOperationException always
 	 */
+	@Override
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );
 	}
 
 	/**
+	 * {@inheritDoc}
+	 * <p/>
 	 * Throws UnsupportedOperationException since this cache is read-only
 	 *
 	 * @throws UnsupportedOperationException always
 	 */
+	@Override
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
 			throws UnsupportedOperationException {
 		throw new UnsupportedOperationException( "Can't write to a readonly object" );

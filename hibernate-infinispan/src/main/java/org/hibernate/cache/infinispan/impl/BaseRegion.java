@@ -1,20 +1,43 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.cache.infinispan.impl;
 
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 
-import org.hibernate.cache.infinispan.util.Caches;
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 
 import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
 
@@ -22,184 +45,208 @@ import org.hibernate.cache.spi.RegionFactory;
  * Support for Infinispan {@link Region}s. Handles common "utility" methods for an underlying named
  * Cache. In other words, this implementation doesn't actually read or write data. Subclasses are
  * expected to provide core cache interaction appropriate to the semantics needed.
- * 
+ *
  * @author Chris Bredesen
  * @author Galder Zamarreño
  * @since 3.5
  */
 public abstract class BaseRegion implements Region {
 
-   private static final Log log = LogFactory.getLog(BaseRegion.class);
+	private static final Log log = LogFactory.getLog( BaseRegion.class );
 
-   private enum InvalidateState {
-      INVALID, CLEARING, VALID
-   }
+	private enum InvalidateState {
+		INVALID, CLEARING, VALID
+	}
 
-   private final String name;
-   private final AdvancedCache regionClearCache;
-   private final TransactionManager tm;
-   private final Object invalidationMutex = new Object();
-   private final AtomicReference<InvalidateState> invalidateState =
-         new AtomicReference<InvalidateState>(InvalidateState.VALID);
-   private final RegionFactory factory;
+	private final String name;
+	private final AdvancedCache regionClearCache;
+	private final TransactionManager tm;
+	private final Object invalidationMutex = new Object();
+	private final AtomicReference<InvalidateState> invalidateState =
+			new AtomicReference<InvalidateState>( InvalidateState.VALID );
+	private final RegionFactory factory;
 
-   protected final AdvancedCache cache;
+	protected final AdvancedCache cache;
 
-   public BaseRegion(AdvancedCache cache, String name, RegionFactory factory) {
-      this.cache = cache;
-      this.name = name;
-      this.tm = cache.getTransactionManager();
-      this.factory = factory;
-      this.regionClearCache = cache.withFlags(
-            Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT);
-   }
+	public BaseRegion(AdvancedCache cache, String name, RegionFactory factory) {
+		this.cache = cache;
+		this.name = name;
+		this.tm = cache.getTransactionManager();
+		this.factory = factory;
+		this.regionClearCache = cache.withFlags(
+				Flag.CACHE_MODE_LOCAL, Flag.ZERO_LOCK_ACQUISITION_TIMEOUT
+		);
+	}
 
-   public String getName() {
-      return name;
-   }
+	@Override
+	public String getName() {
+		return name;
+	}
 
-   public long getElementCountInMemory() {
-      if (checkValid())
-         return cache.size();
+	@Override
+	public long getElementCountInMemory() {
+		if ( checkValid() ) {
+			return cache.size();
+		}
 
-      return 0;
-   }
+		return 0;
+	}
 
-   /**
-    * Not supported.
-    * 
-    * @return -1
-    */
-   public long getElementCountOnDisk() {
-      return -1;
-   }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * Not supported; returns -1
+	 */
+	@Override
+	public long getElementCountOnDisk() {
+		return -1;
+	}
 
-   /**
-    * Not supported.
-    * 
-    * @return -1
-    */
-   public long getSizeInMemory() {
-      return -1;
-   }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * Not supported; returns -1
+	 */
+	@Override
+	public long getSizeInMemory() {
+		return -1;
+	}
 
-   public int getTimeout() {
-      return 600; // 60 seconds
-   }
+	@Override
+	public int getTimeout() {
+		// 60 seconds
+		return 600;
+	}
 
-   public long nextTimestamp() {
-      return factory.nextTimestamp();
-   }
+	@Override
+	public long nextTimestamp() {
+		return factory.nextTimestamp();
+	}
 
-   public Map toMap() {
-      if (checkValid())
-         return cache;
+	@Override
+	public Map toMap() {
+		if ( checkValid() ) {
+			return cache;
+		}
 
-      return Collections.EMPTY_MAP;
-   }
+		return Collections.EMPTY_MAP;
+	}
 
-   public void destroy() throws CacheException {
-      try {
-         cache.stop();
-      } finally {
-         cache.removeListener(this);
-      }
-   }
+	@Override
+	public void destroy() throws CacheException {
+		try {
+			cache.stop();
+		}
+		finally {
+			cache.removeListener( this );
+		}
+	}
 
-   public boolean contains(Object key) {
-      return checkValid() && cache.containsKey(key);
-   }
+	@Override
+	public boolean contains(Object key) {
+		return checkValid() && cache.containsKey( key );
+	}
 
-   public boolean checkValid() {
-      boolean valid = isValid();
-      if (!valid) {
-         synchronized (invalidationMutex) {
-            if (invalidateState.compareAndSet(
-                  InvalidateState.INVALID, InvalidateState.CLEARING)) {
-               Transaction tx = suspend();
-               try {
-                  // Clear region in a separate transaction
-                  Caches.withinTx(cache, new Callable<Void>() {
-                     @Override
-                     public Void call() throws Exception {
-                        regionClearCache.clear();
-                        return null;
-                     }
-                  });
-                  invalidateState.compareAndSet(
-                        InvalidateState.CLEARING, InvalidateState.VALID);
-               }
-               catch (Exception e) {
-                  if (log.isTraceEnabled()) {
-                     log.trace("Could not invalidate region: "
-                           + e.getLocalizedMessage());
-                  }
-               }
-               finally {
-                  resume(tx);
-               }
-            }
-         }
-         valid = isValid();
-      }
-      
-      return valid;
-   }
+	public boolean checkValid() {
+		boolean valid = isValid();
+		if ( !valid ) {
+			synchronized (invalidationMutex) {
+				if ( invalidateState.compareAndSet(
+						InvalidateState.INVALID, InvalidateState.CLEARING
+				) ) {
+					Transaction tx = suspend();
+					try {
+						// Clear region in a separate transaction
+						Caches.withinTx(
+								cache, new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								regionClearCache.clear();
+								return null;
+							}
+						}
+						);
+						invalidateState.compareAndSet(
+								InvalidateState.CLEARING, InvalidateState.VALID
+						);
+					}
+					catch (Exception e) {
+						if ( log.isTraceEnabled() ) {
+							log.trace(
+									"Could not invalidate region: "
+											+ e.getLocalizedMessage()
+							);
+						}
+					}
+					finally {
+						resume( tx );
+					}
+				}
+			}
+			valid = isValid();
+		}
 
-   protected boolean isValid() {
-      return invalidateState.get() == InvalidateState.VALID;
-   }
+		return valid;
+	}
 
-   /**
-    * Tell the TransactionManager to suspend any ongoing transaction.
-    * 
-    * @return the transaction that was suspended, or <code>null</code> if
-    *         there wasn't one
-    */
-   public Transaction suspend() {
-       Transaction tx = null;
-       try {
-           if (tm != null) {
-               tx = tm.suspend();
-           }
-       } catch (SystemException se) {
-           throw new CacheException("Could not suspend transaction", se);
-       }
-       return tx;
-   }
+	protected boolean isValid() {
+		return invalidateState.get() == InvalidateState.VALID;
+	}
 
-   /**
-    * Tell the TransactionManager to resume the given transaction
-    * 
-    * @param tx
-    *            the transaction to suspend. May be <code>null</code>.
-    */
-   public void resume(Transaction tx) {
-       try {
-           if (tx != null)
-               tm.resume(tx);
-       } catch (Exception e) {
-           throw new CacheException("Could not resume transaction", e);
-       }
-   }
+	/**
+	 * Tell the TransactionManager to suspend any ongoing transaction.
+	 *
+	 * @return the transaction that was suspended, or <code>null</code> if
+	 *         there wasn't one
+	 */
+	public Transaction suspend() {
+		Transaction tx = null;
+		try {
+			if ( tm != null ) {
+				tx = tm.suspend();
+			}
+		}
+		catch (SystemException se) {
+			throw new CacheException( "Could not suspend transaction", se );
+		}
+		return tx;
+	}
 
-   public void invalidateRegion() {
-      if (log.isTraceEnabled()) log.trace("Invalidate region: " + name);
-      invalidateState.set(InvalidateState.INVALID);
-   }
+	/**
+	 * Tell the TransactionManager to resume the given transaction
+	 *
+	 * @param tx the transaction to suspend. May be <code>null</code>.
+	 */
+	public void resume(Transaction tx) {
+		try {
+			if ( tx != null ) {
+				tm.resume( tx );
+			}
+		}
+		catch (Exception e) {
+			throw new CacheException( "Could not resume transaction", e );
+		}
+	}
 
-   public TransactionManager getTransactionManager() {
-      return tm;
-   }
+	public void invalidateRegion() {
+		if ( log.isTraceEnabled() ) {
+			log.trace( "Invalidate region: " + name );
+		}
+		invalidateState.set( InvalidateState.INVALID );
+	}
 
-   // Used to satisfy TransactionalDataRegion.isTransactionAware in subclasses
-   @SuppressWarnings("unused")
-   public boolean isTransactionAware() {
-      return tm != null;
-   }
+	public TransactionManager getTransactionManager() {
+		return tm;
+	}
 
-   public AdvancedCache getCache() {
-      return cache;
-   }
+	// Used to satisfy TransactionalDataRegion.isTransactionAware in subclasses
+	@SuppressWarnings("unused")
+	public boolean isTransactionAware() {
+		return tm != null;
+	}
+
+	public AdvancedCache getCache() {
+		return cache;
+	}
 
 }

@@ -115,7 +115,7 @@ public class ReadWriteEhcacheEntityRegionAccessStrategy
 			final Lockable item = (Lockable) region().get( key );
 
 			if ( item != null && item.isUnlockable( lock ) ) {
-				Lock lockItem = (Lock) item;
+				final Lock lockItem = (Lock) item;
 				if ( lockItem.wasLockedConcurrently() ) {
 					decrementLock( key, lockItem );
 					return false;

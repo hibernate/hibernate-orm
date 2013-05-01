@@ -23,6 +23,7 @@
  */
 package org.hibernate.cache.ehcache;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -204,6 +205,14 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 			}
 			if ( url == null ) {
 				url = AbstractEhcacheRegionFactory.class.getResource( configurationResourceName );
+			}
+			if ( url == null ) {
+				try {
+					url = new URL( configurationResourceName );
+				}
+				catch ( MalformedURLException e ) {
+					// ignore
+				}
 			}
 		}
 		if ( LOG.isDebugEnabled() ) {

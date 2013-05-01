@@ -47,6 +47,7 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 						RegionFactory.class,
 						InfinispanRegionFactory.class,
 						"infinispan",
+						InfinispanRegionFactory.class.getName(),
 						InfinispanRegionFactory.class.getSimpleName()
 				)
 		);
@@ -56,6 +57,7 @@ public class StrategyRegistrationProviderImpl implements StrategyRegistrationPro
 						RegionFactory.class,
 						JndiInfinispanRegionFactory.class,
 						"infinispan-jndi",
+						JndiInfinispanRegionFactory.class.getName(),
 						JndiInfinispanRegionFactory.class.getSimpleName()
 				)
 		);

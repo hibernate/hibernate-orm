@@ -28,23 +28,27 @@ import java.util.Map;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.jboss.logging.Logger;
 
 /**
  * Initiator for the {@link RegionFactory} service.
- *
+ * 
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
+			RegionFactoryInitiator.class.getName() );
+
 	/**
 	 * Singleton access
 	 */
 	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
-
-	/**
-	 * Property name to use to configure the full qualified class name for the {@code RegionFactory}
-	 */
-	public static final String IMPL_NAME = "hibernate.cache.region.factory_class";
 
 	@Override
 	public Class<RegionFactory> getServiceInitiated() {
@@ -52,20 +56,34 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	}
 
 	@Override
-	@SuppressWarnings( { "unchecked" })
+	@SuppressWarnings({ "unchecked" })
 	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final Object setting = configurationValues.get( IMPL_NAME );
-		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
-				RegionFactory.class,
-				setting,
-				NoCachingRegionFactory.INSTANCE
-		);
+		boolean useSecondLevelCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_SECOND_LEVEL_CACHE,
+				configurationValues, true );
+		boolean useQueryCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_QUERY_CACHE, configurationValues );
+
+		RegionFactory regionFactory;
+
+		// The cache provider is needed when we either have second-level cache enabled
+		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
+		if ( useSecondLevelCache || useQueryCache ) {
+			final Object setting = configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY );
+			regionFactory = registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
+					RegionFactory.class, setting, NoCachingRegionFactory.INSTANCE );
+		}
+		else {
+			regionFactory = NoCachingRegionFactory.INSTANCE;
+		}
+
+		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
+
+		return regionFactory;
 	}
 
 	/**
 	 * Map legacy names unto the new corollary.
 	 *
-	 * todo this shouldn't be public, nor really static.  hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
+	 * TODO: temporary hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
 	 *
 	 * @param name The (possibly legacy) factory name
 	 *

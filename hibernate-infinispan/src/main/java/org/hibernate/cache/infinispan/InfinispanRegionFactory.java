@@ -1,5 +1,6 @@
 package org.hibernate.cache.infinispan;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -388,8 +389,18 @@ public class InfinispanRegionFactory implements RegionFactory {
          String configLoc = ConfigurationHelper.getString(
                INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
          ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
-         InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
-               configLoc, classLoader);
+         InputStream is;
+         try {
+	         is = FileLookupFactory.newInstance().lookupFileStrict(
+	               configLoc, classLoader);
+         }
+         catch ( FileNotFoundException e ) {
+        	 // In some environments (ex: OSGi), hibernate-infinispan may not
+        	 // be in the app CL.  It's important to also try this CL.
+        	 classLoader = this.getClass().getClassLoader();
+        	 is = FileLookupFactory.newInstance().lookupFileStrict(
+                     configLoc, classLoader);
+         }
          ParserRegistry parserRegistry = new ParserRegistry(classLoader);
          ConfigurationBuilderHolder holder = parserRegistry.parse(is);
 

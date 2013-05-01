@@ -290,9 +290,7 @@ public class SettingsFactory implements Serializable {
 			settings.setQueryCacheFactory( createQueryCacheFactory( properties, serviceRegistry ) );
 		}
 
-		// The cache provider is needed when we either have second-level cache enabled
-		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
-		settings.setRegionFactory( createRegionFactory( properties, ( useSecondLevelCache || useQueryCache ), serviceRegistry ) );
+		settings.setRegionFactory( serviceRegistry.getService( RegionFactory.class ) );
 
 		boolean useMinimalPuts = ConfigurationHelper.getBoolean(
 				AvailableSettings.USE_MINIMAL_PUTS, properties, settings.getRegionFactory().isMinimalPutsEnabledByDefault()
@@ -435,39 +433,6 @@ public class SettingsFactory implements Serializable {
 		}
 		catch (Exception e) {
 			throw new HibernateException( "could not instantiate QueryCacheFactory: " + queryCacheFactoryClassName, e );
-		}
-	}
-
-	private static RegionFactory createRegionFactory(Properties properties, boolean cachingEnabled, ServiceRegistry serviceRegistry) {
-		String regionFactoryClassName = RegionFactoryInitiator.mapLegacyNames(
-				ConfigurationHelper.getString(
-						AvailableSettings.CACHE_REGION_FACTORY, properties, null
-				)
-		);
-		if ( regionFactoryClassName == null || !cachingEnabled) {
-			regionFactoryClassName = DEF_CACHE_REG_FACTORY;
-		}
-		LOG.debugf( "Cache region factory : %s", regionFactoryClassName );
-		try {
-			try {
-				return (RegionFactory) serviceRegistry.getService( ClassLoaderService.class )
-						.classForName( regionFactoryClassName )
-						.getConstructor( Properties.class )
-						.newInstance( properties );
-			}
-			catch ( NoSuchMethodException e ) {
-				// no constructor accepting Properties found, try no arg constructor
-				LOG.debugf(
-						"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
-						regionFactoryClassName
-				);
-				return (RegionFactory) serviceRegistry.getService( ClassLoaderService.class )
-						.classForName( regionFactoryClassName )
-						.newInstance();
-			}
-		}
-		catch ( Exception e ) {
-			throw new HibernateException( "could not instantiate RegionFactory [" + regionFactoryClassName + "]", e );
 		}
 	}
 	//todo remove this once we move to new metamodel

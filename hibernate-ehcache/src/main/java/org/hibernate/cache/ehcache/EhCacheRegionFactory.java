@@ -89,13 +89,7 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 				manager = new CacheManager( configuration );
 			}
 			else {
-				URL url;
-				try {
-					url = new URL( configurationResourceName );
-				}
-				catch (MalformedURLException e) {
-					url = loadResource( configurationResourceName );
-				}
+				URL url = loadResource( configurationResourceName );
 				final Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
 				manager = new CacheManager( configuration );
 			}

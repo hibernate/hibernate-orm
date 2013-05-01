@@ -343,7 +343,13 @@ subprojects { subProject ->
             ignoreFailures = true
         }
         // exclude generated sources
-        checkstyleMain.exclude '**/generated-src/**'
+        // unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
+        //checkstyleMain.exclude '**/generated-src/**'
+        checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/**'
+        checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/*'
+        checkstyleMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
+        checkstyleMain.exclude '**/*_$logger*'
+        checkstyleMain.exclude '**/org/hibernate/internal/jaxb/**'
         // because cfg package is a mess mainly from annotation stuff
         checkstyleMain.exclude '**/org/hibernate/cfg/**'
         checkstyleMain.exclude '**/org/hibernate/cfg/*'
@@ -353,7 +359,13 @@ subprojects { subProject ->
             ignoreFailures = true
         }
         // exclude generated sources
-        findbugsMain.exclude '**/generated-src/**'
+        // unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
+        //findbugsMain.exclude '**/generated-src/**'
+        findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/**'
+        findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/*'
+        findbugsMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
+        findbugsMain.exclude '**/*_$logger*'
+        findbugsMain.exclude '**/org/hibernate/internal/jaxb/**'
 
 
         buildDashboard.dependsOn check

@@ -88,6 +88,7 @@ import org.hibernate.jpa.boot.spi.NamedInputStream;
 import org.hibernate.jpa.boot.spi.PackageDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
+import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.event.spi.JpaIntegrator;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
@@ -97,6 +98,7 @@ import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
 import org.hibernate.jpa.spi.IdentifierGeneratorStrategyProvider;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccService;
@@ -135,6 +137,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	 * Names a {@link StrategyRegistrationProviderList}
 	 */
 	public static final String STRATEGY_REGISTRATION_PROVIDERS = "hibernate.strategy_registration_provider";
+	
+	/**
+	 * Names a {@link TypeContributorList}
+	 */
+	public static final String TYPE_CONTRIBUTORS = "hibernate.type_contributors";
 
 	/**
 	 * Names a Jandex {@link Index} instance to use.
@@ -1166,6 +1173,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		for ( String packageName : metadataSources.packageNames ) {
 			cfg.addPackage( packageName );
 		}
+		
+		final TypeContributorList typeContributorList
+				= (TypeContributorList) configurationValues.get( TYPE_CONTRIBUTORS );
+		if ( typeContributorList != null ) {
+			configurationValues.remove( TYPE_CONTRIBUTORS );
+			for ( TypeContributor typeContributor : typeContributorList.getTypeContributors() ) {
+				cfg.registerTypeContributor( typeContributor );
+			}
+		}
+		
 		return cfg;
 	}
 

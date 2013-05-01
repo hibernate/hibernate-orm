@@ -22,11 +22,6 @@ package org.hibernate.osgi;
 
 import java.util.List;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceFactory;
-import org.osgi.framework.ServiceRegistration;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -34,7 +29,12 @@ import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceFactory;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * Hibernate 4.2 and 4.3 still heavily rely on TCCL for ClassLoading.  Although
@@ -96,6 +96,11 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
 			builder.withStrategySelectors( strategyRegistrationProvider );
 		}
+        
+        final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+        for (TypeContributor typeContributor : typeContributors) {
+        	configuration.registerTypeContributor( typeContributor );
+        }
 
 		final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
 				.applySettings( configuration.getProperties() ).build();

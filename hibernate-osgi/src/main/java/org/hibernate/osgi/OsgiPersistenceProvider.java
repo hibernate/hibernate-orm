@@ -37,7 +37,8 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
-
+import org.hibernate.jpa.boot.spi.TypeContributorList;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
@@ -135,6 +136,15 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 			}
 		};
 		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
+
+		final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+		TypeContributorList typeContributorList = new TypeContributorList() {
+			@Override
+			public List<TypeContributor> getTypeContributors() {
+				return typeContributors;
+			}
+		};
+		settings.put( EntityManagerFactoryBuilderImpl.TYPE_CONTRIBUTORS, typeContributorList );
 		
 		return settings;
 	}

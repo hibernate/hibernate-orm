@@ -79,6 +79,7 @@ import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -86,6 +87,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -133,15 +135,17 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.metamodel.spi.TypeContributions;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
 import org.hibernate.tool.hbm2ddl.SchemaUpdateScript;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
+import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
@@ -223,7 +227,9 @@ public class Configuration implements Serializable {
 	protected Map<ExtendsQueueEntry, ?> extendsQueue;
 
 	protected Map<String, SQLFunction> sqlFunctions;
+	
 	private TypeResolver typeResolver = new TypeResolver();
+	private List<TypeContributor> typeContributorRegistrations = new ArrayList<TypeContributor>();
 
 	private EntityTuplizerFactory entityTuplizerFactory;
 //	private ComponentTuplizerFactory componentTuplizerFactory; todo : HHH-3517 and HHH-1907
@@ -1782,7 +1788,8 @@ public class Configuration implements Serializable {
 	 */
 	public SessionFactory buildSessionFactory(ServiceRegistry serviceRegistry) throws HibernateException {
 		LOG.debugf( "Preparing to build session factory with filters : %s", filterDefinitions );
-
+		
+		buildTypeRegistrations( serviceRegistry );
 		secondPassCompile();
 		if ( !metadataSourceQueue.isEmpty() ) {
 			LOG.incompleteMappingMetadataCacheProcessing();
@@ -1803,6 +1810,39 @@ public class Configuration implements Serializable {
 				settings,
 				sessionFactoryObserver
 			);
+	}
+	
+	private void buildTypeRegistrations(ServiceRegistry serviceRegistry) {
+		final TypeContributions typeContributions = new TypeContributions() {
+			@Override
+			public void contributeType(BasicType type) {
+				typeResolver.registerTypeOverride( type );
+			}
+
+			@Override
+			public void contributeType(UserType type, String[] keys) {
+				typeResolver.registerTypeOverride( type, keys );
+			}
+
+			@Override
+			public void contributeType(CompositeUserType type, String[] keys) {
+				typeResolver.registerTypeOverride( type, keys );
+			}
+		};
+
+		// add Dialect contributed types
+		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		dialect.contributeTypes( typeContributions, serviceRegistry );
+
+		// add TypeContributor contributed types.
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
+			contributor.contribute( typeContributions, serviceRegistry );
+		}
+		// from app registrations
+		for ( TypeContributor contributor : typeContributorRegistrations ) {
+			contributor.contribute( typeContributions, serviceRegistry );
+		}
 	}
 
 	/**
@@ -2508,6 +2548,10 @@ public class Configuration implements Serializable {
 
 	public void registerTypeOverride(CompositeUserType type, String[] keys) {
 		getTypeResolver().registerTypeOverride( type, keys );
+	}
+
+	public void registerTypeContributor(TypeContributor typeContributor) {
+		typeContributorRegistrations.add( typeContributor );
 	}
 
 	public SessionFactoryObserver getSessionFactoryObserver() {

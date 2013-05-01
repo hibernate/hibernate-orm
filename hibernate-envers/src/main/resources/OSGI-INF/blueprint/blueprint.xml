@@ -6,5 +6,8 @@
 
   <bean id="integrator" class="org.hibernate.envers.event.spi.EnversIntegrator"/>
   <service ref="integrator" interface="org.hibernate.integrator.spi.Integrator"/>
+
+  <bean id="typeContributor" class="org.hibernate.envers.internal.entities.TypeContributorImpl"/>
+  <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/>
   
 </blueprint>

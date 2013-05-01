@@ -252,11 +252,11 @@ public class JBossStandaloneJtaExampleTest {
       cfg.setProperty(Environment.RELEASE_CONNECTIONS, "auto");
       cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
       cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
-      cfg.setProperty(Environment.CACHE_REGION_FACTORY,
-            "org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase$TestInfinispanRegionFactory");
 
       Properties envProps = Environment.getProperties();
       envProps.put(AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform());
+      envProps.setProperty(Environment.CACHE_REGION_FACTORY,
+              "org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase$TestInfinispanRegionFactory");
       serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
 
       String[] mappings = new String[]{"org/hibernate/test/cache/infinispan/functional/Item.hbm.xml"};

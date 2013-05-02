@@ -29,5 +29,11 @@ package org.hibernate.jpa.boot.archive.spi;
  * @author Steve Ebersole
  */
 public interface ArchiveEntryHandler {
+	/**
+	 * Handle the entry
+	 *
+	 * @param entry The entry to handle
+	 * @param context The visitation context
+	 */
 	public void handleEntry(ArchiveEntry entry, ArchiveContext context);
 }

@@ -80,7 +80,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		final Map integration = wrap( properties );
 		final List<ParsedPersistenceXmlDescriptor> units;
 		try {
-			 units = PersistenceXmlParser.locatePersistenceUnits( integration );
+			units = PersistenceXmlParser.locatePersistenceUnits( integration );
 		}
 		catch (RuntimeException e) {
 			log.debug( "Unable to locate persistence units", e );
@@ -106,7 +106,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 					persistenceUnitName
 			);
 
-			boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
+			final boolean matches = persistenceUnitName == null || persistenceUnit.getName().equals( persistenceUnitName );
 			if ( !matches ) {
 				log.debug( "Excluding from consideration due to name mis-match" );
 				continue;
@@ -146,7 +146,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public void generateSchema(PersistenceUnitInfo info, Map map) {
 		log.tracef( "Starting generateSchema : PUI.name=%s", info.getPersistenceUnitName() );
 
-		EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder( info, map );
+		final EntityManagerFactoryBuilder builder = Bootstrap.getEntityManagerFactoryBuilder( info, map );
 		builder.generateSchema();
 	}
 

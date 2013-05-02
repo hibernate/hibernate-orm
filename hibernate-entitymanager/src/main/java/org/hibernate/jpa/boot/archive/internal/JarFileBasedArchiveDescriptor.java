@@ -55,6 +55,13 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 			JarFileBasedArchiveDescriptor.class.getName()
 	);
 
+	/**
+	 * Constructs a JarFileBasedArchiveDescriptor
+	 *
+	 * @param archiveDescriptorFactory The factory creating this
+	 * @param archiveUrl The url to the JAR file
+	 * @param entry The prefix for entries within the JAR url
+	 */
 	public JarFileBasedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL archiveUrl,
@@ -87,7 +94,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 				// This algorithm assumes that the zipped file is only the URL root (including entry), not
 				// just any random entry
 				try {
-					InputStream is = new BufferedInputStream( jarFile.getInputStream( zipEntry ) );
+					final InputStream is = new BufferedInputStream( jarFile.getInputStream( zipEntry ) );
 					try {
 						final JarInputStream jarInputStream = new JarInputStream( is );
 						ZipEntry subZipEntry = jarInputStream.getNextEntry();
@@ -173,7 +180,7 @@ public class JarFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
 
 	private JarFile resolveJarFileReference() {
 		try {
-			String filePart = getArchiveUrl().getFile();
+			final String filePart = getArchiveUrl().getFile();
 			if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
 				// unescaped (from the container), keep as is
 				return new JarFile( getArchiveUrl().getFile() );

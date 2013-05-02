@@ -36,6 +36,8 @@ import org.jboss.logging.Logger;
 import org.hibernate.jpa.boot.archive.spi.ArchiveException;
 
 /**
+ * Helper for dealing with archives
+ *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
@@ -54,32 +56,36 @@ public class ArchiveHelper {
 	public static URL getJarURLFromURLEntry(URL url, String entry) throws IllegalArgumentException {
 		URL jarUrl;
 		String file = url.getFile();
-		if ( ! entry.startsWith( "/" ) ) entry = "/" + entry;
+		if ( ! entry.startsWith( "/" ) ) {
+			entry = "/" + entry;
+		}
 		file = file.substring( 0, file.length() - entry.length() );
-		if ( file.endsWith( "!" ) ) file = file.substring( 0, file.length() - 1 );
+		if ( file.endsWith( "!" ) ) {
+			file = file.substring( 0, file.length() - 1 );
+		}
 		try {
-			String protocol = url.getProtocol();
+			final String protocol = url.getProtocol();
 
-			if ( "jar".equals( protocol )
-					|| "wsjar".equals( protocol ) ) { //Websphere has it's own way
+			if ( "jar".equals( protocol ) || "wsjar".equals( protocol ) ) {
 				//Original URL is like jar:protocol
+				//WebSphere has it's own way
 				jarUrl = new URL( file );
 				if ( "file".equals( jarUrl.getProtocol() ) ) {
-					//not escaped, need to voodoo
 					if ( file.indexOf( ' ' ) != -1 ) {
-						//not escaped, need to voodoo
-						jarUrl = new File( jarUrl.getFile() ).toURI().toURL(); //goes by toURI to escape the path
+						//not escaped, need to voodoo; goes by toURI to escape the path
+						jarUrl = new File( jarUrl.getFile() ).toURI().toURL();
 					}
-				} //otherwise left as is
+				}
 			}
-			else if ( "zip".equals( protocol ) //Weblogic has it's own way
-					|| "code-source".equals( url.getProtocol() ) //OC4J prevent ejb.jar access (ie everything without path)
-					|| "file".equals( protocol )  //if no wrapping is done
-					) {
+			else if ( "zip".equals( protocol )
+					//OC4J prevent ejb.jar access (ie everything without path)
+					|| "code-source".equals( url.getProtocol() )
+					//if no wrapping is done
+					|| "file".equals( protocol ) ) {
 				//we have extracted the zip file, so it should be read as a file
 				if ( file.indexOf( ' ' ) != -1 ) {
-					//not escaped, need to voodoo
-					jarUrl = new File(file).toURI().toURL(); //goes by toURI to escape the path
+					//not escaped, need to voodoo; goes by toURI to escape the path
+					jarUrl = new File(file).toURI().toURL();
 				}
 				else {
 					jarUrl = new File(file).toURL();
@@ -92,7 +98,7 @@ public class ArchiveHelper {
 					jarUrl = new URL( protocol, url.getHost(), url.getPort(), file );
 				}
 				//HHH-6442: Arquilian
-				catch ( final MalformedURLException murle ) {
+				catch ( final MalformedURLException e ) {
 					//Just use the provided URL as-is, likely it has a URLStreamHandler
 					//associated w/ the instance
 					jarUrl = url;
@@ -104,12 +110,16 @@ public class ArchiveHelper {
 					"Unable to determine JAR Url from " + url + ". Cause: " + e.getMessage()
 			);
 		}
-		log.trace("JAR URL from URL Entry: " + url + " >> " + jarUrl);
+		log.trace( "JAR URL from URL Entry: " + url + " >> " + jarUrl );
 		return jarUrl;
 	}
 
 	/**
 	 * get the URL from a given path string
+	 *
+	 * @param jarPath The path that represents a URL
+	 *
+	 * @return The resolved URL reference
 	 *
 	 * @throws IllegalArgumentException is something goes wrong
 	 */
@@ -131,30 +141,17 @@ public class ArchiveHelper {
 		return jarUrl;
 	}
 
-	public static String unqualifiedJarFileName(URL jarUrl) {
-		// todo : weak algorithm subject to AOOBE
-		String fileName = jarUrl.getFile();
-		int exclamation = fileName.lastIndexOf( "!" );
-		if (exclamation != -1) {
-			fileName = fileName.substring( 0, exclamation );
-		}
-
-		int slash = fileName.lastIndexOf( "/" );
-		if ( slash != -1 ) {
-			fileName = fileName.substring(
-					fileName.lastIndexOf( "/" ) + 1,
-					fileName.length()
-			);
-		}
-
-		if ( fileName.length() > 4 && fileName.endsWith( "ar" ) && fileName.charAt( fileName.length() - 4 ) == '.' ) {
-			fileName = fileName.substring( 0, fileName.length() - 4 );
-		}
-
-		return fileName;
-	}
-
-	public static byte[] getBytesFromInputStreamSafely(InputStream inputStream) {
+	/**
+	 * Extracts the bytes out of an InputStream.  This form is the same as {@link #getBytesFromInputStream}
+	 * except that any {@link IOException} are wrapped as (runtime) {@link ArchiveException}
+	 *
+	 * @param inputStream The stream from which to extract bytes.
+	 *
+	 * @return The bytes
+	 *
+	 * @throws ArchiveException Indicates a problem accessing the stream
+	 */
+	public static byte[] getBytesFromInputStreamSafely(InputStream inputStream) throws ArchiveException {
 		try {
 			return getBytesFromInputStream( inputStream );
 		}
@@ -163,18 +160,30 @@ public class ArchiveHelper {
 		}
 	}
 
+	/**
+	 * Extracts the bytes out of an InputStream.
+	 *
+	 * @param inputStream The stream from which to extract bytes.
+	 *
+	 * @return The bytes
+	 *
+	 * @throws IOException Indicates a problem accessing the stream
+	 *
+	 * @see #getBytesFromInputStreamSafely(java.io.InputStream)
+	 */
 	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
 		// Optimized by HHH-7835
 		int size;
-		List<byte[]> data = new LinkedList<byte[]>();
-		int bufferSize = 4096;
+		final List<byte[]> data = new LinkedList<byte[]>();
+		final int bufferSize = 4096;
 		byte[] tmpByte = new byte[bufferSize];
 		int offset = 0;
 		int total = 0;
 		for ( ;; ) {
 			size = inputStream.read( tmpByte, offset, bufferSize - offset );
-			if ( size == -1 )
+			if ( size == -1 ) {
 				break;
+			}
 
 			offset += size;
 
@@ -186,7 +195,7 @@ public class ArchiveHelper {
 			}
 		}
 
-		byte[] result = new byte[total + offset];
+		final byte[] result = new byte[total + offset];
 		int count = 0;
 		for ( byte[] arr : data ) {
 			System.arraycopy( arr, 0, result, count * arr.length, arr.length );
@@ -195,5 +204,8 @@ public class ArchiveHelper {
 		System.arraycopy( tmpByte, 0, result, count * tmpByte.length, offset );
 
 		return result;
+	}
+
+	private ArchiveHelper() {
 	}
 }

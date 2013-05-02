@@ -38,6 +38,13 @@ import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 public class JarProtocolArchiveDescriptor implements ArchiveDescriptor {
 	private final ArchiveDescriptor delegateDescriptor;
 
+	/**
+	 * Constructs a JarProtocolArchiveDescriptor
+	 *
+	 * @param archiveDescriptorFactory The factory creating this
+	 * @param url The url to the JAR file
+	 * @param incomingEntry The prefix for entries within the JAR url
+	 */
 	public JarProtocolArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL url,
@@ -60,7 +67,7 @@ public class JarProtocolArchiveDescriptor implements ArchiveDescriptor {
 			subEntry = urlFile.substring( subEntryIndex + 1 );
 		}
 
-		URL fileUrl = archiveDescriptorFactory.getJarURLFromURLEntry( url, subEntry );
+		final URL fileUrl = archiveDescriptorFactory.getJarURLFromURLEntry( url, subEntry );
 		delegateDescriptor = archiveDescriptorFactory.buildArchiveDescriptor( fileUrl, subEntry );
 	}
 

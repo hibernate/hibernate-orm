@@ -32,10 +32,15 @@ import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 
 /**
+ * Standard implementation of ArchiveDescriptorFactory
+ *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
 public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactory {
+	/**
+	 * Singleton access
+	 */
 	public static final StandardArchiveDescriptorFactory INSTANCE = new StandardArchiveDescriptorFactory();
 
 	@Override

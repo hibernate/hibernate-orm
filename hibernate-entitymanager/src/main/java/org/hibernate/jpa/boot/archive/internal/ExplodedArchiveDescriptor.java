@@ -43,6 +43,8 @@ import org.hibernate.jpa.boot.spi.InputStreamAccess;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 
 /**
+ * Descriptor for exploded (directory) archives
+ *
  * @author Steve Ebersole
  */
 public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
@@ -51,6 +53,13 @@ public class ExplodedArchiveDescriptor extends AbstractArchiveDescriptor {
 			ExplodedArchiveDescriptor.class.getName()
 	);
 
+	/**
+	 * Constructs an ExplodedArchiveDescriptor
+	 *
+	 * @param archiveDescriptorFactory The factory creating this
+	 * @param archiveUrl The directory URL
+	 * @param entryBasePrefix the base (within the url) that described the prefix for entries within the archive
+	 */
 	public ExplodedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL archiveUrl,

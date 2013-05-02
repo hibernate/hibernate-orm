@@ -23,9 +23,6 @@
  */
 package org.hibernate.jpa;
 
-
-import org.hibernate.internal.util.StringHelper;
-
 /**
  * Defines the available HEM settings, both JPA-defined as well as Hibernate-specific
  * <p/>
@@ -444,7 +441,10 @@ public interface AvailableSettings {
 	 * Consider this as experimental
 	 * It is not recommended to set up this property, the configuration is stored
 	 * in the JNDI in a serialized form
+	 *
+	 * @deprecated Configuration going away.
 	 */
+	@Deprecated
 	public static final String CONFIGURATION_JNDI_NAME = "hibernate.ejb.configuration_jndi_name";
 
 	/**
@@ -463,13 +463,21 @@ public interface AvailableSettings {
 	/**
 	 * List of classes names
 	 * Internal use only
+	 *
+	 * @deprecated Was never intended for external use
 	 */
+	@Deprecated
+	@SuppressWarnings("UnusedDeclaration")
 	public static final String CLASS_NAMES = "hibernate.ejb.classes";
 
 	/**
 	 * List of annotated packages
 	 * Internal use only
+	 *
+	 * @deprecated Was never intended for external use
 	 */
+	@Deprecated
+	@SuppressWarnings("UnusedDeclaration")
 	public static final String PACKAGE_NAMES = "hibernate.ejb.packages";
 
 	/**
@@ -509,9 +517,34 @@ public interface AvailableSettings {
 	public static final String XML_FILE_NAMES = "hibernate.ejb.xml_files";
 	public static final String HBXML_FILES = "hibernate.hbmxml.files";
 	public static final String LOADED_CLASSES = "hibernate.ejb.loaded.classes";
+
+	/**
+	 * Deprecated
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#JACC_CONTEXT_ID} instead
+	 */
+	@Deprecated
 	public static final String JACC_CONTEXT_ID = org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
+
+	/**
+	 * Deprecated
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#JACC_PREFIX} instead
+	 */
+	@Deprecated
 	public static final String JACC_PREFIX = org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+
+	/**
+	 * Deprecated
+	 *
+	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#JACC_ENABLED} instead
+	 */
+	@Deprecated
 	public static final String JACC_ENABLED = org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
+
+	/**
+	 * Used to pass along the name of the persistence unit.
+	 */
 	public static final String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
 
 }

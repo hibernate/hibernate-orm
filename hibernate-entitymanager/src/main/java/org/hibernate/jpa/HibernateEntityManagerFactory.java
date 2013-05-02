@@ -42,5 +42,13 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	 */
 	public SessionFactory getSessionFactory();
 
+	/**
+	 * Retrieve the EntityTypeImpl by name.  Use of the Hibernate O/RM notion the "entity name" allows support
+	 * for non-strictly-JPA models to be used in JPA APIs
+	 *
+	 * @param entityName The entity name
+	 *
+	 * @return The EntityTypeImpl
+	 */
 	public EntityTypeImpl getEntityTypeByName(String entityName);
 }

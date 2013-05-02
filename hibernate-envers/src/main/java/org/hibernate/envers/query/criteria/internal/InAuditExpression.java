@@ -28,25 +28,30 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
 import org.hibernate.envers.query.criteria.AuditCriterion;
-import org.hibernate.envers.query.criteria.internal.CriteriaTools;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class InAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
-    private Object[] values;
+	private PropertyNameGetter propertyNameGetter;
+	private Object[] values;
 
-    public InAuditExpression(PropertyNameGetter propertyNameGetter, Object[] values) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.values = values;
-    }
+	public InAuditExpression(PropertyNameGetter propertyNameGetter, Object[] values) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.values = values;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
-        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
-        parameters.addWhereWithParams(propertyName, "in (", values, ")");
-    }
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
+		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
+		parameters.addWhereWithParams( propertyName, "in (", values, ")" );
+	}
 }

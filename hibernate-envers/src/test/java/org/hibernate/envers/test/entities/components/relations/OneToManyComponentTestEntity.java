@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components.relations;
+
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,51 +37,59 @@ import org.hibernate.envers.Audited;
 @Entity
 @Table(name = "OneToManyComp")
 public class OneToManyComponentTestEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Embedded
-    @Audited
-    private OneToManyComponent comp1;
+	@Embedded
+	@Audited
+	private OneToManyComponent comp1;
 
-    public OneToManyComponentTestEntity() {
-    }
+	public OneToManyComponentTestEntity() {
+	}
 
-    public OneToManyComponentTestEntity(Integer id, OneToManyComponent comp1) {
-        this.id = id;
-        this.comp1 = comp1;
-    }
+	public OneToManyComponentTestEntity(Integer id, OneToManyComponent comp1) {
+		this.id = id;
+		this.comp1 = comp1;
+	}
 
-    public OneToManyComponentTestEntity(OneToManyComponent comp1) {
-        this.comp1 = comp1;
-    }
+	public OneToManyComponentTestEntity(OneToManyComponent comp1) {
+		this.comp1 = comp1;
+	}
 
 	public Integer getId() {
-        return id;
-    }
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public OneToManyComponent getComp1() {
-        return comp1;
-    }
+	public OneToManyComponent getComp1() {
+		return comp1;
+	}
 
-    public void setComp1(OneToManyComponent comp1) {
-        this.comp1 = comp1;
-    }
+	public void setComp1(OneToManyComponent comp1) {
+		this.comp1 = comp1;
+	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
 		OneToManyComponentTestEntity that = (OneToManyComponentTestEntity) o;
 
-		if (comp1 != null ? !comp1.equals(that.comp1) : that.comp1 != null) return false;
-		if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( comp1 != null ? !comp1.equals( that.comp1 ) : that.comp1 != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -93,6 +102,6 @@ public class OneToManyComponentTestEntity {
 	}
 
 	public String toString() {
-        return "OTMCTE(id = " + id + ", comp1 = " + comp1 + ")";
-    }
+		return "OTMCTE(id = " + id + ", comp1 = " + comp1 + ")";
+	}
 }

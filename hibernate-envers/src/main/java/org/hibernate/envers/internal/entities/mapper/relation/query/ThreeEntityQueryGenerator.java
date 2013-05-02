@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -49,11 +49,12 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 	private final String queryString;
 	private final String queryRemovedString;
 
-	public ThreeEntityQueryGenerator(GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
-									 AuditStrategy auditStrategy, String versionsMiddleEntityName,
-									 MiddleIdData referencingIdData, MiddleIdData referencedIdData,
-									 MiddleIdData indexIdData, boolean revisionTypeInId,
-									 MiddleComponentData... componentData) {
+	public ThreeEntityQueryGenerator(
+			GlobalConfiguration globalCfg, AuditEntitiesConfiguration verEntCfg,
+			AuditStrategy auditStrategy, String versionsMiddleEntityName,
+			MiddleIdData referencingIdData, MiddleIdData referencedIdData,
+			MiddleIdData indexIdData, boolean revisionTypeInId,
+			MiddleComponentData... componentData) {
 		super( verEntCfg, referencingIdData, revisionTypeInId );
 
 		/*
@@ -102,7 +103,12 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		 *     e.revision_type != DEL AND
 		 *     f.revision_type != DEL
 		 */
-		final QueryBuilder commonPart = commonQueryPart( referencedIdData, indexIdData, versionsMiddleEntityName, verEntCfg.getOriginalIdPropName() );
+		final QueryBuilder commonPart = commonQueryPart(
+				referencedIdData,
+				indexIdData,
+				versionsMiddleEntityName,
+				verEntCfg.getOriginalIdPropName()
+		);
 		final QueryBuilder validQuery = commonPart.deepCopy();
 		final QueryBuilder removedQuery = commonPart.deepCopy();
 		createValidDataRestrictions(
@@ -120,8 +126,9 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 	/**
 	 * Compute common part for both queries.
 	 */
-	private QueryBuilder commonQueryPart(MiddleIdData referencedIdData, MiddleIdData indexIdData,
-										 String versionsMiddleEntityName, String originalIdPropertyName) {
+	private QueryBuilder commonQueryPart(
+			MiddleIdData referencedIdData, MiddleIdData indexIdData,
+			String versionsMiddleEntityName, String originalIdPropertyName) {
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
 		// SELECT new list(ee) FROM middleEntity ee
 		final QueryBuilder qb = new QueryBuilder( versionsMiddleEntityName, MIDDLE_ENTITY_ALIAS );
@@ -151,9 +158,10 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 	/**
 	 * Creates query restrictions used to retrieve only actual data.
 	 */
-	private void createValidDataRestrictions(GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
-											 MiddleIdData referencedIdData, String versionsMiddleEntityName, QueryBuilder qb,
-											 Parameters rootParameters, boolean inclusive, MiddleComponentData... componentData) {
+	private void createValidDataRestrictions(
+			GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
+			MiddleIdData referencedIdData, String versionsMiddleEntityName, QueryBuilder qb,
+			Parameters rootParameters, boolean inclusive, MiddleComponentData... componentData) {
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
@@ -161,16 +169,34 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
-				globalCfg, qb, rootParameters, REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
-				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(), false, referencedIdData, revisionPropertyPath,
-				originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR, inclusive
+				globalCfg,
+				qb,
+				rootParameters,
+				REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
+				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(),
+				false,
+				referencedIdData,
+				revisionPropertyPath,
+				originalIdPropertyName,
+				REFERENCED_ENTITY_ALIAS,
+				REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
+				inclusive
 		);
 		// (selecting f entities at revision :revision)
 		// --> based on auditStrategy (see above)
 		auditStrategy.addEntityAtRevisionRestriction(
-				globalCfg, qb, rootParameters, REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
-				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(), false, referencedIdData, revisionPropertyPath,
-				originalIdPropertyName, INDEX_ENTITY_ALIAS, INDEX_ENTITY_ALIAS_DEF_AUD_STR, inclusive
+				globalCfg,
+				qb,
+				rootParameters,
+				REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
+				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(),
+				false,
+				referencedIdData,
+				revisionPropertyPath,
+				originalIdPropertyName,
+				INDEX_ENTITY_ALIAS,
+				INDEX_ENTITY_ALIAS_DEF_AUD_STR,
+				inclusive
 		);
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)
@@ -182,20 +208,33 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		// ee.revision_type != DEL
 		rootParameters.addWhereWithNamedParam( revisionTypePropName, "!=", DEL_REVISION_TYPE_PARAMETER );
 		// e.revision_type != DEL
-		rootParameters.addWhereWithNamedParam( REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName, false, "!=", DEL_REVISION_TYPE_PARAMETER );
+		rootParameters.addWhereWithNamedParam(
+				REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName,
+				false,
+				"!=",
+				DEL_REVISION_TYPE_PARAMETER
+		);
 		// f.revision_type != DEL
-		rootParameters.addWhereWithNamedParam( INDEX_ENTITY_ALIAS + "." + revisionTypePropName, false, "!=", DEL_REVISION_TYPE_PARAMETER );
+		rootParameters.addWhereWithNamedParam(
+				INDEX_ENTITY_ALIAS + "." + revisionTypePropName,
+				false,
+				"!=",
+				DEL_REVISION_TYPE_PARAMETER
+		);
 	}
 
 	/**
 	 * Create query restrictions used to retrieve actual data and deletions that took place at exactly given revision.
 	 */
-	private void createValidAndRemovedDataRestrictions(GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
-													   MiddleIdData referencedIdData, String versionsMiddleEntityName,
-													   QueryBuilder remQb, MiddleComponentData... componentData) {
+	private void createValidAndRemovedDataRestrictions(
+			GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
+			MiddleIdData referencedIdData, String versionsMiddleEntityName,
+			QueryBuilder remQb, MiddleComponentData... componentData) {
 		final Parameters disjoint = remQb.getRootParameters().addSubParameters( "or" );
-		final Parameters valid = disjoint.addSubParameters( "and" ); // Restrictions to match all valid rows.
-		final Parameters removed = disjoint.addSubParameters( "and" ); // Restrictions to match all rows deleted at exactly given revision.
+		// Restrictions to match all valid rows.
+		final Parameters valid = disjoint.addSubParameters( "and" );
+		// Restrictions to match all rows deleted at exactly given revision.
+		final Parameters removed = disjoint.addSubParameters( "and" );
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		final String revisionTypePropName = getRevisionTypePath();
 		// Excluding current revision, because we need to match data valid at the previous one.
@@ -205,15 +244,35 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		// ee.revision = :revision
 		removed.addWhereWithNamedParam( revisionPropertyPath, "=", REVISION_PARAMETER );
 		// e.revision = :revision
-		removed.addWhereWithNamedParam( REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath, false, "=", REVISION_PARAMETER );
+		removed.addWhereWithNamedParam(
+				REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
+				false,
+				"=",
+				REVISION_PARAMETER
+		);
 		// f.revision = :revision
-		removed.addWhereWithNamedParam( INDEX_ENTITY_ALIAS + "." + revisionPropertyPath, false, "=", REVISION_PARAMETER );
+		removed.addWhereWithNamedParam(
+				INDEX_ENTITY_ALIAS + "." + revisionPropertyPath,
+				false,
+				"=",
+				REVISION_PARAMETER
+		);
 		// ee.revision_type = DEL
 		removed.addWhereWithNamedParam( revisionTypePropName, "=", DEL_REVISION_TYPE_PARAMETER );
 		// e.revision_type = DEL
-		removed.addWhereWithNamedParam( REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName, false, "=", DEL_REVISION_TYPE_PARAMETER );
+		removed.addWhereWithNamedParam(
+				REFERENCED_ENTITY_ALIAS + "." + revisionTypePropName,
+				false,
+				"=",
+				DEL_REVISION_TYPE_PARAMETER
+		);
 		// f.revision_type = DEL
-		removed.addWhereWithNamedParam( INDEX_ENTITY_ALIAS + "." + revisionTypePropName, false, "=", DEL_REVISION_TYPE_PARAMETER );
+		removed.addWhereWithNamedParam(
+				INDEX_ENTITY_ALIAS + "." + revisionTypePropName,
+				false,
+				"=",
+				DEL_REVISION_TYPE_PARAMETER
+		);
 	}
 
 	@Override

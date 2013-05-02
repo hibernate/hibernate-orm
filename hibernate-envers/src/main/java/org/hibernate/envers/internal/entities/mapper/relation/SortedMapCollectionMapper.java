@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -37,18 +37,30 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 public final class SortedMapCollectionMapper extends MapCollectionMapper<SortedMap> {
 	private final Comparator comparator;
 
-	public SortedMapCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
-									 Class<? extends SortedMap> collectionClass, Class<? extends SortedMap> proxyClass,
-									 MiddleComponentData elementComponentData, MiddleComponentData indexComponentData, Comparator comparator,
-									 boolean revisionTypeInId) {
-		super(commonCollectionMapperData, collectionClass, proxyClass, elementComponentData, indexComponentData, revisionTypeInId);
+	public SortedMapCollectionMapper(
+			CommonCollectionMapperData commonCollectionMapperData,
+			Class<? extends SortedMap> collectionClass, Class<? extends SortedMap> proxyClass,
+			MiddleComponentData elementComponentData, MiddleComponentData indexComponentData, Comparator comparator,
+			boolean revisionTypeInId) {
+		super(
+				commonCollectionMapperData,
+				collectionClass,
+				proxyClass,
+				elementComponentData,
+				indexComponentData,
+				revisionTypeInId
+		);
 		this.comparator = comparator;
 	}
 
-	protected Initializor<SortedMap> getInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-													Object primaryKey, Number revision, boolean removed) {
-		return new SortedMapCollectionInitializor(verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
-				primaryKey, revision, removed, collectionClass, elementComponentData, indexComponentData, comparator);
+	@Override
+	protected Initializor<SortedMap> getInitializor(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+			Object primaryKey, Number revision, boolean removed) {
+		return new SortedMapCollectionInitializor(
+				verCfg, versionsReader, commonCollectionMapperData.getQueryGenerator(),
+				primaryKey, revision, removed, collectionClass, elementComponentData, indexComponentData, comparator
+		);
 	}
 
 }

@@ -70,13 +70,21 @@ public class ManyToOneEagerComponent {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( !( o instanceof ManyToOneEagerComponent ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ManyToOneEagerComponent) ) {
+			return false;
+		}
 
 		ManyToOneEagerComponent that = (ManyToOneEagerComponent) o;
 
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) return false;
-		if ( entity != null ? !entity.equals( that.entity ) : that.entity != null ) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( entity != null ? !entity.equals( that.entity ) : that.entity != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -84,7 +92,7 @@ public class ManyToOneEagerComponent {
 	@Override
 	public int hashCode() {
 		int result = entity != null ? entity.hashCode() : 0;
-		result = 31 * result + ( data != null ? data.hashCode() : 0 );
+		result = 31 * result + (data != null ? data.hashCode() : 0);
 		return result;
 	}
 

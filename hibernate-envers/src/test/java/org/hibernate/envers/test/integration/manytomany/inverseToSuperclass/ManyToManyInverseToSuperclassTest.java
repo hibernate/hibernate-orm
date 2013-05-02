@@ -1,27 +1,26 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
 
-import java.util.ArrayList;
 import javax.persistence.EntityManager;
-
-import org.junit.Test;
+import java.util.ArrayList;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 
+import org.junit.Test;
+
 /**
  * @author Hern�n Chanfreau
- * 
  */
-public class ManyToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTestCase  {
+public class ManyToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTestCase {
 	private long m1_id;
 
 	@Override
 	protected String[] getMappings() {
-		return new String[] { "mappings/manyToMany/inverseToSuperclass/mappings.hbm.xml" };
+		return new String[] {"mappings/manyToMany/inverseToSuperclass/mappings.hbm.xml"};
 	}
 
 	@Test
-    @Priority(10)
+	@Priority(10)
 	public void initData() {
 		EntityManager em = getEntityManager();
 
@@ -31,16 +30,16 @@ public class ManyToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTe
 		// Revision 1
 		em.getTransaction().begin();
 
-		det1.setStr2("detail 1");
+		det1.setStr2( "detail 1" );
 
-		m1.setStr("master");
-		m1.setItems(new ArrayList<DetailSubclass>());
-		m1.getItems().add(det1);
+		m1.setStr( "master" );
+		m1.setItems( new ArrayList<DetailSubclass>() );
+		m1.getItems().add( det1 );
 
-		det1.setMasters(new ArrayList<Master>());
-		det1.getMasters().add(m1);
+		det1.setMasters( new ArrayList<Master>() );
+		det1.getMasters().add( m1 );
 
-		em.persist(m1);
+		em.persist( m1 );
 		em.getTransaction().commit();
 		m1_id = m1.getId();
 
@@ -89,10 +88,10 @@ public class ManyToManyInverseToSuperclassTest extends BaseEnversJPAFunctionalTe
 
 	@Test
 	public void testHistoryExists() {
-		Master rev1_1 = getAuditReader().find(Master.class, m1_id, 1);
-		Master rev1_2 = getAuditReader().find(Master.class, m1_id, 2);
-		Master rev1_3 = getAuditReader().find(Master.class, m1_id, 3);
-		Master rev1_4 = getAuditReader().find(Master.class, m1_id, 4);
+		Master rev1_1 = getAuditReader().find( Master.class, m1_id, 1 );
+		Master rev1_2 = getAuditReader().find( Master.class, m1_id, 2 );
+		Master rev1_3 = getAuditReader().find( Master.class, m1_id, 3 );
+		Master rev1_4 = getAuditReader().find( Master.class, m1_id, 4 );
 
 		assert (rev1_1 != null);
 		assert (rev1_2 != null);

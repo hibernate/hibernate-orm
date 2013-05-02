@@ -23,10 +23,6 @@
  */
 package org.hibernate.envers.test.integration.modifiedflags.entities;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
@@ -37,6 +33,10 @@ import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
@@ -51,51 +51,51 @@ import org.hibernate.envers.test.entities.components.Component2;
 @Table(name = "PartialModFlags")
 @Audited(withModifiedFlag = false)
 public class PartialModifiedFlagsEntity {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Audited(withModifiedFlag = true)
-    private String data;
+	@Audited(withModifiedFlag = true)
+	private String data;
 
 	@Audited(withModifiedFlag = true)
 	@Embedded
-    private Component1 comp1;
+	private Component1 comp1;
 
 	@Audited(withModifiedFlag = false)
 	@Embedded
-    private Component2 comp2;
+	private Component2 comp2;
 
-    @Audited(withModifiedFlag = true)
-    @OneToOne(mappedBy="reference")
-    private WithModifiedFlagReferencingEntity referencing;
+	@Audited(withModifiedFlag = true)
+	@OneToOne(mappedBy = "reference")
+	private WithModifiedFlagReferencingEntity referencing;
 
 	@Audited(withModifiedFlag = false)
-    @OneToOne(mappedBy="secondReference")
-    private WithModifiedFlagReferencingEntity referencing2;
+	@OneToOne(mappedBy = "secondReference")
+	private WithModifiedFlagReferencingEntity referencing2;
 
-    @Audited(withModifiedFlag = true)
-    @ElementCollection
-    @JoinTable(name = "PartialModFlags_StrSet")
-    @AuditJoinTable(name = "PartialModFlags_StrSet_AUD")
-    private Set<String> stringSet = new HashSet<String>();
+	@Audited(withModifiedFlag = true)
+	@ElementCollection
+	@JoinTable(name = "PartialModFlags_StrSet")
+	@AuditJoinTable(name = "PartialModFlags_StrSet_AUD")
+	private Set<String> stringSet = new HashSet<String>();
 
 	@Audited(withModifiedFlag = true)
 	@ManyToMany
 	@CollectionTable(name = "ENTITIESSET")
-    private Set<StrTestEntity> entitiesSet = new HashSet<StrTestEntity>();
+	private Set<StrTestEntity> entitiesSet = new HashSet<StrTestEntity>();
 
 	@Audited(withModifiedFlag = true)
 	@ElementCollection
-	@MapKeyColumn(nullable=false)
-    @JoinTable(name = "PartialModFlags_StrMap")
-    @AuditJoinTable(name = "PartialModFlags_StrMap_AUD")
-    private Map<String, String> stringMap = new HashMap<String, String>();
+	@MapKeyColumn(nullable = false)
+	@JoinTable(name = "PartialModFlags_StrMap")
+	@AuditJoinTable(name = "PartialModFlags_StrMap_AUD")
+	private Map<String, String> stringMap = new HashMap<String, String>();
 
 	@Audited(withModifiedFlag = true)
-    @ManyToMany
-    @CollectionTable(name = "ENTITIESMAP")
-    @MapKeyColumn(nullable = false)
-    private Map<String, StrTestEntity> entitiesMap =
+	@ManyToMany
+	@CollectionTable(name = "ENTITIESMAP")
+	@MapKeyColumn(nullable = false)
+	private Map<String, StrTestEntity> entitiesMap =
 			new HashMap<String, StrTestEntity>();
 
 	public PartialModifiedFlagsEntity() {
@@ -106,36 +106,36 @@ public class PartialModifiedFlagsEntity {
 	}
 
 	public Integer getId() {
-        return id;
-    }
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getData() {
-        return data;
-    }
+	public String getData() {
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
-    public WithModifiedFlagReferencingEntity getReferencing() {
-        return referencing;
-    }
+	public WithModifiedFlagReferencingEntity getReferencing() {
+		return referencing;
+	}
 
-    public void setReferencing(WithModifiedFlagReferencingEntity referencing) {
-        this.referencing = referencing;
-    }
+	public void setReferencing(WithModifiedFlagReferencingEntity referencing) {
+		this.referencing = referencing;
+	}
 
 	public WithModifiedFlagReferencingEntity getReferencing2() {
-        return referencing2;
-    }
+		return referencing2;
+	}
 
-    public void setReferencing2(WithModifiedFlagReferencingEntity referencing) {
-        this.referencing2 = referencing;
-    }
+	public void setReferencing2(WithModifiedFlagReferencingEntity referencing) {
+		this.referencing2 = referencing;
+	}
 
 	public Component1 getComp1() {
 		return comp1;
@@ -186,21 +186,29 @@ public class PartialModifiedFlagsEntity {
 	}
 
 	public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof PartialModifiedFlagsEntity)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof PartialModifiedFlagsEntity) ) {
+			return false;
+		}
 
-        PartialModifiedFlagsEntity that = (PartialModifiedFlagsEntity) o;
+		PartialModifiedFlagsEntity that = (PartialModifiedFlagsEntity) o;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (data != null ? data.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
+		return result;
+	}
 }

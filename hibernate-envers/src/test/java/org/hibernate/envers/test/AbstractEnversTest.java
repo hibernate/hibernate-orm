@@ -8,22 +8,26 @@ import org.junit.runners.Parameterized;
 
 /**
  * An abstract Envers test which runs the tests using two audit strategies.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 @RunWith(EnversRunner.class)
 public abstract class AbstractEnversTest {
-    private String auditStrategy;
+	private String auditStrategy;
 
-    @Parameterized.Parameters
-    public static List<Object[]> data() {
-        return Arrays.asList(new Object[]{null}, new Object[]{"org.hibernate.envers.strategy.ValidityAuditStrategy"});
-    }
+	@Parameterized.Parameters
+	public static List<Object[]> data() {
+		return Arrays.asList(
+				new Object[] {null},
+				new Object[] {"org.hibernate.envers.strategy.ValidityAuditStrategy"}
+		);
+	}
 
-    public void setTestData(Object[] data) {
-        auditStrategy = (String) data[0];
-    }
+	public void setTestData(Object[] data) {
+		auditStrategy = (String) data[0];
+	}
 
-    public String getAuditStrategy() {
-        return auditStrategy;
-    }
+	public String getAuditStrategy() {
+		return auditStrategy;
+	}
 }

@@ -36,33 +36,42 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class SimpleAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
-    private Object value;
-    private String op;
+	private PropertyNameGetter propertyNameGetter;
+	private Object value;
+	private String op;
 
-    public SimpleAuditExpression(PropertyNameGetter propertyNameGetter, Object value, String op) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.value = value;
-        this.op = op;
-    }
+	public SimpleAuditExpression(PropertyNameGetter propertyNameGetter, Object value, String op) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.value = value;
+		this.op = op;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
 
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( auditCfg, entityName, propertyName );
 
-        if (relatedEntity == null) {
-            parameters.addWhereWithParam(propertyName, op, value);
-        } else {
-            if (!"=".equals(op) && !"<>".equals(op)) {
-                throw new AuditException("This type of operation: " + op + " (" + entityName + "." + propertyName +
-                        ") isn't supported and can't be used in queries.");
-            }
+		if ( relatedEntity == null ) {
+			parameters.addWhereWithParam( propertyName, op, value );
+		}
+		else {
+			if ( !"=".equals( op ) && !"<>".equals( op ) ) {
+				throw new AuditException(
+						"This type of operation: " + op + " (" + entityName + "." + propertyName +
+								") isn't supported and can't be used in queries."
+				);
+			}
 
-            Object id = relatedEntity.getIdMapper().mapToIdFromEntity(value);
+			Object id = relatedEntity.getIdMapper().mapToIdFromEntity( value );
 
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, null, "=".equals(op));
-        }
-    }
+			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, "=".equals( op ) );
+		}
+	}
 }

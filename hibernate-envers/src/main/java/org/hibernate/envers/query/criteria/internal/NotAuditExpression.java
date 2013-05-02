@@ -33,14 +33,15 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
  * @author Adam Warski (adam at warski dot org)
  */
 public class NotAuditExpression implements AuditCriterion {
-    private AuditCriterion criterion;
+	private AuditCriterion criterion;
 
-    public NotAuditExpression(AuditCriterion criterion) {
-        this.criterion = criterion;
-    }
+	public NotAuditExpression(AuditCriterion criterion) {
+		this.criterion = criterion;
+	}
 
-    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-        criterion.addToQuery(verCfg, versionsReader, entityName, qb, parameters.addNegatedParameters());
-    }
+	public void addToQuery(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		criterion.addToQuery( verCfg, versionsReader, entityName, qb, parameters.addNegatedParameters() );
+	}
 }

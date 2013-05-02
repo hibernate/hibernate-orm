@@ -40,7 +40,7 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 @Audited
-@Proxy(lazy=false)
+@Proxy(lazy = false)
 //Class name is too long of an identifier for Oracle.
 @Table(name = "IngOneToOne")
 public final class BidirectionalEagerAnnotationRefIngOneToOne {
@@ -72,13 +72,21 @@ public final class BidirectionalEagerAnnotationRefIngOneToOne {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( ! ( o instanceof BidirectionalEagerAnnotationRefIngOneToOne ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof BidirectionalEagerAnnotationRefIngOneToOne) ) {
+			return false;
+		}
 
 		BidirectionalEagerAnnotationRefIngOneToOne that = (BidirectionalEagerAnnotationRefIngOneToOne) o;
 
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) return false;
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -86,7 +94,7 @@ public final class BidirectionalEagerAnnotationRefIngOneToOne {
 	@Override
 	public int hashCode() {
 		int result = id != null ? id.hashCode() : 0;
-		result = 31 * result + ( data != null ? data.hashCode() : 0 );
+		result = 31 * result + (data != null ? data.hashCode() : 0);
 		return result;
 	}
 

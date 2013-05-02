@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -56,13 +56,15 @@ public abstract class ArraysTools {
 
 	/**
 	 * Converts map's value set to an array. {@code keys} parameter specifies requested elements and their order.
+	 *
 	 * @param data Source map.
 	 * @param keys Array of keys that represent requested map values.
+	 *
 	 * @return Array of values stored in the map under specified keys. If map does not contain requested key,
 	 *         {@code null} is inserted.
 	 */
 	public static Object[] mapToArray(Map<String, Object> data, String[] keys) {
-		Object[] ret = new Object[keys.length];
+		final Object[] ret = new Object[keys.length];
 		for ( int i = 0; i < keys.length; ++i ) {
 			ret[i] = data.get( keys[i] );
 		}

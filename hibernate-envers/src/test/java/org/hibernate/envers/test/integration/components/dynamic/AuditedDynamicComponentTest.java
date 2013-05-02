@@ -7,9 +7,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import junit.framework.Assert;
-import org.junit.Test;
-
 import org.hibernate.MappingException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.envers.Audited;
@@ -17,18 +14,24 @@ import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.test.AbstractEnversTest;
 import org.hibernate.service.ServiceRegistry;
+
+import org.junit.Test;
+import junit.framework.Assert;
+
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue( jiraKey = "HHH-8049" )
+@TestForIssue(jiraKey = "HHH-8049")
 public class AuditedDynamicComponentTest extends AbstractEnversTest {
 	@Test
 	public void testAuditedDynamicComponentFailure() throws URISyntaxException {
 		final Configuration config = new Configuration();
-		final URL hbm = Thread.currentThread().getContextClassLoader().getResource( "mappings/dynamicComponents/mapAudited.hbm.xml" );
+		final URL hbm = Thread.currentThread().getContextClassLoader().getResource(
+				"mappings/dynamicComponents/mapAudited.hbm.xml"
+		);
 		config.addFile( new File( hbm.toURI() ) );
 
 		final String auditStrategy = getAuditStrategy();
@@ -41,7 +44,7 @@ public class AuditedDynamicComponentTest extends AbstractEnversTest {
 			config.buildSessionFactory( serviceRegistry );
 			Assert.fail( "MappingException expected" );
 		}
-		catch ( MappingException e ) {
+		catch (MappingException e) {
 			Assert.assertEquals(
 					"Audited dynamic-component properties are not supported. Consider applying @NotAudited annotation to "
 							+ AuditedDynamicMapComponent.class.getName() + "#customFields.",

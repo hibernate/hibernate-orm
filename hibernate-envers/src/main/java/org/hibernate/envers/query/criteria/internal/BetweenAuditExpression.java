@@ -34,23 +34,29 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class BetweenAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
-    private Object lo;
-    private Object hi;
+	private PropertyNameGetter propertyNameGetter;
+	private Object lo;
+	private Object hi;
 
-    public BetweenAuditExpression(PropertyNameGetter propertyNameGetter, Object lo, Object hi) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.lo = lo;
-        this.hi = hi;
-    }
+	public BetweenAuditExpression(PropertyNameGetter propertyNameGetter, Object lo, Object hi) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.lo = lo;
+		this.hi = hi;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
-        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
-        
-        Parameters subParams = parameters.addSubParameters(Parameters.AND);
-        subParams.addWhereWithParam(propertyName, ">=", lo);
-        subParams.addWhereWithParam(propertyName, "<=", hi);
-    }
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
+		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
+
+		Parameters subParams = parameters.addSubParameters( Parameters.AND );
+		subParams.addWhereWithParam( propertyName, ">=", lo );
+		subParams.addWhereWithParam( propertyName, "<=", hi );
+	}
 }

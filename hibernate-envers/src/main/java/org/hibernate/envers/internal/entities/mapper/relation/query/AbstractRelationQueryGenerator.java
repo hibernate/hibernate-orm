@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -47,8 +47,9 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 	protected final MiddleIdData referencingIdData;
 	protected final boolean revisionTypeInId;
 
-	protected AbstractRelationQueryGenerator(AuditEntitiesConfiguration verEntCfg, MiddleIdData referencingIdData,
-											 boolean revisionTypeInId) {
+	protected AbstractRelationQueryGenerator(
+			AuditEntitiesConfiguration verEntCfg, MiddleIdData referencingIdData,
+			boolean revisionTypeInId) {
 		this.verEntCfg = verEntCfg;
 		this.referencingIdData = referencingIdData;
 		this.revisionTypeInId = revisionTypeInId;
@@ -61,16 +62,19 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 
 	/**
 	 * @return Query executed to retrieve state of audited entity valid at previous revision
-	 * or removed during exactly specified revision number. Used only when traversing deleted
-	 * entities graph.
+	 *         or removed during exactly specified revision number. Used only when traversing deleted
+	 *         entities graph.
 	 */
 	protected abstract String getQueryRemovedString();
 
+	@Override
 	public Query getQuery(AuditReaderImplementor versionsReader, Object primaryKey, Number revision, boolean removed) {
-		Query query = versionsReader.getSession().createQuery( removed ? getQueryRemovedString() : getQueryString() );
+		final Query query = versionsReader.getSession().createQuery( removed ? getQueryRemovedString() : getQueryString() );
 		query.setParameter( DEL_REVISION_TYPE_PARAMETER, RevisionType.DEL );
 		query.setParameter( REVISION_PARAMETER, revision );
-		for ( QueryParameterData paramData : referencingIdData.getPrefixedMapper().mapToQueryParametersFromId( primaryKey ) ) {
+		for ( QueryParameterData paramData : referencingIdData.getPrefixedMapper().mapToQueryParametersFromId(
+				primaryKey
+		) ) {
 			paramData.setParameterValue( query );
 		}
 		return query;

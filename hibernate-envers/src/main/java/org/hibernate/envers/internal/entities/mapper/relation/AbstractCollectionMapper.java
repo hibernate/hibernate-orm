@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -53,43 +53,53 @@ import org.hibernate.property.Setter;
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
-    protected final CommonCollectionMapperData commonCollectionMapperData;    
-    protected final Class<? extends T> collectionClass;
-    protected final boolean ordinalInId;
+	protected final CommonCollectionMapperData commonCollectionMapperData;
+	protected final Class<? extends T> collectionClass;
+	protected final boolean ordinalInId;
 	protected final boolean revisionTypeInId;
 
-    private final Constructor<? extends T> proxyConstructor;
+	private final Constructor<? extends T> proxyConstructor;
 
-	protected AbstractCollectionMapper(CommonCollectionMapperData commonCollectionMapperData,
+	protected AbstractCollectionMapper(
+			CommonCollectionMapperData commonCollectionMapperData,
 			Class<? extends T> collectionClass, Class<? extends T> proxyClass, boolean ordinalInId,
 			boolean revisionTypeInId) {
-        this.commonCollectionMapperData = commonCollectionMapperData;
-        this.collectionClass = collectionClass;
+		this.commonCollectionMapperData = commonCollectionMapperData;
+		this.collectionClass = collectionClass;
 		this.ordinalInId = ordinalInId;
 		this.revisionTypeInId = revisionTypeInId;
 
-        try {
-            proxyConstructor = proxyClass.getConstructor(Initializor.class);
-        } catch (NoSuchMethodException e) {
-            throw new AuditException(e);
-        }
-    }
+		try {
+			proxyConstructor = proxyClass.getConstructor( Initializor.class );
+		}
+		catch (NoSuchMethodException e) {
+			throw new AuditException( e );
+		}
+	}
 
-    protected abstract Collection getNewCollectionContent(PersistentCollection newCollection);
-    protected abstract Collection getOldCollectionContent(Serializable oldCollection);
+	protected abstract Collection getNewCollectionContent(PersistentCollection newCollection);
 
-    /**
-     * Maps the changed collection element to the given map.
+	protected abstract Collection getOldCollectionContent(Serializable oldCollection);
+
+	/**
+	 * Maps the changed collection element to the given map.
+	 *
 	 * @param idData Map to which composite-id data should be added.
-     * @param data Where to map the data.
-     * @param changed The changed collection element to map.
-     */
-    protected abstract void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object changed);
+	 * @param data Where to map the data.
+	 * @param changed The changed collection element to map.
+	 */
+	protected abstract void mapToMapFromObject(
+			SessionImplementor session,
+			Map<String, Object> idData,
+			Map<String, Object> data,
+			Object changed);
 
 	/**
 	 * Creates map for storing identifier data. Ordinal parameter guarantees uniqueness of primary key.
 	 * Composite primary key cannot contain embeddable properties since they might be nullable.
+	 *
 	 * @param ordinal Iteration ordinal.
+	 *
 	 * @return Map for holding identifier data.
 	 */
 	protected Map<String, Object> createIdMap(int ordinal) {
@@ -100,79 +110,113 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 		return idMap;
 	}
 
-    private void addCollectionChanges(SessionImplementor session, List<PersistentCollectionChangeData> collectionChanges,
-									  Set<Object> changed, RevisionType revisionType, Serializable id) {
+	private void addCollectionChanges(
+			SessionImplementor session, List<PersistentCollectionChangeData> collectionChanges,
+			Set<Object> changed, RevisionType revisionType, Serializable id) {
 		int ordinal = 0;
 
-        for (Object changedObj : changed) {
-            Map<String, Object> entityData = new HashMap<String, Object>();
-			Map<String, Object> originalId = createIdMap( ordinal++ );
-            entityData.put(commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId);
+		for ( Object changedObj : changed ) {
+			final Map<String, Object> entityData = new HashMap<String, Object>();
+			final Map<String, Object> originalId = createIdMap( ordinal++ );
+			entityData.put( commonCollectionMapperData.getVerEntCfg().getOriginalIdPropName(), originalId );
 
-            collectionChanges.add(new PersistentCollectionChangeData(
-                    commonCollectionMapperData.getVersionsMiddleEntityName(), entityData, changedObj));
-            // Mapping the collection owner's id.
-            commonCollectionMapperData.getReferencingIdData().getPrefixedMapper().mapToMapFromId(originalId, id);
+			collectionChanges.add(
+					new PersistentCollectionChangeData(
+							commonCollectionMapperData.getVersionsMiddleEntityName(), entityData, changedObj
+					)
+			);
+			// Mapping the collection owner's id.
+			commonCollectionMapperData.getReferencingIdData().getPrefixedMapper().mapToMapFromId( originalId, id );
 
-            // Mapping collection element and index (if present).
-            mapToMapFromObject(session, originalId, entityData, changedObj);
+			// Mapping collection element and index (if present).
+			mapToMapFromObject( session, originalId, entityData, changedObj );
 
-			(revisionTypeInId ? originalId : entityData).put(commonCollectionMapperData.getVerEntCfg().getRevisionTypePropName(), revisionType);
-        }
-    }
-
-    @SuppressWarnings({"unchecked"})
-    public List<PersistentCollectionChangeData> mapCollectionChanges(SessionImplementor session,
-																	 String referencingPropertyName,
-                                                                     PersistentCollection newColl,
-                                                                     Serializable oldColl, Serializable id) {
-        if (!commonCollectionMapperData.getCollectionReferencingPropertyData().getName().equals(referencingPropertyName)) {
-            return null;
-        }
-
-        List<PersistentCollectionChangeData> collectionChanges = new ArrayList<PersistentCollectionChangeData>();
-
-        // Comparing new and old collection content.
-        Collection newCollection = getNewCollectionContent(newColl);
-        Collection oldCollection = getOldCollectionContent(oldColl);
-
-        Set<Object> added = new HashSet<Object>();
-        if (newColl != null) { added.addAll(newCollection); }
-		// Re-hashing the old collection as the hash codes of the elements there may have changed, and the
-		// removeAll in AbstractSet has an implementation that is hashcode-change sensitive (as opposed to addAll).
-        if (oldColl != null) { added.removeAll(new HashSet(oldCollection)); }
-
-        addCollectionChanges(session, collectionChanges, added, RevisionType.ADD, id);
-
-        Set<Object> deleted = new HashSet<Object>();
-        if (oldColl != null) { deleted.addAll(oldCollection); }
-		// The same as above - re-hashing new collection.
-        if (newColl != null) { deleted.removeAll(new HashSet(newCollection)); }
-
-        addCollectionChanges(session, collectionChanges, deleted, RevisionType.DEL, id);
-
-        return collectionChanges;
-    }
-
-    public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-        // Changes are mapped in the "mapCollectionChanges" method.
-        return false;
-    }
+			(revisionTypeInId ? originalId : entityData).put(
+					commonCollectionMapperData.getVerEntCfg()
+							.getRevisionTypePropName(), revisionType
+			);
+		}
+	}
 
 	@Override
-	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj, Object oldObj) {
-		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
-		if (propertyData.isUsingModifiedFlag()) {
-			if (isNotPersistentCollection(newObj) || isNotPersistentCollection(oldObj)) {
+	@SuppressWarnings({"unchecked"})
+	public List<PersistentCollectionChangeData> mapCollectionChanges(
+			SessionImplementor session,
+			String referencingPropertyName,
+			PersistentCollection newColl,
+			Serializable oldColl, Serializable id) {
+		if ( !commonCollectionMapperData.getCollectionReferencingPropertyData().getName().equals(
+				referencingPropertyName
+		) ) {
+			return null;
+		}
+
+		final List<PersistentCollectionChangeData> collectionChanges = new ArrayList<PersistentCollectionChangeData>();
+
+		// Comparing new and old collection content.
+		final Collection newCollection = getNewCollectionContent( newColl );
+		final Collection oldCollection = getOldCollectionContent( oldColl );
+
+		final Set<Object> added = new HashSet<Object>();
+		if ( newColl != null ) {
+			added.addAll( newCollection );
+		}
+		// Re-hashing the old collection as the hash codes of the elements there may have changed, and the
+		// removeAll in AbstractSet has an implementation that is hashcode-change sensitive (as opposed to addAll).
+		if ( oldColl != null ) {
+			added.removeAll( new HashSet( oldCollection ) );
+		}
+
+		addCollectionChanges( session, collectionChanges, added, RevisionType.ADD, id );
+
+		final Set<Object> deleted = new HashSet<Object>();
+		if ( oldColl != null ) {
+			deleted.addAll( oldCollection );
+		}
+		// The same as above - re-hashing new collection.
+		if ( newColl != null ) {
+			deleted.removeAll( new HashSet( newCollection ) );
+		}
+
+		addCollectionChanges( session, collectionChanges, deleted, RevisionType.DEL, id );
+
+		return collectionChanges;
+	}
+
+	@Override
+	public boolean mapToMapFromEntity(
+			SessionImplementor session,
+			Map<String, Object> data,
+			Object newObj,
+			Object oldObj) {
+		// Changes are mapped in the "mapCollectionChanges" method.
+		return false;
+	}
+
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(
+			SessionImplementor session,
+			Map<String, Object> data,
+			Object newObj,
+			Object oldObj) {
+		final PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+		if ( propertyData.isUsingModifiedFlag() ) {
+			if ( isNotPersistentCollection( newObj ) || isNotPersistentCollection( oldObj ) ) {
 				// Compare POJOs.
-				data.put(propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual(newObj, oldObj));
-			} else if (isFromNullToEmptyOrFromEmptyToNull((PersistentCollection) newObj, (Serializable) oldObj)) {
-                data.put(propertyData.getModifiedFlagPropertyName(), true);
-			} else {
-				List<PersistentCollectionChangeData> changes = mapCollectionChanges(session,
-                        commonCollectionMapperData.getCollectionReferencingPropertyData().getName(),
-						(PersistentCollection) newObj, (Serializable) oldObj, null);
-                data.put(propertyData.getModifiedFlagPropertyName(), !changes.isEmpty());
+				data.put( propertyData.getModifiedFlagPropertyName(), !Tools.objectsEqual( newObj, oldObj ) );
+			}
+			else if ( isFromNullToEmptyOrFromEmptyToNull( (PersistentCollection) newObj, (Serializable) oldObj ) ) {
+				data.put( propertyData.getModifiedFlagPropertyName(), true );
+			}
+			else {
+				final List<PersistentCollectionChangeData> changes = mapCollectionChanges(
+						session,
+						commonCollectionMapperData.getCollectionReferencingPropertyData().getName(),
+						(PersistentCollection) newObj,
+						(Serializable) oldObj,
+						null
+				);
+				data.put( propertyData.getModifiedFlagPropertyName(), !changes.isEmpty() );
 			}
 		}
 	}
@@ -183,8 +227,8 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 	private boolean isFromNullToEmptyOrFromEmptyToNull(PersistentCollection newColl, Serializable oldColl) {
 		// Comparing new and old collection content.
-        Collection newCollection = getNewCollectionContent(newColl);
-        Collection oldCollection = getOldCollectionContent(oldColl);
+		final Collection newCollection = getNewCollectionContent( newColl );
+		final Collection oldCollection = getOldCollectionContent( oldColl );
 
 		return oldCollection == null && newCollection != null && newCollection.isEmpty()
 				|| newCollection == null && oldCollection != null && oldCollection.isEmpty();
@@ -192,36 +236,53 @@ public abstract class AbstractCollectionMapper<T> implements PropertyMapper {
 
 	@Override
 	public void mapModifiedFlagsToMapForCollectionChange(String collectionPropertyName, Map<String, Object> data) {
-		PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
-		if (propertyData.isUsingModifiedFlag()) {
-            data.put(propertyData.getModifiedFlagPropertyName(), propertyData.getName().equals(collectionPropertyName));
+		final PropertyData propertyData = commonCollectionMapperData.getCollectionReferencingPropertyData();
+		if ( propertyData.isUsingModifiedFlag() ) {
+			data.put(
+					propertyData.getModifiedFlagPropertyName(),
+					propertyData.getName().equals( collectionPropertyName )
+			);
 		}
 	}
 
-	protected abstract Initializor<T> getInitializor(AuditConfiguration verCfg,
-                                                     AuditReaderImplementor versionsReader, Object primaryKey,
-                                                     Number revision, boolean removed);
+	protected abstract Initializor<T> getInitializor(
+			AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Object primaryKey,
+			Number revision, boolean removed);
 
-    public void mapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-                                   AuditReaderImplementor versionsReader, Number revision) {
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), commonCollectionMapperData.getCollectionReferencingPropertyData());
-        try {
+	@Override
+	public void mapToEntityFromMap(
+			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+			AuditReaderImplementor versionsReader, Number revision) {
+		final Setter setter = ReflectionTools.getSetter(
+				obj.getClass(),
+				commonCollectionMapperData.getCollectionReferencingPropertyData()
+		);
+		try {
 			setter.set(
 					obj,
 					proxyConstructor.newInstance(
 							getInitializor(
 									verCfg, versionsReader, primaryKey, revision,
-									RevisionType.DEL.equals( data.get( verCfg.getAuditEntCfg().getRevisionTypePropName() ) )
+									RevisionType.DEL.equals(
+											data.get(
+													verCfg.getAuditEntCfg()
+															.getRevisionTypePropName()
+											)
+									)
 							)
 					),
 					null
 			);
-        } catch (InstantiationException e) {
-            throw new AuditException(e);
-        } catch (IllegalAccessException e) {
-            throw new AuditException(e);
-        } catch (InvocationTargetException e) {
-            throw new AuditException(e);
-        }
-    }
+		}
+		catch (InstantiationException e) {
+			throw new AuditException( e );
+		}
+		catch (IllegalAccessException e) {
+			throw new AuditException( e );
+		}
+		catch (InvocationTargetException e) {
+			throw new AuditException( e );
+		}
+	}
 }

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -39,85 +39,92 @@ import org.hibernate.property.Setter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class EmbeddedIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
-    private PropertyData idPropertyData;
+	private PropertyData idPropertyData;
 
-    public EmbeddedIdMapper(PropertyData idPropertyData, Class compositeIdClass) {
-        super(compositeIdClass);
+	public EmbeddedIdMapper(PropertyData idPropertyData, Class compositeIdClass) {
+		super( compositeIdClass );
 
-        this.idPropertyData = idPropertyData;
-    }
+		this.idPropertyData = idPropertyData;
+	}
 
-    public void mapToMapFromId(Map<String, Object> data, Object obj) {
-        for (IdMapper idMapper : ids.values()) {
-            idMapper.mapToMapFromEntity(data, obj);
-        }
-    }
+	@Override
+	public void mapToMapFromId(Map<String, Object> data, Object obj) {
+		for ( IdMapper idMapper : ids.values() ) {
+			idMapper.mapToMapFromEntity( data, obj );
+		}
+	}
 
-    public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
-        if (obj == null) {
-            return;
-        }
+	@Override
+	public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
+		if ( obj == null ) {
+			return;
+		}
 
-        Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyData);
-        mapToMapFromId(data, getter.get(obj));
-    }
+		final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData );
+		mapToMapFromId( data, getter.get( obj ) );
+	}
 
-    public boolean mapToEntityFromMap(Object obj, Map data) {
-        if (data == null || obj == null) {
-            return false;
-        }
+	@Override
+	public boolean mapToEntityFromMap(Object obj, Map data) {
+		if ( data == null || obj == null ) {
+			return false;
+		}
 
-        Getter getter = ReflectionTools.getGetter(obj.getClass(), idPropertyData);
-        Setter setter = ReflectionTools.getSetter(obj.getClass(), idPropertyData);
+		final Getter getter = ReflectionTools.getGetter( obj.getClass(), idPropertyData );
+		final Setter setter = ReflectionTools.getSetter( obj.getClass(), idPropertyData );
 
-        try {
-            Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
+		try {
+			final Object subObj = ReflectHelper.getDefaultConstructor( getter.getReturnType() ).newInstance();
 
-            boolean ret = true;
-            for (IdMapper idMapper : ids.values()) {
-                ret &= idMapper.mapToEntityFromMap(subObj, data);
-            }
+			boolean ret = true;
+			for ( IdMapper idMapper : ids.values() ) {
+				ret &= idMapper.mapToEntityFromMap( subObj, data );
+			}
 
-            if (ret) {
-                setter.set(obj, subObj, null);
-            }
+			if ( ret ) {
+				setter.set( obj, subObj, null );
+			}
 
-            return ret;
-        } catch (Exception e) {
-            throw new AuditException(e);
-        }
-    }
+			return ret;
+		}
+		catch (Exception e) {
+			throw new AuditException( e );
+		}
+	}
 
-    public IdMapper prefixMappedProperties(String prefix) {
-        EmbeddedIdMapper ret = new EmbeddedIdMapper(idPropertyData, compositeIdClass);
+	@Override
+	public IdMapper prefixMappedProperties(String prefix) {
+		final EmbeddedIdMapper ret = new EmbeddedIdMapper( idPropertyData, compositeIdClass );
 
-        for (PropertyData propertyData : ids.keySet()) {
-            String propertyName = propertyData.getName();
-            ret.ids.put(propertyData, new SingleIdMapper(new PropertyData(prefix + propertyName, propertyData)));
-        }
+		for ( PropertyData propertyData : ids.keySet() ) {
+			final String propertyName = propertyData.getName();
+			ret.ids.put( propertyData, new SingleIdMapper( new PropertyData( prefix + propertyName, propertyData ) ) );
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 
-    public Object mapToIdFromEntity(Object data) {
-        if (data == null) {
-            return null;
-        }
+	@Override
+	public Object mapToIdFromEntity(Object data) {
+		if ( data == null ) {
+			return null;
+		}
 
-        Getter getter = ReflectionTools.getGetter(data.getClass(), idPropertyData);
-        return getter.get(data);
-    }
+		final Getter getter = ReflectionTools.getGetter( data.getClass(), idPropertyData );
+		return getter.get( data );
+	}
 
-    public List<QueryParameterData> mapToQueryParametersFromId(Object obj) {
-        Map<String, Object> data = new LinkedHashMap<String, Object>();
-        mapToMapFromId(data, obj);
+	@Override
+	public List<QueryParameterData> mapToQueryParametersFromId(Object obj) {
+		final Map<String, Object> data = new LinkedHashMap<String, Object>();
+		mapToMapFromId( data, obj );
 
-        List<QueryParameterData> ret = new ArrayList<QueryParameterData>();
+		final List<QueryParameterData> ret = new ArrayList<QueryParameterData>();
 
-        for (Map.Entry<String, Object> propertyData : data.entrySet()) {
-            ret.add(new QueryParameterData(propertyData.getKey(), propertyData.getValue()));
-        }
+		for ( Map.Entry<String, Object> propertyData : data.entrySet() ) {
+			ret.add( new QueryParameterData( propertyData.getKey(), propertyData.getValue() ) );
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 }

@@ -1,31 +1,32 @@
 package org.hibernate.envers.test.integration.entityNames.manyToManyAudited;
+
 import java.util.List;
 
 import org.hibernate.envers.Audited;
 
 /**
  * @author Hern&aacute;n Chanfreau
- * 
  */
 
 @Audited
 public class Person {
-	
+
 	private long id;
-	
+
 	private String name;
-	
+
 	private int age;
-	
+
 	private List<Car> cars;
-	
-	public Person(){ }
-	
-	public Person(String name, int age){
+
+	public Person() {
+	}
+
+	public Person(String name, int age) {
 		this.name = name;
 		this.age = age;
 	}
-	
+
 
 	public long getId() {
 		return id;

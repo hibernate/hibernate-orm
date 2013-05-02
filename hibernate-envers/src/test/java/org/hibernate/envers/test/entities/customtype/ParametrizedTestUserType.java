@@ -40,78 +40,80 @@ import org.hibernate.usertype.UserType;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ParametrizedTestUserType implements UserType, ParameterizedType {
-    private static final int[] TYPES = new int[] { Types.VARCHAR };
+	private static final int[] TYPES = new int[] {Types.VARCHAR};
 
-    private String param1;
-    private String param2;
+	private String param1;
+	private String param2;
 
-    public void setParameterValues(Properties parameters) {
-        param1 = parameters.getProperty("param1");
-        param2 = parameters.getProperty("param2");
-    }
+	public void setParameterValues(Properties parameters) {
+		param1 = parameters.getProperty( "param1" );
+		param2 = parameters.getProperty( "param2" );
+	}
 
-    public Class returnedClass() {
-        return String.class;
-    }
+	public Class returnedClass() {
+		return String.class;
+	}
 
-    public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
-        return StringType.INSTANCE.nullSafeGet( rs, names[0], session );
-    }
+	public Object nullSafeGet(ResultSet rs, String[] names, SessionImplementor session, Object owner)
+			throws HibernateException, SQLException {
+		return StringType.INSTANCE.nullSafeGet( rs, names[0], session );
+	}
 
-    public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
-        if (value != null) {
-            String v = (String) value;
-            if (!v.startsWith(param1)) {
-                v = param1 + v;
-            }
-            if (!v.endsWith(param2)) {
-                v = v + param2;
-            }
-            StringType.INSTANCE.nullSafeSet(st, v, index, session);
-        }
+	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
+			throws HibernateException, SQLException {
+		if ( value != null ) {
+			String v = (String) value;
+			if ( !v.startsWith( param1 ) ) {
+				v = param1 + v;
+			}
+			if ( !v.endsWith( param2 ) ) {
+				v = v + param2;
+			}
+			StringType.INSTANCE.nullSafeSet( st, v, index, session );
+		}
 		else {
-            StringType.INSTANCE.nullSafeSet( st, null, index, session );
-        }
-    }
+			StringType.INSTANCE.nullSafeSet( st, null, index, session );
+		}
+	}
 
-    public int[] sqlTypes() {
-        return TYPES;
-    }
+	public int[] sqlTypes() {
+		return TYPES;
+	}
 
-    public Object assemble(Serializable cached, Object owner) throws HibernateException {
-        return cached;
-    }
+	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+		return cached;
+	}
 
-    public Object deepCopy(Object value) throws HibernateException {
-        return value;
-    }
+	public Object deepCopy(Object value) throws HibernateException {
+		return value;
+	}
 
-    public Serializable disassemble(Object value) throws HibernateException {
-        return (Serializable) value;
-    }
+	public Serializable disassemble(Object value) throws HibernateException {
+		return (Serializable) value;
+	}
 
-    public boolean equals(Object x, Object y) throws HibernateException {
-        //noinspection ObjectEquality
-        if (x == y) {
-            return true;
-        }
+	public boolean equals(Object x, Object y) throws HibernateException {
+		//noinspection ObjectEquality
+		if ( x == y ) {
+			return true;
+		}
 
-        if (x == null || y == null) {
-            return false;
-        }
+		if ( x == null || y == null ) {
+			return false;
+		}
 
-        return x.equals(y);
-    }
+		return x.equals( y );
+	}
 
-    public int hashCode(Object x) throws HibernateException {
-        return x.hashCode();
-    }
+	public int hashCode(Object x) throws HibernateException {
+		return x.hashCode();
+	}
 
-    public boolean isMutable() {
-        return false;
-    }
+	public boolean isMutable() {
+		return false;
+	}
 
-    public Object replace(Object original, Object target, Object owner) throws HibernateException {
-        return original;
-    }
+	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+		return original;
+	}
 }

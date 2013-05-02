@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
+
 import java.util.List;
 
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
@@ -31,42 +32,45 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
  * Initializes a persistent collection.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractCollectionInitializor<T> implements Initializor<T> {
-    private final AuditReaderImplementor versionsReader;
-    private final RelationQueryGenerator queryGenerator;
-    private final Object primaryKey;
-    protected final Number revision;
+	private final AuditReaderImplementor versionsReader;
+	private final RelationQueryGenerator queryGenerator;
+	private final Object primaryKey;
+	protected final Number revision;
 	protected final boolean removed;
-    protected final EntityInstantiator entityInstantiator;
+	protected final EntityInstantiator entityInstantiator;
 
-    public AbstractCollectionInitializor(AuditConfiguration verCfg,
-                                         AuditReaderImplementor versionsReader,
-                                         RelationQueryGenerator queryGenerator,
-                                         Object primaryKey, Number revision, boolean removed) {
-        this.versionsReader = versionsReader;
-        this.queryGenerator = queryGenerator;
-        this.primaryKey = primaryKey;
-        this.revision = revision;
+	public AbstractCollectionInitializor(
+			AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader,
+			RelationQueryGenerator queryGenerator,
+			Object primaryKey, Number revision, boolean removed) {
+		this.versionsReader = versionsReader;
+		this.queryGenerator = queryGenerator;
+		this.primaryKey = primaryKey;
+		this.revision = revision;
 		this.removed = removed;
 
-        entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
-    }
+		entityInstantiator = new EntityInstantiator( verCfg, versionsReader );
+	}
 
-    protected abstract T initializeCollection(int size);
+	protected abstract T initializeCollection(int size);
 
-    protected abstract void addToCollection(T collection, Object collectionRow);
+	protected abstract void addToCollection(T collection, Object collectionRow);
 
-    public T initialize() {
-        List<?> collectionContent = queryGenerator.getQuery(versionsReader, primaryKey, revision, removed).list();
+	@Override
+	public T initialize() {
+		final List<?> collectionContent = queryGenerator.getQuery( versionsReader, primaryKey, revision, removed ).list();
 
-        T collection = initializeCollection(collectionContent.size());
+		final T collection = initializeCollection( collectionContent.size() );
 
-        for (Object collectionRow : collectionContent) {
-            addToCollection(collection, collectionRow);
-        }
+		for ( Object collectionRow : collectionContent ) {
+			addToCollection( collection, collectionRow );
+		}
 
-        return collection;
-    }
+		return collection;
+	}
 }

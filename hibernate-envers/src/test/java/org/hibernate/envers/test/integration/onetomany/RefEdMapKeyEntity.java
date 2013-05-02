@@ -22,13 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetomany;
-import java.util.HashMap;
-import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKey;
 import javax.persistence.OneToMany;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.envers.Audited;
 
@@ -37,51 +38,57 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class RefEdMapKeyEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Audited
-    @OneToMany(mappedBy="reference")
-    @MapKey(name = "data")
-    private Map<String, RefIngMapKeyEntity> idmap;
+	@Audited
+	@OneToMany(mappedBy = "reference")
+	@MapKey(name = "data")
+	private Map<String, RefIngMapKeyEntity> idmap;
 
-    public RefEdMapKeyEntity() {
-        idmap = new HashMap<String, RefIngMapKeyEntity>();
-    }
+	public RefEdMapKeyEntity() {
+		idmap = new HashMap<String, RefIngMapKeyEntity>();
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Map<String, RefIngMapKeyEntity> getIdmap() {
-        return idmap;
-    }
+	public Map<String, RefIngMapKeyEntity> getIdmap() {
+		return idmap;
+	}
 
-    public void setIdmap(Map<String, RefIngMapKeyEntity> idmap) {
-        this.idmap = idmap;
-    }
+	public void setIdmap(Map<String, RefIngMapKeyEntity> idmap) {
+		this.idmap = idmap;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof RefEdMapKeyEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof RefEdMapKeyEntity) ) {
+			return false;
+		}
 
-        RefEdMapKeyEntity that = (RefEdMapKeyEntity) o;
+		RefEdMapKeyEntity that = (RefEdMapKeyEntity) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        return (id != null ? id.hashCode() : 0);
-    }
+	public int hashCode() {
+		return (id != null ? id.hashCode() : 0);
+	}
 
-    public String toString() {
-        return "RedMKE(id = " + id + ", idmap = " + idmap + ")";
-    }
+	public String toString() {
+		return "RedMKE(id = " + id + ", idmap = " + idmap + ")";
+	}
 }

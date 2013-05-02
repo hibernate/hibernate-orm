@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,76 +22,86 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities;
+
 import org.hibernate.envers.ModificationStore;
+import org.hibernate.internal.util.compare.EqualsHelper;
 
 /**
  * Holds information on a property that is audited.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class PropertyData {
-    private final String name;
+	private final String name;
 	/**
 	 * Name of the property in the bean.
 	 */
 	private final String beanName;
-    private final String accessType;
-    private final ModificationStore store;
+	private final String accessType;
+	private final ModificationStore store;
 	private boolean usingModifiedFlag;
 	private String modifiedFlagName;
 
-    /**
-     * Copies the given property data, except the name.
-     * @param newName New name.
-     * @param propertyData Property data to copy the rest of properties from.
-     */
-    public PropertyData(String newName, PropertyData propertyData) {
-        this.name = newName;
+	/**
+	 * Copies the given property data, except the name.
+	 *
+	 * @param newName New name.
+	 * @param propertyData Property data to copy the rest of properties from.
+	 */
+	public PropertyData(String newName, PropertyData propertyData) {
+		this.name = newName;
 		this.beanName = propertyData.beanName;
-        this.accessType = propertyData.accessType;
-        this.store = propertyData.store;
-    }
-
-    /**
-     * @param name Name of the property.
-	 * @param beanName Name of the property in the bean.
-     * @param accessType Accessor type for this property.
-     * @param store How this property should be stored.
-     */
-    public PropertyData(String name, String beanName, String accessType, ModificationStore store) {
-        this.name = name;
-		this.beanName = beanName;
-        this.accessType = accessType;
-        this.store = store;
-    }
+		this.accessType = propertyData.accessType;
+		this.store = propertyData.store;
+	}
 
 	/**
-     * @param name Name of the property.
+	 * @param name Name of the property.
 	 * @param beanName Name of the property in the bean.
-     * @param accessType Accessor type for this property.
-     * @param store How this property should be stored.
-     * @param usingModifiedFlag Defines if field changes should be tracked
-     */
-	public PropertyData(String name, String beanName, String accessType, ModificationStore store, boolean usingModifiedFlag, String modifiedFlagName) {
-		this(name, beanName, accessType, store);
+	 * @param accessType Accessor type for this property.
+	 * @param store How this property should be stored.
+	 */
+	public PropertyData(String name, String beanName, String accessType, ModificationStore store) {
+		this.name = name;
+		this.beanName = beanName;
+		this.accessType = accessType;
+		this.store = store;
+	}
+
+	/**
+	 * @param name Name of the property.
+	 * @param beanName Name of the property in the bean.
+	 * @param accessType Accessor type for this property.
+	 * @param store How this property should be stored.
+	 * @param usingModifiedFlag Defines if field changes should be tracked
+	 */
+	public PropertyData(
+			String name,
+			String beanName,
+			String accessType,
+			ModificationStore store,
+			boolean usingModifiedFlag,
+			String modifiedFlagName) {
+		this( name, beanName, accessType, store );
 		this.usingModifiedFlag = usingModifiedFlag;
 		this.modifiedFlagName = modifiedFlagName;
 	}
 
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 
 	public String getBeanName() {
 		return beanName;
 	}
 
 	public String getAccessType() {
-        return accessType;
-    }
+		return accessType;
+	}
 
-    public ModificationStore getStore() {
-        return store;
-    }
+	public ModificationStore getStore() {
+		return store;
+	}
 
 	public boolean isUsingModifiedFlag() {
 		return usingModifiedFlag;
@@ -103,18 +113,19 @@ public class PropertyData {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
-		PropertyData that = (PropertyData) o;
-
-		if (accessType != null ? !accessType.equals(that.accessType) : that.accessType != null) return false;
-		if (beanName != null ? !beanName.equals(that.beanName) : that.beanName != null) return false;
-		if (name != null ? !name.equals(that.name) : that.name != null) return false;
-		if (store != that.store) return false;
-		if (usingModifiedFlag != that.usingModifiedFlag) return false;
-
-		return true;
+		final PropertyData that = (PropertyData) o;
+		return usingModifiedFlag == that.usingModifiedFlag
+				&& store == that.store
+				&& EqualsHelper.equals( accessType, that.accessType )
+				&& EqualsHelper.equals( beanName, that.beanName )
+				&& EqualsHelper.equals( name, that.name );
 	}
 
 	@Override

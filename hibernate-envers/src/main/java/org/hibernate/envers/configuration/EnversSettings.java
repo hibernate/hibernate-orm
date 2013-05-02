@@ -1,6 +1,27 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.envers.configuration;
-
-import org.hibernate.envers.strategy.DefaultAuditStrategy;
 
 /**
  * Configuration property names.
@@ -69,7 +90,7 @@ public interface EnversSettings {
 	public static final String AUDIT_TABLE_SUFFIX = "org.hibernate.envers.audit_table_suffix";
 
 	/**
-	 * Audit strategy. Defaults to {@link DefaultAuditStrategy}.
+	 * Audit strategy. Defaults to {@link org.hibernate.envers.strategy.DefaultAuditStrategy}.
 	 */
 	public static final String AUDIT_STRATEGY = "org.hibernate.envers.audit_strategy";
 
@@ -99,7 +120,7 @@ public interface EnversSettings {
 	 * Defaults to {@literal REVEND_TSTMP}.
 	 */
 	public static final String AUDIT_STRATEGY_VALIDITY_REVEND_TIMESTAMP_FIELD_NAME = "org.hibernate.envers.audit_strategy_validity_revend_timestamp_field_name";
-	
+
 	/**
 	 * Name of column used for storing ordinal of the change in sets of embeddable elements. Defaults to {@literal SETORDINAL}.
 	 */

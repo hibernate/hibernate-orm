@@ -30,9 +30,10 @@ import org.hibernate.envers.tools.Pair;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface AuditOrder {
-    /**
-     * @param auditCfg Configuration.
-     * @return A pair: (property name, ascending?).
-     */
-    Pair<String, Boolean> getData(AuditConfiguration auditCfg);
+	/**
+	 * @param auditCfg Configuration.
+	 *
+	 * @return A pair: (property name, ascending?).
+	 */
+	Pair<String, Boolean> getData(AuditConfiguration auditCfg);
 }

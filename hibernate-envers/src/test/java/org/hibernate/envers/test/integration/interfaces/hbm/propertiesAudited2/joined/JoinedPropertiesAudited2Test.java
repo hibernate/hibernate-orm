@@ -8,6 +8,6 @@ import org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2.A
 public class JoinedPropertiesAudited2Test extends AbstractPropertiesAudited2Test {
 	@Override
 	protected String[] getMappings() {
-		return new String[] { "mappings/interfaces/joinedPropertiesAudited2Mappings.hbm.xml" };
+		return new String[] {"mappings/interfaces/joinedPropertiesAudited2Mappings.hbm.xml"};
 	}
 }

@@ -1,31 +1,32 @@
 package org.hibernate.envers.test.integration.entityNames.singleAssociatedAudited;
+
 import org.hibernate.envers.Audited;
 
 /**
  * @author Hern&aacute;n Chanfreau
- * 
  */
 
 @Audited
 public class Car {
-	
+
 	private long id;
-	
+
 	private int number;
-	
+
 	private Person owner;
 
-    private Person driver;
-	
-	public Car() { }
+	private Person driver;
+
+	public Car() {
+	}
 
 	public Car(int number, Person owner, Person driver) {
 		this.number = number;
 		this.owner = owner;
-        this.driver = driver;
+		this.driver = driver;
 	}
 
-	
+
 	public long getId() {
 		return id;
 	}
@@ -40,7 +41,7 @@ public class Car {
 
 	public void setOwner(Person owner) {
 		this.owner = owner;
-	}	
+	}
 
 	public int getNumber() {
 		return number;
@@ -50,11 +51,11 @@ public class Car {
 		this.number = number;
 	}
 
-    public Person getDriver() {
-        return driver;
-    }
+	public Person getDriver() {
+		return driver;
+	}
 
-    public void setDriver(Person driver) {
-        this.driver = driver;
-    }
+	public void setDriver(Person driver) {
+		this.driver = driver;
+	}
 }

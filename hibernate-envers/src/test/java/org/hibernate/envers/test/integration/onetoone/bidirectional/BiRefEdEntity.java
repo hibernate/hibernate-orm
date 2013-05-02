@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.onetoone.bidirectional;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
@@ -33,70 +34,78 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class BiRefEdEntity {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Audited
-    private String data;
+	@Audited
+	private String data;
 
-    @Audited
-    @OneToOne(mappedBy="reference")
-    private BiRefIngEntity referencing;
+	@Audited
+	@OneToOne(mappedBy = "reference")
+	private BiRefIngEntity referencing;
 
-    public BiRefEdEntity() {
-    }
+	public BiRefEdEntity() {
+	}
 
-    public BiRefEdEntity(Integer id, String data) {
-        this.id = id;
-        this.data = data;
-    }
+	public BiRefEdEntity(Integer id, String data) {
+		this.id = id;
+		this.data = data;
+	}
 
-    public BiRefEdEntity(Integer id, String data, BiRefIngEntity referencing) {
-        this.id = id;
-        this.data = data;
-        this.referencing = referencing;
-    }
+	public BiRefEdEntity(Integer id, String data, BiRefIngEntity referencing) {
+		this.id = id;
+		this.data = data;
+		this.referencing = referencing;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getData() {
-        return data;
-    }
+	public String getData() {
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
-    public BiRefIngEntity getReferencing() {
-        return referencing;
-    }
+	public BiRefIngEntity getReferencing() {
+		return referencing;
+	}
 
-    public void setReferencing(BiRefIngEntity referencing) {
-        this.referencing = referencing;
-    }
+	public void setReferencing(BiRefIngEntity referencing) {
+		this.referencing = referencing;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BiRefEdEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof BiRefEdEntity) ) {
+			return false;
+		}
 
-        BiRefEdEntity that = (BiRefEdEntity) o;
+		BiRefEdEntity that = (BiRefEdEntity) o;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (data != null ? data.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
+		return result;
+	}
 }

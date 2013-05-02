@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.accesstype;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -35,76 +36,84 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class MixedAccessTypeEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @AccessType("property")
-    private String data;
+	@AccessType("property")
+	private String data;
 
-    @Transient
-    private boolean dataSet;
+	@Transient
+	private boolean dataSet;
 
-    public MixedAccessTypeEntity() {
-    }
+	public MixedAccessTypeEntity() {
+	}
 
-    public MixedAccessTypeEntity(String data) {
-        this.data = data;
-    }
+	public MixedAccessTypeEntity(String data) {
+		this.data = data;
+	}
 
-    public MixedAccessTypeEntity(Integer id, String data) {
-        this.id = id;
-        this.data = data;
-    }
+	public MixedAccessTypeEntity(Integer id, String data) {
+		this.id = id;
+		this.data = data;
+	}
 
-    public Integer getId() {
-        throw new RuntimeException();
-    }
+	public Integer getId() {
+		throw new RuntimeException();
+	}
 
-    public void setId(Integer id) {
-        throw new RuntimeException();
-    }
+	public void setId(Integer id) {
+		throw new RuntimeException();
+	}
 
-    // TODO: this should be on the property. But how to discover in AnnotationsMetadataReader that the
-    // we should read annotations from fields, even though the access type is "property"?
-    @Audited
-    public String getData() {
-        return data;
-    }
+	// TODO: this should be on the property. But how to discover in AnnotationsMetadataReader that the
+	// we should read annotations from fields, even though the access type is "property"?
+	@Audited
+	public String getData() {
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-        dataSet = true;
-    }
+	public void setData(String data) {
+		this.data = data;
+		dataSet = true;
+	}
 
-    public boolean isDataSet() {
-        return dataSet;
-    }
+	public boolean isDataSet() {
+		return dataSet;
+	}
 
-    public Integer readId() {
-        return id;
-    }
+	public Integer readId() {
+		return id;
+	}
 
-    public void writeData(String data) {
-        this.data = data;
-    }
+	public void writeData(String data) {
+		this.data = data;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MixedAccessTypeEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof MixedAccessTypeEntity) ) {
+			return false;
+		}
 
-        MixedAccessTypeEntity that = (MixedAccessTypeEntity) o;
+		MixedAccessTypeEntity that = (MixedAccessTypeEntity) o;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (data != null ? data.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
+		return result;
+	}
 }

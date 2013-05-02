@@ -3,7 +3,6 @@ package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited2;
 
 /**
  * @author Hern�n Chanfreau
- *
  */
 public class NonAuditedImplementor implements SimpleInterface {
 	private long id;
@@ -37,7 +36,7 @@ public class NonAuditedImplementor implements SimpleInterface {
 	public void setNonAuditedImplementorData(String implementorData) {
 		this.nonAuditedImplementorData = implementorData;
 	}
-	
+
 	public int getNumerito() {
 		return numerito;
 	}

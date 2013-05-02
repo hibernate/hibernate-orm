@@ -1,13 +1,14 @@
 package org.hibernate.envers.test.integration.basic;
 
-import java.util.List;
 import javax.persistence.EntityManager;
+import java.util.List;
+
+import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
+import org.hibernate.envers.test.entities.IntTestEntity;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.entities.IntTestEntity;
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -35,12 +36,19 @@ public class TransactionRollbackBehaviour extends BaseEnversJPAFunctionalTestCas
 		List<Number> revisionsForSavedClass = getAuditReader().getRevisions( IntTestEntity.class, ite2Id );
 		Assert.assertEquals( "There should be one revision for inserted entity.", 1, revisionsForSavedClass.size() );
 
-		List<Number> revisionsForRolledbackClass = getAuditReader().getRevisions( IntTestEntity.class, rollbackedIteId );
-		Assert.assertEquals( "There should be no revision for rolled back transaction.", 0, revisionsForRolledbackClass.size() );
+		List<Number> revisionsForRolledbackClass = getAuditReader().getRevisions(
+				IntTestEntity.class,
+				rollbackedIteId
+		);
+		Assert.assertEquals(
+				"There should be no revision for rolled back transaction.",
+				0,
+				revisionsForRolledbackClass.size()
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-8189" )
+	@TestForIssue(jiraKey = "HHH-8189")
 	public void testFlushedAuditRecordsRollback() {
 		// Given
 		EntityManager em = getEntityManager();
@@ -63,12 +71,19 @@ public class TransactionRollbackBehaviour extends BaseEnversJPAFunctionalTestCas
 		List<Number> revisionsForSavedClass = getAuditReader().getRevisions( IntTestEntity.class, ite2Id );
 		Assert.assertEquals( "There should be one revision for inserted entity.", 1, revisionsForSavedClass.size() );
 
-		List<Number> revisionsForRolledbackClass = getAuditReader().getRevisions( IntTestEntity.class, rollbackedIteId );
-		Assert.assertEquals( "There should be no revision for rolled back transaction.", 0, revisionsForRolledbackClass.size() );
+		List<Number> revisionsForRolledbackClass = getAuditReader().getRevisions(
+				IntTestEntity.class,
+				rollbackedIteId
+		);
+		Assert.assertEquals(
+				"There should be no revision for rolled back transaction.",
+				0,
+				revisionsForRolledbackClass.size()
+		);
 	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { IntTestEntity.class };
+		return new Class<?>[] {IntTestEntity.class};
 	}
 }

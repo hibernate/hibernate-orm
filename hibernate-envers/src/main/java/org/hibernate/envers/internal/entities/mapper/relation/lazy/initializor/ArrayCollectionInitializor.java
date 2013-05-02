@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor;
+
 import java.util.List;
 import java.util.Map;
 
@@ -32,39 +33,47 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 
 /**
  * Initializes a map.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class ArrayCollectionInitializor extends AbstractCollectionInitializor<Object[]> {
-    private final MiddleComponentData elementComponentData;
-    private final MiddleComponentData indexComponentData;
+	private final MiddleComponentData elementComponentData;
+	private final MiddleComponentData indexComponentData;
 
-    public ArrayCollectionInitializor(AuditConfiguration verCfg,
-                                    AuditReaderImplementor versionsReader,
-                                    RelationQueryGenerator queryGenerator,
-                                    Object primaryKey, Number revision, boolean removed,
-                                    MiddleComponentData elementComponentData,
-                                    MiddleComponentData indexComponentData) {
-        super(verCfg, versionsReader, queryGenerator, primaryKey, revision, removed);
+	public ArrayCollectionInitializor(
+			AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader,
+			RelationQueryGenerator queryGenerator,
+			Object primaryKey, Number revision, boolean removed,
+			MiddleComponentData elementComponentData,
+			MiddleComponentData indexComponentData) {
+		super( verCfg, versionsReader, queryGenerator, primaryKey, revision, removed );
 
-        this.elementComponentData = elementComponentData;
-        this.indexComponentData = indexComponentData;
-    }
+		this.elementComponentData = elementComponentData;
+		this.indexComponentData = indexComponentData;
+	}
 
-    protected Object[] initializeCollection(int size) {
-        return new Object[size];
-    }
+	@Override
+	protected Object[] initializeCollection(int size) {
+		return new Object[size];
+	}
 
-    @SuppressWarnings({"unchecked"})
-    protected void addToCollection(Object[] collection, Object collectionRow) {
-        Object elementData = ((List) collectionRow).get(elementComponentData.getComponentIndex());
-        Object element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
-                (Map<String, Object>) elementData, null, revision);
+	@Override
+	@SuppressWarnings({"unchecked"})
+	protected void addToCollection(Object[] collection, Object collectionRow) {
+		final Object elementData = ((List) collectionRow).get( elementComponentData.getComponentIndex() );
+		final Object element = elementComponentData.getComponentMapper().mapToObjectFromFullMap(
+				entityInstantiator,
+				(Map<String, Object>) elementData, null, revision
+		);
 
-        Object indexData = ((List) collectionRow).get(indexComponentData.getComponentIndex());
-        Object indexObj = indexComponentData.getComponentMapper().mapToObjectFromFullMap(entityInstantiator,
-                (Map<String, Object>) indexData, element, revision);
-        int index = ((Number) indexObj).intValue();
+		final Object indexData = ((List) collectionRow).get( indexComponentData.getComponentIndex() );
+		final Object indexObj = indexComponentData.getComponentMapper().mapToObjectFromFullMap(
+				entityInstantiator,
+				(Map<String, Object>) indexData, element, revision
+		);
+		final int index = ((Number) indexObj).intValue();
 
-        collection[index] = element;
-    }
+		collection[index] = element;
+	}
 }

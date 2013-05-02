@@ -1,4 +1,5 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
+
 import org.hibernate.envers.Audited;
 
 @Audited

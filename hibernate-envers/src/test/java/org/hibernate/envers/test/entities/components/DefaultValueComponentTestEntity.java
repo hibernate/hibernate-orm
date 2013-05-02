@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
@@ -46,7 +47,7 @@ public class DefaultValueComponentTestEntity {
 
 	@Embedded
 	@Audited
-	@AttributeOverrides( { @AttributeOverride(name = "comp2.str1", column = @Column(name = "COMP2_STR1")) })
+	@AttributeOverrides({@AttributeOverride(name = "comp2.str1", column = @Column(name = "COMP2_STR1"))})
 	private DefaultValueComponent1 comp1 = null;
 
 	public DefaultValueComponentTestEntity() {
@@ -55,15 +56,16 @@ public class DefaultValueComponentTestEntity {
 	public static DefaultValueComponentTestEntity of(
 			DefaultValueComponent1 comp1) {
 		DefaultValueComponentTestEntity instance = new DefaultValueComponentTestEntity();
-		instance.setComp1(comp1);
+		instance.setComp1( comp1 );
 		return instance;
 	}
 
-	public static DefaultValueComponentTestEntity of(Integer id,
+	public static DefaultValueComponentTestEntity of(
+			Integer id,
 			DefaultValueComponent1 comp1) {
 		DefaultValueComponentTestEntity instance = new DefaultValueComponentTestEntity();
-		instance.setId(id);
-		instance.setComp1(comp1);
+		instance.setId( id );
+		instance.setComp1( comp1 );
 		return instance;
 	}
 
@@ -84,17 +86,21 @@ public class DefaultValueComponentTestEntity {
 	}
 
 	public boolean equals(Object o) {
-		if (this == o)
+		if ( this == o ) {
 			return true;
-		if (!(o instanceof DefaultValueComponentTestEntity))
+		}
+		if ( !(o instanceof DefaultValueComponentTestEntity) ) {
 			return false;
+		}
 
 		DefaultValueComponentTestEntity that = (DefaultValueComponentTestEntity) o;
 
-		if (comp1 != null ? !comp1.equals(that.comp1) : that.comp1 != null)
+		if ( comp1 != null ? !comp1.equals( that.comp1 ) : that.comp1 != null ) {
 			return false;
-		if (id != null ? !id.equals(that.id) : that.id != null)
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
 			return false;
+		}
 
 		return true;
 	}

@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.collection;
-import java.util.ArrayList;
-import java.util.List;
+
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.IndexColumn;
 import org.hibernate.envers.Audited;
@@ -37,51 +38,57 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class StringListEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Audited
-    @ElementCollection
-    @IndexColumn(name = "list_index")
-    private List<String> strings;
+	@Audited
+	@ElementCollection
+	@IndexColumn(name = "list_index")
+	private List<String> strings;
 
-    public StringListEntity() {
-        strings = new ArrayList<String>();
-    }
+	public StringListEntity() {
+		strings = new ArrayList<String>();
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public List<String> getStrings() {
-        return strings;
-    }
+	public List<String> getStrings() {
+		return strings;
+	}
 
-    public void setStrings(List<String> strings) {
-        this.strings = strings;
-    }
+	public void setStrings(List<String> strings) {
+		this.strings = strings;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof StringListEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof StringListEntity) ) {
+			return false;
+		}
 
-        StringListEntity that = (StringListEntity) o;
+		StringListEntity that = (StringListEntity) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        return (id != null ? id.hashCode() : 0);
-    }
+	public int hashCode() {
+		return (id != null ? id.hashCode() : 0);
+	}
 
-    public String toString() {
-        return "SLE(id = " + id + ", strings = " + strings + ")";
-    }
+	public String toString() {
+		return "SLE(id = " + id + ", strings = " + strings + ")";
+	}
 }

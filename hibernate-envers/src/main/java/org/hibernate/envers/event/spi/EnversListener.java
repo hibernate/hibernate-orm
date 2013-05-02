@@ -31,5 +31,10 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
  * @author Steve Ebersole
  */
 public interface EnversListener {
+	/**
+	 * Get the Envers AuditConfiguration
+	 *
+	 * @return The Envers AuditConfiguration
+	 */
 	public AuditConfiguration getAuditConfiguration();
 }

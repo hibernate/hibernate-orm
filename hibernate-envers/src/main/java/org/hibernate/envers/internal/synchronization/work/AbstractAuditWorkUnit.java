@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -41,67 +41,73 @@ import org.hibernate.envers.strategy.AuditStrategy;
  */
 public abstract class AbstractAuditWorkUnit implements AuditWorkUnit {
 	protected final SessionImplementor sessionImplementor;
-    protected final AuditConfiguration verCfg;
-    protected final Serializable id;
-    protected final String entityName;
-    protected final AuditStrategy auditStrategy;
-    protected final RevisionType revisionType;
+	protected final AuditConfiguration verCfg;
+	protected final Serializable id;
+	protected final String entityName;
+	protected final AuditStrategy auditStrategy;
+	protected final RevisionType revisionType;
 
-    private Object performedData;
+	private Object performedData;
 
-    protected AbstractAuditWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-									Serializable id, RevisionType revisionType) {
+	protected AbstractAuditWorkUnit(
+			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+			Serializable id, RevisionType revisionType) {
 		this.sessionImplementor = sessionImplementor;
-        this.verCfg = verCfg;
-        this.id = id;
-        this.entityName = entityName;
-        this.revisionType = revisionType;
-        this.auditStrategy = verCfg.getAuditStrategy();
-    }
+		this.verCfg = verCfg;
+		this.id = id;
+		this.entityName = entityName;
+		this.revisionType = revisionType;
+		this.auditStrategy = verCfg.getAuditStrategy();
+	}
 
-    protected void fillDataWithId(Map<String, Object> data, Object revision) {
-        AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
+	protected void fillDataWithId(Map<String, Object> data, Object revision) {
+		final AuditEntitiesConfiguration entitiesCfg = verCfg.getAuditEntCfg();
 
-        Map<String, Object> originalId = new HashMap<String, Object>();
-        originalId.put(entitiesCfg.getRevisionFieldName(), revision);
+		final Map<String, Object> originalId = new HashMap<String, Object>();
+		originalId.put( entitiesCfg.getRevisionFieldName(), revision );
 
-        verCfg.getEntCfg().get(getEntityName()).getIdMapper().mapToMapFromId(originalId, id);
-        data.put(entitiesCfg.getRevisionTypePropName(), revisionType);
-        data.put(entitiesCfg.getOriginalIdPropName(), originalId);
-    }
+		verCfg.getEntCfg().get( getEntityName() ).getIdMapper().mapToMapFromId( originalId, id );
+		data.put( entitiesCfg.getRevisionTypePropName(), revisionType );
+		data.put( entitiesCfg.getOriginalIdPropName(), originalId );
+	}
 
-    public void perform(Session session, Object revisionData) {
-        Map<String, Object> data = generateData(revisionData);
+	@Override
+	public void perform(Session session, Object revisionData) {
+		final Map<String, Object> data = generateData( revisionData );
 
-        auditStrategy.perform(session, getEntityName(), verCfg, id, data, revisionData);
+		auditStrategy.perform( session, getEntityName(), verCfg, id, data, revisionData );
 
-        setPerformed(data);
-    }
+		setPerformed( data );
+	}
 
-    public Serializable getEntityId() {
-        return id;
-    }
+	@Override
+	public Serializable getEntityId() {
+		return id;
+	}
 
-    public boolean isPerformed() {
-        return performedData != null;
-    }
+	@Override
+	public boolean isPerformed() {
+		return performedData != null;
+	}
 
-    public String getEntityName() {
-        return entityName;
-    }
+	@Override
+	public String getEntityName() {
+		return entityName;
+	}
 
-    protected void setPerformed(Object performedData) {
-        this.performedData = performedData;
-    }
+	protected void setPerformed(Object performedData) {
+		this.performedData = performedData;
+	}
 
-    public void undo(Session session) {
-        if (isPerformed()) {
-            session.delete(verCfg.getAuditEntCfg().getAuditEntityName(getEntityName()), performedData);
-            session.flush();
-        }
-    }
+	public void undo(Session session) {
+		if ( isPerformed() ) {
+			session.delete( verCfg.getAuditEntCfg().getAuditEntityName( getEntityName() ), performedData );
+			session.flush();
+		}
+	}
 
-    public RevisionType getRevisionType() {
-        return revisionType;
-    }
+	@Override
+	public RevisionType getRevisionType() {
+		return revisionType;
+	}
 }

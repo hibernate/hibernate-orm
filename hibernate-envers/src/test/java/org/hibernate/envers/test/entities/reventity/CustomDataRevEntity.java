@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.reventity;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -37,40 +38,41 @@ import org.hibernate.envers.RevisionTimestamp;
  */
 @Entity
 @GenericGenerator(name = "EnversTestingRevisionGenerator",
-                  strategy = "org.hibernate.id.enhanced.TableGenerator",
-                  parameters = {@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
-                                @Parameter(name = "initial_value", value = "1"),
-                                @Parameter(name = "increment_size", value = "1"),
-                                @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
-                  }
+				  strategy = "org.hibernate.id.enhanced.TableGenerator",
+				  parameters = {
+						  @Parameter(name = "table_name", value = "REVISION_GENERATOR"),
+						  @Parameter(name = "initial_value", value = "1"),
+						  @Parameter(name = "increment_size", value = "1"),
+						  @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
+				  }
 )
 @RevisionEntity
 public class CustomDataRevEntity {
-    @Id
-    @GeneratedValue(generator = "EnversTestingRevisionGenerator")
-    @RevisionNumber
-    private int customId;
+	@Id
+	@GeneratedValue(generator = "EnversTestingRevisionGenerator")
+	@RevisionNumber
+	private int customId;
 
-    @RevisionTimestamp
-    private long customTimestamp;
+	@RevisionTimestamp
+	private long customTimestamp;
 
 	private String data;
 
-    public int getCustomId() {
-        return customId;
-    }
+	public int getCustomId() {
+		return customId;
+	}
 
-    public void setCustomId(int customId) {
-        this.customId = customId;
-    }
+	public void setCustomId(int customId) {
+		this.customId = customId;
+	}
 
-    public long getCustomTimestamp() {
-        return customTimestamp;
-    }
+	public long getCustomTimestamp() {
+		return customTimestamp;
+	}
 
-    public void setCustomTimestamp(long customTimestamp) {
-        this.customTimestamp = customTimestamp;
-    }
+	public void setCustomTimestamp(long customTimestamp) {
+		this.customTimestamp = customTimestamp;
+	}
 
 	public String getData() {
 		return data;
@@ -82,14 +84,24 @@ public class CustomDataRevEntity {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof CustomDataRevEntity)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof CustomDataRevEntity) ) {
+			return false;
+		}
 
 		CustomDataRevEntity that = (CustomDataRevEntity) o;
 
-		if (customId != that.customId) return false;
-		if (customTimestamp != that.customTimestamp) return false;
-		if (data != null ? !data.equals(that.data) : that.data != null) return false;
+		if ( customId != that.customId ) {
+			return false;
+		}
+		if ( customTimestamp != that.customTimestamp ) {
+			return false;
+		}
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
 
 		return true;
 	}

@@ -12,9 +12,11 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.TestForIssue;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -22,13 +24,14 @@ import org.junit.Test;
 public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { StrTestEntity.class };
+		return new Class<?>[] {StrTestEntity.class};
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-7478" )
+	@TestForIssue(jiraKey = "HHH-7478")
 	public void testTransactionProcessSynchronization() {
-		final EventListenerRegistry registry = sessionFactory().getServiceRegistry().getService( EventListenerRegistry.class );
+		final EventListenerRegistry registry = sessionFactory().getServiceRegistry()
+				.getService( EventListenerRegistry.class );
 		final CountingPostInsertTransactionBoundaryListener listener = new CountingPostInsertTransactionBoundaryListener();
 
 		registry.getEventListenerGroup( EventType.POST_INSERT ).appendListener( listener );
@@ -52,18 +55,22 @@ public class RegisterUserEventListenersTest extends BaseEnversFunctionalTestCase
 
 		@Override
 		public void onPostInsert(PostInsertEvent event) {
-			event.getSession().getActionQueue().registerProcess(new BeforeTransactionCompletionProcess() {
-				@Override
-				public void doBeforeTransactionCompletion(SessionImplementor session) {
-					beforeCounter.increase();
-				}
-			});
-			event.getSession().getActionQueue().registerProcess(new AfterTransactionCompletionProcess() {
-				@Override
-				public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-					afterCounter.increase();
-				}
-			});
+			event.getSession().getActionQueue().registerProcess(
+					new BeforeTransactionCompletionProcess() {
+						@Override
+						public void doBeforeTransactionCompletion(SessionImplementor session) {
+							beforeCounter.increase();
+						}
+					}
+			);
+			event.getSession().getActionQueue().registerProcess(
+					new AfterTransactionCompletionProcess() {
+						@Override
+						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+							afterCounter.increase();
+						}
+					}
+			);
 		}
 
 		@Override

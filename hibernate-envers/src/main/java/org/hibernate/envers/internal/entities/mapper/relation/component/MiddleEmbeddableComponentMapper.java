@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -49,39 +49,73 @@ public class MiddleEmbeddableComponentMapper implements MiddleComponentMapper, C
 	}
 
 	@Override
-	public Object mapToObjectFromFullMap(EntityInstantiator entityInstantiator, Map<String, Object> data, Object dataObject, Number revision) {
+	public Object mapToObjectFromFullMap(
+			EntityInstantiator entityInstantiator,
+			Map<String, Object> data,
+			Object dataObject,
+			Number revision) {
 		try {
-			final Object componentInstance = dataObject != null ? dataObject : ReflectHelper.getDefaultConstructor( componentClass ).newInstance();
+			final Object componentInstance = dataObject != null ? dataObject : ReflectHelper.getDefaultConstructor(
+					componentClass
+			).newInstance();
 			delegate.mapToEntityFromMap(
 					entityInstantiator.getAuditConfiguration(), componentInstance, data, null,
 					entityInstantiator.getAuditReaderImplementor(), revision
 			);
 			return componentInstance;
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new AuditException( e );
 		}
 	}
 
 	@Override
-	public void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object obj) {
+	public void mapToMapFromObject(
+			SessionImplementor session,
+			Map<String, Object> idData,
+			Map<String, Object> data,
+			Object obj) {
 		delegate.mapToMapFromEntity( session, data, obj, obj );
 	}
 
 	@Override
-	public void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2) {
+	public void addMiddleEqualToQuery(
+			Parameters parameters,
+			String idPrefix1,
+			String prefix1,
+			String idPrefix2,
+			String prefix2) {
 		addMiddleEqualToQuery( delegate, parameters, idPrefix1, prefix1, idPrefix2, prefix2 );
 	}
 
-	protected void addMiddleEqualToQuery(CompositeMapperBuilder compositeMapper, Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2) {
+	protected void addMiddleEqualToQuery(
+			CompositeMapperBuilder compositeMapper,
+			Parameters parameters,
+			String idPrefix1,
+			String prefix1,
+			String idPrefix2,
+			String prefix2) {
 		for ( final Map.Entry<PropertyData, PropertyMapper> entry : compositeMapper.getProperties().entrySet() ) {
 			final String propertyName = entry.getKey().getName();
 			final PropertyMapper nestedMapper = entry.getValue();
 			if ( nestedMapper instanceof CompositeMapperBuilder ) {
-				addMiddleEqualToQuery( (CompositeMapperBuilder) nestedMapper, parameters, idPrefix1, prefix1, idPrefix2, prefix2 );
+				addMiddleEqualToQuery(
+						(CompositeMapperBuilder) nestedMapper,
+						parameters,
+						idPrefix1,
+						prefix1,
+						idPrefix2,
+						prefix2
+				);
 			}
 			else if ( nestedMapper instanceof ToOneIdMapper ) {
-				( (ToOneIdMapper) nestedMapper ).addMiddleEqualToQuery( parameters, idPrefix1, prefix1, idPrefix2, prefix2 );
+				((ToOneIdMapper) nestedMapper).addMiddleEqualToQuery(
+						parameters,
+						idPrefix1,
+						prefix1,
+						idPrefix2,
+						prefix2
+				);
 			}
 			else {
 				parameters.addWhere( prefix1 + '.' + propertyName, false, "=", prefix2 + '.' + propertyName, false );

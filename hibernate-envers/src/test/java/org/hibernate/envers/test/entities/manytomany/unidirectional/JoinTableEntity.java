@@ -1,14 +1,14 @@
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -27,8 +27,8 @@ public class JoinTableEntity implements Serializable {
 
 	@ManyToMany
 	@JoinTable(name = "test_join_table",
-			joinColumns = @JoinColumn(name = "assoc_id1"),
-			inverseJoinColumns = @JoinColumn(name = "assoc_id2")
+			   joinColumns = @JoinColumn(name = "assoc_id1"),
+			   inverseJoinColumns = @JoinColumn(name = "assoc_id2")
 	)
 	private Set<StrTestEntity> references = new HashSet<StrTestEntity>();
 
@@ -46,13 +46,21 @@ public class JoinTableEntity implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( !( o instanceof JoinTableEntity ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof JoinTableEntity) ) {
+			return false;
+		}
 
 		JoinTableEntity that = (JoinTableEntity) o;
 
-		if ( data != null ? !data.equals( that.data ) : that.data != null ) return false;
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -60,7 +68,7 @@ public class JoinTableEntity implements Serializable {
 	@Override
 	public int hashCode() {
 		int result = id != null ? id.hashCode() : 0;
-		result = 31 * result + ( data != null ? data.hashCode() : 0 );
+		result = 31 * result + (data != null ? data.hashCode() : 0);
 		return result;
 	}
 

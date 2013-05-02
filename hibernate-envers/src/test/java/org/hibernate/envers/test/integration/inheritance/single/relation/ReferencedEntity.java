@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.inheritance.single.relation;
-import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -36,41 +37,47 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class ReferencedEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @OneToMany(mappedBy = "referenced")
-    private Set<ParentIngEntity> referencing;
+	@OneToMany(mappedBy = "referenced")
+	private Set<ParentIngEntity> referencing;
 
-    public Set<ParentIngEntity> getReferencing() {
-        return referencing;
-    }
+	public Set<ParentIngEntity> getReferencing() {
+		return referencing;
+	}
 
-    public void setReferencing(Set<ParentIngEntity> referencing) {
-        this.referencing = referencing;
-    }
+	public void setReferencing(Set<ParentIngEntity> referencing) {
+		this.referencing = referencing;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ReferencedEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ReferencedEntity) ) {
+			return false;
+		}
 
-        ReferencedEntity that = (ReferencedEntity) o;
+		ReferencedEntity that = (ReferencedEntity) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        return id;
-    }
+	public int hashCode() {
+		return id;
+	}
 }

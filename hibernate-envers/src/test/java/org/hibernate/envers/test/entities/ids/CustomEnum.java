@@ -28,14 +28,14 @@ package org.hibernate.envers.test.entities.ids;
  * @author Slawek Garwol (slawekgarwol at gmail dot com)
  */
 public enum CustomEnum {
-    YES,
-    NO;
+	YES,
+	NO;
 
-    public String toYesNo() {
-        return this == YES ? "Y" : "N";
-    }
+	public String toYesNo() {
+		return this == YES ? "Y" : "N";
+	}
 
-    public static CustomEnum fromYesNo(String value) {
-        return "Y".equals(value) ? YES : NO;
-    }
+	public static CustomEnum fromYesNo(String value) {
+		return "Y".equals( value ) ? YES : NO;
+	}
 }

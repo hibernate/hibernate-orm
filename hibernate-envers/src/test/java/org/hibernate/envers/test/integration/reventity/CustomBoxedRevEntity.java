@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.reventity;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -37,56 +38,66 @@ import org.hibernate.envers.RevisionTimestamp;
  */
 @Entity
 @GenericGenerator(name = "EnversTestingRevisionGenerator",
-                  strategy = "org.hibernate.id.enhanced.TableGenerator",
-                  parameters = {@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
-                                @Parameter(name = "initial_value", value = "1"),
-                                @Parameter(name = "increment_size", value = "1"),
-                                @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
-                  }
+				  strategy = "org.hibernate.id.enhanced.TableGenerator",
+				  parameters = {
+						  @Parameter(name = "table_name", value = "REVISION_GENERATOR"),
+						  @Parameter(name = "initial_value", value = "1"),
+						  @Parameter(name = "increment_size", value = "1"),
+						  @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
+				  }
 )
 @RevisionEntity
 public class CustomBoxedRevEntity {
-    @Id
-    @GeneratedValue(generator = "EnversTestingRevisionGenerator")
-    @RevisionNumber
-    private Integer customId;
+	@Id
+	@GeneratedValue(generator = "EnversTestingRevisionGenerator")
+	@RevisionNumber
+	private Integer customId;
 
-    @RevisionTimestamp
-    private Long customTimestamp;
+	@RevisionTimestamp
+	private Long customTimestamp;
 
-    public Integer getCustomId() {
-        return customId;
-    }
+	public Integer getCustomId() {
+		return customId;
+	}
 
-    public void setCustomId(Integer customId) {
-        this.customId = customId;
-    }
+	public void setCustomId(Integer customId) {
+		this.customId = customId;
+	}
 
-    public Long getCustomTimestamp() {
-        return customTimestamp;
-    }
+	public Long getCustomTimestamp() {
+		return customTimestamp;
+	}
 
-    public void setCustomTimestamp(Long customTimestamp) {
-        this.customTimestamp = customTimestamp;
-    }
+	public void setCustomTimestamp(Long customTimestamp) {
+		this.customTimestamp = customTimestamp;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CustomBoxedRevEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof CustomBoxedRevEntity) ) {
+			return false;
+		}
 
-        CustomBoxedRevEntity that = (CustomBoxedRevEntity) o;
+		CustomBoxedRevEntity that = (CustomBoxedRevEntity) o;
 
-        if (customId != null ? !customId.equals(that.customId) : that.customId != null) return false;
-        if (customTimestamp != null ? !customTimestamp.equals(that.customTimestamp) : that.customTimestamp != null)
-            return false;
+		if ( customId != null ? !customId.equals( that.customId ) : that.customId != null ) {
+			return false;
+		}
+		if ( customTimestamp != null ?
+				!customTimestamp.equals( that.customTimestamp ) :
+				that.customTimestamp != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = (customId != null ? customId.hashCode() : 0);
-        result = 31 * result + (customTimestamp != null ? customTimestamp.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (customId != null ? customId.hashCode() : 0);
+		result = 31 * result + (customTimestamp != null ? customTimestamp.hashCode() : 0);
+		return result;
+	}
 }

@@ -12,14 +12,14 @@ import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionE
 @Entity
 @RevisionEntity(ExtendedRevisionListener.class)
 public class ExtendedRevisionEntity extends SequenceIdTrackingModifiedEntitiesRevisionEntity {
-    @Column(name = "USER_COMMENT")
-    private String comment;
+	@Column(name = "USER_COMMENT")
+	private String comment;
 
-    public String getComment() {
-        return comment;
-    }
+	public String getComment() {
+		return comment;
+	}
 
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
+	public void setComment(String comment) {
+		this.comment = comment;
+	}
 }

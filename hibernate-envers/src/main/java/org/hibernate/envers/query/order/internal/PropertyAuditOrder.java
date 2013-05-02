@@ -32,15 +32,15 @@ import org.hibernate.envers.tools.Pair;
  * @author Adam Warski (adam at warski dot org)
  */
 public class PropertyAuditOrder implements AuditOrder {
-    private final PropertyNameGetter propertyNameGetter;
-    private final boolean asc;
+	private final PropertyNameGetter propertyNameGetter;
+	private final boolean asc;
 
-    public PropertyAuditOrder(PropertyNameGetter propertyNameGetter, boolean asc) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.asc = asc;
-    }
+	public PropertyAuditOrder(PropertyNameGetter propertyNameGetter, boolean asc) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.asc = asc;
+	}
 
-    public Pair<String, Boolean> getData(AuditConfiguration auditCfg) {
-        return Pair.make(propertyNameGetter.get(auditCfg), asc);
-    }
+	public Pair<String, Boolean> getData(AuditConfiguration auditCfg) {
+		return Pair.make( propertyNameGetter.get( auditCfg ), asc );
+	}
 }

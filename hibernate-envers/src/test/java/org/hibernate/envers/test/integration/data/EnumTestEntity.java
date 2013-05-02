@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.data;
+
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -36,75 +37,86 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class EnumTestEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    public enum E1 { X, Y }
-    public enum E2 { A, B }
+	public enum E1 {X, Y}
 
-    @Enumerated(EnumType.STRING)
-    private E1 enum1;
+	public enum E2 {A, B}
 
-    @Enumerated(EnumType.ORDINAL)
-    private E2 enum2;
+	@Enumerated(EnumType.STRING)
+	private E1 enum1;
 
-    public EnumTestEntity() {
-    }
+	@Enumerated(EnumType.ORDINAL)
+	private E2 enum2;
 
-    public EnumTestEntity(E1 enum1, E2 enum2) {
-        this.enum1 = enum1;
-        this.enum2 = enum2;
-    }
+	public EnumTestEntity() {
+	}
 
-    public EnumTestEntity(Integer id, E1 enum1, E2 enum2) {
-        this.id = id;
-        this.enum1 = enum1;
-        this.enum2 = enum2;
-    }
+	public EnumTestEntity(E1 enum1, E2 enum2) {
+		this.enum1 = enum1;
+		this.enum2 = enum2;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public EnumTestEntity(Integer id, E1 enum1, E2 enum2) {
+		this.id = id;
+		this.enum1 = enum1;
+		this.enum2 = enum2;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public E1 getEnum1() {
-        return enum1;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public void setEnum1(E1 enum1) {
-        this.enum1 = enum1;
-    }
+	public E1 getEnum1() {
+		return enum1;
+	}
 
-    public E2 getEnum2() {
-        return enum2;
-    }
+	public void setEnum1(E1 enum1) {
+		this.enum1 = enum1;
+	}
 
-    public void setEnum2(E2 enum2) {
-        this.enum2 = enum2;
-    }
+	public E2 getEnum2() {
+		return enum2;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof EnumTestEntity)) return false;
+	public void setEnum2(E2 enum2) {
+		this.enum2 = enum2;
+	}
 
-        EnumTestEntity that = (EnumTestEntity) o;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof EnumTestEntity) ) {
+			return false;
+		}
 
-        if (enum1 != that.enum1) return false;
-        if (enum2 != that.enum2) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		EnumTestEntity that = (EnumTestEntity) o;
 
-        return true;
-    }
+		if ( enum1 != that.enum1 ) {
+			return false;
+		}
+		if ( enum2 != that.enum2 ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (enum1 != null ? enum1.hashCode() : 0);
-        result = 31 * result + (enum2 != null ? enum2.hashCode() : 0);
-        return result;
-    }
+		return true;
+	}
+
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (enum1 != null ? enum1.hashCode() : 0);
+		result = 31 * result + (enum2 != null ? enum2.hashCode() : 0);
+		return result;
+	}
 }

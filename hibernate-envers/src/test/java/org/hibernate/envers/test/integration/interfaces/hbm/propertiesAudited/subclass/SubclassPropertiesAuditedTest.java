@@ -4,11 +4,10 @@ import org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited.Ab
 
 /**
  * @author Hern�n Chanfreau
- *
  */
 public class SubclassPropertiesAuditedTest extends AbstractPropertiesAuditedTest {
 	@Override
 	protected String[] getMappings() {
-		return new String[] { "mappings/interfaces/subclassPropertiesAuditedMappings.hbm.xml" };
+		return new String[] {"mappings/interfaces/subclassPropertiesAuditedMappings.hbm.xml"};
 	}
 }

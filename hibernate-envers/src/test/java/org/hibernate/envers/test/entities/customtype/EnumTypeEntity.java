@@ -14,8 +14,9 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class EnumTypeEntity {
-	public static enum E1 { X, Y }
-	public static enum E2 { A, B }
+	public static enum E1 {X, Y}
+
+	public static enum E2 {A, B}
 
 	@Id
 	@GeneratedValue
@@ -43,14 +44,24 @@ public class EnumTypeEntity {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( ! ( o instanceof EnumTypeEntity ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof EnumTypeEntity) ) {
+			return false;
+		}
 
 		EnumTypeEntity that = (EnumTypeEntity) o;
 
-		if ( enum1 != that.enum1 ) return false;
-		if ( enum2 != that.enum2 ) return false;
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) return false;
+		if ( enum1 != that.enum1 ) {
+			return false;
+		}
+		if ( enum2 != that.enum2 ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -58,8 +69,8 @@ public class EnumTypeEntity {
 	@Override
 	public int hashCode() {
 		int result = id != null ? id.hashCode() : 0;
-		result = 31 * result + ( enum1 != null ? enum1.hashCode() : 0 );
-		result = 31 * result + ( enum2 != null ? enum2.hashCode() : 0 );
+		result = 31 * result + (enum1 != null ? enum1.hashCode() : 0);
+		result = 31 * result + (enum2 != null ? enum2.hashCode() : 0);
 		return result;
 	}
 

@@ -22,13 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel;
+
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.envers.Audited;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * 
  * @author Hern&aacut;n Chanfreau
  */
 @MappedSuperclass
@@ -36,7 +36,7 @@ public class AuditedMethodMappedSuperclass {
 
 	@Audited
 	private String str;
-	
+
 	private String otherStr;
 
 	public AuditedMethodMappedSuperclass() {
@@ -64,15 +64,18 @@ public class AuditedMethodMappedSuperclass {
 	}
 
 	public boolean equals(Object o) {
-		if (this == o)
+		if ( this == o ) {
 			return true;
-		if (!(o instanceof AuditedMethodMappedSuperclass))
+		}
+		if ( !(o instanceof AuditedMethodMappedSuperclass) ) {
 			return false;
+		}
 
 		AuditedMethodMappedSuperclass that = (AuditedMethodMappedSuperclass) o;
 
-		if (str != null ? !str.equals(that.str) : that.str != null)
+		if ( str != null ? !str.equals( that.str ) : that.str != null ) {
 			return false;
+		}
 
 		return true;
 	}

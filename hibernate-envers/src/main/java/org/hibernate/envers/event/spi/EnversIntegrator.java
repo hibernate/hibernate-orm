@@ -43,8 +43,15 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class EnversIntegrator implements Integrator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EnversIntegrator.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			EnversIntegrator.class.getName()
+	);
 
+	/**
+	 * The name of a configuration setting that can be used to control whether auto registration of envers listeners
+	 * should happen or not.  Default is true
+	 */
 	public static final String AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
 
 	@Override
@@ -52,25 +59,55 @@ public class EnversIntegrator implements Integrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		final boolean autoRegister = ConfigurationHelper.getBoolean( AUTO_REGISTER, configuration.getProperties(), true );
+		final boolean autoRegister = ConfigurationHelper.getBoolean(
+				AUTO_REGISTER,
+				configuration.getProperties(),
+				true
+		);
 		if ( !autoRegister ) {
 			LOG.debug( "Skipping Envers listener auto registration" );
 			return;
 		}
 
-		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
+		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor(
+				configuration,
+				serviceRegistry.getService(
+						ClassLoaderService.class
+				)
+		);
 
-        if (enversConfiguration.getEntCfg().hasAuditedEntities()) {
-		    listenerRegistry.appendListeners( EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.POST_INSERT, new EnversPostInsertEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.POST_UPDATE, new EnversPostUpdateEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.POST_COLLECTION_RECREATE, new EnversPostCollectionRecreateEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.PRE_COLLECTION_REMOVE, new EnversPreCollectionRemoveEventListenerImpl( enversConfiguration ) );
-		    listenerRegistry.appendListeners( EventType.PRE_COLLECTION_UPDATE, new EnversPreCollectionUpdateEventListenerImpl( enversConfiguration ) );
-        }
+		if ( enversConfiguration.getEntCfg().hasAuditedEntities() ) {
+			listenerRegistry.appendListeners(
+					EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl(
+					enversConfiguration
+			)
+			);
+			listenerRegistry.appendListeners(
+					EventType.POST_INSERT, new EnversPostInsertEventListenerImpl(
+					enversConfiguration
+			)
+			);
+			listenerRegistry.appendListeners(
+					EventType.POST_UPDATE, new EnversPostUpdateEventListenerImpl(
+					enversConfiguration
+			)
+			);
+			listenerRegistry.appendListeners(
+					EventType.POST_COLLECTION_RECREATE,
+					new EnversPostCollectionRecreateEventListenerImpl( enversConfiguration )
+			);
+			listenerRegistry.appendListeners(
+					EventType.PRE_COLLECTION_REMOVE,
+					new EnversPreCollectionRemoveEventListenerImpl( enversConfiguration )
+			);
+			listenerRegistry.appendListeners(
+					EventType.PRE_COLLECTION_UPDATE,
+					new EnversPreCollectionUpdateEventListenerImpl( enversConfiguration )
+			);
+		}
 	}
 
 	@Override
@@ -84,9 +121,10 @@ public class EnversIntegrator implements Integrator {
 	 * @see org.hibernate.integrator.spi.Integrator#integrate(org.hibernate.metamodel.source.MetadataImplementor, org.hibernate.engine.spi.SessionFactoryImplementor, org.hibernate.service.spi.SessionFactoryServiceRegistry)
 	 */
 	@Override
-	public void integrate( MetadataImplementor metadata,
-	                       SessionFactoryImplementor sessionFactory,
-	                       SessionFactoryServiceRegistry serviceRegistry ) {
-	    // TODO: implement
+	public void integrate(
+			MetadataImplementor metadata,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryServiceRegistry serviceRegistry) {
+		// TODO: implement
 	}
 }

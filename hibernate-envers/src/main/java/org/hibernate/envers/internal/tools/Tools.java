@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -61,7 +61,7 @@ public abstract class Tools {
 	}
 
 	public static <T> List<T> iteratorToList(Iterator<T> iter) {
-		List<T> ret = new ArrayList<T>();
+		final List<T> ret = new ArrayList<T>();
 		while ( iter.hasNext() ) {
 			ret.add( iter.next() );
 		}
@@ -92,8 +92,8 @@ public abstract class Tools {
 	 * @return A list of pairs: ((0, element_at_index_0), (1, element_at_index_1), ...)
 	 */
 	public static <T> List<Pair<Integer, T>> listToIndexElementPairList(List<T> list) {
-		List<Pair<Integer, T>> ret = new ArrayList<Pair<Integer, T>>();
-		Iterator<T> listIter = list.iterator();
+		final List<Pair<Integer, T>> ret = new ArrayList<Pair<Integer, T>>();
+		final Iterator<T> listIter = list.iterator();
 		for ( int i = 0; i < list.size(); i++ ) {
 			ret.add( Pair.make( i, listIter.next() ) );
 		}

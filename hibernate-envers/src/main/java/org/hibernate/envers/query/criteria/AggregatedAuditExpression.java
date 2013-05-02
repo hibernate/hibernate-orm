@@ -38,53 +38,59 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
-    private PropertyNameGetter propertyNameGetter;
-    private AggregatedMode mode;
+	private PropertyNameGetter propertyNameGetter;
+	private AggregatedMode mode;
 	private boolean correlate = false; // Correlate subquery with outer query by entity id.
-    private List<AuditCriterion> criterions;
+	private List<AuditCriterion> criterions;
 
-    public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.mode = mode;
-        criterions = new ArrayList<AuditCriterion>();
-    }
+	public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.mode = mode;
+		criterions = new ArrayList<AuditCriterion>();
+	}
 
-    public static enum AggregatedMode {
-        MAX,
-        MIN
-    }
+	public static enum AggregatedMode {
+		MAX,
+		MIN
+	}
 
-    public AggregatedAuditExpression add(AuditCriterion criterion) {
-        criterions.add(criterion);
-        return this;
-    }
+	public AggregatedAuditExpression add(AuditCriterion criterion) {
+		criterions.add( criterion );
+		return this;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-        String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
 
-        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
+		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
 
-        // Make sure our conditions are ANDed together even if the parent Parameters have a different connective
-        Parameters subParams = parameters.addSubParameters(Parameters.AND);
-        // This will be the aggregated query, containing all the specified conditions
-        QueryBuilder subQb = qb.newSubQueryBuilder();
+		// Make sure our conditions are ANDed together even if the parent Parameters have a different connective
+		Parameters subParams = parameters.addSubParameters( Parameters.AND );
+		// This will be the aggregated query, containing all the specified conditions
+		QueryBuilder subQb = qb.newSubQueryBuilder();
 
-        // Adding all specified conditions both to the main query, as well as to the
-        // aggregated one.
-        for (AuditCriterion versionsCriteria : criterions) {
-            versionsCriteria.addToQuery(auditCfg, versionsReader, entityName, qb, subParams);
-            versionsCriteria.addToQuery(auditCfg, versionsReader, entityName, subQb, subQb.getRootParameters());
-        }
+		// Adding all specified conditions both to the main query, as well as to the
+		// aggregated one.
+		for ( AuditCriterion versionsCriteria : criterions ) {
+			versionsCriteria.addToQuery( auditCfg, versionsReader, entityName, qb, subParams );
+			versionsCriteria.addToQuery( auditCfg, versionsReader, entityName, subQb, subQb.getRootParameters() );
+		}
 
-        // Setting the desired projection of the aggregated query
-        switch (mode) {
-            case MIN:
-                subQb.addProjection("min", propertyName, false);
-                break;
-            case MAX:
-                subQb.addProjection("max", propertyName, false);
-        }
+		// Setting the desired projection of the aggregated query
+		switch ( mode ) {
+			case MIN:
+				subQb.addProjection( "min", propertyName, false );
+				break;
+			case MAX:
+				subQb.addProjection( "max", propertyName, false );
+		}
 
 		// Correlating subquery with the outer query by entity id. See JIRA HHH-7827.
 		if ( correlate ) {
@@ -96,14 +102,15 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 			);
 		}
 
-        // Adding the constrain on the result of the aggregated criteria
-        subParams.addWhere(propertyName, "=", subQb);
-    }
+		// Adding the constrain on the result of the aggregated criteria
+		subParams.addWhere( propertyName, "=", subQb );
+	}
 
 	/**
 	 * Compute aggregated expression in the context of each entity instance separately. Useful for retrieving latest
 	 * revisions of all entities of a particular type.<br/>
 	 * Implementation note: Correlates subquery with the outer query by entity id.
+	 *
 	 * @return this (for method chaining).
 	 */
 	public AggregatedAuditExpression computeAggregationInInstanceContext() {

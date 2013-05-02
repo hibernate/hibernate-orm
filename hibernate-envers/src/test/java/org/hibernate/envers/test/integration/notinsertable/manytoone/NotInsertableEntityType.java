@@ -1,4 +1,5 @@
 package org.hibernate.envers.test.integration.notinsertable.manytoone;
+
 import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -8,18 +9,19 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class NotInsertableEntityType {
-    public NotInsertableEntityType(Integer typeId, String type) {
-        this.typeId = typeId;
-        this.type = type;
-    }
+	public NotInsertableEntityType(Integer typeId, String type) {
+		this.typeId = typeId;
+		this.type = type;
+	}
 
-    public NotInsertableEntityType() { }
+	public NotInsertableEntityType() {
+	}
 
-    @Id
-    private Integer typeId;
+	@Id
+	private Integer typeId;
 
-    @Basic
-    private String type;
+	@Basic
+	private String type;
 
 	public Integer getTypeId() {
 		return typeId;
@@ -39,13 +41,21 @@ public class NotInsertableEntityType {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
 		NotInsertableEntityType that = (NotInsertableEntityType) o;
 
-		if (type != null ? !type.equals(that.type) : that.type != null) return false;
-		if (typeId != null ? !typeId.equals(that.typeId) : that.typeId != null) return false;
+		if ( type != null ? !type.equals( that.type ) : that.type != null ) {
+			return false;
+		}
+		if ( typeId != null ? !typeId.equals( that.typeId ) : that.typeId != null ) {
+			return false;
+		}
 
 		return true;
 	}

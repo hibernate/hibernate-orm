@@ -36,25 +36,25 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 @Table(name = "ManyToOneCompEmb")
 public class ManyToOneComponent {
 	@ManyToOne
-    private StrTestEntity entity;
+	private StrTestEntity entity;
 
-    private String data;
+	private String data;
 
 	public ManyToOneComponent(StrTestEntity entity, String data) {
-        this.entity = entity;
-        this.data = data;
-    }
+		this.entity = entity;
+		this.data = data;
+	}
 
-    public ManyToOneComponent() {
-    }
+	public ManyToOneComponent() {
+	}
 
 	public String getData() {
-        return data;
-    }
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
 	public StrTestEntity getEntity() {
 		return entity;
@@ -66,13 +66,21 @@ public class ManyToOneComponent {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
 		ManyToOneComponent that = (ManyToOneComponent) o;
 
-		if (data != null ? !data.equals(that.data) : that.data != null) return false;
-		if (entity != null ? !entity.equals(that.entity) : that.entity != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( entity != null ? !entity.equals( that.entity ) : that.entity != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -85,6 +93,6 @@ public class ManyToOneComponent {
 	}
 
 	public String toString() {
-        return "ManyToOneComponent(str1 = " + data + ")";
-    }
+		return "ManyToOneComponent(str1 = " + data + ")";
+	}
 }

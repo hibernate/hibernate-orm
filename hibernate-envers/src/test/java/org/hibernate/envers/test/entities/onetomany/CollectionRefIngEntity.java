@@ -22,88 +22,99 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.onetomany;
-import java.io.Serializable;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import java.io.Serializable;
 
 import org.hibernate.envers.Audited;
 
 /**
  * ReferencIng entity
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
 public class CollectionRefIngEntity implements Serializable {
 	private static final long serialVersionUID = -9019967223928425707L;
-	
-    @Id
-    private Integer id;
 
-    @Audited
-    private String data;
+	@Id
+	private Integer id;
 
-    @Audited
-    @ManyToOne
-    private CollectionRefEdEntity reference;
+	@Audited
+	private String data;
 
-	public CollectionRefIngEntity() { }
+	@Audited
+	@ManyToOne
+	private CollectionRefEdEntity reference;
 
-    public CollectionRefIngEntity(Integer id, String data, CollectionRefEdEntity reference) {
-        this.id = id;
-        this.data = data;
-        this.reference = reference;
-    }
+	public CollectionRefIngEntity() {
+	}
 
-    public CollectionRefIngEntity(String data, CollectionRefEdEntity reference) {
-        this.data = data;
-        this.reference = reference;
-    }
+	public CollectionRefIngEntity(Integer id, String data, CollectionRefEdEntity reference) {
+		this.id = id;
+		this.data = data;
+		this.reference = reference;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public CollectionRefIngEntity(String data, CollectionRefEdEntity reference) {
+		this.data = data;
+		this.reference = reference;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public String getData() {
-        return data;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public String getData() {
+		return data;
+	}
 
-    public CollectionRefEdEntity getReference() {
-        return reference;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
-    public void setReference(CollectionRefEdEntity reference) {
-        this.reference = reference;
-    }
+	public CollectionRefEdEntity getReference() {
+		return reference;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CollectionRefIngEntity)) return false;
+	public void setReference(CollectionRefEdEntity reference) {
+		this.reference = reference;
+	}
 
-        CollectionRefIngEntity that = (CollectionRefIngEntity) o;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof CollectionRefIngEntity) ) {
+			return false;
+		}
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		CollectionRefIngEntity that = (CollectionRefIngEntity) o;
 
-        return true;
-    }
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (data != null ? data.hashCode() : 0);
-        return result;
-    }
+		return true;
+	}
 
-    public String toString() {
-        return "CollectionRefIngEntity(id = " + id + ", data = " + data + ")";
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
+		return result;
+	}
+
+	public String toString() {
+		return "CollectionRefIngEntity(id = " + id + ", data = " + data + ")";
+	}
 }

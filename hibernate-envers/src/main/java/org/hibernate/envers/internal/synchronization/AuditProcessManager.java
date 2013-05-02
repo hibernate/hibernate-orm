@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.synchronization;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,23 +37,23 @@ import org.hibernate.event.spi.EventSource;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditProcessManager {
-    private final Map<Transaction, AuditProcess> auditProcesses;
-    private final RevisionInfoGenerator revisionInfoGenerator;
+	private final Map<Transaction, AuditProcess> auditProcesses;
+	private final RevisionInfoGenerator revisionInfoGenerator;
 
-    public AuditProcessManager(RevisionInfoGenerator revisionInfoGenerator) {
-        auditProcesses = new ConcurrentHashMap<Transaction, AuditProcess>();
+	public AuditProcessManager(RevisionInfoGenerator revisionInfoGenerator) {
+		auditProcesses = new ConcurrentHashMap<Transaction, AuditProcess>();
 
-        this.revisionInfoGenerator = revisionInfoGenerator;
-    }
+		this.revisionInfoGenerator = revisionInfoGenerator;
+	}
 
-    public AuditProcess get(EventSource session) {
-        final Transaction transaction = session.getTransaction();
-        
-        AuditProcess auditProcess = auditProcesses.get(transaction);
-        if (auditProcess == null) {
-            // No worries about registering a transaction twice - a transaction is single thread
-            auditProcess = new AuditProcess(revisionInfoGenerator, session);
-            auditProcesses.put(transaction, auditProcess);
+	public AuditProcess get(EventSource session) {
+		final Transaction transaction = session.getTransaction();
+
+		AuditProcess auditProcess = auditProcesses.get( transaction );
+		if ( auditProcess == null ) {
+			// No worries about registering a transaction twice - a transaction is single thread
+			auditProcess = new AuditProcess( revisionInfoGenerator, session );
+			auditProcesses.put( transaction, auditProcess );
 
 			session.getActionQueue().registerProcess(
 					new BeforeTransactionCompletionProcess() {
@@ -65,13 +66,15 @@ public class AuditProcessManager {
 					}
 			);
 
-            session.getActionQueue().registerProcess(new AfterTransactionCompletionProcess() {
-                public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-                    auditProcesses.remove(transaction);
-                }
-            });
-        }
+			session.getActionQueue().registerProcess(
+					new AfterTransactionCompletionProcess() {
+						public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
+							auditProcesses.remove( transaction );
+						}
+					}
+			);
+		}
 
-        return auditProcess;
-    }
+		return auditProcess;
+	}
 }

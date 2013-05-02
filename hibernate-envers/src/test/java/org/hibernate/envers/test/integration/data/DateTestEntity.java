@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.data;
-import java.util.Date;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.Date;
 
 import org.hibernate.envers.Audited;
 
@@ -34,66 +35,72 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class DateTestEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Audited
-    private Date dateValue;
+	@Audited
+	private Date dateValue;
 
-    public DateTestEntity() {
-    }
+	public DateTestEntity() {
+	}
 
-    public DateTestEntity(Date dateValue) {
-        this.dateValue = dateValue;
-    }
+	public DateTestEntity(Date dateValue) {
+		this.dateValue = dateValue;
+	}
 
-    public DateTestEntity(Integer id, Date date) {
-        this.id = id;
-        this.dateValue = date;
-    }
+	public DateTestEntity(Integer id, Date date) {
+		this.id = id;
+		this.dateValue = date;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Date getDateValue() {
-        return dateValue;
-    }
+	public Date getDateValue() {
+		return dateValue;
+	}
 
-    public void setDateValue(Date dateValue) {
-        this.dateValue = dateValue;
-    }
+	public void setDateValue(Date dateValue) {
+		this.dateValue = dateValue;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DateTestEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof DateTestEntity) ) {
+			return false;
+		}
 
-        DateTestEntity that = (DateTestEntity) o;
+		DateTestEntity that = (DateTestEntity) o;
 
-        if (dateValue != null) {
-            if (that.dateValue == null) {
-                return false;
-            }
+		if ( dateValue != null ) {
+			if ( that.dateValue == null ) {
+				return false;
+			}
 
-            if (dateValue.getTime() != that.dateValue.getTime()) {
-                return false;
-            }
-        }
-        
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+			if ( dateValue.getTime() != that.dateValue.getTime() ) {
+				return false;
+			}
+		}
 
-        return true;
-    }
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (dateValue != null ? dateValue.hashCode() : 0);
-        return result;
-    }
+		return true;
+	}
+
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (dateValue != null ? dateValue.hashCode() : 0);
+		return result;
+	}
 }

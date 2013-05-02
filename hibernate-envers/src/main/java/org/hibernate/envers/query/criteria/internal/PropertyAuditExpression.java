@@ -34,21 +34,27 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class PropertyAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
-    private String otherPropertyName;
-    private String op;
+	private PropertyNameGetter propertyNameGetter;
+	private String otherPropertyName;
+	private String op;
 
-    public PropertyAuditExpression(PropertyNameGetter propertyNameGetter, String otherPropertyName, String op) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.otherPropertyName = otherPropertyName;
-        this.op = op;
-    }
+	public PropertyAuditExpression(PropertyNameGetter propertyNameGetter, String otherPropertyName, String op) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.otherPropertyName = otherPropertyName;
+		this.op = op;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
-        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, propertyName);
-        CriteriaTools.checkPropertyNotARelation(auditCfg, entityName, otherPropertyName);
-        parameters.addWhere(propertyName, op, otherPropertyName);
-    }
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
+		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, propertyName );
+		CriteriaTools.checkPropertyNotARelation( auditCfg, entityName, otherPropertyName );
+		parameters.addWhere( propertyName, op, otherPropertyName );
+	}
 }

@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
  * {@link RevisionListener}. Values of this property should form a strictly-increasing sequence
  * of numbers. The value of this property won't be set by Envers. In most cases, this should be
  * an auto-generated database-assigned primary id.
- * 
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Sanne Grinovero
  */

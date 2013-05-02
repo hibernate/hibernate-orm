@@ -35,35 +35,42 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class CriteriaTools {
-    public static void checkPropertyNotARelation(AuditConfiguration verCfg, String entityName,
-                                                 String propertyName) throws AuditException {
-        if (verCfg.getEntCfg().get(entityName).isRelation(propertyName)) {
-            throw new AuditException("This criterion cannot be used on a property that is " +
-                    "a relation to another property.");
-        }
-    }
+	public static void checkPropertyNotARelation(
+			AuditConfiguration verCfg, String entityName,
+			String propertyName) throws AuditException {
+		if ( verCfg.getEntCfg().get( entityName ).isRelation( propertyName ) ) {
+			throw new AuditException(
+					"This criterion cannot be used on a property that is " +
+							"a relation to another property."
+			);
+		}
+	}
 
-    public static RelationDescription getRelatedEntity(AuditConfiguration verCfg, String entityName,
-                                                       String propertyName) throws AuditException {
-        RelationDescription relationDesc = verCfg.getEntCfg().getRelationDescription(entityName, propertyName);
+	public static RelationDescription getRelatedEntity(
+			AuditConfiguration verCfg, String entityName,
+			String propertyName) throws AuditException {
+		RelationDescription relationDesc = verCfg.getEntCfg().getRelationDescription( entityName, propertyName );
 
-        if (relationDesc == null) {
-            return null;
-        }
+		if ( relationDesc == null ) {
+			return null;
+		}
 
-        if (relationDesc.getRelationType() == RelationType.TO_ONE) {
-            return relationDesc;
-        }
+		if ( relationDesc.getRelationType() == RelationType.TO_ONE ) {
+			return relationDesc;
+		}
 
-        throw new AuditException("This type of relation (" + entityName + "." + propertyName +
-                ") isn't supported and can't be used in queries.");
-    }
+		throw new AuditException(
+				"This type of relation (" + entityName + "." + propertyName +
+						") isn't supported and can't be used in queries."
+		);
+	}
 
 	/**
 	 * @see #determinePropertyName(AuditConfiguration, AuditReaderImplementor, String, String)
 	 */
-	public static String determinePropertyName(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
-											   String entityName, PropertyNameGetter propertyNameGetter) {
+	public static String determinePropertyName(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
+			String entityName, PropertyNameGetter propertyNameGetter) {
 		return determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter.get( auditCfg ) );
 	}
 
@@ -72,12 +79,17 @@ public abstract class CriteriaTools {
 	 * @param versionsReader Versions reader.
 	 * @param entityName Original entity name (not audited).
 	 * @param propertyName Property name or placeholder.
+	 *
 	 * @return Path to property. Handles identifier placeholder used by {@link org.hibernate.envers.query.criteria.AuditId}.
 	 */
-	public static String determinePropertyName(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
-											   String entityName, String propertyName) {
+	public static String determinePropertyName(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
+			String entityName, String propertyName) {
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
-			final String identifierPropertyName = versionsReader.getSessionImplementor().getFactory().getEntityPersister( entityName ).getIdentifierPropertyName();
+			final String identifierPropertyName = versionsReader.getSessionImplementor()
+					.getFactory()
+					.getEntityPersister( entityName )
+					.getIdentifierPropertyName();
 			propertyName = auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + identifierPropertyName;
 		}
 		return propertyName;

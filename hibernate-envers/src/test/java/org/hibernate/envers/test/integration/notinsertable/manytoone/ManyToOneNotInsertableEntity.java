@@ -1,4 +1,5 @@
 package org.hibernate.envers.test.integration.notinsertable.manytoone;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,18 +14,19 @@ import org.hibernate.envers.Audited;
 @Table(name = "ManyToOneNotIns")
 @Audited
 public class ManyToOneNotInsertableEntity {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Basic
+	@Basic
 	@Column(name = "numVal")
-    private Integer number;
+	private Integer number;
 
 	@ManyToOne
 	@JoinColumn(name = "numVal", insertable = false, updatable = false)
 	private NotInsertableEntityType type;
 
-	public ManyToOneNotInsertableEntity() { }
+	public ManyToOneNotInsertableEntity() {
+	}
 
 	public ManyToOneNotInsertableEntity(Integer id, Integer number, NotInsertableEntityType type) {
 		this.id = id;

@@ -1,15 +1,13 @@
 package org.hibernate.envers.test.integration.collection;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-
-import org.junit.Test;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.RevisionType;
@@ -19,6 +17,9 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionEntity;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity1;
 import org.hibernate.envers.test.entities.collection.MultipleCollectionRefEntity2;
+
+import org.junit.Test;
+
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
@@ -35,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
  */
 @TestForIssue(jiraKey = "HHH-6349")
 @SkipForDialect(value = Oracle8iDialect.class,
-		comment = "Oracle does not support identity key generation")
+				comment = "Oracle does not support identity key generation")
 public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctionalTestCase {
 	private TransactionManager tm = null;
 
@@ -276,10 +277,11 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 		);
 	}
 
-	private List<AuditJoinTableInfo> getAuditJoinTableRows(String middleEntityName, String joinColumnIdName,
-														   String joinColumnIdProp, String inverseJoinColumnIdName,
-														   String inverseJoinColumnIdProp, String revProp, String revIdProp,
-														   String revTypeProp) throws Exception {
+	private List<AuditJoinTableInfo> getAuditJoinTableRows(
+			String middleEntityName, String joinColumnIdName,
+			String joinColumnIdProp, String inverseJoinColumnIdName,
+			String inverseJoinColumnIdProp, String revProp, String revIdProp,
+			String revTypeProp) throws Exception {
 		StringBuilder qryBuilder = new StringBuilder( "select " );
 		qryBuilder.append( "aud " );
 		qryBuilder.append( ", " ).append( joinColumnIdProp ).append( " as joinColumnId" );
@@ -324,9 +326,10 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 		private final String inverseJoinColumnName;
 		private final Long inverseJoinColumnId;
 
-		private AuditJoinTableInfo(String name, SequenceIdRevisionEntity rev,
-								   RevisionType revType, String joinColumnName, Long joinColumnId,
-								   String inverseJoinColumnName, Long inverseJoinColumnId) {
+		private AuditJoinTableInfo(
+				String name, SequenceIdRevisionEntity rev,
+				RevisionType revType, String joinColumnName, Long joinColumnId,
+				String inverseJoinColumnName, Long inverseJoinColumnId) {
 			this.name = name;
 			this.revId = rev.getId();
 			this.revType = revType;
@@ -349,13 +352,15 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 			if ( this == o ) {
 				return true;
 			}
-			if ( !( o instanceof AuditJoinTableInfo ) ) {
+			if ( !(o instanceof AuditJoinTableInfo) ) {
 				return false;
 			}
 
 			AuditJoinTableInfo that = (AuditJoinTableInfo) o;
 
-			if ( inverseJoinColumnId != null ? !inverseJoinColumnId.equals( that.inverseJoinColumnId ) : that.inverseJoinColumnId != null ) {
+			if ( inverseJoinColumnId != null ?
+					!inverseJoinColumnId.equals( that.inverseJoinColumnId ) :
+					that.inverseJoinColumnId != null ) {
 				return false;
 			}
 			if ( joinColumnId != null ? !joinColumnId.equals( that.joinColumnId ) : that.joinColumnId != null ) {
@@ -377,10 +382,10 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 		@Override
 		public int hashCode() {
 			int result = name != null ? name.hashCode() : 0;
-			result = 31 * result + ( revId != null ? revId.hashCode() : 0 );
-			result = 31 * result + ( revType != null ? revType.hashCode() : 0 );
-			result = 31 * result + ( joinColumnId != null ? joinColumnId.hashCode() : 0 );
-			result = 31 * result + ( inverseJoinColumnId != null ? inverseJoinColumnId.hashCode() : 0 );
+			result = 31 * result + (revId != null ? revId.hashCode() : 0);
+			result = 31 * result + (revType != null ? revType.hashCode() : 0);
+			result = 31 * result + (joinColumnId != null ? joinColumnId.hashCode() : 0);
+			result = 31 * result + (inverseJoinColumnId != null ? inverseJoinColumnId.hashCode() : 0);
 			return result;
 		}
 	}

@@ -23,15 +23,15 @@
  */
 package org.hibernate.envers.test.entities.manytomany;
 
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyJoinColumn;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.hibernate.annotations.Sort;
 import org.hibernate.annotations.SortType;
@@ -46,57 +46,57 @@ import org.hibernate.envers.test.entities.StrTestEntityComparator;
  */
 @Entity
 public class SortedSetEntity {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Audited
-    private String data;
+	@Audited
+	private String data;
 
-    @Audited
-    @ManyToMany
-    @Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
-    private SortedSet<StrTestEntity> sortedSet = new TreeSet<StrTestEntity>(StrTestEntityComparator.INSTANCE);
-    @Audited
+	@Audited
+	@ManyToMany
+	@Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
+	private SortedSet<StrTestEntity> sortedSet = new TreeSet<StrTestEntity>( StrTestEntityComparator.INSTANCE );
+	@Audited
 	@ElementCollection
 	@MapKeyJoinColumn
-    @Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
-    private SortedMap<StrTestEntity, String> sortedMap = new TreeMap<StrTestEntity, String>(StrTestEntityComparator.INSTANCE);
+	@Sort(type = SortType.COMPARATOR, comparator = StrTestEntityComparator.class)
+	private SortedMap<StrTestEntity, String> sortedMap = new TreeMap<StrTestEntity, String>( StrTestEntityComparator.INSTANCE );
 
-    public SortedSetEntity() {
-    }
+	public SortedSetEntity() {
+	}
 
-    public SortedSetEntity(Integer id, String data) {
-        this.id = id;
-        this.data = data;
-    }
+	public SortedSetEntity(Integer id, String data) {
+		this.id = id;
+		this.data = data;
+	}
 
-    public SortedSetEntity(String data) {
-        this.data = data;
-    }
+	public SortedSetEntity(String data) {
+		this.data = data;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getData() {
-        return data;
-    }
+	public String getData() {
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
-    public SortedSet<StrTestEntity> getSortedSet() {
-        return sortedSet;
-    }
+	public SortedSet<StrTestEntity> getSortedSet() {
+		return sortedSet;
+	}
 
-    public void setSortedSet(SortedSet<StrTestEntity> sortedSet) {
-        this.sortedSet = sortedSet;
-    }
+	public void setSortedSet(SortedSet<StrTestEntity> sortedSet) {
+		this.sortedSet = sortedSet;
+	}
 
 	public SortedMap<StrTestEntity, String> getSortedMap() {
 		return sortedMap;
@@ -107,22 +107,28 @@ public class SortedSetEntity {
 	}
 
 	public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SortedSetEntity)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof SortedSetEntity) ) {
+			return false;
+		}
 
-        SortedSetEntity that = (SortedSetEntity) o;
+		SortedSetEntity that = (SortedSetEntity) o;
 
-		return !(data != null ? !data.equals(that.data) : that.data != null) && !(id != null ? !id.equals(that.id) : that.id != null);
+		return !(data != null ? !data.equals( that.data ) : that.data != null) && !(id != null ?
+				!id.equals( that.id ) :
+				that.id != null);
 	}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (data != null ? data.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
+		return result;
+	}
 
-    public String toString() {
-        return "SetOwnedEntity(id = " + id + ", data = " + data + ")";
-    }
+	public String toString() {
+		return "SetOwnedEntity(id = " + id + ", data = " + data + ")";
+	}
 }

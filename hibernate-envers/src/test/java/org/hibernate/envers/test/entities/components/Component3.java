@@ -43,18 +43,19 @@ public class Component3 {
 	private String str1;
 
 	@AttributeOverrides({
-			@AttributeOverride(name = "key", column = @Column(name = "audComp_key")),
-			@AttributeOverride(name = "value", column = @Column(name = "audComp_value")),
-			@AttributeOverride(name = "description", column = @Column(name = "audComp_description"))
-	})
+								@AttributeOverride(name = "key", column = @Column(name = "audComp_key")),
+								@AttributeOverride(name = "value", column = @Column(name = "audComp_value")),
+								@AttributeOverride(name = "description", column = @Column(name = "audComp_description"))
+						})
 	private Component4 auditedComponent;
 
 	@NotAudited
 	@AttributeOverrides({
-			@AttributeOverride(name = "key", column = @Column(name = "notAudComp_key")),
-			@AttributeOverride(name = "value", column = @Column(name = "notAudComp_value")),
-			@AttributeOverride(name = "description", column = @Column(name = "notAudComp_description"))
-	})
+								@AttributeOverride(name = "key", column = @Column(name = "notAudComp_key")),
+								@AttributeOverride(name = "value", column = @Column(name = "notAudComp_value")),
+								@AttributeOverride(name = "description",
+												   column = @Column(name = "notAudComp_description"))
+						})
 	private Component4 nonAuditedComponent;
 
 	public Component3() {
@@ -94,20 +95,30 @@ public class Component3 {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ( ( auditedComponent == null ) ? 0 : auditedComponent.hashCode() );
-		result = prime * result + ( ( str1 == null ) ? 0 : str1.hashCode() );
+		result = prime * result + ((auditedComponent == null) ? 0 : auditedComponent.hashCode());
+		result = prime * result + ((str1 == null) ? 0 : str1.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if ( this == obj ) return true;
-		if ( !( obj instanceof Component3 ) ) return false;
+		if ( this == obj ) {
+			return true;
+		}
+		if ( !(obj instanceof Component3) ) {
+			return false;
+		}
 
 		Component3 other = (Component3) obj;
 
-		if ( auditedComponent != null ? !auditedComponent.equals( other.auditedComponent ) : other.auditedComponent != null ) return false;
-		if ( str1 != null ? !str1.equals( other.str1 ) : other.str1 != null ) return false;
+		if ( auditedComponent != null ?
+				!auditedComponent.equals( other.auditedComponent ) :
+				other.auditedComponent != null ) {
+			return false;
+		}
+		if ( str1 != null ? !str1.equals( other.str1 ) : other.str1 != null ) {
+			return false;
+		}
 
 		return true;
 	}

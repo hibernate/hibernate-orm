@@ -5,5 +5,5 @@ import java.io.Serializable;
 public interface Activity extends Serializable {
 	ActivityId getId();
 
-    Integer getSequenceNumber();
+	Integer getSequenceNumber();
 }

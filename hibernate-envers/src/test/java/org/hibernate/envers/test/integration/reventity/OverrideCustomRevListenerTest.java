@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.reventity;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
+
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -11,5 +12,5 @@ public class OverrideCustomRevListenerTest extends GloballyConfiguredRevListener
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return ArrayHelper.join( super.getAnnotatedClasses(), ListenerRevEntity.class );
-    }
+	}
 }

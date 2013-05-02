@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -38,63 +38,77 @@ import org.hibernate.persister.entity.EntityPersister;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class AddWorkUnit extends AbstractAuditWorkUnit implements AuditWorkUnit {
-    private final Object[] state;
-    private final Map<String, Object> data;
+	private final Object[] state;
+	private final Map<String, Object> data;
 
-    public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-					   Serializable id, EntityPersister entityPersister, Object[] state) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD);
+	public AddWorkUnit(
+			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+			Serializable id, EntityPersister entityPersister, Object[] state) {
+		super( sessionImplementor, entityName, verCfg, id, RevisionType.ADD );
 
-        this.data = new HashMap<String, Object>();
-        this.state = state;
-        this.verCfg.getEntCfg().get(getEntityName()).getPropertyMapper().map(sessionImplementor, data,
-				entityPersister.getPropertyNames(), state, null);
-    }
+		this.data = new HashMap<String, Object>();
+		this.state = state;
+		this.verCfg.getEntCfg().get( getEntityName() ).getPropertyMapper().map(
+				sessionImplementor, data,
+				entityPersister.getPropertyNames(), state, null
+		);
+	}
 
-    public AddWorkUnit(SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
-                       Serializable id, Map<String, Object> data) {
-        super(sessionImplementor, entityName, verCfg, id, RevisionType.ADD);
+	public AddWorkUnit(
+			SessionImplementor sessionImplementor, String entityName, AuditConfiguration verCfg,
+			Serializable id, Map<String, Object> data) {
+		super( sessionImplementor, entityName, verCfg, id, RevisionType.ADD );
 
-        this.data = data;
-        final String[] propertyNames = sessionImplementor.getFactory().getEntityPersister(getEntityName()).getPropertyNames();
-        this.state = ArraysTools.mapToArray(data, propertyNames);
-    }
+		this.data = data;
+		final String[] propertyNames = sessionImplementor.getFactory()
+				.getEntityPersister( getEntityName() )
+				.getPropertyNames();
+		this.state = ArraysTools.mapToArray( data, propertyNames );
+	}
 
-    public boolean containsWork() {
-        return true;
-    }
+	@Override
+	public boolean containsWork() {
+		return true;
+	}
 
-    public Map<String, Object> generateData(Object revisionData) {
-        fillDataWithId(data, revisionData);
-        return data;
-    }
+	@Override
+	public Map<String, Object> generateData(Object revisionData) {
+		fillDataWithId( data, revisionData );
+		return data;
+	}
 
-    public Object[] getState() {
-        return state;
-    }
+	public Object[] getState() {
+		return state;
+	}
 
-    public AuditWorkUnit merge(AddWorkUnit second) {
-        return second;
-    }
+	@Override
+	public AuditWorkUnit merge(AddWorkUnit second) {
+		return second;
+	}
 
-    public AuditWorkUnit merge(ModWorkUnit second) {
-        return new AddWorkUnit(sessionImplementor, entityName, verCfg, id, second.getData());
-    }
+	@Override
+	public AuditWorkUnit merge(ModWorkUnit second) {
+		return new AddWorkUnit( sessionImplementor, entityName, verCfg, id, second.getData() );
+	}
 
-    public AuditWorkUnit merge(DelWorkUnit second) {
-        return null;
-    }
+	@Override
+	public AuditWorkUnit merge(DelWorkUnit second) {
+		return null;
+	}
 
-    public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
-		second.mergeCollectionModifiedData(data);
+	@Override
+	public AuditWorkUnit merge(CollectionChangeWorkUnit second) {
+		second.mergeCollectionModifiedData( data );
 		return this;
 	}
 
-    public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
-        return FakeBidirectionalRelationWorkUnit.merge(second, this, second.getNestedWorkUnit());
-    }
+	@Override
+	public AuditWorkUnit merge(FakeBidirectionalRelationWorkUnit second) {
+		return FakeBidirectionalRelationWorkUnit.merge( second, this, second.getNestedWorkUnit() );
+	}
 
-    public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
-        return first.merge(this);
-    }
+	@Override
+	public AuditWorkUnit dispatch(WorkUnitMergeVisitor first) {
+		return first.merge( this );
+	}
 }

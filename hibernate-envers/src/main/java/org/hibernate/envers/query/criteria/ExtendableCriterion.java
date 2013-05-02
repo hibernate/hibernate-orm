@@ -28,5 +28,5 @@ package org.hibernate.envers.query.criteria;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface ExtendableCriterion {
-    public ExtendableCriterion add(AuditCriterion criterion);
+	public ExtendableCriterion add(AuditCriterion criterion);
 }

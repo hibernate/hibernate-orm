@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,93 +35,160 @@ import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
  * @author HernпїЅn Chanfreau
  */
 public class EntityConfiguration {
-    private String versionsEntityName;
-    /** Holds the className for instantiation the configured entity */
-    private String entityClassName;
+	private String versionsEntityName;
+	/**
+	 * Holds the className for instantiation the configured entity
+	 */
+	private String entityClassName;
 	private IdMappingData idMappingData;
-    private ExtendedPropertyMapper propertyMapper;
-    // Maps from property name
-    private Map<String, RelationDescription> relations;
-    private String parentEntityName;
+	private ExtendedPropertyMapper propertyMapper;
+	// Maps from property name
+	private Map<String, RelationDescription> relations;
+	private String parentEntityName;
 
-    public EntityConfiguration(String versionsEntityName, String entityClassName, IdMappingData idMappingData,
-                               ExtendedPropertyMapper propertyMapper, String parentEntityName) {
-        this.versionsEntityName = versionsEntityName;
-        this.entityClassName = entityClassName;
-        this.idMappingData = idMappingData;
-        this.propertyMapper = propertyMapper;
-        this.parentEntityName = parentEntityName;
+	public EntityConfiguration(
+			String versionsEntityName, String entityClassName, IdMappingData idMappingData,
+			ExtendedPropertyMapper propertyMapper, String parentEntityName) {
+		this.versionsEntityName = versionsEntityName;
+		this.entityClassName = entityClassName;
+		this.idMappingData = idMappingData;
+		this.propertyMapper = propertyMapper;
+		this.parentEntityName = parentEntityName;
 
-        this.relations = new HashMap<String, RelationDescription>();
-    }
+		this.relations = new HashMap<String, RelationDescription>();
+	}
 
-    public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper, boolean insertable) {
-        relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE,
-                toEntityName, null, idMapper, null, null, insertable));
-    }
+	public void addToOneRelation(String fromPropertyName, String toEntityName, IdMapper idMapper, boolean insertable) {
+		relations.put(
+				fromPropertyName,
+				new RelationDescription(
+						fromPropertyName,
+						RelationType.TO_ONE,
+						toEntityName,
+						null,
+						idMapper,
+						null,
+						null,
+						insertable
+				)
+		);
+	}
 
-    public void addToOneNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
-                                          IdMapper idMapper) {
-        relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_ONE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper, null, null, true));
-    }
+	public void addToOneNotOwningRelation(
+			String fromPropertyName,
+			String mappedByPropertyName,
+			String toEntityName,
+			IdMapper idMapper) {
+		relations.put(
+				fromPropertyName,
+				new RelationDescription(
+						fromPropertyName,
+						RelationType.TO_ONE_NOT_OWNING,
+						toEntityName,
+						mappedByPropertyName,
+						idMapper,
+						null,
+						null,
+						true
+				)
+		);
+	}
 
-    public void addToManyNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName,
-                                           IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
-                                           PropertyMapper fakeBidirectionalRelationIndexMapper) {
-        relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_NOT_OWNING,
-                toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
-                fakeBidirectionalRelationIndexMapper, true));
-    }
+	public void addToManyNotOwningRelation(
+			String fromPropertyName,
+			String mappedByPropertyName,
+			String toEntityName,
+			IdMapper idMapper,
+			PropertyMapper fakeBidirectionalRelationMapper,
+			PropertyMapper fakeBidirectionalRelationIndexMapper) {
+		relations.put(
+				fromPropertyName,
+				new RelationDescription(
+						fromPropertyName,
+						RelationType.TO_MANY_NOT_OWNING,
+						toEntityName,
+						mappedByPropertyName,
+						idMapper,
+						fakeBidirectionalRelationMapper,
+						fakeBidirectionalRelationIndexMapper,
+						true
+				)
+		);
+	}
 
-    public void addToManyMiddleRelation(String fromPropertyName, String toEntityName) {
-        relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE,
-                toEntityName, null, null, null, null, true));
-    }
+	public void addToManyMiddleRelation(String fromPropertyName, String toEntityName) {
+		relations.put(
+				fromPropertyName,
+				new RelationDescription(
+						fromPropertyName,
+						RelationType.TO_MANY_MIDDLE,
+						toEntityName,
+						null,
+						null,
+						null,
+						null,
+						true
+				)
+		);
+	}
 
-    public void addToManyMiddleNotOwningRelation(String fromPropertyName, String mappedByPropertyName, String toEntityName) {
-        relations.put(fromPropertyName, new RelationDescription(fromPropertyName, RelationType.TO_MANY_MIDDLE_NOT_OWNING,
-                toEntityName, mappedByPropertyName, null, null, null, true));
-    }
+	public void addToManyMiddleNotOwningRelation(
+			String fromPropertyName,
+			String mappedByPropertyName,
+			String toEntityName) {
+		relations.put(
+				fromPropertyName,
+				new RelationDescription(
+						fromPropertyName,
+						RelationType.TO_MANY_MIDDLE_NOT_OWNING,
+						toEntityName,
+						mappedByPropertyName,
+						null,
+						null,
+						null,
+						true
+				)
+		);
+	}
 
-    public boolean isRelation(String propertyName) {
-        return relations.get(propertyName) != null;
-    }
-    
-    public RelationDescription getRelationDescription(String propertyName) {
-        return relations.get(propertyName);
-    }
+	public boolean isRelation(String propertyName) {
+		return relations.get( propertyName ) != null;
+	}
 
-    public IdMappingData getIdMappingData() {
-        return idMappingData;
-    }
+	public RelationDescription getRelationDescription(String propertyName) {
+		return relations.get( propertyName );
+	}
 
-    public IdMapper getIdMapper() {
-        return idMappingData.getIdMapper();
-    }
+	public IdMappingData getIdMappingData() {
+		return idMappingData;
+	}
 
-    public ExtendedPropertyMapper getPropertyMapper() {
-        return propertyMapper;
-    }
+	public IdMapper getIdMapper() {
+		return idMappingData.getIdMapper();
+	}
 
-    public String getParentEntityName() {
-        return parentEntityName;
-    }
+	public ExtendedPropertyMapper getPropertyMapper() {
+		return propertyMapper;
+	}
 
-    // For use by EntitiesConfigurations
+	public String getParentEntityName() {
+		return parentEntityName;
+	}
 
-    String getVersionsEntityName() {
-        return versionsEntityName;
-    }
+	// For use by EntitiesConfigurations
 
-    Iterable<RelationDescription> getRelationsIterator() {
-        return relations.values();
-    }
-    
-    /**
-     * @return the className for the configured entity
-     */
-    public String getEntityClassName() {
+	String getVersionsEntityName() {
+		return versionsEntityName;
+	}
+
+	Iterable<RelationDescription> getRelationsIterator() {
+		return relations.values();
+	}
+
+	/**
+	 * @return the className for the configured entity
+	 */
+	public String getEntityClassName() {
 		return entityClassName;
 	}
 }

@@ -1,8 +1,5 @@
 package org.hibernate.envers.test.entities.collection;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -13,6 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Version;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
@@ -59,27 +59,27 @@ public class MultipleCollectionEntity {
 	}
 
 	public List<MultipleCollectionRefEntity1> getRefEntities1() {
-		return Collections.unmodifiableList(refEntities1);
+		return Collections.unmodifiableList( refEntities1 );
 	}
 
 	public void addRefEntity1(MultipleCollectionRefEntity1 refEntity1) {
-		refEntities1.add(refEntity1);
+		refEntities1.add( refEntity1 );
 	}
 
 	public void removeRefEntity1(MultipleCollectionRefEntity1 refEntity1) {
-		refEntities1.remove(refEntity1);
+		refEntities1.remove( refEntity1 );
 	}
 
 	public List<MultipleCollectionRefEntity2> getRefEntities2() {
-		return Collections.unmodifiableList(refEntities2);
+		return Collections.unmodifiableList( refEntities2 );
 	}
 
 	public void addRefEntity2(MultipleCollectionRefEntity2 refEntity2) {
-		refEntities2.add(refEntity2);
+		refEntities2.add( refEntity2 );
 	}
 
 	public void removeRefEntity2(MultipleCollectionRefEntity2 refEntity2) {
-		refEntities2.remove(refEntity2);
+		refEntities2.remove( refEntity2 );
 	}
 
 	/**
@@ -108,7 +108,7 @@ public class MultipleCollectionEntity {
 		if ( this == o ) {
 			return true;
 		}
-		if ( ! ( o instanceof MultipleCollectionEntity ) ) {
+		if ( !(o instanceof MultipleCollectionEntity) ) {
 			return false;
 		}
 
@@ -130,8 +130,8 @@ public class MultipleCollectionEntity {
 	@Override
 	public int hashCode() {
 		int result = text != null ? text.hashCode() : 0;
-		result = 31 * result + ( refEntities1 != null ? refEntities1.hashCode() : 0 );
-		result = 31 * result + ( refEntities2 != null ? refEntities2.hashCode() : 0 );
+		result = 31 * result + (refEntities1 != null ? refEntities1.hashCode() : 0);
+		result = 31 * result + (refEntities2 != null ? refEntities2.hashCode() : 0);
 		return result;
 	}
 }

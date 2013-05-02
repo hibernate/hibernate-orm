@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -107,30 +107,30 @@ public class AuditConfiguration {
 	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
 		// TODO: Temporarily allow Envers to continuing using
 		// hibernate-commons-annotations' for reflection and class loading.
-		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
 		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
-		
-		Properties properties = cfg.getProperties();
 
-		ReflectionManager reflectionManager = cfg.getReflectionManager();
-		globalCfg = new GlobalConfiguration( properties, classLoaderService );
-		RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
-		RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure( cfg, reflectionManager );
-		auditEntCfg = new AuditEntitiesConfiguration( properties, revInfoCfgResult.getRevisionInfoEntityName() );
-		auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
-		revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
-		revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
-		modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
+		final Properties properties = cfg.getProperties();
+
+		final ReflectionManager reflectionManager = cfg.getReflectionManager();
+		this.globalCfg = new GlobalConfiguration( properties, classLoaderService );
+		final RevisionInfoConfiguration revInfoCfg = new RevisionInfoConfiguration( globalCfg );
+		final RevisionInfoConfigurationResult revInfoCfgResult = revInfoCfg.configure( cfg, reflectionManager );
+		this.auditEntCfg = new AuditEntitiesConfiguration( properties, revInfoCfgResult.getRevisionInfoEntityName() );
+		this.auditProcessManager = new AuditProcessManager( revInfoCfgResult.getRevisionInfoGenerator() );
+		this.revisionInfoQueryCreator = revInfoCfgResult.getRevisionInfoQueryCreator();
+		this.revisionInfoNumberReader = revInfoCfgResult.getRevisionInfoNumberReader();
+		this.modifiedEntityNamesReader = revInfoCfgResult.getModifiedEntityNamesReader();
 		this.classLoaderService = classLoaderService;
-		auditStrategy = initializeAuditStrategy(
+		this.auditStrategy = initializeAuditStrategy(
 				revInfoCfgResult.getRevisionInfoClass(),
 				revInfoCfgResult.getRevisionInfoTimestampData()
 		);
-		entCfg = new EntitiesConfigurator().configure(
+		this.entCfg = new EntitiesConfigurator().configure(
 				cfg, reflectionManager, globalCfg, auditEntCfg, auditStrategy, classLoaderService,
 				revInfoCfgResult.getRevisionInfoXmlMapping(), revInfoCfgResult.getRevisionInfoRelationMapping()
 		);
-		
+
 		Thread.currentThread().setContextClassLoader( tccl );
 	}
 
@@ -143,11 +143,14 @@ public class AuditConfiguration {
 				auditStrategyClass = this.getClass().getClassLoader().loadClass( auditEntCfg.getAuditStrategyName() );
 			}
 			catch (Exception e) {
-				auditStrategyClass = ReflectionTools.loadClass( auditEntCfg.getAuditStrategyName(), classLoaderService );
+				auditStrategyClass = ReflectionTools.loadClass(
+						auditEntCfg.getAuditStrategyName(),
+						classLoaderService
+				);
 			}
-			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor(auditStrategyClass).newInstance();
+			strategy = (AuditStrategy) ReflectHelper.getDefaultConstructor( auditStrategyClass ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new MappingException(
 					String.format( "Unable to create AuditStrategy[%s] instance.", auditEntCfg.getAuditStrategyName() ),
 					e
@@ -156,27 +159,25 @@ public class AuditConfiguration {
 
 		if ( strategy instanceof ValidityAuditStrategy ) {
 			// further initialization required
-			Getter revisionTimestampGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoTimestampData );
+			final Getter revisionTimestampGetter = ReflectionTools.getGetter( revisionInfoClass, revisionInfoTimestampData );
 			( (ValidityAuditStrategy) strategy ).setRevisionTimestampGetter( revisionTimestampGetter );
 		}
 
 		return strategy;
 	}
 
-	//
-
-	private static Map<Configuration, AuditConfiguration> cfgs = new WeakHashMap<Configuration, AuditConfiguration>();
+	private static final Map<Configuration, AuditConfiguration> CFGS = new WeakHashMap<Configuration, AuditConfiguration>();
 
 	public synchronized static AuditConfiguration getFor(Configuration cfg) {
 		return getFor( cfg, null );
 	}
 
 	public synchronized static AuditConfiguration getFor(Configuration cfg, ClassLoaderService classLoaderService) {
-		AuditConfiguration verCfg = cfgs.get( cfg );
+		AuditConfiguration verCfg = CFGS.get( cfg );
 
 		if ( verCfg == null ) {
 			verCfg = new AuditConfiguration( cfg, classLoaderService );
-			cfgs.put( cfg, verCfg );
+			CFGS.put( cfg, verCfg );
 
 			cfg.buildMappings();
 		}

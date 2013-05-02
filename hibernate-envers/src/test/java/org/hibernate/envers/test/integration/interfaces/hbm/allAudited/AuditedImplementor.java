@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.allAudited;
+
 import org.hibernate.envers.Audited;
 
 /**
  * @author Hern�n Chanfreau
- *
  */
 @Audited
 public class AuditedImplementor implements SimpleInterface {

@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.manytomany.unidirectional;
-import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import java.util.List;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -35,6 +36,7 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 
 /**
  * Audited entity with a many-to-many-reference to not audited entity.
+ *
  * @author Toamsz Bech
  * @author Adam Warski
  */
@@ -51,7 +53,8 @@ public class M2MTargetNotAuditedEntity {
 	@ManyToMany(fetch = FetchType.LAZY)
 	private List<UnversionedStrTestEntity> references;
 
-	public M2MTargetNotAuditedEntity() { }
+	public M2MTargetNotAuditedEntity() {
+	}
 
 	public M2MTargetNotAuditedEntity(Integer id, String data, List<UnversionedStrTestEntity> references) {
 		this.id = id;
@@ -85,23 +88,31 @@ public class M2MTargetNotAuditedEntity {
 		this.data = data;
 	}
 
-    public List<UnversionedStrTestEntity> getReferences() {
-        return references;
-    }
+	public List<UnversionedStrTestEntity> getReferences() {
+		return references;
+	}
 
-    public void setReferences(List<UnversionedStrTestEntity> references) {
-        this.references = references;
-    }
+	public void setReferences(List<UnversionedStrTestEntity> references) {
+		this.references = references;
+	}
 
-    public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof M2MTargetNotAuditedEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof M2MTargetNotAuditedEntity) ) {
+			return false;
+		}
 
 		M2MTargetNotAuditedEntity that = (M2MTargetNotAuditedEntity) o;
 
-		if (data != null ? !data.equals(that.getData()) : that.getData() != null) return false;
-        //noinspection RedundantIfStatement
-        if (id != null ? !id.equals(that.getId()) : that.getId() != null) return false;
+		if ( data != null ? !data.equals( that.getData() ) : that.getData() != null ) {
+			return false;
+		}
+		//noinspection RedundantIfStatement
+		if ( id != null ? !id.equals( that.getId() ) : that.getId() != null ) {
+			return false;
+		}
 
 		return true;
 	}

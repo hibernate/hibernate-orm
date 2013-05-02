@@ -23,12 +23,12 @@
  */
 package org.hibernate.envers.test.integration.collection.embeddable;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -56,13 +56,21 @@ public class DarkCharacter implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( ! ( o instanceof DarkCharacter ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof DarkCharacter) ) {
+			return false;
+		}
 
 		DarkCharacter character = (DarkCharacter) o;
 
-		if ( id != character.id ) return false;
-		if ( kills != character.kills ) return false;
+		if ( id != character.id ) {
+			return false;
+		}
+		if ( kills != character.kills ) {
+			return false;
+		}
 
 		return true;
 	}

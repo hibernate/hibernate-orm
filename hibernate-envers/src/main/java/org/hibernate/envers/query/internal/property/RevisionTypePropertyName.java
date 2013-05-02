@@ -27,10 +27,11 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 
 /**
  * Used for specifying restrictions on the revision number, corresponding to an audit entity.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class RevisionTypePropertyName implements PropertyNameGetter {
-    public String get(AuditConfiguration auditCfg) {
-        return auditCfg.getAuditEntCfg().getRevisionTypePropName();
-    }
+	public String get(AuditConfiguration auditCfg) {
+		return auditCfg.getAuditEntCfg().getRevisionTypePropName();
+	}
 }

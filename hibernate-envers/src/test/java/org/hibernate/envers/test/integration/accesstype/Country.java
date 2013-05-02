@@ -1,4 +1,5 @@
 package org.hibernate.envers.test.integration.accesstype;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -19,7 +20,8 @@ public class Country {
 	 * Default constructor for persistence provider.
 	 */
 	@SuppressWarnings({"UnusedDeclaration"})
-	private Country() { }
+	private Country() {
+	}
 
 	private Country(Integer code, String naam) {
 		this.code = code;
@@ -35,7 +37,7 @@ public class Country {
 	}
 
 	public static Country of(Integer code, String name) {
-		return new Country(code, name);
+		return new Country( code, name );
 	}
 
 	@Override
@@ -49,23 +51,32 @@ public class Country {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if ( this == obj ) {
 			return true;
-		if (obj == null)
+		}
+		if ( obj == null ) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if ( getClass() != obj.getClass() ) {
 			return false;
+		}
 		Country other = (Country) obj;
-		if (code == null) {
-			if (other.code != null)
+		if ( code == null ) {
+			if ( other.code != null ) {
 				return false;
-		} else if (!code.equals(other.code))
+			}
+		}
+		else if ( !code.equals( other.code ) ) {
 			return false;
-		if (name == null) {
-			if (other.name != null)
+		}
+		if ( name == null ) {
+			if ( other.name != null ) {
 				return false;
-		} else if (!name.equals(other.name))
+			}
+		}
+		else if ( !name.equals( other.name ) ) {
 			return false;
+		}
 		return true;
 	}
 }

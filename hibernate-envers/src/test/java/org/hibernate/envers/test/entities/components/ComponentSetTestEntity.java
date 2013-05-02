@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -37,13 +38,13 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class ComponentSetTestEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Embedded
-    @Audited
-    private Set<Component1> comps = new HashSet<Component1>();
+	@Embedded
+	@Audited
+	private Set<Component1> comps = new HashSet<Component1>();
 
 	public ComponentSetTestEntity() {
 	}
@@ -53,12 +54,12 @@ public class ComponentSetTestEntity {
 	}
 
 	public Integer getId() {
-        return id;
-    }
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 	public Set<Component1> getComps() {
 		return comps;
@@ -70,13 +71,21 @@ public class ComponentSetTestEntity {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof ComponentSetTestEntity)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ComponentSetTestEntity) ) {
+			return false;
+		}
 
 		ComponentSetTestEntity that = (ComponentSetTestEntity) o;
 
-		if (comps != null ? !comps.equals(that.comps) : that.comps != null) return false;
-		if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( comps != null ? !comps.equals( that.comps ) : that.comps != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}

@@ -27,11 +27,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.mapping.PersistentClass;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -39,22 +39,22 @@ import org.hibernate.mapping.PersistentClass;
 public class NoneAudited extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { BasicTestEntity3.class };
-    }
+		return new Class[] {BasicTestEntity3.class};
+	}
 
-    @Test
-    public void testRevisionInfoTableNotCreated() {
-        @SuppressWarnings({"unchecked"}) List<PersistentClass> pcs = iteratorToList(getCfg().getClassMappings());
-        Assert.assertEquals(1, pcs.size());
-        Assert.assertTrue(pcs.get(0).getClassName().contains("BasicTestEntity3"));
-    }
+	@Test
+	public void testRevisionInfoTableNotCreated() {
+		@SuppressWarnings({"unchecked"}) List<PersistentClass> pcs = iteratorToList( getCfg().getClassMappings() );
+		Assert.assertEquals( 1, pcs.size() );
+		Assert.assertTrue( pcs.get( 0 ).getClassName().contains( "BasicTestEntity3" ) );
+	}
 
-    private <T> List<T> iteratorToList(Iterator<T> it) {
-        List<T> result = new ArrayList<T>();
-        while (it.hasNext()) {
-            result.add(it.next());
-        }
+	private <T> List<T> iteratorToList(Iterator<T> it) {
+		List<T> result = new ArrayList<T>();
+		while ( it.hasNext() ) {
+			result.add( it.next() );
+		}
 
-        return result;
-    }
+		return result;
+	}
 }

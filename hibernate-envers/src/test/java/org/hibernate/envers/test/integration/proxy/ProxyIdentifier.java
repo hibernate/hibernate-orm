@@ -25,8 +25,6 @@ package org.hibernate.envers.test.integration.proxy;
 
 import javax.persistence.EntityManager;
 
-import org.junit.Test;
-
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
@@ -34,55 +32,57 @@ import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAudi
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
+import org.junit.Test;
+
 
 /**
  * @author Eugene Goroschenya
  */
 public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
-    private TargetNotAuditedEntity tnae1;
-    private UnversionedStrTestEntity uste1;
+	private TargetNotAuditedEntity tnae1;
+	private UnversionedStrTestEntity uste1;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TargetNotAuditedEntity.class, UnversionedStrTestEntity.class };
-    }
+		return new Class[] {TargetNotAuditedEntity.class, UnversionedStrTestEntity.class};
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        EntityManager em = getEntityManager();
+	@Test
+	@Priority(10)
+	public void initData() {
+		EntityManager em = getEntityManager();
 
-        uste1 = new UnversionedStrTestEntity("str1");
+		uste1 = new UnversionedStrTestEntity( "str1" );
 
-        // No revision
-        em.getTransaction().begin();
-        em.persist(uste1);
-        em.getTransaction().commit();
+		// No revision
+		em.getTransaction().begin();
+		em.persist( uste1 );
+		em.getTransaction().commit();
 
-        // Revision 1
-        em.getTransaction().begin();
-        uste1 = em.find(UnversionedStrTestEntity.class, uste1.getId());
-        tnae1 = new TargetNotAuditedEntity(1, "tnae1", uste1);
-        em.persist(tnae1);
-        em.getTransaction().commit();
-    }
+		// Revision 1
+		em.getTransaction().begin();
+		uste1 = em.find( UnversionedStrTestEntity.class, uste1.getId() );
+		tnae1 = new TargetNotAuditedEntity( 1, "tnae1", uste1 );
+		em.persist( tnae1 );
+		em.getTransaction().commit();
+	}
 
-    @Test
-    public void testProxyIdentifier() {
-        TargetNotAuditedEntity rev1 = getAuditReader().find(TargetNotAuditedEntity.class, tnae1.getId(), 1);
+	@Test
+	public void testProxyIdentifier() {
+		TargetNotAuditedEntity rev1 = getAuditReader().find( TargetNotAuditedEntity.class, tnae1.getId(), 1 );
 
-        assert rev1.getReference() instanceof HibernateProxy;
+		assert rev1.getReference() instanceof HibernateProxy;
 
-        HibernateProxy proxyCreateByEnvers = (HibernateProxy) rev1.getReference();
-        LazyInitializer lazyInitializer = proxyCreateByEnvers.getHibernateLazyInitializer();
+		HibernateProxy proxyCreateByEnvers = (HibernateProxy) rev1.getReference();
+		LazyInitializer lazyInitializer = proxyCreateByEnvers.getHibernateLazyInitializer();
 
-        assert lazyInitializer.isUninitialized();
-        assert lazyInitializer.getIdentifier() != null;
-        assert lazyInitializer.getIdentifier().equals(tnae1.getId());
-        assert lazyInitializer.isUninitialized();
+		assert lazyInitializer.isUninitialized();
+		assert lazyInitializer.getIdentifier() != null;
+		assert lazyInitializer.getIdentifier().equals( tnae1.getId() );
+		assert lazyInitializer.isUninitialized();
 
-        assert rev1.getReference().getId().equals(uste1.getId());
-        assert rev1.getReference().getStr().equals(uste1.getStr());
-        assert !lazyInitializer.isUninitialized();
-    }
+		assert rev1.getReference().getId().equals( uste1.getId() );
+		assert rev1.getReference().getStr().equals( uste1.getStr() );
+		assert !lazyInitializer.isUninitialized();
+	}
 }

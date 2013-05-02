@@ -2,14 +2,15 @@ package org.hibernate.envers.test.integration.onetomany.detached;
 
 import java.util.Arrays;
 
-import junit.framework.Assert;
-import org.junit.Test;
-
 import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.onetomany.detached.ListRefCollEntity;
+
+import org.junit.Test;
+import junit.framework.Assert;
+
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -21,7 +22,7 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { ListRefCollEntity.class, StrTestEntity.class };
+		return new Class[] {ListRefCollEntity.class, StrTestEntity.class};
 	}
 
 	@Test
@@ -56,7 +57,12 @@ public class DetachedTest extends BaseEnversFunctionalTestCase {
 
 	@Test
 	public void testRevisionsCounts() {
-		Assert.assertEquals( Arrays.asList( 1, 2 ), getAuditReader().getRevisions( ListRefCollEntity.class, parentId ) );
+		Assert.assertEquals(
+				Arrays.asList( 1, 2 ), getAuditReader().getRevisions(
+				ListRefCollEntity.class,
+				parentId
+		)
+		);
 		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, childId ) );
 	}
 

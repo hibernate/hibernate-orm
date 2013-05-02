@@ -56,7 +56,7 @@ ext {
             // javax
             jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-16',
             jta:            'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.0.Alpha1',
-            validation:     'javax.validation:validation-api:1.1.0.CR3',
+            validation:     'javax.validation:validation-api:1.1.0.Final',
             jacc:           'org.jboss.spec.javax.security.jacc:jboss-jacc-api_1.4_spec:1.0.2.Final',
 
             // logging
@@ -90,11 +90,14 @@ ext {
             jpa_modelgen:    'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
             shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
             shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
-            validator:       'org.hibernate:hibernate-validator:5.0.0.CR4',
+            validator:       'org.hibernate:hibernate-validator:5.0.1.Final',
             h2:              "com.h2database:h2:${h2Version}",
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:1.9.0',
+
+            // required by Hibernate Validator at test runtime
+            unified_el:      "org.glassfish:javax.el:3.0-b07",
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~  infinsipan
             infinispan:      "org.infinispan:infinispan-core:${infinispanVersion}",

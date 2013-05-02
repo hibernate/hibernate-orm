@@ -30,7 +30,7 @@ dependencies {
 
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
-
+    testRuntime( libraries.unified_el )
 }
 
 def pomName() {

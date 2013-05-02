@@ -104,6 +104,6 @@ public class QueryHints {
 		return HINTS;
 	}
 
-	private QueryHints() {
+	protected QueryHints() {
 	}
 }

@@ -25,7 +25,7 @@ buildscript {
     }
 }
 
-ext.hibernateTargetVersion = '4.3.0.Beta2'
+ext.hibernateTargetVersion = '4.3.0-SNAPSHOT'
 ext.javaLanguageLevel = "1.6"
 
 task wrapper(type: Wrapper) {

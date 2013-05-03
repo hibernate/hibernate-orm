@@ -74,4 +74,8 @@ public class UniqueKey extends Constraint {
 	public Map<Column, String> getColumnOrderMap() {
 		return columnOrderMap;
 	}
+	
+	public String generatedConstraintNamePrefix() {
+		return "UK_";
+	}
 }

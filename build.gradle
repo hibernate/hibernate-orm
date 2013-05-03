@@ -105,6 +105,8 @@ subprojects { subProject ->
             configurations {
                 all*.exclude group: 'xml-apis', module: 'xml-apis'
             }
+            animalSniffer
+            javaApiSignature
         }
 
         // appropriately inject the common dependencies into each sub-project
@@ -133,6 +135,9 @@ subprojects { subProject ->
             }
             jaxb( libraries.jaxb2_basics )
             jaxb( libraries.jaxb2_ant )
+
+            animalSniffer ( libraries.animal_sniffer )
+            javaApiSignature ( libraries.java16_signature )
         }
 
         // mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -308,8 +313,25 @@ subprojects { subProject ->
             }
         }
 
-    	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-	    eclipseClasspath.dependsOn("generateSources")
+        // eclipseClasspath will not add sources to classpath unless the dirs actually exist.
+        eclipseClasspath.dependsOn("generateSources")
+
+        task copyJavaApiSignature(type: Copy) {
+            from configurations.javaApiSignature
+            into "$buildDir/javaApiSignature/"
+            rename '.*signature', 'javaApi.signature'
+        }
+
+        // checks that only types of the target Java version are used
+        task checkJavaApiSignature << {
+            ant.taskdef(name: 'animalSniffer', classname: 'org.codehaus.mojo.animal_sniffer.ant.CheckSignatureTask', classpath: configurations.animalSniffer.asPath)
+            ant.animalSniffer(signature: "$buildDir/javaApiSignature/javaApi.signature", classpath: configurations.compile.asPath + System.properties.'path.separator' + configurations.provided.asPath) {
+                path(path: "$buildDir/classes/main")
+            }
+        }
+        checkJavaApiSignature.dependsOn compileJava
+        checkJavaApiSignature.dependsOn copyJavaApiSignature
+        check.dependsOn checkJavaApiSignature
 
         // specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         task checkstylePublicSources(type: Checkstyle) {

@@ -3378,7 +3378,14 @@ public class Binder {
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}
 
-			Schema schema = metadata.getDatabase().getSchema( logicalCatalogName, logicalSchemaName );
+
+			Identifier catalogName = StringHelper.isNotEmpty( logicalCatalogName ) ?
+					Identifier.toIdentifier( logicalCatalogName )
+					: referencedEntityBinding.getPrimaryTable().getSchema().getName().getCatalog();
+			Identifier schemaName = StringHelper.isNotEmpty( logicalCatalogName ) ?
+					Identifier.toIdentifier( logicalSchemaName )
+					: referencedEntityBinding.getPrimaryTable().getSchema().getName().getSchema();
+			Schema schema = metadata.getDatabase().getSchema( catalogName, schemaName );
 			return schema.locateTable( tableIdentifier );
 		}
 

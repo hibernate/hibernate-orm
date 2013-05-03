@@ -39,20 +39,20 @@ class NameAnnotationFilter extends AbstractAnnotationFilter {
 		indexedAnnotationInstanceList.clear();
 	}
 
-	public static NameTargetAnnotationFilter INSTANCE = new NameTargetAnnotationFilter();
-
+	public static NameAnnotationFilter INSTANCE = new NameAnnotationFilter();
+	private static final DotName[] TARGET_ANNOTATIONS = new DotName[] {
+			CACHEABLE,
+			TABLE,
+			EXCLUDE_DEFAULT_LISTENERS,
+			EXCLUDE_SUPERCLASS_LISTENERS,
+			ID_CLASS,
+			INHERITANCE,
+			DISCRIMINATOR_VALUE,
+			DISCRIMINATOR_COLUMN,
+			ENTITY_LISTENERS
+	};
 	@Override
 	protected DotName[] targetAnnotation() {
-		return new DotName[] {
-				CACHEABLE,
-				TABLE,
-				EXCLUDE_DEFAULT_LISTENERS,
-				EXCLUDE_SUPERCLASS_LISTENERS,
-				ID_CLASS,
-				INHERITANCE,
-				DISCRIMINATOR_VALUE,
-				DISCRIMINATOR_COLUMN,
-				ENTITY_LISTENERS
-		};
+		return TARGET_ANNOTATIONS;
 	}
 }

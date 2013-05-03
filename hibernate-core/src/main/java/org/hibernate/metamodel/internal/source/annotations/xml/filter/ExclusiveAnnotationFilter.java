@@ -43,11 +43,12 @@ import org.hibernate.metamodel.internal.source.annotations.xml.mocker.MockHelper
 class ExclusiveAnnotationFilter extends AbstractAnnotationFilter {
 
 	public static ExclusiveAnnotationFilter INSTANCE = new ExclusiveAnnotationFilter();
-	private DotName[] targetNames;
-	private List<ExclusiveGroup> exclusiveGroupList;
+	private final DotName[] targetNames;
+	private final List<ExclusiveGroup> exclusiveGroupList;
 
 	private ExclusiveAnnotationFilter() {
-		this.exclusiveGroupList = getExclusiveGroupList();
+		this.exclusiveGroupList = new ArrayList<ExclusiveGroup>();
+		fillExclusiveGroupList();
 		Set<DotName> names = new HashSet<DotName>();
 		for ( ExclusiveGroup group : exclusiveGroupList ) {
 			names.addAll( group.getNames() );
@@ -55,9 +56,7 @@ class ExclusiveAnnotationFilter extends AbstractAnnotationFilter {
 		targetNames = names.toArray( new DotName[names.size()] );
 	}
 
-	private List<ExclusiveGroup> getExclusiveGroupList() {
-		if ( exclusiveGroupList == null ) {
-			exclusiveGroupList = new ArrayList<ExclusiveGroup>();
+	private void fillExclusiveGroupList() {
 			ExclusiveGroup group = new ExclusiveGroup();
 			group.add( ENTITY );
 			group.add( MAPPED_SUPERCLASS );
@@ -113,8 +112,6 @@ class ExclusiveAnnotationFilter extends AbstractAnnotationFilter {
 			group.scope = Scope.ATTRIBUTE;
 			exclusiveGroupList.add( group );
 
-		}
-		return exclusiveGroupList;
 	}
 
 	@Override

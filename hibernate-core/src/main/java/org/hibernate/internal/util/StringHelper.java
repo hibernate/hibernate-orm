@@ -25,12 +25,14 @@
 package org.hibernate.internal.util;
 
 import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.StringTokenizer;
-import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -759,17 +761,21 @@ public final class StringHelper {
 		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] { s };
 	}
 
-	// Oracle restricts identifier lengths to 30.  Rather than tie this to
-	// Dialect, simply restrict randomly-generated constrain names across
-	// the board.
-	private static final int MAX_NAME_LENGTH = 30;
-	public static String randomFixedLengthHex(String prefix) {
-		int length = MAX_NAME_LENGTH - prefix.length();
-		String s = UUID.randomUUID().toString();
-		s = s.replace( "-", "" );
-		if (s.length() > length) {
-			s = s.substring( 0, length );
+	public static String md5HashBase35(String s) {
+		try {
+			MessageDigest md = MessageDigest.getInstance( "MD5" );
+			md.reset();
+			md.update( s.getBytes() );
+			byte[] digest = md.digest();
+			BigInteger bigInt = new BigInteger( 1, digest );
+			// By converting to base 35 (full alphanumeric), we guarantee
+			// that the length of the name will always be smaller than the 30
+			// character identifier restriction enforced by a few dialects.
+			return bigInt.toString( 35 );
 		}
-		return prefix + s;
+		catch ( NoSuchAlgorithmException e ) {
+			// will never happen
+			return s;
+		}
 	}
 }

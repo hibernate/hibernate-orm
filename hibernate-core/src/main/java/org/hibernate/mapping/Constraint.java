@@ -24,21 +24,25 @@
 package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * A relational constraint.
  *
  * @author Gavin King
+ * @author Brett Meyer
  */
 public abstract class Constraint implements RelationalModel, Serializable {
 
 	private String name;
-	private final List<Column> columns = new ArrayList<Column>();
+	private final ArrayList<Column> columns = new ArrayList<Column>();
 	private Table table;
 
 	public String getName() {
@@ -48,6 +52,44 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
+	
+	/**
+	 * If a constraint is not explicitly named, this is called to generate
+	 * a unique hash using the table and column names.
+	 * Static so the name can be generated prior to creating the Constraint.
+	 * They're cached, keyed by name, in multiple locations.
+	 */
+	public static String generateName(String prefix, Table table, Column... columns) {
+		// Use a concatenation that guarantees uniqueness, even if identical names
+		// exist between all table and column identifiers.
+
+		StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
+
+		// Ensure a consistent ordering of columns, regardless of the order
+		// they were bound.
+		// Clone the list, as sometimes a set of order-dependent Column
+		// bindings are given.
+		Column[] alphabeticalColumns = columns.clone();
+		Arrays.sort( alphabeticalColumns, new ColumnComparator() );
+		for ( Column column : alphabeticalColumns ) {
+			String columnName = column == null ? "" : column.getName();
+			sb.append( "column`" + columnName + "`" );
+		}
+		return prefix + StringHelper.md5HashBase35( sb.toString() );
+	}
+
+	/**
+	 * Helper method for the few occasions where the UK isn't cached.
+	 */
+	public void generateName() {
+		name = generateName( generatedConstraintNamePrefix(), table, columns.toArray( new Column[columns.size()] ) );
+	}
+	
+	private static class ColumnComparator implements Comparator<Column> {
+		public int compare(Column col1, Column col2) {
+			return col1.getName().compareTo( col2.getName() );
+		}
+	} 
 
 	public void addColumn(Column column) {
 		if ( !columns.contains( column ) ) columns.add( column );
@@ -133,4 +175,6 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
+	
+	public abstract String generatedConstraintNamePrefix();
 }

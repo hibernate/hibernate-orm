@@ -67,6 +67,12 @@ ext {
             jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
             jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
             jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
+
+            // Animal Sniffer Ant Task and Java 1.6 API signature file
+            // not using 1.9 for the time being due to MANIMALSNIFFER-34
+            animal_sniffer: 'org.codehaus.mojo:animal-sniffer-ant-tasks:1.8',
+            java16_signature: 'org.codehaus.mojo.signature:java16:1.0@signature',
+
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
             // logging for testing

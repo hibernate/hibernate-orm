@@ -76,7 +76,7 @@ public class JoinedIterator<T> implements Iterator<T> {
 	protected void updateCurrentIterator() {
 		if ( currentIterator == null ) {
 			if( wrappedIterators.length == 0  ) {
-				currentIterator = Collections.emptyIterator();
+				currentIterator = Collections.<T>emptyList().iterator();
 			}
 			else {
 				currentIterator = wrappedIterators[0];

@@ -367,7 +367,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public Iterator<Selectable> getColumnIterator() {
-		return Collections.emptyIterator();
+		return Collections.<Selectable>emptyList().iterator();
 	}
 
 	public int getColumnSpan() {

@@ -68,6 +68,13 @@ public abstract class BaseRegion implements Region {
 
 	protected final AdvancedCache cache;
 
+   /**
+    * Base region constructor.
+    *
+    * @param cache instance for the region
+    * @param name of the region
+    * @param factory for this region
+    */
 	public BaseRegion(AdvancedCache cache, String name, RegionFactory factory) {
 		this.cache = cache;
 		this.name = name;
@@ -147,6 +154,12 @@ public abstract class BaseRegion implements Region {
 		return checkValid() && cache.containsKey( key );
 	}
 
+   /**
+    * Checks if the region is valid for operations such as storing new data
+    * in the region, or retrieving data from the region.
+    *
+    * @return true if the region is valid, false otherwise
+    */
 	public boolean checkValid() {
 		boolean valid = isValid();
 		if ( !valid ) {
@@ -154,7 +167,7 @@ public abstract class BaseRegion implements Region {
 				if ( invalidateState.compareAndSet(
 						InvalidateState.INVALID, InvalidateState.CLEARING
 				) ) {
-					Transaction tx = suspend();
+					final Transaction tx = suspend();
 					try {
 						// Clear region in a separate transaction
 						Caches.withinTx(
@@ -228,6 +241,9 @@ public abstract class BaseRegion implements Region {
 		}
 	}
 
+   /**
+    * Invalidates the region.
+    */
 	public void invalidateRegion() {
 		if ( log.isTraceEnabled() ) {
 			log.trace( "Invalidate region: " + name );

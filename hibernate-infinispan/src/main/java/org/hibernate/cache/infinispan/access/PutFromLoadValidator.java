@@ -89,7 +89,6 @@ public class PutFromLoadValidator {
 	 * {@link #acquirePutFromLoadLock(Object)} that hasn't been
 	 * {@link #registerPendingPut(Object) pre-registered} (aka a "naked put")
 	 * will return false.
-	 * will return false.
 	 */
 	public static final long NAKED_PUT_INVALIDATION_PERIOD = TimeUnit.SECONDS.toMillis( 20 );
 
@@ -128,15 +127,23 @@ public class PutFromLoadValidator {
 	private volatile long invalidationTimestamp;
 
 	/**
-	 * Creates a new PutFromLoadValidator.
+	 * Creates a new put from load validator instance.
+    *
+    * @param cache Cache instance on which to store pending put information.
 	 */
 	public PutFromLoadValidator(AdvancedCache cache) {
 		this( cache, NAKED_PUT_INVALIDATION_PERIOD );
 	}
 
-	/**
-	 * Constructor variant for use by unit tests; allows control of various timeouts by the test.
-	 */
+   /**
+    * Constructor variant for use by unit tests; allows control of various timeouts by the test.
+    *
+    * @param cache Cache instance on which to store pending put information.
+    * @param nakedPutInvalidationPeriod Period (in ms) after a removal during which a call to
+    *                                   {@link #acquirePutFromLoadLock(Object)} that hasn't been
+    *                                   {@link #registerPendingPut(Object) pre-registered} (aka a "naked put")
+    *                                   will return false.
+    */
 	public PutFromLoadValidator(
 			AdvancedCache cache,
 			long nakedPutInvalidationPeriod) {
@@ -146,6 +153,16 @@ public class PutFromLoadValidator {
 		);
 	}
 
+   /**
+    * Creates a new put from load validator instance.
+    *
+    * @param cacheManager where to find a cache to store pending put information
+    * @param tm transaction manager
+    * @param nakedPutInvalidationPeriod Period (in ms) after a removal during which a call to
+    *                                   {@link #acquirePutFromLoadLock(Object)} that hasn't been
+    *                                   {@link #registerPendingPut(Object) pre-registered} (aka a "naked put")
+    *                                   will return false.
+    */
 	public PutFromLoadValidator(
 			EmbeddedCacheManager cacheManager,
 			TransactionManager tm, long nakedPutInvalidationPeriod) {

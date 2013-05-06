@@ -38,12 +38,23 @@ public class EvictAllCommand extends BaseRpcCommand {
 
 	private final BaseRegion region;
 
+   /**
+    * Evict all command constructor.
+    *
+    * @param regionName name of the region to evict
+    * @param region to evict
+    */
 	public EvictAllCommand(String regionName, BaseRegion region) {
 		// region name and cache names are the same...
 		super( regionName );
 		this.region = region;
 	}
 
+   /**
+    * Evict all command constructor.
+    *
+    * @param regionName name of the region to evict
+    */
 	public EvictAllCommand(String regionName) {
 		this( regionName, null );
 	}

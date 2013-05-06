@@ -35,18 +35,29 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 
 /**
+ * Collection region implementation
+ *
  * @author Chris Bredesen
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class CollectionRegionImpl extends BaseTransactionalDataRegion implements CollectionRegion {
 
+   /**
+    * Construct a collection region
+    *
+    * @param cache instance to store collection instances
+    * @param name of collection type
+    * @param metadata for the collection type
+    * @param factory for the region
+    */
 	public CollectionRegionImpl(
 			AdvancedCache cache, String name,
 			CacheDataDescription metadata, RegionFactory factory) {
 		super( cache, name, metadata, factory );
 	}
 
+	@Override
 	public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
 		if ( AccessType.READ_ONLY.equals( accessType )
 				|| AccessType.TRANSACTIONAL.equals( accessType ) ) {

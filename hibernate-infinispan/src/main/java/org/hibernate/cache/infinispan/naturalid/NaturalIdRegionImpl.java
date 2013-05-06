@@ -43,6 +43,14 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
 public class NaturalIdRegionImpl extends BaseTransactionalDataRegion
 		implements NaturalIdRegion {
 
+   /**
+    * Constructor for the natural id region.
+    *
+    * @param cache instance to store natural ids
+    * @param name of natural id region
+    * @param metadata for the natural id region
+    * @param factory for the natural id region
+    */
 	public NaturalIdRegionImpl(
 			AdvancedCache cache, String name,
 			CacheDataDescription metadata, RegionFactory factory) {

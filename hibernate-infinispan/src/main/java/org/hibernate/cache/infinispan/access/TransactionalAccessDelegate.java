@@ -32,7 +32,6 @@ import org.infinispan.util.logging.LogFactory;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.spi.access.SoftLock;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in a Infinispan instance.
@@ -53,6 +52,12 @@ public class TransactionalAccessDelegate {
 	private final PutFromLoadValidator putValidator;
 	private final AdvancedCache<Object, Object> writeCache;
 
+   /**
+    * Create a new transactional access delegate instance.
+    *
+    * @param region to control access to
+    * @param validator put from load validator
+    */
 	public TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
 		this.region = region;
 		this.cache = region.getCache();
@@ -60,21 +65,50 @@ public class TransactionalAccessDelegate {
 		this.writeCache = Caches.ignoreReturnValuesCache( cache );
 	}
 
+   /**
+    * Attempt to retrieve an object from the cache.
+    *
+    * @param key The key of the item to be retrieved
+    * @param txTimestamp a timestamp prior to the transaction start time
+    * @return the cached object or <tt>null</tt>
+    * @throws CacheException if the cache retrieval failed
+    */
 	public Object get(Object key, long txTimestamp) throws CacheException {
 		if ( !region.checkValid() ) {
 			return null;
 		}
-		Object val = cache.get( key );
+		final Object val = cache.get( key );
 		if ( val == null ) {
 			putValidator.registerPendingPut( key );
 		}
 		return val;
 	}
 
+   /**
+    * Attempt to cache an object, after loading from the database.
+    *
+    * @param key The item key
+    * @param value The item
+    * @param txTimestamp a timestamp prior to the transaction start time
+    * @param version the item version number
+    * @return <tt>true</tt> if the object was successfully cached
+    */
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version) {
 		return putFromLoad( key, value, txTimestamp, version, false );
 	}
 
+   /**
+    * Attempt to cache an object, after loading from the database, explicitly
+    * specifying the minimalPut behavior.
+    *
+    * @param key The item key
+    * @param value The item
+    * @param txTimestamp a timestamp prior to the transaction start time
+    * @param version the item version number
+    * @param minimalPutOverride Explicit minimalPut flag
+    * @return <tt>true</tt> if the object was successfully cached
+    * @throws CacheException if storing the object failed
+    */
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( !region.checkValid() ) {
@@ -110,20 +144,16 @@ public class TransactionalAccessDelegate {
 		return true;
 	}
 
-	public SoftLock lockItem(Object key, Object version) throws CacheException {
-		return null;
-	}
-
-	public SoftLock lockRegion() throws CacheException {
-		return null;
-	}
-
-	public void unlockItem(Object key, SoftLock lock) throws CacheException {
-	}
-
-	public void unlockRegion(SoftLock lock) throws CacheException {
-	}
-
+   /**
+    * Called after an item has been inserted (before the transaction completes),
+    * instead of calling evict().
+    *
+    * @param key The item key
+    * @param value The item
+    * @param version The item's version value
+    * @return Were the contents of the cache actual changed by this operation?
+    * @throws CacheException if the insert fails
+    */
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		if ( !region.checkValid() ) {
 			return false;
@@ -133,10 +163,17 @@ public class TransactionalAccessDelegate {
 		return true;
 	}
 
-	public boolean afterInsert(Object key, Object value, Object version) throws CacheException {
-		return false;
-	}
-
+   /**
+    * Called after an item has been updated (before the transaction completes),
+    * instead of calling evict().
+    *
+    * @param key The item key
+    * @param value The item
+    * @param currentVersion The item's current version value
+    * @param previousVersion The item's previous version value
+    * @return Whether the contents of the cache actual changed by this operation
+    * @throws CacheException if the update fails
+    */
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		// We update whether or not the region is valid. Other nodes
@@ -146,11 +183,12 @@ public class TransactionalAccessDelegate {
 		return true;
 	}
 
-	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock)
-			throws CacheException {
-		return false;
-	}
-
+   /**
+    * Called after an item has become stale (before the transaction completes).
+    *
+    * @param key The key of the item to remove
+    * @throws CacheException if removing the cached item fails
+    */
 	public void remove(Object key) throws CacheException {
 		if ( !putValidator.invalidateKey( key ) ) {
 			throw new CacheException(
@@ -163,6 +201,11 @@ public class TransactionalAccessDelegate {
 		writeCache.remove( key );
 	}
 
+   /**
+    * Called to evict data from the entire region
+    *
+    * @throws CacheException if eviction the region fails
+    */
 	public void removeAll() throws CacheException {
 		if ( !putValidator.invalidateRegion() ) {
 			throw new CacheException( "Failed to invalidate pending putFromLoad calls for region " + region.getName() );
@@ -170,6 +213,13 @@ public class TransactionalAccessDelegate {
 		cache.clear();
 	}
 
+   /**
+    * Forcibly evict an item from the cache immediately without regard for transaction
+    * isolation.
+    *
+    * @param key The key of the item to remove
+    * @throws CacheException if evicting the item fails
+    */
 	public void evict(Object key) throws CacheException {
 		if ( !putValidator.invalidateKey( key ) ) {
 			throw new CacheException(
@@ -179,6 +229,12 @@ public class TransactionalAccessDelegate {
 		writeCache.remove( key );
 	}
 
+   /**
+    * Forcibly evict all items from the cache immediately without regard for transaction
+    * isolation.
+    *
+    * @throws CacheException if evicting items fails
+    */
 	public void evictAll() throws CacheException {
 		if ( !putValidator.invalidateRegion() ) {
 			throw new CacheException( "Failed to invalidate pending putFromLoad calls for region " + region.getName() );

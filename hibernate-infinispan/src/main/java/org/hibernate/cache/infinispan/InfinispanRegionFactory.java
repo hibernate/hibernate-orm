@@ -90,6 +90,12 @@ public class InfinispanRegionFactory implements RegionFactory {
 	 */
 	public static final String INFINISPAN_CONFIG_RESOURCE_PROP = "hibernate.cache.infinispan.cfg";
 
+   /**
+    * Property name that controls whether Infinispan statistics are enabled.
+    * The property value is expected to be a boolean true or false, and it
+    * overrides statistic configuration in base Infinispan configuration,
+    * if provided.
+    */
 	public static final String INFINISPAN_GLOBAL_STATISTICS_PROP = "hibernate.cache.infinispan.statistics";
 
 	/**

@@ -41,6 +41,14 @@ public abstract class BaseTransactionalDataRegion
 
 	private final CacheDataDescription metadata;
 
+   /**
+    * Base transactional region constructor
+    *
+    * @param cache instance to store transactional data
+    * @param name of the transactional region
+    * @param metadata for the transactional region
+    * @param factory for the transactional region
+    */
 	public BaseTransactionalDataRegion(
 			AdvancedCache cache, String name,
 			CacheDataDescription metadata, RegionFactory factory) {

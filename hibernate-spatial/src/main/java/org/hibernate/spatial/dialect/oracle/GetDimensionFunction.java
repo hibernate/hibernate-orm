@@ -36,9 +36,8 @@ class GetDimensionFunction extends SDOObjectMethod {
 		super( "Get_Dims", StandardBasicTypes.INTEGER );
 	}
 
-	public String render(Type firstArgumentType, final List args,
-						 final SessionFactoryImplementor factory) {
-		StringBuffer buf = new StringBuffer();
+	public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
+		final StringBuffer buf = new StringBuffer();
 		if ( args.isEmpty() ) {
 			throw new IllegalArgumentException(
 					"First Argument in arglist must be object to "

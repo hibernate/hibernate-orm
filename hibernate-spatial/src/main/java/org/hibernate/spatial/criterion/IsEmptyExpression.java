@@ -30,27 +30,37 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 
 /**
+ * A {@code Criterion} constraining a geometry property to be (non-)empty.
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 2/15/11
+ *
  */
 public class IsEmptyExpression implements Criterion {
 
-	private final static TypedValue[] NO_VALUES = new TypedValue[0];
+	private static final TypedValue[] NO_VALUES = new TypedValue[0];
 
 	private final String propertyName;
 	private final boolean isEmpty;
 
+	/**
+	 * Constructs an instance for the specified property
+	 *
+	 * @param propertyName The name of the property being constrained
+	 * @param isEmpty Whether to constrain the property to be empty or non-empty
+	 */
 	public IsEmptyExpression(String propertyName, boolean isEmpty) {
 		this.propertyName = propertyName;
 		this.isEmpty = isEmpty;
 	}
 
+	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
-		SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.isempty );
+		final String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
+		final SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.isempty );
 		return spatialDialect.getIsEmptySQL( column, isEmpty );
 	}
 
+	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return NO_VALUES;
 	}

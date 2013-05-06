@@ -44,12 +44,17 @@ import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * Type Descriptor for the Postgis Geometry type
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 7/27/11
+ *
  */
 public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 
+	/**
+	 * An instance of this class
+	 */
 	public static final PGGeometryTypeDescriptor INSTANCE = new PGGeometryTypeDescriptor();
 
 	@Override
@@ -68,9 +73,9 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-				Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
-				byte[] bytes = encoder.encode( geometry, ByteOrder.NDR ).toByteArray();
+				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final byte[] bytes = encoder.encode( geometry, ByteOrder.NDR ).toByteArray();
 				st.setBytes( index, bytes );
 			}
 
@@ -106,7 +111,7 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 		ByteBuffer buffer = null;
 		if ( object instanceof PGobject ) {
 			buffer = ByteBuffer.from( ( (PGobject) object ).getValue() );
-			WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+			final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 			return decoder.decode( buffer );
 		}
 		throw new IllegalStateException( "Received object of type " + object.getClass().getCanonicalName() );

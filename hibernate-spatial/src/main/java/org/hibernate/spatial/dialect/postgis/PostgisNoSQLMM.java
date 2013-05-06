@@ -27,10 +27,13 @@ import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
+ *  A Dialect for Postgresql with support for the Postgis spatial types, functions and operators (release 1.x - 1.3)
+ *
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: Dec 18, 2010
  */
 public class PostgisNoSQLMM extends PostgisDialect {
+
 	@Override
 	protected void registerTypesAndFunctions() {
 
@@ -183,7 +186,7 @@ public class PostgisNoSQLMM extends PostgisDialect {
 		);
 		registerFunction(
 				"symdifference",
-				new StandardSQLFunction( "symdifference")
+				new StandardSQLFunction( "symdifference" )
 		);
 		registerFunction(
 				"geomunion", new StandardSQLFunction(
@@ -218,42 +221,31 @@ public class PostgisNoSQLMM extends PostgisDialect {
 
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		String emptyExpr = "( isempty(" + columnName + ")) ";
+		final String emptyExpr = "( isempty(" + columnName + ")) ";
 		return isEmpty ? emptyExpr : "not " + emptyExpr;
 	}
 
-	public String getSpatialRelateSQL(String columnName, int spatialRelation,
-									  boolean hasFilter) {
+	@Override
+	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		switch ( spatialRelation ) {
 			case SpatialRelation.WITHIN:
-				return hasFilter ? "(" + columnName + " && ?  AND   within("
-						+ columnName + ", ?))" : " within(" + columnName + ",?)";
+				return "(" + columnName + " && ?  AND within(" + columnName + ", ?))";
 			case SpatialRelation.CONTAINS:
-				return hasFilter ? "(" + columnName + " && ? AND contains("
-						+ columnName + ", ?))" : " contains(" + columnName + ", ?)";
+				return "(" + columnName + " && ? AND contains(" + columnName + ", ?))";
 			case SpatialRelation.CROSSES:
-				return hasFilter ? "(" + columnName + " && ? AND crosses("
-						+ columnName + ", ?))" : " crosses(" + columnName + ", ?)";
+				return "(" + columnName + " && ? AND crosses(" + columnName + ", ?))";
 			case SpatialRelation.OVERLAPS:
-				return hasFilter ? "(" + columnName + " && ? AND overlaps("
-						+ columnName + ", ?))" : " overlaps(" + columnName + ", ?)";
+				return "(" + columnName + " && ? AND overlaps(" + columnName + ", ?))";
 			case SpatialRelation.DISJOINT:
-				return hasFilter ? "(" + columnName + " && ? AND disjoint("
-						+ columnName + ", ?))" : " disjoint(" + columnName + ", ?)";
+				return "(" + columnName + " && ? AND disjoint(" + columnName + ", ?))";
 			case SpatialRelation.INTERSECTS:
-				return hasFilter ? "(" + columnName + " && ? AND intersects("
-						+ columnName + ", ?))" : " intersects(" + columnName
-						+ ", ?)";
+				return "(" + columnName + " && ? AND intersects(" + columnName + ", ?))";
 			case SpatialRelation.TOUCHES:
-				return hasFilter ? "(" + columnName + " && ? AND touches("
-						+ columnName + ", ?))" : " touches(" + columnName + ", ?)";
+				return "(" + columnName + " && ? AND touches(" + columnName + ", ?))";
 			case SpatialRelation.EQUALS:
-				return hasFilter ? "(" + columnName + " && ? AND equals("
-						+ columnName + ", ?))" : " equals(" + columnName + ", ?)";
+				return "(" + columnName + " && ? AND equals(" + columnName + ", ?))";
 			default:
-				throw new IllegalArgumentException(
-						"Spatial relation is not known by this dialect"
-				);
+				throw new IllegalArgumentException( "Spatial relation is not known by this dialect" );
 		}
 
 	}

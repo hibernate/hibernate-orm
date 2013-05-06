@@ -20,14 +20,9 @@
  */
 package org.hibernate.spatial.helper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.hibernate.spatial.Log;
@@ -41,49 +36,38 @@ import org.hibernate.spatial.LogFactory;
 public class PropertyFileReader {
 
 	private static final Log LOG = LogFactory.make();
-
 	/**
 	 * pattern for comment lines. If it matches, it is a comment.
 	 */
-	private static final Pattern nonCommentPattern = Pattern
-			.compile( "^([^#]+)" );
+	private static final Pattern NON_COMMENT_PATTERN = Pattern.compile( "^([^#]+)" );
 
-	private InputStream is = null;
+	private InputStream is;
 
+	/**
+	 * Constructs an instance from the specified {@code InputStream}
+	 * @param is The inputstream
+	 */
 	public PropertyFileReader(InputStream is) {
 		this.is = is;
 	}
 
+	/**
+	 * Returns the properties
+	 * @return {@code Properties}
+	 * @throws IOException if an error occurs when reading from the {@code InputStream}
+	 */
 	public Properties getProperties() throws IOException {
 		if ( is == null ) {
 			return null;
 		}
-		Properties props = new Properties();
+		final Properties props = new Properties();
 		props.load( is );
 		return props;
 	}
 
 	/**
-	 * Returns the non-comment lines in a file.
-	 *
-	 * @return set of non-comment strings.
-	 *
-	 * @throws IOException
+	 * Closes this instance, and closes the underlying {@code InputStream}
 	 */
-	public Set<String> getNonCommentLines() throws IOException {
-		Set<String> lines = new HashSet<String>();
-		String line;
-		BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
-		while ( ( line = reader.readLine() ) != null ) {
-			line = line.trim();
-			Matcher m = nonCommentPattern.matcher( line );
-			if ( m.find() ) {
-				lines.add( m.group().trim() );
-			}
-		}
-		return lines;
-	}
-
 	public void close() {
 		try {
 			this.is.close();

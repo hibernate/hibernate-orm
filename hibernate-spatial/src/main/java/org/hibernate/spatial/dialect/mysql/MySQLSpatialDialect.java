@@ -33,14 +33,15 @@ import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 
 /**
- * Extends the MySQLDialect by also including information on spatial operators,
- * constructors and processing functions.
+ * A Dialect for MySQL with support for its spatial features
  *
- * @author Karel Maesen
- * @author Boni Gopalan [3/11/2011:Refactored the code to introduce MySQLSpatialInnoDBDialect without much code duplication]
+ * @author Karel Maesen, Boni Gopalan
  */
 public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect {
 
+	/**
+	 * Constructs an instance
+	 */
 	public MySQLSpatialDialect() {
 		super();
 		registerColumnType(
@@ -62,14 +63,7 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 		typeContributions.contributeType( new JTSGeometryType( MySQLGeometryTypeDescriptor.INSTANCE ) );
 	}
 
-	/**
-	 * @param columnName The name of the geometry-typed column to which the relation is
-	 * applied
-	 * @param spatialRelation The type of spatial relation (as defined in
-	 * <code>SpatialRelation</code>).
-	 *
-	 * @return
-	 */
+	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		switch ( spatialRelation ) {
 			case SpatialRelation.WITHIN:
@@ -96,35 +90,38 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 
 	}
 
+	@Override
 	public String getSpatialFilterExpression(String columnName) {
 		return "MBRIntersects(" + columnName + ", ? ) ";
 	}
 
+	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		throw new UnsupportedOperationException( "Mysql has no spatial aggregate SQL functions." );
 	}
 
+	@Override
 	public String getDWithinSQL(String columnName) {
 		throw new UnsupportedOperationException( String.format( "Mysql doesn't support the Dwithin function" ) );
 	}
 
+	@Override
 	public String getHavingSridSQL(String columnName) {
 		return " (srid(" + columnName + ") = ?) ";
 	}
 
+	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		String emptyExpr = " IsEmpty(" + columnName + ") ";
+		final String emptyExpr = " IsEmpty(" + columnName + ") ";
 		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
 	}
 
-	public String getDbGeometryTypeName() {
-		return "GEOMETRY";
-	}
-
+	@Override
 	public boolean supportsFiltering() {
 		return false;
 	}
 
+	@Override
 	public boolean supports(SpatialFunction function) {
 		switch ( function ) {
 			case boundary:
@@ -139,8 +136,9 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 			case dwithin:
 			case transform:
 				return false;
+			default:
+				return true;
 		}
-		return true;
 	}
 
 }

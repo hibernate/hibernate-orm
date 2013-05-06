@@ -1,22 +1,22 @@
 /*
  * This file is part of Hibernate Spatial, an extension to the
- *  hibernate ORM solution for spatial (geographic) data.
+ * hibernate ORM solution for spatial (geographic) data.
  *
- *  Copyright © 2007-2012 Geovise BVBA, Geodan IT b.v.
+ * Copyright © 2007-2013 Geovise BVBA
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.dialect.h2geodb;
@@ -38,18 +38,21 @@ import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * Descriptor for GeoDB Geometries.
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 2/29/12
  */
-public class GeoDBGeometryTypeDescriptor  implements SqlTypeDescriptor {
+public class GeoDBGeometryTypeDescriptor implements SqlTypeDescriptor {
 
+	/**
+	 * An instance of this Descriptor
+	 */
 	public static final GeoDBGeometryTypeDescriptor INSTANCE = new GeoDBGeometryTypeDescriptor();
 
 	@Override
 	public int getSqlType() {
 		return Types.ARRAY;
 	}
-
 
 	@Override
 	public boolean canBeRemapped() {
@@ -62,7 +65,7 @@ public class GeoDBGeometryTypeDescriptor  implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
 				st.setBytes( index, GeoDbWkb.to( geometry ) );
 			}
 		};
@@ -89,7 +92,6 @@ public class GeoDBGeometryTypeDescriptor  implements SqlTypeDescriptor {
 			}
 		};
 	}
-
 
 
 }

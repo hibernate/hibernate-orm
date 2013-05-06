@@ -26,12 +26,22 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Struct;
 
+//TODO -- remove this interface..
+
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: Jul 3, 2010
  */
 interface SQLTypeFactory {
 
+	/**
+	 * Creates a {@code Struct} representing the specified geometry, using the specified Connection.
+	 *
+	 * @param geom The {@code SDOGeometry} object
+	 * @param conn The Oracle {@code Connection} used to create the {@code Struct}
+	 * @return The {@code Struct} representation of the specified SDO Geometry
+	 * @throws SQLException If a Struct object cannot be created.
+	 */
 	public abstract Struct createStruct(SDOGeometry geom, Connection conn) throws SQLException;
 
 	public abstract Array createElemInfoArray(ElemInfo elemInfo, Connection conn) throws SQLException;

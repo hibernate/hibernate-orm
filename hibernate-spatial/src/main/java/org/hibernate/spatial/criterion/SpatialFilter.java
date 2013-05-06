@@ -34,59 +34,60 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.jts.EnvelopeAdapter;
 
 /**
- * An implementation for a simple spatial filter. This <code>Criterion</code>
- * restricts the resultset to those features whose bounding box overlaps the
- * filter geometry. It is intended for quick, but inexact spatial queries.
+ * A <code>Criterion</code> constraining a geometry property to have a bounding box that overlaps with
+ * a specified bounding box.
  *
  * @author Karel Maesen
  */
 public class SpatialFilter implements Criterion {
 
 	private static final long serialVersionUID = 1L;
+	private String propertyName;
+	private Geometry filter;
 
-	private String propertyName = null;
-
-	private Geometry filter = null;
-
+	/**
+	 * Constructs an instance with the specified property and the bounding box of the specified geometry.
+	 *
+	 * @param propertyName The name of the propety being constrained
+	 * @param filter The geometry whose bounding box is used as search geometry
+	 */
 	public SpatialFilter(String propertyName, Geometry filter) {
 		this.propertyName = propertyName;
 		this.filter = filter;
 	}
 
-	public SpatialFilter(String propertyName, Envelope envelope, int SRID) {
+	/**
+	 * Constructs an instance with the specified property and the bounding box of the specified geometry.
+	 *
+	 * @param propertyName The name of the propety being constrained
+	 * @param envelope The bounding box is used as search geometry
+	 * @param srid The SRID of the specified bounding box
+	 */
+	public SpatialFilter(String propertyName, Envelope envelope, int srid) {
 		this.propertyName = propertyName;
-		this.filter = EnvelopeAdapter.toPolygon( envelope, SRID );
+		this.filter = EnvelopeAdapter.toPolygon( envelope, srid );
 
 	}
 
-	public TypedValue[] getTypedValues(Criteria criteria,
-									   CriteriaQuery criteriaQuery) throws HibernateException {
+	@Override
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
-				criteriaQuery.getTypedValue(
-						criteria,
-						propertyName, filter
-				)
+				criteriaQuery.getTypedValue( criteria, propertyName, filter )
 		};
 	}
 
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-			throws HibernateException {
-		SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		String[] columns = criteriaQuery.getColumnsUsingProjection(
-				criteria,
-				this.propertyName
-		);
-		Dialect dialect = factory.getDialect();
+	@Override
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
+		final String[] columns = criteriaQuery.getColumnsUsingProjection( criteria, this.propertyName );
+		final Dialect dialect = factory.getDialect();
 		if ( dialect instanceof SpatialDialect ) {
-			SpatialDialect seDialect = (SpatialDialect) dialect;
+			final SpatialDialect seDialect = (SpatialDialect) dialect;
 			return seDialect.getSpatialFilterExpression( columns[0] );
 		}
 		else {
-			throw new IllegalStateException(
-					"Dialect must be spatially enabled dialect"
-			);
+			throw new IllegalStateException( "Dialect must be spatially enabled dialect" );
 		}
-
 	}
 
 }

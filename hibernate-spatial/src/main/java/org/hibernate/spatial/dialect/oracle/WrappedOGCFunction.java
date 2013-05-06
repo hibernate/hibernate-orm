@@ -44,8 +44,7 @@ class WrappedOGCFunction extends StandardSQLFunction {
 	 * @param geomArrays indicates which argument places are occupied by
 	 * sdo_geometries
 	 */
-	WrappedOGCFunction(final String name, final Type type,
-					   final boolean[] geomArrays) {
+	WrappedOGCFunction(final String name, final Type type, final boolean[] geomArrays) {
 		super( name, type );
 		if ( isSpatial( type ) ) {
 			throw new IllegalArgumentException(
@@ -67,10 +66,8 @@ class WrappedOGCFunction extends StandardSQLFunction {
 		this.isGeometryTyped = true;
 	}
 
-	public String render(Type firstArgumentType, final List args,
-						 final SessionFactoryImplementor factory) {
-
-		StringBuilder buf = new StringBuilder();
+	public String render(Type firstArgumentType, final List args, final SessionFactoryImplementor factory) {
+		final StringBuilder buf = new StringBuilder();
 		buf.append( "MDSYS." ).append( getName() ).append( "(" );
 		for ( int i = 0; i < args.size(); i++ ) {
 			if ( i > 0 ) {

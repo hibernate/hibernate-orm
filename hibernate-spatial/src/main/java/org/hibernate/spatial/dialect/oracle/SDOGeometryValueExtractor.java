@@ -45,7 +45,12 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 
+
+//TODO -- requires cleanup and must be made package local
+
 /**
+ * ValueExtractor for SDO_GEOMETRY
+ *
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/22/11
  */
@@ -54,25 +59,30 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	private static GeometryFactory geometryFactory = new GeometryFactory();
 
 
+	/**
+	 * Creates instance
+	 *
+	 * @param javaDescriptor javadescriptor to use
+	 */
 	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor) {
 		super( javaDescriptor, SDOGeometryTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		Object geomObj = rs.getObject( name );
+		final Object geomObj = rs.getObject( name );
 		return getJavaDescriptor().wrap( toJTS( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-		Object geomObj = statement.getObject( index );
+		final Object geomObj = statement.getObject( index );
 		return getJavaDescriptor().wrap( toJTS( geomObj ), options );
 	}
 
 	@Override
 	protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-		Object geomObj = statement.getObject( name );
+		final Object geomObj = statement.getObject( name );
 		return getJavaDescriptor().wrap( toJTS( geomObj ), options );
 	}
 
@@ -82,106 +92,110 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 		return geometryFactory;
 	}
 
+	/**
+	 * Converts an oracle to a JTS Geometry
+	 *
+	 * @param struct The Oracle STRUCT representation of an SDO_GEOMETRY
+	 *
+	 * @return The JTS Geometry value
+	 */
 	public Geometry toJTS(Object struct) {
 		if ( struct == null ) {
 			return null;
 		}
-		SDOGeometry SDOGeom = SDOGeometry.load( (Struct) struct );
-		return convert2JTS( SDOGeom );
+		final SDOGeometry sdogeom = SDOGeometry.load( (Struct) struct );
+		return convert2JTS( sdogeom );
 	}
 
-	private Geometry convert2JTS(SDOGeometry SDOGeom) {
-		int dim = SDOGeom.getGType().getDimension();
-		int lrsDim = SDOGeom.getGType().getLRSDimension();
+	private Geometry convert2JTS(SDOGeometry sdoGeom) {
+		final int dim = sdoGeom.getGType().getDimension();
+		final int lrsDim = sdoGeom.getGType().getLRSDimension();
 		Geometry result = null;
-		switch ( SDOGeom.getGType().getTypeGeometry() ) {
+		switch ( sdoGeom.getGType().getTypeGeometry() ) {
 			case POINT:
-				result = convertSDOPoint( SDOGeom );
+				result = convertSDOPoint( sdoGeom );
 				break;
 			case LINE:
-				result = convertSDOLine( dim, lrsDim, SDOGeom );
+				result = convertSDOLine( dim, lrsDim, sdoGeom );
 				break;
 			case POLYGON:
-				result = convertSDOPolygon( dim, lrsDim, SDOGeom );
+				result = convertSDOPolygon( dim, lrsDim, sdoGeom );
 				break;
 			case MULTIPOINT:
-				result = convertSDOMultiPoint( dim, lrsDim, SDOGeom );
+				result = convertSDOMultiPoint( dim, lrsDim, sdoGeom );
 				break;
 			case MULTILINE:
-				result = convertSDOMultiLine( dim, lrsDim, SDOGeom );
+				result = convertSDOMultiLine( dim, lrsDim, sdoGeom );
 				break;
 			case MULTIPOLYGON:
-				result = convertSDOMultiPolygon( dim, lrsDim, SDOGeom );
+				result = convertSDOMultiPolygon( dim, lrsDim, sdoGeom );
 				break;
 			case COLLECTION:
-				result = convertSDOCollection( dim, lrsDim, SDOGeom );
+				result = convertSDOCollection( dim, lrsDim, sdoGeom );
 				break;
 			default:
 				throw new IllegalArgumentException(
 						"Type not supported: "
-								+ SDOGeom.getGType().getTypeGeometry()
+								+ sdoGeom.getGType().getTypeGeometry()
 				);
 		}
-		result.setSRID( SDOGeom.getSRID() );
+		result.setSRID( sdoGeom.getSRID() );
 		return result;
 
 	}
 
-	private Geometry convertSDOCollection(int dim, int lrsDim,
-										  SDOGeometry SDOGeom) {
-		List<Geometry> geometries = new ArrayList<Geometry>();
-		for ( SDOGeometry elemGeom : SDOGeom.getElementGeometries() ) {
+	private Geometry convertSDOCollection(int dim, int lrsDim, SDOGeometry sdoGeom) {
+		final List<Geometry> geometries = new ArrayList<Geometry>();
+		for ( SDOGeometry elemGeom : sdoGeom.getElementGeometries() ) {
 			geometries.add( convert2JTS( elemGeom ) );
 		}
-		Geometry[] geomArray = new Geometry[geometries.size()];
+		final Geometry[] geomArray = new Geometry[geometries.size()];
 		return getGeometryFactory().createGeometryCollection(
 				geometries.toArray( geomArray )
 		);
 	}
 
-	private Point convertSDOPoint(SDOGeometry SDOGeom) {
-		Double[] ordinates = SDOGeom.getOrdinates().getOrdinateArray();
+	private Point convertSDOPoint(SDOGeometry sdoGeom) {
+		Double[] ordinates = sdoGeom.getOrdinates().getOrdinateArray();
 		if ( ordinates.length == 0 ) {
-			if ( SDOGeom.getDimension() == 2 ) {
+			if ( sdoGeom.getDimension() == 2 ) {
 				ordinates = new Double[] {
-						SDOGeom.getPoint().x,
-						SDOGeom.getPoint().y
+						sdoGeom.getPoint().x,
+						sdoGeom.getPoint().y
 				};
 			}
 			else {
 				ordinates = new Double[] {
-						SDOGeom.getPoint().x,
-						SDOGeom.getPoint().y, SDOGeom.getPoint().z
+						sdoGeom.getPoint().x,
+						sdoGeom.getPoint().y, sdoGeom.getPoint().z
 				};
 			}
 		}
-		CoordinateSequence cs = convertOrdinateArray( ordinates, SDOGeom );
-		Point point = getGeometryFactory().createPoint( cs );
-		return point;
+		final CoordinateSequence cs = convertOrdinateArray( ordinates, sdoGeom );
+		return getGeometryFactory().createPoint( cs );
 	}
 
-	private MultiPoint convertSDOMultiPoint(int dim, int lrsDim,
-											SDOGeometry SDOGeom) {
-		Double[] ordinates = SDOGeom.getOrdinates().getOrdinateArray();
-		CoordinateSequence cs = convertOrdinateArray( ordinates, SDOGeom );
-		MultiPoint multipoint = getGeometryFactory().createMultiPoint( cs );
+	private MultiPoint convertSDOMultiPoint(int dim, int lrsDim, SDOGeometry sdoGeom) {
+		final Double[] ordinates = sdoGeom.getOrdinates().getOrdinateArray();
+		final CoordinateSequence cs = convertOrdinateArray( ordinates, sdoGeom );
+		final MultiPoint multipoint = getGeometryFactory().createMultiPoint( cs );
 		return multipoint;
 	}
 
-	private LineString convertSDOLine(int dim, int lrsDim, SDOGeometry SDOGeom) {
-		boolean lrs = SDOGeom.isLRSGeometry();
-		ElemInfo info = SDOGeom.getInfo();
+	private LineString convertSDOLine(int dim, int lrsDim, SDOGeometry sdoGeom) {
+		final boolean lrs = sdoGeom.isLRSGeometry();
+		final ElemInfo info = sdoGeom.getInfo();
 		CoordinateSequence cs = null;
 
 		int i = 0;
 		while ( i < info.getSize() ) {
 			if ( info.getElementType( i ).isCompound() ) {
-				int numCompounds = info.getNumCompounds( i );
-				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, SDOGeom ) );
+				final int numCompounds = info.getNumCompounds( i );
+				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, sdoGeom ) );
 				i += 1 + numCompounds;
 			}
 			else {
-				cs = add( cs, getElementCSeq( i, SDOGeom, false ) );
+				cs = add( cs, getElementCSeq( i, sdoGeom, false ) );
 				i++;
 			}
 		}
@@ -196,41 +210,38 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 
 	}
 
-	private MultiLineString convertSDOMultiLine(int dim, int lrsDim,
-												SDOGeometry SDOGeom) {
-		boolean lrs = SDOGeom.isLRSGeometry();
+	private MultiLineString convertSDOMultiLine(int dim, int lrsDim, SDOGeometry sdoGeom) {
+		final boolean lrs = sdoGeom.isLRSGeometry();
 		if ( lrs ) {
 			throw new UnsupportedOperationException();
 		}
-		ElemInfo info = SDOGeom.getInfo();
-		LineString[] lines = new LineString[SDOGeom.getInfo().getSize()];
+		final ElemInfo info = sdoGeom.getInfo();
+		final LineString[] lines = new LineString[sdoGeom.getInfo().getSize()];
 		int i = 0;
 		while ( i < info.getSize() ) {
 			CoordinateSequence cs = null;
 			if ( info.getElementType( i ).isCompound() ) {
-				int numCompounds = info.getNumCompounds( i );
-				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, SDOGeom ) );
-				LineString line = getGeometryFactory().createLineString( cs );
+				final int numCompounds = info.getNumCompounds( i );
+				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, sdoGeom ) );
+				final LineString line = getGeometryFactory().createLineString( cs );
 				lines[i] = line;
 				i += 1 + numCompounds;
 			}
 			else {
-				cs = add( cs, getElementCSeq( i, SDOGeom, false ) );
-				LineString line = getGeometryFactory().createLineString( cs );
+				cs = add( cs, getElementCSeq( i, sdoGeom, false ) );
+				final LineString line = getGeometryFactory().createLineString( cs );
 				lines[i] = line;
 				i++;
 			}
 		}
 
-		MultiLineString mls = getGeometryFactory().createMultiLineString( lines );
-		return mls;
-
+		return getGeometryFactory().createMultiLineString( lines );
 	}
 
-	private Geometry convertSDOPolygon(int dim, int lrsDim, SDOGeometry SDOGeom) {
+	private Geometry convertSDOPolygon(int dim, int lrsDim, SDOGeometry sdoGeom) {
 		LinearRing shell = null;
-		LinearRing[] holes = new LinearRing[SDOGeom.getNumElements() - 1];
-		ElemInfo info = SDOGeom.getInfo();
+		final LinearRing[] holes = new LinearRing[sdoGeom.getNumElements() - 1];
+		final ElemInfo info = sdoGeom.getInfo();
 		int i = 0;
 		int idxInteriorRings = 0;
 		while ( i < info.getSize() ) {
@@ -238,10 +249,10 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 			int numCompounds = 0;
 			if ( info.getElementType( i ).isCompound() ) {
 				numCompounds = info.getNumCompounds( i );
-				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, SDOGeom ) );
+				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, sdoGeom ) );
 			}
 			else {
-				cs = add( cs, getElementCSeq( i, SDOGeom, false ) );
+				cs = add( cs, getElementCSeq( i, sdoGeom, false ) );
 			}
 			if ( info.getElementType( i ).isInteriorRing() ) {
 				holes[idxInteriorRings] = getGeometryFactory()
@@ -256,11 +267,10 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 		return getGeometryFactory().createPolygon( shell, holes );
 	}
 
-	private MultiPolygon convertSDOMultiPolygon(int dim, int lrsDim,
-												SDOGeometry SDOGeom) {
+	private MultiPolygon convertSDOMultiPolygon(int dim, int lrsDim, SDOGeometry sdoGeom) {
 		List<LinearRing> holes = new ArrayList<LinearRing>();
-		List<Polygon> polygons = new ArrayList<Polygon>();
-		ElemInfo info = SDOGeom.getInfo();
+		final List<Polygon> polygons = new ArrayList<Polygon>();
+		final ElemInfo info = sdoGeom.getInfo();
 		LinearRing shell = null;
 		int i = 0;
 		while ( i < info.getSize() ) {
@@ -268,18 +278,18 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 			int numCompounds = 0;
 			if ( info.getElementType( i ).isCompound() ) {
 				numCompounds = info.getNumCompounds( i );
-				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, SDOGeom ) );
+				cs = add( cs, getCompoundCSeq( i + 1, i + numCompounds, sdoGeom ) );
 			}
 			else {
-				cs = add( cs, getElementCSeq( i, SDOGeom, false ) );
+				cs = add( cs, getElementCSeq( i, sdoGeom, false ) );
 			}
 			if ( info.getElementType( i ).isInteriorRing() ) {
-				LinearRing lr = getGeometryFactory().createLinearRing( cs );
+				final LinearRing lr = getGeometryFactory().createLinearRing( cs );
 				holes.add( lr );
 			}
 			else {
 				if ( shell != null ) {
-					Polygon polygon = getGeometryFactory().createPolygon(
+					final Polygon polygon = getGeometryFactory().createPolygon(
 							shell,
 							holes.toArray( new LinearRing[holes.size()] )
 					);
@@ -292,16 +302,13 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 			i += 1 + numCompounds;
 		}
 		if ( shell != null ) {
-			Polygon polygon = getGeometryFactory().createPolygon(
+			final Polygon polygon = getGeometryFactory().createPolygon(
 					shell,
 					holes.toArray( new LinearRing[holes.size()] )
 			);
 			polygons.add( polygon );
 		}
-		MultiPolygon multiPolygon = getGeometryFactory().createMultiPolygon(
-				polygons.toArray( new Polygon[polygons.size()] )
-		);
-		return multiPolygon;
+		return getGeometryFactory().createMultiPolygon( polygons.toArray( new Polygon[polygons.size()] ) );
 	}
 
 	/**
@@ -309,27 +316,22 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	 *
 	 * @param idxFirst the first sub-element of the compound element
 	 * @param idxLast the last sub-element of the compound element
-	 * @param SDOGeom the SDOGeometry that holds the compound element.
+	 * @param sdoGeom the SDOGeometry that holds the compound element.
 	 *
 	 * @return
 	 */
-	private CoordinateSequence getCompoundCSeq(int idxFirst, int idxLast,
-											   SDOGeometry SDOGeom) {
+	private CoordinateSequence getCompoundCSeq(int idxFirst, int idxLast, SDOGeometry sdoGeom) {
 		CoordinateSequence cs = null;
 		for ( int i = idxFirst; i <= idxLast; i++ ) {
 			// pop off the last element as it is added with the next
 			// coordinate sequence
 			if ( cs != null && cs.size() > 0 ) {
-				Coordinate[] coordinates = cs.toCoordinateArray();
-				Coordinate[] newCoordinates = new Coordinate[coordinates.length - 1];
-				System.arraycopy(
-						coordinates, 0, newCoordinates, 0,
-						coordinates.length - 1
-				);
-				cs = getGeometryFactory().getCoordinateSequenceFactory()
-						.create( newCoordinates );
+				final Coordinate[] coordinates = cs.toCoordinateArray();
+				final Coordinate[] newCoordinates = new Coordinate[coordinates.length - 1];
+				System.arraycopy( coordinates, 0, newCoordinates, 0, coordinates.length - 1 );
+				cs = getGeometryFactory().getCoordinateSequenceFactory().create( newCoordinates );
 			}
-			cs = add( cs, getElementCSeq( i, SDOGeom, ( i < idxLast ) ) );
+			cs = add( cs, getElementCSeq( i, sdoGeom, ( i < idxLast ) ) );
 		}
 		return cs;
 	}
@@ -338,36 +340,32 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	 * Gets the CoordinateSequence corresponding to an element.
 	 *
 	 * @param i
-	 * @param SDOGeom
+	 * @param sdoGeom
 	 *
 	 * @return
 	 */
-	private CoordinateSequence getElementCSeq(int i, SDOGeometry SDOGeom,
-											  boolean hasNextSE) {
-		ElementType type = SDOGeom.getInfo().getElementType( i );
-		Double[] elemOrdinates = extractOrdinatesOfElement(
-				i, SDOGeom,
-				hasNextSE
-		);
+	private CoordinateSequence getElementCSeq(int i, SDOGeometry sdoGeom, boolean hasNextSE) {
+		final ElementType type = sdoGeom.getInfo().getElementType( i );
+		final Double[] elemOrdinates = extractOrdinatesOfElement( i, sdoGeom, hasNextSE );
 		CoordinateSequence cs;
 		if ( type.isStraightSegment() ) {
-			cs = convertOrdinateArray( elemOrdinates, SDOGeom );
+			cs = convertOrdinateArray( elemOrdinates, sdoGeom );
 		}
 		else if ( type.isArcSegment() || type.isCircle() ) {
-			Coordinate[] linearized = linearize(
-					elemOrdinates, SDOGeom
-					.getDimension(), SDOGeom.isLRSGeometry(), type.isCircle()
+			final Coordinate[] linearized = linearize(
+					elemOrdinates,
+					sdoGeom.getDimension(),
+					sdoGeom.isLRSGeometry(),
+					type.isCircle()
 			);
-			cs = getGeometryFactory().getCoordinateSequenceFactory().create(
-					linearized
-			);
+			cs = getGeometryFactory().getCoordinateSequenceFactory().create( linearized );
 		}
 		else if ( type.isRect() ) {
-			cs = convertOrdinateArray( elemOrdinates, SDOGeom );
-			Coordinate ll = cs.getCoordinate( 0 );
-			Coordinate ur = cs.getCoordinate( 1 );
-			Coordinate lr = new Coordinate( ur.x, ll.y );
-			Coordinate ul = new Coordinate( ll.x, ur.y );
+			cs = convertOrdinateArray( elemOrdinates, sdoGeom );
+			final Coordinate ll = cs.getCoordinate( 0 );
+			final Coordinate ur = cs.getCoordinate( 1 );
+			final Coordinate lr = new Coordinate( ur.x, ll.y );
+			final Coordinate ul = new Coordinate( ll.x, ur.y );
 			if ( type.isExteriorRing() ) {
 				cs = getGeometryFactory().getCoordinateSequenceFactory()
 						.create( new Coordinate[] { ll, lr, ur, ul, ll } );
@@ -386,46 +384,43 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 		return cs;
 	}
 
-	private CoordinateSequence add(CoordinateSequence seq1,
-								   CoordinateSequence seq2) {
+	private CoordinateSequence add(CoordinateSequence seq1, CoordinateSequence seq2) {
 		if ( seq1 == null ) {
 			return seq2;
 		}
 		if ( seq2 == null ) {
 			return seq1;
 		}
-		Coordinate[] c1 = seq1.toCoordinateArray();
-		Coordinate[] c2 = seq2.toCoordinateArray();
-		Coordinate[] c3 = new Coordinate[c1.length + c2.length];
+		final Coordinate[] c1 = seq1.toCoordinateArray();
+		final Coordinate[] c2 = seq2.toCoordinateArray();
+		final Coordinate[] c3 = new Coordinate[c1.length + c2.length];
 		System.arraycopy( c1, 0, c3, 0, c1.length );
 		System.arraycopy( c2, 0, c3, c1.length, c2.length );
 		return getGeometryFactory().getCoordinateSequenceFactory().create( c3 );
 	}
 
-	private Double[] extractOrdinatesOfElement(int element,
-											   SDOGeometry SDOGeom, boolean hasNextSE) {
-		int start = SDOGeom.getInfo().getOrdinatesOffset( element );
-		if ( element < SDOGeom.getInfo().getSize() - 1 ) {
-			int end = SDOGeom.getInfo().getOrdinatesOffset( element + 1 );
+	private Double[] extractOrdinatesOfElement(int element, SDOGeometry sdoGeom, boolean hasNextSE) {
+		final int start = sdoGeom.getInfo().getOrdinatesOffset( element );
+		if ( element < sdoGeom.getInfo().getSize() - 1 ) {
+			int end = sdoGeom.getInfo().getOrdinatesOffset( element + 1 );
 			// if this is a subelement of a compound geometry,
 			// the last point is the first point of
 			// the next subelement.
 			if ( hasNextSE ) {
-				end += SDOGeom.getDimension();
+				end += sdoGeom.getDimension();
 			}
-			return SDOGeom.getOrdinates().getOrdinatesArray( start, end );
+			return sdoGeom.getOrdinates().getOrdinatesArray( start, end );
 		}
 		else {
-			return SDOGeom.getOrdinates().getOrdinatesArray( start );
+			return sdoGeom.getOrdinates().getOrdinatesArray( start );
 		}
 	}
 
-	private CoordinateSequence convertOrdinateArray(Double[] oordinates,
-													SDOGeometry SDOGeom) {
-		int dim = SDOGeom.getDimension();
-		Coordinate[] coordinates = new Coordinate[oordinates.length / dim];
-		int zDim = SDOGeom.getZDimension() - 1;
-		int lrsDim = SDOGeom.getLRSDimension() - 1;
+	private CoordinateSequence convertOrdinateArray(Double[] oordinates, SDOGeometry sdoGeom) {
+		final int dim = sdoGeom.getDimension();
+		final Coordinate[] coordinates = new Coordinate[oordinates.length / dim];
+		final int zDim = sdoGeom.getZDimension() - 1;
+		final int lrsDim = sdoGeom.getLRSDimension() - 1;
 		for ( int i = 0; i < coordinates.length; i++ ) {
 			if ( dim == 2 ) {
 				coordinates[i] = new Coordinate(
@@ -434,7 +429,7 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 				);
 			}
 			else if ( dim == 3 ) {
-				if ( SDOGeom.isLRSGeometry() ) {
+				if ( sdoGeom.isLRSGeometry() ) {
 
 					throw new UnsupportedOperationException();
 //					coordinates[i] = MCoordinate.create2dWithMeasure(
@@ -445,8 +440,10 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 				}
 				else {
 					coordinates[i] = new Coordinate(
-							oordinates[i * dim], // X
-							oordinates[i * dim + 1], // Y
+							//X
+							oordinates[i * dim],
+							//Y
+							oordinates[i * dim + 1],
 							oordinates[i * dim + zDim]
 					); // Z
 				}
@@ -482,12 +479,11 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	 *
 	 * @return linearized interpolation of arcs or circle
 	 */
-	private Coordinate[] linearize(Double[] arcOrdinates, int dim, boolean lrs,
-								   boolean entireCirlce) {
+	private Coordinate[] linearize(Double[] arcOrdinates, int dim, boolean lrs, boolean entireCirlce) {
 		Coordinate[] linearizedCoords = new Coordinate[0];
 		// CoordDim is the dimension that includes only non-measure (X,Y,Z)
 		// ordinates in its value
-		int coordDim = lrs ? dim - 1 : dim;
+		final int coordDim = lrs ? dim - 1 : dim;
 		// this only works with 2-Dimensional geometries, since we use
 		// JGeometry linearization;
 		if ( coordDim != 2 ) {
@@ -499,15 +495,15 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 		int numOrd = dim;
 		while ( numOrd < arcOrdinates.length ) {
 			numOrd = numOrd - dim;
-			double x1 = arcOrdinates[numOrd++];
-			double y1 = arcOrdinates[numOrd++];
-			double m1 = lrs ? arcOrdinates[numOrd++] : Double.NaN;
-			double x2 = arcOrdinates[numOrd++];
-			double y2 = arcOrdinates[numOrd++];
-			double m2 = lrs ? arcOrdinates[numOrd++] : Double.NaN;
-			double x3 = arcOrdinates[numOrd++];
-			double y3 = arcOrdinates[numOrd++];
-			double m3 = lrs ? arcOrdinates[numOrd++] : Double.NaN;
+			final double x1 = arcOrdinates[numOrd++];
+			final double y1 = arcOrdinates[numOrd++];
+			final double m1 = lrs ? arcOrdinates[numOrd++] : Double.NaN;
+			final double x2 = arcOrdinates[numOrd++];
+			final double y2 = arcOrdinates[numOrd++];
+			final double m2 = lrs ? arcOrdinates[numOrd++] : Double.NaN;
+			final double x3 = arcOrdinates[numOrd++];
+			final double y3 = arcOrdinates[numOrd++];
+			final double m3 = lrs ? arcOrdinates[numOrd++] : Double.NaN;
 
 			Coordinate[] coords;
 			if ( entireCirlce ) {
@@ -545,18 +541,10 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 				resultBegin = 0;
 			}
 
-			int destPos = linearizedCoords.length;
-			Coordinate[] tmpCoords = new Coordinate[linearizedCoords.length
-					+ coords.length - resultBegin];
-			System.arraycopy(
-					linearizedCoords, 0, tmpCoords, 0,
-					linearizedCoords.length
-			);
-			System.arraycopy(
-					coords, resultBegin, tmpCoords, destPos,
-					coords.length - resultBegin
-			);
-
+			final int destPos = linearizedCoords.length;
+			final Coordinate[] tmpCoords = new Coordinate[linearizedCoords.length + coords.length - resultBegin];
+			System.arraycopy( linearizedCoords, 0, tmpCoords, 0, linearizedCoords.length );
+			System.arraycopy( coords, resultBegin, tmpCoords, destPos, coords.length - resultBegin );
 			linearizedCoords = tmpCoords;
 		}
 		return linearizedCoords;

@@ -21,7 +21,9 @@
 
 package org.hibernate.spatial.testing;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 
@@ -31,10 +33,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public abstract class TestSupport {
 
-	protected Configuration configuration;
+	protected ConfigurationService configurationService;
 
-	public DataSourceUtils createDataSourceUtil(Configuration configuration) {
-		this.configuration = configuration;
+	public DataSourceUtils createDataSourceUtil(MetadataImplementor metadataImplementor) {
+		this.configurationService = metadataImplementor.getServiceRegistry().getService( ConfigurationService.class );
 		return new DataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 	}
 
@@ -49,18 +51,18 @@ public abstract class TestSupport {
 	public abstract SQLExpressionTemplate getSQLExpressionTemplate();
 
 	protected String driver() {
-		return configuration.getProperty( "hibernate.connection.driver_class" );
+		return configurationService.getSetting( AvailableSettings.DRIVER );
 	}
 
 	protected String url() {
-		return configuration.getProperty( "hibernate.connection.url" );
+		return configurationService.getSetting( AvailableSettings.URL );
 	}
 
 	protected String user() {
-		return configuration.getProperty( "hibernate.connection.username" );
+		return configurationService.getSetting( AvailableSettings.USER );
 	}
 
 	protected String passwd() {
-		return configuration.getProperty( "hibernate.connection.password" );
+		return configurationService.getSetting( AvailableSettings.PASS );
 	}
 }

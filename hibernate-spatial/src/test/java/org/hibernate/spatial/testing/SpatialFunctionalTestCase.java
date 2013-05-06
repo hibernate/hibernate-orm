@@ -31,7 +31,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -110,13 +110,12 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 *
 	 * @return
 	 */
-	protected Configuration constructConfiguration() {
-		Configuration cfg = super.constructConfiguration();
-		initializeSpatialTestSupport( cfg );
-		return cfg;
+	public void afterMetadataBuilt(MetadataImplementor metadataImplementor) {
+		super.afterMetadataBuilt( metadataImplementor );
+		initializeSpatialTestSupport( metadataImplementor );
 	}
 
-	private void initializeSpatialTestSupport(Configuration cfg) {
+	private void initializeSpatialTestSupport(MetadataImplementor cfg) {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( getDialect() );
 			dataSourceUtils = support.createDataSourceUtil( cfg );
@@ -134,7 +133,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * <p/>
 	 * Mostly used to register spatial metadata in databases such as Oracle Spatial.
 	 */
-	protected void afterSessionFactoryBuilt() {
+	public void afterSessionFactoryBuilt() {
 		dataSourceUtils.afterCreateSchema();
 	}
 

@@ -24,12 +24,17 @@ package org.hibernate.spatial.helper;
  * This exception is thrown when Hibernate Spatial fails to find a required
  * resource.
  *
- * @author maesenka
+ * @author Karel Maesen, Geovise BVBA
  */
 public class FinderException extends Exception {
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Creates an instance with the specified message
+	 *
+	 * @param msg the error message for this exception
+	 */
 	public FinderException(String msg) {
 		super( msg );
 	}

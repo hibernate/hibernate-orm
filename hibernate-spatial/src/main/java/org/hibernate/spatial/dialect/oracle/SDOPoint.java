@@ -29,15 +29,15 @@ import java.sql.Struct;
  *         creation-date: Jul 1, 2010
  */
 class SDOPoint {
-	public double x = 0.0;
+	public double x;
 
-	public double y = 0.0;
+	public double y;
 
 	public double z = Double.NaN;
 
 	public SDOPoint(Struct struct) {
 		try {
-			Object[] data = struct.getAttributes();
+			final Object[] data = struct.getAttributes();
 			this.x = ( (Number) data[0] ).doubleValue();
 			this.y = ( (Number) data[1] ).doubleValue();
 			if ( data[2] != null ) {
@@ -50,7 +50,7 @@ class SDOPoint {
 	}
 
 	public String toString() {
-		StringBuilder stb = new StringBuilder();
+		final StringBuilder stb = new StringBuilder();
 		stb.append( "(" ).append( x ).append( "," ).append( y ).append( "," ).append(
 				z
 		).append( ")" );

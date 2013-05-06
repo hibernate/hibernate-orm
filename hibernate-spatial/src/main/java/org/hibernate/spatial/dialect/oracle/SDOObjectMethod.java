@@ -88,7 +88,7 @@ class SDOObjectMethod implements SQLFunction {
 		  */
 
 	public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) throws QueryException {
-		StringBuffer buf = new StringBuffer();
+		final StringBuffer buf = new StringBuffer();
 		if ( args.isEmpty() ) {
 			throw new QueryException(
 					"First Argument in arglist must be object to which method is applied"

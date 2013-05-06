@@ -21,7 +21,7 @@
 
 package org.hibernate.spatial.testing.dialects.oracle;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
@@ -51,8 +51,8 @@ public class OracleSDOTestSupport extends TestSupport {
 	}
 
 	@Override
-	public DataSourceUtils createDataSourceUtil(Configuration configuration) {
-		this.configuration = configuration;
+	public DataSourceUtils createDataSourceUtil(MetadataImplementor metadataImplementor) {
+		super.createDataSourceUtil( metadataImplementor );
 		return new SDODataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 	}
 }

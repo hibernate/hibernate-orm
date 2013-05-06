@@ -27,25 +27,31 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.spatial.SpatialRelation;
 
 /**
- * Static Factory Class for creating spatial criterion types.
- * <p/>
- * <p>
+ * A factory for spatial criteria.
+ *
  * The criterion types created by this class implement the spatial query
  * expressions of the OpenGIS Simple Features Specification for SQL, Revision
- * 1.1.
- * <p/>
- * In addition, it provides for a simple spatial <code>filter</code> that
+ * 1.1. In addition, it provides for a simple spatial <code>filter</code> that
  * works mostly using the spatial index. This corresponds to the Oracle
  * Spatial's "SDO_FILTER" function, or the "&&" operator of PostGIS.
- * </p>
  *
  * @author Karel Maesen
  */
 public class SpatialRestrictions {
 
-	SpatialRestrictions() {
+	private SpatialRestrictions() {
 	}
 
+	/**
+	 * Apply a "spatially equal" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression eq(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -53,7 +59,16 @@ public class SpatialRestrictions {
 		);
 	}
 
-
+	/**
+	 * Apply a "spatially within" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression within(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -61,6 +76,16 @@ public class SpatialRestrictions {
 		);
 	}
 
+	/**
+	 * Apply a "spatially contains" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression contains(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -68,6 +93,16 @@ public class SpatialRestrictions {
 		);
 	}
 
+	/**
+	 * Apply a "spatially crosses" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression crosses(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -75,6 +110,16 @@ public class SpatialRestrictions {
 		);
 	}
 
+	/**
+	 * Apply a "spatially disjoint" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression disjoint(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -82,6 +127,16 @@ public class SpatialRestrictions {
 		);
 	}
 
+	/**
+	 * Apply a "spatially intersects" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression intersects(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -89,6 +144,16 @@ public class SpatialRestrictions {
 		);
 	}
 
+	/**
+	 * Apply a "spatially overlaps" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression overlaps(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -96,6 +161,16 @@ public class SpatialRestrictions {
 		);
 	}
 
+	/**
+	 * Apply a "spatially touches" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in comparison
+	 *
+	 * @return SpatialRelateExpression
+	 *
+	 * @see SpatialRelateExpression
+	 */
 	public static SpatialRelateExpression touches(String propertyName, Geometry value) {
 		return new SpatialRelateExpression(
 				propertyName, value,
@@ -103,34 +178,102 @@ public class SpatialRestrictions {
 		);
 	}
 
-	public static SpatialFilter filter(String propertyName, Geometry filter) {
-		return new SpatialFilter( propertyName, filter );
+	/**
+	 * Apply a bounding box overlap constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param value The geometry value whose bounding box to use in the comparison
+	 *
+	 * @return SpatialFilter
+	 *
+	 * @see SpatialFilter
+	 */
+	public static SpatialFilter filter(String propertyName, Geometry value) {
+		return new SpatialFilter( propertyName, value );
 	}
 
-	public static SpatialFilter filter(String propertyName, Envelope envelope,
-									   int SRID) {
-		return new SpatialFilter( propertyName, envelope, SRID );
+	/**
+	 * Apply a bounding box overlap constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param envelope The envelope or bounding box to use in the comparison
+	 * @param srid the SRID of the bounding box
+	 *
+	 * @return SpatialFilter
+	 *
+	 * @see SpatialFilter
+	 */
+	public static SpatialFilter filter(String propertyName, Envelope envelope, int srid) {
+		return new SpatialFilter( propertyName, envelope, srid );
 	}
 
+	/**
+	 * Apply a "distance within" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param geometry The geometry value to use in the comparison
+	 * @param distance The distance
+	 *
+	 * @return DWithinExpression
+	 *
+	 * @see DWithinExpression
+	 */
 	public static Criterion distanceWithin(String propertyName, Geometry geometry, double distance) {
 		return new DWithinExpression( propertyName, geometry, distance );
 	}
 
-
+	/**
+	 * Apply a "having srid" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 * @param srid The SRID value to use in the comparison
+	 *
+	 * @return A HavingSridExpression
+	 *
+	 * @see HavingSridExpression
+	 */
 	public static Criterion havingSRID(String propertyName, int srid) {
 		return new HavingSridExpression( propertyName, srid );
 	}
 
+	/**
+	 * Apply an "is empty" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 *
+	 * @return A IsEmptyExpression
+	 *
+	 * @see IsEmptyExpression
+	 */
 	public static Criterion isEmpty(String propertyName) {
 		return new IsEmptyExpression( propertyName, true );
 	}
 
+	/**
+	 * Apply an "is not empty" constraint to the named property
+	 *
+	 * @param propertyName The name of the property
+	 *
+	 * @return A IsEmptyExpression
+	 *
+	 * @see IsEmptyExpression
+	 */
 	public static Criterion isNotEmpty(String propertyName) {
 		return new IsEmptyExpression( propertyName, false );
 	}
 
-	public static Criterion spatialRestriction(int relation,
-											   String propertyName, Geometry value) {
+	/**
+	 * Apply the specified spatial relation constraint to the named property.
+	 *
+	 * @param relation The spatial relation to apply
+	 * @param propertyName The name of the property
+	 * @param value The geometry value to use in the comparison
+	 *
+	 * @return SpatialFilter
+	 *
+	 * @see SpatialFilter
+	 */
+	public static Criterion spatialRestriction(int relation, String propertyName, Geometry value) {
 		switch ( relation ) {
 			case SpatialRelation.CONTAINS:
 				return contains( propertyName, value );

@@ -43,22 +43,21 @@ import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * Descriptor for MySQL Geometries.
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 1/17/12
  */
 public class MySQLGeometryTypeDescriptor implements SqlTypeDescriptor {
 
+	/**
+	 * An instance of this Descriptor
+	 */
 	public static final MySQLGeometryTypeDescriptor INSTANCE = new MySQLGeometryTypeDescriptor();
 
 	@Override
 	public int getSqlType() {
 		return Types.ARRAY;
 	}
-//
-//	@Override
-//	public String getTypeName() {
-//		return "GEOMETRY";
-//	}
 
 	@Override
 	public boolean canBeRemapped() {
@@ -71,10 +70,10 @@ public class MySQLGeometryTypeDescriptor implements SqlTypeDescriptor {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
-				Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
-				ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
-				byte[] bytes = ( buffer == null ? null : buffer.toByteArray() );
+				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.MYSQL_WKB );
+				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
+				final byte[] bytes = ( buffer == null ? null : buffer.toByteArray() );
 				st.setBytes( index, bytes );
 			}
 		};
@@ -106,8 +105,8 @@ public class MySQLGeometryTypeDescriptor implements SqlTypeDescriptor {
 		if ( bytes == null ) {
 			return null;
 		}
-		ByteBuffer buffer = ByteBuffer.from( bytes );
-		WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
+		final ByteBuffer buffer = ByteBuffer.from( bytes );
+		final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
 		return decoder.decode( buffer );
 	}
 

@@ -31,7 +31,7 @@ enum TypeGeometry {
 			5
 	), MULTILINE( 6 ), MULTIPOLYGON( 7 ), SOLID( 8 ), MULTISOLID( 9 );
 
-	private int gtype = 0;
+	private int gtype;
 
 	TypeGeometry(int gtype) {
 		this.gtype = gtype;

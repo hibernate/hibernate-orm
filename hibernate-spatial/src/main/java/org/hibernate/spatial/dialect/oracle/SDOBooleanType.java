@@ -42,7 +42,7 @@ class SDOBooleanType extends BooleanType {
 	}
 
 	public Object get(ResultSet rs, String name) throws SQLException {
-		String value = rs.getString( name );
+		final String value = rs.getString( name );
 		if ( rs.wasNull() ) {
 			return getDefaultValue();
 		}
@@ -61,17 +61,12 @@ class SDOBooleanType extends BooleanType {
 			st.setNull( index, Types.VARCHAR );
 		}
 		else {
-			boolean bool = value.booleanValue();
-			st.setString( index, bool ? "TRUE" : "FALSE" );
+			st.setString( index, value ? "TRUE" : "FALSE" );
 		}
 	}
 
 	public String objectToSQLString(Boolean value, Dialect dialect) {
-		return value.booleanValue() ? "'TRUE'" : "'FALSE'";
+		return value ? "'TRUE'" : "'FALSE'";
 	}
-
-//    public int sqlType() {
-//        return Types.VARCHAR;
-//    }
 
 }

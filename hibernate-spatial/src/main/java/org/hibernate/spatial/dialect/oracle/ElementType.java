@@ -46,7 +46,7 @@ enum ElementType {
 
 	private int interpretation = 2;
 
-	private boolean compound = false;
+	private boolean compound;
 
 	private ElementType(int etype, int interp) {
 		this.etype = etype;

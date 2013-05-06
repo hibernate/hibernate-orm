@@ -40,8 +40,14 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements SpatialDialect {
 
-	public final static String SHORT_NAME = "sqlserver";
+	/**
+	 * The short name for this dialect
+	 */
+	public static final String SHORT_NAME = "sqlserver";
 
+	/**
+	 * Constructs an instance
+	 */
 	public SqlServer2008SpatialDialect() {
 		super();
 
@@ -114,6 +120,7 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		typeContributions.contributeType( new JTSGeometryType( SqlServer2008GeometryTypeDescriptor.INSTANCE ) );
 	}
 
+	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		final String stfunction;
 		switch ( spatialRelation ) {
@@ -150,31 +157,38 @@ public class SqlServer2008SpatialDialect extends SQLServer2008Dialect implements
 		return columnName + "." + stfunction + "(?) = 1";
 	}
 
+	@Override
 	public String getSpatialFilterExpression(String columnName) {
 		return columnName + ".Filter(?) = 1";
 	}
 
+	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		throw new UnsupportedOperationException( "No spatial aggregate SQL functions." );
 	}
 
+	@Override
 	public String getDWithinSQL(String columnName) {
 		throw new UnsupportedOperationException( "SQL Server has no DWithin function." );
 	}
 
+	@Override
 	public String getHavingSridSQL(String columnName) {
 		return columnName + ".STSrid = (?)";
 	}
 
+	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		String base = "(" + columnName + ".STIsEmpty() ";
+		final String base = "(" + columnName + ".STIsEmpty() ";
 		return isEmpty ? base + " = 1 )" : base + " = 0 )";
 	}
 
+	@Override
 	public boolean supportsFiltering() {
 		return true;
 	}
 
+	@Override
 	public boolean supports(SpatialFunction function) {
 		return ( getFunctions().get( function.toString() ) != null );
 	}

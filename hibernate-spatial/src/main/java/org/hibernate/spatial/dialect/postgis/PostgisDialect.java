@@ -34,17 +34,18 @@ import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * Extends the PostgreSQLDialect by also including information on spatial
- * operators, constructors and processing functions.
+ * A Dialect for Postgresql with support for the Postgis spatial types, functions and operators (release 1.3 or higher)
  *
  * @author Karel Maesen
  */
 public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialect {
 
 
+	/**
+	 * Creates an instance
+	 */
 	public PostgisDialect() {
 		super();
-
 		registerTypesAndFunctions();
 	}
 
@@ -239,6 +240,7 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		);
 	}
 
+	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		switch ( spatialRelation ) {
 			case SpatialRelation.WITHIN:
@@ -266,27 +268,32 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 
 	}
 
+	@Override
 	public String getDWithinSQL(String columnName) {
 		return "ST_DWithin(" + columnName + ",?,?)";
 	}
 
+	@Override
 	public String getHavingSridSQL(String columnName) {
 		return "( ST_srid(" + columnName + ") = ?)";
 	}
 
+	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
+		final String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
 		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
 	}
 
+	@Override
 	public String getSpatialFilterExpression(String columnName) {
 		return "(" + columnName + " && ? ) ";
 	}
 
+	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		switch ( aggregation ) {
 			case SpatialAggregate.EXTENT:
-				StringBuilder stbuf = new StringBuilder();
+				final StringBuilder stbuf = new StringBuilder();
 				stbuf.append( "extent(" ).append( columnName ).append( ")" );
 				return stbuf.toString();
 			default:
@@ -297,10 +304,12 @@ public class PostgisDialect extends PostgreSQL82Dialect implements SpatialDialec
 		}
 	}
 
+	@Override
 	public boolean supportsFiltering() {
 		return true;
 	}
 
+	@Override
 	public boolean supports(SpatialFunction function) {
 		return ( getFunctions().get( function.toString() ) != null );
 	}

@@ -37,27 +37,31 @@ import org.hibernate.type.Type;
 public class OracleSpatialProjection extends SimpleProjection {
 
 	private static final long serialVersionUID = 1L;
-
 	private final String propertyName;
-
 	private final int aggregate;
 
+	/**
+	 * Constructs an instance for the specified aggregate function and property
+	 *
+	 * @param aggregate The aggregate function (a value of {@code OracleSpatialAggregate}
+	 * @param propertyName The name of the geometry property
+	 */
 	public OracleSpatialProjection(int aggregate, String propertyName) {
 		this.propertyName = propertyName;
 		this.aggregate = aggregate;
 	}
 
-	public String toSqlString(Criteria criteria, int position,
-							  CriteriaQuery criteriaQuery) throws HibernateException {
+	@Override
+	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) throws HibernateException {
 
-		SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		String[] columns = criteriaQuery.getColumnsUsingProjection(
+		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
+		final String[] columns = criteriaQuery.getColumnsUsingProjection(
 				criteria,
 				this.propertyName
 		);
-		Dialect dialect = factory.getDialect();
+		final Dialect dialect = factory.getDialect();
 		if ( dialect instanceof SpatialDialect ) {
-			SpatialDialect seDialect = (SpatialDialect) dialect;
+			final SpatialDialect seDialect = (SpatialDialect) dialect;
 
 			return new StringBuffer(
 					seDialect.getSpatialAggregateSQL(
@@ -74,11 +78,13 @@ public class OracleSpatialProjection extends SimpleProjection {
 
 	}
 
+	@Override
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery)
 			throws HibernateException {
 		return new Type[] { criteriaQuery.getType( criteria, this.propertyName ) };
 	}
 
+	@Override
 	public String toString() {
 		return aggregate + "(" + propertyName + ")";
 	}

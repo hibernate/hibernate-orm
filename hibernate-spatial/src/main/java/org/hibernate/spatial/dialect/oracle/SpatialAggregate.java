@@ -29,11 +29,11 @@ import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
  */
 class SpatialAggregate {
 
-	boolean _aggregateType;
+	private boolean aggregateType;
 
-	String _aggregateSyntax;
+	private String aggregateSyntax;
 
-	private final String SDO_AGGR = "SDO_AGGR_";
+	private static final String SDO_AGGR = "SDO_AGGR_";
 
 	SpatialAggregate() {
 	}
@@ -45,43 +45,43 @@ class SpatialAggregate {
 		switch ( aggregation ) {
 			case org.hibernate.spatial.SpatialAggregate.EXTENT:
 				specificAggrSyntax = "MBR";
-				_aggregateType = false;
+				aggregateType = false;
 				break;
 			case OracleSpatialAggregate.LRS_CONCAT:
 				specificAggrSyntax = "LRS_CONCAT";
-				_aggregateType = true;
+				aggregateType = true;
 				break;
 			case OracleSpatialAggregate.CENTROID:
 				specificAggrSyntax = "CENTROID";
-				_aggregateType = true;
+				aggregateType = true;
 				break;
 			case OracleSpatialAggregate.CONCAT_LINES:
 				specificAggrSyntax = "CONCAT_LINES";
-				_aggregateType = false;
+				aggregateType = false;
 				break;
 			case OracleSpatialAggregate.UNION:
 				specificAggrSyntax = "UNION";
-				_aggregateType = true;
+				aggregateType = true;
 				break;
 			case OracleSpatialAggregate.CONVEXHULL:
 				specificAggrSyntax = "CONVEXHULL";
-				_aggregateType = true;
+				aggregateType = true;
 				break;
 			default:
 				specificAggrSyntax = null;
 				break;
 		}
 		if ( specificAggrSyntax != null ) {
-			_aggregateSyntax = SDO_AGGR + specificAggrSyntax;
+			aggregateSyntax = SDO_AGGR + specificAggrSyntax;
 		}
 	}
 
 	public boolean isAggregateType() {
-		return _aggregateType;
+		return aggregateType;
 	}
 
 	public String getAggregateSyntax() {
-		return _aggregateSyntax;
+		return aggregateSyntax;
 	}
 
 }

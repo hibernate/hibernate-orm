@@ -1,22 +1,22 @@
 /*
  * This file is part of Hibernate Spatial, an extension to the
- *  hibernate ORM solution for spatial (geographic) data.
+ * hibernate ORM solution for spatial (geographic) data.
  *
- *  Copyright © 2007-2012 Geovise BVBA, Geodan IT b.v.
+ * Copyright © 2007-2013 Geovise BVBA
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.dialect.h2geodb;
@@ -47,30 +47,45 @@ import org.hibernate.spatial.LogFactory;
 
 /**
  * A utility class to serialize from/to GeoDB WKB's.
- * <p/>
+ *
  * <p>Note: this utility makes it unnecessary to have a dependency on GeoDB. As long as GeoDB is
  * not available in common maven repositories, such a dependency is to be avoided.</p>
  *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 2/29/12
  */
 public class GeoDbWkb {
 
-	private static Log LOG = LogFactory.make();
+	private static final Log LOGGER = LogFactory.make();
 
+	private GeoDbWkb() {
+	}
 
+	/**
+	 * Encode the specified {@code Geometry} into a WKB
+	 *
+	 * @param geometry The value to encode
+	 *
+	 * @return A byte-array representing the geometry in WKB.
+	 */
 	public static byte[] to(Geometry geometry) {
-		WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-		ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
+		final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+		final ByteBuffer buffer = encoder.encode( geometry, ByteOrder.NDR );
 		return ( buffer == null ? null : buffer.toByteArray() );
 	}
 
+	/**
+	 * Decode the object into a {@code Geometry}
+	 *
+	 * @param object The object to decode
+	 *
+	 * @return The {@code Geometry}
+	 */
 	public static Geometry from(Object object) {
 		if ( object == null ) {
 			return null;
 		}
 		try {
-			WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
+			final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 			if ( object instanceof Blob ) {
 				return decoder.decode( toByteBuffer( (Blob) object ) );
 			}
@@ -88,14 +103,14 @@ public class GeoDbWkb {
 			}
 		}
 		catch ( Exception e ) {
-			LOG.warn( "Could not convert database object to a Geometry." );
+			LOGGER.warn( "Could not convert database object to a Geometry." );
 			throw new HibernateException( e );
 		}
 
 	}
 
 	private static Geometry toPolygon(Envelope env) {
-		PointSequence ps = PointSequenceBuilders.fixedSized( 4, DimensionalFlag.d2D, CrsId.UNDEFINED )
+		final PointSequence ps = PointSequenceBuilders.fixedSized( 4, DimensionalFlag.d2D, CrsId.UNDEFINED )
 				.add( env.getMinX(), env.getMinY() )
 				.add( env.getMinX(), env.getMaxY() )
 				.add( env.getMaxX(), env.getMaxY() )
@@ -104,8 +119,8 @@ public class GeoDbWkb {
 	}
 
 	private static ByteBuffer toByteBuffer(Blob blob) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		byte[] buf = new byte[1024];
+		final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		final byte[] buf = new byte[1024];
 
 		InputStream in = null;
 		try {
@@ -116,7 +131,7 @@ public class GeoDbWkb {
 			}
 		}
 		catch ( Exception e ) {
-			LOG.warn( "Could not convert database BLOB object to binary stream.", e );
+			LOGGER.warn( "Could not convert database BLOB object to binary stream.", e );
 		}
 		finally {
 			try {
@@ -125,7 +140,7 @@ public class GeoDbWkb {
 				}
 			}
 			catch ( IOException e ) {
-				LOG.warn( "Could not close binary stream." );
+				LOGGER.warn( "Could not close binary stream." );
 			}
 		}
 		return ByteBuffer.from( baos.toByteArray() );

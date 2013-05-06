@@ -1,22 +1,22 @@
 /*
  * This file is part of Hibernate Spatial, an extension to the
- *  hibernate ORM solution for spatial (geographic) data.
+ * hibernate ORM solution for spatial (geographic) data.
  *
- *  Copyright © 2007-2012 Geovise BVBA, Geodan IT b.v.
+ * Copyright © 2007-2013 Geovise BVBA
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial.dialect.h2geodb;
@@ -252,6 +252,7 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		typeContributions.contributeType( new JTSGeometryType( GeoDBGeometryTypeDescriptor.INSTANCE ) );
 	}
 
+	@Override
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		switch ( aggregation ) {
 			// NOT YET AVAILABLE IN GEODB
@@ -267,30 +268,28 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		}
 	}
 
+	@Override
 	public String getDWithinSQL(String columnName) {
 		return "ST_DWithin(" + columnName + ",?,?)";
 	}
 
+	@Override
 	public String getHavingSridSQL(String columnName) {
 		return "( ST_srid(" + columnName + ") = ?)";
 	}
 
+	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
-		String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
+		final String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
 		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
 	}
 
-	/* (non-Javadoc)
-		  * @see org.hibernatespatial.SpatialDialect#getSpatialFilterExpression(java.lang.String)
-		  */
+	@Override
 	public String getSpatialFilterExpression(String columnName) {
 		return "(" + columnName + " && ? ) ";
 	}
 
-	/* (non-Javadoc)
-		  * @see org.hibernatespatial.SpatialDialect#getSpatialRelateSQL(java.lang.String, int, boolean)
-		  */
-
+	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		switch ( spatialRelation ) {
 			case SpatialRelation.WITHIN:
@@ -316,31 +315,14 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		}
 	}
 
-	/* (non-Javadoc)
-		  * @see org.hibernatespatial.SpatialDialect#getDbGeometryTypeName()
-		  */
-
-	public String getDbGeometryTypeName() {
-		return "GEOM";
-	}
-
-	/* (non-Javadoc)
-		  * @see org.hibernatespatial.SpatialDialect#isTwoPhaseFiltering()
-		  */
-
-	public boolean isTwoPhaseFiltering() {
-		return false;
-	}
-
+	@Override
 	public boolean supportsFiltering() {
 		return false;
 	}
 
+	@Override
 	public boolean supports(SpatialFunction function) {
-		if ( function == SpatialFunction.difference ) {
-			return false;
-		}
-		return ( getFunctions().get( function.toString() ) != null );
+		return function != SpatialFunction.difference && ( getFunctions().get( function.toString() ) != null );
 	}
 
 }

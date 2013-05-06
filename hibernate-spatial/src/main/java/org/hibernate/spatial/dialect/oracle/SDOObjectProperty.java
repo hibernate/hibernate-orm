@@ -89,7 +89,7 @@ class SDOObjectProperty implements SQLFunction {
 
 	public String render(Type firstArgtype, List args, SessionFactoryImplementor factory)
 			throws QueryException {
-		StringBuffer buf = new StringBuffer();
+		final StringBuffer buf = new StringBuffer();
 		if ( args.isEmpty() ) {
 			throw new QueryException(
 					"First Argument in arglist must be object of which property is queried"

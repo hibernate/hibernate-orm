@@ -29,7 +29,7 @@ class SDOGType {
 
 	private int dimension = 2;
 
-	private int lrsDimension = 0;
+	private int lrsDimension;
 
 	private TypeGeometry typeGeometry = TypeGeometry.UNKNOWN_GEOMETRY;
 
@@ -105,18 +105,18 @@ class SDOGType {
 	}
 
 	public static SDOGType parse(int v) {
-		int dim = v / 1000;
+		final int dim = v / 1000;
 		v -= dim * 1000;
-		int lrsDim = v / 100;
+		final int lrsDim = v / 100;
 		v -= lrsDim * 100;
-		TypeGeometry typeGeometry = TypeGeometry.parse( v );
+		final TypeGeometry typeGeometry = TypeGeometry.parse( v );
 		return new SDOGType( dim, lrsDim, typeGeometry );
 	}
 
 	public static SDOGType parse(Object datum) {
 
 		try {
-			int v = ( (Number) datum ).intValue();
+			final int v = ( (Number) datum ).intValue();
 			return parse( v );
 		}
 		catch ( Exception e ) {

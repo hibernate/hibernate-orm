@@ -29,12 +29,17 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * Descriptor for the Oracle Spatial SDO_GEOMETRY type
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 8/22/11
+ *
  */
 public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 
-	public static SDOGeometryTypeDescriptor INSTANCE = new SDOGeometryTypeDescriptor();
+	/**
+	 * An instance of this class
+	 */
+	public static final SDOGeometryTypeDescriptor INSTANCE = new SDOGeometryTypeDescriptor();
 
 	@Override
 	public int getSqlType() {

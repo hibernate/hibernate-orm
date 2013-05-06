@@ -33,6 +33,8 @@ import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
+ * A {@code Criterion} constraining a geometry property to be within a specified distance of a search geometry.
+ *
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 2/1/11
  */
@@ -43,19 +45,31 @@ public class DWithinExpression implements Criterion {
 	private final Geometry geometry;
 	private final double distance;
 
+	/**
+	 * Constructs an instance
+	 *
+	 * @param propertyName The name of the property being constrained
+	 * @param geometry The search geometry
+	 * @param distance The search distance (in units of the spatial reference system of the search geometry)
+	 */
 	public DWithinExpression(String propertyName, Geometry geometry, double distance) {
 		this.propertyName = propertyName;
 		this.geometry = geometry;
 		this.distance = distance;
 	}
 
+	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
-		SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect( criteriaQuery, SpatialFunction.dwithin );
+		final String column = ExpressionUtil.findColumn( propertyName, criteria, criteriaQuery );
+		final SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect(
+				criteriaQuery,
+				SpatialFunction.dwithin
+		);
 		return spatialDialect.getDWithinSQL( column );
 
 	}
 
+	@Override
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 		return new TypedValue[] {
 				criteriaQuery.getTypedValue( criteria, propertyName, geometry ),

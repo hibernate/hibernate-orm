@@ -43,23 +43,24 @@ import org.hibernate.spatial.helper.FinderException;
  */
 public class DefaultConnectionFinder implements ConnectionFinder {
 
-	private final static Class<?> oracleConnectionClass;
+	private static final Class<?> ORACLE_CONNECTION_CLASS;
 
 	static {
 		try {
-			oracleConnectionClass = Class.forName( "oracle.jdbc.driver.OracleConnection" );
+			ORACLE_CONNECTION_CLASS = Class.forName( "oracle.jdbc.driver.OracleConnection" );
 		}
 		catch ( ClassNotFoundException e ) {
 			throw new HibernateException( "Can't find Oracle JDBC Driver on classpath." );
 		}
 	}
 
+	@Override
 	public Connection find(Connection con) throws FinderException {
 		if ( con == null ) {
 			return null;
 		}
 
-		if ( oracleConnectionClass.isInstance( con ) ) {
+		if ( ORACLE_CONNECTION_CLASS.isInstance( con ) ) {
 			return con;
 		}
 		// try to find the Oracleconnection recursively
@@ -71,7 +72,7 @@ public class DefaultConnectionFinder implements ConnectionFinder {
 
 				try {
 					method.setAccessible( true );
-					Connection oc = find( (Connection) ( method.invoke( con, new Object[] { } ) ) );
+					final Connection oc = find( (Connection) ( method.invoke( con, new Object[] { } ) ) );
 					if ( oc == null ) {
 						throw new FinderException(
 								String.format(

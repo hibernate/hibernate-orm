@@ -1,22 +1,22 @@
 /*
  * This file is part of Hibernate Spatial, an extension to the
- *  hibernate ORM solution for spatial (geographic) data.
+ * hibernate ORM solution for spatial (geographic) data.
  *
- *  Copyright © 2007-2012 Geovise BVBA
+ * Copyright © 2007-2013 Geovise BVBA
  *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation; either
- *  version 2.1 of the License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 package org.hibernate.spatial;
@@ -31,16 +31,23 @@ import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
+ * Descriptor for JTS {@code Geometry}s.
+ *
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
 public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geometry> {
 
+	/**
+	 * An instance of this descriptor
+	 */
+	public static final JavaTypeDescriptor<Geometry> INSTANCE = new JTSGeometryJavaTypeDescriptor();
 
-	public static final JavaTypeDescriptor<Geometry> INSTANCE = new JTSGeometryJavaTypeDescriptor( Geometry.class );
-
-	public JTSGeometryJavaTypeDescriptor(Class<Geometry> type) {
-		super( type );
+	/**
+	 * Initialize a type descriptor for the geolatte-geom {@code Geometry} type.
+	 */
+	public JTSGeometryJavaTypeDescriptor() {
+		super( Geometry.class );
 	}
 
 	@Override
@@ -50,7 +57,7 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 
 	@Override
 	public Geometry fromString(String string) {
-		WKTReader reader = new WKTReader();
+		final WKTReader reader = new WKTReader();
 		try {
 			return reader.read( string );
 		}

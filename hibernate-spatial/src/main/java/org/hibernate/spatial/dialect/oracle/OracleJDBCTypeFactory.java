@@ -56,7 +56,6 @@ public class OracleJDBCTypeFactory implements SQLTypeFactory {
 	private static Constructor<?> arrayConstructor;
 	private static Constructor<?> structConstructor;
 
-
 	static {
 		Object[] obj = findDescriptorCreator( "oracle.sql.StructDescriptor" );
 		structDescriptorClass = (Class<?>) obj[0];
@@ -96,12 +95,8 @@ public class OracleJDBCTypeFactory implements SQLTypeFactory {
 
 	private static Object[] findDescriptorCreator(String className) {
 		try {
-			Class clazz = ReflectHelper.classForName( className );
-			Method m = clazz.getMethod(
-					"createDescriptor",
-					String.class,
-					Connection.class
-			);
+			final Class clazz = ReflectHelper.classForName( className );
+			final Method m = clazz.getMethod( "createDescriptor", String.class, Connection.class );
 			return new Object[] { clazz, m };
 		}
 		catch ( ClassNotFoundException e ) {
@@ -120,7 +115,7 @@ public class OracleJDBCTypeFactory implements SQLTypeFactory {
 		connectionFinder = finder;
 	}
 
-
+	@Override
 	public Struct createStruct(SDOGeometry geom, Connection conn) throws SQLException {
 		Connection oracleConnection = null;
 		try {
@@ -130,8 +125,8 @@ public class OracleJDBCTypeFactory implements SQLTypeFactory {
 			throw new HibernateException( "Problem finding Oracle Connection", e );
 		}
 
-		Object structDescriptor = createStructDescriptor( SDOGeometry.getTypeName(), oracleConnection );
-		Object[] attributes = createDatumArray( 5 );
+		final Object structDescriptor = createStructDescriptor( SDOGeometry.getTypeName(), oracleConnection );
+		final Object[] attributes = createDatumArray( 5 );
 		attributes[0] = createNumber( geom.getGType().intValue() );
 		if ( geom.getSRID() > 0 ) {
 			attributes[1] = createNumber( geom.getSRID() );
@@ -144,18 +139,18 @@ public class OracleJDBCTypeFactory implements SQLTypeFactory {
 		return createStruct( structDescriptor, oracleConnection, attributes );
 	}
 
+	@Override
 	public Array createElemInfoArray(ElemInfo elemInfo, Connection conn) {
-		Object arrayDescriptor = createArrayDescriptor( ElemInfo.TYPE_NAME, conn );
+		final Object arrayDescriptor = createArrayDescriptor( ElemInfo.TYPE_NAME, conn );
 		return createArray( arrayDescriptor, conn, elemInfo.getElements() );
 	}
 
-
+	@Override
 	public Array createOrdinatesArray(Ordinates ordinates, Connection conn) throws SQLException {
-		Object arrayDescriptor = createArrayDescriptor( Ordinates.TYPE_NAME, conn );
+		final Object arrayDescriptor = createArrayDescriptor( Ordinates.TYPE_NAME, conn );
 		return createArray( arrayDescriptor, conn, ordinates.getOrdinateArray() );
 
 	}
-
 
 	private Array createArray(Object descriptor, Connection conn, Object[] data) {
 		try {

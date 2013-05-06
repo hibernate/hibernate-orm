@@ -12,14 +12,18 @@ import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * A Dialect for MySQL 5 using InnoDB engine, with support for its spatial features
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 6/21/12
+ *
  */
 public class MySQL5SpatialInnoDBDialect extends MySQL5InnoDBDialect implements SpatialDialect {
 
 	private MySQLSpatialDialect dialectDelegate = new MySQLSpatialDialect();
 
-
+	/**
+	 * Constructs an instance
+	 */
 	public MySQL5SpatialInnoDBDialect() {
 		super();
 		registerColumnType(
@@ -74,10 +78,6 @@ public class MySQL5SpatialInnoDBDialect extends MySQL5InnoDBDialect implements S
 	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return dialectDelegate.getIsEmptySQL( columnName, isEmpty );
-	}
-
-	public String getDbGeometryTypeName() {
-		return dialectDelegate.getDbGeometryTypeName();
 	}
 
 	@Override

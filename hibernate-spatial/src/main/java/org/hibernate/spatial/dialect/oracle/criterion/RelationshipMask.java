@@ -20,9 +20,66 @@
  */
 package org.hibernate.spatial.dialect.oracle.criterion;
 
+/**
+ * Enumerates the types of spatial relationship masks supported by Oracle Spatial.
+ */
 public enum RelationshipMask {
-	TOUCH, OVERLAPBYDISJOINT, OVERLAPBYINTERSECT, EQUAL, INSIDE, COVEREDBY, CONTAINS, COVERS, ANYINTERACT, ON;
+	/**
+	 * The "touch" relationship
+	 */
+	TOUCH,
 
+	/**
+	 * The "overlapbydisjoint" relationship
+	 */
+	OVERLAPBYDISJOINT,
+
+	/**
+	 * The "overlapbyintersect" relationship
+	 */
+	OVERLAPBYINTERSECT,
+
+	/**
+	 * The "equal" relationship
+	 */
+	EQUAL,
+
+	/**
+	 * The "inside" relationship
+	 */
+	INSIDE,
+
+	/**
+	 * The "coveredby" relationship
+	 */
+	COVEREDBY,
+
+	/**
+	 * The "contains" relationship
+	 */
+	CONTAINS,
+
+	/**
+	 * The "covers" relationship
+	 */
+	COVERS,
+
+	/**
+	 * The "anyinteract" relationship
+	 */
+	ANYINTERACT,
+
+	/**
+	 * The "on" relationship
+	 */
+	ON;
+
+	/**
+	 * Combines the passed "{@code RelationshipMask}s
+	 *
+	 * @param masks The array of masks to combine
+	 * @return A {@code String} representing the combined relationship mask
+	 */
 	public static String booleanCombination(RelationshipMask[] masks) {
 		String strMask = null;
 		for ( RelationshipMask relationshipMask : masks ) {

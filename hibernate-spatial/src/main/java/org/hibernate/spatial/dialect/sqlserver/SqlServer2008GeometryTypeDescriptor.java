@@ -41,11 +41,16 @@ import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * Type descriptor for the SQL Server 2008 Geometry type.
+ *
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/23/11
  */
 public class SqlServer2008GeometryTypeDescriptor  implements SqlTypeDescriptor {
 
+	/**
+	 * An instance of the descrtiptor
+	 */
 	public static final SqlServer2008GeometryTypeDescriptor INSTANCE = new SqlServer2008GeometryTypeDescriptor();
 
 	@Override
@@ -63,8 +68,8 @@ public class SqlServer2008GeometryTypeDescriptor  implements SqlTypeDescriptor {
 		return new BasicBinder<X>(javaTypeDescriptor, this){
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
-				byte[] bytes = Encoders.encode( geometry );
+				final Geometry geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final byte[] bytes = Encoders.encode( geometry );
 				st.setObject( index, bytes );
 			}
 

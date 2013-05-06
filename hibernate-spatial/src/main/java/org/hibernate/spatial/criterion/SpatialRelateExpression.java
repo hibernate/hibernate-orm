@@ -32,82 +32,56 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
 
 /**
- * An implementation of the <code>Criterion</code> interface that implements
- * spatial queries: queries to the effect that a geometry property has a
- * specific spatial relation to a test geometry
+ * A {@code Criterion} constraining a {@code Geometry} property to have specific spatial relation
+ * to a search {@code Geometry}.
  *
  * @author Karel Maesen
  */
 public class SpatialRelateExpression implements Criterion {
 
+	private static final long serialVersionUID = 1L;
 	/**
 	 * The geometry property
 	 */
-	private String propertyName = null;
-
+	private String propertyName;
 	/**
 	 * The test geometry
 	 */
-	private Geometry value = null;
-
+	private Geometry value;
 	/**
 	 * The spatial relation that is queried for.
 	 */
 	private int spatialRelation = -1;
 
-	private static final long serialVersionUID = 1L;
-
-	public SpatialRelateExpression(String propertyName,
-								   Geometry value, int spatialRelation) {
+	/**
+	 * Constructs an instance
+	 *
+	 * @param propertyName The name of the property being constrained
+	 * @param value The search {@code Geometry}
+	 * @param spatialRelation The type of {@code SpatialRelation} to use in the comparison
+	 */
+	public SpatialRelateExpression(String propertyName, Geometry value, int spatialRelation) {
 		this.propertyName = propertyName;
 		this.spatialRelation = spatialRelation;
 		this.value = value;
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.criterion.Criterion#getTypedValues(org.hibernate.Criteria,
-		  *      org.hibernate.criterion.CriteriaQuery)
-		  */
-
-	public TypedValue[] getTypedValues(Criteria criteria,
-									   CriteriaQuery criteriaQuery) throws HibernateException {
-		return new TypedValue[] {
-				criteriaQuery.getTypedValue(
-						criteria,
-						propertyName, value
-				)
-		};
-
+	@Override
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		return new TypedValue[] { criteriaQuery.getTypedValue( criteria, propertyName, value ) };
 	}
 
-	/*
-		  * (non-Javadoc)
-		  *
-		  * @see org.hibernate.criterion.Criterion#toSqlString(org.hibernate.Criteria,
-		  *      org.hibernate.criterion.CriteriaQuery)
-		  */
-
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-			throws HibernateException {
-		SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		String[] columns = criteriaQuery.getColumnsUsingProjection(
-				criteria,
-				this.propertyName
-		);
-		Dialect dialect = factory.getDialect();
+	@Override
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
+		final String[] columns = criteriaQuery.getColumnsUsingProjection( criteria, this.propertyName );
+		final Dialect dialect = factory.getDialect();
 		if ( dialect instanceof SpatialDialect ) {
-			SpatialDialect seDialect = (SpatialDialect) dialect;
-			return seDialect.getSpatialRelateSQL(
-					columns[0],
-					spatialRelation
-			);
+			final SpatialDialect seDialect = (SpatialDialect) dialect;
+			return seDialect.getSpatialRelateSQL( columns[0], spatialRelation );
 		}
 		else {
-			throw new IllegalStateException(
-					"Dialect must be spatially enabled dialect"
-			);
+			throw new IllegalStateException( "Dialect must be spatially enabled dialect" );
 		}
 	}
 

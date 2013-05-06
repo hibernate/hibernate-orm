@@ -8,12 +8,14 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
+ * An {@code Iterable} over the spatial functions supported by MySQL.
+ *
  * @author Karel Maesen, Geovise BVBA
- *         creation-date: 9/15/12
+ *
  */
 class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFunction>> {
 
-	final private Map<String, StandardSQLFunction> functionsToRegister = new HashMap<String, StandardSQLFunction>();
+	private final Map<String, StandardSQLFunction> functionsToRegister = new HashMap<String, StandardSQLFunction>();
 
 	MySQLSpatialFunctions(){
 		functionsToRegister.put(

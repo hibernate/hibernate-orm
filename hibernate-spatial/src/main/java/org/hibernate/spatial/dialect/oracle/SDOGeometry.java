@@ -37,17 +37,12 @@ import org.hibernate.spatial.helper.FinderException;
 
 class SDOGeometry {
 
-	private final static SQLTypeFactory TYPE_FACTORY = new OracleJDBCTypeFactory();
+	private static final SQLTypeFactory TYPE_FACTORY = new OracleJDBCTypeFactory();
 	private static final String SQL_TYPE_NAME = "MDSYS.SDO_GEOMETRY";
-
 	private SDOGType gtype;
-
 	private int srid;
-
 	private SDOPoint point;
-
 	private ElemInfo info;
-
 	private Ordinates ordinates;
 
 
@@ -63,8 +58,8 @@ class SDOGeometry {
 		if ( array == null || java.lang.reflect.Array.getLength( array ) == 0 ) {
 			return "()";
 		}
-		int length = java.lang.reflect.Array.getLength( array );
-		StringBuilder stb = new StringBuilder();
+		final int length = java.lang.reflect.Array.getLength( array );
+		final StringBuilder stb = new StringBuilder();
 		stb.append( "(" ).append( java.lang.reflect.Array.get( array, 0 ) );
 		for ( int i = 1; i < length; i++ ) {
 			stb.append( "," ).append( java.lang.reflect.Array.get( array, i ) );
@@ -73,51 +68,107 @@ class SDOGeometry {
 		return stb.toString();
 	}
 
-
 	/**
 	 * This joins an array of SDO_GEOMETRIES to a SDOGeometry of type
 	 * COLLECTION
 	 *
-	 * @param SDOElements
+	 * @param sdoElements The SDO_geometries to join into an SDO Geometry Collection
 	 *
-	 * @return
+	 * @return The SDO Collection Geometry
 	 */
-	public static SDOGeometry join(SDOGeometry[] SDOElements) {
-		SDOGeometry SDOCollection = new SDOGeometry();
-		if ( SDOElements == null || SDOElements.length == 0 ) {
-			SDOCollection.setGType(
-					new SDOGType(
-							2, 0,
-							TypeGeometry.COLLECTION
-					)
-			);
+	public static SDOGeometry join(SDOGeometry[] sdoElements) {
+		final SDOGeometry sdoCollection = new SDOGeometry();
+		if ( sdoElements == null || sdoElements.length == 0 ) {
+			sdoCollection.setGType( new SDOGType( 2, 0, TypeGeometry.COLLECTION ) );
 		}
 		else {
-			SDOGeometry firstElement = SDOElements[0];
-			int dim = firstElement.getGType().getDimension();
-			int lrsDim = firstElement.getGType().getLRSDimension();
-			SDOCollection.setGType(
-					new SDOGType(
-							dim, lrsDim,
-							TypeGeometry.COLLECTION
-					)
-			);
+			final SDOGeometry firstElement = sdoElements[0];
+			final int dim = firstElement.getGType().getDimension();
+			final int lrsDim = firstElement.getGType().getLRSDimension();
+			sdoCollection.setGType( new SDOGType( dim, lrsDim, TypeGeometry.COLLECTION ) );
 			int ordinatesOffset = 1;
-			for ( int i = 0; i < SDOElements.length; i++ ) {
-				ElemInfo element = SDOElements[i].getInfo();
-				Double[] ordinates = SDOElements[i].getOrdinates()
-						.getOrdinateArray();
+			for ( int i = 0; i < sdoElements.length; i++ ) {
+				final ElemInfo element = sdoElements[i].getInfo();
+				final Double[] ordinates = sdoElements[i].getOrdinates().getOrdinateArray();
 				if ( element != null && element.getSize() > 0 ) {
-					int shift = ordinatesOffset
-							- element.getOrdinatesOffset( 0 );
+					final int shift = ordinatesOffset - element.getOrdinatesOffset( 0 );
 					shiftOrdinateOffset( element, shift );
-					SDOCollection.addElement( element );
-					SDOCollection.addOrdinates( ordinates );
+					sdoCollection.addElement( element );
+					sdoCollection.addOrdinates( ordinates );
 					ordinatesOffset += ordinates.length;
 				}
 			}
 		}
-		return SDOCollection;
+		return sdoCollection;
+	}
+
+	public static SDOGeometry load(Struct struct) {
+
+		Object[] data;
+		try {
+			data = struct.getAttributes();
+		}
+		catch ( SQLException e ) {
+			throw new RuntimeException( e );
+		}
+
+		final SDOGeometry geom = new SDOGeometry();
+		geom.setGType( SDOGType.parse( data[0] ) );
+		geom.setSRID( data[1] );
+		if ( data[2] != null ) {
+			geom.setPoint( new SDOPoint( (Struct) data[2] ) );
+		}
+		geom.setInfo( new ElemInfo( (Array) data[3] ) );
+		geom.setOrdinates( new Ordinates( (Array) data[4] ) );
+
+		return geom;
+	}
+
+	public static Struct store(SDOGeometry geom, Connection conn)
+			throws SQLException, FinderException {
+		return TYPE_FACTORY.createStruct( geom, conn );
+	}
+
+	private static void shiftOrdinateOffset(ElemInfo elemInfo, int offset) {
+		for ( int i = 0; i < elemInfo.getSize(); i++ ) {
+			final int newOffset = elemInfo.getOrdinatesOffset( i ) + offset;
+			elemInfo.setOrdinatesOffset( i, newOffset );
+		}
+	}
+
+	private static SDOGType deriveGTYPE(ElementType elementType,
+										SDOGeometry origGeom) {
+		switch ( elementType ) {
+			case POINT:
+			case ORIENTATION:
+				return new SDOGType(
+						origGeom.getDimension(), origGeom
+						.getLRSDimension(), TypeGeometry.POINT
+				);
+			case POINT_CLUSTER:
+				return new SDOGType(
+						origGeom.getDimension(), origGeom
+						.getLRSDimension(), TypeGeometry.MULTIPOINT
+				);
+			case LINE_ARC_SEGMENTS:
+			case LINE_STRAITH_SEGMENTS:
+			case COMPOUND_LINE:
+				return new SDOGType(
+						origGeom.getDimension(), origGeom
+						.getLRSDimension(), TypeGeometry.LINE
+				);
+			case COMPOUND_EXTERIOR_RING:
+			case EXTERIOR_RING_ARC_SEGMENTS:
+			case EXTERIOR_RING_CIRCLE:
+			case EXTERIOR_RING_RECT:
+			case EXTERIOR_RING_STRAIGHT_SEGMENTS:
+				return new SDOGType(
+						origGeom.getDimension(), origGeom
+						.getLRSDimension(), TypeGeometry.POLYGON
+				);
+			default:
+				return null;
+		}
 	}
 
 	public ElemInfo getInfo() {
@@ -156,38 +207,6 @@ class SDOGeometry {
 		return srid;
 	}
 
-	public void setSRID(int srid) {
-		this.srid = srid;
-	}
-
-	public static SDOGeometry load(Struct struct) {
-
-		Object[] data;
-		try {
-			data = struct.getAttributes();
-		}
-		catch ( SQLException e ) {
-			throw new RuntimeException( e );
-		}
-
-		SDOGeometry geom = new SDOGeometry();
-		geom.setGType( SDOGType.parse( data[0] ) );
-		geom.setSRID( data[1] );
-		if ( data[2] != null ) {
-			geom.setPoint( new SDOPoint( (Struct) data[2] ) );
-		}
-		geom.setInfo( new ElemInfo( (Array) data[3] ) );
-		geom.setOrdinates( new Ordinates( (Array) data[4] ) );
-
-		return geom;
-	}
-
-	public static Struct store(SDOGeometry geom, Connection conn)
-			throws SQLException, FinderException {
-		return TYPE_FACTORY.createStruct( geom, conn );
-	}
-
-
 	private void setSRID(Object datum) {
 		if ( datum == null ) {
 			this.srid = 0;
@@ -199,6 +218,10 @@ class SDOGeometry {
 		catch ( Exception e ) {
 			throw new RuntimeException( e );
 		}
+	}
+
+	public void setSRID(int srid) {
+		this.srid = srid;
 	}
 
 	public boolean isLRSGeometry() {
@@ -229,7 +252,7 @@ class SDOGeometry {
 		int i = 0;
 		while ( i < info.getSize() ) {
 			if ( info.getElementType( i ).isCompound() ) {
-				int numCompounds = info.getNumCompounds( i );
+				final int numCompounds = info.getNumCompounds( i );
 				i += 1 + numCompounds;
 			}
 			else {
@@ -241,7 +264,7 @@ class SDOGeometry {
 	}
 
 	public String toString() {
-		StringBuilder stb = new StringBuilder();
+		final StringBuilder stb = new StringBuilder();
 		stb.append( "(" ).append( gtype ).append( "," ).append( srid ).append( "," )
 				.append( point ).append( "," ).append( info ).append( "," ).append(
 				ordinates
@@ -276,14 +299,15 @@ class SDOGeometry {
 	 */
 	public SDOGeometry[] getElementGeometries() {
 		if ( getGType().getTypeGeometry() == TypeGeometry.COLLECTION ) {
-			List<SDOGeometry> elements = new ArrayList<SDOGeometry>();
+			final List<SDOGeometry> elements = new ArrayList<SDOGeometry>();
 			int i = 0;
 			while ( i < this.getNumElements() ) {
-				ElementType et = this.getInfo().getElementType( i );
+				final ElementType et = this.getInfo().getElementType( i );
 				int next = i + 1;
 				// if the element is an exterior ring, or a compound
 				// element, then this geometry spans multiple elements.
-				if ( et.isExteriorRing() ) { // then next element is the
+				if ( et.isExteriorRing() ) {
+					// then next element is the
 					// first non-interior ring
 					while ( next < this.getNumElements() ) {
 						if ( !this.getInfo().getElementType( next )
@@ -296,28 +320,17 @@ class SDOGeometry {
 				else if ( et.isCompound() ) {
 					next = i + this.getInfo().getNumCompounds( i ) + 1;
 				}
-				SDOGeometry elemGeom = new SDOGeometry();
-				SDOGType elemGtype = deriveGTYPE(
-						this.getInfo()
-								.getElementType( i ), this
-				);
+				final SDOGeometry elemGeom = new SDOGeometry();
+				final SDOGType elemGtype = deriveGTYPE( this.getInfo().getElementType( i ), this );
 				elemGeom.setGType( elemGtype );
 				elemGeom.setSRID( this.getSRID() );
-				ElemInfo elemInfo = new ElemInfo(
-						this.getInfo()
-								.getElement( i )
-				);
-				shiftOrdinateOffset(
-						elemInfo, -elemInfo
-						.getOrdinatesOffset( 0 ) + 1
-				);
+				final ElemInfo elemInfo = new ElemInfo( this.getInfo().getElement( i ) );
+				shiftOrdinateOffset( elemInfo, -elemInfo.getOrdinatesOffset( 0 ) + 1 );
 				elemGeom.setInfo( elemInfo );
-				int startPosition = this.getInfo().getOrdinatesOffset( i );
+				final int startPosition = this.getInfo().getOrdinatesOffset( i );
 				Ordinates elemOrdinates = null;
 				if ( next < this.getNumElements() ) {
-					int endPosition = this.getInfo().getOrdinatesOffset(
-							next
-					);
+					final int endPosition = this.getInfo().getOrdinatesOffset( next );
 					elemOrdinates = new Ordinates(
 							this.getOrdinates()
 									.getOrdinatesArray( startPosition, endPosition )
@@ -338,47 +351,6 @@ class SDOGeometry {
 		else {
 			return new SDOGeometry[] { this };
 		}
-	}
-
-	private static void shiftOrdinateOffset(ElemInfo elemInfo, int offset) {
-		for ( int i = 0; i < elemInfo.getSize(); i++ ) {
-			int newOffset = elemInfo.getOrdinatesOffset( i ) + offset;
-			elemInfo.setOrdinatesOffset( i, newOffset );
-		}
-	}
-
-	private static SDOGType deriveGTYPE(ElementType elementType,
-										SDOGeometry origGeom) {
-		switch ( elementType ) {
-			case POINT:
-			case ORIENTATION:
-				return new SDOGType(
-						origGeom.getDimension(), origGeom
-						.getLRSDimension(), TypeGeometry.POINT
-				);
-			case POINT_CLUSTER:
-				return new SDOGType(
-						origGeom.getDimension(), origGeom
-						.getLRSDimension(), TypeGeometry.MULTIPOINT
-				);
-			case LINE_ARC_SEGMENTS:
-			case LINE_STRAITH_SEGMENTS:
-			case COMPOUND_LINE:
-				return new SDOGType(
-						origGeom.getDimension(), origGeom
-						.getLRSDimension(), TypeGeometry.LINE
-				);
-			case COMPOUND_EXTERIOR_RING:
-			case EXTERIOR_RING_ARC_SEGMENTS:
-			case EXTERIOR_RING_CIRCLE:
-			case EXTERIOR_RING_RECT:
-			case EXTERIOR_RING_STRAIGHT_SEGMENTS:
-				return new SDOGType(
-						origGeom.getDimension(), origGeom
-						.getLRSDimension(), TypeGeometry.POLYGON
-				);
-		}
-		return null;
 	}
 
 }

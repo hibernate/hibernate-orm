@@ -49,13 +49,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/22/11
  */
-public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
+class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
 	private static final Log LOG = LogFactory.make();
-
 	private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - %s";
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - <null>";
-
 	private final JavaTypeDescriptor<J> javaDescriptor;
 
 
@@ -91,14 +89,14 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 						)
 				);
 			}
-			Geometry jtsGeom = javaDescriptor.unwrap( value, Geometry.class, options );
-			Object dbGeom = toNative( jtsGeom, st.getConnection() );
+			final Geometry jtsGeom = javaDescriptor.unwrap( value, Geometry.class, options );
+			final Object dbGeom = toNative( jtsGeom, st.getConnection() );
 			st.setObject( index, dbGeom );
 		}
 	}
 
 	protected Object toNative(Geometry jtsGeom, Connection connection) {
-		SDOGeometry geom = convertJTSGeometry( jtsGeom );
+		final SDOGeometry geom = convertJTSGeometry( jtsGeom );
 		if ( geom != null ) {
 			try {
 				return SDOGeometry.store( geom, connection );
@@ -151,26 +149,25 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
 	private SDOGeometry convertJTSGeometryCollection(
 			GeometryCollection collection) {
-		SDOGeometry[] SDOElements = new SDOGeometry[collection
-				.getNumGeometries()];
+		final SDOGeometry[] sdoElements = new SDOGeometry[collection.getNumGeometries()];
 		for ( int i = 0; i < collection.getNumGeometries(); i++ ) {
-			Geometry geom = collection.getGeometryN( i );
-			SDOElements[i] = convertJTSGeometry( geom );
+			final Geometry geom = collection.getGeometryN( i );
+			sdoElements[i] = convertJTSGeometry( geom );
 		}
-		SDOGeometry ccollect = SDOGeometry.join( SDOElements );
+		final SDOGeometry ccollect = SDOGeometry.join( sdoElements );
 		ccollect.setSRID( collection.getSRID() );
 		return ccollect;
 	}
 
 	private SDOGeometry convertJTSMultiPolygon(MultiPolygon multiPolygon) {
-		int dim = getCoordDimension( multiPolygon );
-		int lrsPos = getCoordinateLrsPosition( multiPolygon );
-		SDOGeometry geom = new SDOGeometry();
+		final int dim = getCoordDimension( multiPolygon );
+		final int lrsPos = getCoordinateLrsPosition( multiPolygon );
+		final SDOGeometry geom = new SDOGeometry();
 		geom.setGType( new SDOGType( dim, lrsPos, TypeGeometry.MULTIPOLYGON ) );
 		geom.setSRID( multiPolygon.getSRID() );
 		for ( int i = 0; i < multiPolygon.getNumGeometries(); i++ ) {
 			try {
-				Polygon pg = (Polygon) multiPolygon.getGeometryN( i );
+				final Polygon pg = (Polygon) multiPolygon.getGeometryN( i );
 				addPolygon( geom, pg );
 			}
 			catch ( Exception e ) {
@@ -183,17 +180,14 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	private SDOGeometry convertJTSLineString(LineString lineString) {
-		int dim = getCoordDimension( lineString );
-		int lrsPos = getCoordinateLrsPosition( lineString );
-		boolean isLrs = lrsPos > 0;
-		Double[] ordinates = convertCoordinates(
-				lineString.getCoordinates(),
-				dim, isLrs
-		);
-		SDOGeometry geom = new SDOGeometry();
+		final int dim = getCoordDimension( lineString );
+		final int lrsPos = getCoordinateLrsPosition( lineString );
+		final boolean isLrs = lrsPos > 0;
+		final Double[] ordinates = convertCoordinates( lineString.getCoordinates(), dim, isLrs );
+		final SDOGeometry geom = new SDOGeometry();
 		geom.setGType( new SDOGType( dim, lrsPos, TypeGeometry.LINE ) );
 		geom.setSRID( lineString.getSRID() );
-		ElemInfo info = new ElemInfo( 1 );
+		final ElemInfo info = new ElemInfo( 1 );
 		info.setElement( 0, 1, ElementType.LINE_STRAITH_SEGMENTS, 0 );
 		geom.setInfo( info );
 		geom.setOrdinates( new Ordinates( ordinates ) );
@@ -202,13 +196,13 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	private SDOGeometry convertJTSMultiPoint(MultiPoint multiPoint) {
-		int dim = getCoordDimension( multiPoint );
-		int lrsDim = getCoordinateLrsPosition( multiPoint );
-		boolean isLrs = ( lrsDim != 0 );
-		SDOGeometry geom = new SDOGeometry();
+		final int dim = getCoordDimension( multiPoint );
+		final int lrsDim = getCoordinateLrsPosition( multiPoint );
+		final boolean isLrs = ( lrsDim != 0 );
+		final SDOGeometry geom = new SDOGeometry();
 		geom.setGType( new SDOGType( dim, lrsDim, TypeGeometry.MULTIPOINT ) );
 		geom.setSRID( multiPoint.getSRID() );
-		ElemInfo info = new ElemInfo( multiPoint.getNumPoints() );
+		final ElemInfo info = new ElemInfo( multiPoint.getNumPoints() );
 		int oordinatesOffset = 1;
 		Double[] ordinates = new Double[] { };
 		for ( int i = 0; i < multiPoint.getNumPoints(); i++ ) {
@@ -225,19 +219,15 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	private SDOGeometry convertJTSPoint(Point jtsGeom) {
-		int dim = getCoordDimension( jtsGeom );
+		final int dim = getCoordDimension( jtsGeom );
+		final int lrsDim = getCoordinateLrsPosition( jtsGeom );
+		final boolean isLrs = ( lrsDim != 0 );
 
-		int lrsDim = getCoordinateLrsPosition( jtsGeom );
-		boolean isLrs = ( lrsDim != 0 );
-
-		Double[] coord = convertCoordinates(
-				jtsGeom.getCoordinates(), dim,
-				isLrs
-		);
-		SDOGeometry geom = new SDOGeometry();
+		final Double[] coord = convertCoordinates( jtsGeom.getCoordinates(), dim, isLrs );
+		final SDOGeometry geom = new SDOGeometry();
 		geom.setGType( new SDOGType( dim, lrsDim, TypeGeometry.POINT ) );
 		geom.setSRID( jtsGeom.getSRID() );
-		ElemInfo info = new ElemInfo( 1 );
+		final ElemInfo info = new ElemInfo( 1 );
 		info.setElement( 0, 1, ElementType.POINT, 1 );
 		geom.setInfo( info );
 		geom.setOrdinates( new Ordinates( coord ) );
@@ -245,9 +235,9 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	private SDOGeometry convertJTSPolygon(Polygon polygon) {
-		int dim = getCoordDimension( polygon );
-		int lrsPos = getCoordinateLrsPosition( polygon );
-		SDOGeometry geom = new SDOGeometry();
+		final int dim = getCoordDimension( polygon );
+		final int lrsPos = getCoordinateLrsPosition( polygon );
+		final SDOGeometry geom = new SDOGeometry();
 		geom.setGType( new SDOGType( dim, lrsPos, TypeGeometry.POLYGON ) );
 		geom.setSRID( polygon.getSRID() );
 		addPolygon( geom, polygon );
@@ -255,8 +245,8 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	}
 
 	private void addPolygon(SDOGeometry geom, Polygon polygon) {
-		int numInteriorRings = polygon.getNumInteriorRing();
-		ElemInfo info = new ElemInfo( numInteriorRings + 1 );
+		final int numInteriorRings = polygon.getNumInteriorRing();
+		final ElemInfo info = new ElemInfo( numInteriorRings + 1 );
 		int ordinatesPreviousOffset = 0;
 		if ( geom.getOrdinates() != null ) {
 			ordinatesPreviousOffset = geom.getOrdinates().getOrdinateArray().length;
@@ -293,13 +283,13 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
 	private SDOGeometry convertJTSMultiLineString(
 			MultiLineString multiLineString) {
-		int dim = getCoordDimension( multiLineString );
-		int lrsDim = getCoordinateLrsPosition( multiLineString );
-		boolean isLrs = ( lrsDim != 0 );
-		SDOGeometry geom = new SDOGeometry();
+		final int dim = getCoordDimension( multiLineString );
+		final int lrsDim = getCoordinateLrsPosition( multiLineString );
+		final boolean isLrs = ( lrsDim != 0 );
+		final SDOGeometry geom = new SDOGeometry();
 		geom.setGType( new SDOGType( dim, lrsDim, TypeGeometry.MULTILINE ) );
 		geom.setSRID( multiLineString.getSRID() );
-		ElemInfo info = new ElemInfo( multiLineString.getNumGeometries() );
+		final ElemInfo info = new ElemInfo( multiLineString.getNumGeometries() );
 		int oordinatesOffset = 1;
 		Double[] ordinates = new Double[] { };
 		for ( int i = 0; i < multiLineString.getNumGeometries(); i++ ) {
@@ -318,10 +308,9 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 		return geom;
 	}
 
-	private Double[] convertAddCoordinates(Double[] ordinates,
-										   Coordinate[] coordinates, int dim, boolean isLrs) {
-		Double[] no = convertCoordinates( coordinates, dim, isLrs );
-		Double[] newordinates = new Double[ordinates.length + no.length];
+	private Double[] convertAddCoordinates(Double[] ordinates, Coordinate[] coordinates, int dim, boolean isLrs) {
+		final Double[] no = convertCoordinates( coordinates, dim, isLrs );
+		final Double[] newordinates = new Double[ordinates.length + no.length];
 		System.arraycopy( ordinates, 0, newordinates, 0, ordinates.length );
 		System.arraycopy( no, 0, newordinates, ordinates.length, no.length );
 		return newordinates;
@@ -341,18 +330,18 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	private Double[] convertCoordinates(Coordinate[] coordinates, int dim,
 										boolean isLrs) {
 
-		if (isLrs)
+		if ( isLrs ) {
 			throw new UnsupportedOperationException();
+		}
 
 		if ( dim > 4 ) {
 			throw new IllegalArgumentException(
 					"Dim parameter value cannot be greater than 4"
 			);
 		}
-		Double[] converted = new Double[coordinates.length * dim];
+		final Double[] converted = new Double[coordinates.length * dim];
 		for ( int i = 0; i < coordinates.length; i++ ) {
-			Coordinate c = coordinates[i];
-
+			final Coordinate c = coordinates[i];
 			// set the X and Y values
 			converted[i * dim] = toDouble( c.x );
 			converted[i * dim + 1] = toDouble( c.y );
@@ -395,7 +384,7 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 		// This shall be cleaner if MCoordinate.getOrdinate(int ordinateIndex)
 		// is moved to the
 		// Coordinate class
-		Coordinate c = geom.getCoordinate();
+		final Coordinate c = geom.getCoordinate();
 		int d = 0;
 		if ( c != null ) {
 			if ( !Double.isNaN( c.x ) ) {
@@ -429,8 +418,8 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 	 * @return the lrs position for the SDOGeometry.SDOGType
 	 */
 	private int getCoordinateLrsPosition(Geometry geom) {
-		Coordinate c = geom.getCoordinate();
-		int measurePos = 0;
+		final Coordinate c = geom.getCoordinate();
+		final int measurePos = 0;
 //		if ( c != null && !Double.isNaN( c.m ) ) {
 //			measurePos = ( Double.isNaN( c.z ) ) ? 3 : 4;
 //		}
@@ -441,7 +430,7 @@ public class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
 	private Coordinate[] reverseRing(Coordinate[] ar) {
 		for ( int i = 0; i < ar.length / 2; i++ ) {
-			Coordinate cs = ar[i];
+			final Coordinate cs = ar[i];
 			ar[i] = ar[ar.length - 1 - i];
 			ar[ar.length - 1 - i] = cs;
 		}

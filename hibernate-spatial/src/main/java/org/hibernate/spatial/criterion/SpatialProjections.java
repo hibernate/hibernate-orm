@@ -32,40 +32,44 @@ import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.type.Type;
 
 /**
+ * A factory for spatial projections.
+ *
  * @author Karel Maesen
  */
 public class SpatialProjections {
 
+	private SpatialProjections() {
+	}
+
+	/**
+	 * Applies an extent projection to the specified geometry function
+	 *
+	 * <p>The extent of a set of {@code Geometry}s is the union of their bounding boxes.</p>
+	 *
+	 * @param propertyName The property to use for calculating the extent
+	 *
+	 * @return an extent-projection for the specified property.
+	 */
 	public static Projection extent(final String propertyName) {
 		return new SimpleProjection() {
 
-			public Type[] getTypes(Criteria criteria,
-								   CriteriaQuery criteriaQuery) throws HibernateException {
+			public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
 				return new Type[] {
-						criteriaQuery.getType(
-								criteria,
-								propertyName
-						)
+						criteriaQuery.getType( criteria, propertyName )
 				};
 			}
 
-			public String toSqlString(Criteria criteria, int position,
-									  CriteriaQuery criteriaQuery) throws HibernateException {
-				StringBuilder stbuf = new StringBuilder();
+			public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery)
+					throws HibernateException {
+				final StringBuilder stbuf = new StringBuilder();
 
-				SessionFactoryImplementor factory = criteriaQuery.getFactory();
-				String[] columns = criteriaQuery.getColumnsUsingProjection(
-						criteria, propertyName
-				);
-				Dialect dialect = factory.getDialect();
+				final SessionFactoryImplementor factory = criteriaQuery.getFactory();
+				final String[] columns = criteriaQuery.getColumnsUsingProjection( criteria, propertyName );
+				final Dialect dialect = factory.getDialect();
 				if ( dialect instanceof SpatialDialect ) {
-					SpatialDialect seDialect = (SpatialDialect) dialect;
-
+					final SpatialDialect seDialect = (SpatialDialect) dialect;
 					stbuf.append(
-							seDialect.getSpatialAggregateSQL(
-									columns[0],
-									SpatialAggregate.EXTENT
-							)
+							seDialect.getSpatialAggregateSQL( columns[0], SpatialAggregate.EXTENT )
 					);
 					stbuf.append( " as y" ).append( position ).append( '_' );
 					return stbuf.toString();

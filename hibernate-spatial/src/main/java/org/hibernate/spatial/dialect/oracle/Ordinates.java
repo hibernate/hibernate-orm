@@ -43,7 +43,7 @@ class Ordinates {
 			return;
 		}
 		try {
-			Number[] ords = (Number[]) array.getArray();
+			final Number[] ords = (Number[]) array.getArray();
 			this.ordinates = new Double[ords.length];
 			for ( int i = 0; i < ords.length; i++ ) {
 				this.ordinates[i] = ords[i] != null ? ords[i].doubleValue()
@@ -60,13 +60,13 @@ class Ordinates {
 	}
 
 	public Double[] getOrdinatesArray(int startPosition, int endPosition) {
-		Double[] a = new Double[endPosition - startPosition];
+		final Double[] a = new Double[endPosition - startPosition];
 		System.arraycopy( this.ordinates, startPosition - 1, a, 0, a.length );
 		return a;
 	}
 
 	public Double[] getOrdinatesArray(int startPosition) {
-		Double[] a = new Double[this.ordinates.length - ( startPosition - 1 )];
+		final Double[] a = new Double[this.ordinates.length - ( startPosition - 1 )];
 		System.arraycopy( this.ordinates, startPosition - 1, a, 0, a.length );
 		return a;
 	}
@@ -76,7 +76,7 @@ class Ordinates {
 	}
 
 	public void addOrdinates(Double[] ordinatesToAdd) {
-		Double[] newOrdinates = new Double[this.ordinates.length
+		final Double[] newOrdinates = new Double[this.ordinates.length
 				+ ordinatesToAdd.length];
 		System.arraycopy(
 				this.ordinates, 0, newOrdinates, 0,
@@ -88,11 +88,5 @@ class Ordinates {
 		);
 		this.ordinates = newOrdinates;
 	}
-
-//    public ARRAY toOracleArray(Connection conn) throws SQLException {
-//        ArrayDescriptor arrayDescriptor = ArrayDescriptor.createDescriptor(
-//                TYPE_NAME, conn);
-//        return new ARRAY(arrayDescriptor, conn, this.ordinates);
-//    }
 
 }

@@ -31,15 +31,14 @@ import java.sql.Array;
 class ElemInfo {
 
 	static final String TYPE_NAME = "MDSYS.SDO_ELEM_INFO_ARRAY";
-
 	private BigDecimal[] triplets;
 
 	public ElemInfo(int size) {
 		this.triplets = new BigDecimal[3 * size];
 	}
 
-	public ElemInfo(BigDecimal[] elem_info) {
-		this.triplets = elem_info;
+	public ElemInfo(BigDecimal[] elemInfo) {
+		this.triplets = elemInfo;
 	}
 
 	public ElemInfo(Array array) {
@@ -54,7 +53,6 @@ class ElemInfo {
 			throw new RuntimeException( e );
 		}
 	}
-
 
 	public BigDecimal[] getElements() {
 		return this.triplets;
@@ -73,10 +71,9 @@ class ElemInfo {
 	}
 
 	public ElementType getElementType(int i) {
-		int etype = this.triplets[i * 3 + 1].intValue();
-		int interp = this.triplets[i * 3 + 2].intValue();
-		ElementType et = ElementType.parseType( etype, interp );
-		return et;
+		final int etype = this.triplets[i * 3 + 1].intValue();
+		final int interp = this.triplets[i * 3 + 2].intValue();
+		return ElementType.parseType( etype, interp );
 	}
 
 	public boolean isCompound(int i) {
@@ -92,8 +89,7 @@ class ElemInfo {
 		}
 	}
 
-	public void setElement(int i, int ordinatesOffset, ElementType et,
-						   int numCompounds) {
+	public void setElement(int i, int ordinatesOffset, ElementType et, int numCompounds) {
 		if ( i > getSize() ) {
 			throw new RuntimeException(
 					"Attempted to set more elements in ElemInfo Array than capacity."
@@ -112,7 +108,7 @@ class ElemInfo {
 	}
 
 	public void addElement(BigDecimal[] element) {
-		BigDecimal[] newTriplets = new BigDecimal[this.triplets.length + element.length];
+		final BigDecimal[] newTriplets = new BigDecimal[this.triplets.length + element.length];
 		System.arraycopy(
 				this.triplets, 0, newTriplets, 0,
 				this.triplets.length
@@ -131,7 +127,7 @@ class ElemInfo {
 	public BigDecimal[] getElement(int i) {
 		BigDecimal[] ea = null;
 		if ( this.getElementType( i ).isCompound() ) {
-			int numCompounds = this.getNumCompounds( i );
+			final int numCompounds = this.getNumCompounds( i );
 			ea = new BigDecimal[numCompounds + 1];
 		}
 		else {
@@ -141,9 +137,4 @@ class ElemInfo {
 		return ea;
 	}
 
-//    public ARRAY toOracleArray(Connection conn) throws SQLException {
-//        ArrayDescriptor arrayDescriptor = ArrayDescriptor.createDescriptor(
-//                TYPE_NAME, conn);
-//        return new ARRAY(arrayDescriptor, conn, this.triplets);
-//    }
 }

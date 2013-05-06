@@ -1,12 +1,13 @@
 package org.hibernate.envers.test.integration.modifiedflags;
 
-import java.util.List;
 import javax.persistence.EntityManager;
-
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.integration.basic.BasicTestEntity1;
+
+import org.junit.Test;
+
 import org.hibernate.testing.TestForIssue;
 
 import static org.hibernate.envers.test.tools.TestTools.extractRevisionNumbers;
@@ -22,7 +23,7 @@ public class HasChangedManualFlush extends AbstractModifiedFlagsEntityTest {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { BasicTestEntity1.class };
+		return new Class[] {BasicTestEntity1.class};
 	}
 
 	@Test

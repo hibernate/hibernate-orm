@@ -23,8 +23,7 @@
  */
 
 package org.hibernate.envers.test.integration.inheritance.joined.relation.unidirectional;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -32,6 +31,8 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -43,23 +44,23 @@ import org.hibernate.envers.Audited;
 @Inheritance(strategy = InheritanceType.JOINED)
 @Audited
 public abstract class AbstractSetEntity {
-    @Id
+	@Id
 	@GeneratedValue
-    private Integer id;
+	private Integer id;
 
-    @OneToMany
-    private Set<AbstractContainedEntity> entities = new HashSet<AbstractContainedEntity>();
+	@OneToMany
+	private Set<AbstractContainedEntity> entities = new HashSet<AbstractContainedEntity>();
 
-    public AbstractSetEntity() {
-    }
+	public AbstractSetEntity() {
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 	public Set<AbstractContainedEntity> getEntities() {
 		return entities;

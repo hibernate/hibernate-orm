@@ -34,6 +34,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
@@ -359,11 +360,10 @@ public class DefaultSaveOrUpdateEventListener extends AbstractSaveEventListener 
 	 * @param entity The entity being updated.
 	 */
 	private void cascadeOnUpdate(SaveOrUpdateEvent event, EntityPersister persister, Object entity) {
-		EventSource source = event.getSession();
+		final EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( CascadingActions.SAVE_UPDATE, Cascade.AFTER_UPDATE, source )
-					.cascade( persister, entity );
+			new Cascade( CascadingActions.SAVE_UPDATE, CascadePoint.AFTER_UPDATE, source ).cascade( persister, entity );
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

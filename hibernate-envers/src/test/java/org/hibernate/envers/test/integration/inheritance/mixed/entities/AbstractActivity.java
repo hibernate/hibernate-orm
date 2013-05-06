@@ -12,23 +12,23 @@ import org.hibernate.envers.Audited;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class AbstractActivity implements Activity {
 	@EmbeddedId
-    private ActivityId id;
+	private ActivityId id;
 
-    private Integer sequenceNumber;
+	private Integer sequenceNumber;
 
-    public ActivityId getId() {
-        return id;
-    }
+	public ActivityId getId() {
+		return id;
+	}
 
-    public void setId(ActivityId id) {
-        this.id = id;
-    }
+	public void setId(ActivityId id) {
+		this.id = id;
+	}
 
 	public Integer getSequenceNumber() {
-        return sequenceNumber;
-    }
+		return sequenceNumber;
+	}
 
-    public void setSequenceNumber(Integer sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
-    }
+	public void setSequenceNumber(Integer sequenceNumber) {
+		this.sequenceNumber = sequenceNumber;
+	}
 }

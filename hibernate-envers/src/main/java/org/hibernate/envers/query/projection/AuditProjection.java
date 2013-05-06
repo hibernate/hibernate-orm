@@ -30,9 +30,10 @@ import org.hibernate.envers.internal.tools.Triple;
  * @author Adam Warski (adam at warski dot org)
  */
 public interface AuditProjection {
-    /**
-     * @param auditCfg Configuration.
-     * @return A triple: (function name - possibly null, property name, add distinct?).
-     */
-    Triple<String, String, Boolean> getData(AuditConfiguration auditCfg);
+	/**
+	 * @param auditCfg Configuration.
+	 *
+	 * @return A triple: (function name - possibly null, property name, add distinct?).
+	 */
+	Triple<String, String, Boolean> getData(AuditConfiguration auditCfg);
 }

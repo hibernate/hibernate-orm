@@ -1,11 +1,12 @@
 package org.hibernate.envers.test.integration.naming;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
 /**
  * Mapped superclass for Audit join table test.
- * 
+ *
  * @author Erik-Berndt Scheper
  */
 @MappedSuperclass
@@ -26,8 +27,7 @@ public abstract class VersionsJoinTableRangeTestEntitySuperClass {
 	}
 
 	/**
-	 * @param id
-	 *            the id to set
+	 * @param id the id to set
 	 */
 	protected void setId(Integer id) {
 		this.id = id;
@@ -41,8 +41,7 @@ public abstract class VersionsJoinTableRangeTestEntitySuperClass {
 	}
 
 	/**
-	 * @param genericValue
-	 *            the genericValue to set
+	 * @param genericValue the genericValue to set
 	 */
 	public void setGenericValue(String genericValue) {
 		this.genericValue = genericValue;
@@ -60,23 +59,32 @@ public abstract class VersionsJoinTableRangeTestEntitySuperClass {
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if ( this == obj ) {
 			return true;
-		if (obj == null)
+		}
+		if ( obj == null ) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if ( getClass() != obj.getClass() ) {
 			return false;
+		}
 		VersionsJoinTableRangeTestEntitySuperClass other = (VersionsJoinTableRangeTestEntitySuperClass) obj;
-		if (genericValue == null) {
-			if (other.genericValue != null)
+		if ( genericValue == null ) {
+			if ( other.genericValue != null ) {
 				return false;
-		} else if (!genericValue.equals(other.genericValue))
+			}
+		}
+		else if ( !genericValue.equals( other.genericValue ) ) {
 			return false;
-		if (id == null) {
-			if (other.id != null)
+		}
+		if ( id == null ) {
+			if ( other.id != null ) {
 				return false;
-		} else if (!id.equals(other.id))
+			}
+		}
+		else if ( !id.equals( other.id ) ) {
 			return false;
+		}
 		return true;
 	}
 

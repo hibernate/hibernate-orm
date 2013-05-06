@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.engine.config.internal.ConfigurationServiceInitiator;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -90,7 +91,7 @@ public class StandardServiceInitiators {
 
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );
 
-
+		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 		return Collections.unmodifiableList( serviceInitiators );
 	}
 }

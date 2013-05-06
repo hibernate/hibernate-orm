@@ -32,19 +32,19 @@ import org.hibernate.envers.query.projection.AuditProjection;
  * @author Adam Warski (adam at warski dot org)
  */
 public class PropertyAuditProjection implements AuditProjection {
-    private final PropertyNameGetter propertyNameGetter;
-    private final String function;
-    private final boolean distinct;
+	private final PropertyNameGetter propertyNameGetter;
+	private final String function;
+	private final boolean distinct;
 
-    public PropertyAuditProjection(PropertyNameGetter propertyNameGetter, String function, boolean distinct) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.function = function;
-        this.distinct = distinct;
-    }
+	public PropertyAuditProjection(PropertyNameGetter propertyNameGetter, String function, boolean distinct) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.function = function;
+		this.distinct = distinct;
+	}
 
-    public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
-        String propertyName = propertyNameGetter.get(auditCfg);
+	public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
+		String propertyName = propertyNameGetter.get( auditCfg );
 
-        return Triple.make(function, propertyName, distinct);
-    }
+		return Triple.make( function, propertyName, distinct );
+	}
 }

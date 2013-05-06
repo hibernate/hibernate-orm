@@ -33,13 +33,26 @@ import org.hibernate.HibernateException;
 public abstract class LockingStrategyException extends HibernateException {
 	private final Object entity;
 
+	/**
+	 * Constructs a LockingStrategyException
+	 *
+	 * @param entity The entity we were trying to lock
+	 * @param message Message explaining the condition
+	 */
 	public LockingStrategyException(Object entity, String message) {
 		super( message );
 		this.entity = entity;
 	}
 
-	public LockingStrategyException(Object entity, String message, Throwable root) {
-		super( message, root );
+	/**
+	 * Constructs a LockingStrategyException
+	 *
+	 * @param entity The entity we were trying to lock
+	 * @param message Message explaining the condition
+	 * @param cause The underlying cause
+	 */
+	public LockingStrategyException(Object entity, String message, Throwable cause) {
+		super( message, cause );
 		this.entity = entity;
 	}
 

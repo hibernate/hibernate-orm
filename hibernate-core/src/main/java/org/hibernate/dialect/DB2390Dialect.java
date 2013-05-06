@@ -31,31 +31,38 @@ package org.hibernate.dialect;
  * @author Kristoffer Dyrkorn
  */
 public class DB2390Dialect extends DB2Dialect {
-
+	@Override
 	public boolean supportsSequences() {
 		return false;
 	}
 
+	@Override
 	public String getIdentitySelectString() {
 		return "select identity_val_local() from sysibm.sysdummy1";
 	}
 
+	@Override
 	public boolean supportsLimit() {
 		return true;
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
 	public boolean supportsLimitOffset() {
 		return false;
 	}
 
+	@Override
 	public boolean useMaxForLimit() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsVariableLimit() {
 		return false;
 	}
 
+	@Override
 	public String getLimitString(String sql, int offset, int limit) {
 		if ( offset > 0 ) {
 			throw new UnsupportedOperationException( "query result offset is not supported" );
@@ -63,12 +70,7 @@ public class DB2390Dialect extends DB2Dialect {
 		if ( limit == 0 ) {
 			return sql;
 		}
-		return new StringBuilder( sql.length() + 40 )
-				.append( sql )
-				.append( " fetch first " )
-				.append( limit )
-				.append( " rows only " )
-				.toString();
+		return sql + " fetch first " + limit + " rows only ";
 	}
 
 }

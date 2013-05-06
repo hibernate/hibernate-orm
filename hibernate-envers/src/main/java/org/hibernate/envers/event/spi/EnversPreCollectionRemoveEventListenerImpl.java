@@ -31,6 +31,8 @@ import org.hibernate.event.spi.PreCollectionRemoveEvent;
 import org.hibernate.event.spi.PreCollectionRemoveEventListener;
 
 /**
+ * Envers-specific collection removal event listener
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
@@ -46,14 +48,14 @@ public class EnversPreCollectionRemoveEventListenerImpl
 
 	@Override
 	public void onPreRemoveCollection(PreCollectionRemoveEvent event) {
-        CollectionEntry collectionEntry = getCollectionEntry( event );
-        if ( collectionEntry != null && !collectionEntry.getLoadedPersister().isInverse() ) {
+		final CollectionEntry collectionEntry = getCollectionEntry( event );
+		if ( collectionEntry != null && !collectionEntry.getLoadedPersister().isInverse() ) {
 			Serializable oldColl = collectionEntry.getSnapshot();
 			if ( !event.getCollection().wasInitialized() && shouldGenerateRevision( event ) ) {
 				// In case of uninitialized collection we need a fresh snapshot to properly calculate audit data.
 				oldColl = initializeCollection( event );
 			}
-            onCollectionAction( event, null, oldColl, collectionEntry );
-        }
+			onCollectionAction( event, null, oldColl, collectionEntry );
+		}
 	}
 }

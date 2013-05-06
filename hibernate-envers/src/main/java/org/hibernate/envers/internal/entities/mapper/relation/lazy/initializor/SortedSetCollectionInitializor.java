@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -41,29 +41,43 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 public class SortedSetCollectionInitializor extends BasicCollectionInitializor<SortedSet> {
 	private final Comparator comparator;
 
-	public SortedSetCollectionInitializor(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-										  RelationQueryGenerator queryGenerator, Object primaryKey, Number revision, boolean removed,
-										  Class<? extends SortedSet> collectionClass, MiddleComponentData elementComponentData,
-										  Comparator comparator) {
-		super(verCfg, versionsReader, queryGenerator, primaryKey, revision, removed, collectionClass, elementComponentData);
+	public SortedSetCollectionInitializor(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+			RelationQueryGenerator queryGenerator, Object primaryKey, Number revision, boolean removed,
+			Class<? extends SortedSet> collectionClass, MiddleComponentData elementComponentData,
+			Comparator comparator) {
+		super(
+				verCfg,
+				versionsReader,
+				queryGenerator,
+				primaryKey,
+				revision,
+				removed,
+				collectionClass,
+				elementComponentData
+		);
 		this.comparator = comparator;
 	}
 
 	@Override
 	protected SortedSet initializeCollection(int size) {
-		if (comparator == null) {
-			return super.initializeCollection(size);
+		if ( comparator == null ) {
+			return super.initializeCollection( size );
 		}
 		try {
-			return collectionClass.getConstructor(Comparator.class).newInstance(comparator);
-		} catch (InstantiationException e) {
-			throw new AuditException(e);
-		} catch (IllegalAccessException e) {
-			throw new AuditException(e);
-		} catch (NoSuchMethodException e) {
-			throw new AuditException(e);
-		} catch (InvocationTargetException e) {
-			throw new AuditException(e);
+			return collectionClass.getConstructor( Comparator.class ).newInstance( comparator );
+		}
+		catch (InstantiationException e) {
+			throw new AuditException( e );
+		}
+		catch (IllegalAccessException e) {
+			throw new AuditException( e );
+		}
+		catch (NoSuchMethodException e) {
+			throw new AuditException( e );
+		}
+		catch (InvocationTargetException e) {
+			throw new AuditException( e );
 		}
 	}
 }

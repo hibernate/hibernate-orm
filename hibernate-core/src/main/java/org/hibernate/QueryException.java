@@ -23,15 +23,11 @@
  */
 package org.hibernate;
 
-import org.jboss.logging.Logger;
-
 /**
  * A problem occurred translating a Hibernate query to SQL due to invalid query syntax, etc.
  */
 public class QueryException extends HibernateException {
-	private static final Logger log = Logger.getLogger( QueryException.class );
-
-	private String queryString;
+	private final String queryString;
 
 	/**
 	 * Constructs a QueryException using the specified exception message.
@@ -39,7 +35,7 @@ public class QueryException extends HibernateException {
 	 * @param message A message explaining the exception condition
 	 */
 	public QueryException(String message) {
-		super( message );
+		this( message, null, null );
 	}
 
 	/**
@@ -48,8 +44,8 @@ public class QueryException extends HibernateException {
 	 * @param message A message explaining the exception condition
 	 * @param cause The underlying cause
 	 */
-	public QueryException(String message, Throwable cause) {
-		super( message, cause );
+	public QueryException(String message, Exception cause) {
+		this( message, null, cause );
 	}
 
 	/**
@@ -59,7 +55,18 @@ public class QueryException extends HibernateException {
 	 * @param queryString The query being evaluated when the exception occurred
 	 */
 	public QueryException(String message, String queryString) {
-		super( message );
+		this( message, queryString, null );
+	}
+
+	/**
+	 * Constructs a QueryException using the specified exception message and query-string.
+	 *
+	 * @param message A message explaining the exception condition
+	 * @param queryString The query being evaluated when the exception occurred
+	 * @param cause The underlying cause
+	 */
+	public QueryException(String message, String queryString, Exception cause) {
+		super( message, cause );
 		this.queryString = queryString;
 	}
 
@@ -69,7 +76,7 @@ public class QueryException extends HibernateException {
 	 * @param cause The underlying cause
 	 */
 	public QueryException(Exception cause) {
-		super( cause );
+		this( "A query exception occurred", null, cause );
 	}
 
 	/**
@@ -81,30 +88,52 @@ public class QueryException extends HibernateException {
 		return queryString;
 	}
 
-	/**
-	 * Set the query string.  Even an option since often the part of the code generating the exception does not
-	 * have access to the query overall.
-	 *
-	 * @param queryString The query string.
-	 */
-	public void setQueryString(String queryString) {
-		if ( this.queryString != null ) {
-			log.debugf(
-					"queryString overriding non-null previous value [%s] : %s",
-					this.queryString,
-					queryString
-			);
-		}
-		this.queryString = queryString;
-	}
-
 	@Override
 	public String getMessage() {
-		String msg = super.getMessage();
-		if ( queryString!=null ) {
+		String msg = getOriginalMessage();
+		if ( queryString != null ) {
 			msg += " [" + queryString + ']';
 		}
 		return msg;
 	}
 
+	protected final String getOriginalMessage() {
+		return super.getMessage();
+	}
+
+	/**
+	 * Wraps this exception with another, of same kind, with the specified queryString.  If this exception already
+	 * has a queryString defined, the same exception ({@code this}) is returned.  Otherwise the protected
+	 * {@link #generateQueryException(String)} is called, to allow subclasses to properly create the correct
+	 * subclass for return.
+	 *
+	 * @param queryString The query string that led to the QueryException
+	 *
+	 * @return {@code this}, if {@code this} has {@code null} for {@link #getQueryString()}; otherwise a new
+	 * QueryException (or subclass) is returned.
+	 */
+	public final QueryException wrapWithQueryString(String queryString) {
+		if ( this.getQueryString() != null ) {
+			return this;
+		}
+
+		return generateQueryException( queryString );
+	}
+
+	/**
+	 * Called from {@link #wrapWithQueryString(String)} when we really need to generate a new QueryException
+	 * (or subclass).
+	 * <p/>
+	 * NOTE : implementors should take care to use {@link #getOriginalMessage()} for the message, not
+	 * {@link #getMessage()}
+	 *
+	 * @param queryString The query string
+	 *
+	 * @return The generated QueryException (or subclass)
+	 *
+	 * @see #getOriginalMessage()
+	 */
+	protected QueryException generateQueryException(String queryString) {
+		return new QueryException( getOriginalMessage(), queryString, this );
+	}
 }

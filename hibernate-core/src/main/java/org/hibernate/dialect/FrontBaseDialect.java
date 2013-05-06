@@ -53,6 +53,9 @@ import org.hibernate.persister.entity.Lockable;
  */
 public class FrontBaseDialect extends Dialect {
 
+	/**
+	 * Constructs a FrontBaseDialect
+	 */
 	public FrontBaseDialect() {
 		super();
 
@@ -74,37 +77,43 @@ public class FrontBaseDialect extends Dialect {
 		registerColumnType( Types.CLOB, "clob" );
 	}
 
+	@Override
 	public String getAddColumnString() {
 		return "add column";
 	}
 
+	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
 	}
 
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
 
 	/**
-	 * Does this dialect support the <tt>FOR UPDATE</tt> syntax. No!
-	 *
-	 * @return false always. FrontBase doesn't support this syntax,
-	 * which was dropped with SQL92
+	 * FrontBase doesn't support this syntax, which was dropped with SQL92.
+	 * <p/>
+	 * {@inheritDoc}
 	 */
+	@Override
 	public String getForUpdateString() {
 		return "";
 	}
 
-	public String getCurrentTimestampCallString() {
+	@Override
+	public String getCurrentTimestampSelectString() {
 		// TODO : not sure this is correct, could not find docs on how to do this.
 		return "{?= call current_timestamp}";
 	}
 
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return true;
 	}
 
+	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// Frontbase has no known variation of a "SELECT ... FOR UPDATE" syntax...
 		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {

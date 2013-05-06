@@ -23,22 +23,24 @@
  */
 package org.hibernate.dialect;
 
-
-/**
- * @author Gavin King, Scott Marlow
+/** A Dialect for MySQL 5 using InnoDB engine
+ *
+ * @author Gavin King,
+ * @author Scott Marlow
  */
 public class MySQL5InnoDBDialect extends MySQL5Dialect {
-
+	@Override
 	public boolean supportsCascadeDelete() {
 		return true;
 	}
-	
+
+	@Override
 	public String getTableTypeString() {
 		return " ENGINE=InnoDB";
 	}
 
+	@Override
 	public boolean hasSelfReferentialForeignKeyBug() {
 		return true;
 	}
-	
 }

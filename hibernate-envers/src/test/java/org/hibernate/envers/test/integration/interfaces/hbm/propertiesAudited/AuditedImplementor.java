@@ -1,9 +1,9 @@
 package org.hibernate.envers.test.integration.interfaces.hbm.propertiesAudited;
+
 import org.hibernate.envers.Audited;
 
 /**
  * @author Hern�n Chanfreau
- *
  */
 @Audited
 public class AuditedImplementor implements SimpleInterface {
@@ -38,7 +38,7 @@ public class AuditedImplementor implements SimpleInterface {
 	public void setAuditedImplementorData(String implementorData) {
 		this.auditedImplementorData = implementorData;
 	}
-	
+
 	public int getNumerito() {
 		return numerito;
 	}

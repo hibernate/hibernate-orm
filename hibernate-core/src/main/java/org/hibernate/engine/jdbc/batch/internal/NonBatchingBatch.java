@@ -40,8 +40,10 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class NonBatchingBatch extends AbstractBatchImpl {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, NonBatchingBatch.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			NonBatchingBatch.class.getName()
+	);
 
 	private JdbcCoordinator jdbcCoordinator;
 	

@@ -33,16 +33,17 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
  * @author Adam Warski (adam at warski dot org)
  */
 public class RevisionTypeAuditExpression implements AuditCriterion {
-    private Object value;
-    private String op;
+	private Object value;
+	private String op;
 
-    public RevisionTypeAuditExpression(Object value, String op) {
-        this.value = value;
-        this.op = op;
-    }
+	public RevisionTypeAuditExpression(Object value, String op) {
+		this.value = value;
+		this.op = op;
+	}
 
-    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-        parameters.addWhereWithParam(verCfg.getAuditEntCfg().getRevisionTypePropName(), op, value);
-    }
+	public void addToQuery(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		parameters.addWhereWithParam( verCfg.getAuditEntCfg().getRevisionTypePropName(), op, value );
+	}
 }

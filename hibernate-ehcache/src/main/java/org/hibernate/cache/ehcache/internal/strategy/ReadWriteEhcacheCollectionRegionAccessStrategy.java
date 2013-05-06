@@ -40,15 +40,16 @@ public class ReadWriteEhcacheCollectionRegionAccessStrategy
 
 	/**
 	 * Create a read/write access strategy accessing the given collection region.
+	 *
+	 * @param region The wrapped region
+	 * @param settings The Hibernate settings
 	 */
 	public ReadWriteEhcacheCollectionRegionAccessStrategy(EhcacheCollectionRegion region) {
 		super( region );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public CollectionRegion getRegion() {
-		return region;
+		return region();
 	}
 }

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2008, 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -55,55 +55,6 @@ public class SimpleExpression implements Criterion {
 		this.op = op;
 	}
 
-	public SimpleExpression ignoreCase() {
-		ignoreCase = true;
-		return this;
-	}
-
-	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery)
-			throws HibernateException {
-
-		String[] columns = criteriaQuery.findColumns( propertyName, criteria );
-		Type type = criteriaQuery.getTypeUsingProjection( criteria, propertyName );
-		StringBuilder fragment = new StringBuilder();
-		if ( columns.length > 1 ) {
-			fragment.append( '(' );
-		}
-		SessionFactoryImplementor factory = criteriaQuery.getFactory();
-		int[] sqlTypes = type.sqlTypes( factory );
-		for ( int i = 0; i < columns.length; i++ ) {
-			boolean lower = ignoreCase &&
-					(sqlTypes[i] == Types.VARCHAR || sqlTypes[i] == Types.CHAR);
-			if ( lower ) {
-				fragment.append( factory.getDialect().getLowercaseFunction() )
-						.append( '(' );
-			}
-			fragment.append( columns[i] );
-			if ( lower ) {
-				fragment.append( ')' );
-			}
-			fragment.append( getOp() ).append( "?" );
-			if ( i < columns.length - 1 ) {
-				fragment.append( " and " );
-			}
-		}
-		if ( columns.length > 1 ) {
-			fragment.append( ')' );
-		}
-		return fragment.toString();
-
-	}
-
-	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery)
-			throws HibernateException {
-		Object icvalue = ignoreCase ? value.toString().toLowerCase() : value;
-		return new TypedValue[] {criteriaQuery.getTypedValue( criteria, propertyName, icvalue )};
-	}
-
-	public String toString() {
-		return propertyName + getOp() + value;
-	}
-
 	protected final String getOp() {
 		return op;
 	}
@@ -115,4 +66,58 @@ public class SimpleExpression implements Criterion {
 	public Object getValue() {
 		return value;
 	}
+
+	/**
+	 * Make case insensitive.  No effect for non-String values
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SimpleExpression ignoreCase() {
+		ignoreCase = true;
+		return this;
+	}
+
+	@Override
+	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final String[] columns = criteriaQuery.findColumns( propertyName, criteria );
+		final Type type = criteriaQuery.getTypeUsingProjection( criteria, propertyName );
+		final StringBuilder fragment = new StringBuilder();
+
+		if ( columns.length > 1 ) {
+			fragment.append( '(' );
+		}
+		final SessionFactoryImplementor factory = criteriaQuery.getFactory();
+		final int[] sqlTypes = type.sqlTypes( factory );
+		for ( int i = 0; i < columns.length; i++ ) {
+			final boolean lower = ignoreCase && (sqlTypes[i] == Types.VARCHAR || sqlTypes[i] == Types.CHAR);
+			if ( lower ) {
+				fragment.append( factory.getDialect().getLowercaseFunction() ).append( '(' );
+			}
+			fragment.append( columns[i] );
+			if ( lower ) {
+				fragment.append( ')' );
+			}
+
+			fragment.append( getOp() ).append( "?" );
+			if ( i < columns.length - 1 ) {
+				fragment.append( " and " );
+			}
+		}
+		if ( columns.length > 1 ) {
+			fragment.append( ')' );
+		}
+		return fragment.toString();
+	}
+
+	@Override
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final Object casedValue = ignoreCase ? value.toString().toLowerCase() : value;
+		return new TypedValue[] { criteriaQuery.getTypedValue( criteria, propertyName, casedValue ) };
+	}
+
+	@Override
+	public String toString() {
+		return propertyName + getOp() + value;
+	}
+
 }

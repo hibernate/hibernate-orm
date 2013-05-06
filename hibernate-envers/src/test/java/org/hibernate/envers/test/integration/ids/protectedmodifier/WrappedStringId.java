@@ -1,7 +1,7 @@
 package org.hibernate.envers.test.integration.ids.protectedmodifier;
 
-import java.io.Serializable;
 import javax.persistence.Embeddable;
+import java.io.Serializable;
 
 @Embeddable
 public class WrappedStringId implements Serializable {
@@ -21,10 +21,14 @@ public class WrappedStringId implements Serializable {
 	}
 
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( o == null || getClass() != o.getClass() ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 		WrappedStringId that = (WrappedStringId) o;
-		return !( id != null ? !id.equals( that.id ) : that.id != null );
+		return !(id != null ? !id.equals( that.id ) : that.id != null);
 	}
 
 	public int hashCode() {

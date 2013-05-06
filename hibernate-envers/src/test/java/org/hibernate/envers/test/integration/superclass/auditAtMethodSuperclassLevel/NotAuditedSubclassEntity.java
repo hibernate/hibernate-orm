@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.superclass.auditAtMethodSuperclassLevel;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -30,9 +31,7 @@ import javax.persistence.Table;
 
 /**
  * @author Adam Warski (adam at warski dot org)
- * 
  * @author Hern&aacute;n Chanfreau
- * 
  */
 @Entity
 @Table(name = "NotAuditedSubclass")
@@ -40,20 +39,20 @@ public class NotAuditedSubclassEntity extends AuditedMethodMappedSuperclass {
 	@Id
 	@GeneratedValue
 	private Integer id;
-	
+
 	private String notAuditedStr;
 
 	public NotAuditedSubclassEntity() {
 	}
 
 	public NotAuditedSubclassEntity(Integer id, String str, String otherStr, String notAuditedStr) {
-		super(str, otherStr);
+		super( str, otherStr );
 		this.notAuditedStr = notAuditedStr;
 		this.id = id;
 	}
 
 	public NotAuditedSubclassEntity(String str, String otherStr, String notAuditedStr) {
-		super(str, otherStr);
+		super( str, otherStr );
 		this.notAuditedStr = notAuditedStr;
 	}
 
@@ -74,17 +73,21 @@ public class NotAuditedSubclassEntity extends AuditedMethodMappedSuperclass {
 	}
 
 	public boolean equals(Object o) {
-		if (this == o)
+		if ( this == o ) {
 			return true;
-		if (!(o instanceof NotAuditedSubclassEntity))
+		}
+		if ( !(o instanceof NotAuditedSubclassEntity) ) {
 			return false;
-		if (!super.equals(o))
+		}
+		if ( !super.equals( o ) ) {
 			return false;
+		}
 
 		NotAuditedSubclassEntity that = (NotAuditedSubclassEntity) o;
 
-		if (id != null ? !id.equals(that.id) : that.id != null)
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
 			return false;
+		}
 
 		return true;
 	}

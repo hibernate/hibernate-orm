@@ -54,9 +54,14 @@ import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
+ * The standard DatabaseInfoDialectResolver implementation
+ *
  * @author Steve Ebersole
  */
 public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectResolver {
+	/**
+	 * Singleton access
+	 */
 	public static final StandardDatabaseInfoDialectResolver INSTANCE = new StandardDatabaseInfoDialectResolver();
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
@@ -159,7 +164,7 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 			return new InformixDialect();
 		}
 
-		if ( databaseName.equals("DB2 UDB for AS/400" ) ) {
+		if ( "DB2 UDB for AS/400".equals( databaseName ) ) {
 			return new DB2400Dialect();
 		}
 

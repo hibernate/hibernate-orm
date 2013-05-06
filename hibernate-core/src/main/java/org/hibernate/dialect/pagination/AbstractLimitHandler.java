@@ -25,10 +25,12 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		this.selection = selection;
 	}
 
+	@Override
 	public boolean supportsLimit() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsLimitOffset() {
 		return supportsLimit();
 	}
@@ -112,20 +114,24 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		return zeroBasedFirstResult;
 	}
 
+	@Override
 	public String getProcessedSql() {
 		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName() );
 	}
 
+	@Override
 	public int bindLimitParametersAtStartOfQuery(PreparedStatement statement, int index)
 			throws SQLException {
 		return bindLimitParametersFirst() ? bindLimitParameters( statement, index ) : 0;
 	}
 
+	@Override
 	public int bindLimitParametersAtEndOfQuery(PreparedStatement statement, int index)
 			throws SQLException {
 		return !bindLimitParametersFirst() ? bindLimitParameters( statement, index ) : 0;
 	}
 
+	@Override
 	public void setMaxRows(PreparedStatement statement) throws SQLException {
 	}
 
@@ -142,10 +148,10 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		if ( !supportsVariableLimit() || !LimitHelper.hasMaxRows( selection ) ) {
 			return 0;
 		}
-		int firstRow = convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
-		int lastRow = getMaxOrLimit();
-		boolean hasFirstRow = supportsLimitOffset() && ( firstRow > 0 || forceLimitUsage() );
-		boolean reverse = bindLimitParametersInReverseOrder();
+		final int firstRow = convertToFirstRowValue( LimitHelper.getFirstRow( selection ) );
+		final int lastRow = getMaxOrLimit();
+		final boolean hasFirstRow = supportsLimitOffset() && ( firstRow > 0 || forceLimitUsage() );
+		final boolean reverse = bindLimitParametersInReverseOrder();
 		if ( hasFirstRow ) {
 			statement.setInt( index + ( reverse ? 1 : 0 ), firstRow );
 		}

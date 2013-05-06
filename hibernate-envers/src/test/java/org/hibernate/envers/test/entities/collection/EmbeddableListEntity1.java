@@ -23,8 +23,6 @@
  */
 package org.hibernate.envers.test.entities.collection;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -32,6 +30,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.components.Component3;
@@ -82,18 +82,24 @@ public class EmbeddableListEntity1 {
 	}
 
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( !( o instanceof EmbeddableListEntity1 ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof EmbeddableListEntity1) ) {
+			return false;
+		}
 
 		EmbeddableListEntity1 that = (EmbeddableListEntity1) o;
 
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
 
 	public int hashCode() {
-		return ( id != null ? id.hashCode() : 0 );
+		return (id != null ? id.hashCode() : 0);
 	}
 
 	public String toString() {

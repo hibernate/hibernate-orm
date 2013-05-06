@@ -52,8 +52,7 @@ import org.hibernate.sql.Update;
  * @since 3.5
  */
 public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			PessimisticWriteUpdateLockingStrategy.class.getName()
 	);
@@ -88,10 +87,11 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
-		SessionFactoryImplementor factory = session.getFactory();
+
+		final SessionFactoryImplementor factory = session.getFactory();
 		try {
 			try {
-				PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+				final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 				try {
 					lockable.getVersionType().nullSafeSet( st, version, 1, session );
 					int offset = 2;
@@ -103,8 +103,9 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 						lockable.getVersionType().nullSafeSet( st, version, offset, session );
 					}
 
-					int affected = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
-					if ( affected < 0 ) {  // todo:  should this instead check for exactly one row modified?
+					final int affected = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+					// todo:  should this instead check for exactly one row modified?
+					if ( affected < 0 ) {
 						if (factory.getStatistics().isStatisticsEnabled()) {
 							factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
 						}
@@ -130,8 +131,8 @@ public class PessimisticWriteUpdateLockingStrategy implements LockingStrategy {
 	}
 
 	protected String generateLockString() {
-		SessionFactoryImplementor factory = lockable.getFactory();
-		Update update = new Update( factory.getDialect() );
+		final SessionFactoryImplementor factory = lockable.getFactory();
+		final Update update = new Update( factory.getDialect() );
 		update.setTableName( lockable.getRootTableName() );
 		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
 		update.setVersionColumnName( lockable.getVersionColumnName() );

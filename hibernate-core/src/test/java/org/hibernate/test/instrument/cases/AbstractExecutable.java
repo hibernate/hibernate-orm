@@ -30,8 +30,10 @@ public abstract class AbstractExecutable implements Executable {
 		}
 		finally {
 			factory.close();
+			factory = null;
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
+				serviceRegistry = null;
 			}
 		}
 	}

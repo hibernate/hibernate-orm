@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -35,27 +35,37 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
  */
 public class ToOneDelegateSessionImplementor extends AbstractDelegateSessionImplementor {
 	private static final long serialVersionUID = 4770438372940785488L;
-	
-    private final AuditReaderImplementor versionsReader;
-    private final Class<?> entityClass;
-    private final Object entityId;
-    private final Number revision;
-    private final boolean removed;
-    private final AuditConfiguration verCfg;
 
-	public ToOneDelegateSessionImplementor(AuditReaderImplementor versionsReader,
-                                           Class<?> entityClass, Object entityId, Number revision, boolean removed,
-                                           AuditConfiguration verCfg) {
-        super(versionsReader.getSessionImplementor());
-        this.versionsReader = versionsReader;
-        this.entityClass = entityClass;
-        this.entityId = entityId;
-        this.revision = revision;
-        this.removed = removed;
-        this.verCfg = verCfg;
-    }
+	private final AuditReaderImplementor versionsReader;
+	private final Class<?> entityClass;
+	private final Object entityId;
+	private final Number revision;
+	private final boolean removed;
+	private final AuditConfiguration verCfg;
 
-    public Object doImmediateLoad(String entityName) throws HibernateException {
-        return ToOneEntityLoader.loadImmediate( versionsReader, entityClass, entityName, entityId, revision, removed, verCfg );
-    }
+	public ToOneDelegateSessionImplementor(
+			AuditReaderImplementor versionsReader,
+			Class<?> entityClass, Object entityId, Number revision, boolean removed,
+			AuditConfiguration verCfg) {
+		super( versionsReader.getSessionImplementor() );
+		this.versionsReader = versionsReader;
+		this.entityClass = entityClass;
+		this.entityId = entityId;
+		this.revision = revision;
+		this.removed = removed;
+		this.verCfg = verCfg;
+	}
+
+	@Override
+	public Object doImmediateLoad(String entityName) throws HibernateException {
+		return ToOneEntityLoader.loadImmediate(
+				versionsReader,
+				entityClass,
+				entityName,
+				entityId,
+				revision,
+				removed,
+				verCfg
+		);
+	}
 }

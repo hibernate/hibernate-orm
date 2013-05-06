@@ -24,10 +24,7 @@
 package org.hibernate.engine;
 
 /**
- * Describes the strategy for fetching an association
- * <p/>
- * todo not really a fan of the name.  not sure of a better one though.
- * I'd almost rather see this be called the style, but then what to call FetchStyle?  HowToFetch?
+ * Describes the strategy for fetching an association, which includes both when and how.
  *
  * @author Steve Ebersole
  */
@@ -35,6 +32,12 @@ public class FetchStrategy {
 	private final FetchTiming timing;
 	private final FetchStyle style;
 
+	/**
+	 * Constructs a FetchStrategy.
+	 *
+	 * @param timing The fetch timing (the when)
+	 * @param style The fetch style (the how).
+	 */
 	public FetchStrategy(FetchTiming timing, FetchStyle style) {
 		this.timing = timing;
 		this.style = style;

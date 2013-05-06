@@ -31,6 +31,9 @@ import org.hibernate.event.service.spi.DuplicationStrategy;
  * @author Steve Ebersole
  */
 public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
+	/**
+	 * Singleton access
+	 */
 	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
 
 	@Override

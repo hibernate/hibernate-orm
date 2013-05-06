@@ -1,10 +1,11 @@
 package org.hibernate.envers.test.integration.naming;
+
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
 /**
  * Concrete implementation of mapped superclass for Audit join table test.
- * 
+ *
  * @author Erik-Berndt Scheper
  * @see VersionsJoinTableRangeTestAlternateEntity
  * @see VersionsJoinTableRangeTestEntitySuperClass
@@ -13,7 +14,7 @@ import javax.persistence.Table;
 @Table(name = "RANGE_TEST_ENTITY")
 @org.hibernate.envers.Audited
 public class VersionsJoinTableRangeTestEntity extends
-		VersionsJoinTableRangeTestEntitySuperClass {
+											  VersionsJoinTableRangeTestEntitySuperClass {
 
 	private String value;
 
@@ -32,8 +33,7 @@ public class VersionsJoinTableRangeTestEntity extends
 	}
 
 	/**
-	 * @param value
-	 *            the value to set
+	 * @param value the value to set
 	 */
 	public void setValue(String value) {
 		this.value = value;
@@ -49,18 +49,24 @@ public class VersionsJoinTableRangeTestEntity extends
 
 	@Override
 	public boolean equals(Object obj) {
-		if (this == obj)
+		if ( this == obj ) {
 			return true;
-		if (!super.equals(obj))
+		}
+		if ( !super.equals( obj ) ) {
 			return false;
-		if (getClass() != obj.getClass())
+		}
+		if ( getClass() != obj.getClass() ) {
 			return false;
+		}
 		VersionsJoinTableRangeTestEntity other = (VersionsJoinTableRangeTestEntity) obj;
-		if (value == null) {
-			if (other.value != null)
+		if ( value == null ) {
+			if ( other.value != null ) {
 				return false;
-		} else if (!value.equals(other.value))
+			}
+		}
+		else if ( !value.equals( other.value ) ) {
 			return false;
+		}
 		return true;
 	}
 
@@ -68,11 +74,12 @@ public class VersionsJoinTableRangeTestEntity extends
 	public String toString() {
 		StringBuilder output = new StringBuilder();
 
-		output.append("VersionsJoinTableRangeComponentTestEntity {");
-		output.append(" id = \"").append(getId()).append("\", ");
-		output.append(" genericValue = \"").append(getGenericValue()).append(
-				"\", ");
-		output.append(" value = \"").append(this.value).append("\"}");
+		output.append( "VersionsJoinTableRangeComponentTestEntity {" );
+		output.append( " id = \"" ).append( getId() ).append( "\", " );
+		output.append( " genericValue = \"" ).append( getGenericValue() ).append(
+				"\", "
+		);
+		output.append( " value = \"" ).append( this.value ).append( "\"}" );
 		return output.toString();
 	}
 

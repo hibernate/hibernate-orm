@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine.jdbc;
 
-
 /**
  * Marker interface for non-contextually created java.sql.NClob instances..
  * <p/>

@@ -23,13 +23,13 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.management.MBeanNotificationInfo;
 import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.sf.ehcache.hibernate.management.api.HibernateStats;
 
@@ -43,14 +43,14 @@ import org.hibernate.stat.Statistics;
  *
  * @author <a href="mailto:asanoujam@terracottatech.com">Abhishek Sanoujam</a>
  */
-public class HibernateStatsImpl extends BaseEmitterBean implements HibernateStats {
+public class HibernateStatsImpl extends AbstractEmitterBean implements HibernateStats {
 	private static final double MILLIS_PER_SECOND = 1000;
 	private static final MBeanNotificationInfo NOTIFICATION_INFO;
 
 	private final SessionFactory sessionFactory;
 
 	static {
-		final String[] notifTypes = new String[] { };
+		final String[] notifTypes = new String[] {};
 		final String name = Notification.class.getName();
 		final String description = "Hibernate Statistics Event";
 		NOTIFICATION_INFO = new MBeanNotificationInfo( notifTypes, name, description );
@@ -172,7 +172,7 @@ public class HibernateStatsImpl extends BaseEmitterBean implements HibernateStat
 	public double getQueryExecutionRate() {
 		long startTime = getStatistics().getStartTime();
 		long now = System.currentTimeMillis();
-		double deltaSecs = ( now - startTime ) / MILLIS_PER_SECOND;
+		double deltaSecs = (now - startTime) / MILLIS_PER_SECOND;
 		return getQueryExecutionCount() / deltaSecs;
 	}
 
@@ -321,10 +321,10 @@ public class HibernateStatsImpl extends BaseEmitterBean implements HibernateStat
 	}
 
 	/**
-	 * @see BaseEmitterBean#getNotificationInfo()
+	 * @see AbstractEmitterBean#getNotificationInfo()
 	 */
 	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
-		return new MBeanNotificationInfo[] { NOTIFICATION_INFO };
+		return new MBeanNotificationInfo[] {NOTIFICATION_INFO};
 	}
 }

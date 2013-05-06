@@ -47,13 +47,14 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 public class EhcacheCollectionRegion extends EhcacheTransactionalDataRegion implements CollectionRegion {
-
-
-    /**
-     * Constructs an EhcacheCollectionRegion around the given underlying cache.
-     *
-     * @param accessStrategyFactory
-     */
+	/**
+	 * Constructs an EhcacheCollectionRegion around the given underlying cache.
+	 *
+	 * @param accessStrategyFactory The factory for building needed CollectionRegionAccessStrategy instance
+	 * @param underlyingCache The ehcache cache instance
+	 * @param metadata Metadata about the data to be cached in this region
+	 * @param properties Any additional[ properties
+	 */
     public EhcacheCollectionRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, boolean isMinimalPutsEnabled,
                                    CacheDataDescription metadata, Properties properties) {
         super( accessStrategyFactory, underlyingCache, isMinimalPutsEnabled, metadata, properties );
@@ -63,6 +64,7 @@ public class EhcacheCollectionRegion extends EhcacheTransactionalDataRegion impl
      * {@inheritDoc}
      */
     public CollectionRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-        return accessStrategyFactory.createCollectionRegionAccessStrategy( this, accessType );
+        return getAccessStrategyFactory().createCollectionRegionAccessStrategy( this, accessType );
     }
 }
+

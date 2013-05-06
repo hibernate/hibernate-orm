@@ -6,5 +6,6 @@ package org.hibernate.envers.test.integration.interfaces.components;
  */
 public interface IComponent {
 	String getData();
+
 	void setData(String data);
 }

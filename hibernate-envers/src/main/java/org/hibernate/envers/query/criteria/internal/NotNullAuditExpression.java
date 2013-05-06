@@ -35,21 +35,28 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class NotNullAuditExpression implements AuditCriterion {
-    private PropertyNameGetter propertyNameGetter;
+	private PropertyNameGetter propertyNameGetter;
 
-    public NotNullAuditExpression(PropertyNameGetter propertyNameGetter) {
-        this.propertyNameGetter = propertyNameGetter;
-    }
+	public NotNullAuditExpression(PropertyNameGetter propertyNameGetter) {
+		this.propertyNameGetter = propertyNameGetter;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( auditCfg, entityName, propertyName );
 
-        if (relatedEntity == null) {
-            parameters.addNotNullRestriction(propertyName, true);
-        } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, null, null, false);
-        }
-    }
+		if ( relatedEntity == null ) {
+			parameters.addNotNullRestriction( propertyName, true );
+		}
+		else {
+			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, null, null, false );
+		}
+	}
 }

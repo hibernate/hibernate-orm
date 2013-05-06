@@ -36,17 +36,17 @@ public class BeanUtils {
 	/**
 	 * Return the named getter method on the bean or null if not found.
 	 *
-	 * @param bean
-	 * @param propertyName
+	 * @param bean The bean
+	 * @param propertyName The property to get the getter for
 	 *
 	 * @return the named getter method
 	 */
 	private static Method getMethod(Object bean, String propertyName) {
-		StringBuilder sb = new StringBuilder( "get" ).append( Character.toUpperCase( propertyName.charAt( 0 ) ) );
+		final StringBuilder sb = new StringBuilder( "get" ).append( Character.toUpperCase( propertyName.charAt( 0 ) ) );
 		if ( propertyName.length() > 1 ) {
 			sb.append( propertyName.substring( 1 ) );
 		}
-		String getterName = sb.toString();
+		final String getterName = sb.toString();
 		for ( Method m : bean.getClass().getMethods() ) {
 			if ( getterName.equals( m.getName() ) && m.getParameterTypes().length == 0 ) {
 				return m;
@@ -55,14 +55,6 @@ public class BeanUtils {
 		return null;
 	}
 
-	/**
-	 * Return the named field on the bean or null if not found.
-	 *
-	 * @param bean
-	 * @param propertyName
-	 *
-	 * @return the named field
-	 */
 	private static Field getField(Object bean, String propertyName) {
 		for ( Field f : bean.getClass().getDeclaredFields() ) {
 			if ( propertyName.equals( f.getName() ) ) {
@@ -87,8 +79,8 @@ public class BeanUtils {
 	/**
 	 * Retrieve a named bean property value.
 	 *
-	 * @param bean bean
-	 * @param propertyName
+	 * @param bean The bean instance
+	 * @param propertyName The name of the property whose value to extract
 	 *
 	 * @return the property value
 	 */
@@ -96,24 +88,24 @@ public class BeanUtils {
 		validateArgs( bean, propertyName );
 
 		// try getters first
-		Method getter = getMethod( bean, propertyName );
+		final Method getter = getMethod( bean, propertyName );
 		if ( getter != null ) {
 			try {
 				return getter.invoke( bean );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				/**/
 			}
 		}
 
 		// then try fields
-		Field field = getField( bean, propertyName );
+		final Field field = getField( bean, propertyName );
 		if ( field != null ) {
 			try {
 				field.setAccessible( true );
 				return field.get( bean );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				/**/
 			}
 		}
@@ -124,22 +116,25 @@ public class BeanUtils {
 	/**
 	 * Retrieve a Long bean property value.
 	 *
-	 * @param bean bean
-	 * @param propertyName
+	 * @param bean The bean instance
+	 * @param propertyName The name of the property whose value to extract
 	 *
 	 * @return long value
 	 *
-	 * @throws NoSuchFieldException
+	 * @throws NoSuchFieldException If the value is null (wow)
 	 */
 	public static long getLongBeanProperty(final Object bean, final String propertyName) throws NoSuchFieldException {
 		validateArgs( bean, propertyName );
-		Object o = getBeanProperty( bean, propertyName );
+		final Object o = getBeanProperty( bean, propertyName );
 		if ( o == null ) {
 			throw new NoSuchFieldException( propertyName );
 		}
-		else if ( !( o instanceof Number ) ) {
+		else if ( !(o instanceof Number) ) {
 			throw new IllegalArgumentException( propertyName + " not an Number" );
 		}
-		return ( (Number) o ).longValue();
+		return ((Number) o).longValue();
+	}
+
+	private BeanUtils() {
 	}
 }

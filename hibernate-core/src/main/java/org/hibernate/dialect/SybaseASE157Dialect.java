@@ -44,6 +44,9 @@ import org.hibernate.type.StandardBasicTypes;
  */
 public class SybaseASE157Dialect extends SybaseASE15Dialect {
 
+	/**
+	 * Constructs a SybaseASE157Dialect
+	 */
 	public SybaseASE157Dialect() {
 		super();
 
@@ -55,40 +58,43 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 		registerFunction( "charindex", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, "charindex(?1, ?2, ?3)" ) );
 	}
 
-	//HHH-7298 I don't know if this would break something or cause some side affects
-	//but it is required to use 'select for update'
 	@Override
 	public String getTableTypeString() {
+		//HHH-7298 I don't know if this would break something or cause some side affects
+		//but it is required to use 'select for update'
 		return " lock datarows";
 	}
 
-	// support Lob Locator
 	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		return true;
 	}
+
 	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
 
-	// support 'select ... for update [of columns]'
 	@Override
 	public boolean forUpdateOfColumns() {
 		return true;
 	}
+
 	@Override
 	public String getForUpdateString() {
 		return " for update";
 	}
+
 	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
+
 	@Override
 	public String appendLockHint(LockOptions mode, String tableName) {
 		return tableName;
 	}
+
 	@Override
 	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
@@ -113,6 +119,4 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 			}
 		};
 	}
-
-
 }

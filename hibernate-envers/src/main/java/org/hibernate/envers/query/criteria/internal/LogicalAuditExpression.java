@@ -33,21 +33,22 @@ import org.hibernate.envers.query.criteria.AuditCriterion;
  * @author Adam Warski (adam at warski dot org)
  */
 public class LogicalAuditExpression implements AuditCriterion {
-    private AuditCriterion lhs;
-    private AuditCriterion rhs;
-    private String op;
+	private AuditCriterion lhs;
+	private AuditCriterion rhs;
+	private String op;
 
-    public LogicalAuditExpression(AuditCriterion lhs, AuditCriterion rhs, String op) {
-        this.lhs = lhs;
-        this.rhs = rhs;
-        this.op = op;
-    }
+	public LogicalAuditExpression(AuditCriterion lhs, AuditCriterion rhs, String op) {
+		this.lhs = lhs;
+		this.rhs = rhs;
+		this.op = op;
+	}
 
-    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-        Parameters opParameters = parameters.addSubParameters(op);
+	public void addToQuery(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		Parameters opParameters = parameters.addSubParameters( op );
 
-        lhs.addToQuery(verCfg, versionsReader, entityName, qb, opParameters.addSubParameters("and"));
-        rhs.addToQuery(verCfg, versionsReader, entityName, qb, opParameters.addSubParameters("and"));
-    }
+		lhs.addToQuery( verCfg, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
+		rhs.addToQuery( verCfg, versionsReader, entityName, qb, opParameters.addSubParameters( "and" ) );
+	}
 }

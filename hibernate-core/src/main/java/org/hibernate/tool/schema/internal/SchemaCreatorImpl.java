@@ -108,7 +108,7 @@ public class SchemaCreatorImpl implements SchemaCreator {
 				for  ( UniqueKey uniqueKey : table.getUniqueKeys() ) {
 					checkExportIdentifier( uniqueKey, exportIdentifiers );
 					applySqlStrings( targets, dialect.getUniqueDelegate()
-							.applyUniquesOnAlter( uniqueKey ) );
+							.getAlterTableToAddUniqueKeyCommand( uniqueKey ) );
 				}
 
 			}

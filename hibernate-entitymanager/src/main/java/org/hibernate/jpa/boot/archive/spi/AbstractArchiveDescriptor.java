@@ -33,6 +33,8 @@ import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
 import org.hibernate.jpa.boot.spi.InputStreamAccess;
 
 /**
+ * Base support for ArchiveDescriptor implementors.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractArchiveDescriptor implements ArchiveDescriptor {
@@ -57,6 +59,7 @@ public abstract class AbstractArchiveDescriptor implements ArchiveDescriptor {
 		return entryBasePrefix.startsWith( "/" ) ? entryBasePrefix.substring( 1 ) : entryBasePrefix;
 	}
 
+	@SuppressWarnings("UnusedDeclaration")
 	protected ArchiveDescriptorFactory getArchiveDescriptorFactory() {
 		return archiveDescriptorFactory;
 	}

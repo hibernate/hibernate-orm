@@ -34,7 +34,7 @@ public interface ArchiveEntry {
 	/**
 	 * Get the entry's name
 	 *
-	 * @return
+	 * @return The name
 	 */
 	public String getName();
 
@@ -42,14 +42,14 @@ public interface ArchiveEntry {
 	 * Get the relative name of the entry within the archive.  Typically what we are looking for here is
 	 * the ClassLoader resource lookup name.
 	 *
-	 * @return
+	 * @return The name relative to the archive root
 	 */
 	public String getNameWithinArchive();
 
 	/**
 	 * Get access to the stream for the entry
 	 *
-	 * @return
+	 * @return Obtain stream access to the entry
 	 */
 	public InputStreamAccess getStreamAccess();
 }

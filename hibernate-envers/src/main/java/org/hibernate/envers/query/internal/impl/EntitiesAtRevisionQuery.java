@@ -44,28 +44,30 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * @author HernпїЅn Chanfreau
  */
 public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
-    private final Number revision;
-    private final boolean includeDeletions;
+	private final Number revision;
+	private final boolean includeDeletions;
 
-    public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
-                                   AuditReaderImplementor versionsReader, Class<?> cls,
-                                   Number revision, boolean includeDeletions) {
-        super(verCfg, versionsReader, cls);
-        this.revision = revision;
-        this.includeDeletions = includeDeletions;
-    }
+	public EntitiesAtRevisionQuery(
+			AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Class<?> cls,
+			Number revision, boolean includeDeletions) {
+		super( verCfg, versionsReader, cls );
+		this.revision = revision;
+		this.includeDeletions = includeDeletions;
+	}
 
-    public EntitiesAtRevisionQuery(AuditConfiguration verCfg,
-                                   AuditReaderImplementor versionsReader, Class<?> cls,
-                                   String entityName, Number revision, boolean includeDeletions) {
-        super(verCfg, versionsReader, cls, entityName);
-        this.revision = revision;
-        this.includeDeletions = includeDeletions;
-    }
-    
-    @SuppressWarnings({"unchecked"})
-    public List list() {
-        /*
+	public EntitiesAtRevisionQuery(
+			AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Class<?> cls,
+			String entityName, Number revision, boolean includeDeletions) {
+		super( verCfg, versionsReader, cls, entityName );
+		this.revision = revision;
+		this.includeDeletions = includeDeletions;
+	}
+
+	@SuppressWarnings({"unchecked"})
+	public List list() {
+		/*
          * The query that we need to create:
          *   SELECT new list(e) FROM versionsReferencedEntity e
          *   WHERE
@@ -82,44 +84,58 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
          * (only non-deleted entities)
          *     e.revision_type != DEL
          */
-        AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
-        String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-        String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		AuditEntitiesConfiguration verEntCfg = verCfg.getAuditEntCfg();
+		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+		String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 
-        MiddleIdData referencedIdData = new MiddleIdData(verEntCfg, verCfg.getEntCfg().get(entityName).getIdMappingData(), 
-        		null, entityName, verCfg.getEntCfg().isVersioned(entityName));
+		MiddleIdData referencedIdData = new MiddleIdData(
+				verEntCfg, verCfg.getEntCfg().get( entityName ).getIdMappingData(),
+				null, entityName, verCfg.getEntCfg().isVersioned( entityName )
+		);
 
-        // (selecting e entities at revision :revision)
-        // --> based on auditStrategy (see above)
-        verCfg.getAuditStrategy().addEntityAtRevisionRestriction(verCfg.getGlobalCfg(), qb, qb.getRootParameters(),
-				revisionPropertyPath, verEntCfg.getRevisionEndFieldName(), true, referencedIdData,
-				revisionPropertyPath, originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR, true);
+		// (selecting e entities at revision :revision)
+		// --> based on auditStrategy (see above)
+		verCfg.getAuditStrategy().addEntityAtRevisionRestriction(
+				verCfg.getGlobalCfg(),
+				qb,
+				qb.getRootParameters(),
+				revisionPropertyPath,
+				verEntCfg.getRevisionEndFieldName(),
+				true,
+				referencedIdData,
+				revisionPropertyPath,
+				originalIdPropertyName,
+				REFERENCED_ENTITY_ALIAS,
+				REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
+				true
+		);
 
-        if (!includeDeletions) {
-            // e.revision_type != DEL
-            qb.getRootParameters().addWhereWithParam(verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL);
-        }
+		if ( !includeDeletions ) {
+			// e.revision_type != DEL
+			qb.getRootParameters().addWhereWithParam( verEntCfg.getRevisionTypePropName(), "<>", RevisionType.DEL );
+		}
 
-        // all specified conditions
-        for (AuditCriterion criterion : criterions) {
-            criterion.addToQuery(verCfg, versionsReader, entityName, qb, qb.getRootParameters());
-        }
-        
-        Query query = buildQuery();
-        // add named parameter (only used for ValidAuditTimeStrategy) 
-        List<String> params = Arrays.asList(query.getNamedParameters());
-        if (params.contains(REVISION_PARAMETER)) {
-            query.setParameter(REVISION_PARAMETER, revision);
-        }
-        List queryResult = query.list();
+		// all specified conditions
+		for ( AuditCriterion criterion : criterions ) {
+			criterion.addToQuery( verCfg, versionsReader, entityName, qb, qb.getRootParameters() );
+		}
 
-        if (hasProjection) {
-            return queryResult;
-        } else {
-            List result = new ArrayList();
-            entityInstantiator.addInstancesFromVersionsEntities(entityName, result, queryResult, revision);
+		Query query = buildQuery();
+		// add named parameter (only used for ValidAuditTimeStrategy)
+		List<String> params = Arrays.asList( query.getNamedParameters() );
+		if ( params.contains( REVISION_PARAMETER ) ) {
+			query.setParameter( REVISION_PARAMETER, revision );
+		}
+		List queryResult = query.list();
 
-            return result;
-        }
-    }
+		if ( hasProjection ) {
+			return queryResult;
+		}
+		else {
+			List result = new ArrayList();
+			entityInstantiator.addInstancesFromVersionsEntities( entityName, result, queryResult, revision );
+
+			return result;
+		}
+	}
 }

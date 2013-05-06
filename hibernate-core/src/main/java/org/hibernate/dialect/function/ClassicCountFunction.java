@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
@@ -30,13 +31,16 @@ import org.hibernate.type.Type;
  * Classic COUNT sqlfunction that return types as it was done in Hibernate 3.1 
  * 
  * @author Max Rydahl Andersen
- *
  */
 public class ClassicCountFunction extends StandardSQLFunction {
+	/**
+	 * Constructs a ClassicCountFunction
+	 */
 	public ClassicCountFunction() {
 		super( "count" );
 	}
 
+	@Override
 	public Type getReturnType(Type columnType, Mapping mapping) {
 		return StandardBasicTypes.INTEGER;
 	}

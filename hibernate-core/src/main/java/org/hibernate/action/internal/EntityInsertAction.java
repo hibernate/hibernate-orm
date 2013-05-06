@@ -48,7 +48,6 @@ import org.hibernate.persister.entity.EntityPersister;
  * @see EntityIdentityInsertAction
  */
 public final class EntityInsertAction extends AbstractEntityInsertAction {
-
 	private Object version;
 	private Object cacheEntry;
 
@@ -130,7 +129,7 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 					version,
 					session
 			);
-			cacheEntry = persister.getCacheEntryStructure().structure(ce);
+			cacheEntry = persister.getCacheEntryStructure().structure( ce );
 			final CacheKey ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
 			final boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
 			

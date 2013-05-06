@@ -35,27 +35,29 @@ import org.hibernate.envers.internal.tools.query.QueryBuilder;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditConjunction implements AuditCriterion, ExtendableCriterion {
-    private List<AuditCriterion> criterions;
+	private List<AuditCriterion> criterions;
 
-    public AuditConjunction() {
-        criterions = new ArrayList<AuditCriterion>();
-    }
+	public AuditConjunction() {
+		criterions = new ArrayList<AuditCriterion>();
+	}
 
-    public AuditConjunction add(AuditCriterion criterion) {
-        criterions.add(criterion);
-        return this;
-    }
+	public AuditConjunction add(AuditCriterion criterion) {
+		criterions.add( criterion );
+		return this;
+	}
 
-    public void addToQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-        Parameters andParameters = parameters.addSubParameters(Parameters.AND);
+	public void addToQuery(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		Parameters andParameters = parameters.addSubParameters( Parameters.AND );
 
-        if (criterions.size() == 0) {
-            andParameters.addWhere("1", false, "=", "1", false);
-        } else {
-            for (AuditCriterion criterion : criterions) {
-                criterion.addToQuery(verCfg, versionsReader, entityName, qb, andParameters);
-            }
-        }
-    }
+		if ( criterions.size() == 0 ) {
+			andParameters.addWhere( "1", false, "=", "1", false );
+		}
+		else {
+			for ( AuditCriterion criterion : criterions ) {
+				criterion.addToQuery( verCfg, versionsReader, entityName, qb, andParameters );
+			}
+		}
+	}
 }

@@ -36,27 +36,36 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
  * @author Adam Warski (adam at warski dot org)
  */
 public class RelatedAuditExpression implements AuditCriterion {
-    private final PropertyNameGetter propertyNameGetter;
-    private final Object id;
-    private final boolean equals;
+	private final PropertyNameGetter propertyNameGetter;
+	private final Object id;
+	private final boolean equals;
 
-    public RelatedAuditExpression(PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
-        this.propertyNameGetter = propertyNameGetter;
-        this.id = id;
-        this.equals = equals;
-    }
+	public RelatedAuditExpression(PropertyNameGetter propertyNameGetter, Object id, boolean equals) {
+		this.propertyNameGetter = propertyNameGetter;
+		this.id = id;
+		this.equals = equals;
+	}
 
-    public void addToQuery(AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
-						   QueryBuilder qb, Parameters parameters) {
-		String propertyName = CriteriaTools.determinePropertyName( auditCfg, versionsReader, entityName, propertyNameGetter );
-        
-        RelationDescription relatedEntity = CriteriaTools.getRelatedEntity(auditCfg, entityName, propertyName);
+	public void addToQuery(
+			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
+			QueryBuilder qb, Parameters parameters) {
+		String propertyName = CriteriaTools.determinePropertyName(
+				auditCfg,
+				versionsReader,
+				entityName,
+				propertyNameGetter
+		);
 
-        if (relatedEntity == null) {
-            throw new AuditException("This criterion can only be used on a property that is " +
-                    "a relation to another property.");
-        } else {
-            relatedEntity.getIdMapper().addIdEqualsToQuery(parameters, id, null, equals);
-        }
-    }
+		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( auditCfg, entityName, propertyName );
+
+		if ( relatedEntity == null ) {
+			throw new AuditException(
+					"This criterion can only be used on a property that is " +
+							"a relation to another property."
+			);
+		}
+		else {
+			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, null, equals );
+		}
+	}
 }

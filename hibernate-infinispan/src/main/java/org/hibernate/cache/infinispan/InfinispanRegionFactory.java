@@ -19,14 +19,14 @@ import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
+import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.factories.GlobalComponentRegistry;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
 import org.infinispan.util.concurrent.IsolationLevel;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.ParserRegistry;
 import org.infinispan.util.FileLookupFactory;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -39,16 +39,10 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
 import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.impl.BaseRegion;
-import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
 import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
-import org.hibernate.cache.infinispan.timestamp.ClusteredTimestampsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
 import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
 import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
-import org.hibernate.cache.infinispan.util.CacheCommandFactory;
-import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.NaturalIdRegion;
@@ -60,73 +54,55 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.util.ClassLoaderHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.infinispan.AdvancedCache;
-import org.infinispan.commands.module.ModuleCommandFactory;
-import org.infinispan.configuration.cache.CacheMode;
-import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.configuration.cache.ConfigurationBuilder;
-import org.infinispan.configuration.parsing.ConfigurationBuilderHolder;
-import org.infinispan.configuration.parsing.ParserRegistry;
-import org.infinispan.factories.GlobalComponentRegistry;
-import org.infinispan.manager.DefaultCacheManager;
-import org.infinispan.manager.EmbeddedCacheManager;
-import org.infinispan.transaction.TransactionMode;
-import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
-import org.infinispan.util.FileLookupFactory;
-import org.infinispan.util.concurrent.IsolationLevel;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
  * regions.
- * 
+ *
  * @author Chris Bredesen
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class InfinispanRegionFactory extends AbstractRegionFactory {
 
-   private static final Log log = LogFactory.getLog(InfinispanRegionFactory.class);
+	private static final Log log = LogFactory.getLog( InfinispanRegionFactory.class );
 
-   private static final String PREFIX = "hibernate.cache.infinispan.";
+	private static final String PREFIX = "hibernate.cache.infinispan.";
 
-   private static final String CONFIG_SUFFIX = ".cfg";
+	private static final String CONFIG_SUFFIX = ".cfg";
 
-   private static final String STRATEGY_SUFFIX = ".eviction.strategy";
+	private static final String STRATEGY_SUFFIX = ".eviction.strategy";
 
-   private static final String WAKE_UP_INTERVAL_SUFFIX = ".eviction.wake_up_interval";
+	private static final String WAKE_UP_INTERVAL_SUFFIX = ".eviction.wake_up_interval";
 
-   private static final String MAX_ENTRIES_SUFFIX = ".eviction.max_entries";
+	private static final String MAX_ENTRIES_SUFFIX = ".eviction.max_entries";
 
-   private static final String LIFESPAN_SUFFIX = ".expiration.lifespan";
+	private static final String LIFESPAN_SUFFIX = ".expiration.lifespan";
 
-   private static final String MAX_IDLE_SUFFIX = ".expiration.max_idle";
+	private static final String MAX_IDLE_SUFFIX = ".expiration.max_idle";
 
 //   private static final String STATISTICS_SUFFIX = ".statistics";
 
-   /** 
-    * Classpath or filesystem resource containing Infinispan configurations the factory should use.
-    * 
-    * @see #DEF_INFINISPAN_CONFIG_RESOURCE
-    */
-   public static final String INFINISPAN_CONFIG_RESOURCE_PROP = "hibernate.cache.infinispan.cfg";
+	/**
+	 * Classpath or filesystem resource containing Infinispan configurations the factory should use.
+	 *
+	 * @see #DEF_INFINISPAN_CONFIG_RESOURCE
+	 */
+	public static final String INFINISPAN_CONFIG_RESOURCE_PROP = "hibernate.cache.infinispan.cfg";
 
-   public static final String INFINISPAN_GLOBAL_STATISTICS_PROP = "hibernate.cache.infinispan.statistics";
+	public static final String INFINISPAN_GLOBAL_STATISTICS_PROP = "hibernate.cache.infinispan.statistics";
 
-   /**
-    * Property that controls whether Infinispan should interact with the
-    * transaction manager as a {@link javax.transaction.Synchronization} or as
-    * an XA resource. If the property is set to true, it will be a
-    * synchronization, otherwise an XA resource.
-    *
-    * @see #DEF_USE_SYNCHRONIZATION
-    */
-   public static final String INFINISPAN_USE_SYNCHRONIZATION_PROP = "hibernate.cache.infinispan.use_synchronization";
-   
+	/**
+	 * Property that controls whether Infinispan should interact with the
+	 * transaction manager as a {@link javax.transaction.Synchronization} or as
+	 * an XA resource. If the property is set to true, it will be a
+	 * synchronization, otherwise an XA resource.
+	 *
+	 * @see #DEF_USE_SYNCHRONIZATION
+	 */
+	public static final String INFINISPAN_USE_SYNCHRONIZATION_PROP = "hibernate.cache.infinispan.use_synchronization";
+
 	private static final String NATURAL_ID_KEY = "naturalid";
 
 	/**
@@ -134,24 +110,25 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 	 *
 	 * @see #DEF_ENTITY_RESOURCE
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public static final String NATURAL_ID_CACHE_RESOURCE_PROP = PREFIX + NATURAL_ID_KEY + CONFIG_SUFFIX;
 
    private static final String ENTITY_KEY = "entity";
-   
+
    /**
     * Name of the configuration that should be used for entity caches.
-    * 
+    *
     * @see #DEF_ENTITY_RESOURCE
     */
    public static final String ENTITY_CACHE_RESOURCE_PROP = PREFIX + ENTITY_KEY + CONFIG_SUFFIX;
-   
+
    private static final String COLLECTION_KEY = "collection";
-   
+
    /**
     * Name of the configuration that should be used for collection caches.
     * No default value, as by default we try to use the same Infinispan cache
     * instance we use for entity caching.
-    * 
+    *
     * @see #ENTITY_CACHE_RESOURCE_PROP
     * @see #DEF_ENTITY_RESOURCE
     */
@@ -161,7 +138,7 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 
    /**
     * Name of the configuration that should be used for timestamp caches.
-    * 
+    *
     * @see #DEF_TIMESTAMPS_RESOURCE
     */
    public static final String TIMESTAMPS_CACHE_RESOURCE_PROP = PREFIX + TIMESTAMPS_KEY + CONFIG_SUFFIX;
@@ -170,7 +147,7 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 
    /**
     * Name of the configuration that should be used for query caches.
-    * 
+    *
     * @see #DEF_QUERY_RESOURCE
     */
    public static final String QUERY_CACHE_RESOURCE_PROP = PREFIX + QUERY_KEY + CONFIG_SUFFIX;
@@ -214,69 +191,90 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
    private org.infinispan.transaction.lookup.TransactionManagerLookup transactionManagerlookup;
 
    private List<String> regionNames = new ArrayList<String>();
-   
-   /** {@inheritDoc} */
-   public CollectionRegion buildCollectionRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
-      if (log.isDebugEnabled()) log.debug("Building collection cache region [" + regionName + "]");
-      AdvancedCache cache = getCache(regionName, COLLECTION_KEY, properties);
-      CollectionRegionImpl region = new CollectionRegionImpl(
-            cache, regionName, metadata, this);
-      startRegion(region, regionName);
-      return region;
-   }
 
-   /** {@inheritDoc} */
-   public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata) throws CacheException {
-      if (log.isDebugEnabled()) log.debug("Building entity cache region [" + regionName + "]");
-      AdvancedCache cache = getCache(regionName, ENTITY_KEY, properties);
-      EntityRegionImpl region = new EntityRegionImpl(
-            cache, regionName, metadata, this);
-      startRegion(region, regionName);
-      return region;
-   }
+	@Override
+	public CollectionRegion buildCollectionRegion(
+			String regionName,
+			Properties properties,
+			CacheDataDescription metadata) throws CacheException {
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building collection cache region [" + regionName + "]" );
+		}
+		final AdvancedCache cache = getCache( regionName, COLLECTION_KEY, properties );
+		final CollectionRegionImpl region = new CollectionRegionImpl( cache, regionName, metadata, this );
+		startRegion( region, regionName );
+		return region;
+	}
+
+	@Override
+	public EntityRegion buildEntityRegion(String regionName, Properties properties, CacheDataDescription metadata)
+			throws CacheException {
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building entity cache region [" + regionName + "]" );
+		}
+		final AdvancedCache cache = getCache( regionName, ENTITY_KEY, properties );
+		final EntityRegionImpl region = new EntityRegionImpl( cache, regionName, metadata, this );
+		startRegion( region, regionName );
+		return region;
+	}
+
+	/**
+	 * Create a new instance using the default configuration.
+	 */
+	public InfinispanRegionFactory() {
+	}
+
+	/**
+	 * Create a new instance using conifguration properties in <code>props</code>.
+	 *
+	 * @param props Environmental properties; currently unused.
+	 */
+	@SuppressWarnings("UnusedParameters")
+	public InfinispanRegionFactory(Properties props) {
+	}
+
 
 	@Override
 	public NaturalIdRegion buildNaturalIdRegion(String regionName, Properties properties, CacheDataDescription metadata)
 			throws CacheException {
-		if (log.isDebugEnabled()) {
-			log.debug("Building natural id cache region [" + regionName + "]");
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building natural id cache region [" + regionName + "]" );
 		}
-		AdvancedCache cache = getCache(regionName, NATURAL_ID_KEY, properties);
-		NaturalIdRegionImpl region = new NaturalIdRegionImpl(
-				cache, regionName, metadata, this);
-		startRegion(region, regionName);
+		final AdvancedCache cache = getCache( regionName, NATURAL_ID_KEY, properties );
+		final NaturalIdRegionImpl region = new NaturalIdRegionImpl( cache, regionName, metadata, this );
+		startRegion( region, regionName );
 		return region;
 	}
-	
-   /**
-    * {@inheritDoc}
-    */
-   public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
-            throws CacheException {
-      if (log.isDebugEnabled()) log.debug("Building query results cache region [" + regionName + "]");
-      String cacheName = typeOverrides.get(QUERY_KEY).getCacheName();
-      // If region name is not default one, lookup a cache for that region name
-      if (!regionName.equals("org.hibernate.cache.internal.StandardQueryCache"))
-         cacheName = regionName;
 
-      AdvancedCache cache = getCache(cacheName, QUERY_KEY, properties);
-      QueryResultsRegionImpl region = new QueryResultsRegionImpl(
-            cache, regionName, this);
-      startRegion(region, regionName);
-      return region;
-   }
+	@Override
+	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
+			throws CacheException {
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building query results cache region [" + regionName + "]" );
+		}
+		String cacheName = typeOverrides.get( QUERY_KEY ).getCacheName();
+		// If region name is not default one, lookup a cache for that region name
+		if ( !regionName.equals( "org.hibernate.cache.internal.StandardQueryCache" ) ) {
+			cacheName = regionName;
+		}
 
-   /**
-    * {@inheritDoc}
-    */
-   public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
-            throws CacheException {
-      if (log.isDebugEnabled()) log.debug("Building timestamps cache region [" + regionName + "]");
-      AdvancedCache cache = getCache(regionName, TIMESTAMPS_KEY, properties);
-      TimestampsRegionImpl region = createTimestampsRegion(cache, regionName);
-      startRegion(region, regionName);
-      return region;
-   }
+		final AdvancedCache cache = getCache( cacheName, QUERY_KEY, properties );
+		final QueryResultsRegionImpl region = new QueryResultsRegionImpl( cache, regionName, this );
+		startRegion( region, regionName );
+		return region;
+	}
+
+	@Override
+	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
+			throws CacheException {
+		if ( log.isDebugEnabled() ) {
+			log.debug( "Building timestamps cache region [" + regionName + "]" );
+		}
+		final AdvancedCache cache = getCache( regionName, TIMESTAMPS_KEY, properties );
+		final TimestampsRegionImpl region = createTimestampsRegion( cache, regionName );
+		startRegion( region, regionName );
+		return region;
+	}
 
    protected TimestampsRegionImpl createTimestampsRegion(
          AdvancedCache cache, String regionName) {
@@ -286,9 +284,7 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
          return new TimestampsRegionImpl(cache, regionName, this);
    }
 
-   /**
-    * {@inheritDoc}
-    */
+   @Override
    public boolean isMinimalPutsEnabledByDefault() {
       return true;
    }
@@ -298,13 +294,11 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       return AccessType.TRANSACTIONAL;
    }
 
-   /**
-    * {@inheritDoc}
-    */
+	@Override
    public long nextTimestamp() {
       return System.currentTimeMillis() / 100;
    }
-   
+
    public void setCacheManager(EmbeddedCacheManager manager) {
       this.manager = manager;
    }
@@ -337,14 +331,6 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
 		}
 	}
 
-	/**
-    * {@inheritDoc}
-    */
-   @Override
-   public void start(Settings settings, Properties properties) throws CacheException {
-     	start();
-   }
-
    private void definePendingPutsCache() {
       ConfigurationBuilder builder = new ConfigurationBuilder();
       // A local, lightweight cache for pending puts, which is
@@ -367,9 +353,6 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
    }
 
 
-	/**
-    * {@inheritDoc}
-    */
    @Override
    public void stop() {
       log.debug("Stop region factory");
@@ -388,17 +371,17 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       log.debug("Stop cache manager");
       manager.stop();
    }
-   
+
    /**
     * Returns an unmodifiable map containing configured entity/collection type configuration overrides.
     * This method should be used primarily for testing/checking purpouses.
-    * 
+    *
     * @return an unmodifiable map.
     */
    public Map<String, TypeOverrides> getTypeOverrides() {
       return Collections.unmodifiableMap(typeOverrides);
    }
-   
+
    public Set<String> getDefinedConfigurations() {
       return Collections.unmodifiableSet(definedConfigurations);
    }
@@ -617,5 +600,4 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       }
       return override;
    }
-
 }

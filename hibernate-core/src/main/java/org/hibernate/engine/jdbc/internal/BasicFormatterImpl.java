@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.jdbc.internal;
 
@@ -84,23 +83,24 @@ public class BasicFormatterImpl implements Formatter {
 		MISC.add( "on" );
 	}
 
-	static final String indentString = "    ";
-	static final String initial = "\n    ";
+	private static final String INDENT_STRING = "    ";
+	private static final String INITIAL = "\n    ";
 
+	@Override
 	public String format(String source) {
 		return new FormatProcess( source ).perform();
 	}
 
 	private static class FormatProcess {
 		boolean beginLine = true;
-		boolean afterBeginBeforeEnd = false;
-		boolean afterByOrSetOrFromOrSelect = false;
-		boolean afterValues = false;
-		boolean afterOn = false;
-		boolean afterBetween = false;
-		boolean afterInsert = false;
-		int inFunction = 0;
-		int parensSinceSelect = 0;
+		boolean afterBeginBeforeEnd;
+		boolean afterByOrSetOrFromOrSelect;
+		boolean afterValues;
+		boolean afterOn;
+		boolean afterBetween;
+		boolean afterInsert;
+		int inFunction;
+		int parensSinceSelect;
 		private LinkedList<Integer> parenCounts = new LinkedList<Integer>();
 		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<Boolean>();
 
@@ -122,7 +122,7 @@ public class BasicFormatterImpl implements Formatter {
 
 		public String perform() {
 
-			result.append( initial );
+			result.append( INITIAL );
 
 			while ( tokens.hasMoreTokens() ) {
 				token = tokens.nextToken();
@@ -134,7 +134,8 @@ public class BasicFormatterImpl implements Formatter {
 						t = tokens.nextToken();
 						token += t;
 					}
-					while ( !"'".equals( t ) && tokens.hasMoreTokens() ); // cannot handle single quotes
+					// cannot handle single quotes
+					while ( !"'".equals( t ) && tokens.hasMoreTokens() );
 				}
 				else if ( "\"".equals( token ) ) {
 					String t;
@@ -384,13 +385,13 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private static boolean isWhitespace(String token) {
-			return StringHelper.WHITESPACE.indexOf( token ) >= 0;
+			return StringHelper.WHITESPACE.contains( token );
 		}
 
 		private void newline() {
 			result.append( "\n" );
 			for ( int i = 0; i < indent; i++ ) {
-				result.append( indentString );
+				result.append( INDENT_STRING );
 			}
 			beginLine = true;
 		}

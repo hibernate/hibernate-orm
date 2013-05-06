@@ -27,16 +27,17 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 
 /**
  * Used for specifying restrictions on a property of an audited entity.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class EntityPropertyName implements PropertyNameGetter {
-    private final String propertyName;
+	private final String propertyName;
 
-    public EntityPropertyName(String propertyName) {
-        this.propertyName = propertyName;
-    }
+	public EntityPropertyName(String propertyName) {
+		this.propertyName = propertyName;
+	}
 
-    public String get(AuditConfiguration auditCfg) {
-        return propertyName;
-    }
+	public String get(AuditConfiguration auditCfg) {
+		return propertyName;
+	}
 }

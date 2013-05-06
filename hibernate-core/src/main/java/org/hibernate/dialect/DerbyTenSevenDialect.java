@@ -26,14 +26,21 @@ package org.hibernate.dialect;
 import java.sql.Types;
 
 /**
+ * Dialect for Derby 10.7
+ *
  * @author Strong Liu
  */
-public class DerbyTenSevenDialect extends DerbyTenSixDialect{
-    public DerbyTenSevenDialect() {
-         registerColumnType( Types.BOOLEAN, "boolean" );
-    }
+public class DerbyTenSevenDialect extends DerbyTenSixDialect {
+	/**
+	 * Constructs a DerbyTenSevenDialect
+	 */
+	public DerbyTenSevenDialect() {
+		super();
+		registerColumnType( Types.BOOLEAN, "boolean" );
+	}
 
-    public String toBooleanValueString(boolean bool) {
-        return String.valueOf(bool);
-    }
+	@Override
+	public String toBooleanValueString(boolean bool) {
+		return String.valueOf( bool );
+	}
 }

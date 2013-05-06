@@ -28,18 +28,20 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 
 /**
  * PropertyNameGetter for modified flags
+ *
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public class ModifiedFlagPropertyName implements PropertyNameGetter {
-    private final PropertyNameGetter propertyNameGetter;
+	private final PropertyNameGetter propertyNameGetter;
 
-    public ModifiedFlagPropertyName(PropertyNameGetter propertyNameGetter) {
-        this.propertyNameGetter = propertyNameGetter;
-    }
+	public ModifiedFlagPropertyName(PropertyNameGetter propertyNameGetter) {
+		this.propertyNameGetter = propertyNameGetter;
+	}
 
-    public String get(AuditConfiguration auditCfg) {
+	public String get(AuditConfiguration auditCfg) {
 		return MetadataTools.getModifiedFlagPropertyName(
-                propertyNameGetter.get(auditCfg),
-                auditCfg.getGlobalCfg().getModifiedFlagSuffix());
-    }
+				propertyNameGetter.get( auditCfg ),
+				auditCfg.getGlobalCfg().getModifiedFlagSuffix()
+		);
+	}
 }

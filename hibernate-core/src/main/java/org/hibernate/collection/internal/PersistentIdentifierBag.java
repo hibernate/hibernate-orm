@@ -53,37 +53,53 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class PersistentIdentifierBag extends AbstractPersistentCollection implements List {
+	protected List<Object> values;
+	protected Map<Integer, Object> identifiers;
 
-	protected List values; //element
-	protected Map identifiers; //index -> id
-
-	public PersistentIdentifierBag(SessionImplementor session) {
-		super(session);
+	/**
+	 * Constructs a PersistentIdentifierBag.  This form needed for SOAP libraries, etc
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public PersistentIdentifierBag() {
 	}
 
-	public PersistentIdentifierBag() {} //needed for SOAP libraries, etc
+	/**
+	 * Constructs a PersistentIdentifierBag.
+	 *
+	 * @param session The session
+	 */
+	public PersistentIdentifierBag(SessionImplementor session) {
+		super( session );
+	}
 
+	/**
+	 * Constructs a PersistentIdentifierBag.
+	 *
+	 * @param session The session
+	 * @param coll The base elements
+	 */
+	@SuppressWarnings("unchecked")
 	public PersistentIdentifierBag(SessionImplementor session, Collection coll) {
-		super(session);
+		super( session );
 		if (coll instanceof List) {
-			values = (List) coll;
+			values = (List<Object>) coll;
 		}
 		else {
-			values = new ArrayList();
-			Iterator iter = coll.iterator();
-			while ( iter.hasNext() ) {
-				values.add( iter.next() );
+			values = new ArrayList<Object>();
+			for ( Object element : coll ) {
+				values.add( element );
 			}
 		}
 		setInitialized();
-		setDirectlyAccessible(true);
-		identifiers = new HashMap();
+		setDirectlyAccessible( true );
+		identifiers = new HashMap<Integer, Object>();
 	}
 
+	@Override
 	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
-	throws HibernateException {
-		Serializable[] array = (Serializable[]) disassembled;
-		int size = array.length;
+			throws HibernateException {
+		final Serializable[] array = (Serializable[]) disassembled;
+		final int size = array.length;
 		beforeInitialize( persister, size );
 		for ( int i = 0; i < size; i+=2 ) {
 			identifiers.put(
@@ -94,20 +110,24 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 	}
 
+	@Override
 	public Object getIdentifier(Object entry, int i) {
 		return identifiers.get( i );
 	}
 
+	@Override
 	public boolean isWrapper(Object collection) {
 		return values==collection;
 	}
 
+	@Override
 	public boolean add(Object o) {
 		write();
-		values.add(o);
+		values.add( o );
 		return true;
 	}
 
+	@Override
 	public void clear() {
 		initialize( true );
 		if ( ! values.isEmpty() || ! identifiers.isEmpty() ) {
@@ -117,31 +137,36 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 	}
 
+	@Override
 	public boolean contains(Object o) {
 		read();
-		return values.contains(o);
+		return values.contains( o );
 	}
 
+	@Override
 	public boolean containsAll(Collection c) {
 		read();
-		return values.containsAll(c);
+		return values.containsAll( c );
 	}
 
+	@Override
 	public boolean isEmpty() {
 		return readSize() ? getCachedSize()==0 : values.isEmpty();
 	}
 
+	@Override
 	public Iterator iterator() {
 		read();
 		return new IteratorProxy( values.iterator() );
 	}
 
+	@Override
 	public boolean remove(Object o) {
 		initialize( true );
-		int index = values.indexOf(o);
-		if (index>=0) {
-			beforeRemove(index);
-			values.remove(index);
+		final int index = values.indexOf( o );
+		if ( index >= 0 ) {
+			beforeRemove( index );
+			values.remove( index );
 			dirty();
 			return true;
 		}
@@ -150,12 +175,14 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 	}
 
+	@Override
 	public boolean removeAll(Collection c) {
 		if ( c.size() > 0 ) {
 			boolean result = false;
-			Iterator iter = c.iterator();
-			while ( iter.hasNext() ) {
-				if ( remove( iter.next() ) ) result=true;
+			for ( Object element : c ) {
+				if ( remove( element ) ) {
+					result = true;
+				}
 			}
 			return result;
 		}
@@ -164,6 +191,7 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 	}
 
+	@Override
 	public boolean retainAll(Collection c) {
 		initialize( true );
 		if ( values.retainAll( c ) ) {
@@ -175,168 +203,210 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 	}
 
+	@Override
 	public int size() {
 		return readSize() ? getCachedSize() : values.size();
 	}
 
+	@Override
 	public Object[] toArray() {
 		read();
 		return values.toArray();
 	}
 
+	@Override
 	public Object[] toArray(Object[] a) {
 		read();
-		return values.toArray(a);
+		return values.toArray( a );
 	}
 
+	@Override
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
-		identifiers = anticipatedSize <= 0 ? new HashMap() : new HashMap( anticipatedSize + 1 + (int)( anticipatedSize * .75f ), .75f );
-		values = anticipatedSize <= 0 ? new ArrayList() : new ArrayList( anticipatedSize );
+		identifiers = anticipatedSize <= 0
+				? new HashMap<Integer, Object>()
+				: new HashMap<Integer, Object>( anticipatedSize + 1 + (int)( anticipatedSize * .75f ), .75f );
+		values = anticipatedSize <= 0
+				? new ArrayList<Object>()
+				: new ArrayList<Object>( anticipatedSize );
 	}
 
+	@Override
 	public Serializable disassemble(CollectionPersister persister)
 			throws HibernateException {
-		Serializable[] result = new Serializable[ values.size() * 2 ];
-		int i=0;
-		for (int j=0; j< values.size(); j++) {
-			Object value = values.get(j);
+		final Serializable[] result = new Serializable[ values.size() * 2 ];
+		int i = 0;
+		for ( int j=0; j< values.size(); j++ ) {
+			final Object value = values.get( j );
 			result[i++] = persister.getIdentifierType().disassemble( identifiers.get( j ), getSession(), null );
 			result[i++] = persister.getElementType().disassemble( value, getSession(), null );
 		}
 		return result;
 	}
 
+	@Override
 	public boolean empty() {
 		return values.isEmpty();
 	}
 
+	@Override
 	public Iterator entries(CollectionPersister persister) {
 		return values.iterator();
 	}
 
+	@Override
 	public boolean entryExists(Object entry, int i) {
 		return entry!=null;
 	}
 
+	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		Type elementType = persister.getElementType();
-		Map snap = (Map) getSnapshot();
-		if ( snap.size()!= values.size() ) return false;
+		final Type elementType = persister.getElementType();
+		final Map snap = (Map) getSnapshot();
+		if ( snap.size()!= values.size() ) {
+			return false;
+		}
 		for ( int i=0; i<values.size(); i++ ) {
-			Object value = values.get(i);
-			Object id = identifiers.get( i );
-			if (id==null) return false;
-			Object old = snap.get(id);
-			if ( elementType.isDirty( old, value, getSession() ) ) return false;
+			final Object value = values.get( i );
+			final Object id = identifiers.get( i );
+			if ( id == null ) {
+				return false;
+			}
+			final Object old = snap.get( id );
+			if ( elementType.isDirty( old, value, getSession() ) ) {
+				return false;
+			}
 		}
 		return true;
 	}
 
+	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return ( (Map) snapshot ).isEmpty();
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		Map snap = (Map) getSnapshot();
-		List deletes = new ArrayList( snap.keySet() );
+		final Map snap = (Map) getSnapshot();
+		final List deletes = new ArrayList( snap.keySet() );
 		for ( int i=0; i<values.size(); i++ ) {
-			if ( values.get(i)!=null ) deletes.remove( identifiers.get( i ) );
+			if ( values.get( i ) != null ) {
+				deletes.remove( identifiers.get( i ) );
+			}
 		}
 		return deletes.iterator();
 	}
 
+	@Override
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
 		throw new UnsupportedOperationException("Bags don't have indexes");
 	}
 
+	@Override
 	public Object getElement(Object entry) {
 		return entry;
 	}
 
+	@Override
 	public Object getSnapshotElement(Object entry, int i) {
-		Map snap = (Map) getSnapshot();
-		Object id = identifiers.get( i );
-		return snap.get(id);
+		final Map snap = (Map) getSnapshot();
+		final Object id = identifiers.get( i );
+		return snap.get( id );
 	}
 
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType)
-		throws HibernateException {
-
-		Map snap = (Map) getSnapshot();
-		Object id = identifiers.get( i );
-		return entry!=null && ( id==null || snap.get(id)==null );
+			throws HibernateException {
+		final Map snap = (Map) getSnapshot();
+		final Object id = identifiers.get( i );
+		return entry != null
+				&& ( id==null || snap.get( id )==null );
 	}
 
+	@Override
 	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
+		if ( entry == null ) {
+			return false;
+		}
 
-		if (entry==null) return false;
-		Map snap = (Map) getSnapshot();
-		Object id = identifiers.get( i );
-		if (id==null) return false;
-		Object old = snap.get(id);
-		return old!=null && elemType.isDirty( old, entry, getSession() );
+		final Map snap = (Map) getSnapshot();
+		final Object id = identifiers.get( i );
+		if ( id == null ) {
+			return false;
+		}
+
+		final Object old = snap.get( id );
+		return old != null && elemType.isDirty( old, entry, getSession() );
 	}
 
-
+	@Override
 	public Object readFrom(
-		ResultSet rs,
-		CollectionPersister persister,
-		CollectionAliases descriptor,
-		Object owner)
-		throws HibernateException, SQLException {
-
-		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		Object old = identifiers.put(
+			ResultSet rs,
+			CollectionPersister persister,
+			CollectionAliases descriptor,
+			Object owner) throws HibernateException, SQLException {
+		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+		final Object old = identifiers.put(
 			values.size(),
 			persister.readIdentifier( rs, descriptor.getSuffixedIdentifierAlias(), getSession() )
 		);
-		if ( old==null ) values.add(element); //maintain correct duplication if loaded in a cartesian product
+
+		if ( old == null ) {
+			//maintain correct duplication if loaded in a cartesian product
+			values.add( element );
+		}
 		return element;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		HashMap map = new HashMap( values.size() );
-		Iterator iter = values.iterator();
+		final HashMap map = new HashMap( values.size() );
+		final Iterator iter = values.iterator();
 		int i=0;
 		while ( iter.hasNext() ) {
-			Object value = iter.next();
+			final Object value = iter.next();
 			map.put(
-				identifiers.get( i++ ),
-				persister.getElementType().deepCopy(value, persister.getFactory())
+					identifiers.get( i++ ),
+					persister.getElementType().deepCopy( value, persister.getFactory() )
 			);
 		}
 		return map;
 	}
 
+	@Override
 	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
-		Map sn = (Map) snapshot;
+		final Map sn = (Map) snapshot;
 		return getOrphans( sn.values(), values, entityName, getSession() );
 	}
 
+	@Override
 	public void preInsert(CollectionPersister persister) throws HibernateException {
-		Iterator iter = values.iterator();
-		int i=0;
-		while ( iter.hasNext() ) {
-			Object entry = iter.next();
-			Integer loc = i++;
-			if ( !identifiers.containsKey(loc) ) { //TODO: native ids
-				Serializable id = persister.getIdentifierGenerator().generate( getSession(), entry );
-				identifiers.put(loc, id);
+		final Iterator itr = values.iterator();
+		int i = 0;
+		while ( itr.hasNext() ) {
+			final Object entry = itr.next();
+			final Integer loc = i++;
+			if ( !identifiers.containsKey( loc ) ) {
+				//TODO: native ids
+				final Serializable id = persister.getIdentifierGenerator().generate( getSession(), entry );
+				identifiers.put( loc, id );
 			}
 		}
 	}
 
+	@Override
 	public void add(int index, Object element) {
 		write();
-		beforeAdd(index);
-		values.add(index, element);
+		beforeAdd( index );
+		values.add( index, element );
 	}
 
+	@Override
 	public boolean addAll(int index, Collection c) {
 		if ( c.size() > 0 ) {
-			Iterator iter = c.iterator();
-			while ( iter.hasNext() ) {
-				add( index++, iter.next() );
+			for ( Object element : c ) {
+				add( index++, element );
 			}
 			return true;
 		}
@@ -345,42 +415,47 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		}
 	}
 
+	@Override
 	public Object get(int index) {
 		read();
-		return values.get(index);
+		return values.get( index );
 	}
 
+	@Override
 	public int indexOf(Object o) {
 		read();
-		return values.indexOf(o);
+		return values.indexOf( o );
 	}
 
+	@Override
 	public int lastIndexOf(Object o) {
 		read();
-		return values.lastIndexOf(o);
+		return values.lastIndexOf( o );
 	}
 
+	@Override
 	public ListIterator listIterator() {
 		read();
 		return new ListIteratorProxy( values.listIterator() );
 	}
 
+	@Override
 	public ListIterator listIterator(int index) {
 		read();
-		return new ListIteratorProxy( values.listIterator(index) );
+		return new ListIteratorProxy( values.listIterator( index ) );
 	}
 
 	private void beforeRemove(int index) {
-		Object removedId = identifiers.get( index );
-		int last = values.size()-1;
+		final Object removedId = identifiers.get( index );
+		final int last = values.size()-1;
 		for ( int i=index; i<last; i++ ) {
-			Object id = identifiers.get( i+1 );
-	        if ( id==null ) {
+			final Object id = identifiers.get( i+1 );
+			if ( id == null ) {
 				identifiers.remove( i );
-	        }
-	        else {
+			}
+			else {
 				identifiers.put( i, id );
-	        }
+			}
 		}
 		identifiers.put( last, removedId );
 	}
@@ -392,37 +467,41 @@ public class PersistentIdentifierBag extends AbstractPersistentCollection implem
 		identifiers.remove( index );
 	}
 
+	@Override
 	public Object remove(int index) {
 		write();
-		beforeRemove(index);
-		return values.remove(index);
+		beforeRemove( index );
+		return values.remove( index );
 	}
 
+	@Override
 	public Object set(int index, Object element) {
 		write();
-		return values.set(index, element);
+		return values.set( index, element );
 	}
 
+	@Override
 	public List subList(int fromIndex, int toIndex) {
 		read();
-		return new ListProxy( values.subList(fromIndex, toIndex) );
+		return new ListProxy( values.subList( fromIndex, toIndex ) );
 	}
 
+	@Override
 	public boolean addAll(Collection c) {
 		if ( c.size()> 0 ) {
 			write();
-			return values.addAll(c);
+			return values.addAll( c );
 		}
 		else {
 			return false;
 		}
 	}
 
+	@Override
 	public void afterRowInsert(
-		CollectionPersister persister,
-		Object entry,
-		int i)
-		throws HibernateException {
+			CollectionPersister persister,
+			Object entry,
+			int i) throws HibernateException {
 		//TODO: if we are using identity columns, fetch the identifier
 	}
 

@@ -23,8 +23,6 @@
  */
 package org.hibernate.envers.test.entities.collection;
 
-import java.util.HashMap;
-import java.util.Map;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -32,6 +30,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.components.Component3;
@@ -73,18 +73,24 @@ public class EmbeddableMapEntity {
 	}
 
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( !( o instanceof EmbeddableMapEntity ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof EmbeddableMapEntity) ) {
+			return false;
+		}
 
 		EmbeddableMapEntity that = (EmbeddableMapEntity) o;
 
-		if ( id != null ? !id.equals( that.id ) : that.id != null ) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
 
 	public int hashCode() {
-		return ( id != null ? id.hashCode() : 0 );
+		return (id != null ? id.hashCode() : 0);
 	}
 
 	public String toString() {

@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.query;
-import java.util.List;
+
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import java.util.List;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -39,31 +40,31 @@ import org.hibernate.envers.query.projection.AuditProjection;
  * @see org.hibernate.Criteria
  */
 public interface AuditQuery {
-    List getResultList() throws AuditException;
+	List getResultList() throws AuditException;
 
-    Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException;
+	Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException;
 
-    AuditQuery add(AuditCriterion criterion);
+	AuditQuery add(AuditCriterion criterion);
 
-    AuditQuery addProjection(AuditProjection projection);
+	AuditQuery addProjection(AuditProjection projection);
 
-    AuditQuery addOrder(AuditOrder order);
+	AuditQuery addOrder(AuditOrder order);
 
-    AuditQuery setMaxResults(int maxResults);
+	AuditQuery setMaxResults(int maxResults);
 
 	AuditQuery setFirstResult(int firstResult);
 
-    AuditQuery setCacheable(boolean cacheable);
+	AuditQuery setCacheable(boolean cacheable);
 
-    AuditQuery setCacheRegion(String cacheRegion);
+	AuditQuery setCacheRegion(String cacheRegion);
 
-    AuditQuery setComment(String comment);
+	AuditQuery setComment(String comment);
 
-    AuditQuery setFlushMode(FlushMode flushMode);
+	AuditQuery setFlushMode(FlushMode flushMode);
 
-    AuditQuery setCacheMode(CacheMode cacheMode);
+	AuditQuery setCacheMode(CacheMode cacheMode);
 
-    AuditQuery setTimeout(int timeout);
+	AuditQuery setTimeout(int timeout);
 
-    AuditQuery setLockMode(LockMode lockMode);
+	AuditQuery setLockMode(LockMode lockMode);
 }

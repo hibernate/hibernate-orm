@@ -29,6 +29,8 @@ import java.sql.ResultSet;
 import org.hibernate.service.Service;
 
 /**
+ * Contract for JDBC REF_CURSOR support.
+ *
  * @author Steve Ebersole
  */
 public interface RefCursorSupport extends Service {

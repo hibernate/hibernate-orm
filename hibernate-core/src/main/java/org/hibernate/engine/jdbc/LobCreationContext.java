@@ -39,8 +39,10 @@ public interface LobCreationContext {
 		 * Perform whatever actions are necessary using the provided JDBC {@link Connection}.
 		 *
 		 * @param connection The JDBC {@link Connection}.
+		 *
 		 * @return The created LOB.
-		 * @throws SQLException
+		 *
+		 * @throws SQLException Indicates trouble accessing the JDBC driver to create the LOB
 		 */
 		public T executeOnConnection(Connection connection) throws SQLException;
 	}
@@ -49,6 +51,9 @@ public interface LobCreationContext {
 	 * Execute the given callback, making sure it has access to a viable JDBC {@link Connection}.
 	 *
 	 * @param callback The callback to execute .
+	 * @param <T> The Java type of the type of LOB being created.  One of {@link java.sql.Blob},
+	 * {@link java.sql.Clob}, {@link java.sql.NClob}
+	 *
 	 * @return The LOB created by the callback.
 	 */
 	public <T> T execute(Callback<T> callback);

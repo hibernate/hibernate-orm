@@ -22,8 +22,9 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.ids;
-import java.io.Serializable;
+
 import javax.persistence.Embeddable;
+import java.io.Serializable;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -34,53 +35,61 @@ import org.hibernate.annotations.TypeDef;
 @Embeddable
 @TypeDef(name = "customEnum", typeClass = CustomEnumUserType.class)
 public class EmbIdWithCustomType implements Serializable {
-    private Integer x;
+	private Integer x;
 
-    @Type(type = "customEnum")
-    private CustomEnum customEnum;
+	@Type(type = "customEnum")
+	private CustomEnum customEnum;
 
-    public EmbIdWithCustomType() {
-    }
+	public EmbIdWithCustomType() {
+	}
 
-    public EmbIdWithCustomType(Integer x, CustomEnum customEnum) {
-        this.x = x;
-        this.customEnum = customEnum;
-    }
+	public EmbIdWithCustomType(Integer x, CustomEnum customEnum) {
+		this.x = x;
+		this.customEnum = customEnum;
+	}
 
-    public Integer getX() {
-        return x;
-    }
+	public Integer getX() {
+		return x;
+	}
 
-    public void setX(Integer x) {
-        this.x = x;
-    }
+	public void setX(Integer x) {
+		this.x = x;
+	}
 
-    public CustomEnum getCustomEnum() {
-        return customEnum;
-    }
+	public CustomEnum getCustomEnum() {
+		return customEnum;
+	}
 
-    public void setCustomEnum(CustomEnum customEnum) {
-        this.customEnum = customEnum;
-    }
+	public void setCustomEnum(CustomEnum customEnum) {
+		this.customEnum = customEnum;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (!(obj instanceof EmbIdWithCustomType)) return false;
+	@Override
+	public boolean equals(Object obj) {
+		if ( this == obj ) {
+			return true;
+		}
+		if ( !(obj instanceof EmbIdWithCustomType) ) {
+			return false;
+		}
 
-        EmbIdWithCustomType that = (EmbIdWithCustomType) obj;
+		EmbIdWithCustomType that = (EmbIdWithCustomType) obj;
 
-        if (x != null ? !x.equals(that.x) : that.x != null) return false;
-        if (customEnum != that.customEnum) return false;
+		if ( x != null ? !x.equals( that.x ) : that.x != null ) {
+			return false;
+		}
+		if ( customEnum != that.customEnum ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public int hashCode() {
-        int result;
-        result = (x != null ? x.hashCode() : 0);
-        result = 31 * result + (customEnum != null ? customEnum.hashCode() : 0);
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		int result;
+		result = (x != null ? x.hashCode() : 0);
+		result = 31 * result + (customEnum != null ? customEnum.hashCode() : 0);
+		return result;
+	}
 }

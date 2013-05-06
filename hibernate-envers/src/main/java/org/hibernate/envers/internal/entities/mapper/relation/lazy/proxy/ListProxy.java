@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities.mapper.relation.lazy.proxy;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -30,62 +31,72 @@ import java.util.ListIterator;
  * @author Adam Warski (adam at warski dot org)
  */
 public class ListProxy<U> extends CollectionProxy<U, List<U>> implements List<U> {
-    private static final long serialVersionUID = -5479232938279790987L;
+	private static final long serialVersionUID = -5479232938279790987L;
 
-    public ListProxy() {
-    }
+	public ListProxy() {
+	}
 
-    public ListProxy(org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<List<U>> initializor) {
-        super(initializor);
-    }
+	public ListProxy(org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<List<U>> initializor) {
+		super( initializor );
+	}
 
-    public boolean addAll(int index, Collection<? extends U> c) {
-        checkInit();
-        return delegate.addAll(index, c);
-    }
+	@Override
+	public boolean addAll(int index, Collection<? extends U> c) {
+		checkInit();
+		return delegate.addAll( index, c );
+	}
 
-    public U get(int index) {
-        checkInit();
-        return delegate.get(index);
-    }
+	@Override
+	public U get(int index) {
+		checkInit();
+		return delegate.get( index );
+	}
 
-    public U set(int index, U element) {
-        checkInit();
-        return delegate.set(index, element);
-    }
+	@Override
+	public U set(int index, U element) {
+		checkInit();
+		return delegate.set( index, element );
+	}
 
-    public void add(int index, U element) {
-        checkInit();
-        delegate.add(index, element);
-    }
+	@Override
+	public void add(int index, U element) {
+		checkInit();
+		delegate.add( index, element );
+	}
 
-    public U remove(int index) {
-        checkInit();
-        return delegate.remove(index);
-    }
+	@Override
+	public U remove(int index) {
+		checkInit();
+		return delegate.remove( index );
+	}
 
-    public int indexOf(Object o) {
-        checkInit();
-        return delegate.indexOf(o);
-    }
+	@Override
+	public int indexOf(Object o) {
+		checkInit();
+		return delegate.indexOf( o );
+	}
 
-    public int lastIndexOf(Object o) {
-        checkInit();
-        return delegate.lastIndexOf(o);
-    }
+	@Override
+	public int lastIndexOf(Object o) {
+		checkInit();
+		return delegate.lastIndexOf( o );
+	}
 
-    public ListIterator<U> listIterator() {
-        checkInit();
-        return delegate.listIterator();
-    }
+	@Override
+	public ListIterator<U> listIterator() {
+		checkInit();
+		return delegate.listIterator();
+	}
 
-    public ListIterator<U> listIterator(int index) {
-        checkInit();
-        return delegate.listIterator(index);
-    }
+	@Override
+	public ListIterator<U> listIterator(int index) {
+		checkInit();
+		return delegate.listIterator( index );
+	}
 
-    public List<U> subList(int fromIndex, int toIndex) {
-        checkInit();
-        return delegate.subList(fromIndex, toIndex);
-    }
+	@Override
+	public List<U> subList(int fromIndex, int toIndex) {
+		checkInit();
+		return delegate.subList( fromIndex, toIndex );
+	}
 }

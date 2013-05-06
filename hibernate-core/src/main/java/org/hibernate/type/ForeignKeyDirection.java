@@ -24,6 +24,7 @@
 package org.hibernate.type;
 
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 
 /**
  * Represents directionality of the foreign key constraint
@@ -36,8 +37,8 @@ public enum ForeignKeyDirection {
 	 */
 	TO_PARENT {
 		@Override
-		public boolean cascadeNow(int cascadePoint) {
-			return cascadePoint != Cascade.BEFORE_INSERT_AFTER_DELETE;
+		public boolean cascadeNow(CascadePoint cascadePoint) {
+			return cascadePoint != CascadePoint.BEFORE_INSERT_AFTER_DELETE;
 		}
 
 	},
@@ -46,16 +47,21 @@ public enum ForeignKeyDirection {
 	 */
 	FROM_PARENT {
 		@Override
-		public boolean cascadeNow(int cascadePoint) {
-			return cascadePoint != Cascade.AFTER_INSERT_BEFORE_DELETE;
+		public boolean cascadeNow(CascadePoint cascadePoint) {
+			return cascadePoint != CascadePoint.AFTER_INSERT_BEFORE_DELETE;
 		}
 	};
 
 	/**
 	 * Should we cascade at this cascade point?
 	 *
+	 * @param cascadePoint The point at which the cascade is being initiated.
+	 *
+	 * @return {@code true} if cascading should be performed now.
+	 *
 	 * @see org.hibernate.engine.internal.Cascade
 	 */
-	public abstract boolean cascadeNow(int cascadePoint);
+	public abstract boolean cascadeNow(CascadePoint cascadePoint);
 
 }
+

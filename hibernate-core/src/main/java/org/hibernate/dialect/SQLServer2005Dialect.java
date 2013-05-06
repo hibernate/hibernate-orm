@@ -45,9 +45,13 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Yoryos Valotasios
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@SuppressWarnings("deprecation")
 public class SQLServer2005Dialect extends SQLServerDialect {
 	private static final int MAX_LENGTH = 8000;
 
+	/**
+	 * Constructs a SQLServer2005Dialect
+	 */
 	public SQLServer2005Dialect() {
 		// HHH-3965 fix
 		// As per http://www.sql-server-helper.com/faq/sql-server-2005-varchar-max-p01.aspx
@@ -74,23 +78,25 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		return new SQLServer2005LimitHandler( sql, selection );
 	}
 
-	@Override // since SQLServer2005 the nowait hint is supported
+	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
+		// NOTE : since SQLServer2005 the nowait hint is supported
 		if ( lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT ) {
 			return tableName + " with (updlock, rowlock, nowait)";
 		}
-		LockMode mode = lockOptions.getLockMode();
-		boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
-		String noWaitStr = isNoWait? ", nowait" :"";
+
+		final LockMode mode = lockOptions.getLockMode();
+		final boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
+		final String noWaitStr = isNoWait ? ", nowait" : "";
 		switch ( mode ) {
 			case UPGRADE_NOWAIT:
-				 return tableName + " with (updlock, rowlock, nowait)";
+				return tableName + " with (updlock, rowlock, nowait)";
 			case UPGRADE:
 			case PESSIMISTIC_WRITE:
 			case WRITE:
-				return tableName + " with (updlock, rowlock"+noWaitStr+" )";
+				return tableName + " with (updlock, rowlock" + noWaitStr + " )";
 			case PESSIMISTIC_READ:
-				return tableName + " with (holdlock, rowlock"+noWaitStr+" )";
+				return tableName + " with (holdlock, rowlock" + noWaitStr + " )";
 			default:
 				return tableName;
 		}

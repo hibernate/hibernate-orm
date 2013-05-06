@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components.relations;
+
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -37,25 +38,25 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 public class NotAuditedManyToOneComponent {
 	@ManyToOne
 	@NotAudited
-    private UnversionedStrTestEntity entity;
+	private UnversionedStrTestEntity entity;
 
-    private String data;
+	private String data;
 
 	public NotAuditedManyToOneComponent(UnversionedStrTestEntity entity, String data) {
-        this.entity = entity;
-        this.data = data;
-    }
+		this.entity = entity;
+		this.data = data;
+	}
 
-    public NotAuditedManyToOneComponent() {
-    }
+	public NotAuditedManyToOneComponent() {
+	}
 
 	public String getData() {
-        return data;
-    }
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
 	public UnversionedStrTestEntity getEntity() {
 		return entity;
@@ -67,13 +68,21 @@ public class NotAuditedManyToOneComponent {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
 		NotAuditedManyToOneComponent that = (NotAuditedManyToOneComponent) o;
 
-		if (data != null ? !data.equals(that.data) : that.data != null) return false;
-		if (entity != null ? !entity.equals(that.entity) : that.entity != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( entity != null ? !entity.equals( that.entity ) : that.entity != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -86,6 +95,6 @@ public class NotAuditedManyToOneComponent {
 	}
 
 	public String toString() {
-        return "NotAuditedManyToOneComponent(str1 = " + data + ")";
-    }
+		return "NotAuditedManyToOneComponent(str1 = " + data + ")";
+	}
 }

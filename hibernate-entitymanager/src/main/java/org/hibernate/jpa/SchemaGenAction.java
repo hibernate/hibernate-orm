@@ -93,10 +93,20 @@ public enum SchemaGenAction {
 		);
 	}
 
+	/**
+	 * Does this action include creations?
+	 *
+	 * @return {@code true} if this action is either {@link #CREATE} or {@link #BOTH}
+	 */
 	public boolean includesCreate() {
 		return this == CREATE || this == BOTH;
 	}
 
+	/**
+	 * Does this action include drops?
+	 *
+	 * @return {@code true} if this action is either {@link #DROP} or {@link #BOTH}
+	 */
 	public boolean includesDrop() {
 		return this == DROP || this == BOTH;
 	}

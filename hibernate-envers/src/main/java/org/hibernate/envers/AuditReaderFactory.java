@@ -38,20 +38,25 @@ import org.hibernate.event.spi.PostInsertEventListener;
  * @author Adam Warski (adam at warski dot org)
  */
 public class AuditReaderFactory {
-    private AuditReaderFactory() { }
+	private AuditReaderFactory() {
+	}
 
-    /**
-     * Create an audit reader associated with an open session.
-     * @param session An open session.
-     * @return An audit reader associated with the given sesison. It shouldn't be used
-     * after the session is closed.
-     * @throws AuditException When the given required listeners aren't installed.
-     */
-    public static AuditReader get(Session session) throws AuditException {
-        SessionImplementor sessionImpl;
-		if (!(session instanceof SessionImplementor)) {
+	/**
+	 * Create an audit reader associated with an open session.
+	 *
+	 * @param session An open session.
+	 *
+	 * @return An audit reader associated with the given sesison. It shouldn't be used
+	 *         after the session is closed.
+	 *
+	 * @throws AuditException When the given required listeners aren't installed.
+	 */
+	public static AuditReader get(Session session) throws AuditException {
+		SessionImplementor sessionImpl;
+		if ( !(session instanceof SessionImplementor) ) {
 			sessionImpl = (SessionImplementor) session.getSessionFactory().getCurrentSession();
-		} else {
+		}
+		else {
 			sessionImpl = (SessionImplementor) session;
 		}
 
@@ -61,37 +66,41 @@ public class AuditReaderFactory {
 				.getServiceRegistry()
 				.getService( EventListenerRegistry.class );
 
-		for ( PostInsertEventListener listener : listenerRegistry.getEventListenerGroup( EventType.POST_INSERT ).listeners() ) {
+		for ( PostInsertEventListener listener : listenerRegistry.getEventListenerGroup( EventType.POST_INSERT )
+				.listeners() ) {
 			if ( listener instanceof EnversListener ) {
 				// todo : slightly different from original code in that I am not checking the other listener groups...
 				return new AuditReaderImpl(
-						( (EnversListener) listener ).getAuditConfiguration(),
+						((EnversListener) listener).getAuditConfiguration(),
 						session,
 						sessionImpl
 				);
 			}
 		}
 
-        throw new AuditException( "Envers listeners were not properly registered" );
-    }
+		throw new AuditException( "Envers listeners were not properly registered" );
+	}
 
-    /**
-     * Create an audit reader associated with an open entity manager.
-     * @param entityManager An open entity manager.
-     * @return An audit reader associated with the given entity manager. It shouldn't be used
-     * after the entity manager is closed.
-     * @throws AuditException When the given entity manager is not based on Hibernate, or if the required
-     * listeners aren't installed.
-     */
-    public static AuditReader get(EntityManager entityManager) throws AuditException {
-        if (entityManager.getDelegate() instanceof Session) {
-            return get((Session) entityManager.getDelegate());
-        }
+	/**
+	 * Create an audit reader associated with an open entity manager.
+	 *
+	 * @param entityManager An open entity manager.
+	 *
+	 * @return An audit reader associated with the given entity manager. It shouldn't be used
+	 *         after the entity manager is closed.
+	 *
+	 * @throws AuditException When the given entity manager is not based on Hibernate, or if the required
+	 * listeners aren't installed.
+	 */
+	public static AuditReader get(EntityManager entityManager) throws AuditException {
+		if ( entityManager.getDelegate() instanceof Session ) {
+			return get( (Session) entityManager.getDelegate() );
+		}
 
-        if (entityManager.getDelegate() instanceof EntityManager) {
-            return get((EntityManager) entityManager.getDelegate());
-        }
+		if ( entityManager.getDelegate() instanceof EntityManager ) {
+			return get( (EntityManager) entityManager.getDelegate() );
+		}
 
-        throw new AuditException("Hibernate EntityManager not present!");
-    }
+		throw new AuditException( "Hibernate EntityManager not present!" );
+	}
 }

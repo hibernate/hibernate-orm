@@ -22,10 +22,11 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components.relations;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.persistence.Embeddable;
 import javax.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.test.entities.StrTestEntity;
 
@@ -35,24 +36,24 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 @Embeddable
 public class OneToManyComponent {
 	@OneToMany
-    private Set<StrTestEntity> entities = new HashSet<StrTestEntity>();
+	private Set<StrTestEntity> entities = new HashSet<StrTestEntity>();
 
-    private String data;
+	private String data;
 
 	public OneToManyComponent(String data) {
-        this.data = data;
-    }
+		this.data = data;
+	}
 
-    public OneToManyComponent() {
-    }
+	public OneToManyComponent() {
+	}
 
 	public String getData() {
-        return data;
-    }
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
 	public Set<StrTestEntity> getEntities() {
 		return entities;
@@ -64,13 +65,21 @@ public class OneToManyComponent {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
 
 		OneToManyComponent that = (OneToManyComponent) o;
 
-		if (data != null ? !data.equals(that.data) : that.data != null) return false;
-		if (entities != null ? !entities.equals(that.entities) : that.entities != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( entities != null ? !entities.equals( that.entities ) : that.entities != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -83,6 +92,6 @@ public class OneToManyComponent {
 	}
 
 	public String toString() {
-        return "OneToManyComponent(data = " + data + ")";
-    }
+		return "OneToManyComponent(data = " + data + ")";
+	}
 }

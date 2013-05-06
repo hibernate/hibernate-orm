@@ -5,6 +5,68 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.0.Beta2 (2013.05.02)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/13052
+
+** Sub-task
+    * [HHH-7617] - Gradle eclipse task missing src paths and test source generation
+    * [HHH-7943] - C3P0, Proxool, ehcache, and infinispan services for OSGi
+    * [HHH-7944] - Envers OSGi support
+    * [HHH-7993] - Support jar scanning in OSGi
+    * [HHH-7995] - Auto-discovery of Hibernate extension points in OSGi
+    * [HHH-8141] - Upgrade to Gradle 1.5
+    * [HHH-8142] - Create a 'compile' task that performs all copmpilations 
+    * [HHH-8143] - Create a 'generateSources' task that performs all generation tasks
+    * [HHH-8145] - Add MaxPermSize to test configuration
+    * [HHH-8146] - Update to use maven-publishing plugin
+    * [HHH-8147] - Update to use distribution plugin for createing release bundles
+    * [HHH-8151] - Consolidate defining "java language level" in one place
+    * [HHH-8152] - General cleanup
+    * [HHH-8156] - Apply new Gradle plugins
+    * [HHH-8160] - Integrate with Aries JPA 2.1 branch
+
+** Bug
+    * [HHH-5845] - Lazy Loading of audited entites with revision type 'delete'
+    * [HHH-7357] - Incorrect exception translation when using Oracle
+    * [HHH-7478] - ConcurrentModificationException when adding a BeforeTransactionCompletionProcess from with a PostInsertEventListener for an @Audited entity
+    * [HHH-7880] - SessionFactory.openStatelessSession() does not respect tenant identifier from CurrentTenantIdentifierResolver
+    * [HHH-7974] - Session.getTenantIdentifier() not callable without active transaction
+    * [HHH-8049] - Initialization error with <dynamic-component> mapping
+    * [HHH-8084] - LobMergeTest fails on oracle
+    * [HHH-8103] - Oracle LOB ordering not working with SequenceIdentityGenerator
+    * [HHH-8137] - Javadoc generation is currently not playing nicely with Java7 javadoc changes
+    * [HHH-8171] - Auditing of collections of embeddables only supporting single element changes
+    * [HHH-8173] - AvailableSettings constants for javax.persistence.schema-generation contain space
+    * [HHH-8178] - Natural IDs generating one UniqueKey per Column
+    * [HHH-8182] - Correct intermittent UpgradeLockTest failures
+    * [HHH-8189] - Audit records are not rolled back when transaction is rolled back
+    * [HHH-8207] - Locale conversion is broken
+    * [HHH-8215] - Windows Build with Eclipse does not work
+
+** Deprecation
+    * [HHH-8170] - Deprecate Hibernate @ForeignKey in favor of JPA 2.1 introduced @ForeignKey annotation
+
+** Improvement
+    * [HHH-7605] - Provide details "An entity copy was already assigned to a different entity."
+    * [HHH-7908] - Logging level checking.
+    * [HHH-8138] - Log SQLException in DatabaseTarget with cause of schema export CREATE statement failure
+    * [HHH-8159] - Apply fixups indicated by analysis tools
+    * [HHH-8162] - Make unique constraint handling on schema update configurable
+    * [HHH-8167] - Adding @NotNull to a @ManyToOne association with @JoinColumnsOrFormulas leads to ClassCastException
+    * [HHH-8180] - Improve performance of logging level checks
+    * [HHH-8183] - Also support synonyms for schema validation
+
+** New Feature
+    * [HHH-8157] - Adding DBAllocator labels for new DBs
+    * [HHH-8163] - Deprecate @IndexColumn and add @ListIndexBase
+
+** Task
+    * [HHH-8164] - Deprecate @Sort in favor of @SortNatural and @SortComparator
+    * [HHH-8175] - Add support for Postgresql 9.2, Postgres Plus 9.2 and IBM DB2 10.1
+    * [HHH-8186] - Type in docs? Caching section nonstrict != nontrict 
+    * [HHH-8212] - Add CLA ref to CONTRIBUTING.md
+
 
 Changes in version 4.3.0.Beta1 (2012.07.12)
 ------------------------------------------------------------------------------------------------------------------------

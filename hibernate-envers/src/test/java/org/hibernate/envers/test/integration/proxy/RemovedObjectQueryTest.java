@@ -1,13 +1,10 @@
 package org.hibernate.envers.test.integration.proxy;
 
+import javax.persistence.EntityManager;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityManager;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.envers.RevisionType;
@@ -27,6 +24,10 @@ import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 import org.hibernate.envers.test.integration.manytomany.ternary.TernaryMapEntity;
 import org.hibernate.envers.test.tools.TestTools;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -172,7 +173,10 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 		em.getTransaction().begin();
 		unversionedEntity1 = new UnversionedStrTestEntity( "string 1" );
 		unversionedEntity2 = new UnversionedStrTestEntity( "string 2" );
-		M2MIndexedListTargetNotAuditedEntity relationNotAuditedEntity = new M2MIndexedListTargetNotAuditedEntity( 1, "Parent" );
+		M2MIndexedListTargetNotAuditedEntity relationNotAuditedEntity = new M2MIndexedListTargetNotAuditedEntity(
+				1,
+				"Parent"
+		);
 		relationNotAuditedEntity.getReferences().add( unversionedEntity1 );
 		relationNotAuditedEntity.getReferences().add( unversionedEntity2 );
 		em.persist( unversionedEntity1 );
@@ -182,7 +186,10 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		// Revision 14 - removing entity with unversioned relation
 		em.getTransaction().begin();
-		relationNotAuditedEntity = em.find( M2MIndexedListTargetNotAuditedEntity.class, relationNotAuditedEntity.getId() );
+		relationNotAuditedEntity = em.find(
+				M2MIndexedListTargetNotAuditedEntity.class,
+				relationNotAuditedEntity.getId()
+		);
 		em.remove( relationNotAuditedEntity );
 		em.getTransaction().commit();
 
@@ -225,12 +232,16 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 		Assert.assertEquals( 16, getRevisionNumber( objArray[1] ) );
 
 		TernaryMapEntity mapEntity = (TernaryMapEntity) objArray[0];
-		Assert.assertEquals( TestTools.makeMap( intEntity1, stringEntity1, intEntity2, stringEntity2 ), mapEntity.getMap() );
+		Assert.assertEquals(
+				TestTools.makeMap( intEntity1, stringEntity1, intEntity2, stringEntity2 ),
+				mapEntity.getMap()
+		);
 	}
 
 	@Test
 	public void testUnversionedRelation() {
-		List queryResult = getAuditReader().createQuery().forRevisionsOfEntity( M2MIndexedListTargetNotAuditedEntity.class, false, true )
+		List queryResult = getAuditReader().createQuery()
+				.forRevisionsOfEntity( M2MIndexedListTargetNotAuditedEntity.class, false, true )
 				.add( AuditEntity.id().eq( 1 ) )
 				.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
 				.getResultList();
@@ -440,6 +451,6 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	private Number getRevisionNumber(Object revisionEntity) {
-		return ( (SequenceIdRevisionEntity) revisionEntity ).getId();
+		return ((SequenceIdRevisionEntity) revisionEntity).getId();
 	}
 }

@@ -35,6 +35,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.internal.Nullability;
 import org.hibernate.engine.spi.CascadingActions;
@@ -321,8 +322,11 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
 			// cascade-delete to collections BEFORE the collection owner is deleted
-			new Cascade( CascadingActions.DELETE, Cascade.AFTER_INSERT_BEFORE_DELETE, session )
-					.cascade( persister, entity, transientEntities );
+			new Cascade( CascadingActions.DELETE, CascadePoint.AFTER_INSERT_BEFORE_DELETE, session ).cascade(
+					persister,
+					entity,
+					transientEntities
+			);
 		}
 		finally {
 			session.getPersistenceContext().decrementCascadeLevel();
@@ -341,8 +345,11 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		session.getPersistenceContext().incrementCascadeLevel();
 		try {
 			// cascade-delete to many-to-one AFTER the parent was deleted
-			new Cascade( CascadingActions.DELETE, Cascade.BEFORE_INSERT_AFTER_DELETE, session )
-					.cascade( persister, entity, transientEntities );
+			new Cascade( CascadingActions.DELETE, CascadePoint.BEFORE_INSERT_AFTER_DELETE, session ).cascade(
+					persister,
+					entity,
+					transientEntities
+			);
 		}
 		finally {
 			session.getPersistenceContext().decrementCascadeLevel();

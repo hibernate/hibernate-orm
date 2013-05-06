@@ -27,13 +27,19 @@ import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 import org.osgi.framework.Bundle;
 
 /**
+ * ArchiveDescriptorFactory implementation for OSGi environments
+ *
  * @author Brett Meyer
  * @author Tim Ward
  */
 public class OsgiArchiveDescriptorFactory implements ArchiveDescriptorFactory {
-
 	private Bundle persistenceBundle;
 
+	/**
+	 * Creates a OsgiArchiveDescriptorFactory
+	 *
+	 * @param persistenceBundle The OSGi bundle being scanned
+	 */
 	public OsgiArchiveDescriptorFactory(Bundle persistenceBundle) {
 		this.persistenceBundle = persistenceBundle;
 	}

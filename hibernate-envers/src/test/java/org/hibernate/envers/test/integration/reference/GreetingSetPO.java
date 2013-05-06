@@ -1,9 +1,10 @@
 package org.hibernate.envers.test.integration.reference;
-import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -45,13 +46,21 @@ public class GreetingSetPO {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof GreetingSetPO)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof GreetingSetPO) ) {
+			return false;
+		}
 
 		GreetingSetPO that = (GreetingSetPO) o;
 
-		if (id != null ? !id.equals(that.id) : that.id != null) return false;
-		if (name != null ? !name.equals(that.name) : that.name != null) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
+		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
+			return false;
+		}
 
 		return true;
 	}

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -44,9 +44,10 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 	private final String queryString;
 	private final String queryRemovedString;
 
-	public OneEntityQueryGenerator(AuditEntitiesConfiguration verEntCfg, AuditStrategy auditStrategy,
-								   String versionsMiddleEntityName, MiddleIdData referencingIdData,
-								   boolean revisionTypeInId, MiddleComponentData... componentData) {
+	public OneEntityQueryGenerator(
+			AuditEntitiesConfiguration verEntCfg, AuditStrategy auditStrategy,
+			String versionsMiddleEntityName, MiddleIdData referencingIdData,
+			boolean revisionTypeInId, MiddleComponentData... componentData) {
 		super( verEntCfg, referencingIdData, revisionTypeInId );
 
 		/*
@@ -89,16 +90,21 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 		qb.addProjection( null, MIDDLE_ENTITY_ALIAS, false, false );
 		// WHERE
 		// ee.originalId.id_ref_ing = :id_ref_ing
-		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( qb.getRootParameters(), verEntCfg.getOriginalIdPropName(), true );
+		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery(
+				qb.getRootParameters(),
+				verEntCfg.getOriginalIdPropName(),
+				true
+		);
 		return qb;
 	}
 
 	/**
 	 * Creates query restrictions used to retrieve only actual data.
 	 */
-	private void createValidDataRestrictions(AuditStrategy auditStrategy, String versionsMiddleEntityName,
-											 QueryBuilder qb, Parameters rootParameters, boolean inclusive,
-											 MiddleComponentData... componentData) {
+	private void createValidDataRestrictions(
+			AuditStrategy auditStrategy, String versionsMiddleEntityName,
+			QueryBuilder qb, Parameters rootParameters, boolean inclusive,
+			MiddleComponentData... componentData) {
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		final String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
 		final String eeOriginalIdPropertyPath = MIDDLE_ENTITY_ALIAS + "." + originalIdPropertyName;
@@ -116,11 +122,14 @@ public final class OneEntityQueryGenerator extends AbstractRelationQueryGenerato
 	/**
 	 * Create query restrictions used to retrieve actual data and deletions that took place at exactly given revision.
 	 */
-	private void createValidAndRemovedDataRestrictions(AuditStrategy auditStrategy, String versionsMiddleEntityName,
-													   QueryBuilder remQb, MiddleComponentData... componentData) {
+	private void createValidAndRemovedDataRestrictions(
+			AuditStrategy auditStrategy, String versionsMiddleEntityName,
+			QueryBuilder remQb, MiddleComponentData... componentData) {
 		final Parameters disjoint = remQb.getRootParameters().addSubParameters( "or" );
-		final Parameters valid = disjoint.addSubParameters( "and" ); // Restrictions to match all valid rows.
-		final Parameters removed = disjoint.addSubParameters( "and" ); // Restrictions to match all rows deleted at exactly given revision.
+		// Restrictions to match all valid rows.
+		final Parameters valid = disjoint.addSubParameters( "and" );
+		// Restrictions to match all rows deleted at exactly given revision.
+		final Parameters removed = disjoint.addSubParameters( "and" );
 		// Excluding current revision, because we need to match data valid at the previous one.
 		createValidDataRestrictions( auditStrategy, versionsMiddleEntityName, remQb, valid, false, componentData );
 		// ee.revision = :revision

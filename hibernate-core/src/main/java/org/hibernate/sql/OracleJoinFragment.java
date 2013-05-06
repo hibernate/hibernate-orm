@@ -129,8 +129,8 @@ public class OracleJoinFragment extends JoinFragment {
 		StringBuilder buf = new StringBuilder( on );
 		for ( int i = 0; i < buf.length(); i++ ) {
 			char character = buf.charAt( i );
-			boolean isInsertPoint = OPERATORS.contains( new Character( character ) ) ||
-					( character == ' ' && buf.length() > i + 3 && "is ".equals( buf.substring( i + 1, i + 4 ) ) );
+			final boolean isInsertPoint = OPERATORS.contains( Character.valueOf( character ) )
+					|| ( character == ' ' && buf.length() > i + 3 && "is ".equals( buf.substring( i + 1, i + 4 ) ) );
 			if ( isInsertPoint ) {
 				buf.insert( i, "(+)" );
 				i += 3;
@@ -142,8 +142,8 @@ public class OracleJoinFragment extends JoinFragment {
 	private static final Set OPERATORS = new HashSet();
 
 	static {
-		OPERATORS.add( new Character( '=' ) );
-		OPERATORS.add( new Character( '<' ) );
-		OPERATORS.add( new Character( '>' ) );
+		OPERATORS.add( Character.valueOf( '=' ) );
+		OPERATORS.add( Character.valueOf( '<' ) );
+		OPERATORS.add( Character.valueOf( '>' ) );
 	}
 }

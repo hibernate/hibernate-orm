@@ -1,10 +1,9 @@
 package org.hibernate.envers.test.entities.components;
+
 import javax.persistence.Embedded;
 
 /**
- * 
  * @author Erik-Berndt Scheper
- * 
  */
 public class DefaultValueComponent1 {
 
@@ -13,11 +12,12 @@ public class DefaultValueComponent1 {
 	@Embedded
 	private DefaultValueComponent2 comp2 = new DefaultValueComponent2();
 
-	public static final DefaultValueComponent1 of(String str1,
+	public static final DefaultValueComponent1 of(
+			String str1,
 			DefaultValueComponent2 comp2) {
 		DefaultValueComponent1 instance = new DefaultValueComponent1();
-		instance.setStr1(str1);
-		instance.setComp2(comp2);
+		instance.setStr1( str1 );
+		instance.setComp2( comp2 );
 		return instance;
 	}
 
@@ -38,17 +38,21 @@ public class DefaultValueComponent1 {
 	}
 
 	public boolean equals(Object o) {
-		if (this == o)
+		if ( this == o ) {
 			return true;
-		if (!(o instanceof DefaultValueComponent1))
+		}
+		if ( !(o instanceof DefaultValueComponent1) ) {
 			return false;
+		}
 
 		DefaultValueComponent1 that = (DefaultValueComponent1) o;
 
-		if (str1 != null ? !str1.equals(that.str1) : that.str1 != null)
+		if ( str1 != null ? !str1.equals( that.str1 ) : that.str1 != null ) {
 			return false;
-		if (comp2 != null ? !comp2.equals(that.comp2) : that.comp2 != null)
+		}
+		if ( comp2 != null ? !comp2.equals( that.comp2 ) : that.comp2 != null ) {
 			return false;
+		}
 
 		return true;
 	}

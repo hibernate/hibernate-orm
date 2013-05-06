@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.collection.mapkey;
-import java.util.HashMap;
-import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKey;
 import javax.persistence.Table;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.entities.StrTestEntity;
@@ -40,51 +41,57 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 @Entity
 @Table(name = "IdMapKey")
 public class IdMapKeyEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Audited
-    @ManyToMany
-    @MapKey
-    private Map<Integer, StrTestEntity> idmap;
+	@Audited
+	@ManyToMany
+	@MapKey
+	private Map<Integer, StrTestEntity> idmap;
 
-    public IdMapKeyEntity() {
-        idmap = new HashMap<Integer, StrTestEntity>();
-    }
+	public IdMapKeyEntity() {
+		idmap = new HashMap<Integer, StrTestEntity>();
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Map<Integer, StrTestEntity> getIdmap() {
-        return idmap;
-    }
+	public Map<Integer, StrTestEntity> getIdmap() {
+		return idmap;
+	}
 
-    public void setIdmap(Map<Integer, StrTestEntity> idmap) {
-        this.idmap = idmap;
-    }
+	public void setIdmap(Map<Integer, StrTestEntity> idmap) {
+		this.idmap = idmap;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof IdMapKeyEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof IdMapKeyEntity) ) {
+			return false;
+		}
 
-        IdMapKeyEntity that = (IdMapKeyEntity) o;
+		IdMapKeyEntity that = (IdMapKeyEntity) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        return (id != null ? id.hashCode() : 0);
-    }
+	public int hashCode() {
+		return (id != null ? id.hashCode() : 0);
+	}
 
-    public String toString() {
-        return "IMKE(id = " + id + ", idmap = " + idmap + ")";
-    }
+	public String toString() {
+		return "IMKE(id = " + id + ", idmap = " + idmap + ")";
+	}
 }

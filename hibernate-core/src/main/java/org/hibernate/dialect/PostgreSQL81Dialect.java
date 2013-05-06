@@ -57,8 +57,12 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Gavin King
  */
+@SuppressWarnings("deprecation")
 public class PostgreSQL81Dialect extends Dialect {
 
+	/**
+	 * Constructs a PostgreSQL81Dialect
+	 */
 	public PostgreSQL81Dialect() {
 		super();
 		registerColumnType( Types.BIT, "bool" );
@@ -152,13 +156,10 @@ public class PostgreSQL81Dialect extends Dialect {
 
 		registerFunction( "str", new SQLFunctionTemplate(StandardBasicTypes.STRING, "cast(?1 as varchar)") );
 
-		getDefaultProperties().setProperty(Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE);
+		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public SqlTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		SqlTypeDescriptor descriptor;
@@ -183,87 +184,100 @@ public class PostgreSQL81Dialect extends Dialect {
 		return descriptor;
 	}
 
+	@Override
 	public String getAddColumnString() {
 		return "add column";
 	}
 
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName );
 	}
 
+	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		return "nextval ('" + sequenceName + "')";
 	}
 
+	@Override
 	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName; //starts with 1, implicitly
+		//starts with 1, implicitly
+		return "create sequence " + sequenceName;
 	}
 
+	@Override
 	public String getDropSequenceString(String sequenceName) {
 		return "drop sequence " + sequenceName;
 	}
 
+	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
 	}
+
+	@Override
 	public boolean dropConstraints() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsSequences() {
 		return true;
 	}
 
+	@Override
 	public String getQuerySequencesString() {
 		return "select relname from pg_class where relkind='S'";
 	}
 
+	@Override
 	public boolean supportsLimit() {
 		return true;
 	}
 
+	@Override
 	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuilder( sql.length()+20 )
-				.append( sql )
-				.append( hasOffset ? " limit ? offset ?" : " limit ?" )
-				.toString();
+		return sql + (hasOffset ? " limit ? offset ?" : " limit ?");
 	}
 
+	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsIdentityColumns() {
 		return true;
 	}
 
+	@Override
 	public String getForUpdateString(String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
 
+	@Override
 	public String getIdentitySelectString(String table, String column, int type) {
-		return new StringBuilder().append("select currval('")
-			.append(table)
-			.append('_')
-			.append(column)
-			.append("_seq')")
-			.toString();
+		return "select currval('" + table + '_' + column + "_seq')";
 	}
 
+	@Override
 	public String getIdentityColumnString(int type) {
 		return type==Types.BIGINT ?
 			"bigserial not null" :
 			"serial not null";
 	}
 
+	@Override
 	public boolean hasDataTypeInIdentityColumn() {
 		return false;
 	}
 
+	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}
 
+	@Override
 	public String getCaseInsensitiveLike(){
 		return "ilike";
 	}
@@ -273,77 +287,88 @@ public class PostgreSQL81Dialect extends Dialect {
 		return true;
 	}
 
+	@Override
 	public Class getNativeIdentifierGeneratorClass() {
 		return SequenceGenerator.class;
 	}
 
+	@Override
 	public boolean supportsOuterJoinForUpdate() {
 		return false;
 	}
-	
+
+	@Override
 	public boolean useInputStreamToInsertBlob() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsUnionAll() {
 		return true;
 	}
 
 	/**
 	 * Workaround for postgres bug #1453
+	 * <p/>
+	 * {@inheritDoc}
 	 */
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
-		String typeName = getTypeName(sqlType, 1, 1, 0);
+		String typeName = getTypeName( sqlType, 1, 1, 0 );
 		//trim off the length/precision/scale
-		int loc = typeName.indexOf('(');
-		if (loc>-1) {
-			typeName = typeName.substring(0, loc);
+		final int loc = typeName.indexOf( '(' );
+		if ( loc > -1 ) {
+			typeName = typeName.substring( 0, loc );
 		}
 		return "null::" + typeName;
 	}
 
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsTemporaryTables() {
 		return true;
 	}
 
+	@Override
 	public String getCreateTemporaryTableString() {
 		return "create temporary table";
 	}
 
+	@Override
 	public String getCreateTemporaryTablePostfix() {
 		return "on commit drop";
 	}
 
-	/*public boolean dropTemporaryTableAfterUse() {
-		//we have to, because postgres sets current tx
-		//to rollback only after a failed create table
-		return true;
-	}*/
-
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}
 
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
 
+	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select now()";
 	}
 
+	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
 
+	@Override
 	public String toBooleanValueString(boolean bool) {
 		return bool ? "true" : "false";
 	}
 
+	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
 	}
@@ -352,25 +377,26 @@ public class PostgreSQL81Dialect extends Dialect {
 	 * Constraint-name extractor for Postgres constraint violation exceptions.
 	 * Orginally contributed by Denny Bartelt.
 	 */
-	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 		public String extractConstraintName(SQLException sqle) {
 			try {
-				int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
+				final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) );
 				switch (sqlState) {
 					// CHECK VIOLATION
-					case 23514: return extractUsingTemplate("violates check constraint \"","\"", sqle.getMessage());
+					case 23514: return extractUsingTemplate( "violates check constraint \"","\"", sqle.getMessage() );
 					// UNIQUE VIOLATION
-					case 23505: return extractUsingTemplate("violates unique constraint \"","\"", sqle.getMessage());
+					case 23505: return extractUsingTemplate( "violates unique constraint \"","\"", sqle.getMessage() );
 					// FOREIGN KEY VIOLATION
-					case 23503: return extractUsingTemplate("violates foreign key constraint \"","\"", sqle.getMessage());
+					case 23503: return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
 					// NOT NULL VIOLATION
-					case 23502: return extractUsingTemplate("null value in column \"","\" violates not-null constraint", sqle.getMessage());
+					case 23502: return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
 					// TODO: RESTRICT VIOLATION
 					case 23001: return null;
 					// ALL OTHER
 					default: return null;
 				}
-			} catch (NumberFormatException nfe) {
+			}
+			catch (NumberFormatException nfe) {
 				return null;
 			}
 		}
@@ -383,11 +409,13 @@ public class PostgreSQL81Dialect extends Dialect {
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
 				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 
-				if ( "40P01".equals( sqlState ) ) { // DEADLOCK DETECTED
+				if ( "40P01".equals( sqlState ) ) {
+					// DEADLOCK DETECTED
 					return new LockAcquisitionException( message, sqlException, sql );
 				}
 
-				if ( "55P03".equals( sqlState ) ) { // LOCK NOT AVAILABLE
+				if ( "55P03".equals( sqlState ) ) {
+					// LOCK NOT AVAILABLE
 					return new PessimisticLockException( message, sqlException, sql );
 				}
 
@@ -396,37 +424,39 @@ public class PostgreSQL81Dialect extends Dialect {
 			}
 		};
 	}
-	
+
+	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		// Register the type of the out param - PostgreSQL uses Types.OTHER
-		statement.registerOutParameter(col++, Types.OTHER);
+		statement.registerOutParameter( col++, Types.OTHER );
 		return col;
 	}
 
+	@Override
 	public ResultSet getResultSet(CallableStatement ps) throws SQLException {
 		ps.execute();
-		return (ResultSet) ps.getObject(1);
+		return (ResultSet) ps.getObject( 1 );
 	}
 
+	@Override
 	public boolean supportsPooledSequences() {
 		return true;
 	}
 
-	//only necessary for postgre < 7.4
-	//http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
+	/**
+	 * only necessary for postgre < 7.4  See http://anoncvs.postgresql.org/cvsweb.cgi/pgsql/doc/src/sgml/ref/create_sequence.sgml
+	 * <p/>
+	 * {@inheritDoc}
+	 */
+	@Override
 	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) {
 		return getCreateSequenceString( sequenceName ) + " start " + initialValue + " increment " + incrementSize;
 	}
 	
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-// seems to not really...
-//	public boolean supportsRowValueConstructorSyntax() {
-//		return true;
-//	}
-
-
-    public boolean supportsEmptyInList() {
+	@Override
+	public boolean supportsEmptyInList() {
 		return false;
 	}
 
@@ -445,25 +475,32 @@ public class PostgreSQL81Dialect extends Dialect {
 		return false;
 	}
 
-	// locking support
+	@Override
 	public String getForUpdateString() {
 		return " for update";
 	}
 
+	@Override
 	public String getWriteLockString(int timeout) {
-		if ( timeout == LockOptions.NO_WAIT )
+		if ( timeout == LockOptions.NO_WAIT ) {
 			return " for update nowait";
-		else
+		}
+		else {
 			return " for update";
+		}
 	}
 
+	@Override
 	public String getReadLockString(int timeout) {
-		if ( timeout == LockOptions.NO_WAIT )
+		if ( timeout == LockOptions.NO_WAIT ) {
 			return " for share nowait";
-		else
+		}
+		else {
 			return " for share";
+		}
 	}
 
+	@Override
 	public boolean supportsRowValueConstructorSyntax() {
 		return true;
 	}
@@ -475,6 +512,6 @@ public class PostgreSQL81Dialect extends Dialect {
 	
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
-		return getForUpdateString(aliases) + " nowait ";
+		return getForUpdateString( aliases ) + " nowait ";
 	}
 }

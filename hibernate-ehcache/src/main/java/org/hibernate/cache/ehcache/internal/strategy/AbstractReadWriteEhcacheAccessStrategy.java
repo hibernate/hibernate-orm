@@ -74,9 +74,9 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
     public final Object get(Object key, long txTimestamp) throws CacheException {
         readLockIfNeeded( key );
         try {
-            Lockable item = (Lockable) region.get( key );
+            final Lockable item = (Lockable) region.get( key );
 
-            boolean readable = item != null && item.isReadable( txTimestamp );
+            final boolean readable = item != null && item.isReadable( txTimestamp );
             if ( readable ) {
                 return item.getValue();
             }
@@ -101,8 +101,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             throws CacheException {
         region.writeLock( key );
         try {
-            Lockable item = (Lockable) region.get( key );
-            boolean writeable = item == null || item.isWriteable( txTimestamp, version, versionComparator );
+            final Lockable item = (Lockable) region.get( key );
+            final boolean writeable = item == null || item.isWriteable( txTimestamp, version, versionComparator );
             if ( writeable ) {
                 region.put( key, new Item( value, version, region.nextTimestamp() ) );
                 return true;
@@ -125,8 +125,8 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
     public final SoftLock lockItem(Object key, Object version) throws CacheException {
         region.writeLock( key );
         try {
-            Lockable item = (Lockable) region.get( key );
-            long timeout = region.nextTimestamp() + region.getTimeout();
+            final Lockable item = (Lockable) region.get( key );
+            final long timeout = region.nextTimestamp() + region.getTimeout();
             final Lock lock = ( item == null ) ? new Lock( timeout, uuid, nextLockId(), version ) : item.lock(
                     timeout,
                     uuid,
@@ -258,37 +258,27 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             this.timestamp = timestamp;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+		@Override
         public boolean isReadable(long txTimestamp) {
             return txTimestamp > timestamp;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+		@Override
         public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
             return version != null && versionComparator.compare( version, newVersion ) < 0;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+		@Override
         public Object getValue() {
             return value;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+		@Override
         public boolean isUnlockable(SoftLock lock) {
             return false;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public Lock lock(long timeout, UUID uuid, long lockId) {
             return new Lock( timeout, uuid, lockId, version );
         }
@@ -320,16 +310,12 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             this.sourceUuid = sourceUuid;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public boolean isReadable(long txTimestamp) {
             return false;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
             if ( txTimestamp > timeout ) {
                 // if timedout then allow write
@@ -345,23 +331,16 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             ) < 0;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public Object getValue() {
             return null;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public boolean isUnlockable(SoftLock lock) {
             return equals( lock );
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public boolean equals(Object o) {
             if ( o == this ) {
@@ -375,9 +354,6 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             }
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public int hashCode() {
             int hash = ( sourceUuid != null ? sourceUuid.hashCode() : 0 );
@@ -395,9 +371,7 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             return concurrent;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        @Override
         public Lock lock(long timeout, UUID uuid, long lockId) {
             concurrent = true;
             multiplicity++;
@@ -414,13 +388,9 @@ abstract class AbstractReadWriteEhcacheAccessStrategy<T extends EhcacheTransacti
             }
         }
 
-        /**
-         * {@inheritDoc}
-         */
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder( "Lock Source-UUID:" + sourceUuid + " Lock-ID:" + lockId );
-            return sb.toString();
+			return "Lock Source-UUID:" + sourceUuid + " Lock-ID:" + lockId;
         }
     }
 }

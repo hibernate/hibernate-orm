@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.lock;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.persister.entity.Lockable;
@@ -70,7 +71,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 
 	private String noWaitSql;
 
-	public String getNoWaitSql() {
+	protected String getNoWaitSql() {
 		if ( noWaitSql == null ) {
 			noWaitSql = generateLockString( LockOptions.NO_WAIT );
 		}
@@ -79,7 +80,7 @@ public abstract class AbstractSelectLockingStrategy implements LockingStrategy {
 
 	private String skipLockedSql;
 
-	public String getSkipLockedSql() {
+	protected String getSkipLockedSql() {
 		if ( skipLockedSql == null ) {
 			skipLockedSql = generateLockString( LockOptions.SKIP_LOCKED );
 		}

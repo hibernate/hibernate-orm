@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.reventity;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -37,55 +38,64 @@ import org.hibernate.envers.RevisionTimestamp;
  */
 @Entity
 @GenericGenerator(name = "EnversTestingRevisionGenerator",
-                  strategy = "org.hibernate.id.enhanced.TableGenerator",
-                  parameters = {@Parameter(name = "table_name", value = "REVISION_GENERATOR"),
-                                @Parameter(name = "initial_value", value = "1"),
-                                @Parameter(name = "increment_size", value = "1"),
-                                @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
-                  }
+				  strategy = "org.hibernate.id.enhanced.TableGenerator",
+				  parameters = {
+						  @Parameter(name = "table_name", value = "REVISION_GENERATOR"),
+						  @Parameter(name = "initial_value", value = "1"),
+						  @Parameter(name = "increment_size", value = "1"),
+						  @Parameter(name = "prefer_entity_table_as_segment_value", value = "true")
+				  }
 )
 @RevisionEntity(TestExceptionRevisionListener.class)
 public class ExceptionListenerRevEntity {
-    @Id
-    @GeneratedValue(generator = "EnversTestingRevisionGenerator")
-    @RevisionNumber
-    private int id;
+	@Id
+	@GeneratedValue(generator = "EnversTestingRevisionGenerator")
+	@RevisionNumber
+	private int id;
 
-    @RevisionTimestamp
-    private long timestamp;
+	@RevisionTimestamp
+	private long timestamp;
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public long getTimestamp() {
-        return timestamp;
-    }
+	public long getTimestamp() {
+		return timestamp;
+	}
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
+	public void setTimestamp(long timestamp) {
+		this.timestamp = timestamp;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ExceptionListenerRevEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ExceptionListenerRevEntity) ) {
+			return false;
+		}
 
-        ExceptionListenerRevEntity revEntity = (ExceptionListenerRevEntity) o;
+		ExceptionListenerRevEntity revEntity = (ExceptionListenerRevEntity) o;
 
-        if (id != revEntity.id) return false;
-        if (timestamp != revEntity.timestamp) return false;
+		if ( id != revEntity.id ) {
+			return false;
+		}
+		if ( timestamp != revEntity.timestamp ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = id;
-        result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = id;
+		result = 31 * result + (int) (timestamp ^ (timestamp >>> 32));
+		return result;
+	}
 }

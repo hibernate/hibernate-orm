@@ -96,9 +96,9 @@ public class CallbackAndDirtyTest extends BaseEntityManagerFunctionalTestCase {
 		manager.getTransaction().commit();
 
 		manager.getTransaction().begin();
-		mark = manager.find( Employee.class, new Long( ids[0] ) );
-		joe = manager.find( Customer.class, new Long( ids[1] ) );
-		yomomma = manager.find( Person.class, new Long( ids[2] ) );
+		mark = manager.find( Employee.class, Long.valueOf( ids[0] ) );
+		joe = manager.find( Customer.class, Long.valueOf( ids[1] ) );
+		yomomma = manager.find( Person.class, Long.valueOf( ids[2] ) );
 
 		mark.setZip( "30306" );
 		assertEquals( 1, manager.createQuery( "select p from Person p where p.zip = '30306'" ).getResultList().size() );

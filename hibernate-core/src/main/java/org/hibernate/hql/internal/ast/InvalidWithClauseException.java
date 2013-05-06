@@ -30,11 +30,10 @@ package org.hibernate.hql.internal.ast;
  * @author Steve Ebersole
  */
 public class InvalidWithClauseException extends QuerySyntaxException {
-	public InvalidWithClauseException(String message) {
-		super( message );
-	}
-
 	public InvalidWithClauseException(String message, String queryString) {
 		super( message, queryString );
+		if ( queryString == null ) {
+			throw new IllegalArgumentException( "Illegal to pass null as queryString argument" );
+		}
 	}
 }

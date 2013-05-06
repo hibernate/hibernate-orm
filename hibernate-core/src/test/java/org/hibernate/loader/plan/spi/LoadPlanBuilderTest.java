@@ -41,7 +41,6 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
@@ -52,7 +51,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

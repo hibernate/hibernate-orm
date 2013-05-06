@@ -22,12 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.integration.naming;
-import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import java.util.Set;
 
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
@@ -39,74 +40,82 @@ import org.hibernate.envers.test.entities.StrTestEntity;
 @Entity
 @Table(name = "VersionsJoinTable")
 public class VersionsJoinTableTestEntity {
-    @Id
-    private Integer id;
+	@Id
+	private Integer id;
 
-    @Audited
-    private String data;
+	@Audited
+	private String data;
 
-    @Audited
-    @OneToMany
-    @JoinColumn(name = "VJT_ID")
-    @AuditJoinTable(name = "VERSIONS_JOIN_TABLE_TEST", inverseJoinColumns = @JoinColumn(name = "STR_ID"))
-    private Set<StrTestEntity> collection;
+	@Audited
+	@OneToMany
+	@JoinColumn(name = "VJT_ID")
+	@AuditJoinTable(name = "VERSIONS_JOIN_TABLE_TEST", inverseJoinColumns = @JoinColumn(name = "STR_ID"))
+	private Set<StrTestEntity> collection;
 
-    public VersionsJoinTableTestEntity() {
-    }
+	public VersionsJoinTableTestEntity() {
+	}
 
-    public VersionsJoinTableTestEntity(Integer id, String data) {
-        this.id = id;
-        this.data = data;
-    }
+	public VersionsJoinTableTestEntity(Integer id, String data) {
+		this.id = id;
+		this.data = data;
+	}
 
-    public VersionsJoinTableTestEntity(String data) {
-        this.data = data;
-    }
+	public VersionsJoinTableTestEntity(String data) {
+		this.data = data;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public String getData() {
-        return data;
-    }
+	public String getData() {
+		return data;
+	}
 
-    public void setData(String data) {
-        this.data = data;
-    }
+	public void setData(String data) {
+		this.data = data;
+	}
 
-    public Set<StrTestEntity> getCollection() {
-        return collection;
-    }
+	public Set<StrTestEntity> getCollection() {
+		return collection;
+	}
 
-    public void setCollection(Set<StrTestEntity> collection) {
-        this.collection = collection;
-    }
+	public void setCollection(Set<StrTestEntity> collection) {
+		this.collection = collection;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof VersionsJoinTableTestEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof VersionsJoinTableTestEntity) ) {
+			return false;
+		}
 
-        VersionsJoinTableTestEntity that = (VersionsJoinTableTestEntity) o;
+		VersionsJoinTableTestEntity that = (VersionsJoinTableTestEntity) o;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( data != null ? !data.equals( that.data ) : that.data != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (data != null ? data.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (data != null ? data.hashCode() : 0);
+		return result;
+	}
 
-    public String toString() {
-        return "VersionsJoinTableTestEntity(id = " + id + ", data = " + data + ")";
-    }
+	public String toString() {
+		return "VersionsJoinTableTestEntity(id = " + id + ", data = " + data + ")";
+	}
 }

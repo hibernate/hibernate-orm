@@ -24,6 +24,7 @@
 package org.hibernate.internal;
 
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
 import javax.naming.Name;
@@ -53,15 +54,34 @@ public class SessionFactoryRegistry {
 			SessionFactoryRegistry.class.getName()
 	);
 
+	/**
+	 * Singleton access
+	 */
 	public static final SessionFactoryRegistry INSTANCE = new SessionFactoryRegistry();
 
+	/**
+	 * A map for mapping the UUID of a SessionFactory to the corresponding SessionFactory instance
+	 */
 	private final ConcurrentHashMap<String, SessionFactory> sessionFactoryMap = new ConcurrentHashMap<String, SessionFactory>();
+
+	/**
+	 * A cross-reference for mapping a SessionFactory name to its UUID.  Not all SessionFactories get named,
+	 */
 	private final ConcurrentHashMap<String,String> nameUuidXref = new ConcurrentHashMap<String, String>();
 
-	public SessionFactoryRegistry() {
+	private SessionFactoryRegistry() {
 		LOG.debugf( "Initializing SessionFactoryRegistry : %s", this );
 	}
 
+	/**
+	 * Adds a SessionFactory to the registry
+	 *
+	 * @param uuid The uuid under which to register the SessionFactory
+	 * @param name The optional name under which to register the SessionFactory
+	 * @param isNameAlsoJndiName Is name, if provided, also a JNDI name?
+	 * @param instance The SessionFactory instance
+	 * @param jndiService The JNDI service, so we can register a listener if name is a JNDI name
+	 */
 	public void addSessionFactory(
 			String uuid,
 			String name,
@@ -72,7 +92,7 @@ public class SessionFactoryRegistry {
 			throw new IllegalArgumentException( "SessionFactory UUID cannot be null" );
 		}
 
-        LOG.debugf( "Registering SessionFactory: %s (%s)", uuid, name == null ? "<unnamed>" : name );
+		LOG.debugf( "Registering SessionFactory: %s (%s)", uuid, name == null ? "<unnamed>" : name );
 		sessionFactoryMap.put( uuid, instance );
 		if ( name != null ) {
 			nameUuidXref.put( name, uuid );
@@ -103,6 +123,14 @@ public class SessionFactoryRegistry {
 		}
 	}
 
+	/**
+	 * Remove a previously added SessionFactory
+	 *
+	 * @param uuid The uuid
+	 * @param name The optional name
+	 * @param isNameAlsoJndiName Is name, if provided, also a JNDI name?
+	 * @param jndiService The JNDI service
+	 */
 	public void removeSessionFactory(
 			String uuid,
 			String name,
@@ -129,8 +157,15 @@ public class SessionFactoryRegistry {
 		sessionFactoryMap.remove( uuid );
 	}
 
+	/**
+	 * Get a registered SessionFactory by name
+	 *
+	 * @param name The name
+	 *
+	 * @return The SessionFactory
+	 */
 	public SessionFactory getNamedSessionFactory(String name) {
-        LOG.debugf( "Lookup: name=%s", name );
+		LOG.debugf( "Lookup: name=%s", name );
 		final String uuid = nameUuidXref.get( name );
 		return getSessionFactory( uuid );
 	}
@@ -146,13 +181,34 @@ public class SessionFactoryRegistry {
 	}
 
 	/**
+	 * Does this registry currently contain registrations?
+	 *
+	 * @return true/false
+	 */
+	public boolean hasRegistrations() {
+		return ! sessionFactoryMap.isEmpty();
+	}
+
+	public void clearRegistrations() {
+		nameUuidXref.clear();
+		for ( SessionFactory factory : sessionFactoryMap.values() ) {
+			try {
+				factory.close();
+			}
+			catch (Exception ignore) {
+			}
+		}
+		sessionFactoryMap.clear();
+	}
+
+	/**
 	 * Implementation of {@literal JNDI} {@link javax.naming.event.NamespaceChangeListener} contract to listener for context events
 	 * and react accordingly if necessary
 	 */
 	private final NamespaceChangeListener LISTENER = new NamespaceChangeListener() {
 		@Override
 		public void objectAdded(NamingEvent evt) {
-            LOG.debugf("A factory was successfully bound to name: %s", evt.getNewBinding().getName());
+			LOG.debugf("A factory was successfully bound to name: %s", evt.getNewBinding().getName());
 		}
 
 		@Override
@@ -172,7 +228,7 @@ public class SessionFactoryRegistry {
 			final String oldJndiName = evt.getOldBinding().getName();
 			final String newJndiName = evt.getNewBinding().getName();
 
-            LOG.factoryJndiRename( oldJndiName, newJndiName );
+			LOG.factoryJndiRename( oldJndiName, newJndiName );
 
 			final String uuid = nameUuidXref.remove( oldJndiName );
 			nameUuidXref.put( newJndiName, uuid );

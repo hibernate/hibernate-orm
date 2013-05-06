@@ -23,16 +23,24 @@
  */
 package org.hibernate.engine.jdbc.internal;
 
-
 /**
  * Represents the the understood types or styles of formatting. 
  *
  * @author Steve Ebersole
  */
 public enum FormatStyle {
+	/**
+	 * Formatting for SELECT, INSERT, UPDATE and DELETE statements
+	 */
 	BASIC( "basic", new BasicFormatterImpl() ),
-	DDL( "ddl", new DDLFormatterImpl() ),
-	NONE( "none", new NoFormatImpl() );
+	/**
+	 * Formatting for DDL (CREATE, ALTER, DROP, etc) statements
+	 */
+	DDL( "ddl", DDLFormatterImpl.INSTANCE ),
+	/**
+	 * No formatting
+	 */
+	NONE( "none", NoFormatImpl.INSTANCE );
 
 	private final String name;
 	private final Formatter formatter;
@@ -51,6 +59,11 @@ public enum FormatStyle {
 	}
 
 	private static class NoFormatImpl implements Formatter {
+		/**
+		 * Singleton access
+		 */
+		public static final NoFormatImpl INSTANCE = new NoFormatImpl();
+
 		public String format(String source) {
 			return source;
 		}

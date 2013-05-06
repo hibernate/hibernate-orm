@@ -23,68 +23,69 @@
  */
 package org.hibernate.envers.test.integration.components.collections;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Set;
-import javax.persistence.EntityManager;
-
-import org.junit.Ignore;
-import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.components.Component1;
 import org.hibernate.envers.test.entities.components.ComponentSetTestEntity;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
 /**
  * TODO: enable and implement
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 @Ignore
 public class CollectionOfComponents extends BaseEnversJPAFunctionalTestCase {
-    private Integer id1;
+	private Integer id1;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { ComponentSetTestEntity.class };
-    }
+		return new Class[] {ComponentSetTestEntity.class};
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        // Revision 1
-        EntityManager em = getEntityManager();
-        em.getTransaction().begin();
+	@Test
+	@Priority(10)
+	public void initData() {
+		// Revision 1
+		EntityManager em = getEntityManager();
+		em.getTransaction().begin();
 
-        ComponentSetTestEntity cte1 = new ComponentSetTestEntity();
+		ComponentSetTestEntity cte1 = new ComponentSetTestEntity();
 
-        em.persist(cte1);
+		em.persist( cte1 );
 
-        em.getTransaction().commit();
+		em.getTransaction().commit();
 
-        // Revision 2
-        em = getEntityManager();
-        em.getTransaction().begin();
+		// Revision 2
+		em = getEntityManager();
+		em.getTransaction().begin();
 
-        cte1 = em.find(ComponentSetTestEntity.class, cte1.getId());
+		cte1 = em.find( ComponentSetTestEntity.class, cte1.getId() );
 
-        cte1.getComps().add(new Component1("a", "b"));
+		cte1.getComps().add( new Component1( "a", "b" ) );
 
-        em.getTransaction().commit();
+		em.getTransaction().commit();
 
-        id1 = cte1.getId();
-    }
+		id1 = cte1.getId();
+	}
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ComponentSetTestEntity.class, id1));
-    }
+	@Test
+	public void testRevisionsCounts() {
+		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( ComponentSetTestEntity.class, id1 ) );
+	}
 
-    @Test
-    public void testHistoryOfId1() {
-        assert getAuditReader().find(ComponentSetTestEntity.class, id1, 1).getComps().size() == 0;
-		
-		Set<Component1> comps1 = getAuditReader().find(ComponentSetTestEntity.class, id1, 2).getComps();
-        assert comps1.size() == 1;
-		assert comps1.contains(new Component1("a", "b"));
-    }
+	@Test
+	public void testHistoryOfId1() {
+		assert getAuditReader().find( ComponentSetTestEntity.class, id1, 1 ).getComps().size() == 0;
+
+		Set<Component1> comps1 = getAuditReader().find( ComponentSetTestEntity.class, id1, 2 ).getComps();
+		assert comps1.size() == 1;
+		assert comps1.contains( new Component1( "a", "b" ) );
+	}
 }

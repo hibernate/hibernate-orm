@@ -23,18 +23,19 @@
  */
 package org.hibernate.dialect;
 
-
 /**
+ * A Dialect for MySQL using the MyISAM engine
+ *
  * @author Gavin King
  */
 public class MySQLMyISAMDialect extends MySQLDialect {
-
+	@Override
 	public String getTableTypeString() {
 		return " type=MyISAM";
 	}
 
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
-
 }

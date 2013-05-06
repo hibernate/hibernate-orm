@@ -23,13 +23,14 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * CacheRegionUtils
  *
  * @author gkeim
  */
+@SuppressWarnings("UnusedDeclaration")
 public abstract class CacheRegionUtils {
 	/**
 	 * HIT_COLOR
@@ -49,51 +50,53 @@ public abstract class CacheRegionUtils {
 	/**
 	 * HIT_FILL_COLOR
 	 */
-	public final static Color HIT_FILL_COLOR = CacheRegionUtils.HIT_COLOR.brighter().brighter().brighter();
+	public static final Color HIT_FILL_COLOR = CacheRegionUtils.HIT_COLOR.brighter().brighter().brighter();
 
 	/**
 	 * MISS_FILL_COLOR
 	 */
-	public final static Color MISS_FILL_COLOR = CacheRegionUtils.MISS_COLOR.brighter().brighter().brighter();
+	public static final Color MISS_FILL_COLOR = CacheRegionUtils.MISS_COLOR.brighter().brighter().brighter();
 
 	/**
 	 * PUT_FILL_COLOR
 	 */
-	public final static Color PUT_FILL_COLOR = CacheRegionUtils.PUT_COLOR.brighter().brighter().brighter();
+	public static final Color PUT_FILL_COLOR = CacheRegionUtils.PUT_COLOR.brighter().brighter().brighter();
 
 	/**
 	 * HIT_DRAW_COLOR
 	 */
-	public final static Color HIT_DRAW_COLOR = CacheRegionUtils.HIT_COLOR.darker();
+	public static final Color HIT_DRAW_COLOR = CacheRegionUtils.HIT_COLOR.darker();
 
 	/**
 	 * MISS_DRAW_COLOR
 	 */
-	public final static Color MISS_DRAW_COLOR = CacheRegionUtils.MISS_COLOR.darker();
+	public static final Color MISS_DRAW_COLOR = CacheRegionUtils.MISS_COLOR.darker();
 
 	/**
 	 * PUT_DRAW_COLOR
 	 */
-	public final static Color PUT_DRAW_COLOR = CacheRegionUtils.PUT_COLOR.darker();
+	public static final Color PUT_DRAW_COLOR = CacheRegionUtils.PUT_COLOR.darker();
 
 
 	/**
-	 * determineShortName
+	 * Determine a short name from the full name
 	 *
-	 * @param fullName
+	 * @param fullName The full name
+	 *
+	 * @return The short name
 	 */
 	public static String determineShortName(String fullName) {
 		String result = fullName;
 
 		if ( fullName != null ) {
-			String[] comps = fullName.split( "\\." );
+			final String[] comps = fullName.split( "\\." );
 			if ( comps.length == 1 ) {
 				return fullName;
 			}
 			boolean truncate = true;
 			for ( int i = 0; i < comps.length; i++ ) {
 				String comp = comps[i];
-				char c = comp.charAt( 0 );
+				final char c = comp.charAt( 0 );
 				if ( truncate && Character.isUpperCase( c ) ) {
 					truncate = false;
 				}
@@ -108,16 +111,18 @@ public abstract class CacheRegionUtils {
 	}
 
 	/**
-	 * join
+	 * Same as Hibernate internal {@link org.hibernate.internal.util.StringHelper#join} methods
 	 *
-	 * @param elements
-	 * @param c
+	 * @param elements The things to join
+	 * @param c The separator between elements
+	 *
+	 * @return The joined string
 	 */
 	private static String join(String[] elements, char c) {
 		if ( elements == null ) {
 			return null;
 		}
-		StringBuilder sb = new StringBuilder();
+		final StringBuilder sb = new StringBuilder();
 		for ( String s : elements ) {
 			sb.append( s ).append( c );
 		}

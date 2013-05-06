@@ -42,7 +42,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.context.spi.AbstractCurrentSessionContext;
-import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -51,39 +50,37 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * A {@link CurrentSessionContext} impl which scopes the notion of current
- * session by the current thread of execution.  Unlike the JTA counterpart,
- * threads do not give us a nice hook to perform any type of cleanup making
- * it questionable for this impl to actually generate Session instances.  In
- * the interest of usability, it was decided to have this default impl
- * actually generate a session upon first request and then clean it up
- * after the {@link org.hibernate.Transaction} associated with that session
- * is committed/rolled-back.  In order for ensuring that happens, the sessions
- * generated here are unusable until after {@link Session#beginTransaction()}
- * has been called. If <tt>close()</tt> is called on a session managed by
- * this class, it will be automatically unbound.
- * <p/>
- * Additionally, the static {@link #bind} and {@link #unbind} methods are
- * provided to allow application code to explicitly control opening and
- * closing of these sessions.  This, with some from of interception,
- * is the preferred approach.  It also allows easy framework integration
- * and one possible approach for implementing long-sessions.
- * <p/>
- * The {@link #buildOrObtainSession}, {@link #isAutoCloseEnabled},
- * {@link #isAutoFlushEnabled}, {@link #getConnectionReleaseMode}, and
- * {@link #buildCleanupSynch} methods are all provided to allow easy
+ * A {@link org.hibernate.context.spi.CurrentSessionContext} impl which scopes the notion of current
+ * session by the current thread of execution.  Unlike the JTA counterpart, threads do not give us a nice
+ * hook to perform any type of cleanup making it questionable for this impl to actually generate Session
+ * instances.  In the interest of usability, it was decided to have this default impl actually generate
+ * a session upon first request and then clean it up after the {@link org.hibernate.Transaction}
+ * associated with that session is committed/rolled-back.  In order for ensuring that happens, the
+ * sessions generated here are unusable until after {@link Session#beginTransaction()} has been
+ * called. If <tt>close()</tt> is called on a session managed by this class, it will be automatically
+ * unbound.
+ *
+ * Additionally, the static {@link #bind} and {@link #unbind} methods are provided to allow application
+ * code to explicitly control opening and closing of these sessions.  This, with some from of interception,
+ * is the preferred approach.  It also allows easy framework integration and one possible approach for
+ * implementing long-sessions.
+ *
+ * The {@link #buildOrObtainSession}, {@link #isAutoCloseEnabled}, {@link #isAutoFlushEnabled},
+ * {@link #getConnectionReleaseMode}, and {@link #buildCleanupSynch} methods are all provided to allow easy
  * subclassing (for long-running session scenarios, for example).
  *
  * @author Steve Ebersole
  */
 public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ThreadLocalSessionContext.class.getName()
+	);
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       ThreadLocalSessionContext.class.getName());
 	private static final Class[] SESSION_PROXY_INTERFACES = new Class[] {
 			Session.class,
-	        SessionImplementor.class,
-	        EventSource.class,
+			SessionImplementor.class,
+			EventSource.class,
 			TransactionContext.class,
 			LobCreationContext.class
 	};
@@ -91,11 +88,16 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	/**
 	 * A ThreadLocal maintaining current sessions for the given execution thread.
 	 * The actual ThreadLocal variable is a java.util.Map to account for
-	 * the possibility for multiple SessionFactorys being used during execution
+	 * the possibility for multiple SessionFactory instances being used during execution
 	 * of the given thread.
 	 */
-	private static final ThreadLocal<Map> context = new ThreadLocal<Map>();
+	private static final ThreadLocal<Map> CONTEXT_TL = new ThreadLocal<Map>();
 
+	/**
+	 * Constructs a ThreadLocal
+	 *
+	 * @param factory The factory this context will service
+	 */
 	public ThreadLocalSessionContext(SessionFactoryImplementor factory) {
 		super( factory );
 	}
@@ -122,10 +124,15 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 
 	private boolean needsWrapping(Session session) {
 		// try to make sure we don't wrap and already wrapped session
-		return session != null
-		       && ! Proxy.isProxyClass( session.getClass() )
-		       || ( Proxy.getInvocationHandler( session ) != null
-		       && ! ( Proxy.getInvocationHandler( session ) instanceof TransactionProtectionWrapper ) );
+		if ( session != null ) {
+			if ( Proxy.isProxyClass( session.getClass() ) ) {
+				final InvocationHandler invocationHandler = Proxy.getInvocationHandler( session );
+				if ( invocationHandler != null && TransactionProtectionWrapper.class.isInstance( invocationHandler ) ) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -138,13 +145,14 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	/**
-	 * Strictly provided for subclassing purposes; specifically to allow long-session
+	 * Strictly provided for sub-classing purposes; specifically to allow long-session
 	 * support.
 	 * <p/>
 	 * This implementation always just opens a new session.
 	 *
 	 * @return the built or (re)obtained session.
 	 */
+	@SuppressWarnings("deprecation")
 	protected Session buildOrObtainSession() {
 		return baseSessionBuilder()
 				.autoClose( isAutoCloseEnabled() )
@@ -153,8 +161,8 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 				.openSession();
 	}
 
-	protected CleanupSynch buildCleanupSynch() {
-		return new CleanupSynch( factory() );
+	protected CleanupSync buildCleanupSynch() {
+		return new CleanupSync( factory() );
 	}
 
 	/**
@@ -185,12 +193,12 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	protected Session wrap(Session session) {
-		TransactionProtectionWrapper wrapper = new TransactionProtectionWrapper( session );
-		Session wrapped = ( Session ) Proxy.newProxyInstance(
+		final TransactionProtectionWrapper wrapper = new TransactionProtectionWrapper( session );
+		final Session wrapped = (Session) Proxy.newProxyInstance(
 				Session.class.getClassLoader(),
 				SESSION_PROXY_INTERFACES,
-		        wrapper
-			);
+				wrapper
+		);
 		// yick!  need this for proper serialization/deserialization handling...
 		wrapper.setWrapped( wrapped );
 		return wrapped;
@@ -202,13 +210,13 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 * @param session The session to bind.
 	 */
 	public static void bind(org.hibernate.Session session) {
-		SessionFactory factory = session.getSessionFactory();
+		final SessionFactory factory = session.getSessionFactory();
 		cleanupAnyOrphanedSession( factory );
 		doBind( session, factory );
 	}
 
 	private static void cleanupAnyOrphanedSession(SessionFactory factory) {
-		Session orphan = doUnbind( factory, false );
+		final Session orphan = doUnbind( factory, false );
 		if ( orphan != null ) {
 			LOG.alreadySessionBound();
 			try {
@@ -239,7 +247,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static Session existingSession(SessionFactory factory) {
-		Map sessionMap = sessionMap();
+		final Map sessionMap = sessionMap();
 		if ( sessionMap == null ) {
 			return null;
 		}
@@ -247,7 +255,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	protected static Map sessionMap() {
-		return context.get();
+		return CONTEXT_TL.get();
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -255,42 +263,38 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		Map sessionMap = sessionMap();
 		if ( sessionMap == null ) {
 			sessionMap = new HashMap();
-			context.set( sessionMap );
+			CONTEXT_TL.set( sessionMap );
 		}
 		sessionMap.put( factory, session );
 	}
 
 	private static Session doUnbind(SessionFactory factory, boolean releaseMapIfEmpty) {
-		Map sessionMap = sessionMap();
 		Session session = null;
+		final Map sessionMap = sessionMap();
 		if ( sessionMap != null ) {
-			session = ( Session ) sessionMap.remove( factory );
+			session = (Session) sessionMap.remove( factory );
 			if ( releaseMapIfEmpty && sessionMap.isEmpty() ) {
-				context.set( null );
+				CONTEXT_TL.set( null );
 			}
 		}
 		return session;
 	}
 
 	/**
-	 * JTA transaction synch used for cleanup of the internal session map.
+	 * Transaction sync used for cleanup of the internal session map.
 	 */
-	protected static class CleanupSynch implements Synchronization, Serializable {
+	protected static class CleanupSync implements Synchronization, Serializable {
 		protected final SessionFactory factory;
 
-		public CleanupSynch(SessionFactory factory) {
+		public CleanupSync(SessionFactory factory) {
 			this.factory = factory;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void beforeCompletion() {
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void afterCompletion(int i) {
 			unbind( factory );
 		}
@@ -304,9 +308,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 			this.realSession = realSession;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 			final String methodName = method.getName(); 
 			try {
@@ -315,13 +317,13 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					unbind( realSession.getSessionFactory() );
 				}
 				else if ( "toString".equals( methodName )
-					     || "equals".equals( methodName )
-					     || "hashCode".equals( methodName )
-				         || "getStatistics".equals( methodName )
-					     || "isOpen".equals( methodName )
-						 || "getListeners".equals( methodName )
-						) {
+						|| "equals".equals( methodName )
+						|| "hashCode".equals( methodName )
+						|| "getStatistics".equals( methodName )
+						|| "isOpen".equals( methodName )
+						|| "getListeners".equals( methodName ) ) {
 					// allow these to go through the the real session no matter what
+					LOG.tracef( "Allowing invocation [%s] to proceed to real session", methodName );
 				}
 				else if ( !realSession.isOpen() ) {
 					// essentially, if the real session is closed allow any
@@ -329,6 +331,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 					// will complain by throwing an appropriate exception;
 					// NOTE that allowing close() above has the same basic effect,
 					//   but we capture that there simply to doAfterTransactionCompletion the unbind...
+					LOG.tracef( "Allowing invocation [%s] to proceed to real (closed) session", methodName );
 				}
 				else if ( !realSession.getTransaction().isActive() ) {
 					// limit the methods available if no transaction is active
@@ -339,21 +342,24 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 							|| "getFactory".equals( methodName )
 							|| "getSessionFactory".equals( methodName )
 							|| "getTenantIdentifier".equals( methodName ) ) {
-						LOG.tracev( "Allowing method [{0}] in non-transacted context", methodName );
+						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session", methodName );
 					}
 					else if ( "reconnect".equals( methodName ) || "disconnect".equals( methodName ) ) {
 						// allow these (deprecated) methods to pass through
+						LOG.tracef( "Allowing invocation [%s] to proceed to real (non-transacted) session - deprecated methods", methodName );
 					}
 					else {
 						throw new HibernateException( methodName + " is not valid without active transaction" );
 					}
 				}
-				LOG.tracev( "Allowing proxied method [{0}] to proceed to real session", methodName );
+				LOG.tracef( "Allowing proxy invocation [%s] to proceed to real session", methodName );
 				return method.invoke( realSession, args );
 			}
 			catch ( InvocationTargetException e ) {
-                if (e.getTargetException() instanceof RuntimeException) throw (RuntimeException)e.getTargetException();
-                throw e;
+				if (e.getTargetException() instanceof RuntimeException) {
+					throw (RuntimeException)e.getTargetException();
+				}
+				throw e;
 			}
 		}
 

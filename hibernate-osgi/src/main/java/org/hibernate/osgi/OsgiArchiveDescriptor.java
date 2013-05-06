@@ -37,18 +37,26 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 
 /**
+ * ArchiveDescriptor implementation for describing archives in the OSGi sense
+ *
  * @author Brett Meyer
  * @author Tim Ward
  */
 public class OsgiArchiveDescriptor implements ArchiveDescriptor {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			OsgiArchiveDescriptor.class.getName()
+	);
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			OsgiArchiveDescriptor.class.getName() );
+	private final Bundle persistenceBundle;
+	private final BundleWiring bundleWiring;
 
-	private BundleWiring bundleWiring;
-
-	private Bundle persistenceBundle;
-
+	/**
+	 * Creates a OsgiArchiveDescriptor
+	 *
+	 * @param persistenceBundle The bundle being described as an archive
+	 */
+	@SuppressWarnings("RedundantCast")
 	public OsgiArchiveDescriptor(Bundle persistenceBundle) {
 		this.persistenceBundle = persistenceBundle;
 		bundleWiring = (BundleWiring) persistenceBundle.adapt( BundleWiring.class );
@@ -56,14 +64,12 @@ public class OsgiArchiveDescriptor implements ArchiveDescriptor {
 
 	@Override
 	public void visitArchive(ArchiveContext context) {
-		Collection<String> resources = bundleWiring.listResources( "/", "*", BundleWiring.LISTRESOURCES_RECURSE );
+		final Collection<String> resources = bundleWiring.listResources( "/", "*", BundleWiring.LISTRESOURCES_RECURSE );
 		for ( final String resource : resources ) {
-			// TODO: Is there a better way to check this?  Karaf is including
-			// directories.
+			// TODO: Is there a better way to check this?  Karaf is including directories.
 			if ( !resource.endsWith( "/" ) ) {
 				try {
 					// TODO: Is using resource as the names correct?
-					
 					final InputStreamAccess inputStreamAccess = new InputStreamAccess() {
 						@Override
 						public String getStreamName() {

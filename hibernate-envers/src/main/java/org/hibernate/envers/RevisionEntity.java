@@ -34,15 +34,15 @@ import java.lang.annotation.Target;
  * and a long-valued property annotated with {@link RevisionTimestamp}. The {@link DefaultRevisionEntity}
  * already has those two fields, so you may extend it, but you may also write your own revision entity
  * from scratch.
- * 
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface RevisionEntity {
-    /**
-     * @return The optional listener that will be used to fill in the custom revision entity.
-     * May also be specified using the {@code org.hibernate.envers.revision_listener} configuration property.
-     */
-    Class<? extends RevisionListener> value() default RevisionListener.class;
+	/**
+	 * The optional listener that will be used to fill in the custom revision entity.
+	 * May also be specified using the {@code org.hibernate.envers.revision_listener} configuration property.
+	 */
+	Class<? extends RevisionListener> value() default RevisionListener.class;
 }

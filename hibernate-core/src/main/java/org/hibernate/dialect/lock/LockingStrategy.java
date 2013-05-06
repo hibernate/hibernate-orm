@@ -51,10 +51,11 @@ public interface LockingStrategy {
 	 * @param object The object logically being locked (currently not used)
 	 * @param timeout timeout in milliseconds, 0 = no wait, -1 = wait indefinitely
 	 * @param session The session from which the lock request originated
+	 *
 	 * @throws StaleObjectStateException Indicates an inability to locate the database row as part of acquiring
 	 * the requested lock.
 	 * @throws LockingStrategyException Indicates a failure in the lock attempt
 	 */
 	public void lock(Serializable id, Object version, Object object, int timeout, SessionImplementor session)
-	throws StaleObjectStateException, LockingStrategyException;
+			throws StaleObjectStateException, LockingStrategyException;
 }

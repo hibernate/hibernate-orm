@@ -45,8 +45,15 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class EnversIntegrator implements Integrator {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EnversIntegrator.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			EnversIntegrator.class.getName()
+	);
 
+	/**
+	 * The name of a configuration setting that can be used to control whether auto registration of envers listeners
+	 * should happen or not.  Default is true
+	 */
 	public static final String AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
 
 	@Override
@@ -54,16 +61,25 @@ public class EnversIntegrator implements Integrator {
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		final boolean autoRegister = ConfigurationHelper.getBoolean( AUTO_REGISTER, configuration.getProperties(), true );
+		final boolean autoRegister = ConfigurationHelper.getBoolean(
+				AUTO_REGISTER,
+				configuration.getProperties(),
+				true
+		);
 		if ( !autoRegister ) {
 			LOG.debug( "Skipping Envers listener auto registration" );
 			return;
 		}
 
-		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
+		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
+		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor(
+				configuration,
+				serviceRegistry.getService(
+						ClassLoaderService.class
+				)
+		);
 
 		appendListeners( listenerRegistry, enversConfiguration );
 	}

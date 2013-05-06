@@ -1,14 +1,15 @@
 package org.hibernate.envers.test.integration.inheritance.tableperclass.abstractparent;
 
-import java.util.Iterator;
 import javax.persistence.EntityManager;
-
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.Iterator;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.mapping.Table;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -18,7 +19,7 @@ import org.hibernate.testing.TestForIssue;
 public class AuditedAbstractParentTest extends BaseEnversJPAFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { AbstractEntity.class, EffectiveEntity1.class };
+		return new Class<?>[] {AbstractEntity.class, EffectiveEntity1.class};
 	}
 
 	@Test

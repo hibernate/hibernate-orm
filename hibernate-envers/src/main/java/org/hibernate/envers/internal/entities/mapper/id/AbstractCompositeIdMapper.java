@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -35,36 +35,39 @@ import org.hibernate.internal.util.ReflectHelper;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractCompositeIdMapper extends AbstractIdMapper implements SimpleIdMapperBuilder {
-    protected Map<PropertyData, SingleIdMapper> ids;
-    protected Class compositeIdClass;
+	protected Map<PropertyData, SingleIdMapper> ids;
+	protected Class compositeIdClass;
 
-    protected AbstractCompositeIdMapper(Class compositeIdClass) {
-        ids = Tools.newLinkedHashMap();
-        this.compositeIdClass = compositeIdClass;
-    }
+	protected AbstractCompositeIdMapper(Class compositeIdClass) {
+		ids = Tools.newLinkedHashMap();
+		this.compositeIdClass = compositeIdClass;
+	}
 
-    public void add(PropertyData propertyData) {
-        ids.put(propertyData, new SingleIdMapper(propertyData));
-    }
+	@Override
+	public void add(PropertyData propertyData) {
+		ids.put( propertyData, new SingleIdMapper( propertyData ) );
+	}
 
-    public Object mapToIdFromMap(Map data) {
-        if (data == null) {
-            return null;
-        }
+	@Override
+	public Object mapToIdFromMap(Map data) {
+		if ( data == null ) {
+			return null;
+		}
 
-        Object ret;
-        try {
-            ret = ReflectHelper.getDefaultConstructor(compositeIdClass).newInstance();
-        } catch (Exception e) {
-            throw new AuditException(e);
-        }
+		final Object ret;
+		try {
+			ret = ReflectHelper.getDefaultConstructor( compositeIdClass ).newInstance();
+		}
+		catch (Exception e) {
+			throw new AuditException( e );
+		}
 
-        for (SingleIdMapper mapper : ids.values()) {
-            if (!mapper.mapToEntityFromMap(ret, data)) {
-                return null;
-            }
-        }
+		for ( SingleIdMapper mapper : ids.values() ) {
+			if ( !mapper.mapToEntityFromMap( ret, data ) ) {
+				return null;
+			}
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 }

@@ -33,6 +33,9 @@ package org.hibernate.dialect;
  * @author Scott Marlow
  */
 public class DerbyTenSixDialect extends DerbyTenFiveDialect {
+	/**
+	 * Constructs a DerbyTenSixDialect
+	 */
 	public DerbyTenSixDialect() {
 		super();
 	}

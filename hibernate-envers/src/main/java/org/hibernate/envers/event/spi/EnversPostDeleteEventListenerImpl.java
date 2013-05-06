@@ -32,6 +32,8 @@ import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * Envers-specific entity (post) deletion event listener
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
@@ -43,30 +45,30 @@ public class EnversPostDeleteEventListenerImpl extends BaseEnversEventListener i
 
 	@Override
 	public void onPostDelete(PostDeleteEvent event) {
-        String entityName = event.getPersister().getEntityName();
+		final String entityName = event.getPersister().getEntityName();
 
-        if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
-            checkIfTransactionInProgress(event.getSession());
+		if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+			checkIfTransactionInProgress( event.getSession() );
 
-            AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get( event.getSession() );
+			final AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get( event.getSession() );
 
-            AuditWorkUnit workUnit = new DelWorkUnit(
+			final AuditWorkUnit workUnit = new DelWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
 					getAuditConfiguration(),
-                    event.getId(),
+					event.getId(),
 					event.getPersister(),
 					event.getDeletedState()
 			);
-            auditProcess.addWorkUnit( workUnit );
+			auditProcess.addWorkUnit( workUnit );
 
-            if ( workUnit.containsWork() ) {
-                generateBidirectionalCollectionChangeWorkUnits(
+			if ( workUnit.containsWork() ) {
+				generateBidirectionalCollectionChangeWorkUnits(
 						auditProcess,
 						event.getPersister(),
 						entityName,
 						null,
-                        event.getDeletedState(),
+						event.getDeletedState(),
 						event.getSession()
 				);
 			}

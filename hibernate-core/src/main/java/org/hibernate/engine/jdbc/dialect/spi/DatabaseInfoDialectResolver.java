@@ -42,7 +42,13 @@ public interface DatabaseInfoDialectResolver extends Service {
 	 */
 	public Dialect resolve(DatabaseInfo databaseInfo);
 
+	/**
+	 * Essentially a "parameter object" for {@link DatabaseInfoDialectResolver#resolve}
+	 */
 	public static interface DatabaseInfo {
+		/**
+		 * Constant used to indicate that no version is defined
+		 */
 		public static final int NO_VERSION = -9999;
 
 		/**

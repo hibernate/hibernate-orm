@@ -36,13 +36,10 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Gail Badner
  */
 public class NonNullableTransientDependencies {
-
 	// Multiple property paths can refer to the same transient entity, so use Set<String>
 	// for the map value.
-	private final Map<Object,Set<String>> propertyPathsByTransientEntity =
-			new IdentityHashMap<Object,Set<String>>();
+	private final Map<Object,Set<String>> propertyPathsByTransientEntity = new IdentityHashMap<Object,Set<String>>();
 
-	/* package-protected */
 	void add(String propertyName, Object transientEntity) {
 		Set<String> propertyPaths = propertyPathsByTransientEntity.get( transientEntity );
 		if ( propertyPaths == null ) {
@@ -56,22 +53,48 @@ public class NonNullableTransientDependencies {
 		return propertyPathsByTransientEntity.keySet();
 	}
 
+	/**
+	 * Retrieve the paths that refer to the transient entity
+	 *
+	 * @param entity The transient entity
+	 *
+	 * @return The property paths
+	 */
 	public Iterable<String> getNonNullableTransientPropertyPaths(Object entity) {
 		return propertyPathsByTransientEntity.get( entity );
 	}
 
+	/**
+	 * Are there any paths currently tracked here?
+	 *
+	 * @return {@code true} indicates there are no path tracked here currently
+	 */
 	public boolean isEmpty() {
 		return propertyPathsByTransientEntity.isEmpty();
 	}
 
+	/**
+	 * Clean up any tracked references for the given entity, throwing an exception if there were any paths.
+	 *
+	 * @param entity The entity
+	 *
+	 * @throws IllegalStateException If the entity had tracked paths
+	 */
 	public void resolveNonNullableTransientEntity(Object entity) {
 		if ( propertyPathsByTransientEntity.remove( entity ) == null ) {
 			throw new IllegalStateException( "Attempt to resolve a non-nullable, transient entity that is not a dependency." );
 		}
 	}
 
+	/**
+	 * Build a loggable representation of the paths tracked here at the moment.
+	 *
+	 * @param session The session (used to resolve entity names)
+	 *
+	 * @return The loggable representation
+	 */
 	public String toLoggableString(SessionImplementor session) {
-		StringBuilder sb = new StringBuilder( getClass().getSimpleName() ).append( '[' );
+		final StringBuilder sb = new StringBuilder( getClass().getSimpleName() ).append( '[' );
 		for ( Map.Entry<Object,Set<String>> entry : propertyPathsByTransientEntity.entrySet() ) {
 			sb.append( "transientEntityName=" ).append( session.bestGuessEntityName( entry.getKey() ) );
 			sb.append( " requiredBy=" ).append( entry.getValue() );

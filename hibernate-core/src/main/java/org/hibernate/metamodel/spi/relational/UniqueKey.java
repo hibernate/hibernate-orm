@@ -51,14 +51,12 @@ public class UniqueKey extends AbstractConstraint {
 
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) {
-		return new String[] { dialect.getUniqueDelegate().applyUniquesOnAlter(
-				this ) };
+		return new String[] { dialect.getUniqueDelegate().getAlterTableToAddUniqueKeyCommand( this ) };
 	}
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) {
-		return new String[] { dialect.getUniqueDelegate().dropUniquesOnAlter(
-				this ) };
+		return new String[] { dialect.getUniqueDelegate().getAlterTableToDropUniqueKeyCommand( this ) };
 	}
 
 	@Override

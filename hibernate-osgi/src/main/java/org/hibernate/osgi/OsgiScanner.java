@@ -20,8 +20,9 @@
  */
 package org.hibernate.osgi;
 
-import org.hibernate.jpa.boot.scan.spi.AbstractScannerImpl;
 import org.osgi.framework.Bundle;
+
+import org.hibernate.jpa.boot.scan.spi.AbstractScannerImpl;
 
 /**
  * OSGi-specific implementation of the Scanner contract. Scans the persistence
@@ -31,7 +32,11 @@ import org.osgi.framework.Bundle;
  * @author Tim Ward
  */
 public class OsgiScanner extends AbstractScannerImpl {
-
+	/**
+	 * Constructs the scanner for finding things in a OSGi bundle
+	 *
+	 * @param persistenceBundle The OSGi Bundle to scan
+	 */
 	public OsgiScanner(Bundle persistenceBundle) {
 		super( new OsgiArchiveDescriptorFactory( persistenceBundle ) );
 	}

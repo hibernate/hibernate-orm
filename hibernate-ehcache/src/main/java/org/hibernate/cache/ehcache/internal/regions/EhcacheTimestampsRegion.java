@@ -38,13 +38,17 @@ import org.hibernate.cache.spi.TimestampsRegion;
  * @author Alex Snaps
  */
 public class EhcacheTimestampsRegion extends EhcacheGeneralDataRegion implements TimestampsRegion {
-
 	/**
 	 * Constructs an EhcacheTimestampsRegion around the given underlying cache.
 	 *
-	 * @param accessStrategyFactory
+	 * @param accessStrategyFactory The factory for building needed CollectionRegionAccessStrategy instance
+	 * @param underlyingCache The ehcache cache instance
+	 * @param properties Any additional[ properties
 	 */
-	public EhcacheTimestampsRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, Properties properties) {
-		super(accessStrategyFactory, underlyingCache, properties);
+	public EhcacheTimestampsRegion(
+			EhcacheAccessStrategyFactory accessStrategyFactory,
+			Ehcache underlyingCache,
+			Properties properties) {
+		super( accessStrategyFactory, underlyingCache, properties );
 	}
 }

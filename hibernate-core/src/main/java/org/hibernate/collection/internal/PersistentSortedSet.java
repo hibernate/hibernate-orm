@@ -25,7 +25,6 @@ package org.hibernate.collection.internal;
 
 import java.io.Serializable;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
@@ -42,17 +41,42 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
  */
 public class PersistentSortedSet extends PersistentSet implements SortedSet {
-
 	protected Comparator comparator;
 
-	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode) 
-	throws HibernateException {
-		//if (set==null) return new Set(session);
-		TreeMap clonedSet = new TreeMap(comparator);
-		Iterator iter = set.iterator();
-		while ( iter.hasNext() ) {
-			Object copy = persister.getElementType().deepCopy( iter.next(), persister.getFactory() );
-			clonedSet.put(copy, copy);
+	/**
+	 * Constructs a PersistentSortedSet.  This form needed for SOAP libraries, etc
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public PersistentSortedSet() {
+	}
+
+	/**
+	 * Constructs a PersistentSortedSet
+	 *
+	 * @param session The session
+	 */
+	public PersistentSortedSet(SessionImplementor session) {
+		super( session );
+	}
+
+	/**
+	 * Constructs a PersistentSortedSet
+	 *
+	 * @param session The session
+	 * @param set The underlying set data
+	 */
+	public PersistentSortedSet(SessionImplementor session, SortedSet set) {
+		super( session, set );
+		comparator = set.comparator();
+	}
+
+	@SuppressWarnings({"unchecked", "UnusedParameters"})
+	protected Serializable snapshot(BasicCollectionPersister persister, EntityMode entityMode)
+			throws HibernateException {
+		final TreeMap clonedSet = new TreeMap( comparator );
+		for ( Object setElement : set ) {
+			final Object copy = persister.getElementType().deepCopy( setElement, persister.getFactory() );
+			clonedSet.put( copy, copy );
 		}
 		return clonedSet;
 	}
@@ -61,106 +85,91 @@ public class PersistentSortedSet extends PersistentSet implements SortedSet {
 		this.comparator = comparator;
 	}
 
-	public PersistentSortedSet(SessionImplementor session) {
-		super(session);
-	}
-
-	public PersistentSortedSet(SessionImplementor session, SortedSet set) {
-		super(session, set);
-		comparator = set.comparator();
-	}
-
-	public PersistentSortedSet() {} //needed for SOAP libraries, etc
-
-	/**
-	 * @see PersistentSortedSet#comparator()
-	 */
+	@Override
 	public Comparator comparator() {
 		return comparator;
 	}
 
-	/**
-	 * @see PersistentSortedSet#subSet(Object,Object)
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public SortedSet subSet(Object fromElement, Object toElement) {
 		read();
-		SortedSet s;
-		s = ( (SortedSet) set ).subSet(fromElement, toElement);
-		return new SubSetProxy(s);
+		final SortedSet subSet = ( (SortedSet) set ).subSet( fromElement, toElement );
+		return new SubSetProxy( subSet );
 	}
 
-	/**
-	 * @see PersistentSortedSet#headSet(Object)
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public SortedSet headSet(Object toElement) {
 		read();
-		SortedSet s = ( (SortedSet) set ).headSet(toElement);
-		return new SubSetProxy(s);
+		final SortedSet headSet = ( (SortedSet) set ).headSet( toElement );
+		return new SubSetProxy( headSet );
 	}
 
-	/**
-	 * @see PersistentSortedSet#tailSet(Object)
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public SortedSet tailSet(Object fromElement) {
 		read();
-		SortedSet s = ( (SortedSet) set ).tailSet(fromElement);
-		return new SubSetProxy(s);
+		final SortedSet tailSet = ( (SortedSet) set ).tailSet( fromElement );
+		return new SubSetProxy( tailSet );
 	}
 
-	/**
-	 * @see PersistentSortedSet#first()
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object first() {
 		read();
 		return ( (SortedSet) set ).first();
 	}
 
-	/**
-	 * @see PersistentSortedSet#last()
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object last() {
 		read();
 		return ( (SortedSet) set ).last();
 	}
 
-	/** wrapper for subSets to propagate write to its backing set */
+	/**
+	 * wrapper for subSets to propagate write to its backing set
+	 */
 	class SubSetProxy extends SetProxy implements SortedSet {
-
 		SubSetProxy(SortedSet s) {
-			super(s);
+			super( s );
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
 		public Comparator comparator() {
 			return ( (SortedSet) this.set ).comparator();
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object first() {
 			return ( (SortedSet) this.set ).first();
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
 		public SortedSet headSet(Object toValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).headSet(toValue) );
+			return new SubSetProxy( ( (SortedSet) this.set ).headSet( toValue ) );
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
 		public Object last() {
 			return ( (SortedSet) this.set ).last();
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
 		public SortedSet subSet(Object fromValue, Object toValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).subSet(fromValue, toValue) );
+			return new SubSetProxy( ( (SortedSet) this.set ).subSet( fromValue, toValue ) );
 		}
 
+		@Override
+		@SuppressWarnings("unchecked")
 		public SortedSet tailSet(Object fromValue) {
-			return new SubSetProxy( ( (SortedSet) this.set ).tailSet(fromValue) );
+			return new SubSetProxy( ( (SortedSet) this.set ).tailSet( fromValue ) );
 		}
-
 	}
-
 }
-
-
-
-
-
-
-

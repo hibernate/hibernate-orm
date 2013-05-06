@@ -29,12 +29,14 @@ import org.hibernate.event.spi.PostCollectionRecreateEvent;
 import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 
 /**
+ * Envers-specific collection recreation event listener
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  */
 public class EnversPostCollectionRecreateEventListenerImpl
-		extends  BaseEnversCollectionEventListener
+		extends BaseEnversCollectionEventListener
 		implements PostCollectionRecreateEventListener {
 
 	protected EnversPostCollectionRecreateEventListenerImpl(AuditConfiguration enversConfiguration) {
@@ -43,9 +45,9 @@ public class EnversPostCollectionRecreateEventListenerImpl
 
 	@Override
 	public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
-        CollectionEntry collectionEntry = getCollectionEntry( event );
-        if ( ! collectionEntry.getLoadedPersister().isInverse() ) {
-            onCollectionAction( event, event.getCollection(), null, collectionEntry );
-        }
+		final CollectionEntry collectionEntry = getCollectionEntry( event );
+		if ( !collectionEntry.getLoadedPersister().isInverse() ) {
+			onCollectionAction( event, event.getCollection(), null, collectionEntry );
+		}
 	}
 }

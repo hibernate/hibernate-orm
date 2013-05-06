@@ -31,6 +31,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
@@ -102,8 +103,11 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 		EventSource source = event.getSession();
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( CascadingActions.LOCK, Cascade.AFTER_LOCK, source)
-					.cascade( persister, entity, event.getLockOptions() );
+			new Cascade( CascadingActions.LOCK, CascadePoint.AFTER_LOCK, source).cascade(
+					persister,
+					entity,
+					event.getLockOptions()
+			);
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();

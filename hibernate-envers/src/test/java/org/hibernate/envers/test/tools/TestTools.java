@@ -78,7 +78,7 @@ public class TestTools {
 	public static List<Integer> extractRevisionNumbers(List queryResults) {
 		final List<Integer> result = new ArrayList<Integer>();
 		for ( Object queryResult : queryResults ) {
-			result.add( ( (SequenceIdRevisionEntity) ( (Object[]) queryResult )[1] ).getId() );
+			result.add( ((SequenceIdRevisionEntity) ((Object[]) queryResult)[1]).getId() );
 		}
 		return result;
 	}

@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.entities.ids;
 
-import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.io.Serializable;
 
 import org.hibernate.envers.Audited;
 
@@ -27,13 +27,21 @@ public class UnusualIdNamingEntity implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( !( o instanceof UnusualIdNamingEntity) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof UnusualIdNamingEntity) ) {
+			return false;
+		}
 
 		UnusualIdNamingEntity that = (UnusualIdNamingEntity) o;
 
-		if ( uniqueField != null ? !uniqueField.equals( that.uniqueField ) : that.uniqueField != null ) return false;
-		if ( variousData != null ? !variousData.equals( that.variousData ) : that.variousData != null ) return false;
+		if ( uniqueField != null ? !uniqueField.equals( that.uniqueField ) : that.uniqueField != null ) {
+			return false;
+		}
+		if ( variousData != null ? !variousData.equals( that.variousData ) : that.variousData != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -41,7 +49,7 @@ public class UnusualIdNamingEntity implements Serializable {
 	@Override
 	public int hashCode() {
 		int result = uniqueField != null ? uniqueField.hashCode() : 0;
-		result = 31 * result + ( variousData != null ? variousData.hashCode() : 0 );
+		result = 31 * result + (variousData != null ? variousData.hashCode() : 0);
 		return result;
 	}
 

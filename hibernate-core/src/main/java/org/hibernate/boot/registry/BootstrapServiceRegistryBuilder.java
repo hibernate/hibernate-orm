@@ -32,8 +32,8 @@ import java.util.Set;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
-import org.hibernate.boot.registry.selector.Availability;
-import org.hibernate.boot.registry.selector.AvailabilityAnnouncer;
+import org.hibernate.boot.registry.selector.StrategyRegistration;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
@@ -169,23 +169,23 @@ public class BootstrapServiceRegistryBuilder {
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public <T> BootstrapServiceRegistryBuilder withStrategySelector(Class<T> strategy, String name, Class<? extends T> implementation) {
-		this.strategySelectorBuilder.addExplicitAvailability( strategy, implementation, name );
+		this.strategySelectorBuilder.addExplicitStrategyRegistration( strategy, implementation, name );
 		return this;
 	}
 
 	/**
 	 * Applies one or more strategy selectors announced as available by the passed announcer.
 	 *
-	 * @param availabilityAnnouncer An announcer for one or more available selectors
+	 * @param strategyRegistrationProvider An provider for one or more available selectors
 	 *
 	 * @return {@code this}, for method chaining
 	 *
 	 * @see org.hibernate.boot.registry.selector.spi.StrategySelector#registerStrategyImplementor(Class, String, Class)
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public BootstrapServiceRegistryBuilder withStrategySelectors(AvailabilityAnnouncer availabilityAnnouncer) {
-		for ( Availability availability : availabilityAnnouncer.getAvailabilities() ) {
-			this.strategySelectorBuilder.addExplicitAvailability( availability );
+	public BootstrapServiceRegistryBuilder withStrategySelectors(StrategyRegistrationProvider strategyRegistrationProvider) {
+		for ( StrategyRegistration strategyRegistration : strategyRegistrationProvider.getStrategyRegistrations() ) {
+			this.strategySelectorBuilder.addExplicitStrategyRegistration( strategyRegistration );
 		}
 		return this;
 	}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<blueprint  default-activation="eager" 
+            xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <bean id="integrator" class="org.hibernate.envers.event.spi.EnversIntegrator"/>
+  <service ref="integrator" interface="org.hibernate.integrator.spi.Integrator"/>
+
+  <bean id="typeContributor" class="org.hibernate.envers.internal.entities.TypeContributorImpl"/>
+  <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/>
+  
+</blueprint>

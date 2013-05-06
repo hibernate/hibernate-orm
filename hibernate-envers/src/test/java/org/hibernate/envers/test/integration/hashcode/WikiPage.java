@@ -1,12 +1,13 @@
 package org.hibernate.envers.test.integration.hashcode;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -78,13 +79,21 @@ public class WikiPage {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof WikiPage)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof WikiPage) ) {
+			return false;
+		}
 
 		WikiPage wikiPage = (WikiPage) o;
 
-		if (content != null ? !content.equals(wikiPage.content) : wikiPage.content != null) return false;
-		if (title != null ? !title.equals(wikiPage.title) : wikiPage.title != null) return false;
+		if ( content != null ? !content.equals( wikiPage.content ) : wikiPage.content != null ) {
+			return false;
+		}
+		if ( title != null ? !title.equals( wikiPage.title ) : wikiPage.title != null ) {
+			return false;
+		}
 
 		return true;
 	}

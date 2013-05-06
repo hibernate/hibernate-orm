@@ -245,8 +245,12 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 			renderSQL();
 		}
 		catch ( QueryException qe ) {
-			qe.setQueryString( queryString );
-			throw qe;
+			if ( qe.getQueryString() == null ) {
+				throw qe.wrapWithQueryString( queryString );
+			}
+			else {
+				throw qe;
+			}
 		}
 		catch ( MappingException me ) {
 			throw me;
@@ -254,9 +258,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		catch ( Exception e ) {
 			LOG.debug( "Unexpected query compilation problem", e );
 			e.printStackTrace();
-			QueryException qe = new QueryException( "Incorrect query syntax", e );
-			qe.setQueryString( queryString );
-			throw qe;
+			throw new QueryException( "Incorrect query syntax", queryString, e );
 		}
 
 		postInstantiate();
@@ -548,9 +550,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
     public int[] getNamedParameterLocs(String name) throws QueryException {
 		Object o = namedParameters.get( name );
 		if ( o == null ) {
-			QueryException qe = new QueryException( ERROR_NAMED_PARAMETER_DOES_NOT_APPEAR + name );
-			qe.setQueryString( queryString );
-			throw qe;
+			throw new QueryException( ERROR_NAMED_PARAMETER_DOES_NOT_APPEAR + name, queryString );
 		}
 		if ( o instanceof Integer ) return new int[] { (Integer) o };
 		else {

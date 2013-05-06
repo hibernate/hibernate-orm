@@ -1,22 +1,23 @@
 package org.hibernate.envers.test.integration.manytomany.unidirectional;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.HashSet;
-import javax.persistence.EntityManager;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.JoinTableEntity;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@TestForIssue( jiraKey = "HHH-8087" )
+@TestForIssue(jiraKey = "HHH-8087")
 public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 	private Long collectionEntityId = null;
 	private Integer element1Id = null;
@@ -24,7 +25,7 @@ public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { JoinTableEntity.class, StrTestEntity.class };
+		return new Class<?>[] {JoinTableEntity.class, StrTestEntity.class};
 	}
 
 	@Test
@@ -93,9 +94,14 @@ public class JoinTableDetachedTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevisionsCounts() {
-		Assert.assertEquals( Arrays.asList( 1, 2, 3, 4, 5 ), getAuditReader().getRevisions(JoinTableEntity.class, collectionEntityId ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions(StrTestEntity.class, element1Id ) );
-		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions(StrTestEntity.class, element2Id ) );
+		Assert.assertEquals(
+				Arrays.asList( 1, 2, 3, 4, 5 ), getAuditReader().getRevisions(
+				JoinTableEntity.class,
+				collectionEntityId
+		)
+		);
+		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, element1Id ) );
+		Assert.assertEquals( Arrays.asList( 1 ), getAuditReader().getRevisions( StrTestEntity.class, element2Id ) );
 	}
 
 	@Test

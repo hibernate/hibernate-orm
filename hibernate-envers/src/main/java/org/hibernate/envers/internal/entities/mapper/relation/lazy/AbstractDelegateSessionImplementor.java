@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -56,22 +56,22 @@ import org.hibernate.type.Type;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-@SuppressWarnings( {"deprecation"})
+@SuppressWarnings({"deprecation"})
 public abstract class AbstractDelegateSessionImplementor implements SessionImplementor {
-    protected SessionImplementor delegate;
+	protected SessionImplementor delegate;
 
-    public AbstractDelegateSessionImplementor(SessionImplementor delegate) {
-        this.delegate = delegate;
-    }
+	public AbstractDelegateSessionImplementor(SessionImplementor delegate) {
+		this.delegate = delegate;
+	}
 
-    public abstract Object doImmediateLoad(String entityName);
+	public abstract Object doImmediateLoad(String entityName);
 
 	@Override
-    public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
-        return doImmediateLoad(entityName);
-    }
+	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
+		return doImmediateLoad( entityName );
+	}
 
-    // Delegate methods
+	// Delegate methods
 
 
 	@Override
@@ -106,13 +106,13 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 
 	@Override
 	public Interceptor getInterceptor() {
-        return delegate.getInterceptor();
-    }
+		return delegate.getInterceptor();
+	}
 
 	@Override
-    public void setAutoClear(boolean enabled) {
-        delegate.setAutoClear(enabled);
-    }
+	public void setAutoClear(boolean enabled) {
+		delegate.setAutoClear( enabled );
+	}
 
 	@Override
 	public void disableTransactionAutoJoin() {
@@ -121,148 +121,154 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 
 	@Override
 	public boolean isTransactionInProgress() {
-        return delegate.isTransactionInProgress();
-    }
+		return delegate.isTransactionInProgress();
+	}
 
 	@Override
-    public void initializeCollection(PersistentCollection collection, boolean writing) throws HibernateException {
-        delegate.initializeCollection(collection, writing);
-    }
+	public void initializeCollection(PersistentCollection collection, boolean writing) throws HibernateException {
+		delegate.initializeCollection( collection, writing );
+	}
 
 	@Override
-    public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable) throws HibernateException {
-        return delegate.internalLoad(entityName, id, eager, nullable);
-    }
+	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
+			throws HibernateException {
+		return delegate.internalLoad( entityName, id, eager, nullable );
+	}
 
 	@Override
-    public long getTimestamp() {
-        return delegate.getTimestamp();
-    }
+	public long getTimestamp() {
+		return delegate.getTimestamp();
+	}
 
 	@Override
-    public SessionFactoryImplementor getFactory() {
-        return delegate.getFactory();
-    }
+	public SessionFactoryImplementor getFactory() {
+		return delegate.getFactory();
+	}
 
 	@Override
-    public List list(String query, QueryParameters queryParameters) throws HibernateException {
-        return delegate.list(query, queryParameters);
-    }
+	public List list(String query, QueryParameters queryParameters) throws HibernateException {
+		return delegate.list( query, queryParameters );
+	}
 
 	@Override
-    public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
-        return delegate.iterate(query, queryParameters);
-    }
+	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
+		return delegate.iterate( query, queryParameters );
+	}
 
 	@Override
-    public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
-        return delegate.scroll(query, queryParameters);
-    }
+	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
+		return delegate.scroll( query, queryParameters );
+	}
 
 	@Override
-    public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
-        return delegate.scroll(criteria, scrollMode);
-    }
+	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
+		return delegate.scroll( criteria, scrollMode );
+	}
 
 	@Override
-    public List list(Criteria criteria) {
-        return delegate.list(criteria);
-    }
+	public List list(Criteria criteria) {
+		return delegate.list( criteria );
+	}
 
 	@Override
-    public List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
-        return delegate.listFilter(collection, filter, queryParameters);
-    }
+	public List listFilter(Object collection, String filter, QueryParameters queryParameters)
+			throws HibernateException {
+		return delegate.listFilter( collection, filter, queryParameters );
+	}
 
 	@Override
-    public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException {
-        return delegate.iterateFilter(collection, filter, queryParameters);
-    }
+	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
+			throws HibernateException {
+		return delegate.iterateFilter( collection, filter, queryParameters );
+	}
 
 	@Override
-    public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
-        return delegate.getEntityPersister(entityName, object);
-    }
+	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
+		return delegate.getEntityPersister( entityName, object );
+	}
 
 	@Override
-    public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
-        return delegate.getEntityUsingInterceptor(key);
-    }
+	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
+		return delegate.getEntityUsingInterceptor( key );
+	}
 
 	@Override
-    public Serializable getContextEntityIdentifier(Object object) {
-        return delegate.getContextEntityIdentifier(object);
-    }
+	public Serializable getContextEntityIdentifier(Object object) {
+		return delegate.getContextEntityIdentifier( object );
+	}
 
 	@Override
-    public String bestGuessEntityName(Object object) {
-        return delegate.bestGuessEntityName(object);
-    }
+	public String bestGuessEntityName(Object object) {
+		return delegate.bestGuessEntityName( object );
+	}
 
 	@Override
-    public String guessEntityName(Object entity) throws HibernateException {
-        return delegate.guessEntityName(entity);
-    }
+	public String guessEntityName(Object entity) throws HibernateException {
+		return delegate.guessEntityName( entity );
+	}
 
 	@Override
-    public Object instantiate(String entityName, Serializable id) throws HibernateException {
-        return delegate.instantiate(entityName, id);
-    }
+	public Object instantiate(String entityName, Serializable id) throws HibernateException {
+		return delegate.instantiate( entityName, id );
+	}
 
 	@Override
-    public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-        return delegate.listCustomQuery(customQuery, queryParameters);
-    }
+	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
+		return delegate.listCustomQuery( customQuery, queryParameters );
+	}
 
 	@Override
-    public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters) throws HibernateException {
-        return delegate.scrollCustomQuery(customQuery, queryParameters);
-    }
+	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
+			throws HibernateException {
+		return delegate.scrollCustomQuery( customQuery, queryParameters );
+	}
 
 	@Override
-    public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-        return delegate.list(spec, queryParameters);
-    }
+	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
+		return delegate.list( spec, queryParameters );
+	}
 
 	@Override
-    public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-        return delegate.scroll(spec, queryParameters);
-    }
+	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
+			throws HibernateException {
+		return delegate.scroll( spec, queryParameters );
+	}
 
 	@Override
-    public Object getFilterParameterValue(String filterParameterName) {
-        return delegate.getFilterParameterValue(filterParameterName);
-    }
+	public Object getFilterParameterValue(String filterParameterName) {
+		return delegate.getFilterParameterValue( filterParameterName );
+	}
 
 	@Override
-    public Type getFilterParameterType(String filterParameterName) {
-        return delegate.getFilterParameterType(filterParameterName);
-    }
+	public Type getFilterParameterType(String filterParameterName) {
+		return delegate.getFilterParameterType( filterParameterName );
+	}
 
 	@Override
-    public Map getEnabledFilters() {
-        return delegate.getEnabledFilters();
-    }
+	public Map getEnabledFilters() {
+		return delegate.getEnabledFilters();
+	}
 
 	@Override
-    public int getDontFlushFromFind() {
-        return delegate.getDontFlushFromFind();
-    }
+	public int getDontFlushFromFind() {
+		return delegate.getDontFlushFromFind();
+	}
 
 	@Override
-    public PersistenceContext getPersistenceContext() {
-        return delegate.getPersistenceContext();
-    }
+	public PersistenceContext getPersistenceContext() {
+		return delegate.getPersistenceContext();
+	}
 
 	@Override
-    public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
-        return delegate.executeUpdate(query, queryParameters);
-    }
+	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
+		return delegate.executeUpdate( query, queryParameters );
+	}
 
 	@Override
-    public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException {
-        return delegate.executeNativeUpdate(specification, queryParameters);
-    }
+	public int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters)
+			throws HibernateException {
+		return delegate.executeNativeUpdate( specification, queryParameters );
+	}
 
 	@Override
 	public NonFlushedChanges getNonFlushedChanges() throws HibernateException {
@@ -275,74 +281,74 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 	}
 
 	@Override
-    public CacheMode getCacheMode() {
-        return delegate.getCacheMode();
-    }
+	public CacheMode getCacheMode() {
+		return delegate.getCacheMode();
+	}
 
 	@Override
-    public void setCacheMode(CacheMode cm) {
-        delegate.setCacheMode(cm);
-    }
+	public void setCacheMode(CacheMode cm) {
+		delegate.setCacheMode( cm );
+	}
 
 	@Override
-    public boolean isOpen() {
-        return delegate.isOpen();
-    }
+	public boolean isOpen() {
+		return delegate.isOpen();
+	}
 
 	@Override
-    public boolean isConnected() {
-        return delegate.isConnected();
-    }
+	public boolean isConnected() {
+		return delegate.isConnected();
+	}
 
 	@Override
-    public FlushMode getFlushMode() {
-        return delegate.getFlushMode();
-    }
+	public FlushMode getFlushMode() {
+		return delegate.getFlushMode();
+	}
 
 	@Override
-    public void setFlushMode(FlushMode fm) {
-        delegate.setFlushMode(fm);
-    }
+	public void setFlushMode(FlushMode fm) {
+		delegate.setFlushMode( fm );
+	}
 
 	@Override
-    public Connection connection() {
-        return delegate.connection();
-    }
+	public Connection connection() {
+		return delegate.connection();
+	}
 
 	@Override
-    public void flush() {
-        delegate.flush();
-    }
+	public void flush() {
+		delegate.flush();
+	}
 
 	@Override
-    public Query getNamedQuery(String name) {
-        return delegate.getNamedQuery(name);
-    }
+	public Query getNamedQuery(String name) {
+		return delegate.getNamedQuery( name );
+	}
 
 	@Override
-    public Query getNamedSQLQuery(String name) {
-        return delegate.getNamedSQLQuery(name);
-    }
+	public Query getNamedSQLQuery(String name) {
+		return delegate.getNamedSQLQuery( name );
+	}
 
 	@Override
-    public boolean isEventSource() {
-        return delegate.isEventSource();
-    }
+	public boolean isEventSource() {
+		return delegate.isEventSource();
+	}
 
 	@Override
-    public void afterScrollOperation() {
-        delegate.afterScrollOperation();
-    }
+	public void afterScrollOperation() {
+		delegate.afterScrollOperation();
+	}
 
 	@Override
-    public void setFetchProfile(String name) {
-        delegate.setFetchProfile(name);
-    }
+	public void setFetchProfile(String name) {
+		delegate.setFetchProfile( name );
+	}
 
 	@Override
-    public String getFetchProfile() {
-        return delegate.getFetchProfile();
-    }
+	public String getFetchProfile() {
+		return delegate.getFetchProfile();
+	}
 
 	@Override
 	public TransactionCoordinator getTransactionCoordinator() {
@@ -351,6 +357,6 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 
 	@Override
 	public boolean isClosed() {
-        return delegate.isClosed();
-    }
+		return delegate.isClosed();
+	}
 }

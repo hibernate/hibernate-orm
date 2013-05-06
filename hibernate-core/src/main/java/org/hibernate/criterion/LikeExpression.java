@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.criterion;
+
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -51,16 +51,12 @@ public class LikeExpression implements Criterion {
 		this.ignoreCase = ignoreCase;
 	}
 
-	protected LikeExpression(
-			String propertyName,
-			String value) {
+	protected LikeExpression(String propertyName, String value) {
 		this( propertyName, value, null, false );
 	}
 
-	protected LikeExpression(
-			String propertyName,
-			String value,
-			MatchMode matchMode) {
+	@SuppressWarnings("UnusedDeclaration")
+	protected LikeExpression(String propertyName, String value, MatchMode matchMode) {
 		this( propertyName, matchMode.toMatchString( value ) );
 	}
 
@@ -73,16 +69,16 @@ public class LikeExpression implements Criterion {
 		this( propertyName, matchMode.toMatchString( value ), escapeChar, ignoreCase );
 	}
 
-	public String toSqlString(
-			Criteria criteria,
-			CriteriaQuery criteriaQuery) throws HibernateException {
-		Dialect dialect = criteriaQuery.getFactory().getDialect();
-		String[] columns = criteriaQuery.findColumns(propertyName, criteria);
+	@Override
+	public String toSqlString(Criteria criteria,CriteriaQuery criteriaQuery) {
+		final Dialect dialect = criteriaQuery.getFactory().getDialect();
+		final String[] columns = criteriaQuery.findColumns( propertyName, criteria );
 		if ( columns.length != 1 ) {
 			throw new HibernateException( "Like may only be used with single-column properties" );
 		}
-		String escape = escapeChar == null ? "" : " escape \'" + escapeChar + "\'";
-		String column = columns[0];
+
+		final String escape = escapeChar == null ? "" : " escape \'" + escapeChar + "\'";
+		final String column = columns[0];
 		if ( ignoreCase ) {
 			if ( dialect.supportsCaseInsensitiveLike() ) {
 				return column +" " + dialect.getCaseInsensitiveLike() + " ?" + escape;
@@ -96,11 +92,10 @@ public class LikeExpression implements Criterion {
 		}
 	}
 
-	public TypedValue[] getTypedValues(
-			Criteria criteria,
-			CriteriaQuery criteriaQuery) throws HibernateException {
-		return new TypedValue[] {
-				criteriaQuery.getTypedValue( criteria, propertyName, ignoreCase ? value.toString().toLowerCase() : value.toString() )
-		};
+	@Override
+	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) {
+		final String matchValue = ignoreCase ? value.toString().toLowerCase() : value.toString();
+
+		return new TypedValue[] { criteriaQuery.getTypedValue( criteria, propertyName, matchValue ) };
 	}
 }

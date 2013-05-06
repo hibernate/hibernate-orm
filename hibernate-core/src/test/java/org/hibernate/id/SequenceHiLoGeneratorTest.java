@@ -34,7 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.TestingDatabaseInfo;
+import org.hibernate.testing.env.TestingDatabaseInfo;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -85,7 +85,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 			}
 		} );
 
-		Dialect dialect = new H2Dialect();
+		Dialect dialect = TestingDatabaseInfo.DIALECT;
 
 		generator = new SequenceHiLoGenerator();
 		generator.configure( StandardBasicTypes.LONG, properties, dialect );

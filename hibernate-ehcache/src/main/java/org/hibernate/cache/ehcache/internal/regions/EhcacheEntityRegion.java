@@ -33,7 +33,6 @@ import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
-import org.hibernate.cfg.Settings;
 
 /**
  * An entity region specific wrapper around an Ehcache instance.
@@ -46,12 +45,11 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implements EntityRegion {
-
-
     /**
      * Constructs an EhcacheEntityRegion around the given underlying cache.
      *
-     * @param accessStrategyFactory
+	 * @param accessStrategyFactory The factory for building needed EntityRegionAccessStrategy instance
+	 * @param underlyingCache The ehcache cache instance
      */
     public EhcacheEntityRegion(EhcacheAccessStrategyFactory accessStrategyFactory, Ehcache underlyingCache, boolean isMinimalPutsEnabled,
                                CacheDataDescription metadata, Properties properties) {
@@ -62,6 +60,7 @@ public class EhcacheEntityRegion extends EhcacheTransactionalDataRegion implemen
      * {@inheritDoc}
      */
     public EntityRegionAccessStrategy buildAccessStrategy(AccessType accessType) throws CacheException {
-        return accessStrategyFactory.createEntityRegionAccessStrategy( this, accessType );
+        return getAccessStrategyFactory().createEntityRegionAccessStrategy( this, accessType );
     }
 }
+

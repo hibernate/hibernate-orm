@@ -30,6 +30,9 @@ import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
 /**
+ * A specialized Connection provider contract used when the application is using multi-tenancy support requiring
+ * tenant aware connections.
+ *
  * @author Steve Ebersole
  */
 public interface MultiTenantConnectionProvider extends Service, Wrapped {

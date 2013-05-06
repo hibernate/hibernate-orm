@@ -21,10 +21,11 @@ import org.hibernate.usertype.UserType;
  * Custom type used to persist binary representation of Java object in the database.
  * Spans over two columns - one storing text representation of Java class name and the second one
  * containing binary data.
+ *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ObjectUserType implements UserType {
-	private static final int[] TYPES = new int[] { Types.VARCHAR, Types.BLOB };
+	private static final int[] TYPES = new int[] {Types.VARCHAR, Types.BLOB};
 
 	@Override
 	public int[] sqlTypes() {
@@ -38,8 +39,12 @@ public class ObjectUserType implements UserType {
 
 	@Override
 	public boolean equals(Object x, Object y) throws HibernateException {
-		if ( x == y ) return true;
-		if ( x == null || y == null ) return false;
+		if ( x == y ) {
+			return true;
+		}
+		if ( x == null || y == null ) {
+			return false;
+		}
 		return x.equals( y );
 	}
 
@@ -77,7 +82,7 @@ public class ObjectUserType implements UserType {
 			objectOutputStream.flush();
 			return new ByteArrayInputStream( byteArrayOutputStream.toByteArray() );
 		}
-		catch ( IOException e ) {
+		catch (IOException e) {
 			throw new RuntimeException( e );
 		}
 		finally {
@@ -91,7 +96,7 @@ public class ObjectUserType implements UserType {
 			objectInputStream = new ObjectInputStream( inputStream );
 			return objectInputStream.readObject();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
 		finally {
@@ -104,7 +109,7 @@ public class ObjectUserType implements UserType {
 			try {
 				stream.close();
 			}
-			catch ( IOException e ) {
+			catch (IOException e) {
 			}
 		}
 	}
@@ -114,7 +119,7 @@ public class ObjectUserType implements UserType {
 			try {
 				stream.close();
 			}
-			catch ( IOException e ) {
+			catch (IOException e) {
 			}
 		}
 	}

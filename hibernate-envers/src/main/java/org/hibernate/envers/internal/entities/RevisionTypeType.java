@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -32,78 +32,84 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.IntegerType;
 import org.hibernate.usertype.UserType;
 
 /**
  * A hibernate type for the {@link RevisionType} enum.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class RevisionTypeType implements UserType, Serializable {
-    private static final long serialVersionUID = -1053201518229282688L;
-    
-    private static final int[] SQL_TYPES = { Types.TINYINT };
+	private static final long serialVersionUID = -1053201518229282688L;
 
-    public int[] sqlTypes() {
-        return SQL_TYPES;
-    }
+	private static final int[] SQL_TYPES = {Types.TINYINT};
 
-    public Class returnedClass() {
-        return RevisionType.class;
-    }
+	@Override
+	public int[] sqlTypes() {
+		return SQL_TYPES;
+	}
 
-    public RevisionType nullSafeGet(ResultSet resultSet, String[] names, SessionImplementor session, Object owner) throws HibernateException, SQLException {
-		Integer representationInt = IntegerType.INSTANCE.nullSafeGet( resultSet, names[0], session );
+	@Override
+	public Class returnedClass() {
+		return RevisionType.class;
+	}
+
+	@Override
+	public RevisionType nullSafeGet(ResultSet resultSet, String[] names, SessionImplementor session, Object owner)
+			throws HibernateException, SQLException {
+		final Integer representationInt = IntegerType.INSTANCE.nullSafeGet( resultSet, names[0], session );
 		return representationInt == null ?
 				null :
 				RevisionType.fromRepresentation( representationInt.byteValue() );
-    }
+	}
 
-    public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index, SessionImplementor session) throws HibernateException, SQLException {
+	@Override
+	public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index, SessionImplementor session)
+			throws HibernateException, SQLException {
 		IntegerType.INSTANCE.nullSafeSet(
 				preparedStatement,
-				( value == null ? null : ((RevisionType) value).getRepresentation().intValue() ),
+				(value == null ? null : ((RevisionType) value).getRepresentation().intValue()),
 				index,
 				session
 		);
-    }
+	}
 
-    public Object deepCopy(Object value) throws HibernateException{
-        return value;
-    }
+	@Override
+	public Object deepCopy(Object value) throws HibernateException {
+		return value;
+	}
 
-    public boolean isMutable() {
-        return false;
-    }
+	@Override
+	public boolean isMutable() {
+		return false;
+	}
 
-    public Object assemble(Serializable cached, Object owner) throws HibernateException {
-        return cached;
-    }
+	@Override
+	public Object assemble(Serializable cached, Object owner) throws HibernateException {
+		return cached;
+	}
 
-    public Serializable disassemble(Object value) throws HibernateException {
-        return (Serializable)value;
-    }
+	@Override
+	public Serializable disassemble(Object value) throws HibernateException {
+		return (Serializable) value;
+	}
 
-    public Object replace(Object original, Object target, Object owner) throws HibernateException {
-        return original;
-    }
+	@Override
+	public Object replace(Object original, Object target, Object owner) throws HibernateException {
+		return original;
+	}
 
-    public int hashCode(Object x) throws HibernateException {
-        return x.hashCode();
-    }
+	@Override
+	public int hashCode(Object x) throws HibernateException {
+		return x.hashCode();
+	}
 
-    public boolean equals(Object x, Object y) throws HibernateException {
-        //noinspection ObjectEquality
-        if (x == y) {
-            return true;
-        }
-
-        if (null == x || null == y) {
-            return false;
-        }
-
-        return x.equals(y);
-    }
+	@Override
+	public boolean equals(Object x, Object y) throws HibernateException {
+		return EqualsHelper.equals( x, y );
+	}
 }
 
 

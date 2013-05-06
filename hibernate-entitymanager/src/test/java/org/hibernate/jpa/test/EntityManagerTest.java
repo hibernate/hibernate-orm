@@ -186,7 +186,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 	public void testContains() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Integer nonManagedObject = new Integer( 4 );
+		Integer nonManagedObject = Integer.valueOf( 4 );
 		try {
 			em.contains( nonManagedObject );
 			fail( "Should have raised an exception" );

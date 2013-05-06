@@ -41,6 +41,11 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 		this.factory = factory;
 	}
 
+	/**
+	 * Access to the SessionFactory
+	 *
+	 * @return The SessionFactory being serviced by this context
+	 */
 	public SessionFactoryImplementor factory() {
 		return factory;
 	}

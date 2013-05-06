@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -31,14 +32,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  */
 public class AnsiTrimFunction extends TrimFunctionTemplate {
 	protected String render(Options options, String trimSource, SessionFactoryImplementor factory) {
-		return new StringBuilder()
-				.append( "trim(" )
-				.append( options.getTrimSpecification().getName() )
-				.append( ' ' )
-				.append( options.getTrimCharacter() )
-				.append( " from " )
-				.append( trimSource )
-				.append( ')' )
-				.toString();
+		return String.format(
+				"trim(%s %s from %s)",
+				options.getTrimSpecification().getName(),
+				options.getTrimCharacter(),
+				trimSource
+		);
 	}
 }

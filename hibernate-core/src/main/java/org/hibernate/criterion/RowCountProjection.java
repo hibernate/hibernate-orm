@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2010, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,11 +22,13 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.criterion;
+
 import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.type.Type;
 
 /**
@@ -35,30 +37,30 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class RowCountProjection extends SimpleProjection {
-	private static List ARGS = java.util.Collections.singletonList( "*" );
+	private static final List ARGS = java.util.Collections.singletonList( "*" );
 
-	public String toString() {
-		return "count(*)";
-	}
-
+	@Override
 	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
-		return new Type[] {
-				getFunction( criteriaQuery ).getReturnType( null, criteriaQuery.getFactory() )
-		};
+		final Type countFunctionReturnType = getFunction( criteriaQuery ).getReturnType( null, criteriaQuery.getFactory() );
+		return new Type[] { countFunctionReturnType };
 	}
 
+	@Override
 	public String toSqlString(Criteria criteria, int position, CriteriaQuery criteriaQuery) throws HibernateException {
-		return getFunction( criteriaQuery ).render( null, ARGS, criteriaQuery.getFactory() )
-				+ " as y" + position + '_';
+		return getFunction( criteriaQuery ).render( null, ARGS, criteriaQuery.getFactory() ) + " as y" + position + '_';
 	}
 
 	protected SQLFunction getFunction(CriteriaQuery criteriaQuery) {
-		SQLFunction function = criteriaQuery.getFactory()
-				.getSqlFunctionRegistry()
-				.findSQLFunction( "count" );
+		final SQLFunctionRegistry sqlFunctionRegistry = criteriaQuery.getFactory().getSqlFunctionRegistry();
+		final SQLFunction function = sqlFunctionRegistry.findSQLFunction( "count" );
 		if ( function == null ) {
 			throw new HibernateException( "Unable to locate count function mapping" );
 		}
 		return function;
+	}
+
+	@Override
+	public String toString() {
+		return "count(*)";
 	}
 }

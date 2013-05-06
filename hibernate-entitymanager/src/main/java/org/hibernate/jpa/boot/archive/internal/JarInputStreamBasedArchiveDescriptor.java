@@ -52,6 +52,13 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 			JarInputStreamBasedArchiveDescriptor.class.getName()
 	);
 
+	/**
+	 * Constructs a JarInputStreamBasedArchiveDescriptor
+	 *
+	 * @param archiveDescriptorFactory The factory creating this
+	 * @param url The url to the JAR file
+	 * @param entry The prefix for entries within the JAR url
+	 */
 	public JarInputStreamBasedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL url,
@@ -74,7 +81,7 @@ public class JarInputStreamBasedArchiveDescriptor extends AbstractArchiveDescrip
 		try {
 			JarEntry jarEntry;
 			while ( ( jarEntry = jarInputStream.getNextJarEntry() ) != null ) {
-				String jarEntryName = jarEntry.getName();
+				final String jarEntryName = jarEntry.getName();
 				if ( getEntryBasePrefix() != null && ! jarEntryName.startsWith( getEntryBasePrefix() ) ) {
 					continue;
 				}

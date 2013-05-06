@@ -32,6 +32,8 @@ import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * Envers-specific entity (post) update event listener
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
@@ -43,43 +45,41 @@ public class EnversPostUpdateEventListenerImpl extends BaseEnversEventListener i
 
 	@Override
 	public void onPostUpdate(PostUpdateEvent event) {
-        String entityName = event.getPersister().getEntityName();
+		final String entityName = event.getPersister().getEntityName();
 
-        if ( getAuditConfiguration().getEntCfg().isVersioned(entityName) ) {
-            checkIfTransactionInProgress(event.getSession());
+		if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+			checkIfTransactionInProgress( event.getSession() );
 
-            AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
-
+			final AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get( event.getSession() );
 			final Object[] newDbState = postUpdateDBState( event );
-
-            AuditWorkUnit workUnit = new ModWorkUnit(
+			final AuditWorkUnit workUnit = new ModWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
 					getAuditConfiguration(),
-                    event.getId(),
+					event.getId(),
 					event.getPersister(),
 					newDbState,
 					event.getOldState()
 			);
-            auditProcess.addWorkUnit( workUnit );
+			auditProcess.addWorkUnit( workUnit );
 
-            if ( workUnit.containsWork() ) {
-                generateBidirectionalCollectionChangeWorkUnits(
+			if ( workUnit.containsWork() ) {
+				generateBidirectionalCollectionChangeWorkUnits(
 						auditProcess,
 						event.getPersister(),
 						entityName,
 						newDbState,
-                        event.getOldState(),
+						event.getOldState(),
 						event.getSession()
 				);
-            }
-        }
+			}
+		}
 	}
 
 	private Object[] postUpdateDBState(PostUpdateEvent event) {
-		Object[] newDbState = event.getState().clone();
+		final Object[] newDbState = event.getState().clone();
 		if ( event.getOldState() != null ) {
-			EntityPersister entityPersister = event.getPersister();
+			final EntityPersister entityPersister = event.getPersister();
 			for ( int i = 0; i < entityPersister.getPropertyNames().length; ++i ) {
 				if ( !entityPersister.getPropertyUpdateability()[i] ) {
 					// Assuming that PostUpdateEvent#getOldState() returns database state of the record before modification.

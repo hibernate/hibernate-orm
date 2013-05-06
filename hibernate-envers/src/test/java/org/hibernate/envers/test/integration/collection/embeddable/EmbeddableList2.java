@@ -23,16 +23,17 @@
  */
 package org.hibernate.envers.test.integration.collection.embeddable;
 
-import java.util.Arrays;
 import javax.persistence.EntityManager;
-
-import org.junit.Test;
+import java.util.Arrays;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrTestNoProxyEntity;
 import org.hibernate.envers.test.entities.collection.EmbeddableListEntity2;
 import org.hibernate.envers.test.entities.components.relations.ManyToOneEagerComponent;
+
+import org.junit.Test;
+
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -45,7 +46,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author thiagolrc
  */
-@TestForIssue( jiraKey = "HHH-6613" )
+@TestForIssue(jiraKey = "HHH-6613")
 public class EmbeddableList2 extends BaseEnversJPAFunctionalTestCase {
 	private Integer ele_id1 = null;
 
@@ -61,7 +62,7 @@ public class EmbeddableList2 extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EmbeddableListEntity2.class, StrTestNoProxyEntity.class };
+		return new Class<?>[] {EmbeddableListEntity2.class, StrTestNoProxyEntity.class};
 	}
 
 	@Test
@@ -97,7 +98,9 @@ public class EmbeddableList2 extends BaseEnversJPAFunctionalTestCase {
 		ele1 = em.find( EmbeddableListEntity2.class, ele1.getId() );
 		em.persist( entity3 );
 		ele1.getComponentList().get( ele1.getComponentList().indexOf( manyToOneComponent2 ) ).setEntity( entity3 );
-		ele1.getComponentList().get( ele1.getComponentList().indexOf( manyToOneComponent2 ) ).setData( "dataComponent3" );
+		ele1.getComponentList()
+				.get( ele1.getComponentList().indexOf( manyToOneComponent2 ) )
+				.setData( "dataComponent3" );
 		em.getTransaction().commit();
 
 		// Revision 5 (ele1: adding a new many-to-one component)
@@ -111,7 +114,10 @@ public class EmbeddableList2 extends BaseEnversJPAFunctionalTestCase {
 		// Revision 6 (ele1: changing the component's entity properties)
 		em.getTransaction().begin();
 		ele1 = em.find( EmbeddableListEntity2.class, ele1.getId() );
-		ele1.getComponentList().get( ele1.getComponentList().indexOf( manyToOneComponent4 ) ).getEntity().setStr( "sat4" );
+		ele1.getComponentList()
+				.get( ele1.getComponentList().indexOf( manyToOneComponent4 ) )
+				.getEntity()
+				.setStr( "sat4" );
 		em.getTransaction().commit();
 
 		// Revision 7 (ele1: removing component)

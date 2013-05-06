@@ -27,12 +27,14 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 
 /**
  * Provides a function to get the name of a property, which is used in a query, to apply some restrictions on it.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public interface PropertyNameGetter {
-    /**
-     * @param auditCfg Audit configuration.
-     * @return Name of the property, to be used in a query.
-     */
-    public String get(AuditConfiguration auditCfg);
+	/**
+	 * @param auditCfg Audit configuration.
+	 *
+	 * @return Name of the property, to be used in a query.
+	 */
+	public String get(AuditConfiguration auditCfg);
 }

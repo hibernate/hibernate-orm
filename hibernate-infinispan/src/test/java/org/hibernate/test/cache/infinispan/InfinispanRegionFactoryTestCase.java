@@ -28,6 +28,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -47,6 +48,7 @@ import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.testing.ServiceRegistryBuilder;
@@ -619,21 +621,27 @@ public class InfinispanRegionFactoryTestCase {
 	}
 
 	private SessionFactoryImplementor createSessionFactory(final EmbeddedCacheManager manager, Properties p) {
-		Properties properties = new Properties();
+		Map properties = new HashMap();
 		properties.putAll( p );
+
+		InfinispanRegionFactory regionFactory = createRegionFactory( manager, p );
 		properties.put(
-				RegionFactoryInitiator.IMPL_NAME,
-				createRegionFactory( manager, p )
+				AvailableSettings.CACHE_REGION_FACTORY,
+				regionFactory
 		);
 		properties.put( AvailableSettings.JTA_PLATFORM, JBossStandAloneJtaPlatform.class.getName() );
-		org.hibernate.cfg.Configuration cfg = new org.hibernate.cfg.Configuration();
-		cfg.setProperties( properties );
+//		org.hibernate.cfg.Configuration cfg = new org.hibernate.cfg.Configuration();
+//		cfg.setProperties( properties );
+
+
 		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( properties );
-		return (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+		return  (SessionFactoryImplementor) metadataSources.buildMetadata().buildSessionFactory();
+//		return (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
 	}
 
 	private InfinispanRegionFactory createRegionFactory(final EmbeddedCacheManager manager, Properties p) {
-		final InfinispanRegionFactory factory = new SingleNodeTestCase.TestInfinispanRegionFactory() {
+		return new SingleNodeTestCase.TestInfinispanRegionFactory() {
 
 			@Override
 			protected org.infinispan.transaction.lookup.TransactionManagerLookup createTransactionManagerLookup(ServiceRegistry sr) {
@@ -659,7 +667,6 @@ public class InfinispanRegionFactoryTestCase {
 
 		};
 
-		return factory;
 	}
 
 }

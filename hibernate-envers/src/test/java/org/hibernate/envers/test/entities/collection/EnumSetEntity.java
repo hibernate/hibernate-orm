@@ -22,14 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.collection;
-import java.util.HashSet;
-import java.util.Set;
+
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.envers.Audited;
 
@@ -38,68 +39,75 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class EnumSetEntity {
-    public static enum E1 { X, Y }
-    public static enum E2 { A, B }
+	public static enum E1 {X, Y}
 
-    @Id
-    @GeneratedValue
-    private Integer id;
+	public static enum E2 {A, B}
 
-    @Audited
-    @ElementCollection
-    @Enumerated(EnumType.STRING)
-    private Set<E1> enums1;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Audited
-    @ElementCollection
-    @Enumerated(EnumType.ORDINAL)
-    private Set<E2> enums2;
+	@Audited
+	@ElementCollection
+	@Enumerated(EnumType.STRING)
+	private Set<E1> enums1;
 
-    public EnumSetEntity() {
-        enums1 = new HashSet<E1>();
-        enums2 = new HashSet<E2>();
-    }
+	@Audited
+	@ElementCollection
+	@Enumerated(EnumType.ORDINAL)
+	private Set<E2> enums2;
 
-    public Integer getId() {
-        return id;
-    }
+	public EnumSetEntity() {
+		enums1 = new HashSet<E1>();
+		enums2 = new HashSet<E2>();
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public Set<E1> getEnums1() {
-        return enums1;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public void setEnums1(Set<E1> enums1) {
-        this.enums1 = enums1;
-    }
+	public Set<E1> getEnums1() {
+		return enums1;
+	}
 
-    public Set<E2> getEnums2() {
-        return enums2;
-    }
+	public void setEnums1(Set<E1> enums1) {
+		this.enums1 = enums1;
+	}
 
-    public void setEnums2(Set<E2> enums2) {
-        this.enums2 = enums2;
-    }
+	public Set<E2> getEnums2() {
+		return enums2;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof EnumSetEntity)) return false;
+	public void setEnums2(Set<E2> enums2) {
+		this.enums2 = enums2;
+	}
 
-        EnumSetEntity that = (EnumSetEntity) o;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof EnumSetEntity) ) {
+			return false;
+		}
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		EnumSetEntity that = (EnumSetEntity) o;
 
-        return true;
-    }
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-    public int hashCode() {
-        return (id != null ? id.hashCode() : 0);
-    }
+		return true;
+	}
 
-    public String toString() {
-        return "ESE(id = " + id + ", enums1 = " + enums1 + ", enums2 = " + enums2 + ")";
-    }
+	public int hashCode() {
+		return (id != null ? id.hashCode() : 0);
+	}
+
+	public String toString() {
+		return "ESE(id = " + id + ", enums1 = " + enums1 + ", enums2 = " + enums2 + ")";
+	}
 }

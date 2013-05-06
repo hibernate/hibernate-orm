@@ -31,7 +31,6 @@ import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
 import org.hibernate.cache.spi.EntityRegion;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.cfg.Settings;
 
 /**
  * JTA EntityRegionAccessStrategy.
@@ -56,43 +55,33 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 		this.ehcache = ehcache;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean afterInsert(Object key, Object value, Object version) {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object get(Object key, long txTimestamp) throws CacheException {
 		try {
-			Element element = ehcache.get( key );
+			final Element element = ehcache.get( key );
 			return element == null ? null : element.getObjectValue();
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			throw new CacheException( e );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public EntityRegion getRegion() {
-		return region;
+		return region();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean insert(Object key, Object value, Object version)
 			throws CacheException {
 		//OptimisticCache? versioning?
@@ -100,23 +89,23 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 			ehcache.put( new Element( key, value ) );
 			return true;
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			throw new CacheException( e );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public SoftLock lockItem(Object key, Object version) throws CacheException {
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean putFromLoad(Object key, Object value, long txTimestamp,
-							   Object version, boolean minimalPutOverride) throws CacheException {
+	@Override
+	public boolean putFromLoad(
+			Object key,
+			Object value,
+			long txTimestamp,
+			Object version,
+			boolean minimalPutOverride) throws CacheException {
 		try {
 			if ( minimalPutOverride && ehcache.get( key ) != null ) {
 				return false;
@@ -125,41 +114,37 @@ public class TransactionalEhcacheEntityRegionAccessStrategy extends AbstractEhca
 			ehcache.put( new Element( key, value ) );
 			return true;
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			throw new CacheException( e );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void remove(Object key) throws CacheException {
 		try {
 			ehcache.remove( key );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			throw new CacheException( e );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void unlockItem(Object key, SoftLock lock) throws CacheException {
 		// no-op
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public boolean update(Object key, Object value, Object currentVersion,
-						  Object previousVersion) throws CacheException {
+	@Override
+	public boolean update(
+			Object key,
+			Object value,
+			Object currentVersion,
+			Object previousVersion) throws CacheException {
 		try {
 			ehcache.put( new Element( key, value ) );
 			return true;
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			throw new CacheException( e );
 		}
 	}

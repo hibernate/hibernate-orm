@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import org.jboss.logging.Logger;
@@ -48,27 +49,52 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class PersistentArrayHolder extends AbstractPersistentCollection {
-	protected Object array;
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			PersistentArrayHolder.class.getName()
+	);
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PersistentArrayHolder.class.getName());
+	protected Object array;
 
 	//just to help out during the load (ugly, i know)
 	private transient Class elementClass;
 	private transient java.util.List tempList;
 
+	/**
+	 * Constructs a PersistentCollection instance for holding an array.
+	 *
+	 * @param session The session
+	 * @param array The array (the persistent "collection").
+	 */
 	public PersistentArrayHolder(SessionImplementor session, Object array) {
-		super(session);
+		super( session );
 		this.array = array;
 		setInitialized();
 	}
 
+	/**
+	 * Constructs a PersistentCollection instance for holding an array.
+	 *
+	 * @param session The session
+	 * @param persister The persister for the array
+	 */
+	public PersistentArrayHolder(SessionImplementor session, CollectionPersister persister) {
+		super( session );
+		elementClass = persister.getElementClass();
+	}
+
+
+
+	@Override
 	public Serializable getSnapshot(CollectionPersister persister) throws HibernateException {
-		int length = /*(array==null) ? tempList.size() :*/ Array.getLength(array);
-		Serializable result = (Serializable) Array.newInstance( persister.getElementClass(), length );
+//		final int length = (array==null) ? tempList.size() : Array.getLength( array );
+		final int length = Array.getLength( array );
+		final Serializable result = (Serializable) Array.newInstance( persister.getElementClass(), length );
 		for ( int i=0; i<length; i++ ) {
-			Object elt = /*(array==null) ? tempList.get(i) :*/ Array.get(array, i);
+//			final Object elt = (array==null) ? tempList.get( i ) : Array.get( array, i );
+			final Object elt = Array.get( array, i );
 			try {
-				Array.set( result, i, persister.getElementType().deepCopy(elt, persister.getFactory()) );
+				Array.set( result, i, persister.getElementType().deepCopy( elt, persister.getFactory() ) );
 			}
 			catch (IllegalArgumentException iae) {
 				LOG.invalidArrayElementType( iae.getMessage() );
@@ -78,70 +104,84 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		return result;
 	}
 
+	@Override
 	public boolean isSnapshotEmpty(Serializable snapshot) {
 		return Array.getLength( snapshot ) == 0;
 	}
 
 	@Override
 	public Collection getOrphans(Serializable snapshot, String entityName) throws HibernateException {
-		Object[] sn = (Object[]) snapshot;
-		Object[] arr = (Object[]) array;
-		ArrayList result = new ArrayList();
-		for (int i=0; i<sn.length; i++) result.add( sn[i] );
-		for (int i=0; i<sn.length; i++) identityRemove( result, arr[i], entityName, getSession() );
+		final Object[] sn = (Object[]) snapshot;
+		final Object[] arr = (Object[]) array;
+		final ArrayList result = new ArrayList();
+		Collections.addAll( result, sn );
+		for ( int i=0; i<sn.length; i++ ) {
+			identityRemove( result, arr[i], entityName, getSession() );
+		}
 		return result;
 	}
 
-	public PersistentArrayHolder(SessionImplementor session, CollectionPersister persister) throws HibernateException {
-		super(session);
-		elementClass = persister.getElementClass();
-	}
-
+	@SuppressWarnings("UnusedDeclaration")
 	public Object getArray() {
 		return array;
 	}
 
+	@Override
 	public boolean isWrapper(Object collection) {
 		return array==collection;
 	}
 
+	@Override
 	public boolean equalsSnapshot(CollectionPersister persister) throws HibernateException {
-		Type elementType = persister.getElementType();
-		Serializable snapshot = getSnapshot();
-		int xlen = Array.getLength(snapshot);
-		if ( xlen!= Array.getLength(array) ) return false;
+		final Type elementType = persister.getElementType();
+		final Serializable snapshot = getSnapshot();
+		final int xlen = Array.getLength( snapshot );
+		if ( xlen!= Array.getLength( array ) ) {
+			return false;
+		}
 		for ( int i=0; i<xlen; i++) {
-			if ( elementType.isDirty( Array.get(snapshot, i), Array.get(array, i), getSession() ) ) return false;
+			if ( elementType.isDirty( Array.get( snapshot, i ), Array.get( array, i ), getSession() ) ) {
+				return false;
+			}
 		}
 		return true;
 	}
 
+	/**
+	 * Get an iterator over the array elements
+	 *
+	 * @return The iterator
+	 */
+	@SuppressWarnings("unchecked")
 	public Iterator elements() {
-		//if (array==null) return tempList.iterator();
-		int length = Array.getLength(array);
-		java.util.List list = new ArrayList(length);
-		for (int i=0; i<length; i++) {
-			list.add( Array.get(array, i) );
+		final int length = Array.getLength( array );
+		final java.util.List list = new ArrayList( length );
+		for ( int i=0; i<length; i++ ) {
+			list.add( Array.get( array, i ) );
 		}
 		return list.iterator();
 	}
+
 	@Override
 	public boolean empty() {
 		return false;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public Object readFrom(ResultSet rs, CollectionPersister persister, CollectionAliases descriptor, Object owner)
 	throws HibernateException, SQLException {
-
-		Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
-		int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
+		final Object element = persister.readElement( rs, owner, descriptor.getSuffixedElementAliases(), getSession() );
+		final int index = (Integer) persister.readIndex( rs, descriptor.getSuffixedIndexAliases(), getSession() );
 		for ( int i = tempList.size(); i<=index; i++) {
-			tempList.add(i, null);
+			tempList.add( i, null );
 		}
-		tempList.set(index, element);
+		tempList.set( index, element );
 		return element;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public Iterator entries(CollectionPersister persister) {
 		return elements();
 	}
@@ -151,30 +191,32 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		super.beginRead();
 		tempList = new ArrayList();
 	}
+
 	@Override
-    public boolean endRead() {
+	public boolean endRead() {
 		setInitialized();
 		array = Array.newInstance( elementClass, tempList.size() );
-		for ( int i=0; i<tempList.size(); i++) {
-			Array.set(array, i, tempList.get(i) );
+		for ( int i=0; i<tempList.size(); i++ ) {
+			Array.set( array, i, tempList.get( i ) );
 		}
-		tempList=null;
+		tempList = null;
 		return true;
 	}
 
+	@Override
 	public void beforeInitialize(CollectionPersister persister, int anticipatedSize) {
 		//if (tempList==null) throw new UnsupportedOperationException("Can't lazily initialize arrays");
 	}
 
 	@Override
-    public boolean isDirectlyAccessible() {
+	public boolean isDirectlyAccessible() {
 		return true;
 	}
 
+	@Override
 	public void initializeFromCache(CollectionPersister persister, Serializable disassembled, Object owner)
-	throws HibernateException {
-		Serializable[] cached = (Serializable[]) disassembled;
-
+			throws HibernateException {
+		final Serializable[] cached = (Serializable[]) disassembled;
 		array = Array.newInstance( persister.getElementClass(), cached.length );
 
 		for ( int i=0; i<cached.length; i++ ) {
@@ -182,74 +224,79 @@ public class PersistentArrayHolder extends AbstractPersistentCollection {
 		}
 	}
 
+	@Override
 	public Serializable disassemble(CollectionPersister persister) throws HibernateException {
-		int length = Array.getLength(array);
-		Serializable[] result = new Serializable[length];
+		final int length = Array.getLength( array );
+		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().disassemble( Array.get(array,i), getSession(), null );
+			result[i] = persister.getElementType().disassemble( Array.get( array,i ), getSession(), null );
 		}
 
-		/*int length = tempList.size();
-		Serializable[] result = new Serializable[length];
-		for ( int i=0; i<length; i++ ) {
-			result[i] = persister.getElementType().disassemble( tempList.get(i), session );
-		}*/
-
 		return result;
-
 	}
 
 	@Override
-    public Object getValue() {
+	public Object getValue() {
 		return array;
 	}
 
+	@Override
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		java.util.List<Integer> deletes = new ArrayList<Integer>();
-		Serializable sn = getSnapshot();
-		int snSize = Array.getLength(sn);
-		int arraySize = Array.getLength(array);
+		final java.util.List<Integer> deletes = new ArrayList<Integer>();
+		final Serializable sn = getSnapshot();
+		final int snSize = Array.getLength( sn );
+		final int arraySize = Array.getLength( array );
 		int end;
 		if ( snSize > arraySize ) {
-			for ( int i=arraySize; i<snSize; i++ ) deletes.add( i );
+			for ( int i=arraySize; i<snSize; i++ ) {
+				deletes.add( i );
+			}
 			end = arraySize;
 		}
 		else {
 			end = snSize;
 		}
 		for ( int i=0; i<end; i++ ) {
-			if ( Array.get(array, i)==null && Array.get(sn, i)!=null ) deletes.add( i );
+			if ( Array.get( array, i ) == null && Array.get( sn, i ) != null ) {
+				deletes.add( i );
+			}
 		}
 		return deletes.iterator();
 	}
 
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
-		Serializable sn = getSnapshot();
-		return Array.get(array, i)!=null && ( i >= Array.getLength(sn) || Array.get(sn, i)==null );
+		final Serializable sn = getSnapshot();
+		return Array.get( array, i ) != null && ( i >= Array.getLength( sn ) || Array.get( sn, i ) == null );
 	}
 
+	@Override
 	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
-		Serializable sn = getSnapshot();
-		return i<Array.getLength(sn) &&
-				Array.get(sn, i)!=null &&
-				Array.get(array, i)!=null &&
-				elemType.isDirty( Array.get(array, i), Array.get(sn, i), getSession() );
+		final Serializable sn = getSnapshot();
+		return i < Array.getLength( sn )
+				&& Array.get( sn, i ) != null
+				&& Array.get( array, i ) != null
+				&& elemType.isDirty( Array.get( array, i ), Array.get( sn, i ), getSession() );
 	}
 
+	@Override
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
 		return i;
 	}
 
+	@Override
 	public Object getElement(Object entry) {
 		return entry;
 	}
 
+	@Override
 	public Object getSnapshotElement(Object entry, int i) {
-		Serializable sn = getSnapshot();
-		return Array.get(sn, i);
+		final Serializable sn = getSnapshot();
+		return Array.get( sn, i );
 	}
 
+	@Override
 	public boolean entryExists(Object entry, int i) {
-		return entry!=null;
+		return entry != null;
 	}
 }

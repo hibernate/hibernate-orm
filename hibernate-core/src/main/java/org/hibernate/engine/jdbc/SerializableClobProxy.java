@@ -43,7 +43,7 @@ import org.hibernate.internal.util.ClassLoaderHelper;
 public class SerializableClobProxy implements InvocationHandler, Serializable {
 	private static final Class[] PROXY_INTERFACES = new Class[] { Clob.class, WrappedClob.class, Serializable.class };
 
-	private transient final Clob clob;
+	private final transient Clob clob;
 
 	/**
 	 * Builds a serializable {@link java.sql.Clob} wrapper around the given {@link java.sql.Clob}.
@@ -55,6 +55,11 @@ public class SerializableClobProxy implements InvocationHandler, Serializable {
 		this.clob = clob;
 	}
 
+	/**
+	 * Access to the wrapped Clob reference
+	 *
+	 * @return The wrapped Clob reference
+	 */
 	public Clob getWrappedClob() {
 		if ( clob == null ) {
 			throw new IllegalStateException( "Clobs may not be accessed after serialization" );
@@ -87,11 +92,7 @@ public class SerializableClobProxy implements InvocationHandler, Serializable {
 	 * @return The generated proxy.
 	 */
 	public static Clob generateProxy(Clob clob) {
-		return ( Clob ) Proxy.newProxyInstance(
-				getProxyClassLoader(),
-				PROXY_INTERFACES,
-				new SerializableClobProxy( clob )
-		);
+		return (Clob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new SerializableClobProxy( clob ) );
 	}
 
 	/**

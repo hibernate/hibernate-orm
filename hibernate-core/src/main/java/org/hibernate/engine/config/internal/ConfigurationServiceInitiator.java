@@ -30,11 +30,17 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * The ServiceInitiator for the ConfigurationService
+ *
  * @author Steve Ebersole
  */
 public class ConfigurationServiceInitiator implements StandardServiceInitiator<ConfigurationService> {
+	/**
+	 * Singleton access
+	 */
 	public static final ConfigurationServiceInitiator INSTANCE = new ConfigurationServiceInitiator();
 
+	@Override
 	public ConfigurationService initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		return new ConfigurationServiceImpl( configurationValues );
 	}

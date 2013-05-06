@@ -23,70 +23,70 @@
  */
 package org.hibernate.envers.test.integration.inheritance.single;
 
-import java.util.Arrays;
 import javax.persistence.EntityManager;
-
-import org.junit.Test;
+import java.util.Arrays;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+
+import org.junit.Test;
 
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class ChildAuditing extends BaseEnversJPAFunctionalTestCase {
-    private Integer id1;
+	private Integer id1;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { ChildEntity.class, ParentEntity.class };
+		return new Class[] {ChildEntity.class, ParentEntity.class};
 	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        EntityManager em = getEntityManager();
+	@Test
+	@Priority(10)
+	public void initData() {
+		EntityManager em = getEntityManager();
 
-        // Rev 1
-        em.getTransaction().begin();
-        ChildEntity ce = new ChildEntity("x", 1l);
-        em.persist(ce);
-        id1 = ce.getId();
-        em.getTransaction().commit();
+		// Rev 1
+		em.getTransaction().begin();
+		ChildEntity ce = new ChildEntity( "x", 1l );
+		em.persist( ce );
+		id1 = ce.getId();
+		em.getTransaction().commit();
 
-        // Rev 2
-        em.getTransaction().begin();
-        ce = em.find(ChildEntity.class, id1);
-        ce.setData("y");
-        ce.setNumVal(2l);
-        em.getTransaction().commit();
-    }
+		// Rev 2
+		em.getTransaction().begin();
+		ce = em.find( ChildEntity.class, id1 );
+		ce.setData( "y" );
+		ce.setNumVal( 2l );
+		em.getTransaction().commit();
+	}
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1, 2).equals(getAuditReader().getRevisions(ChildEntity.class, id1));
-    }
+	@Test
+	public void testRevisionsCounts() {
+		assert Arrays.asList( 1, 2 ).equals( getAuditReader().getRevisions( ChildEntity.class, id1 ) );
+	}
 
-    @Test
-    public void testHistoryOfChildId1() {
-        ChildEntity ver1 = new ChildEntity(id1, "x", 1l);
-        ChildEntity ver2 = new ChildEntity(id1, "y", 2l);
+	@Test
+	public void testHistoryOfChildId1() {
+		ChildEntity ver1 = new ChildEntity( id1, "x", 1l );
+		ChildEntity ver2 = new ChildEntity( id1, "y", 2l );
 
-        assert getAuditReader().find(ChildEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(ChildEntity.class, id1, 2).equals(ver2);
+		assert getAuditReader().find( ChildEntity.class, id1, 1 ).equals( ver1 );
+		assert getAuditReader().find( ChildEntity.class, id1, 2 ).equals( ver2 );
 
-        assert getAuditReader().find(ParentEntity.class, id1, 1).equals(ver1);
-        assert getAuditReader().find(ParentEntity.class, id1, 2).equals(ver2);
-    }
+		assert getAuditReader().find( ParentEntity.class, id1, 1 ).equals( ver1 );
+		assert getAuditReader().find( ParentEntity.class, id1, 2 ).equals( ver2 );
+	}
 
-    @Test
-    public void testPolymorphicQuery() {
-        ChildEntity childVer1 = new ChildEntity(id1, "x", 1l);
+	@Test
+	public void testPolymorphicQuery() {
+		ChildEntity childVer1 = new ChildEntity( id1, "x", 1l );
 
-        assert getAuditReader().createQuery().forEntitiesAtRevision(ChildEntity.class, 1).getSingleResult()
-                .equals(childVer1);
+		assert getAuditReader().createQuery().forEntitiesAtRevision( ChildEntity.class, 1 ).getSingleResult()
+				.equals( childVer1 );
 
-        assert getAuditReader().createQuery().forEntitiesAtRevision(ParentEntity.class, 1).getSingleResult()
-                .equals(childVer1);
-    }
+		assert getAuditReader().createQuery().forEntitiesAtRevision( ParentEntity.class, 1 ).getSingleResult()
+				.equals( childVer1 );
+	}
 }

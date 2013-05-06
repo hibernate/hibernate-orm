@@ -7,64 +7,73 @@ import javax.persistence.ManyToOne;
 
 /**
  * Custom detail of revision entity.
+ *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
 public class ModifiedEntityTypeEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @ManyToOne
-    private CustomTrackingRevisionEntity revision;
-    
-    private String entityClassName;
+	@ManyToOne
+	private CustomTrackingRevisionEntity revision;
 
-    public ModifiedEntityTypeEntity() {
-    }
+	private String entityClassName;
 
-    public ModifiedEntityTypeEntity(String entityClassName) {
-        this.entityClassName = entityClassName;
-    }
+	public ModifiedEntityTypeEntity() {
+	}
 
-    public ModifiedEntityTypeEntity(CustomTrackingRevisionEntity revision, String entityClassName) {
-        this.revision = revision;
-        this.entityClassName = entityClassName;
-    }
+	public ModifiedEntityTypeEntity(String entityClassName) {
+		this.entityClassName = entityClassName;
+	}
 
-    public CustomTrackingRevisionEntity getRevision() {
-        return revision;
-    }
+	public ModifiedEntityTypeEntity(CustomTrackingRevisionEntity revision, String entityClassName) {
+		this.revision = revision;
+		this.entityClassName = entityClassName;
+	}
 
-    public void setRevision(CustomTrackingRevisionEntity revision) {
-        this.revision = revision;
-    }
+	public CustomTrackingRevisionEntity getRevision() {
+		return revision;
+	}
 
-    public String getEntityClassName() {
-        return entityClassName;
-    }
+	public void setRevision(CustomTrackingRevisionEntity revision) {
+		this.revision = revision;
+	}
 
-    public void setEntityClassName(String entityClassName) {
-        this.entityClassName = entityClassName;
-    }
+	public String getEntityClassName() {
+		return entityClassName;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ModifiedEntityTypeEntity)) return false;
+	public void setEntityClassName(String entityClassName) {
+		this.entityClassName = entityClassName;
+	}
 
-        ModifiedEntityTypeEntity that = (ModifiedEntityTypeEntity) o;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ModifiedEntityTypeEntity) ) {
+			return false;
+		}
 
-        if (entityClassName != null ? !entityClassName.equals(that.entityClassName) : that.entityClassName != null) return false;
+		ModifiedEntityTypeEntity that = (ModifiedEntityTypeEntity) o;
 
-        return true;
-    }
+		if ( entityClassName != null ?
+				!entityClassName.equals( that.entityClassName ) :
+				that.entityClassName != null ) {
+			return false;
+		}
 
-    public int hashCode() {
-        return entityClassName != null ? entityClassName.hashCode() : 0;
-    }
+		return true;
+	}
 
-    @Override
-    public String toString() {
-        return "CustomTrackingRevisionEntity(entityClassName = " + entityClassName + ")";
-    }
+	public int hashCode() {
+		return entityClassName != null ? entityClassName.hashCode() : 0;
+	}
+
+	@Override
+	public String toString() {
+		return "CustomTrackingRevisionEntity(entityClassName = " + entityClassName + ")";
+	}
 }

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -33,17 +34,17 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 public class PrimitiveTestEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Audited
-    private int numVal1;
+	@Audited
+	private int numVal1;
 
 	private int numVal2;
 
-    public PrimitiveTestEntity() {
-    }
+	public PrimitiveTestEntity() {
+	}
 
 	public PrimitiveTestEntity(int numVal1, int numVal2) {
 		this.numVal1 = numVal1;
@@ -57,20 +58,20 @@ public class PrimitiveTestEntity {
 	}
 
 	public Integer getId() {
-        return id;
-    }
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Integer getNumVal1() {
-        return numVal1;
-    }
+	public Integer getNumVal1() {
+		return numVal1;
+	}
 
-    public void setNumVal1(Integer numVal1) {
-        this.numVal1 = numVal1;
-    }
+	public void setNumVal1(Integer numVal1) {
+		this.numVal1 = numVal1;
+	}
 
 	public int getNumVal2() {
 		return numVal2;
@@ -82,14 +83,24 @@ public class PrimitiveTestEntity {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof PrimitiveTestEntity)) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof PrimitiveTestEntity) ) {
+			return false;
+		}
 
 		PrimitiveTestEntity that = (PrimitiveTestEntity) o;
 
-		if (numVal1 != that.numVal1) return false;
-		if (numVal2 != that.numVal2) return false;
-		if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( numVal1 != that.numVal1 ) {
+			return false;
+		}
+		if ( numVal2 != that.numVal2 ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -103,6 +114,6 @@ public class PrimitiveTestEntity {
 	}
 
 	public String toString() {
-        return "PTE(id = " + id + ", numVal1 = " + numVal1 + ", numVal2 = " + numVal2 + ")";
-    }
+		return "PTE(id = " + id + ", numVal1 = " + numVal1 + ", numVal2 = " + numVal2 + ")";
+	}
 }

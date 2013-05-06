@@ -48,7 +48,6 @@ public class StandardSessionFactoryServiceInitiators {
 		serviceInitiators.add( EventListenerServiceInitiator.INSTANCE );
 		serviceInitiators.add( StatisticsInitiator.INSTANCE );
 		serviceInitiators.add( CacheInitiator.INSTANCE );
-		serviceInitiators.add( RegionFactoryInitiator.INSTANCE );
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}

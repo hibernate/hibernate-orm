@@ -30,10 +30,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
+import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 
@@ -46,12 +47,12 @@ import org.hibernate.engine.config.spi.StandardConverters;
  * @author Alex Snaps
  */
 public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory {
+	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
+			EhCacheMessageLogger.class,
+			SingletonEhCacheRegionFactory.class.getName()
+	);
 
-    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
-            EhCacheMessageLogger.class,
-            SingletonEhCacheRegionFactory.class.getName()
-    );
-    private static final AtomicInteger REFERENCE_COUNT = new AtomicInteger();
+	private static final AtomicInteger REFERENCE_COUNT = new AtomicInteger();
 
 	@Override
 	public void start() {
@@ -79,7 +80,7 @@ public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory 
 					}
 					url = loadResource( configurationResourceName );
 				}
-				Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
+				Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
 				manager = CacheManager.create( configuration );
 				REFERENCE_COUNT.incrementAndGet();
 			}
@@ -109,5 +110,22 @@ public class SingletonEhCacheRegionFactory extends AbstractEhcacheRegionFactory 
             throw new CacheException( e );
         }
     }
+	/**
+	 * Constructs a SingletonEhCacheRegionFactory
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public SingletonEhCacheRegionFactory() {
+	}
+
+	/**
+	 * Constructs a SingletonEhCacheRegionFactory
+	 *
+	 * @param prop Not used
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public SingletonEhCacheRegionFactory(Properties prop) {
+		super();
+	}
+
 
 }

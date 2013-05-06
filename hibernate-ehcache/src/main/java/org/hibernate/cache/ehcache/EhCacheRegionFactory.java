@@ -30,12 +30,13 @@ import java.util.Properties;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
 import net.sf.ehcache.config.ConfigurationFactory;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.CacheException;
-import org.hibernate.cache.ehcache.internal.util.HibernateUtil;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
 
 /**
  * A non-singleton EhCacheRegionFactory implementation.
@@ -47,11 +48,28 @@ import org.hibernate.engine.config.spi.StandardConverters;
  * @author Alex Snaps
  */
 public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
+	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
+			EhCacheMessageLogger.class,
+			EhCacheRegionFactory.class.getName()
+	);
 
-    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
-            EhCacheMessageLogger.class,
-            EhCacheRegionFactory.class.getName()
-    );
+
+	/**
+	 * Creates a non-singleton EhCacheRegionFactory
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public EhCacheRegionFactory() {
+	}
+
+	/**
+	 * Creates a non-singleton EhCacheRegionFactory
+	 *
+	 * @param prop Not used
+	 */
+	@SuppressWarnings("UnusedDeclaration")
+	public EhCacheRegionFactory(Properties prop) {
+		super();
+	}
 
 	@Override
 	public void start() {
@@ -62,7 +80,8 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 
 		try {
 			ConfigurationService configurationService = getServiceRegistry().getService( ConfigurationService.class );
-			String configurationResourceName = configurationService.getSetting( NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME,
+			String configurationResourceName = configurationService.getSetting(
+					NET_SF_EHCACHE_CONFIGURATION_RESOURCE_NAME,
 					StandardConverters.STRING, null
 			);
 			if ( configurationResourceName == null || configurationResourceName.length() == 0 ) {
@@ -77,10 +96,10 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 				catch ( MalformedURLException e ) {
 					url = loadResource( configurationResourceName );
 				}
-				Configuration configuration = HibernateUtil.loadAndCorrectConfiguration( url );
+				Configuration configuration = HibernateEhcacheUtils.loadAndCorrectConfiguration( url );
 				manager = new CacheManager( configuration );
 			}
-			Properties properties = new Properties(  );
+			Properties properties = new Properties();
 			properties.putAll( configurationService.getSettings() );
 			mbeanRegistrationHelper.registerMBean( manager, properties );
 		}
@@ -101,20 +120,18 @@ public class EhCacheRegionFactory extends AbstractEhcacheRegionFactory {
 		}
 	}
 
-    /**
-     * {@inheritDoc}
-     */
-    public void stop() {
-        try {
-            if ( manager != null ) {
-                mbeanRegistrationHelper.unregisterMBean();
-                manager.shutdown();
-                manager = null;
-            }
-        }
-        catch ( net.sf.ehcache.CacheException e ) {
-            throw new CacheException( e );
-        }
-    }
+	@Override
+	public void stop() {
+		try {
+			if ( manager != null ) {
+				mbeanRegistrationHelper.unregisterMBean();
+				manager.shutdown();
+				manager = null;
+			}
+		}
+		catch ( net.sf.ehcache.CacheException e ) {
+			throw new CacheException( e );
+		}
+	}
 
 }

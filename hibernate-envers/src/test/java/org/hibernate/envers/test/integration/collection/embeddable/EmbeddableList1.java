@@ -23,17 +23,18 @@
  */
 package org.hibernate.envers.test.integration.collection.embeddable;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
-import javax.persistence.EntityManager;
-
-import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.collection.EmbeddableListEntity1;
 import org.hibernate.envers.test.entities.components.Component3;
 import org.hibernate.envers.test.entities.components.Component4;
+
+import org.junit.Test;
+
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -41,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Kristoffer Lundberg (kristoffer at cambio dot se)
  */
-@TestForIssue( jiraKey = "HHH-6613" )
+@TestForIssue(jiraKey = "HHH-6613")
 public class EmbeddableList1 extends BaseEnversJPAFunctionalTestCase {
 	private Integer ele1_id = null;
 
@@ -52,7 +53,7 @@ public class EmbeddableList1 extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { EmbeddableListEntity1.class };
+		return new Class<?>[] {EmbeddableListEntity1.class};
 	}
 
 	@Test
@@ -99,7 +100,12 @@ public class EmbeddableList1 extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testRevisionsCounts() {
-		assertEquals( Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions( EmbeddableListEntity1.class, ele1_id ) );
+		assertEquals(
+				Arrays.asList( 1, 2, 3, 4 ), getAuditReader().getRevisions(
+				EmbeddableListEntity1.class,
+				ele1_id
+		)
+		);
 	}
 
 	@Test

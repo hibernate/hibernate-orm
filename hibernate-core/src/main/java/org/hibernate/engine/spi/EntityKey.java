@@ -55,7 +55,7 @@ public final class EntityKey implements Serializable {
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
-	 * <p>
+	 * <p/>
 	 * NOTE : This signature has changed to accommodate both entity mode and multi-tenancy, both of which relate to
 	 * the Session to which this key belongs.  To help minimize the impact of these changes in the future, the
 	 * {@link SessionImplementor#generateEntityKey} method was added to hide the session-specific changes.
@@ -68,7 +68,7 @@ public final class EntityKey implements Serializable {
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier" );
 		}
-		this.identifier = id; 
+		this.identifier = id;
 		this.rootEntityName = persister.getRootEntityName();
 		this.entityName = persister.getEntityName();
 		this.tenantId = tenantId;
@@ -92,11 +92,11 @@ public final class EntityKey implements Serializable {
 	 */
 	private EntityKey(
 			Serializable identifier,
-	        String rootEntityName,
-	        String entityName,
-	        Type identifierType,
-	        boolean batchLoadable,
-	        SessionFactoryImplementor factory,
+			String rootEntityName,
+			String entityName,
+			Type identifierType,
+			boolean batchLoadable,
+			SessionFactoryImplementor factory,
 			String tenantId) {
 		this.identifier = identifier;
 		this.rootEntityName = rootEntityName;
@@ -129,10 +129,17 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public boolean equals(Object other) {
-		EntityKey otherKey = (EntityKey) other;
-		return otherKey.rootEntityName.equals(this.rootEntityName) &&
-				identifierType.isEqual(otherKey.identifier, this.identifier, factory) &&
-				EqualsHelper.equals( tenantId, otherKey.tenantId );
+		if ( this == other ) {
+			return true;
+		}
+		if ( other == null || getClass() != other.getClass() ) {
+			return false;
+		}
+
+		final EntityKey otherKey = (EntityKey) other;
+		return otherKey.rootEntityName.equals( this.rootEntityName )
+				&& identifierType.isEqual( otherKey.identifier, this.identifier, factory )
+				&& EqualsHelper.equals( tenantId, otherKey.tenantId );
 	}
 
 	@Override
@@ -142,8 +149,8 @@ public final class EntityKey implements Serializable {
 
 	@Override
 	public String toString() {
-		return "EntityKey" + 
-			MessageHelper.infoString( factory.getEntityPersister( entityName ), identifier, factory );
+		return "EntityKey" +
+				MessageHelper.infoString( factory.getEntityPersister( entityName ), identifier, factory );
 	}
 
 	/**
@@ -177,14 +184,14 @@ public final class EntityKey implements Serializable {
 	 */
 	public static EntityKey deserialize(
 			ObjectInputStream ois,
-	        SessionImplementor session) throws IOException, ClassNotFoundException {
+			SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new EntityKey(
-				( Serializable ) ois.readObject(),
-		        (String) ois.readObject(),
+				(Serializable) ois.readObject(),
 				(String) ois.readObject(),
-		        ( Type ) ois.readObject(),
-		        ois.readBoolean(),
-		        ( session == null ? null : session.getFactory() ),
+				(String) ois.readObject(),
+				(Type) ois.readObject(),
+				ois.readBoolean(),
+				(session == null ? null : session.getFactory()),
 				(String) ois.readObject()
 		);
 	}

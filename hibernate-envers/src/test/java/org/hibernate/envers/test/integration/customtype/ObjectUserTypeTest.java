@@ -1,16 +1,17 @@
 package org.hibernate.envers.test.integration.customtype;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Map;
-import javax.persistence.EntityManager;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -24,7 +25,7 @@ public class ObjectUserTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { ObjectUserTypeEntity.class };
+		return new Class<?>[] {ObjectUserTypeEntity.class};
 	}
 
 	@Override
@@ -79,7 +80,10 @@ public class ObjectUserTypeTest extends BaseEnversJPAFunctionalTestCase {
 		Assert.assertEquals( ver2, getAuditReader().find( ObjectUserTypeEntity.class, id, 2 ) );
 		Assert.assertEquals(
 				ver2,
-				getAuditReader().createQuery().forRevisionsOfEntity( ObjectUserTypeEntity.class, true, true ).getResultList().get( 2 )
+				getAuditReader().createQuery()
+						.forRevisionsOfEntity( ObjectUserTypeEntity.class, true, true )
+						.getResultList()
+						.get( 2 )
 		); // Checking delete state.
 	}
 }

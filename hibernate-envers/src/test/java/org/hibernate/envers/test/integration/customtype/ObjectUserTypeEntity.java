@@ -1,10 +1,10 @@
 package org.hibernate.envers.test.integration.customtype;
 
-import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.io.Serializable;
 
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Type;
@@ -12,6 +12,7 @@ import org.hibernate.envers.Audited;
 
 /**
  * Entity encapsulating {@link Object} property which concrete type may change during subsequent updates.
+ *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 @Entity
@@ -24,7 +25,7 @@ public class ObjectUserTypeEntity implements Serializable {
 	private String buildInType;
 
 	@Type(type = "org.hibernate.envers.test.integration.customtype.ObjectUserType")
-	@Columns(columns = { @Column(name = "OBJ_TYPE"), @Column(name = "OBJ_VALUE") })
+	@Columns(columns = {@Column(name = "OBJ_TYPE"), @Column(name = "OBJ_VALUE")})
 	private Object userType;
 
 	public ObjectUserTypeEntity() {
@@ -43,14 +44,24 @@ public class ObjectUserTypeEntity implements Serializable {
 
 	@Override
 	public boolean equals(Object o) {
-		if ( this == o ) return true;
-		if ( ! ( o instanceof ObjectUserTypeEntity ) ) return false;
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ObjectUserTypeEntity) ) {
+			return false;
+		}
 
 		ObjectUserTypeEntity that = (ObjectUserTypeEntity) o;
 
-		if ( id != that.id ) return false;
-		if ( buildInType != null ? !buildInType.equals( that.buildInType ) : that.buildInType != null ) return false;
-		if ( userType != null ? !userType.equals( that.userType ) : that.userType != null ) return false;
+		if ( id != that.id ) {
+			return false;
+		}
+		if ( buildInType != null ? !buildInType.equals( that.buildInType ) : that.buildInType != null ) {
+			return false;
+		}
+		if ( userType != null ? !userType.equals( that.userType ) : that.userType != null ) {
+			return false;
+		}
 
 		return true;
 	}
@@ -58,8 +69,8 @@ public class ObjectUserTypeEntity implements Serializable {
 	@Override
 	public int hashCode() {
 		int result = id;
-		result = 31 * result + ( buildInType != null ? buildInType.hashCode() : 0 );
-		result = 31 * result + ( userType != null ? userType.hashCode() : 0 );
+		result = 31 * result + (buildInType != null ? buildInType.hashCode() : 0);
+		result = 31 * result + (userType != null ? userType.hashCode() : 0);
 		return result;
 	}
 

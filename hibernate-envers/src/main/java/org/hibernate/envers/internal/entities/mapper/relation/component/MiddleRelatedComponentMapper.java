@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities.mapper.relation.component;
+
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionImplementor;
@@ -33,22 +34,35 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  */
 public final class MiddleRelatedComponentMapper implements MiddleComponentMapper {
-    private final MiddleIdData relatedIdData;
+	private final MiddleIdData relatedIdData;
 
-    public MiddleRelatedComponentMapper(MiddleIdData relatedIdData) {
-        this.relatedIdData = relatedIdData;
-    }
+	public MiddleRelatedComponentMapper(MiddleIdData relatedIdData) {
+		this.relatedIdData = relatedIdData;
+	}
 
-    public Object mapToObjectFromFullMap(EntityInstantiator entityInstantiator, Map<String, Object> data,
-                                         Object dataObject, Number revision) {
-        return entityInstantiator.createInstanceFromVersionsEntity(relatedIdData.getEntityName(), data, revision);
-    }
+	@Override
+	public Object mapToObjectFromFullMap(
+			EntityInstantiator entityInstantiator, Map<String, Object> data,
+			Object dataObject, Number revision) {
+		return entityInstantiator.createInstanceFromVersionsEntity( relatedIdData.getEntityName(), data, revision );
+	}
 
-    public void mapToMapFromObject(SessionImplementor session, Map<String, Object> idData, Map<String, Object> data, Object obj) {
-        relatedIdData.getPrefixedMapper().mapToMapFromEntity(idData, obj);
-    }
+	@Override
+	public void mapToMapFromObject(
+			SessionImplementor session,
+			Map<String, Object> idData,
+			Map<String, Object> data,
+			Object obj) {
+		relatedIdData.getPrefixedMapper().mapToMapFromEntity( idData, obj );
+	}
 
-    public void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1, String idPrefix2, String prefix2) {
-        relatedIdData.getPrefixedMapper().addIdsEqualToQuery(parameters, idPrefix1, idPrefix2);
-    }
+	@Override
+	public void addMiddleEqualToQuery(
+			Parameters parameters,
+			String idPrefix1,
+			String prefix1,
+			String idPrefix2,
+			String prefix2) {
+		relatedIdData.getPrefixedMapper().addIdsEqualToQuery( parameters, idPrefix1, idPrefix2 );
+	}
 }

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
+
 import java.sql.Types;
 
 import org.hibernate.LockMode;
@@ -36,20 +37,22 @@ import org.hibernate.dialect.lock.UpdateLockingStrategy;
 import org.hibernate.persister.entity.Lockable;
 
 /**
- * A <tt>Dialect</tt> for Pointbase.
+ * A Dialect for Pointbase.
+ *
  * @author  Ed Mackenzie
  */
 public class PointbaseDialect extends org.hibernate.dialect.Dialect {
-
 	/**
 	 * Creates new PointbaseDialect
 	 */
 	public PointbaseDialect() {
 		super();
-		registerColumnType( Types.BIT, "smallint" ); //no pointbase BIT
+		//no pointbase BIT
+		registerColumnType( Types.BIT, "smallint" );
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.SMALLINT, "smallint" );
-		registerColumnType( Types.TINYINT, "smallint" ); //no pointbase TINYINT
+		//no pointbase TINYINT
+		registerColumnType( Types.TINYINT, "smallint" );
 		registerColumnType( Types.INTEGER, "integer" );
 		registerColumnType( Types.CHAR, "char(1)" );
 		registerColumnType( Types.VARCHAR, "varchar($l)" );
@@ -66,22 +69,27 @@ public class PointbaseDialect extends org.hibernate.dialect.Dialect {
 		registerColumnType( Types.NUMERIC, "numeric($p,$s)" );
 	}
 
+	@Override
 	public String getAddColumnString() {
 		return "add";
 	}
 
+	@Override
 	public boolean dropConstraints() {
 		return false;
 	}
 
+	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade";
 	}
 
+	@Override
 	public String getForUpdateString() {
 		return "";
 	}
 
+	@Override
 	public LockingStrategy getLockingStrategy(Lockable lockable, LockMode lockMode) {
 		// Pointbase has no known variation of a "SELECT ... FOR UPDATE" syntax...
 		if ( lockMode==LockMode.PESSIMISTIC_FORCE_INCREMENT) {

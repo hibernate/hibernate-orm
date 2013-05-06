@@ -28,32 +28,30 @@ import org.jboss.logging.Logger;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.service.spi.SessionFactoryServiceInitiator;
+import java.util.Map;
+import java.util.Properties;
+
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 
 /**
  * Initiator for the {@link RegionFactory} service.
- *
+ * 
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
-public class RegionFactoryInitiator implements SessionFactoryServiceInitiator<RegionFactory> {
-	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
-	private static final String DEFAULT_IMPL = NoCachingRegionFactory.class.getName();
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			RegionFactoryInitiator.class.getName()
-	);
+public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFactory> {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
+			RegionFactoryInitiator.class.getName() );
 
 	/**
-	 * Property name to use to configure the full qualified class name for the {@code RegionFactory}
+	 * Singleton access
 	 */
-	public static final String IMPL_NAME = AvailableSettings.CACHE_REGION_FACTORY;
+	public static final RegionFactoryInitiator INSTANCE = new RegionFactoryInitiator();
 
 	@Override
 	public Class<RegionFactory> getServiceInitiated() {
@@ -61,50 +59,58 @@ public class RegionFactoryInitiator implements SessionFactoryServiceInitiator<Re
 	}
 
 	@Override
-	public RegionFactory initiateService(SessionFactoryImplementor sessionFactory, Configuration configuration, ServiceRegistryImplementor registry) {
-		return initiateService(sessionFactory, registry);
-	}
+	@SuppressWarnings({ "unchecked" })
+	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		Properties p = new Properties();
+		if (configurationValues != null) {
+			p.putAll( configurationValues );
+		}
+		
+		boolean useSecondLevelCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_SECOND_LEVEL_CACHE,
+				configurationValues, true );
+		boolean useQueryCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_QUERY_CACHE, configurationValues );
 
-	@Override
-	public RegionFactory initiateService(SessionFactoryImplementor sessionFactory, MetadataImplementor metadata, ServiceRegistryImplementor registry) {
-		return initiateService(sessionFactory, registry);
-	}
+		RegionFactory regionFactory = NoCachingRegionFactory.INSTANCE;
 
-	private RegionFactory initiateService(SessionFactoryImplementor sessionFactory, ServiceRegistryImplementor registry){
-		boolean isCacheEnabled = isCacheEnabled( registry );
-		if ( !isCacheEnabled ) {
-			LOG.debugf(
-					"Second level cache has been disabled, so using % as cache region factory",
-					NoCachingRegionFactory.class.getName()
-			);
-			return NoCachingRegionFactory.INSTANCE;
+		// The cache provider is needed when we either have second-level cache enabled
+		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
+		final Object  setting = configurationValues.get( AvailableSettings.CACHE_REGION_FACTORY )   ;
+//		ConfigurationHelper.get( AvailableSettings.CACHE_REGION_FACTORY,
+//				configurationValues, null );
+		if ( ( useSecondLevelCache || useQueryCache ) && setting != null ) {
+			try {
+				regionFactory = registry.getService( StrategySelector.class )
+						.resolveStrategy( RegionFactory.class, setting );
+//				try {
+//					regionFactory = regionFactoryClass.getConstructor( Properties.class ).newInstance( p );
+//				}
+//				catch ( NoSuchMethodException e ) {
+//					// no constructor accepting Properties found, try no arg constructor
+//					LOG.debugf(
+//							"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
+//							regionFactoryClass.getSimpleName() );
+//					regionFactory = regionFactoryClass.getConstructor().newInstance();
+//				}
+			}
+			catch ( Exception e ) {
+				throw new HibernateException( "could not instantiate RegionFactory [" + setting + "]", e );
+			}
 		}
 
-		final Object setting = registry.getService( ConfigurationService.class ).getSettings().get( IMPL_NAME );
-		return registry.getService( StrategySelector.class ).resolveDefaultableStrategy(
-				RegionFactory.class,
-				setting,
-				NoCachingRegionFactory.INSTANCE
-		);
+		LOG.debugf( "Cache region factory : %s", regionFactory.getClass().getName() );
+
+		return regionFactory;
 	}
 
-	private static boolean isCacheEnabled(ServiceRegistryImplementor serviceRegistry) {
-		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
-		final boolean useSecondLevelCache = configurationService.getSetting(
-				AvailableSettings.USE_SECOND_LEVEL_CACHE,
-				StandardConverters.BOOLEAN,
-				true
-		);
-		final boolean useQueryCache = configurationService.getSetting(
-				AvailableSettings.USE_QUERY_CACHE,
-				StandardConverters.BOOLEAN,
-				false
-		);
-		return useSecondLevelCache || useQueryCache;
-	}
-
-	// todo this shouldn't be public (nor really static):
-	// hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
+	/**
+	 * Map legacy names unto the new corollary.
+	 *
+	 * TODO: temporary hack for org.hibernate.cfg.SettingsFactory.createRegionFactory()
+	 *
+	 * @param name The (possibly legacy) factory name
+	 *
+	 * @return The factory name to use.
+	 */
 	public static String mapLegacyNames(final String name) {
 		if ( "org.hibernate.cache.EhCacheRegionFactory".equals( name ) ) {
 			return "org.hibernate.cache.ehcache.EhCacheRegionFactory";

@@ -64,7 +64,7 @@ public class CacheImpl implements CacheImplementor {
 	private final Settings settings;
 	private final boolean isQueryCacheEnabled;
 	private transient QueryCache queryCache;
-	private transient RegionFactory regionFactory;
+	private final transient RegionFactory regionFactory;
 	private transient UpdateTimestampsCache updateTimestampsCache;
 	private transient ConcurrentMap<String, QueryCache> queryCaches;
 	private final transient ConcurrentMap<String, Region> allCacheRegions = new ConcurrentHashMap<String, Region>();
@@ -73,7 +73,10 @@ public class CacheImpl implements CacheImplementor {
 		this.sessionFactory = sessionFactory;
 		this.settings = sessionFactory.getSettings();
 		this.serviceRegistry = sessionFactory.getServiceRegistry();
-		this.isQueryCacheEnabled = isQueryCacheEnabled();
+		this.isQueryCacheEnabled = serviceRegistry.getService( ConfigurationService.class ).getSetting( AvailableSettings.USE_QUERY_CACHE,
+				StandardConverters.BOOLEAN, false
+		);
+		this.regionFactory = serviceRegistry.getService( RegionFactory.class );
 
 	}
 
@@ -226,12 +229,6 @@ public class CacheImpl implements CacheImplementor {
 		}
 	}
 
-	private boolean isQueryCacheEnabled(){
-		return serviceRegistry.getService( ConfigurationService.class ).getSetting( AvailableSettings.USE_QUERY_CACHE,
-				StandardConverters.BOOLEAN, false
-		);
-	}
-
 	@Override
 	public void evictQueryRegion(String regionName) {
 		if ( regionName == null ) {
@@ -344,11 +341,6 @@ public class CacheImpl implements CacheImplementor {
 	@Override
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
-	}
-
-	@InjectService
-	public void injectRegionFactory(RegionFactory regionFactory){
-		this.regionFactory = regionFactory;
 	}
 
 	@Override

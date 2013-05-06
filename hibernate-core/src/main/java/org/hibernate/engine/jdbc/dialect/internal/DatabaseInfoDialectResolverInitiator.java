@@ -35,9 +35,14 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * Initiator for the DatabaseInfoDialectResolver service
+ *
  * @author Steve Ebersole
  */
 public class DatabaseInfoDialectResolverInitiator implements StandardServiceInitiator<DatabaseInfoDialectResolver> {
+	/**
+	 * Singleton access
+	 */
 	public static final DatabaseInfoDialectResolverInitiator INSTANCE = new DatabaseInfoDialectResolverInitiator();
 
 	@Override

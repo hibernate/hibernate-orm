@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.function;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,8 +34,8 @@ import org.hibernate.type.Type;
 
 /**
  * A specialized concat() function definition in which:<ol>
- * <li>we translate to use the concat operator ('||')</li>
- * <li>wrap dynamic parameters in CASTs to VARCHAR</li>
+ *     <li>we translate to use the concat operator ('||')</li>
+ *     <li>wrap dynamic parameters in CASTs to VARCHAR</li>
  * </ol>
  * <p/>
  * This last spec is to deal with a limitation on DB2 and variants (e.g. Derby)
@@ -51,6 +52,7 @@ public class DerbyConcatFunction implements SQLFunction {
 	 * <p/>
 	 * Here we always return <tt>true</tt>
 	 */
+	@Override
 	public boolean hasArguments() {
 		return true;
 	}
@@ -60,6 +62,7 @@ public class DerbyConcatFunction implements SQLFunction {
 	 * <p/>
 	 * Here we always return <tt>true</tt>
 	 */
+	@Override
 	public boolean hasParenthesesIfNoArguments() {
 		return true;
 	}
@@ -69,6 +72,7 @@ public class DerbyConcatFunction implements SQLFunction {
 	 * <p/>
 	 * Here we always return {@link StandardBasicTypes#STRING}.
 	 */
+	@Override
 	public Type getReturnType(Type argumentType, Mapping mapping) throws QueryException {
 		return StandardBasicTypes.STRING;
 	}
@@ -83,25 +87,23 @@ public class DerbyConcatFunction implements SQLFunction {
 	 * arg elements in <tt>cast</tt> function calls, use the concatenation operator on the <tt>cast</tt>
 	 * returns, and then wrap that whole thing in a call to the Derby <tt>varchar</tt> function.
 	 */
+	@Override
 	public String render(Type argumentType, List args, SessionFactoryImplementor factory) throws QueryException {
-		boolean areAllArgsParams = true;
-		Iterator itr = args.iterator();
-		while ( itr.hasNext() ) {
-			final String arg = ( String ) itr.next();
-			if ( ! "?".equals( arg ) ) {
-				areAllArgsParams = false;
+		// first figure out if all arguments are dynamic (jdbc parameters) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		boolean areAllArgumentsDynamic = true;
+		for ( Object arg1 : args ) {
+			final String arg = (String) arg1;
+			if ( !"?".equals( arg ) ) {
+				// we found a non-dynamic argument
+				areAllArgumentsDynamic = false;
 				break;
 			}
 		}
 
-		if ( areAllArgsParams ) {
+		if ( areAllArgumentsDynamic ) {
 			return join(
 					args.iterator(),
-					new StringTransformer() {
-						public String transform(String string) {
-							return "cast( ? as varchar(32672) )";
-						}
-					},
+					CAST_STRING_TRANSFORMER,
 					new StringJoinTemplate() {
 						public String getBeginning() {
 							return "varchar( ";
@@ -118,11 +120,7 @@ public class DerbyConcatFunction implements SQLFunction {
 		else {
 			return join(
 					args.iterator(),
-					new StringTransformer() {
-						public String transform(String string) {
-							return string;
-						}
-					},
+					NO_TRANSFORM_STRING_TRANSFORMER,
 					new StringJoinTemplate() {
 						public String getBeginning() {
 							return "(";
@@ -139,8 +137,30 @@ public class DerbyConcatFunction implements SQLFunction {
 	}
 
 	private static interface StringTransformer {
+		/**
+		 * Transform a string to another
+		 *
+		 * @param string The String to be transformed
+		 *
+		 * @return The transformed form
+		 */
 		public String transform(String string);
 	}
+
+	private static final StringTransformer CAST_STRING_TRANSFORMER = new StringTransformer() {
+		@Override
+		public String transform(String string) {
+			// expectation is that incoming string is "?"
+			return "cast( ? as varchar(32672) )";
+		}
+	};
+
+	private static final StringTransformer NO_TRANSFORM_STRING_TRANSFORMER = new StringTransformer() {
+		@Override
+		public String transform(String string) {
+			return string;
+		}
+	};
 
 	private static interface StringJoinTemplate {
 		/**
@@ -165,9 +185,9 @@ public class DerbyConcatFunction implements SQLFunction {
 
 	private static String join(Iterator/*<String>*/ elements, StringTransformer elementTransformer, StringJoinTemplate template) {
 		// todo : make this available via StringHelper?
-		StringBuilder buffer = new StringBuilder( template.getBeginning() );
+		final StringBuilder buffer = new StringBuilder( template.getBeginning() );
 		while ( elements.hasNext() ) {
-			final String element = ( String ) elements.next();
+			final String element = (String) elements.next();
 			buffer.append( elementTransformer.transform( element ) );
 			if ( elements.hasNext() ) {
 				buffer.append( template.getSeparator() );

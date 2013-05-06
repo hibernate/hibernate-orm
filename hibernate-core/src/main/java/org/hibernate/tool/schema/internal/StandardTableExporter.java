@@ -104,8 +104,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			}
 			//only create unique constraint for non-pk column
 			if ( table.hasUniqueKey( col ) && !colName.equals( pkColName )) {
-				buf.append( dialect.getUniqueDelegate().applyUniqueToColumn(
-						col ) );
+				buf.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment( col ) );
 			}
 
 			if ( col.getCheckCondition() != null && dialect.supportsColumnCheck() ) {
@@ -124,7 +123,7 @@ public class StandardTableExporter implements Exporter<Table> {
 					.append( table.getPrimaryKey().sqlConstraintStringInCreateTable( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( table ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( table ) );
 
 		applyTableCheck( table, buf );
 

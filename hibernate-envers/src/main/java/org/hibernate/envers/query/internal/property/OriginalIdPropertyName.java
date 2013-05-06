@@ -29,18 +29,17 @@ import org.hibernate.envers.query.criteria.AuditId;
 /**
  * Used for specifying restrictions on the identifier.
  *
- * @deprecated To be removed together with {@link AuditId#count(String)} in version 5.0.
- *
  * @author Adam Warski (adam at warski dot org)
+ * @deprecated To be removed together with {@link AuditId#count(String)} in version 5.0.
  */
 public class OriginalIdPropertyName implements PropertyNameGetter {
-    private final String idPropertyName;
+	private final String idPropertyName;
 
-    public OriginalIdPropertyName(String idPropertyName) {
-        this.idPropertyName = idPropertyName;
-    }
+	public OriginalIdPropertyName(String idPropertyName) {
+		this.idPropertyName = idPropertyName;
+	}
 
-    public String get(AuditConfiguration auditCfg) {
-        return auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + idPropertyName;
-    }
+	public String get(AuditConfiguration auditCfg) {
+		return auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + idPropertyName;
+	}
 }

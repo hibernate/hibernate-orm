@@ -29,17 +29,17 @@ import org.hibernate.envers.test.AbstractOneSessionTest;
 
 /**
  * Base test for modified flags feature
- * 
+ *
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
 public abstract class AbstractModifiedFlagsOneSessionTest extends
-		AbstractOneSessionTest {
+														  AbstractOneSessionTest {
 
 	@Override
 	protected void addProperties(Configuration configuration) {
-		super.addProperties(configuration);
-		if (forceModifiedFlags()) {
-			configuration.setProperty(EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, "true");
+		super.addProperties( configuration );
+		if ( forceModifiedFlags() ) {
+			configuration.setProperty( EnversSettings.GLOBAL_WITH_MODIFIED_FLAG, "true" );
 		}
 	}
 

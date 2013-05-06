@@ -435,7 +435,7 @@ public class Table implements RelationalModel, Serializable {
 							StringHelper.randomFixedLengthHex("UK_"));
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
-							.applyUniqueToColumn( column ) );
+							.getColumnDefinitionUniquenessFragment( column ) );
 				}
 
 				if ( column.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -538,7 +538,7 @@ public class Table implements RelationalModel, Serializable {
 						StringHelper.randomFixedLengthHex("UK_"));
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
-						.applyUniqueToColumn( col ) );
+						.getColumnDefinitionUniquenessFragment( col ) );
 			}
 				
 			if ( col.hasCheckConstraint() && dialect.supportsColumnCheck() ) {
@@ -562,7 +562,7 @@ public class Table implements RelationalModel, Serializable {
 					.append( getPrimaryKey().sqlConstraintString( dialect ) );
 		}
 
-		buf.append( dialect.getUniqueDelegate().applyUniquesToTable( this ) );
+		buf.append( dialect.getUniqueDelegate().getTableCreationUniqueConstraintsFragment( this ) );
 
 		if ( dialect.supportsTableCheck() ) {
 			Iterator chiter = checkConstraints.iterator();

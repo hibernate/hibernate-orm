@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities.mapper.id;
+
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,69 +32,96 @@ import org.hibernate.envers.internal.tools.query.Parameters;
  * @author Adam Warski (adam at warski dot org)
  */
 public abstract class AbstractIdMapper implements IdMapper {
-    private Parameters getParametersToUse(Parameters parameters, List<QueryParameterData> paramDatas) {
-         if (paramDatas.size() > 1) {
-            return parameters.addSubParameters("and");
-        } else {
-            return parameters;
-        }
-    }
+	private Parameters getParametersToUse(Parameters parameters, List<QueryParameterData> paramDatas) {
+		if ( paramDatas.size() > 1 ) {
+			return parameters.addSubParameters( "and" );
+		}
+		else {
+			return parameters;
+		}
+	}
 
-    public void addIdsEqualToQuery(Parameters parameters, String prefix1, String prefix2) {
-        List<QueryParameterData> paramDatas = mapToQueryParametersFromId(null);
+	@Override
+	public void addIdsEqualToQuery(Parameters parameters, String prefix1, String prefix2) {
+		final List<QueryParameterData> paramDatas = mapToQueryParametersFromId( null );
 
-        Parameters parametersToUse = getParametersToUse(parameters, paramDatas);
+		final Parameters parametersToUse = getParametersToUse( parameters, paramDatas );
 
-        for (QueryParameterData paramData : paramDatas) {
-            parametersToUse.addWhere(paramData.getProperty(prefix1), false, "=", paramData.getProperty(prefix2), false);
-        }
-    }
+		for ( QueryParameterData paramData : paramDatas ) {
+			parametersToUse.addWhere(
+					paramData.getProperty( prefix1 ),
+					false,
+					"=",
+					paramData.getProperty( prefix2 ),
+					false
+			);
+		}
+	}
 
-    public void addIdsEqualToQuery(Parameters parameters, String prefix1, IdMapper mapper2, String prefix2) {
-        List<QueryParameterData> paramDatas1 = mapToQueryParametersFromId(null);
-        List<QueryParameterData> paramDatas2 = mapper2.mapToQueryParametersFromId(null);
+	@Override
+	public void addIdsEqualToQuery(Parameters parameters, String prefix1, IdMapper mapper2, String prefix2) {
+		final List<QueryParameterData> paramDatas1 = mapToQueryParametersFromId( null );
+		final List<QueryParameterData> paramDatas2 = mapper2.mapToQueryParametersFromId( null );
 
-        Parameters parametersToUse = getParametersToUse(parameters, paramDatas1);
+		final Parameters parametersToUse = getParametersToUse( parameters, paramDatas1 );
 
-        Iterator<QueryParameterData> paramDataIter1 = paramDatas1.iterator();
-        Iterator<QueryParameterData> paramDataIter2 = paramDatas2.iterator();
-        while (paramDataIter1.hasNext()) {
-            QueryParameterData paramData1 = paramDataIter1.next();
-            QueryParameterData paramData2 = paramDataIter2.next();
+		final Iterator<QueryParameterData> paramDataIter1 = paramDatas1.iterator();
+		final Iterator<QueryParameterData> paramDataIter2 = paramDatas2.iterator();
+		while ( paramDataIter1.hasNext() ) {
+			final QueryParameterData paramData1 = paramDataIter1.next();
+			final QueryParameterData paramData2 = paramDataIter2.next();
 
-            parametersToUse.addWhere(paramData1.getProperty(prefix1), false, "=", paramData2.getProperty(prefix2), false); 
-        }
-    }
+			parametersToUse.addWhere(
+					paramData1.getProperty( prefix1 ),
+					false,
+					"=",
+					paramData2.getProperty( prefix2 ),
+					false
+			);
+		}
+	}
 
-    public void addIdEqualsToQuery(Parameters parameters, Object id, String prefix, boolean equals) {
-        List<QueryParameterData> paramDatas = mapToQueryParametersFromId(id);
+	@Override
+	public void addIdEqualsToQuery(Parameters parameters, Object id, String prefix, boolean equals) {
+		final List<QueryParameterData> paramDatas = mapToQueryParametersFromId( id );
 
-        Parameters parametersToUse = getParametersToUse(parameters, paramDatas);
+		final Parameters parametersToUse = getParametersToUse( parameters, paramDatas );
 
-        for (QueryParameterData paramData : paramDatas) {
-            if (paramData.getValue() == null) {
-                handleNullValue(parametersToUse, paramData.getProperty(prefix), equals);
-            } else {
-                parametersToUse.addWhereWithParam(paramData.getProperty(prefix), equals ? "=" : "<>", paramData.getValue());
-            }
-        }
-    }
+		for ( QueryParameterData paramData : paramDatas ) {
+			if ( paramData.getValue() == null ) {
+				handleNullValue( parametersToUse, paramData.getProperty( prefix ), equals );
+			}
+			else {
+				parametersToUse.addWhereWithParam(
+						paramData.getProperty( prefix ),
+						equals ? "=" : "<>",
+						paramData.getValue()
+				);
+			}
+		}
+	}
 
-    public void addNamedIdEqualsToQuery(Parameters parameters, String prefix, boolean equals) {
-        List<QueryParameterData> paramDatas = mapToQueryParametersFromId(null);
+	@Override
+	public void addNamedIdEqualsToQuery(Parameters parameters, String prefix, boolean equals) {
+		final List<QueryParameterData> paramDatas = mapToQueryParametersFromId( null );
 
-        Parameters parametersToUse = getParametersToUse(parameters, paramDatas);
+		final Parameters parametersToUse = getParametersToUse( parameters, paramDatas );
 
-        for (QueryParameterData paramData : paramDatas) {
-            parametersToUse.addWhereWithNamedParam(paramData.getProperty(prefix), equals ? "=" : "<>", paramData.getQueryParameterName());
-        }
-    }
+		for ( QueryParameterData paramData : paramDatas ) {
+			parametersToUse.addWhereWithNamedParam(
+					paramData.getProperty( prefix ),
+					equals ? "=" : "<>",
+					paramData.getQueryParameterName()
+			);
+		}
+	}
 
-    private void handleNullValue(Parameters parameters, String propertyName, boolean equals) {
-        if (equals) {
-            parameters.addNullRestriction(propertyName, equals);
-        } else {
-            parameters.addNotNullRestriction(propertyName, equals);
-        }
-    }
+	private void handleNullValue(Parameters parameters, String propertyName, boolean equals) {
+		if ( equals ) {
+			parameters.addNullRestriction( propertyName, equals );
+		}
+		else {
+			parameters.addNotNullRestriction( propertyName, equals );
+		}
+	}
 }

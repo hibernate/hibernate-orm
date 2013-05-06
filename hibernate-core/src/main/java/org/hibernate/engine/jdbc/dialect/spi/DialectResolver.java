@@ -24,8 +24,13 @@
 package org.hibernate.engine.jdbc.dialect.spi;
 
 /**
+ * Deprecated
+ *
  * @deprecated Deprecated in favor of {@link DatabaseMetaDataDialectResolver} to account for resolving by name versus
  * by DatabaseMetaData
+ *
+ * @see DatabaseMetaDataDialectResolver
+ * @see DatabaseInfoDialectResolver
  */
 @Deprecated
 public interface DialectResolver extends DatabaseMetaDataDialectResolver {

@@ -23,10 +23,10 @@
  */
 package org.hibernate.envers.query.internal.impl;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -53,179 +53,214 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
  * @author HernпїЅn Chanfreau
  */
 public abstract class AbstractAuditQuery implements AuditQuery {
-    protected EntityInstantiator entityInstantiator;
-    protected List<AuditCriterion> criterions;
+	protected EntityInstantiator entityInstantiator;
+	protected List<AuditCriterion> criterions;
 
-    protected String entityName;
-    protected String entityClassName;
-    protected String versionsEntityName;
-    protected QueryBuilder qb;
+	protected String entityName;
+	protected String entityClassName;
+	protected String versionsEntityName;
+	protected QueryBuilder qb;
 
-    protected boolean hasProjection;
-    protected boolean hasOrder;
+	protected boolean hasProjection;
+	protected boolean hasOrder;
 
-    protected final AuditConfiguration verCfg;
-    protected final AuditReaderImplementor versionsReader;
+	protected final AuditConfiguration verCfg;
+	protected final AuditReaderImplementor versionsReader;
 
-    protected AbstractAuditQuery(AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
-                                    Class<?> cls) {
-    	this(verCfg, versionsReader, cls, cls.getName());
-    }
+	protected AbstractAuditQuery(
+			AuditConfiguration verCfg, AuditReaderImplementor versionsReader,
+			Class<?> cls) {
+		this( verCfg, versionsReader, cls, cls.getName() );
+	}
 
-	protected AbstractAuditQuery(AuditConfiguration verCfg,
-                                 AuditReaderImplementor versionsReader, Class<?> cls, String entityName) {
+	protected AbstractAuditQuery(
+			AuditConfiguration verCfg,
+			AuditReaderImplementor versionsReader, Class<?> cls, String entityName) {
 		this.verCfg = verCfg;
 		this.versionsReader = versionsReader;
 
 		criterions = new ArrayList<AuditCriterion>();
-		entityInstantiator = new EntityInstantiator(verCfg, versionsReader);
+		entityInstantiator = new EntityInstantiator( verCfg, versionsReader );
 
 		entityClassName = cls.getName();
 		this.entityName = entityName;
 		versionsEntityName = verCfg.getAuditEntCfg().getAuditEntityName(
-				entityName);
+				entityName
+		);
 
-		qb = new QueryBuilder(versionsEntityName, REFERENCED_ENTITY_ALIAS);
+		qb = new QueryBuilder( versionsEntityName, REFERENCED_ENTITY_ALIAS );
 	}
-    
-    protected Query buildQuery() {
-        Query query = qb.toQuery(versionsReader.getSession());
-        setQueryProperties(query);
-        return query;
-    }
-    
+
+	protected Query buildQuery() {
+		Query query = qb.toQuery( versionsReader.getSession() );
+		setQueryProperties( query );
+		return query;
+	}
+
 	protected List buildAndExecuteQuery() {
-        Query query = buildQuery();
+		Query query = buildQuery();
 
-        return query.list();
-    }
+		return query.list();
+	}
 
-    public abstract List list() throws AuditException;
+	public abstract List list() throws AuditException;
 
-    public List getResultList() throws AuditException {
-        return list();
-    }
+	public List getResultList() throws AuditException {
+		return list();
+	}
 
-    public Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException {
-        List result = list();
+	public Object getSingleResult() throws AuditException, NonUniqueResultException, NoResultException {
+		List result = list();
 
-        if (result == null || result.size() == 0) {
-            throw new NoResultException();
-        }
+		if ( result == null || result.size() == 0 ) {
+			throw new NoResultException();
+		}
 
-        if (result.size() > 1) {
-            throw new NonUniqueResultException();
-        }
+		if ( result.size() > 1 ) {
+			throw new NonUniqueResultException();
+		}
 
-        return result.get(0);
-    }
+		return result.get( 0 );
+	}
 
-    public AuditQuery add(AuditCriterion criterion) {
-        criterions.add(criterion);
-        return this;
-    }
+	public AuditQuery add(AuditCriterion criterion) {
+		criterions.add( criterion );
+		return this;
+	}
 
-    // Projection and order
+	// Projection and order
 
-    public AuditQuery addProjection(AuditProjection projection) {
-        Triple<String, String, Boolean> projectionData = projection.getData(verCfg);
-        hasProjection = true;
-		String propertyName = CriteriaTools.determinePropertyName( verCfg, versionsReader, entityName, projectionData.getSecond() );
-        qb.addProjection(projectionData.getFirst(), propertyName, projectionData.getThird());
-        return this;
-    }
+	public AuditQuery addProjection(AuditProjection projection) {
+		Triple<String, String, Boolean> projectionData = projection.getData( verCfg );
+		hasProjection = true;
+		String propertyName = CriteriaTools.determinePropertyName(
+				verCfg,
+				versionsReader,
+				entityName,
+				projectionData.getSecond()
+		);
+		qb.addProjection( projectionData.getFirst(), propertyName, projectionData.getThird() );
+		return this;
+	}
 
-    public AuditQuery addOrder(AuditOrder order) {
-        hasOrder = true;
-        Pair<String, Boolean> orderData = order.getData(verCfg);
-		String propertyName = CriteriaTools.determinePropertyName( verCfg, versionsReader, entityName, orderData.getFirst() );
-        qb.addOrder(propertyName, orderData.getSecond());
-        return this;
-    }
+	public AuditQuery addOrder(AuditOrder order) {
+		hasOrder = true;
+		Pair<String, Boolean> orderData = order.getData( verCfg );
+		String propertyName = CriteriaTools.determinePropertyName(
+				verCfg,
+				versionsReader,
+				entityName,
+				orderData.getFirst()
+		);
+		qb.addOrder( propertyName, orderData.getSecond() );
+		return this;
+	}
 
-    // Query properties
+	// Query properties
 
-    private Integer maxResults;
-    private Integer firstResult;
-    private Boolean cacheable;
-    private String cacheRegion;
-    private String comment;
-    private FlushMode flushMode;
-    private CacheMode cacheMode;
-    private Integer timeout;
-    private LockOptions lockOptions = new LockOptions(LockMode.NONE);
+	private Integer maxResults;
+	private Integer firstResult;
+	private Boolean cacheable;
+	private String cacheRegion;
+	private String comment;
+	private FlushMode flushMode;
+	private CacheMode cacheMode;
+	private Integer timeout;
+	private LockOptions lockOptions = new LockOptions( LockMode.NONE );
 
-    public AuditQuery setMaxResults(int maxResults) {
-        this.maxResults = maxResults;
-        return this;
-    }
+	public AuditQuery setMaxResults(int maxResults) {
+		this.maxResults = maxResults;
+		return this;
+	}
 
-    public AuditQuery setFirstResult(int firstResult) {
-        this.firstResult = firstResult;
-        return this;
-    }
+	public AuditQuery setFirstResult(int firstResult) {
+		this.firstResult = firstResult;
+		return this;
+	}
 
-    public AuditQuery setCacheable(boolean cacheable) {
-        this.cacheable = cacheable;
-        return this;
-    }
+	public AuditQuery setCacheable(boolean cacheable) {
+		this.cacheable = cacheable;
+		return this;
+	}
 
-    public AuditQuery setCacheRegion(String cacheRegion) {
-        this.cacheRegion = cacheRegion;
-        return this;
-    }
+	public AuditQuery setCacheRegion(String cacheRegion) {
+		this.cacheRegion = cacheRegion;
+		return this;
+	}
 
-    public AuditQuery setComment(String comment) {
-        this.comment = comment;
-        return this;
-    }
+	public AuditQuery setComment(String comment) {
+		this.comment = comment;
+		return this;
+	}
 
-    public AuditQuery setFlushMode(FlushMode flushMode) {
-        this.flushMode = flushMode;
-        return this;
-    }
+	public AuditQuery setFlushMode(FlushMode flushMode) {
+		this.flushMode = flushMode;
+		return this;
+	}
 
-    public AuditQuery setCacheMode(CacheMode cacheMode) {
-        this.cacheMode = cacheMode;
-        return this;
-    }
+	public AuditQuery setCacheMode(CacheMode cacheMode) {
+		this.cacheMode = cacheMode;
+		return this;
+	}
 
-    public AuditQuery setTimeout(int timeout) {
-        this.timeout = timeout;
-        return this;
-    }
+	public AuditQuery setTimeout(int timeout) {
+		this.timeout = timeout;
+		return this;
+	}
 
 	/**
 	 * Set lock mode
+	 *
 	 * @param lockMode The {@link LockMode} used for this query.
+	 *
 	 * @return this object
+	 *
 	 * @deprecated Instead use setLockOptions
 	 */
-    public AuditQuery setLockMode(LockMode lockMode) {
-        lockOptions.setLockMode(lockMode);
-        return this;
-    }
+	public AuditQuery setLockMode(LockMode lockMode) {
+		lockOptions.setLockMode( lockMode );
+		return this;
+	}
 
 	/**
 	 * Set lock options
+	 *
 	 * @param lockOptions The @{link LockOptions} used for this query.
+	 *
 	 * @return this object
 	 */
 	public AuditQuery setLockOptions(LockOptions lockOptions) {
-		LockOptions.copy(lockOptions, this.lockOptions);
+		LockOptions.copy( lockOptions, this.lockOptions );
 		return this;
 	}
-    protected void setQueryProperties(Query query) {
-        if (maxResults != null) query.setMaxResults(maxResults);
-        if (firstResult != null) query.setFirstResult(firstResult);
-        if (cacheable != null) query.setCacheable(cacheable);
-        if (cacheRegion != null) query.setCacheRegion(cacheRegion);
-        if (comment != null) query.setComment(comment);
-        if (flushMode != null) query.setFlushMode(flushMode);
-        if (cacheMode != null) query.setCacheMode(cacheMode);
-        if (timeout != null) query.setTimeout(timeout);
-        if (lockOptions != null && lockOptions.getLockMode() != LockMode.NONE) {
-			  query.setLockMode(REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode());
-		  }
-    }
+
+	protected void setQueryProperties(Query query) {
+		if ( maxResults != null ) {
+			query.setMaxResults( maxResults );
+		}
+		if ( firstResult != null ) {
+			query.setFirstResult( firstResult );
+		}
+		if ( cacheable != null ) {
+			query.setCacheable( cacheable );
+		}
+		if ( cacheRegion != null ) {
+			query.setCacheRegion( cacheRegion );
+		}
+		if ( comment != null ) {
+			query.setComment( comment );
+		}
+		if ( flushMode != null ) {
+			query.setFlushMode( flushMode );
+		}
+		if ( cacheMode != null ) {
+			query.setCacheMode( cacheMode );
+		}
+		if ( timeout != null ) {
+			query.setTimeout( timeout );
+		}
+		if ( lockOptions != null && lockOptions.getLockMode() != LockMode.NONE ) {
+			query.setLockMode( REFERENCED_ENTITY_ALIAS, lockOptions.getLockMode() );
+		}
+	}
 }

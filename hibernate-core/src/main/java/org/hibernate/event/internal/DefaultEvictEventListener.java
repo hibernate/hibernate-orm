@@ -29,6 +29,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -142,7 +143,6 @@ public class DefaultEvictEventListener implements EvictEventListener {
 		// This is now handled by removeEntity()
 		//session.getPersistenceContext().removeDatabaseSnapshot(key);
 
-		new Cascade( CascadingActions.EVICT, Cascade.AFTER_EVICT, session )
-				.cascade( persister, object );
+		new Cascade( CascadingActions.EVICT, CascadePoint.AFTER_EVICT, session ).cascade( persister, object );
 	}
 }

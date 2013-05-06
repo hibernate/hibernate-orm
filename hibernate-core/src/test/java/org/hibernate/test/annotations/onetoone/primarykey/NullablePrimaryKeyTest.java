@@ -81,6 +81,7 @@ public class NullablePrimaryKeyTest extends BaseUnitTestCase {
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
+
 		}
 	}
 }

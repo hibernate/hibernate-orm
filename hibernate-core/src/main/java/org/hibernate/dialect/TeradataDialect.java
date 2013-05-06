@@ -37,7 +37,6 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Jay Nance
  */
 public class TeradataDialect extends Dialect {
-	
 	private static final int PARAM_LIST_SIZE_LIMIT = 1024;
 
 	/**
@@ -63,7 +62,8 @@ public class TeradataDialect extends Dialect {
 		registerColumnType( Types.DATE, "DATE" );
 		registerColumnType( Types.TIME, "TIME" );
 		registerColumnType( Types.TIMESTAMP, "TIMESTAMP" );
-		registerColumnType( Types.BOOLEAN, "BYTEINT" );  // hibernate seems to ignore this type...
+		// hibernate seems to ignore this type...
+		registerColumnType( Types.BOOLEAN, "BYTEINT" );
 		registerColumnType( Types.BLOB, "BLOB" );
 		registerColumnType( Types.CLOB, "CLOB" );
 
@@ -113,87 +113,87 @@ public class TeradataDialect extends Dialect {
 	}
 
 	/**
-	 * Does this dialect support the <tt>FOR UPDATE</tt> syntax?
-	 *
-	 * @return empty string ... Teradata does not support <tt>FOR UPDATE<tt> syntax
+	 * Teradata does not support <tt>FOR UPDATE</tt> syntax
+	 * <p/>
+	 * {@inheritDoc}
 	 */
+	@Override
 	public String getForUpdateString() {
 		return "";
 	}
 
+	@Override
 	public boolean supportsIdentityColumns() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsSequences() {
 		return false;
 	}
 
+	@Override
 	public String getAddColumnString() {
 		return "Add Column";
 	}
 
+	@Override
 	public boolean supportsTemporaryTables() {
 		return true;
 	}
 
+	@Override
 	public String getCreateTemporaryTableString() {
 		return "create global temporary table";
 	}
 
+	@Override
 	public String getCreateTemporaryTablePostfix() {
 		return " on commit preserve rows";
 	}
 
+	@Override
 	public Boolean performTemporaryTableDDLInIsolation() {
 		return Boolean.TRUE;
 	}
 
+	@Override
 	public boolean dropTemporaryTableAfterUse() {
 		return false;
 	}
 
-	/**
-	 * Get the name of the database type associated with the given
-	 * <tt>java.sql.Types</tt> typecode.
-	 *
-	 * @param code <tt>java.sql.Types</tt> typecode
-	 * @param length the length or precision of the column
-	 * @param precision the precision of the column
-	 * @param scale the scale of the column
-	 *
-	 * @return the database type name
-	 *
-	 * @throws HibernateException
-	 */
-	public String getTypeName(int code, int length, int precision, int scale) throws HibernateException {
-		/*
-		 * We might want a special case for 19,2. This is very common for money types
-		 * and here it is converted to 18,1
-		 */
-		float f = precision > 0 ? ( float ) scale / ( float ) precision : 0;
-		int p = ( precision > 18 ? 18 : precision );
-		int s = ( precision > 18 ? ( int ) ( 18.0 * f ) : ( scale > 18 ? 18 : scale ) );
+	@Override
+	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
+		// We might want a special case for 19,2. This is very common for money types
+		// and here it is converted to 18,1
+		final float f = precision > 0 ? (float) scale / (float) precision : 0;
+		final int p = ( precision > 18 ? 18 : precision );
+		final int s = ( precision > 18 ? (int) ( 18.0 * f ) : ( scale > 18 ? 18 : scale ) );
 
 		return super.getTypeName( code, length, p, s );
 	}
 
+	@Override
 	public boolean supportsCascadeDelete() {
 		return false;
 	}
 
+	@Override
 	public boolean supportsCircularCascadeDeleteConstraints() {
 		return false;
 	}
 
+	@Override
 	public boolean areStringComparisonsCaseInsensitive() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsEmptyInList() {
 		return false;
 	}
 
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		String v = "null";
 
@@ -235,33 +235,37 @@ public class TeradataDialect extends Dialect {
 			case Types.DATALINK:
 			case Types.BOOLEAN:
 				break;
+			default:
+				break;
 		}
 		return v;
 	}
 
+	@Override
 	public String getCreateMultisetTableString() {
 		return "create multiset table ";
 	}
 
+	@Override
 	public boolean supportsLobValueChangePropogation() {
 		return false;
 	}
 
+	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		return true;
 	}
 
+	@Override
 	public boolean doesRepeatableReadCauseReadersToBlockWriters() {
 		return true;
 	}
 
+	@Override
 	public boolean supportsBindAsCallableArgument() {
 		return false;
 	}
 
-	/* (non-Javadoc)
-		 * @see org.hibernate.dialect.Dialect#getInExpressionCountLimit()
-		 */
 	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;

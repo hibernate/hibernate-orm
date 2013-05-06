@@ -27,7 +27,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.resolver.BasicSQLExceptionConverter;
+import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.AbstractDatabaseMetaDataDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 
@@ -39,14 +39,22 @@ import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 public class StandardDatabaseMetaDataDialectResolver extends AbstractDatabaseMetaDataDialectResolver {
 	private final DatabaseInfoDialectResolver infoResolver;
 
+	/**
+	 * Constructs a StandardDatabaseMetaDataDialectResolver
+	 *
+	 * @param infoResolver The delegate resolver
+	 */
 	public StandardDatabaseMetaDataDialectResolver(DatabaseInfoDialectResolver infoResolver) {
 		this.infoResolver = infoResolver;
 	}
 
+	/**
+	 * A DatabaseInfo implementation wrapping a JDBC DatabaseMetaData reference
+	 */
 	public static final class DatabaseInfoImpl implements DatabaseInfoDialectResolver.DatabaseInfo {
 		private final DatabaseMetaData databaseMetaData;
 
-		public DatabaseInfoImpl(DatabaseMetaData databaseMetaData) {
+		protected DatabaseInfoImpl(DatabaseMetaData databaseMetaData) {
 			this.databaseMetaData = databaseMetaData;
 		}
 
@@ -82,7 +90,7 @@ public class StandardDatabaseMetaDataDialectResolver extends AbstractDatabaseMet
 	}
 
 	@Override
-    protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
+	protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
 		if ( infoResolver == null ) {
 			return null;
 		}

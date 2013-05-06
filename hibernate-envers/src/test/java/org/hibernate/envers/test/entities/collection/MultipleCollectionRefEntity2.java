@@ -82,7 +82,7 @@ public class MultipleCollectionRefEntity2 {
 		if ( this == o ) {
 			return true;
 		}
-		if ( ! ( o instanceof MultipleCollectionRefEntity2 ) ) {
+		if ( !(o instanceof MultipleCollectionRefEntity2) ) {
 			return false;
 		}
 

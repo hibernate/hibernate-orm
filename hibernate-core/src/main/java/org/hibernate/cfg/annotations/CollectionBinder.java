@@ -1139,7 +1139,11 @@ public abstract class CollectionBinder {
 			XProperty property,
 			PropertyHolder parentPropertyHolder,
 			Mappings mappings) throws MappingException {
-		PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( collType.getName() );
+		if ( property == null ) {
+			throw new IllegalArgumentException( "null was passed for argument property" );
+		}
+
+		final PersistentClass collectionEntity = (PersistentClass) persistentClasses.get( collType.getName() );
 		final String hqlOrderBy = extractHqlOrderBy( jpaOrderBy );
 
 		boolean isCollectionOfEntities = collectionEntity != null;
@@ -1269,9 +1273,11 @@ public abstract class CollectionBinder {
 						buildOrderByClauseFromHql( hqlOrderBy, collectionEntity, collValue.getRole() )
 				);
 			}
-			ForeignKey fk = property != null ? property.getAnnotation( ForeignKey.class ) : null;
+			final ForeignKey fk = property.getAnnotation( ForeignKey.class );
 			String fkName = fk != null ? fk.inverseName() : "";
-			if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) element.setForeignKeyName( fkName );
+			if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) {
+				element.setForeignKeyName( fkName );
+			}
 		}
 		else if ( anyAnn != null ) {
 			//@ManyToAny

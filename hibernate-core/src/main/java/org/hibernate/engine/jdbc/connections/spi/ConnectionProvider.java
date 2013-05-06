@@ -25,7 +25,6 @@ package org.hibernate.engine.jdbc.connections.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Wrapped;
 
@@ -46,7 +45,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @return The obtained JDBC connection
 	 *
 	 * @throws SQLException Indicates a problem opening a connection
-	 * @throws HibernateException Indicates a problem otherwise obtaining a connection.
+	 * @throws org.hibernate.HibernateException Indicates a problem otherwise obtaining a connection.
 	 */
 	public Connection getConnection() throws SQLException;
 
@@ -56,7 +55,7 @@ public interface ConnectionProvider extends Service, Wrapped {
 	 * @param conn The JDBC connection to release
 	 *
 	 * @throws SQLException Indicates a problem closing the connection
-	 * @throws HibernateException Indicates a problem otherwise releasing a connection.
+	 * @throws org.hibernate.HibernateException Indicates a problem otherwise releasing a connection.
 	 */
 	public void closeConnection(Connection conn) throws SQLException;
 

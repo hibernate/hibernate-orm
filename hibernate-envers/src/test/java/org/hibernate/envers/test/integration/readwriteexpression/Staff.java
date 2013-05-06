@@ -9,30 +9,42 @@ import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.envers.Audited;
 
 @Entity
-@Table(name="t_staff")
+@Table(name = "t_staff")
 public class Staff {
 
-    public Staff() {
-    }
+	public Staff() {
+	}
 
-    public Staff(double sizeInInches,  Integer id) {
+	public Staff(double sizeInInches, Integer id) {
 		this.sizeInInches = sizeInInches;
 		this.id = id;
 	}
 
 	@Id
-	public Integer getId() { return id; }
-	public void setId(Integer id) {  this.id = id; }
+	public Integer getId() {
+		return id;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
 	private Integer id;
 
-    @Audited
-	@Column(name="size_in_cm")
+	@Audited
+	@Column(name = "size_in_cm")
 	@ColumnTransformer(
 			forColumn = "size_in_cm",
 			read = "size_in_cm / 2.54E0",
-			write = "? * 2.54E0" )
-	public double getSizeInInches() { return sizeInInches; }
-	public void setSizeInInches(double sizeInInches) {  this.sizeInInches = sizeInInches; }
+			write = "? * 2.54E0")
+	public double getSizeInInches() {
+		return sizeInInches;
+	}
+
+	public void setSizeInInches(double sizeInInches) {
+		this.sizeInInches = sizeInInches;
+	}
+
 	private double sizeInInches;
 
 

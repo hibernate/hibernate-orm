@@ -6,8 +6,8 @@ import org.hibernate.envers.test.integration.interfaces.hbm.allAudited.AbstractA
  * @author Hern�n Chanfreau
  */
 public class JoinedAllAuditedTest extends AbstractAllAuditedTest {
-    @Override
-    protected String[] getMappings() {
-        return new String[]{"mappings/interfaces/joinedAllAuditedMappings.hbm.xml"};
-    }
+	@Override
+	protected String[] getMappings() {
+		return new String[] {"mappings/interfaces/joinedAllAuditedMappings.hbm.xml"};
+	}
 }

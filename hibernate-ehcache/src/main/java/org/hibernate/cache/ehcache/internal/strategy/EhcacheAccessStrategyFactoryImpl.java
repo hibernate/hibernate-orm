@@ -42,44 +42,39 @@ import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
  */
 public class EhcacheAccessStrategyFactoryImpl implements EhcacheAccessStrategyFactory {
 
-    private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
-            EhCacheMessageLogger.class,
-            EhcacheAccessStrategyFactoryImpl.class.getName()
-    );
+	private static final EhCacheMessageLogger LOG = Logger.getMessageLogger(
+			EhCacheMessageLogger.class,
+			EhcacheAccessStrategyFactoryImpl.class.getName()
+	);
 
-    /**
-     * {@inheritDoc}
-     */
-    public EntityRegionAccessStrategy createEntityRegionAccessStrategy(EhcacheEntityRegion entityRegion, AccessType accessType) {
-        switch ( accessType ) {
-            case READ_ONLY:
-                if ( entityRegion.getCacheDataDescription().isMutable() ) {
-                    LOG.readOnlyCacheConfiguredForMutableEntity( entityRegion.getName() );
-                }
-                return new ReadOnlyEhcacheEntityRegionAccessStrategy( entityRegion );
-            case READ_WRITE:
-                return new ReadWriteEhcacheEntityRegionAccessStrategy( entityRegion );
+	@Override
+	public EntityRegionAccessStrategy createEntityRegionAccessStrategy(
+			EhcacheEntityRegion entityRegion,
+			AccessType accessType) {
+		switch ( accessType ) {
+			case READ_ONLY:
+				if ( entityRegion.getCacheDataDescription().isMutable() ) {
+					LOG.readOnlyCacheConfiguredForMutableEntity( entityRegion.getName() );
+				}
+				return new ReadOnlyEhcacheEntityRegionAccessStrategy( entityRegion );
+			case READ_WRITE:
+				return new ReadWriteEhcacheEntityRegionAccessStrategy( entityRegion );
 
-            case NONSTRICT_READ_WRITE:
-                return new NonStrictReadWriteEhcacheEntityRegionAccessStrategy(
-                        entityRegion
-                );
+			case NONSTRICT_READ_WRITE:
+				return new NonStrictReadWriteEhcacheEntityRegionAccessStrategy( entityRegion );
 
-            case TRANSACTIONAL:
-                return new TransactionalEhcacheEntityRegionAccessStrategy(
-                        entityRegion,
-                        entityRegion.getEhcache()
-                );
-            default:
-                throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
+			case TRANSACTIONAL:
+				return new TransactionalEhcacheEntityRegionAccessStrategy(
+						entityRegion,
+						entityRegion.getEhcache()
+				);
+			default:
+				throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
+		}
 
-        }
+	}
 
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+	@Override
     public CollectionRegionAccessStrategy createCollectionRegionAccessStrategy(EhcacheCollectionRegion collectionRegion,
                                                                                AccessType accessType) {
         switch ( accessType ) {
@@ -108,32 +103,33 @@ public class EhcacheAccessStrategyFactoryImpl implements EhcacheAccessStrategyFa
     }
 
 	@Override
-	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(EhcacheNaturalIdRegion naturalIdRegion,
+	public NaturalIdRegionAccessStrategy createNaturalIdRegionAccessStrategy(
+			EhcacheNaturalIdRegion naturalIdRegion,
 			AccessType accessType) {
-        switch ( accessType ) {
-        case READ_ONLY:
-            if ( naturalIdRegion.getCacheDataDescription().isMutable() ) {
-                LOG.readOnlyCacheConfiguredForMutableEntity( naturalIdRegion.getName() );
-            }
-            return new ReadOnlyEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion
-            );
-        case READ_WRITE:
-            return new ReadWriteEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion
-            );
-        case NONSTRICT_READ_WRITE:
-            return new NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion
-            );
-        case TRANSACTIONAL:
-            return new TransactionalEhcacheNaturalIdRegionAccessStrategy(
-                    naturalIdRegion, naturalIdRegion.getEhcache()
-            );
-        default:
-            throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
-    }
+		switch ( accessType ) {
+			case READ_ONLY:
+				if ( naturalIdRegion.getCacheDataDescription().isMutable() ) {
+					LOG.readOnlyCacheConfiguredForMutableEntity( naturalIdRegion.getName() );
+				}
+				return new ReadOnlyEhcacheNaturalIdRegionAccessStrategy(
+						naturalIdRegion
+				);
+			case READ_WRITE:
+				return new ReadWriteEhcacheNaturalIdRegionAccessStrategy(
+						naturalIdRegion
+				);
+			case NONSTRICT_READ_WRITE:
+				return new NonStrictReadWriteEhcacheNaturalIdRegionAccessStrategy(
+						naturalIdRegion
+				);
+			case TRANSACTIONAL:
+				return new TransactionalEhcacheNaturalIdRegionAccessStrategy(
+						naturalIdRegion, naturalIdRegion.getEhcache()
+				);
+			default:
+				throw new IllegalArgumentException( "unrecognized access strategy type [" + accessType + "]" );
+		}
 	}
 
-    
+
 }

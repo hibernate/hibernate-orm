@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.internal;
+
 import java.sql.ResultSet;
 
 import org.hibernate.engine.jdbc.ColumnNameCache;
@@ -32,17 +33,19 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
  * Standard Hibernate implementation for wrapping a {@link ResultSet} in a
  " column name cache" wrapper.
  *
+ * @author Steve Ebersole
  * @author Gail Badner
  */
 public class ResultSetWrapperImpl implements ResultSetWrapper {
-	public static ResultSetWrapper INSTANCE = new ResultSetWrapperImpl();
+	/**
+	 * Singleton access
+	 */
+	public static final ResultSetWrapper INSTANCE = new ResultSetWrapperImpl();
 
 	private ResultSetWrapperImpl() {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache) {
 		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache );
 	}

@@ -37,7 +37,6 @@ import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExcepti
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.TransactionalDataRegion;
-import org.hibernate.cfg.Settings;
 
 /**
  * An Ehcache specific TransactionalDataRegion.
@@ -51,7 +50,6 @@ import org.hibernate.cfg.Settings;
  * @author Alex Snaps
  */
 public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements TransactionalDataRegion {
-
 	private static final int LOCAL_LOCK_PROVIDER_CONCURRENCY = 128;
 
 	protected final boolean isMinimalPutsEnabled;
@@ -62,6 +60,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	protected final CacheDataDescription metadata;
 
 	private final CacheLockProvider lockProvider;
+	private final boolean locksAreIndependentOfCache;
 
 	/**
 	 * Construct an transactional Hibernate cache region around the given Ehcache instance.
@@ -72,39 +71,40 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 		this.isMinimalPutsEnabled = isMinimalPutsEnabled;
 		this.metadata = metadata;
 
-		Object context = cache.getInternalContext();
+		final Object context = cache.getInternalContext();
 		if ( context instanceof CacheLockProvider ) {
 			this.lockProvider = (CacheLockProvider) context;
 		}
 		else {
 			this.lockProvider = new StripedReadWriteLockSync( LOCAL_LOCK_PROVIDER_CONCURRENCY );
 		}
+		this.locksAreIndependentOfCache = lockProvider instanceof StripedReadWriteLockSync;
 	}
 
 	public boolean isMinimalPutsEnabled(){
 		return isMinimalPutsEnabled;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isTransactionAware() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public CacheDataDescription getCacheDataDescription() {
 		return metadata;
 	}
 
 	/**
 	 * Get the value mapped to this key, or null if no value is mapped to this key.
+	 *
+	 * @param key The cache key
+	 *
+	 * @return The cached data
 	 */
 	public final Object get(Object key) {
 		try {
-			Element element = cache.get( key );
+			final Element element = getCache().get( key );
 			if ( element == null ) {
 				return null;
 			}
@@ -112,7 +112,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 				return element.getObjectValue();
 			}
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -126,19 +126,24 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Map the given value to the given key, replacing any existing mapping for this key
+	 *
+	 * @param key The cache key
+	 * @param value The data to cache
+	 *
+	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void put(Object key, Object value) throws CacheException {
 		try {
-			Element element = new Element( key, value );
-			cache.put( element );
+			final Element element = new Element( key, value );
+			getCache().put( element );
 		}
-		catch ( IllegalArgumentException e ) {
+		catch (IllegalArgumentException e) {
 			throw new CacheException( e );
 		}
-		catch ( IllegalStateException e ) {
+		catch (IllegalStateException e) {
 			throw new CacheException( e );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -151,18 +156,22 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Remove the mapping for this key (if any exists).
+	 *
+	 * @param key The cache key
+	 *
+	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void remove(Object key) throws CacheException {
 		try {
-			cache.remove( key );
+			getCache().remove( key );
 		}
-		catch ( ClassCastException e ) {
+		catch (ClassCastException e) {
 			throw new CacheException( e );
 		}
-		catch ( IllegalStateException e ) {
+		catch (IllegalStateException e) {
 			throw new CacheException( e );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -175,15 +184,17 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Remove all mapping from this cache region.
+	 *
+	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void clear() throws CacheException {
 		try {
-			cache.removeAll();
+			getCache().removeAll();
 		}
-		catch ( IllegalStateException e ) {
+		catch (IllegalStateException e) {
 			throw new CacheException( e );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -196,12 +207,16 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Attempts to write lock the mapping for the given key.
+	 *
+	 * @param key The cache key
+	 *
+	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void writeLock(Object key) {
 		try {
 			lockProvider.getSyncForKey( key ).lock( LockType.WRITE );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -214,12 +229,16 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Attempts to write unlock the mapping for the given key.
+	 *
+	 * @param key The cache key
+	 *
+ 	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void writeUnlock(Object key) {
 		try {
 			lockProvider.getSyncForKey( key ).unlock( LockType.WRITE );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -232,12 +251,16 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Attempts to read lock the mapping for the given key.
+	 *
+	 * @param key The cache key
+	 *
+	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void readLock(Object key) {
 		try {
 			lockProvider.getSyncForKey( key ).lock( LockType.WRITE );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -250,12 +273,16 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 
 	/**
 	 * Attempts to read unlock the mapping for the given key.
+	 *
+	 * @param key The cache key
+	 *
+	 * @throws CacheException Indicates a problem accessing the cache
 	 */
 	public final void readUnlock(Object key) {
 		try {
 			lockProvider.getSyncForKey( key ).unlock( LockType.WRITE );
 		}
-		catch ( net.sf.ehcache.CacheException e ) {
+		catch (net.sf.ehcache.CacheException e) {
 			if ( e instanceof NonStopCacheException ) {
 				HibernateNonstopCacheExceptionHandler.getInstance()
 						.handleNonstopCacheException( (NonStopCacheException) e );
@@ -271,8 +298,10 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 * <p/>
 	 * Independent locks are not locked by the cache when the cache is accessed directly.  This means that for an independent lock
 	 * lock holds taken through a region method will not block direct access to the cache via other means.
+	 *
+	 * @return true/false.  See discussion above.
 	 */
 	public final boolean locksAreIndependentOfCache() {
-		return lockProvider instanceof StripedReadWriteLockSync;
+		return locksAreIndependentOfCache;
 	}
 }

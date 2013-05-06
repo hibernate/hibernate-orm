@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,159 +20,223 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.criterion;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.Type;
 
 /**
+ * A projection that wraps other projections to allow selecting multiple values.
+ *
  * @author Gavin King
  */
 public class ProjectionList implements EnhancedProjection {
-	
-	private List elements = new ArrayList();
-	
-	protected ProjectionList() {}
-	
+	private List<Projection> elements = new ArrayList<Projection>();
+
+	/**
+	 * Constructs a ProjectionList
+	 *
+	 * @see Projections#projectionList()
+	 */
+	protected ProjectionList() {
+	}
+
+	/**
+	 * Lol
+	 *
+	 * @return duh
+	 *
+	 * @deprecated an instance factory method does not make sense
+	 *
+	 * @see Projections#projectionList()
+	 */
+	@Deprecated
 	public ProjectionList create() {
 		return new ProjectionList();
 	}
-	
-	public ProjectionList add(Projection proj) {
-		elements.add(proj);
+
+	/**
+	 * Add a projection to this list of projections
+	 *
+	 * @param projection The projection to add
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public ProjectionList add(Projection projection) {
+		elements.add( projection );
 		return this;
 	}
 
+	/**
+	 * Adds a projection to this list of projections after wrapping it with an alias
+	 *
+	 * @param projection The projection to add
+	 * @param alias The alias to apply to the projection
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see Projections#alias
+	 */
 	public ProjectionList add(Projection projection, String alias) {
 		return add( Projections.alias( projection, alias ) );
 	}
 
-	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery)
-	throws HibernateException {
-		List types = new ArrayList( getLength() );
-		for ( int i=0; i<getLength(); i++ ) {
-			Type[] elemTypes = getProjection(i).getTypes(criteria, criteriaQuery);
-			ArrayHelper.addAll(types, elemTypes);
-		}
-		return ArrayHelper.toTypeArray(types);
-	}
-	
-	public String toSqlString(Criteria criteria, int loc, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
-		StringBuilder buf = new StringBuilder();
-		for ( int i=0; i<getLength(); i++ ) {
-			Projection proj = getProjection(i);
-			buf.append( proj.toSqlString(criteria, loc, criteriaQuery) );
-			loc += getColumnAliases(loc, criteria, criteriaQuery, proj ).length;
-			if ( i<elements.size()-1 ) buf.append(", ");
-		}
-		return buf.toString();
-	}
-	
-	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) 
-	throws HibernateException {
-		StringBuilder buf = new StringBuilder();
-		for ( int i=0; i<getLength(); i++ ) {
-			Projection proj = getProjection(i);
-			if ( proj.isGrouped() ) {
-				buf.append( proj.toGroupSqlString(criteria, criteriaQuery) )
-					.append(", ");
+	@Override
+	public boolean isGrouped() {
+		for ( Projection projection : elements ) {
+			if ( projection.isGrouped() ) {
+				return true;
 			}
 		}
-		if ( buf.length()>2 ) buf.setLength( buf.length()-2 ); //pull off the last ", "
+		return false;
+	}
+
+	@Override
+	public Type[] getTypes(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final List<Type> types = new ArrayList<Type>( getLength() );
+		for ( Projection projection : elements ) {
+			final Type[] elemTypes = projection.getTypes( criteria, criteriaQuery );
+			Collections.addAll( types, elemTypes );
+		}
+		return types.toArray( new Type[types.size()] );
+	}
+
+	@Override
+	public String toSqlString(Criteria criteria, int loc, CriteriaQuery criteriaQuery) throws HibernateException {
+		final StringBuilder buf = new StringBuilder();
+		String separator = "";
+
+		for ( Projection projection : elements ) {
+			buf.append( separator ).append( projection.toSqlString( criteria, loc, criteriaQuery ) );
+			loc += getColumnAliases( loc, criteria, criteriaQuery, projection ).length;
+			separator = ", ";
+		}
 		return buf.toString();
 	}
-	
-	public String[] getColumnAliases(int loc) {
-		List result = new ArrayList( getLength() );
-		for ( int i=0; i<getLength(); i++ ) {
-			String[] colAliases = getProjection(i).getColumnAliases(loc);
-			ArrayHelper.addAll(result, colAliases);
-			loc+=colAliases.length;
+
+	@Override
+	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		final StringBuilder buf = new StringBuilder();
+		String separator = "";
+		for ( Projection projection : elements ) {
+			if ( ! projection.isGrouped() ) {
+				continue;
+			}
+
+			buf.append( separator ).append( projection.toGroupSqlString( criteria, criteriaQuery ) );
+			separator = ", ";
 		}
-		return ArrayHelper.toStringArray(result);
+		return buf.toString();
 	}
 
-	public String[] getColumnAliases(int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
-		List result = new ArrayList( getLength() );
-		for ( int i=0; i<getLength(); i++ ) {
-			String[] colAliases = getColumnAliases( loc, criteria, criteriaQuery, getProjection( i ) );
-			ArrayHelper.addAll(result, colAliases);
-			loc+=colAliases.length;
+	@Override
+	public String[] getColumnAliases(final int loc) {
+		int position = loc;
+		final List<String> result = new ArrayList<String>( getLength() );
+		for ( Projection projection : elements ) {
+			final String[] aliases = projection.getColumnAliases( position );
+			Collections.addAll( result, aliases );
+			position += aliases.length;
 		}
-		return ArrayHelper.toStringArray(result);
+		return result.toArray( new String[ result.size() ] );
 	}
 
-	public String[] getColumnAliases(String alias, int loc) {
-		for ( int i=0; i<getLength(); i++ ) {
-			String[] result = getProjection(i).getColumnAliases(alias, loc);
-			if (result!=null) return result;
-			loc += getProjection(i).getColumnAliases(loc).length;
+	@Override
+	public String[] getColumnAliases(final int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
+		int position = loc;
+		final List<String> result = new ArrayList<String>( getLength() );
+		for ( Projection projection : elements ) {
+			final String[] aliases = getColumnAliases( position, criteria, criteriaQuery, projection );
+			Collections.addAll( result, aliases );
+			position += aliases.length;
+		}
+		return result.toArray( new String[result.size()] );
+	}
+
+	@Override
+	public String[] getColumnAliases(String alias, final int loc) {
+		int position = loc;
+		for ( Projection projection : elements ) {
+			final String[] aliases = projection.getColumnAliases( alias, position );
+			if ( aliases != null ) {
+				return aliases;
+			}
+			position += projection.getColumnAliases( position ).length;
 		}
 		return null;
 	}
 
+	@Override
 	public String[] getColumnAliases(String alias, int loc, Criteria criteria, CriteriaQuery criteriaQuery) {
-		for ( int i=0; i<getLength(); i++ ) {
-			String[] result = getColumnAliases( alias, loc, criteria, criteriaQuery, getProjection(i) );
-			if (result!=null) return result;
-			loc += getColumnAliases( loc, criteria, criteriaQuery, getProjection( i ) ).length;
+		int position = loc;
+		for ( Projection projection : elements ) {
+			final String[] aliases = getColumnAliases( alias, position, criteria, criteriaQuery, projection );
+			if ( aliases != null ) {
+				return aliases;
+			}
+			position += getColumnAliases( position, criteria, criteriaQuery, projection ).length;
 		}
 		return null;
 	}
 
 	private static String[] getColumnAliases(int loc, Criteria criteria, CriteriaQuery criteriaQuery, Projection projection) {
-		return projection instanceof EnhancedProjection ?
-				( ( EnhancedProjection ) projection ).getColumnAliases( loc, criteria, criteriaQuery ) :
-				projection.getColumnAliases( loc );
+		return projection instanceof EnhancedProjection
+				? ( (EnhancedProjection) projection ).getColumnAliases( loc, criteria, criteriaQuery )
+				: projection.getColumnAliases( loc );
 	}
 
 	private static String[] getColumnAliases(String alias, int loc, Criteria criteria, CriteriaQuery criteriaQuery, Projection projection) {
-		return projection instanceof EnhancedProjection ?
-				( ( EnhancedProjection ) projection ).getColumnAliases( alias, loc, criteria, criteriaQuery ) :
-				projection.getColumnAliases( alias, loc );
+		return projection instanceof EnhancedProjection
+				? ( (EnhancedProjection) projection ).getColumnAliases( alias, loc, criteria, criteriaQuery )
+				: projection.getColumnAliases( alias, loc );
 	}
 
+	@Override
 	public Type[] getTypes(String alias, Criteria criteria, CriteriaQuery criteriaQuery) {
-		for ( int i=0; i<getLength(); i++ ) {
-			Type[] result = getProjection(i).getTypes(alias, criteria, criteriaQuery);
-			if (result!=null) return result;
+		for ( Projection projection : elements ) {
+			final Type[] types = projection.getTypes( alias, criteria, criteriaQuery );
+			if ( types != null ) {
+				return types;
+			}
 		}
 		return null;
 	}
 
+	@Override
 	public String[] getAliases() {
-		List result = new ArrayList( getLength() );
-		for ( int i=0; i<getLength(); i++ ) {
-			String[] aliases = getProjection(i).getAliases();
-			ArrayHelper.addAll( result, aliases );
+		final List<String> result = new ArrayList<String>( getLength() );
+		for ( Projection projection : elements ) {
+			final String[] aliases = projection.getAliases();
+			Collections.addAll( result, aliases );
 		}
-		return ArrayHelper.toStringArray(result);
+		return result.toArray( new String[result.size()] );
+	}
 
-	}
-	
+	/**
+	 * Access a wrapped projection by index
+	 *
+	 * @param i The index of the projection to return
+	 *
+	 * @return The projection
+	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public Projection getProjection(int i) {
-		return (Projection) elements.get(i);
+		return elements.get( i );
 	}
-	
+
 	public int getLength() {
 		return elements.size();
 	}
 
+	@Override
 	public String toString() {
 		return elements.toString();
 	}
 
-	public boolean isGrouped() {
-		for ( int i=0; i<getLength(); i++ ) {
-			if ( getProjection(i).isGrouped() ) return true;
-		}
-		return false;
-	}
 }

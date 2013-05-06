@@ -78,8 +78,10 @@ import org.hibernate.type.Type;
  * @author Joshua Davis (pgmjsd@sourceforge.net)
  */
 public class QueryTranslatorImpl implements FilterTranslator {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryTranslatorImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			QueryTranslatorImpl.class.getName()
+	);
 
 	private SessionFactoryImplementor factory;
 
@@ -132,8 +134,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * @throws MappingException There was a problem querying defined mappings.
 	 */
 	public void compile(
-	        Map replacements,
-	        boolean shallow) throws QueryException, MappingException {
+			Map replacements,
+			boolean shallow) throws QueryException, MappingException {
 		doCompile( replacements, shallow, null );
 	}
 
@@ -148,9 +150,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * @throws MappingException There was a problem querying defined mappings.
 	 */
 	public void compile(
-	        String collectionRole,
-	        Map replacements,
-	        boolean shallow) throws QueryException, MappingException {
+			String collectionRole,
+			Map replacements,
+			boolean shallow) throws QueryException, MappingException {
 		doCompile( replacements, shallow, collectionRole );
 	}
 
@@ -178,12 +180,12 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		try {
 			// PHASE 1 : Parse the HQL into an AST.
-			HqlParser parser = parse( true );
+			final HqlParser parser = parse( true );
 
 			// PHASE 2 : Analyze the HQL AST, and produce an SQL AST.
-			HqlSqlWalker w = analyze( parser, collectionRole );
+			final HqlSqlWalker w = analyze( parser, collectionRole );
 
-			sqlAst = ( Statement ) w.getAST();
+			sqlAst = (Statement) w.getAST();
 
 			// at some point the generate phase needs to be moved out of here,
 			// because a single object-level DML might spawn multiple SQL DML
@@ -201,15 +203,19 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			}
 			else {
 				// PHASE 3 : Generate the SQL.
-				generate( ( QueryNode ) sqlAst );
+				generate( (QueryNode) sqlAst );
 				queryLoader = new QueryLoader( this, factory, w.getSelectClause() );
 			}
 
 			compiled = true;
 		}
 		catch ( QueryException qe ) {
-			qe.setQueryString( hql );
-			throw qe;
+			if ( qe.getQueryString() == null ) {
+				throw qe.wrapWithQueryString( hql );
+			}
+			else {
+				throw qe;
+			}
 		}
 		catch ( RecognitionException e ) {
 			// we do not actually propagate ANTLRExceptions as a cause, so
@@ -224,12 +230,13 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			throw new QueryException( e.getMessage(), hql );
 		}
 
-		this.enabledFilters = null; //only needed during compilation phase...
+		//only needed during compilation phase...
+		this.enabledFilters = null;
 	}
 
 	private void generate(AST sqlAst) throws QueryException, RecognitionException {
 		if ( sql == null ) {
-			SqlGenerator gen = new SqlGenerator(factory);
+			final SqlGenerator gen = new SqlGenerator( factory );
 			gen.statement( sqlAst );
 			sql = gen.getSQL();
 			if ( LOG.isDebugEnabled() ) {
@@ -241,16 +248,17 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 	}
 
+	private static final ASTPrinter SQL_TOKEN_PRINTER = new ASTPrinter( SqlTokenTypes.class );
+
 	private HqlSqlWalker analyze(HqlParser parser, String collectionRole) throws QueryException, RecognitionException {
-		HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole );
-		AST hqlAst = parser.getAST();
+		final HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole );
+		final AST hqlAst = parser.getAST();
 
 		// Transform the tree.
 		w.statement( hqlAst );
 
 		if ( LOG.isDebugEnabled() ) {
-			ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
-			LOG.debug( printer.showAsString( w.getAST(), "--- SQL AST ---" ) );
+			LOG.debug( SQL_TOKEN_PRINTER.showAsString( w.getAST(), "--- SQL AST ---" ) );
 		}
 
 		w.getParseErrorHandler().throwQueryException();
@@ -260,16 +268,15 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 	private HqlParser parse(boolean filter) throws TokenStreamException, RecognitionException {
 		// Parse the query string into an HQL AST.
-		HqlParser parser = HqlParser.getInstance( hql );
+		final HqlParser parser = HqlParser.getInstance( hql );
 		parser.setFilter( filter );
 
 		LOG.debugf( "parse() - HQL: %s", hql );
 		parser.statement();
 
-		AST hqlAst = parser.getAST();
+		final AST hqlAst = parser.getAST();
 
-		JavaConstantConverter converter = new JavaConstantConverter();
-		NodeTraverser walker = new NodeTraverser( converter );
+		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter() );
 		walker.traverseDepthFirst( hqlAst );
 
 		showHqlAst( hqlAst );
@@ -278,10 +285,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return parser;
 	}
 
+	private static final ASTPrinter HQL_TOKEN_PRINTER = new ASTPrinter( HqlTokenTypes.class );
+
 	void showHqlAst(AST hqlAst) {
 		if ( LOG.isDebugEnabled() ) {
-			ASTPrinter printer = new ASTPrinter( HqlTokenTypes.class );
-			LOG.debug( printer.showAsString( hqlAst, "--- HQL AST ---" ) );
+			LOG.debug( HQL_TOKEN_PRINTER.showAsString( hqlAst, "--- HQL AST ---" ) );
 		}
 	}
 

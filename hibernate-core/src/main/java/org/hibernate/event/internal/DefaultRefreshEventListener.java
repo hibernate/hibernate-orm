@@ -34,6 +34,7 @@ import org.hibernate.PersistentObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.internal.Cascade;
+import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
@@ -118,9 +119,12 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 
 		// cascade the refresh prior to refreshing this entity
-		refreshedAlready.put(object, object);
-		new Cascade( CascadingActions.REFRESH, Cascade.BEFORE_REFRESH, source)
-				.cascade( persister, object, refreshedAlready );
+		refreshedAlready.put( object, object );
+		new Cascade( CascadingActions.REFRESH, CascadePoint.BEFORE_REFRESH, source ).cascade(
+				persister,
+				object,
+				refreshedAlready
+		);
 
 		if ( e != null ) {
 			final EntityKey key = source.generateEntityKey( id, persister );

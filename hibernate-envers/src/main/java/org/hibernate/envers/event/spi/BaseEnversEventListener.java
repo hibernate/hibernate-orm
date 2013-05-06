@@ -66,72 +66,84 @@ public abstract class BaseEnversEventListener implements EnversListener {
 			Object[] oldState,
 			SessionImplementor session) {
 		// Checking if this is enabled in configuration ...
-		if ( ! enversConfiguration.getGlobalCfg().isGenerateRevisionsForCollections() ) {
+		if ( !enversConfiguration.getGlobalCfg().isGenerateRevisionsForCollections() ) {
 			return;
 		}
 
 		// Checks every property of the entity, if it is an "owned" to-one relation to another entity.
 		// If the value of that property changed, and the relation is bi-directional, a new revision
 		// for the related entity is generated.
-		String[] propertyNames = entityPersister.getPropertyNames();
+		final String[] propertyNames = entityPersister.getPropertyNames();
 
-		for ( int i=0; i<propertyNames.length; i++ ) {
-			String propertyName = propertyNames[i];
-			RelationDescription relDesc = enversConfiguration.getEntCfg().getRelationDescription(entityName, propertyName);
-			if (relDesc != null && relDesc.isBidirectional() && relDesc.getRelationType() == RelationType.TO_ONE &&
-					relDesc.isInsertable()) {
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			final String propertyName = propertyNames[i];
+			final RelationDescription relDesc = enversConfiguration.getEntCfg().getRelationDescription(
+					entityName,
+					propertyName
+			);
+			if ( relDesc != null && relDesc.isBidirectional() && relDesc.getRelationType() == RelationType.TO_ONE &&
+					relDesc.isInsertable() ) {
 				// Checking for changes
-				Object oldValue = oldState == null ? null : oldState[i];
-				Object newValue = newState == null ? null : newState[i];
+				final Object oldValue = oldState == null ? null : oldState[i];
+				final Object newValue = newState == null ? null : newState[i];
 
-				if (!EntityTools.entitiesEqual( session, relDesc.getToEntityName(), oldValue, newValue )) {
+				if ( !EntityTools.entitiesEqual( session, relDesc.getToEntityName(), oldValue, newValue ) ) {
 					// We have to generate changes both in the old collection (size decreses) and new collection
 					// (size increases).
-					if (newValue != null) {
-						addCollectionChangeWorkUnit(auditProcess, session, entityName, relDesc, newValue);
+					if ( newValue != null ) {
+						addCollectionChangeWorkUnit( auditProcess, session, entityName, relDesc, newValue );
 					}
 
-					if (oldValue != null) {
-						addCollectionChangeWorkUnit(auditProcess, session, entityName, relDesc, oldValue);
+					if ( oldValue != null ) {
+						addCollectionChangeWorkUnit( auditProcess, session, entityName, relDesc, oldValue );
 					}
 				}
 			}
 		}
 	}
 
-	private void addCollectionChangeWorkUnit(AuditProcess auditProcess, SessionImplementor session,
-											 String fromEntityName, RelationDescription relDesc, Object value) {
+	private void addCollectionChangeWorkUnit(
+			AuditProcess auditProcess, SessionImplementor session,
+			String fromEntityName, RelationDescription relDesc, Object value) {
 		// relDesc.getToEntityName() doesn't always return the entity name of the value - in case
 		// of subclasses, this will be root class, no the actual class. So it can't be used here.
 		String toEntityName;
 		Serializable id;
 
-		if (value instanceof HibernateProxy) {
-		    HibernateProxy hibernateProxy = (HibernateProxy) value;
-		    toEntityName = session.bestGuessEntityName(value);
-		    id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
-            // We've got to initialize the object from the proxy to later read its state.
-            value = EntityTools.getTargetFromProxy(session.getFactory(), hibernateProxy);
-		} else {
-	        toEntityName =  session.guessEntityName(value);
+		if ( value instanceof HibernateProxy ) {
+			final HibernateProxy hibernateProxy = (HibernateProxy) value;
+			toEntityName = session.bestGuessEntityName( value );
+			id = hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+			// We've got to initialize the object from the proxy to later read its state.
+			value = EntityTools.getTargetFromProxy( session.getFactory(), hibernateProxy );
+		}
+		else {
+			toEntityName = session.guessEntityName( value );
 
-            IdMapper idMapper = enversConfiguration.getEntCfg().get(toEntityName).getIdMapper();
-            id = (Serializable) idMapper.mapToIdFromEntity(value);
+			final IdMapper idMapper = enversConfiguration.getEntCfg().get( toEntityName ).getIdMapper();
+			id = (Serializable) idMapper.mapToIdFromEntity( value );
 		}
 
-		Set<String> toPropertyNames = enversConfiguration.getEntCfg()
-				.getToPropertyNames(fromEntityName, relDesc.getFromPropertyName(), toEntityName);
-		String toPropertyName = toPropertyNames.iterator().next();
+		final Set<String> toPropertyNames = enversConfiguration.getEntCfg().getToPropertyNames(
+				fromEntityName,
+				relDesc.getFromPropertyName(),
+				toEntityName
+		);
+		final String toPropertyName = toPropertyNames.iterator().next();
 
-		auditProcess.addWorkUnit(new CollectionChangeWorkUnit(session, toEntityName,
-				toPropertyName, enversConfiguration, id, value));
+		auditProcess.addWorkUnit(
+				new CollectionChangeWorkUnit(
+						session, toEntityName,
+						toPropertyName, enversConfiguration, id, value
+				)
+		);
 	}
 
-    protected void checkIfTransactionInProgress(SessionImplementor session) {
-        if (!session.isTransactionInProgress()) {
-            // Historical data would not be flushed to audit tables if outside of active transaction
-            // (AuditProcess#doBeforeTransactionCompletion(SessionImplementor) not executed). 
-            throw new AuditException("Unable to create revision because of non-active transaction");
-        }
-    }
+	protected void checkIfTransactionInProgress(SessionImplementor session) {
+		if ( !session.isTransactionInProgress() ) {
+			// Historical data would not be flushed to audit tables if outside of active transaction
+			// (AuditProcess#doBeforeTransactionCompletion(SessionImplementor) not executed).
+			throw new AuditException( "Unable to create revision because of non-active transaction" );
+		}
+	}
 }

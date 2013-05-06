@@ -84,7 +84,7 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 			Dialect dialect = factory.getDialect();
 			return literalType.objectToSQLString( constantValue, dialect );
 		}
-		catch ( Throwable t ) {
+		catch ( Exception t ) {
 			throw new QueryException( QueryTranslator.ERROR_CANNOT_FORMAT_LITERAL + constantExpression, t );
 		}
 	}

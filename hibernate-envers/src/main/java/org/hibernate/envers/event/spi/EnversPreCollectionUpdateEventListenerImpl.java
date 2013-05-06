@@ -29,6 +29,8 @@ import org.hibernate.event.spi.PreCollectionUpdateEvent;
 import org.hibernate.event.spi.PreCollectionUpdateEventListener;
 
 /**
+ * Envers-specific collection update event listener
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
@@ -43,9 +45,9 @@ public class EnversPreCollectionUpdateEventListenerImpl
 
 	@Override
 	public void onPreUpdateCollection(PreCollectionUpdateEvent event) {
-        CollectionEntry collectionEntry = getCollectionEntry( event );
-        if ( ! collectionEntry.getLoadedPersister().isInverse() ) {
-            onCollectionAction( event, event.getCollection(), collectionEntry.getSnapshot(), collectionEntry );
-        }
+		final CollectionEntry collectionEntry = getCollectionEntry( event );
+		if ( !collectionEntry.getLoadedPersister().isInverse() ) {
+			onCollectionAction( event, event.getCollection(), collectionEntry.getSnapshot(), collectionEntry );
+		}
 	}
 }

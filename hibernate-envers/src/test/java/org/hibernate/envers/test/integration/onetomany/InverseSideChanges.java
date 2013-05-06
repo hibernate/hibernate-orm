@@ -24,85 +24,85 @@
 
 package org.hibernate.envers.test.integration.onetomany;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import javax.persistence.EntityManager;
-
-import org.junit.Test;
 
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 
+import org.junit.Test;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 public class InverseSideChanges extends BaseEnversJPAFunctionalTestCase {
-    private Integer ed1_id;
+	private Integer ed1_id;
 
-    private Integer ing1_id;
+	private Integer ing1_id;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { SetRefEdEntity.class, SetRefIngEntity.class };
-    }
+		return new Class[] {SetRefEdEntity.class, SetRefIngEntity.class};
+	}
 
-    @Test
-    @Priority(10)
-    public void initData() {
-        EntityManager em = getEntityManager();
+	@Test
+	@Priority(10)
+	public void initData() {
+		EntityManager em = getEntityManager();
 
-        SetRefEdEntity ed1 = new SetRefEdEntity(1, "data_ed_1");
+		SetRefEdEntity ed1 = new SetRefEdEntity( 1, "data_ed_1" );
 
-        SetRefIngEntity ing1 = new SetRefIngEntity(3, "data_ing_1");
+		SetRefIngEntity ing1 = new SetRefIngEntity( 3, "data_ing_1" );
 
-        // Revision 1
-        em.getTransaction().begin();
+		// Revision 1
+		em.getTransaction().begin();
 
-        em.persist(ed1);
+		em.persist( ed1 );
 
-        em.getTransaction().commit();
+		em.getTransaction().commit();
 
-        // Revision 2
+		// Revision 2
 
-        em.getTransaction().begin();
+		em.getTransaction().begin();
 
-        ed1 = em.find(SetRefEdEntity.class, ed1.getId());
-        
-        em.persist(ing1);
+		ed1 = em.find( SetRefEdEntity.class, ed1.getId() );
 
-        ed1.setReffering(new HashSet<SetRefIngEntity>());
-        ed1.getReffering().add(ing1);
+		em.persist( ing1 );
 
-        em.getTransaction().commit();
+		ed1.setReffering( new HashSet<SetRefIngEntity>() );
+		ed1.getReffering().add( ing1 );
 
-        //
+		em.getTransaction().commit();
 
-        ed1_id = ed1.getId();
+		//
 
-        ing1_id = ing1.getId();
-    }
+		ed1_id = ed1.getId();
 
-    @Test
-    public void testRevisionsCounts() {
-        assert Arrays.asList(1).equals(getAuditReader().getRevisions(SetRefEdEntity.class, ed1_id));
+		ing1_id = ing1.getId();
+	}
 
-        assert Arrays.asList(2).equals(getAuditReader().getRevisions(SetRefIngEntity.class, ing1_id));
-    }
+	@Test
+	public void testRevisionsCounts() {
+		assert Arrays.asList( 1 ).equals( getAuditReader().getRevisions( SetRefEdEntity.class, ed1_id ) );
 
-    @Test
-    public void testHistoryOfEdId1() {
-        SetRefEdEntity rev1 = getAuditReader().find(SetRefEdEntity.class, ed1_id, 1);
+		assert Arrays.asList( 2 ).equals( getAuditReader().getRevisions( SetRefIngEntity.class, ing1_id ) );
+	}
 
-        assert rev1.getReffering().equals(Collections.EMPTY_SET);
-    }
+	@Test
+	public void testHistoryOfEdId1() {
+		SetRefEdEntity rev1 = getAuditReader().find( SetRefEdEntity.class, ed1_id, 1 );
 
-    @Test
-    public void testHistoryOfEdIng1() {
-        SetRefIngEntity rev2 = getAuditReader().find(SetRefIngEntity.class, ing1_id, 2);
+		assert rev1.getReffering().equals( Collections.EMPTY_SET );
+	}
 
-        assert rev2.getReference() == null;
-    }
+	@Test
+	public void testHistoryOfEdIng1() {
+		SetRefIngEntity rev2 = getAuditReader().find( SetRefIngEntity.class, ing1_id, 2 );
+
+		assert rev2.getReference() == null;
+	}
 }

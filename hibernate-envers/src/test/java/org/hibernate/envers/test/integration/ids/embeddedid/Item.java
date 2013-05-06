@@ -1,8 +1,8 @@
 package org.hibernate.envers.test.integration.ids.embeddedid;
 
-import java.io.Serializable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import java.io.Serializable;
 
 import org.hibernate.envers.Audited;
 
@@ -12,57 +12,65 @@ import org.hibernate.envers.Audited;
 @Entity
 @Audited
 public class Item implements Serializable {
-    @EmbeddedId
-    private ItemId id;
+	@EmbeddedId
+	private ItemId id;
 
-    private Double price;
+	private Double price;
 
-    public Item() {
-    }
+	public Item() {
+	}
 
-    public Item(ItemId id, Double price) {
-        this.id = id;
-        this.price = price;
-    }
+	public Item(ItemId id, Double price) {
+		this.id = id;
+		this.price = price;
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Item)) return false;
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof Item) ) {
+			return false;
+		}
 
-        Item item = (Item) o;
+		Item item = (Item) o;
 
-        if (getId() != null ? !getId().equals(item.getId()) : item.getId() != null) return false;
-        if (getPrice() != null ? !getPrice().equals(item.getPrice()) : item.getPrice() != null) return false;
+		if ( getId() != null ? !getId().equals( item.getId() ) : item.getId() != null ) {
+			return false;
+		}
+		if ( getPrice() != null ? !getPrice().equals( item.getPrice() ) : item.getPrice() != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (price != null ? price.hashCode() : 0);
-        return result;
-    }
+	@Override
+	public int hashCode() {
+		int result = id != null ? id.hashCode() : 0;
+		result = 31 * result + (price != null ? price.hashCode() : 0);
+		return result;
+	}
 
-    @Override
-    public String toString() {
-        return "Item(id = " + id + ", price = + " + price + ")";
-    }
+	@Override
+	public String toString() {
+		return "Item(id = " + id + ", price = + " + price + ")";
+	}
 
-    public ItemId getId() {
-        return id;
-    }
+	public ItemId getId() {
+		return id;
+	}
 
-    public void setId(ItemId id) {
-        this.id = id;
-    }
+	public void setId(ItemId id) {
+		this.id = id;
+	}
 
-    public Double getPrice() {
-        return price;
-    }
+	public Double getPrice() {
+		return price;
+	}
 
-    public void setPrice(Double price) {
-        this.price = price;
-    }
+	public void setPrice(Double price) {
+		this.price = price;
+	}
 }

@@ -38,11 +38,17 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * A service initiator for the MultiTenantConnectionProvider service
+ *
  * @author Steve Ebersole
  */
 public class MultiTenantConnectionProviderInitiator implements StandardServiceInitiator<MultiTenantConnectionProvider> {
-	public static final MultiTenantConnectionProviderInitiator INSTANCE = new MultiTenantConnectionProviderInitiator();
 	private static final Logger log = Logger.getLogger( MultiTenantConnectionProviderInitiator.class );
+
+	/**
+	 * Singleton access
+	 */
+	public static final MultiTenantConnectionProviderInitiator INSTANCE = new MultiTenantConnectionProviderInitiator();
 
 	@Override
 	public Class<MultiTenantConnectionProvider> getServiceInitiated() {
@@ -55,6 +61,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 		final MultiTenancyStrategy strategy = MultiTenancyStrategy.determineMultiTenancyStrategy(  configurationValues );
 		if ( strategy == MultiTenancyStrategy.NONE || strategy == MultiTenancyStrategy.DISCRIMINATOR ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
+			return null;
 		}
 
 		final Object configValue = configurationValues.get( AvailableSettings.MULTI_TENANT_CONNECTION_PROVIDER );

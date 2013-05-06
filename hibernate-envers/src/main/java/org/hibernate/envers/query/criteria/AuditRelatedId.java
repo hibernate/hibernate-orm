@@ -28,27 +28,28 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 
 /**
  * Create restrictions on an id of an entity related to an audited entity.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 @SuppressWarnings({"JavaDoc"})
 public class AuditRelatedId {
-    private final PropertyNameGetter propertyNameGetter;
+	private final PropertyNameGetter propertyNameGetter;
 
-    public AuditRelatedId(PropertyNameGetter propertyNameGetter) {
-        this.propertyNameGetter = propertyNameGetter;
-    }
+	public AuditRelatedId(PropertyNameGetter propertyNameGetter) {
+		this.propertyNameGetter = propertyNameGetter;
+	}
 
-    /**
+	/**
 	 * Apply an "equal" constraint
 	 */
 	public AuditCriterion eq(Object id) {
-		return new RelatedAuditExpression(propertyNameGetter, id, true);
+		return new RelatedAuditExpression( propertyNameGetter, id, true );
 	}
 
-    /**
+	/**
 	 * Apply a "not equal" constraint
 	 */
 	public AuditCriterion ne(Object id) {
-		return new RelatedAuditExpression(propertyNameGetter, id, false);
+		return new RelatedAuditExpression( propertyNameGetter, id, false );
 	}
 }

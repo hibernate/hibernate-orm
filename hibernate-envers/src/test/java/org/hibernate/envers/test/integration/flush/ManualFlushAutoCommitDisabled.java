@@ -9,9 +9,9 @@ import org.hibernate.testing.TestForIssue;
  */
 @TestForIssue(jiraKey = "HHH-7017")
 public class ManualFlushAutoCommitDisabled extends ManualFlush {
-    @Override
-    protected void addConfigOptions(Map options) {
-        super.addConfigOptions(options);
-        options.put("hibernate.connection.autocommit", "false");
-    }
+	@Override
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( "hibernate.connection.autocommit", "false" );
+	}
 }

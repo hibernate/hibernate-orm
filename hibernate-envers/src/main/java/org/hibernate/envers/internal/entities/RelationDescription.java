@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -22,76 +22,78 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.internal.entities;
+
 import org.hibernate.envers.internal.entities.mapper.PropertyMapper;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 
 /**
  * @author Adam Warski (adam at warski dot org)
-*/
+ */
 public class RelationDescription {
-    private final String fromPropertyName;
-    private final RelationType relationType;
-    private final String toEntityName;
-    private final String mappedByPropertyName;
-    private final IdMapper idMapper;
-    private final PropertyMapper fakeBidirectionalRelationMapper;
-    private final PropertyMapper fakeBidirectionalRelationIndexMapper;
-    private final boolean insertable;
-    private boolean bidirectional;
+	private final String fromPropertyName;
+	private final RelationType relationType;
+	private final String toEntityName;
+	private final String mappedByPropertyName;
+	private final IdMapper idMapper;
+	private final PropertyMapper fakeBidirectionalRelationMapper;
+	private final PropertyMapper fakeBidirectionalRelationIndexMapper;
+	private final boolean insertable;
+	private boolean bidirectional;
 
-    public RelationDescription(String fromPropertyName, RelationType relationType, String toEntityName,
-                               String mappedByPropertyName, IdMapper idMapper,
-                               PropertyMapper fakeBidirectionalRelationMapper,
-                               PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable) {
-        this.fromPropertyName = fromPropertyName;
-        this.relationType = relationType;
-        this.toEntityName = toEntityName;
-        this.mappedByPropertyName = mappedByPropertyName;
-        this.idMapper = idMapper;
-        this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
-        this.fakeBidirectionalRelationIndexMapper = fakeBidirectionalRelationIndexMapper;
-        this.insertable = insertable;
+	public RelationDescription(
+			String fromPropertyName, RelationType relationType, String toEntityName,
+			String mappedByPropertyName, IdMapper idMapper,
+			PropertyMapper fakeBidirectionalRelationMapper,
+			PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable) {
+		this.fromPropertyName = fromPropertyName;
+		this.relationType = relationType;
+		this.toEntityName = toEntityName;
+		this.mappedByPropertyName = mappedByPropertyName;
+		this.idMapper = idMapper;
+		this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
+		this.fakeBidirectionalRelationIndexMapper = fakeBidirectionalRelationIndexMapper;
+		this.insertable = insertable;
 
-        this.bidirectional = false;
-    }
+		this.bidirectional = false;
+	}
 
-    public String getFromPropertyName() {
-        return fromPropertyName;
-    }
+	public String getFromPropertyName() {
+		return fromPropertyName;
+	}
 
-    public RelationType getRelationType() {
-        return relationType;
-    }
+	public RelationType getRelationType() {
+		return relationType;
+	}
 
-    public String getToEntityName() {
-        return toEntityName;
-    }
+	public String getToEntityName() {
+		return toEntityName;
+	}
 
-    public String getMappedByPropertyName() {
-        return mappedByPropertyName;
-    }
+	public String getMappedByPropertyName() {
+		return mappedByPropertyName;
+	}
 
-    public IdMapper getIdMapper() {
-        return idMapper;
-    }
+	public IdMapper getIdMapper() {
+		return idMapper;
+	}
 
-    public PropertyMapper getFakeBidirectionalRelationMapper() {
-        return fakeBidirectionalRelationMapper;
-    }
+	public PropertyMapper getFakeBidirectionalRelationMapper() {
+		return fakeBidirectionalRelationMapper;
+	}
 
-    public PropertyMapper getFakeBidirectionalRelationIndexMapper() {
-        return fakeBidirectionalRelationIndexMapper;
-    }
+	public PropertyMapper getFakeBidirectionalRelationIndexMapper() {
+		return fakeBidirectionalRelationIndexMapper;
+	}
 
-    public boolean isInsertable() {
-        return insertable;
-    }
+	public boolean isInsertable() {
+		return insertable;
+	}
 
-    public boolean isBidirectional() {
-        return bidirectional;
-    }
+	public boolean isBidirectional() {
+		return bidirectional;
+	}
 
-    void setBidirectional(boolean bidirectional) {
-        this.bidirectional = bidirectional;
-    }
+	void setBidirectional(boolean bidirectional) {
+		this.bidirectional = bidirectional;
+	}
 }

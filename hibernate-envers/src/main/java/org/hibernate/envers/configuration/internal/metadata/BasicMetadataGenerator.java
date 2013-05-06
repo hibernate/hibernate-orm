@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -40,47 +40,54 @@ import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * Generates metadata for basic properties: immutable types (including enums).
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public final class BasicMetadataGenerator {
-	@SuppressWarnings({ "unchecked" })
-	boolean addBasic(Element parent, PropertyAuditingData propertyAuditingData,
-					 Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
-		Type type = value.getType();
+	@SuppressWarnings({"unchecked"})
+	boolean addBasic(
+			Element parent, PropertyAuditingData propertyAuditingData,
+			Value value, SimpleMapperBuilder mapper, boolean insertable, boolean key) {
+		final Type type = value.getType();
 
-		if ( type instanceof BasicType || type instanceof SerializableToBlobType ||
-				"org.hibernate.type.PrimitiveByteArrayBlobType".equals( type.getClass().getName() ) ) {
+		if ( type instanceof BasicType
+				|| type instanceof SerializableToBlobType
+				|| "org.hibernate.type.PrimitiveByteArrayBlobType".equals( type.getClass().getName() ) ) {
 			if ( parent != null ) {
-				boolean addNestedType = ( value instanceof SimpleValue ) && ( (SimpleValue) value ).getTypeParameters() != null;
+				final boolean addNestedType = (value instanceof SimpleValue)
+						&& ((SimpleValue) value).getTypeParameters() != null;
 
 				String typeName = type.getName();
 				if ( typeName == null ) {
 					typeName = type.getClass().getName();
 				}
 
-				Element prop_mapping = MetadataTools.addProperty(
-						parent, propertyAuditingData.getName(),
-						addNestedType ? null : typeName, propertyAuditingData.isForceInsertable() || insertable, key
+				final Element propMapping = MetadataTools.addProperty(
+						parent,
+						propertyAuditingData.getName(),
+						addNestedType ? null : typeName,
+						propertyAuditingData.isForceInsertable() || insertable,
+						key
 				);
-				MetadataTools.addColumns( prop_mapping, value.getColumnIterator() );
+				MetadataTools.addColumns( propMapping, value.getColumnIterator() );
 
 				if ( addNestedType ) {
-					Properties typeParameters = ( (SimpleValue) value ).getTypeParameters();
-					Element type_mapping = prop_mapping.addElement( "type" );
-					type_mapping.addAttribute( "name", typeName );
+					final Properties typeParameters = ((SimpleValue) value).getTypeParameters();
+					final Element typeMapping = propMapping.addElement( "type" );
+					typeMapping.addAttribute( "name", typeName );
 
 					if ( "org.hibernate.type.EnumType".equals( typeName ) ) {
 						// Proper handling of enumeration type
-						mapEnumerationType( type_mapping, type, typeParameters );
+						mapEnumerationType( typeMapping, type, typeParameters );
 					}
 					else {
 						// By default copying all Hibernate properties
 						for ( Object object : typeParameters.keySet() ) {
-							String keyType = (String) object;
-							String property = typeParameters.getProperty( keyType );
+							final String keyType = (String) object;
+							final String property = typeParameters.getProperty( keyType );
 
 							if ( property != null ) {
-								type_mapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
+								typeMapping.addElement( "param" ).addAttribute( "name", keyType ).setText( property );
 							}
 						}
 					}
@@ -101,32 +108,43 @@ public final class BasicMetadataGenerator {
 
 	private void mapEnumerationType(Element parent, Type type, Properties parameters) {
 		if ( parameters.getProperty( EnumType.ENUM ) != null ) {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.ENUM ).setText( parameters.getProperty( EnumType.ENUM ) );
+			parent.addElement( "param" )
+					.addAttribute( "name", EnumType.ENUM )
+					.setText( parameters.getProperty( EnumType.ENUM ) );
 		}
 		else {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.ENUM ).setText( type.getReturnedClass().getName() );
+			parent.addElement( "param" ).addAttribute( "name", EnumType.ENUM ).setText(
+					type.getReturnedClass()
+							.getName()
+			);
 		}
 		if ( parameters.getProperty( EnumType.NAMED ) != null ) {
-			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED ).setText( parameters.getProperty( EnumType.NAMED ) );
+			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED ).setText(
+					parameters.getProperty(
+							EnumType.NAMED
+					)
+			);
 		}
 		else if ( parameters.get( DynamicParameterizedType.XPROPERTY ) != null ) {
 			// Case of annotations.
 			parent.addElement( "param" ).addAttribute( "name", EnumType.NAMED )
-										.setText( "" + !( (EnumType) ( (CustomType) type ).getUserType() ).isOrdinal() );
+					.setText( "" + !((EnumType) ((CustomType) type).getUserType()).isOrdinal() );
 		}
-		else {
-			// Otherwise we assume that the choice between ordinal and named representation has been omitted.
-			// Call to EnumType#isOrdinal() would always return the default Types.INTEGER. We let Hibernate
-			// to choose the proper strategy during runtime.
-		}
+		// Otherwise we assume that the choice between ordinal and named representation has been omitted.
+		// Call to EnumType#isOrdinal() would always return the default Types.INTEGER. We let Hibernate
+		// to choose the proper strategy during runtime.
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	boolean addManyToOne(Element parent, PropertyAuditingData propertyAuditingData, Value value, SimpleMapperBuilder mapper) {
-		Type type = value.getType();
+	@SuppressWarnings({"unchecked"})
+	boolean addManyToOne(
+			Element parent,
+			PropertyAuditingData propertyAuditingData,
+			Value value,
+			SimpleMapperBuilder mapper) {
+		final Type type = value.getType();
 
 		// A null mapper occurs when adding to composite-id element
-		Element manyToOneElement = parent.addElement( mapper != null ? "many-to-one" : "key-many-to-one" );
+		final Element manyToOneElement = parent.addElement( mapper != null ? "many-to-one" : "key-many-to-one" );
 		manyToOneElement.addAttribute( "name", propertyAuditingData.getName() );
 		manyToOneElement.addAttribute( "class", type.getName() );
 		MetadataTools.addColumns( manyToOneElement, value.getColumnIterator() );

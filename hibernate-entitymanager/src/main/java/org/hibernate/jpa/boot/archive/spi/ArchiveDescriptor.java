@@ -30,5 +30,10 @@ package org.hibernate.jpa.boot.archive.spi;
  * @author Emmanuel Bernard
  */
 public interface ArchiveDescriptor {
+	/**
+	 * Perform visitation using the given context
+	 *
+	 * @param archiveContext The visitation context
+	 */
 	public void visitArchive(ArchiveContext archiveContext);
 }

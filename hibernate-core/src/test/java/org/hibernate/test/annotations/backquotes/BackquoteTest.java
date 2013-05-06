@@ -59,6 +59,12 @@ public class BackquoteTest extends BaseUnitTestCase {
             log.debug(writer.toString());
 			fail(e.getMessage());
 		}
+		finally {
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+				sessionFactory = null;
+			}
+		}
 	}
 
 	/**
@@ -87,6 +93,11 @@ public class BackquoteTest extends BaseUnitTestCase {
 			e.printStackTrace(new PrintWriter(writer));
             log.debug(writer.toString());
         	fail(e.getMessage());
-        }
+        } finally {
+			if(sessionFactory!=null){
+				sessionFactory.close();
+				sessionFactory = null;
+			}
+		}
 	}
 }

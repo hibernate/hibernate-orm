@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.envers.test.entities.components;
+
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -36,77 +37,87 @@ import org.hibernate.envers.Audited;
 @Entity
 @Table(name = "CompTest")
 public class ComponentTestEntity {
-    @Id
-    @GeneratedValue
-    private Integer id;
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-    @Embedded
-    @Audited
-    private Component1 comp1;
+	@Embedded
+	@Audited
+	private Component1 comp1;
 
-    @Embedded
-    private Component2 comp2;
+	@Embedded
+	private Component2 comp2;
 
-    public ComponentTestEntity() {
-    }
+	public ComponentTestEntity() {
+	}
 
-    public ComponentTestEntity(Integer id, Component1 comp1, Component2 comp2) {
-        this.id = id;
-        this.comp1 = comp1;
-        this.comp2 = comp2;
-    }
+	public ComponentTestEntity(Integer id, Component1 comp1, Component2 comp2) {
+		this.id = id;
+		this.comp1 = comp1;
+		this.comp2 = comp2;
+	}
 
-    public ComponentTestEntity(Component1 comp1, Component2 comp2) {
-        this.comp1 = comp1;
-        this.comp2 = comp2;
-    }
+	public ComponentTestEntity(Component1 comp1, Component2 comp2) {
+		this.comp1 = comp1;
+		this.comp2 = comp2;
+	}
 
-    public Integer getId() {
-        return id;
-    }
+	public Integer getId() {
+		return id;
+	}
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public Component1 getComp1() {
-        return comp1;
-    }
+	public Component1 getComp1() {
+		return comp1;
+	}
 
-    public void setComp1(Component1 comp1) {
-        this.comp1 = comp1;
-    }
+	public void setComp1(Component1 comp1) {
+		this.comp1 = comp1;
+	}
 
-    public Component2 getComp2() {
-        return comp2;
-    }
+	public Component2 getComp2() {
+		return comp2;
+	}
 
-    public void setComp2(Component2 comp2) {
-        this.comp2 = comp2;
-    }
+	public void setComp2(Component2 comp2) {
+		this.comp2 = comp2;
+	}
 
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ComponentTestEntity)) return false;
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !(o instanceof ComponentTestEntity) ) {
+			return false;
+		}
 
-        ComponentTestEntity that = (ComponentTestEntity) o;
+		ComponentTestEntity that = (ComponentTestEntity) o;
 
-        if (comp1 != null ? !comp1.equals(that.comp1) : that.comp1 != null) return false;
-        if (comp2 != null ? !comp2.equals(that.comp2) : that.comp2 != null) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+		if ( comp1 != null ? !comp1.equals( that.comp1 ) : that.comp1 != null ) {
+			return false;
+		}
+		if ( comp2 != null ? !comp2.equals( that.comp2 ) : that.comp2 != null ) {
+			return false;
+		}
+		if ( id != null ? !id.equals( that.id ) : that.id != null ) {
+			return false;
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    public int hashCode() {
-        int result;
-        result = (id != null ? id.hashCode() : 0);
-        result = 31 * result + (comp1 != null ? comp1.hashCode() : 0);
-        result = 31 * result + (comp2 != null ? comp2.hashCode() : 0);
-        return result;
-    }
+	public int hashCode() {
+		int result;
+		result = (id != null ? id.hashCode() : 0);
+		result = 31 * result + (comp1 != null ? comp1.hashCode() : 0);
+		result = 31 * result + (comp2 != null ? comp2.hashCode() : 0);
+		return result;
+	}
 
-    public String toString() {
-        return "CTE(id = " + id + ", comp1 = " + comp1 + ", comp2 = " + comp2 + ")"; 
-    }
+	public String toString() {
+		return "CTE(id = " + id + ", comp1 = " + comp1 + ", comp2 = " + comp2 + ")";
+	}
 }

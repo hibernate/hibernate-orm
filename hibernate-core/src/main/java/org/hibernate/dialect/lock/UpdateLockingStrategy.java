@@ -49,8 +49,7 @@ import org.hibernate.sql.Update;
  * @since 3.2
  */
 public class UpdateLockingStrategy implements LockingStrategy {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			UpdateLockingStrategy.class.getName()
 	);
@@ -83,18 +82,19 @@ public class UpdateLockingStrategy implements LockingStrategy {
 
 	@Override
 	public void lock(
-	        Serializable id,
-	        Object version,
-	        Object object,
-	        int timeout,
-	        SessionImplementor session) throws StaleObjectStateException, JDBCException {
+			Serializable id,
+			Object version,
+			Object object,
+			int timeout,
+			SessionImplementor session) throws StaleObjectStateException, JDBCException {
 		if ( !lockable.isVersioned() ) {
 			throw new HibernateException( "write locks via update not supported for non-versioned entities [" + lockable.getEntityName() + "]" );
 		}
+
 		// todo : should we additionally check the current isolation mode explicitly?
-		SessionFactoryImplementor factory = session.getFactory();
+		final SessionFactoryImplementor factory = session.getFactory();
 		try {
-			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+			final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
 				lockable.getVersionType().nullSafeSet( st, version, 1, session );
 				int offset = 2;
@@ -106,7 +106,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 					lockable.getVersionType().nullSafeSet( st, version, offset, session );
 				}
 
-				int affected = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
+				final int affected = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st );
 				if ( affected < 0 ) {
 					if (factory.getStatistics().isStatisticsEnabled()) {
 						factory.getStatisticsImplementor().optimisticFailure( lockable.getEntityName() );
@@ -122,16 +122,16 @@ public class UpdateLockingStrategy implements LockingStrategy {
 		}
 		catch ( SQLException sqle ) {
 			throw session.getFactory().getSQLExceptionHelper().convert(
-			        sqle,
-			        "could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
-			        sql
+					sqle,
+					"could not lock: " + MessageHelper.infoString( lockable, id, session.getFactory() ),
+					sql
 			);
 		}
 	}
 
 	protected String generateLockString() {
-		SessionFactoryImplementor factory = lockable.getFactory();
-		Update update = new Update( factory.getDialect() );
+		final SessionFactoryImplementor factory = lockable.getFactory();
+		final Update update = new Update( factory.getDialect() );
 		update.setTableName( lockable.getRootTableName() );
 		update.addPrimaryKeyColumns( lockable.getRootTableIdentifierColumnNames() );
 		update.setVersionColumnName( lockable.getVersionColumnName() );

@@ -143,6 +143,7 @@
         <module name="JavadocType">
             <property name="scope" value="public"/>
             <property name="allowUnknownTags" value="true" />
+            <property name="allowMissingParamTags" value="true" />
         </module>
         <module name="JavadocMethod">
             <property name="scope" value="public" />
@@ -202,7 +203,10 @@
         <module name="LocalFinalVariableName" />
         <module name="LocalVariableName" />
         <module name="MemberName" />
+        <!--
+        The org.hibernate.engine.spi.ManagedEntity method names (prefixed with '&&_') muck with this
         <module name="MethodName" />
+        -->
         <module name="MethodTypeParameterName" />
         <module name="PackageName" />
         <module name="ParameterName" />

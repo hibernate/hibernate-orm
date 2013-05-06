@@ -283,7 +283,7 @@ public class Table extends AbstractTableSpecification implements Exportable {
 			alter.append( nullablePostfix );
 
 			if ( hasUniqueKey(column) ) {
-				alter.append( dialect.getUniqueDelegate().applyUniqueToColumn(
+				alter.append( dialect.getUniqueDelegate().getColumnDefinitionUniquenessFragment(
 						column ) );
 			}
 

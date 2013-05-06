@@ -77,22 +77,32 @@ public class Component4 {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
-		result = prime * result + ( ( key == null ) ? 0 : key.hashCode() );
-		result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
+		result = prime * result + ((description == null) ? 0 : description.hashCode());
+		result = prime * result + ((key == null) ? 0 : key.hashCode());
+		result = prime * result + ((value == null) ? 0 : value.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if ( this == obj ) return true;
-		if ( !( obj instanceof Component4 ) ) return false;
+		if ( this == obj ) {
+			return true;
+		}
+		if ( !(obj instanceof Component4) ) {
+			return false;
+		}
 
 		Component4 other = (Component4) obj;
 
-		if ( description != null ? !description.equals( other.description ) : other.description != null ) return false;
-		if ( key != null ? !key.equals( other.key ) : other.key != null ) return false;
-		if ( value != null ? !value.equals( other.value ) : other.value != null ) return false;
+		if ( description != null ? !description.equals( other.description ) : other.description != null ) {
+			return false;
+		}
+		if ( key != null ? !key.equals( other.key ) : other.key != null ) {
+			return false;
+		}
+		if ( value != null ? !value.equals( other.value ) : other.value != null ) {
+			return false;
+		}
 
 		return true;
 	}

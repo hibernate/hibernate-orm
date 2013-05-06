@@ -32,44 +32,47 @@ import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * Envers-specific entity (post) insertion event listener
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
  * @author Steve Ebersole
  */
 public class EnversPostInsertEventListenerImpl extends BaseEnversEventListener implements PostInsertEventListener {
-	public EnversPostInsertEventListenerImpl(AuditConfiguration enversConfiguration) {
+	protected EnversPostInsertEventListenerImpl(AuditConfiguration enversConfiguration) {
 		super( enversConfiguration );
 	}
 
-    public void onPostInsert(PostInsertEvent event) {
-        String entityName = event.getPersister().getEntityName();
+	@Override
+	public void onPostInsert(PostInsertEvent event) {
+		final String entityName = event.getPersister().getEntityName();
 
-        if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
-            checkIfTransactionInProgress(event.getSession());
+		if ( getAuditConfiguration().getEntCfg().isVersioned( entityName ) ) {
+			checkIfTransactionInProgress( event.getSession() );
 
-            AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get(event.getSession());
+			final AuditProcess auditProcess = getAuditConfiguration().getSyncManager().get( event.getSession() );
 
-            AuditWorkUnit workUnit = new AddWorkUnit(
+			final AuditWorkUnit workUnit = new AddWorkUnit(
 					event.getSession(),
 					event.getPersister().getEntityName(),
 					getAuditConfiguration(),
-                    event.getId(),
+					event.getId(),
 					event.getPersister(),
 					event.getState()
 			);
-            auditProcess.addWorkUnit( workUnit );
+			auditProcess.addWorkUnit( workUnit );
 
-            if ( workUnit.containsWork() ) {
-                generateBidirectionalCollectionChangeWorkUnits(
+			if ( workUnit.containsWork() ) {
+				generateBidirectionalCollectionChangeWorkUnits(
 						auditProcess,
 						event.getPersister(),
 						entityName,
 						event.getState(),
-                        null,
+						null,
 						event.getSession()
 				);
-            }
-        }
+			}
+		}
 	}
 
 	@Override

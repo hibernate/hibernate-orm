@@ -27,16 +27,17 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
 
 /**
  * Used for specifying restrictions on a property of the revision entity, which is associated with an audit entity.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class RevisionPropertyPropertyName implements PropertyNameGetter {
-    private final String propertyName;
+	private final String propertyName;
 
-    public RevisionPropertyPropertyName(String propertyName) {
-        this.propertyName = propertyName;
-    }
+	public RevisionPropertyPropertyName(String propertyName) {
+		this.propertyName = propertyName;
+	}
 
-    public String get(AuditConfiguration auditCfg) {
-        return auditCfg.getAuditEntCfg().getRevisionPropPath(propertyName);
-    }
+	public String get(AuditConfiguration auditCfg) {
+		return auditCfg.getAuditEntCfg().getRevisionPropPath( propertyName );
+	}
 }

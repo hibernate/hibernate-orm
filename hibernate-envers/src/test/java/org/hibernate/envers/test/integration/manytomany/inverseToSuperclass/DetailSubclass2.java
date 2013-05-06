@@ -1,4 +1,5 @@
 package org.hibernate.envers.test.integration.manytomany.inverseToSuperclass;
+
 import org.hibernate.envers.Audited;
 
 @Audited
@@ -7,7 +8,7 @@ public class DetailSubclass2 extends DetailSubclass {
 	private String str3;
 
 	public DetailSubclass2() {
-		
+
 	}
 
 	public String getStr3() {

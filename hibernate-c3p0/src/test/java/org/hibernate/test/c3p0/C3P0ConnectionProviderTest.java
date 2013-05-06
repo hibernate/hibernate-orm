@@ -30,8 +30,8 @@ import javax.management.ObjectName;
 
 import org.junit.Test;
 
+import org.hibernate.c3p0.internal.C3P0ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.service.jdbc.connections.internal.C3P0ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

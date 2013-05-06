@@ -18,13 +18,14 @@ import org.hibernate.testing.junit4.CustomRunner;
 
 /**
  * Copied & modified from {@link org.junit.runners.Parameterized}.
- *
+ * <p/>
  * The modification is that the generated runners extend {@link CustomRunner} instead of the default
  * {@code TestClassRunnerForParameters}.
- *
+ * <p/>
  * The runner itself sets the data using a setter instead of a constructor, and creates only one test instance. Moreover
  * it doesn't override {@code classBlock} which causes the custom {@code @BeforeClassOnce} and {@code @AfterClassOnce}
  * annotations to work.
+ *
  * @author Adam Warski (adam at warski dot org)
  */
 public class EnversRunner extends Suite {
@@ -34,74 +35,88 @@ public class EnversRunner extends Suite {
 		private final List<Object[]> fParameterList;
 
 		TestClassCustomRunnerForParameters(Class<?> type, List<Object[]> parameterList, int i)
-                throws InitializationError, NoTestsRemainException {
-			super(type);
-			fParameterList= parameterList;
-			fParameterSetNumber= i;
+				throws InitializationError, NoTestsRemainException {
+			super( type );
+			fParameterList = parameterList;
+			fParameterSetNumber = i;
 		}
 
-        @Override
-        protected Object getTestInstance() throws Exception {
-            Object testInstance = super.getTestInstance();
-            if ( AbstractEnversTest.class.isInstance( testInstance ) ) {
-                ( (AbstractEnversTest) testInstance ).setTestData( computeParams() );
-            }
-            else if ( BaseEnversFunctionalTestCase.class.isInstance( testInstance ) ) {
-                ( (BaseEnversFunctionalTestCase) testInstance ).setTestData( computeParams() );
-            }
-            return testInstance;
-        }
+		@Override
+		protected Object getTestInstance() throws Exception {
+			Object testInstance = super.getTestInstance();
+			if ( AbstractEnversTest.class.isInstance( testInstance ) ) {
+				((AbstractEnversTest) testInstance).setTestData( computeParams() );
+			}
+			else if ( BaseEnversFunctionalTestCase.class.isInstance( testInstance ) ) {
+				((BaseEnversFunctionalTestCase) testInstance).setTestData( computeParams() );
+			}
+			return testInstance;
+		}
 
 		private Object[] computeParams() throws Exception {
 			try {
-				return fParameterList.get(fParameterSetNumber);
-			} catch (ClassCastException e) {
-				throw new Exception(String.format(
-						"%s.%s() must return a Collection of arrays.",
-						getTestClass().getName(), getParametersMethod(
-								getTestClass()).getName()));
+				return fParameterList.get( fParameterSetNumber );
+			}
+			catch (ClassCastException e) {
+				throw new Exception(
+						String.format(
+								"%s.%s() must return a Collection of arrays.",
+								getTestClass().getName(), getParametersMethod(
+								getTestClass()
+						).getName()
+						)
+				);
 			}
 		}
 
 		@Override
 		protected String getName() {
-			return String.format("[%s]", fParameterSetNumber);
+			return String.format( "[%s]", fParameterSetNumber );
 		}
 
 		@Override
 		protected String testName(final FrameworkMethod method) {
-			return String.format("%s[%s]", method.getName(),
-                    fParameterSetNumber);
+			return String.format(
+					"%s[%s]", method.getName(),
+					fParameterSetNumber
+			);
 		}
 
 		@Override
 		protected void sortMethods(List<FrameworkMethod> computedTestMethods) {
 			super.sortMethods( computedTestMethods );
-			Collections.sort(computedTestMethods, new Comparator<FrameworkMethod>() {
+			Collections.sort(
+					computedTestMethods, new Comparator<FrameworkMethod>() {
 				private int getPriority(FrameworkMethod fm) {
-					Priority p = fm.getAnnotation(Priority.class);
+					Priority p = fm.getAnnotation( Priority.class );
 					return p == null ? 0 : p.value();
 				}
 
 				@Override
 				public int compare(FrameworkMethod fm1, FrameworkMethod fm2) {
-					return getPriority(fm2) - getPriority(fm1);
+					return getPriority( fm2 ) - getPriority( fm1 );
 				}
-			});
+			}
+			);
 		}
-    }
+	}
 
-	private final ArrayList<Runner> runners= new ArrayList<Runner>();
+	private final ArrayList<Runner> runners = new ArrayList<Runner>();
 
 	/**
 	 * Only called reflectively. Do not use programmatically.
 	 */
 	public EnversRunner(Class<?> klass) throws Throwable {
-		super(klass, Collections.<Runner>emptyList());
-		List<Object[]> parametersList= getParametersList(getTestClass());
-		for (int i= 0; i < parametersList.size(); i++)
-			runners.add(new TestClassCustomRunnerForParameters(getTestClass().getJavaClass(),
-					parametersList, i));
+		super( klass, Collections.<Runner>emptyList() );
+		List<Object[]> parametersList = getParametersList( getTestClass() );
+		for ( int i = 0; i < parametersList.size(); i++ ) {
+			runners.add(
+					new TestClassCustomRunnerForParameters(
+							getTestClass().getJavaClass(),
+							parametersList, i
+					)
+			);
+		}
 	}
 
 	@Override
@@ -112,22 +127,26 @@ public class EnversRunner extends Suite {
 	@SuppressWarnings("unchecked")
 	private List<Object[]> getParametersList(TestClass klass)
 			throws Throwable {
-		return (List<Object[]>) getParametersMethod(klass).invokeExplosively(
-				null);
+		return (List<Object[]>) getParametersMethod( klass ).invokeExplosively(
+				null
+		);
 	}
 
 	private FrameworkMethod getParametersMethod(TestClass testClass)
 			throws Exception {
-		List<FrameworkMethod> methods= testClass.getAnnotatedMethods(Parameterized.Parameters.class);
+		List<FrameworkMethod> methods = testClass.getAnnotatedMethods( Parameterized.Parameters.class );
 
-		for (FrameworkMethod each : methods) {
-			int modifiers= each.getMethod().getModifiers();
-			if (Modifier.isStatic(modifiers) && Modifier.isPublic(modifiers))
+		for ( FrameworkMethod each : methods ) {
+			int modifiers = each.getMethod().getModifiers();
+			if ( Modifier.isStatic( modifiers ) && Modifier.isPublic( modifiers ) ) {
 				return each;
+			}
 		}
 
-		throw new Exception("No public static parameters method on class "
-				+ testClass.getName());
+		throw new Exception(
+				"No public static parameters method on class "
+						+ testClass.getName()
+		);
 	}
 
 }

@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -46,7 +47,7 @@ public class PropertiesTest extends BaseUnitTestCase {
 		props.put("rpt.6.hibernate.connection.password_enc", "76f271db3661fd50082e68d4b953fbee");
 		props.put("hibernate.connection.create", "true");
 
-		final Properties outputProps = ConnectionProviderInitiator.getConnectionProperties( props );
+		final Properties outputProps = ConnectionProviderInitiator.getConnectionProperties( props, Dialect.getDialect() );
 		Assert.assertEquals( 1, outputProps.size() );
 		Assert.assertEquals( "true", outputProps.get( "create" ) );
 	}

@@ -36,12 +36,14 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -128,7 +130,8 @@ public class C3P0ConnectionProvider
 	public void configure(Map props) {
 		final String jdbcDriverClass = (String) props.get( Environment.DRIVER );
 		final String jdbcUrl = (String) props.get( Environment.URL );
-		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props );
+		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( props, dialect );
 
 		LOG.c3p0UsingDriver( jdbcDriverClass, jdbcUrl );
 		LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );

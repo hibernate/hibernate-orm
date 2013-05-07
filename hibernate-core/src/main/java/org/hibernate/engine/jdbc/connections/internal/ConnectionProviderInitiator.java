@@ -38,6 +38,7 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
@@ -247,7 +248,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 *
 	 * @return The connection properties.
 	 */
-	public static Properties getConnectionProperties(Map<?,?> properties) {
+	public static Properties getConnectionProperties(Map<?,?> properties, Dialect dialect) {
 		final Properties result = new Properties();
 		for ( Map.Entry entry : properties.entrySet() ) {
 			if ( ! ( String.class.isInstance( entry.getKey() ) ) || ! String.class.isInstance( entry.getValue() ) ) {
@@ -269,6 +270,11 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				}
 			}
 		}
+		
+		if ( dialect != null ) {
+			dialect.addConnectionProperties( properties, result );
+		}
+		
 		return result;
 	}
 

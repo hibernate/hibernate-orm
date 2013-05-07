@@ -37,7 +37,9 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -151,7 +153,11 @@ public class DriverManagerConnectionProviderImpl
 			throw new HibernateException( msg );
 		}
 
-		connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
+		Dialect dialect = null;
+		if ( serviceRegistry != null ) {
+			dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		}
+		connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues, dialect );
 
 		LOG.usingDriver( driverClassName, url );
 		// if debug level is enabled, then log the password, otherwise mask it

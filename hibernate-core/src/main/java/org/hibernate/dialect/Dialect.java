@@ -32,6 +32,7 @@ import java.sql.NClob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -2626,5 +2627,24 @@ public abstract class Dialect implements ConversionContext {
 	@Deprecated
 	public boolean supportsNotNullUnique() {
 		return true;
+	}
+	
+	/**
+	 * {@link #org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator} will call this method to add in any JDBC connection properties specific
+	 * to this Dialect. Properties may be added conditionally based on the existence
+	 * or values of Hibernate-specific settings.
+	 * 
+	 * Example: If hibernate.synonyms is enabled, Oracle requires
+	 * includeSynonyms to be enabled on the connection. Rather than requiring
+	 * apps to enable both manually, the Oracle Dialect will check for the existence
+	 * of the former and automatically add the latter.
+	 * 
+	 * @param hibernateProperties
+	 *            All Hibernate settings
+	 * @param connectionProperties
+	 *            Connection properties to be given to the JDBC driver.
+	 *            Add additional properties here.
+	 */
+	public void addConnectionProperties(Map hibernateProperties, Properties connectionProperties) {
 	}
 }

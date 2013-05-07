@@ -27,9 +27,12 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
@@ -42,7 +45,9 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
@@ -581,5 +586,14 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public String getNotExpression( String expression ) {
 		return "not (" + expression + ")";
+	}
+	
+	@Override
+	public void addConnectionProperties(Map hibernateProperties, Properties connectionProperties) {
+		if ( ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, hibernateProperties, false ) ) {
+			// Oracle requires that includeSynonyms=true in order for
+			// getColumns to work using a table synonymn name.
+			connectionProperties.setProperty( "includeSynonyms", "true" );
+		}
 	}
 }

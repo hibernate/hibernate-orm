@@ -37,10 +37,14 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 /**
@@ -51,12 +55,14 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  * @author Jonathan Halliday
  */
-public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 	private static final String CONNECTION_KEY = "_database_connection";
 
 	private DriverManagerConnectionProviderImpl delegate;
 
 	private List<Connection> nonEnlistedConnections = new ArrayList<Connection>();
+
+	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
 	public void configure(Map configurationValues) {
@@ -66,7 +72,8 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		transferSetting( Environment.USER, configurationValues, connectionSettings );
 		transferSetting( Environment.PASS, configurationValues, connectionSettings );
 		transferSetting( Environment.ISOLATION, configurationValues, connectionSettings );
-		Properties passThroughSettings = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
+		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		Properties passThroughSettings = ConnectionProviderInitiator.getConnectionProperties( configurationValues, dialect );
 		if ( passThroughSettings != null ) {
 			for ( String setting : passThroughSettings.stringPropertyNames() ) {
 				transferSetting( Environment.CONNECTION_PREFIX + '.' + setting, configurationValues, connectionSettings );
@@ -265,5 +272,10 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		public Xid[] recover(int i) throws XAException {
 			return new Xid[0];
 		}
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 }

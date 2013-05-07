@@ -56,5 +56,8 @@ public class UniqueKey extends Constraint {
 		return dialect.getUniqueDelegate().dropUniquesOnAlter(
 				this, defaultCatalog, defaultSchema );
 	}
-
+	
+	public String generatedConstraintNamePrefix() {
+		return "UK_";
+	}
 }

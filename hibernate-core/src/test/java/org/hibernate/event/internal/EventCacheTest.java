@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -443,6 +444,7 @@ public class EventCacheTest extends BaseCoreFunctionalTestCase {
 	@Entity
 	private static class Simple {
 		@Id
+		@Column(name = "`value`")
 		private int value;
 
 		public Simple(int value) {

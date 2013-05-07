@@ -113,6 +113,7 @@ import org.hibernate.internal.util.xml.XmlDocumentImpl;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
@@ -1391,10 +1392,7 @@ public class Configuration implements Serializable {
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? StringHelper.randomFixedLengthHex("UK_")
-						: holder.getName();
-				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
+				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns() );
 			}
 		}
 		
@@ -1553,8 +1551,6 @@ public class Configuration implements Serializable {
 	}
 
 	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames) {
-		keyName = normalizer.normalizeIdentifierQuoting( keyName );
-
 		int size = columnNames.length;
 		Column[] columns = new Column[size];
 		Set<Column> unbound = new HashSet<Column>();
@@ -1571,6 +1567,12 @@ public class Configuration implements Serializable {
 				unboundNoLogical.add( new Column( column ) );
 			}
 		}
+		
+		if ( StringHelper.isEmpty( keyName ) ) {
+			keyName = Constraint.generateName( "UK_", table, columns );
+		}
+		keyName = normalizer.normalizeIdentifierQuoting( keyName );
+		
 		UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 		for ( Column column : columns ) {
 			if ( table.containsColumn( column ) ) {

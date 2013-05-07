@@ -673,7 +673,8 @@ public class Table implements RelationalModel, Serializable {
 				fk.setName( keyName );
 			}
 			else {
-				fk.generateName();
+				fk.setName( Constraint.generateName( fk.generatedConstraintNamePrefix(),
+						this, keyColumns ) );
 			}
 			
 			foreignKeys.put( key, fk );

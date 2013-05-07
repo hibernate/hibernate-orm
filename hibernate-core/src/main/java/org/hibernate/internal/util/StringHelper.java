@@ -25,9 +25,6 @@
 package org.hibernate.internal.util;
 
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -759,23 +756,5 @@ public final class StringHelper {
 	 */
 	public static String[] toArrayElement(String s) {
 		return ( s == null || s.length() == 0 ) ? new String[0] : new String[] { s };
-	}
-
-	public static String md5HashBase35(String s) {
-		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
-			md.reset();
-			md.update( s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
-		}
-		catch ( NoSuchAlgorithmException e ) {
-			// will never happen
-			return s;
-		}
 	}
 }

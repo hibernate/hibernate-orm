@@ -59,6 +59,7 @@ import org.hibernate.mapping.Bag;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.Fetchable;
@@ -2259,7 +2260,8 @@ public final class HbmBinder {
 						false,
 						true
 					);
-				uk.generateName();
+				uk.setName( Constraint.generateName( uk.generatedConstraintNamePrefix(),
+						table, uk.getColumns() ) );
 				table.addUniqueKey(uk);
 			}
 			else if ( "query".equals(name) ) {

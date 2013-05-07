@@ -57,15 +57,15 @@ public class CriteriaImpl implements Criteria, Serializable {
 	private transient SessionImplementor session;
 	private final String rootAlias;
 
-	private List criterionEntries = new ArrayList();
-	private List orderEntries = new ArrayList();
+	private List<CriterionEntry> criterionEntries = new ArrayList<CriterionEntry>();
+	private List<OrderEntry> orderEntries = new ArrayList<OrderEntry>();
 	private Projection projection;
 	private Criteria projectionCriteria;
 
-	private List subcriteriaList = new ArrayList();
+	private List<Subcriteria> subcriteriaList = new ArrayList<Subcriteria>();
 
-	private Map fetchModes = new HashMap();
-	private Map lockModes = new HashMap();
+	private Map<String, FetchMode> fetchModes = new HashMap<String, FetchMode>();
+	private Map<String, LockMode> lockModes = new HashMap<String, LockMode>();
 
 	private Integer maxResults;
 	private Integer firstResult;
@@ -98,7 +98,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		this.cacheable = false;
 		this.rootAlias = alias;
 	}
-
+	@Override
 	public String toString() {
 		return "CriteriaImpl(" +
 			entityOrClassName + ":" +
@@ -124,7 +124,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		return entityOrClassName;
 	}
 
-	public Map getLockModes() {
+	public Map<String, LockMode> getLockModes() {
 		return lockModes;
 	}
 
@@ -132,15 +132,15 @@ public class CriteriaImpl implements Criteria, Serializable {
 		return projectionCriteria;
 	}
 
-	public Iterator iterateSubcriteria() {
+	public Iterator<Subcriteria> iterateSubcriteria() {
 		return subcriteriaList.iterator();
 	}
 
-	public Iterator iterateExpressionEntries() {
+	public Iterator<CriterionEntry> iterateExpressionEntries() {
 		return criterionEntries.iterator();
 	}
 
-	public Iterator iterateOrderings() {
+	public Iterator<OrderEntry> iterateOrderings() {
 		return orderEntries.iterator();
 	}
 
@@ -151,7 +151,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 
 	// Criteria impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Override
 	public String getAlias() {
 		return rootAlias;
 	}
@@ -159,46 +159,45 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Projection getProjection() {
 		return projection;
 	}
-
+	@Override
 	public Criteria setProjection(Projection projection) {
 		this.projection = projection;
 		this.projectionCriteria = this;
 		setResultTransformer( PROJECTION );
 		return this;
 	}
-
+	@Override
 	public Criteria add(Criterion expression) {
 		add( this, expression );
 		return this;
 	}
-
+	@Override
 	public Criteria addOrder(Order ordering) {
 		orderEntries.add( new OrderEntry( ordering, this ) );
 		return this;
 	}
-
 	public FetchMode getFetchMode(String path) {
-		return (FetchMode) fetchModes.get(path);
+		return fetchModes.get(path);
 	}
-
+	@Override
 	public Criteria setFetchMode(String associationPath, FetchMode mode) {
 		fetchModes.put( associationPath, mode );
 		return this;
 	}
-
+	@Override
 	public Criteria setLockMode(LockMode lockMode) {
 		return setLockMode( getAlias(), lockMode );
 	}
-
+	@Override
 	public Criteria setLockMode(String alias, LockMode lockMode) {
 		lockModes.put( alias, lockMode );
 		return this;
 	}
-
+	@Override
 	public Criteria createAlias(String associationPath, String alias) {
 		return createAlias( associationPath, alias, JoinType.INNER_JOIN );
 	}
-
+	@Override
 	public Criteria createAlias(String associationPath, String alias, JoinType joinType) {
 		new Subcriteria( this, associationPath, alias, joinType );
 		return this;
@@ -208,7 +207,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
 		return createAlias( associationPath, alias, JoinType.parse( joinType ) );
 	}
-
+	@Override
 	public Criteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) {
 		new Subcriteria( this, associationPath, alias, joinType, withClause );
 		return this;
@@ -219,11 +218,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 			throws HibernateException {
 		return createAlias( associationPath, alias, JoinType.parse( joinType ), withClause );
 	}
-
+	@Override
 	public Criteria createCriteria(String associationPath) {
 		return createCriteria( associationPath, JoinType.INNER_JOIN );
 	}
-
+	@Override
 	public Criteria createCriteria(String associationPath, JoinType joinType) {
 		return new Subcriteria( this, associationPath, joinType );
 	}
@@ -232,11 +231,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Criteria createCriteria(String associationPath, int joinType) throws HibernateException {
 		return createCriteria(associationPath, JoinType.parse( joinType ));
 	}
-
+	@Override
 	public Criteria createCriteria(String associationPath, String alias) {
 		return createCriteria( associationPath, alias, JoinType.INNER_JOIN );
 	}
-
+	@Override
 	public Criteria createCriteria(String associationPath, String alias, JoinType joinType) {
 		return new Subcriteria( this, associationPath, alias, joinType );
 	}
@@ -245,7 +244,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
 		return createCriteria( associationPath, alias, JoinType.parse( joinType ) );
 	}
-
+	@Override
 	public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) {
 		return new Subcriteria( this, associationPath, alias, joinType, withClause );
 	}
@@ -259,7 +258,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public ResultTransformer getResultTransformer() {
 		return resultTransformer;
 	}
-
+	@Override
 	public Criteria setResultTransformer(ResultTransformer tupleMapper) {
 		this.resultTransformer = tupleMapper;
 		return this;
@@ -268,7 +267,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Integer getMaxResults() {
 		return maxResults;
 	}
-
+	@Override
 	public Criteria setMaxResults(int maxResults) {
 		this.maxResults = maxResults;
 		return this;
@@ -277,7 +276,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Integer getFirstResult() {
 		return firstResult;
 	}
-
+	@Override
 	public Criteria setFirstResult(int firstResult) {
 		this.firstResult = firstResult;
 		return this;
@@ -286,7 +285,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Integer getFetchSize() {
 		return fetchSize;
 	}
-
+	@Override
 	public Criteria setFetchSize(int fetchSize) {
 		this.fetchSize = fetchSize;
 		return this;
@@ -295,22 +294,18 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public Integer getTimeout() {
 		return timeout;
 	}
-
+   @Override
 	public Criteria setTimeout(int timeout) {
 		this.timeout = timeout;
 		return this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isReadOnlyInitialized() {
 		return readOnly != null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isReadOnly() {
 		if ( ! isReadOnlyInitialized() && getSession() == null ) {
 			throw new IllegalStateException(
@@ -318,23 +313,21 @@ public class CriteriaImpl implements Criteria, Serializable {
 			);
 		}
 		return ( isReadOnlyInitialized() ?
-				readOnly.booleanValue() :
+				readOnly :
 				getSession().getPersistenceContext().isDefaultReadOnly()
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Criteria setReadOnly(boolean readOnly) {
-		this.readOnly = Boolean.valueOf( readOnly );
+		this.readOnly = readOnly;
 		return this;
 	}
 
 	public boolean getCacheable() {
 		return this.cacheable;
 	}
-
+	@Override
 	public Criteria setCacheable(boolean cacheable) {
 		this.cacheable = cacheable;
 		return this;
@@ -343,7 +336,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public String getCacheRegion() {
 		return this.cacheRegion;
 	}
-
+	@Override
 	public Criteria setCacheRegion(String cacheRegion) {
 		this.cacheRegion = cacheRegion.trim();
 		return this;
@@ -352,22 +345,22 @@ public class CriteriaImpl implements Criteria, Serializable {
 	public String getComment() {
 		return comment;
 	}
-
+	@Override
 	public Criteria setComment(String comment) {
 		this.comment = comment;
 		return this;
 	}
-
+	@Override
 	public Criteria setFlushMode(FlushMode flushMode) {
 		this.flushMode = flushMode;
 		return this;
 	}
-
+	@Override
 	public Criteria setCacheMode(CacheMode cacheMode) {
 		this.cacheMode = cacheMode;
 		return this;
 	}
-
+	@Override
 	public List list() throws HibernateException {
 		before();
 		try {
@@ -377,11 +370,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 			after();
 		}
 	}
-
+	@Override
 	public ScrollableResults scroll() {
 		return scroll( ScrollMode.SCROLL_INSENSITIVE );
 	}
-
+	@Override
 	public ScrollableResults scroll(ScrollMode scrollMode) {
 		before();
 		try {
@@ -391,7 +384,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 			after();
 		}
 	}
-
+	@Override
 	public Object uniqueResult() throws HibernateException {
 		return AbstractQueryImpl.uniqueElement( list() );
 	}
@@ -428,7 +421,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		if ( criterionEntries.size() != 1 ) {
 			return false;
 		}
-		CriterionEntry ce = (CriterionEntry) criterionEntries.get(0);
+		CriterionEntry ce = criterionEntries.get(0);
 		return ce.getCriterion() instanceof NaturalIdentifier;
 	}
 
@@ -464,7 +457,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		private Subcriteria(Criteria parent, String path, JoinType joinType) {
 			this( parent, path, null, joinType );
 		}
-
+		@Override
 		public String toString() {
 			return "Subcriteria("
 					+ path + ":"
@@ -474,7 +467,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 
 
 		// State ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+		@Override
 		public String getAlias() {
 			return alias;
 		}
@@ -494,7 +487,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public LockMode getLockMode() {
 			return lockMode;
 		}
-
+		@Override
 		public Criteria setLockMode(LockMode lockMode) {
 			this.lockMode = lockMode;
 			return this;
@@ -513,22 +506,22 @@ public class CriteriaImpl implements Criteria, Serializable {
 		}
 
 		// Criteria impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+		@Override
 		public Criteria add(Criterion expression) {
 			hasRestriction = true;
 			CriteriaImpl.this.add(this, expression);
 			return this;
 		}
-
+		@Override
 		public Criteria addOrder(Order order) {
 			CriteriaImpl.this.orderEntries.add( new OrderEntry(order, this) );
 			return this;
 		}
-
+		@Override
 		public Criteria createAlias(String associationPath, String alias) {
 			return createAlias( associationPath, alias, JoinType.INNER_JOIN );
 		}
-
+		@Override
 		public Criteria createAlias(String associationPath, String alias, JoinType joinType) throws HibernateException {
 			new Subcriteria( this, associationPath, alias, joinType );
 			return this;
@@ -538,7 +531,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public Criteria createAlias(String associationPath, String alias, int joinType) throws HibernateException {
 			return createAlias( associationPath, alias, JoinType.parse( joinType ) );
 		}
-
+		@Override
 		public Criteria createAlias(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
 			new Subcriteria( this, associationPath, alias, joinType, withClause );
 			return this;
@@ -549,11 +542,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 				throws HibernateException {
 			return createAlias( associationPath, alias, JoinType.parse( joinType ), withClause );
 		}
-
+		@Override
 		public Criteria createCriteria(String associationPath) {
 			return createCriteria( associationPath, JoinType.INNER_JOIN );
 		}
-
+		@Override
 		public Criteria createCriteria(String associationPath, JoinType joinType) throws HibernateException {
 			return new Subcriteria( Subcriteria.this, associationPath, joinType );
 		}
@@ -562,11 +555,11 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public Criteria createCriteria(String associationPath, int joinType) throws HibernateException {
 			return createCriteria( associationPath, JoinType.parse( joinType ) );
 		}
-
+		@Override
 		public Criteria createCriteria(String associationPath, String alias) {
 			return createCriteria( associationPath, alias, JoinType.INNER_JOIN );
 		}
-
+		@Override
 		public Criteria createCriteria(String associationPath, String alias, JoinType joinType) throws HibernateException {
 			return new Subcriteria( Subcriteria.this, associationPath, alias, joinType );
 		}
@@ -575,7 +568,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public Criteria createCriteria(String associationPath, String alias, int joinType) throws HibernateException {
 			return createCriteria( associationPath, alias, JoinType.parse( joinType ) );
 		}
-
+		@Override
 		public Criteria createCriteria(String associationPath, String alias, JoinType joinType, Criterion withClause) throws HibernateException {
 			return new Subcriteria( this, associationPath, alias, joinType, withClause );
 		}
@@ -585,96 +578,96 @@ public class CriteriaImpl implements Criteria, Serializable {
 				throws HibernateException {
 			return createCriteria( associationPath, alias, JoinType.parse( joinType ), withClause );
 		}
-
+		@Override
 		public boolean isReadOnly() {
 			return CriteriaImpl.this.isReadOnly();
 		}
-
+		@Override
 		public boolean isReadOnlyInitialized() {
 			return CriteriaImpl.this.isReadOnlyInitialized();
 		}
-
+		@Override
 		public Criteria setReadOnly(boolean readOnly) {
 			CriteriaImpl.this.setReadOnly( readOnly );
 			return this;
 		}
-
+		@Override
 		public Criteria setCacheable(boolean cacheable) {
 			CriteriaImpl.this.setCacheable(cacheable);
 			return this;
 		}
-
+		@Override
 		public Criteria setCacheRegion(String cacheRegion) {
 			CriteriaImpl.this.setCacheRegion(cacheRegion);
 			return this;
 		}
-
+		@Override
 		public List list() throws HibernateException {
 			return CriteriaImpl.this.list();
 		}
-
+		@Override
 		public ScrollableResults scroll() throws HibernateException {
 			return CriteriaImpl.this.scroll();
 		}
-
+		@Override
 		public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException {
 			return CriteriaImpl.this.scroll(scrollMode);
 		}
-
+		@Override
 		public Object uniqueResult() throws HibernateException {
 			return CriteriaImpl.this.uniqueResult();
 		}
-
+		@Override
 		public Criteria setFetchMode(String associationPath, FetchMode mode) {
 			CriteriaImpl.this.setFetchMode( StringHelper.qualify(path, associationPath), mode);
 			return this;
 		}
-
+		@Override
 		public Criteria setFlushMode(FlushMode flushMode) {
 			CriteriaImpl.this.setFlushMode(flushMode);
 			return this;
 		}
-
+		@Override
 		public Criteria setCacheMode(CacheMode cacheMode) {
 			CriteriaImpl.this.setCacheMode(cacheMode);
 			return this;
 		}
-
+		@Override
 		public Criteria setFirstResult(int firstResult) {
 			CriteriaImpl.this.setFirstResult(firstResult);
 			return this;
 		}
-
+		@Override
 		public Criteria setMaxResults(int maxResults) {
 			CriteriaImpl.this.setMaxResults(maxResults);
 			return this;
 		}
-
+		@Override
 		public Criteria setTimeout(int timeout) {
 			CriteriaImpl.this.setTimeout(timeout);
 			return this;
 		}
-
+		@Override
 		public Criteria setFetchSize(int fetchSize) {
 			CriteriaImpl.this.setFetchSize(fetchSize);
 			return this;
 		}
-
+		@Override
 		public Criteria setLockMode(String alias, LockMode lockMode) {
 			CriteriaImpl.this.setLockMode(alias, lockMode);
 			return this;
 		}
-
+		@Override
 		public Criteria setResultTransformer(ResultTransformer resultProcessor) {
 			CriteriaImpl.this.setResultTransformer(resultProcessor);
 			return this;
 		}
-
+		@Override
 		public Criteria setComment(String comment) {
 			CriteriaImpl.this.setComment(comment);
 			return this;
 		}
-
+		@Override
 		public Criteria setProjection(Projection projection) {
 			CriteriaImpl.this.projection = projection;
 			CriteriaImpl.this.projectionCriteria = this;
@@ -699,7 +692,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public Criteria getCriteria() {
 			return criteria;
 		}
-
+		@Override
 		public String toString() {
 			return criterion.toString();
 		}
@@ -721,7 +714,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 		public Criteria getCriteria() {
 			return criteria;
 		}
-
+		@Override
 		public String toString() {
 			return order.toString();
 		}

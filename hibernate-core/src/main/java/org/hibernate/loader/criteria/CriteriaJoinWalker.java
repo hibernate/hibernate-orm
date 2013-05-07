@@ -66,9 +66,9 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	//the user visible aliases, which are unknown to the superclass,
 	//these are not the actual "physical" SQL aliases
 	private final String[] userAliases;
-	private final List userAliasList = new ArrayList();
-	private final List resultTypeList = new ArrayList();
-	private final List includeInResultRowList = new ArrayList();
+	private final List<String> userAliasList = new ArrayList<String>();
+	private final List<Type> resultTypeList = new ArrayList<Type>();
+	private final List<Boolean> includeInResultRowList = new ArrayList<Boolean>();
 
 	public Type[] getResultTypes() {
 		return resultTypes;
@@ -130,7 +130,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 			includeInResultRow = ArrayHelper.toBooleanArray( includeInResultRowList );
 		}
 	}
-
+	@Override
 	protected JoinType getJoinType(
 			OuterJoinLoadable persister,
 			final PropertyPath path,
@@ -207,7 +207,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 		}
 		return resolvedJoinType;
 	}
-
+	@Override
 	protected JoinType getJoinType(
 			AssociationType associationType,
 			FetchMode config,
@@ -239,11 +239,12 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	 * Use the discriminator, to narrow the select to instances
 	 * of the queried subclass, also applying any filters.
 	 */
+	@Override
 	protected String getWhereFragment() throws MappingException {
 		return super.getWhereFragment() +
 			( (Queryable) getPersister() ).filterFragment( getAlias(), getLoadQueryInfluencers().getEnabledFilters() );
 	}
-	
+	@Override
 	protected String generateTableAlias(int n, PropertyPath path, Joinable joinable) {
 		// TODO: deal with side-effects (changes to includeInResultRowList, userAliasList, resultTypeList)!!!
 
@@ -288,7 +289,7 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 
 		return sqlAlias;
 	}
-
+	@Override
 	protected String generateRootAlias(String tableName) {
 		return CriteriaQueryTranslator.ROOT_SQL_ALIAS;
 	}
@@ -296,15 +297,15 @@ public class CriteriaJoinWalker extends AbstractEntityJoinWalker {
 	public Set getQuerySpaces() {
 		return querySpaces;
 	}
-	
+	@Override
 	public String getComment() {
 		return "criteria query";
 	}
-
+	@Override
 	protected String getWithClause(PropertyPath path) {
 		return translator.getWithClause( path.getFullPath() );
 	}
-
+	@Override
 	protected boolean hasRestriction(PropertyPath path)	{
 		return translator.hasRestriction( path.getFullPath() );
 	}

@@ -22,11 +22,11 @@ public enum JoinType {
 		return joinTypeValue;
 	}
 
-	public static JoinType parse(int joinType){
-		if(joinType<0){
+	public static JoinType parse(int joinType) {
+		if ( joinType < 0 ) {
 			return NONE;
 		}
-		switch ( joinType ){
+		switch ( joinType ) {
 			case 0:
 				return INNER_JOIN;
 			case 1:
@@ -36,7 +36,7 @@ public enum JoinType {
 			case 4:
 				return FULL_JOIN;
 			default:
-				throw new HibernateException( "unknown join type: "+joinType );
+				throw new HibernateException( "unknown join type: " + joinType );
 		}
 	}
 }

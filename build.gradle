@@ -177,7 +177,9 @@ subprojects { subProject ->
                             "-encoding", "UTF-8",
                             "-processor", "org.jboss.logging.processor.apt.LoggingToolsProcessor",
                             "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath",
-                            "-AloggingVersion=3.0",
+//                            "-AloggingVersion=3.0",
+                            "-Adebug=true",
+                            "-AskipTranslations=true",
                             "-source", rootProject.javaLanguageLevel,
                             "-target", rootProject.javaLanguageLevel,
                             "-AtranslationFilesPath=${project.rootDir}/src/main/resources"

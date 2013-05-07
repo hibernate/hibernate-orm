@@ -35,25 +35,25 @@ import org.hibernate.type.Type;
  */
 
 class EntityCriteriaInfoProvider implements CriteriaInfoProvider {
-    Queryable persister;
+	private final Queryable persister;
 
-    EntityCriteriaInfoProvider(Queryable persister) {
-	this.persister = persister;
-    }
-
-    public String getName() {
-	return persister.getEntityName();
-    }
-
-    public Serializable[] getSpaces() {
-	return persister.getQuerySpaces();
-    }
-
-    public PropertyMapping getPropertyMapping() {
-	return persister;
-    }
-
-    public Type getType(String relativePath) {
-	return persister.toType(relativePath);
-    }
+	EntityCriteriaInfoProvider(Queryable persister) {
+		this.persister = persister;
+	}
+	@Override
+	public String getName() {
+		return persister.getEntityName();
+	}
+	@Override
+	public Serializable[] getSpaces() {
+		return persister.getQuerySpaces();
+	}
+	@Override
+	public PropertyMapping getPropertyMapping() {
+		return persister;
+	}
+	@Override
+	public Type getType(String relativePath) {
+		return persister.toType( relativePath );
+	}
 }

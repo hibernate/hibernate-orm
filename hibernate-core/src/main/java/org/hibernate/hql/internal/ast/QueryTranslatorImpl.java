@@ -24,6 +24,7 @@
 package org.hibernate.hql.internal.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -133,6 +134,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * @throws QueryException   There was a problem parsing the query string.
 	 * @throws MappingException There was a problem querying defined mappings.
 	 */
+	@Override
 	public void compile(
 			Map replacements,
 			boolean shallow) throws QueryException, MappingException {
@@ -149,6 +151,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 * @throws QueryException   There was a problem parsing the query string.
 	 * @throws MappingException There was a problem querying defined mappings.
 	 */
+	@Override
 	public void compile(
 			String collectionRole,
 			Map replacements,
@@ -304,7 +307,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			throw new QueryExecutionRequestException( "Not supported for select queries", hql );
 		}
 	}
-
+	@Override
 	public String getQueryIdentifier() {
 		return queryIdentifier;
 	}
@@ -322,25 +325,27 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	 *
 	 * @return an array of <tt>Type</tt>s.
 	 */
+	@Override
 	public Type[] getReturnTypes() {
 		errorIfDML();
 		return getWalker().getReturnTypes();
 	}
-
+	@Override
 	public String[] getReturnAliases() {
 		errorIfDML();
 		return getWalker().getReturnAliases();
 	}
-
+	@Override
 	public String[][] getColumnNames() {
 		errorIfDML();
 		return getWalker().getSelectClause().getColumnNames();
 	}
-
+	@Override
 	public Set getQuerySpaces() {
 		return getWalker().getQuerySpaces();
 	}
 
+	@Override
 	public List list(SessionImplementor session, QueryParameters queryParameters)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
@@ -397,6 +402,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	/**
 	 * Return the query results as an iterator
 	 */
+	@Override
 	public Iterator iterate(QueryParameters queryParameters, EventSource session)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
@@ -407,13 +413,14 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	/**
 	 * Return the query results, as an instance of <tt>ScrollableResults</tt>
 	 */
+	@Override
 	public ScrollableResults scroll(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
 		// Delegate to the QueryLoader...
 		errorIfDML();
 		return queryLoader.scroll( queryParameters, session );
 	}
-
+	@Override
 	public int executeUpdate(QueryParameters queryParameters, SessionImplementor session)
 			throws HibernateException {
 		errorIfSelect();
@@ -423,17 +430,16 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	/**
 	 * The SQL query string to be called; implemented by all subclasses
 	 */
+	@Override
 	public String getSQLString() {
 		return sql;
 	}
-
+	@Override
 	public List<String> collectSqlStrings() {
 		ArrayList<String> list = new ArrayList<String>();
 		if ( isManipulationStatement() ) {
 			String[] sqlStatements = statementExecutor.getSqlStatements();
-			for ( int i = 0; i < sqlStatements.length; i++ ) {
-				list.add( sqlStatements[i] );
-			}
+			Collections.addAll( list, sqlStatements );
 		}
 		else {
 			list.add( sql );
@@ -446,11 +452,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	public boolean isShallowQuery() {
 		return shallowQuery;
 	}
-
+	@Override
 	public String getQueryString() {
 		return hql;
 	}
-
+	@Override
 	public Map getEnabledFilters() {
 		return enabledFilters;
 	}
@@ -458,17 +464,17 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	public int[] getNamedParameterLocs(String name) {
 		return getWalker().getNamedParameterLocations( name );
 	}
-
+	@Override
 	public boolean containsCollectionFetches() {
 		errorIfDML();
 		List collectionFetches = ( ( QueryNode ) sqlAst ).getFromClause().getCollectionFetches();
 		return collectionFetches != null && collectionFetches.size() > 0;
 	}
-
+	@Override
 	public boolean isManipulationStatement() {
 		return sqlAst.needsExecutor();
 	}
-
+	@Override
 	public void validateScrollability() throws HibernateException {
 		// Impl Note: allows multiple collection fetches as long as the
 		// entire fecthed graph still "points back" to a single
@@ -496,10 +502,9 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		}
 
 		FromElement owner = null;
-		Iterator itr = query.getSelectClause().getFromElementsForLoad().iterator();
-		while ( itr.hasNext() ) {
+		for ( Object o : query.getSelectClause().getFromElementsForLoad() ) {
 			// should be the first, but just to be safe...
-			final FromElement fromElement = ( FromElement ) itr.next();
+			final FromElement fromElement = (FromElement) o;
 			if ( fromElement.getOrigin() == null ) {
 				owner = fromElement;
 				break;
@@ -560,7 +565,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			throw new QueryException( "Unexpected statement type" );
 		}
 	}
-
+	@Override
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {
 			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameters() );
@@ -581,6 +586,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 	public static class JavaConstantConverter implements NodeTraverser.VisitationStrategy {
 		private AST dotRoot;
+		@Override
 		public void visit(AST node) {
 			if ( dotRoot != null ) {
 				// we are already processing a dot-structure
@@ -589,7 +595,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
                 dotRoot = null;
 			}
 
-			if ( dotRoot == null && node.getType() == HqlTokenTypes.DOT ) {
+			if ( node.getType() == HqlTokenTypes.DOT ) {
 				dotRoot = node;
 				handleDotStructure( dotRoot );
 			}

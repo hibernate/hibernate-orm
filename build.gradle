@@ -430,6 +430,16 @@ subprojects { subProject ->
                         dev.appendNode( 'name', 'The Hibernate Development Team' )
                         dev.appendNode( 'organization', 'Hibernate.org' )
                         dev.appendNode( 'organizationUrl', 'http://hibernate.org' )
+
+                        final String runtimeScope = '<scope>runtime</scope>';
+                        final int replacementLength = runtimeScope.length();
+                        final String compileScope = '<scope>compile</scope>';
+                        final StringBuilder stringBuilder = asString();
+                        int index = stringBuilder.indexOf( runtimeScope );
+                        while ( index > -1 ) {
+                            stringBuilder.replace( index, index+replacementLength, compileScope );
+                            index = stringBuilder.indexOf( runtimeScope );
+                        }
                     }
                 }
             }

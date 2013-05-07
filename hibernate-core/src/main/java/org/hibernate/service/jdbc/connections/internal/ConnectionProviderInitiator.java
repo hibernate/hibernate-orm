@@ -266,6 +266,9 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 					);
 				}
 			}
+			else if ( CONDITIONAL_PROPERTIES.containsKey( key ) ) {
+				result.setProperty( CONDITIONAL_PROPERTIES.get( key ), value );
+			}
 		}
 		return result;
 	}
@@ -281,6 +284,16 @@ public class ConnectionProviderInitiator implements BasicServiceInitiator<Connec
 		SPECIAL_PROPERTIES.add( Environment.ISOLATION );
 		SPECIAL_PROPERTIES.add( Environment.DRIVER );
 		SPECIAL_PROPERTIES.add( Environment.USER );
+	}
 
+	// Connection properties (map value) that automatically need set if the
+	// Hibernate property (map key) is available. Makes the assumption that
+	// both settings use the same value type.
+	private static final Map<String, String> CONDITIONAL_PROPERTIES;
+
+	static {
+		CONDITIONAL_PROPERTIES = new HashMap<String, String>();
+		// Oracle requires that includeSynonyms=true in order for getColumns to work using a table synonym name.
+		CONDITIONAL_PROPERTIES.put( Environment.ENABLE_SYNONYMS, "includeSynonyms" );
 	}
 }

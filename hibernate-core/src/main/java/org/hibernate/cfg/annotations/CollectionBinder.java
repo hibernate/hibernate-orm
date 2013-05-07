@@ -1389,12 +1389,9 @@ public abstract class CollectionBinder {
 
 	private String extractHqlOrderBy(javax.persistence.OrderBy jpaOrderBy) {
 		if ( jpaOrderBy != null ) {
-			final String jpaOrderByFragment = jpaOrderBy.value();
-			return StringHelper.isNotEmpty( jpaOrderByFragment )
-					? jpaOrderByFragment
-					: null;
+			return jpaOrderBy.value(); // Null not possible. In case of empty expression, apply default ordering.
 		}
-		return null;
+		return null; // @OrderBy not found.
 	}
 
 	private static void checkFilterConditions(Collection collValue) {

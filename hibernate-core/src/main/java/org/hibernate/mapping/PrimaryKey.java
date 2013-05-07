@@ -53,4 +53,8 @@ public class PrimaryKey extends Constraint {
 		}
 		return buf.append(')').toString();
 	}
+	
+	public String generatedConstraintNamePrefix() {
+		return "PK_";
+	}
 }

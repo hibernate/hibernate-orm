@@ -69,15 +69,6 @@ public class Table implements RelationalModel, Serializable {
 	private boolean hasDenormalizedTables = false;
 	private String comment;
 	
-	/**
-	 * Natural ID columns must reside in one single UniqueKey within the Table.
-	 * To prevent separate UniqueKeys from being created, this keeps track of
-	 * a sole name used for all of them.  It's necessary since
-	 * AnnotationBinder#processElementAnnotations (static) creates the
-	 * UniqueKeys on a second pass using randomly-generated names.
-	 */
-	private final String naturalIdUniqueKeyName = StringHelper.randomFixedLengthHex( "UK_" );
-
 	static class ForeignKeyKey implements Serializable {
 		String referencedClassName;
 		List columns;
@@ -430,8 +421,8 @@ public class Table implements RelationalModel, Serializable {
 				}
 
 				if ( column.isUnique() ) {
-					UniqueKey uk = getOrCreateUniqueKey( 
-							StringHelper.randomFixedLengthHex("UK_"));
+					String keyName = Constraint.generateName( "UK_", this, column );
+					UniqueKey uk = getOrCreateUniqueKey( keyName );
 					uk.addColumn( column );
 					alter.append( dialect.getUniqueDelegate()
 							.getColumnDefinitionUniquenessFragment( column ) );
@@ -533,8 +524,8 @@ public class Table implements RelationalModel, Serializable {
 			}
 			
 			if ( col.isUnique() ) {
-				UniqueKey uk = getOrCreateUniqueKey( 
-						StringHelper.randomFixedLengthHex("UK_"));
+				String keyName = Constraint.generateName( "UK_", this, col );
+				UniqueKey uk = getOrCreateUniqueKey( keyName );
 				uk.addColumn( col );
 				buf.append( dialect.getUniqueDelegate()
 						.getColumnDefinitionUniquenessFragment( col ) );
@@ -630,7 +621,12 @@ public class Table implements RelationalModel, Serializable {
 	}
 
 	public UniqueKey createUniqueKey(List keyColumns) {
-		String keyName = StringHelper.randomFixedLengthHex("UK_");
+		// If only keyColumns was paramatized...
+		Column[] columnArray = new Column[keyColumns.size()];
+		for (int i = 0; i < keyColumns.size(); i++) {
+			columnArray[i] = (Column) keyColumns.get( 0 );
+		}
+		String keyName = Constraint.generateName( "UK_", this, columnArray );
 		UniqueKey uk = getOrCreateUniqueKey( keyName );
 		uk.addColumns( keyColumns.iterator() );
 		return uk;
@@ -666,19 +662,22 @@ public class Table implements RelationalModel, Serializable {
 		ForeignKey fk = (ForeignKey) foreignKeys.get( key );
 		if ( fk == null ) {
 			fk = new ForeignKey();
-			if ( keyName != null ) {
-				fk.setName( keyName );
-			}
-			else {
-				fk.setName( StringHelper.randomFixedLengthHex("FK_") );
-			}
 			fk.setTable( this );
-			foreignKeys.put( key, fk );
 			fk.setReferencedEntityName( referencedEntityName );
 			fk.addColumns( keyColumns.iterator() );
 			if ( referencedColumns != null ) {
 				fk.addReferencedColumns( referencedColumns.iterator() );
 			}
+			
+			if ( keyName != null ) {
+				fk.setName( keyName );
+			}
+			else {
+				fk.setName( Constraint.generateName( fk.generatedConstraintNamePrefix(),
+						this, keyColumns ) );
+			}
+			
+			foreignKeys.put( key, fk );
 		}
 
 		if ( keyName != null ) {
@@ -826,10 +825,6 @@ public class Table implements RelationalModel, Serializable {
 
 	public Iterator getCheckConstraintsIterator() {
 		return checkConstraints.iterator();
-	}
-	
-	public String getNaturalIdUniqueKeyName() {
-		return naturalIdUniqueKeyName;
 	}
 
 	public Iterator sqlCommentStrings(Dialect dialect, String defaultCatalog, String defaultSchema) {

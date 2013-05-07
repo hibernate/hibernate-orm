@@ -1,4 +1,4 @@
-package org.hibernate.test.collection.set.hhh8206;
+package org.hibernate.test.collection.basic;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -7,24 +7,21 @@ import javax.persistence.Basic;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
-@Table(name="users")
-public class User implements Serializable {
+@Table(name="contact")
+public class Contact implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
-    private Contact contact;
+    private Set<EmailAddress> emailAddresses = new HashSet<EmailAddress>();
+    private Set<EmailAddress> emailAddresses2 = new HashSet<EmailAddress>();
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -45,14 +42,24 @@ public class User implements Serializable {
         this.name = name;
     }
 
-    @ManyToOne(optional = true)
-    @JoinColumn(name = "contact_id", nullable = true, unique = true)
-    public Contact getContact() {
-            return contact;
+    @ElementCollection
+    @CollectionTable(name = "user_email_addresses2", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    public Set<EmailAddress> getEmailAddresses2() {
+        return emailAddresses2;
     }
 
-    public void setContact(Contact contact) {
-            this.contact = contact;
+    public void setEmailAddresses2(Set<EmailAddress> emailAddresses2) {
+        this.emailAddresses2 = emailAddresses2;
+    }
+
+    @ElementCollection
+    @CollectionTable(name = "user_email_addresses", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    public Set<EmailAddress> getEmailAddresses() {
+        return emailAddresses;
+    }
+
+    public void setEmailAddresses(Set<EmailAddress> emailAddresses) {
+        this.emailAddresses = emailAddresses;
     }
 
     @Override
@@ -67,10 +74,10 @@ public class User implements Serializable {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof User)) {
+        if (!(obj instanceof Contact)) {
             return false;
         }
-        final User other = (User) obj;
+        final Contact other = (Contact) obj;
         if (this.id == null || other.id == null) {
             return this == obj;
         }

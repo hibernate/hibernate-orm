@@ -1,7 +1,6 @@
-package org.hibernate.test.collection.set.hhh8206;
+package org.hibernate.test.collection.basic;
 
 import java.io.Serializable;
-import java.util.Set;
 import javax.persistence.*;
 
 @Embeddable

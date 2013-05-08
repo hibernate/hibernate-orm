@@ -147,9 +147,6 @@ public class ProviderMBeanRegistrationHelper {
 			try {
 				final Class factoryType = SessionFactoryRegistry.class;
 				final Field instancesField = getField( factoryType, "sessionFactoryMap" );
-				if ( instancesField == null ) {
-					throw new RuntimeException( "Expected 'sessionFactoryMap' field on " + SessionFactoryRegistry.class.getName() );
-				}
 				instancesField.setAccessible( true );
 				final Map map = (Map) instancesField.get( SessionFactoryRegistry.INSTANCE );
 				if ( map == null ) {

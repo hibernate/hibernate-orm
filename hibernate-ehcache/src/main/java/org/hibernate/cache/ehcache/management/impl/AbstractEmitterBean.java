@@ -138,6 +138,9 @@ public abstract class AbstractEmitterBean extends StandardMBean implements Notif
 		notificationListeners.clear();
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public abstract MBeanNotificationInfo[] getNotificationInfo();
 

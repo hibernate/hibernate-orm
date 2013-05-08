@@ -65,9 +65,10 @@ public class EhcacheHibernateMBeanRegistrationImpl
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public synchronized void registerMBeanForCacheManager(final CacheManager manager, final Properties properties)
 			throws Exception {
-		String sessionFactoryName = properties.getProperty( Environment.SESSION_FACTORY_NAME );
+		final String sessionFactoryName = properties.getProperty( Environment.SESSION_FACTORY_NAME );
 		String name = null;
 		if ( sessionFactoryName == null ) {
 			name = manager.getName();
@@ -91,7 +92,7 @@ public class EhcacheHibernateMBeanRegistrationImpl
 			}
 			try {
 				// register the CacheManager MBean
-				MBeanServer mBeanServer = getMBeanServer();
+				final MBeanServer mBeanServer = getMBeanServer();
 				cacheManagerObjectName = EhcacheHibernateMbeanNames.getCacheManagerObjectName(
 						cacheManagerClusterUUID,
 						registeredCacheManagerName
@@ -123,6 +124,7 @@ public class EhcacheHibernateMBeanRegistrationImpl
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public void enableHibernateStatisticsSupport(SessionFactory sessionFactory) {
 		ehcacheHibernate.enableHibernateStatistics( sessionFactory );
 	}
@@ -130,6 +132,7 @@ public class EhcacheHibernateMBeanRegistrationImpl
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public synchronized void dispose() throws CacheException {
 		if ( status == Status.STATUS_SHUTDOWN ) {
 			return;
@@ -152,27 +155,39 @@ public class EhcacheHibernateMBeanRegistrationImpl
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public synchronized Status getStatus() {
 		return status;
 	}
 
 	/**
+	 *
+	 * {@inheritDoc}
+	 *
 	 * No-op in this case
 	 */
+	@Override
 	public void init() throws CacheException {
 		// no-op
 	}
 
 	/**
+	 *
+	 * {@inheritDoc}
+	 *
 	 * No-op in this case
 	 */
+	@Override
 	public void notifyCacheAdded(String cacheName) {
 		// no-op
 	}
 
 	/**
+	 * {@inheritDoc}
+	 *
 	 * No-op in this case
 	 */
+	@Override
 	public void notifyCacheRemoved(String cacheName) {
 		// no-op
 	}

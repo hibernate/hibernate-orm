@@ -120,7 +120,8 @@ public class EntityStats implements Serializable {
 	protected long optimisticFailureCount;
 
 	/**
-	 * @param name
+	 * Constructor only naming the stat
+	 * @param name the name of the entity
 	 */
 	public EntityStats(String name) {
 		this.name = name;
@@ -128,8 +129,9 @@ public class EntityStats implements Serializable {
 	}
 
 	/**
-	 * @param name
-	 * @param src
+	 * Constructor naming the stat and sourcing stats
+	 * @param name the name of the entity
+	 * @param src its source for the stats to expose
 	 */
 	public EntityStats(String name, EntityStatistics src) {
 		this( name );
@@ -149,7 +151,8 @@ public class EntityStats implements Serializable {
 	}
 
 	/**
-	 * @param cData
+	 * Constructor from compositeDate
+	 * @param cData CompositeData of the stats
 	 */
 	public EntityStats(final CompositeData cData) {
 		int i = 0;
@@ -173,7 +176,8 @@ public class EntityStats implements Serializable {
 	}
 
 	/**
-	 * @param stats
+	 * Adds the counters of this instance up with the ones passed in
+	 * @param stats the stats to add to this one
 	 */
 	public void add(EntityStats stats) {
 		loadCount += stats.getLoadCount();
@@ -185,7 +189,7 @@ public class EntityStats implements Serializable {
 	}
 
 	/**
-	 * toString
+	 * {@inheritDoc}
 	 */
 	@Override
 	public String toString() {
@@ -195,63 +199,72 @@ public class EntityStats implements Serializable {
 	}
 
 	/**
-	 * getName
+	 * The name of the entity those stats are about
+	 * @return the entity name
 	 */
 	public String getName() {
 		return name;
 	}
 
 	/**
-	 * getShortName
+	 * The short name of the entity those stats are about
+	 * @return the shortName of the entity
 	 */
 	public String getShortName() {
 		return shortName;
 	}
 
 	/**
-	 * getLoadCount
+	 * Amount of load ops on the entity
+	 * @return the load count
 	 */
 	public long getLoadCount() {
 		return loadCount;
 	}
 
 	/**
-	 * getUpdateCount
+	 * Amount of update ops on the entity
+	 * @return the update count
 	 */
 	public long getUpdateCount() {
 		return updateCount;
 	}
 
 	/**
-	 * getInsertCount
+	 * Amount of insert ops on the entity
+	 * @return the insert count
 	 */
 	public long getInsertCount() {
 		return insertCount;
 	}
 
 	/**
-	 * getDeleteCount
+	 * Amount of delete ops on the entity
+	 * @return the delete count
 	 */
 	public long getDeleteCount() {
 		return deleteCount;
 	}
 
 	/**
-	 * getFetchCount
+	 * Amount of fetch ops on the entity
+	 * @return the fetch count
 	 */
 	public long getFetchCount() {
 		return fetchCount;
 	}
 
 	/**
-	 * getOptimisticFailureCount
+	 * Amount of optimistic failures on the entity
+	 * @return the optimistic failure count
 	 */
 	public long getOptimisticFailureCount() {
 		return optimisticFailureCount;
 	}
 
 	/**
-	 * toCompositeData
+	 * Creates a CompositeData instance of this instance
+	 * @return the compositeData representation of this instance
 	 */
 	public CompositeData toCompositeData() {
 		try {
@@ -268,14 +281,17 @@ public class EntityStats implements Serializable {
 	}
 
 	/**
-	 * newTabularDataInstance
+	 * Creates a new TabularData
+	 * @return a new TabularData instance
 	 */
 	public static TabularData newTabularDataInstance() {
 		return new TabularDataSupport( TABULAR_TYPE );
 	}
 
 	/**
-	 * fromTabularData
+	 * Reads an array of entityStats from TabularData
+	 * @param tabularData the tabularData with the {@link CompositeData} of stats to extract
+	 * @return all entityStats as an array
 	 */
 	public static EntityStats[] fromTabularData(final TabularData tabularData) {
 		final List<EntityStats> countList = new ArrayList( tabularData.size() );

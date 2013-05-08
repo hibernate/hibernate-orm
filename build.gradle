@@ -406,39 +406,50 @@ subprojects { subProject ->
                     }
 
                     pom.withXml {
-                        def root = asNode();
-                        root.appendNode( 'name', subProject.pomName() )
-                        root.appendNode( 'description', subProject.pomDescription() )
-                        root.appendNode( 'url', 'http://hibernate.org' )
-                        def org = root.appendNode( 'organization' )
-                        org.appendNode( 'name', 'Hibernate.org' )
-                        org.appendNode( 'url', 'http://hibernate.org' )
-                        def jira = root.appendNode( 'issueManagement' )
-                        jira.appendNode( 'system', 'jira' )
-                        jira.appendNode( 'url', 'https://hibernate.atlassian.net/browse/HHH' )
-                        def scm = root.appendNode( 'scm' )
-                        scm.appendNode( 'url', 'http://github.com/hibernate/hibernate-orm' )
-                        scm.appendNode( 'connection', 'scm:git:http://github.com/hibernate/hibernate-orm.git' )
-                        scm.appendNode( 'developerConnection', 'scm:git:git@github.com:hibernate/hibernate-orm.git' )
-                        def license = root.appendNode( 'licenses' ).appendNode( 'license' );
-                        license.appendNode( 'name', 'GNU Lesser General Public License' )
-                        license.appendNode( 'url', 'http://www.gnu.org/licenses/lgpl-2.1.html' )
-                        license.appendNode( 'comments', 'See discussion at http://hibernate.org/license for more details.' )
-                        license.appendNode( 'distribution', 'repo' )
-                        def dev = root.appendNode( 'developers' ).appendNode( 'developer' );
-                        dev.appendNode( 'id', 'hibernate-team' )
-                        dev.appendNode( 'name', 'The Hibernate Development Team' )
-                        dev.appendNode( 'organization', 'Hibernate.org' )
-                        dev.appendNode( 'organizationUrl', 'http://hibernate.org' )
+// sadly for some reason it is not working within the closure above to define the descritpion...
+                        asNode().appendNode( 'description', subProject.pomDescription() )
 
-                        final String runtimeScope = '<scope>runtime</scope>';
-                        final int replacementLength = runtimeScope.length();
-                        final String compileScope = '<scope>compile</scope>';
-                        final StringBuilder stringBuilder = asString();
-                        int index = stringBuilder.indexOf( runtimeScope );
-                        while ( index > -1 ) {
-                            stringBuilder.replace( index, index+replacementLength, compileScope );
-                            index = stringBuilder.indexOf( runtimeScope );
+                        // append additional metadata
+                        asNode().children().last() + {
+                            name subProject.pomName()
+// ugh, see above
+//                            description subProject.pomDescription()
+                            url 'http://hibernate.org'
+                            organization {
+                                name 'Hibernate.org'
+                                url 'http://hibernate.org'
+                            }
+                            issueManagement {
+                                system 'jira'
+                                url 'https://hibernate.atlassian.net/browse/HHH'
+                            }
+                            scm {
+                                url 'http://github.com/hibernate/hibernate-orm'
+                                connection 'scm:git:http://github.com/hibernate/hibernate-orm.git'
+                                developerConnection 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+                            }
+                            licenses {
+                                license {
+                                    name 'GNU Lesser General Public License'
+                                    url 'http://www.gnu.org/licenses/lgpl-2.1.html'
+                                    comments 'See discussion at http://hibernate.org/license for more details.'
+                                    distribution 'repo'
+                                }
+                            }
+                            developers {
+                                developer {
+                                    id 'hibernate-team'
+                                    name 'The Hibernate Development Team'
+                                    organization 'Hibernate.org'
+                                    organizationUrl 'http://hibernate.org'
+                                }
+                            }
+                        }
+
+                        // TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
+                        //      rather than 'compile'; fix that.
+                        asNode().dependencies[0].dependency.each {
+                            it.scope[0].value = 'compile'
                         }
                     }
                 }

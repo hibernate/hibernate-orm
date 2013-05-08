@@ -206,8 +206,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	protected void configure(Configuration configuration) {
 	}
 
-	protected void applyCacheSettings(MetadataImplementor metadataImplementor){
-		if( StringHelper.isEmpty(getCacheConcurrencyStrategy())){
+	public static void applyCacheSettings(MetadataImplementor metadataImplementor, String strategy, boolean overrideCacheStrategy){
+		if( StringHelper.isEmpty(strategy)){
 			return;
 		}
 		for( EntityBinding entityBinding : metadataImplementor.getEntityBindings()){
@@ -224,14 +224,14 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 					}
 				}
 			}
-			if ( !hasLob && entityBinding.getSuperEntityBinding() == null && overrideCacheStrategy() ) {
+			if ( !hasLob && entityBinding.getSuperEntityBinding() == null && overrideCacheStrategy ) {
 				Caching caching = entityBinding.getHierarchyDetails().getCaching();
 				if ( caching == null ) {
 					caching = new Caching();
 				}
 				caching.setRegion( entityBinding.getEntity().getName() );
 				caching.setCacheLazyProperties( true );
-				caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+				caching.setAccessType( AccessType.fromExternalName( strategy ) );
 				entityBinding.getHierarchyDetails().setCaching( caching );
 			}
 			for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure()){
@@ -243,11 +243,15 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 					}
 					caching.setRegion( StringHelper.qualify( entityBinding.getEntity().getName() , attributeBinding.getAttribute().getName() ) );
 					caching.setCacheLazyProperties( true );
-					caching.setAccessType( AccessType.fromExternalName( getCacheConcurrencyStrategy() ) );
+					caching.setAccessType( AccessType.fromExternalName( strategy ) );
 					binding.setCaching( caching );
 				}
 			}
 		}
+	}
+
+	protected void applyCacheSettings(MetadataImplementor metadataImplementor){
+		 applyCacheSettings( metadataImplementor, getCacheConcurrencyStrategy(), overrideCacheStrategy() );
 	}
 
 	protected void applyCacheSettings(Configuration configuration) {

@@ -50,6 +50,7 @@ import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatfor
 import org.hibernate.engine.transaction.jta.platform.internal.JBossStandAloneJtaPlatform;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase;
 import org.hibernate.testing.ServiceRegistryBuilder;
 
@@ -437,6 +438,9 @@ public class InfinispanRegionFactoryTestCase {
 			fail( "Should fail cos no eviction configurations are allowed for timestamp caches" );
 		}
 		catch ( CacheException ce ) {
+		}
+		catch ( ServiceException e) {
+
 		}
 		finally {
 			if ( sf != null ) {

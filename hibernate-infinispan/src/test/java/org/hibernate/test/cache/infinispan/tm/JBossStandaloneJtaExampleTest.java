@@ -26,9 +26,7 @@ package org.hibernate.test.cache.infinispan.tm;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.naming.Context;
@@ -82,6 +80,7 @@ public class JBossStandaloneJtaExampleTest {
 	Context ctx;
 	Main jndiServer;
 	private ServiceRegistry serviceRegistry;
+	private SessionFactory sessionFactory;
 
 
 	@Before
@@ -92,6 +91,45 @@ public class JBossStandaloneJtaExampleTest {
 		lookup.init( new ConfigurationBuilder().build() );
 		bindTransactionManager();
 		bindUserTransaction();
+
+
+		// Extra options located in src/test/resources/hibernate.properties
+		Configuration cfg = new Configuration();
+		cfg.setProperty( Environment.DIALECT, "HSQL" );
+		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
+		cfg.setProperty( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
+		cfg.setProperty( Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory" );
+		cfg.setProperty( Environment.TRANSACTION_STRATEGY, "jta" );
+		cfg.setProperty( Environment.CURRENT_SESSION_CONTEXT_CLASS, "jta" );
+		cfg.setProperty( Environment.RELEASE_CONNECTIONS, "auto" );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "true" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+
+		Properties envProps = Environment.getProperties();
+		envProps.putAll( cfg.getProperties() );
+		envProps.put( AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform() );
+		envProps.setProperty(
+				Environment.CACHE_REGION_FACTORY,
+				"org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase$TestInfinispanRegionFactory"
+		);
+
+		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( envProps );
+		String[] mappings = new String[] { "org/hibernate/test/cache/infinispan/functional/Item.hbm.xml" };
+		for ( String mapping : mappings ) {
+			cfg.addResource( mapping, Thread.currentThread().getContextClassLoader() );
+		}
+		cfg.buildMappings();
+		Iterator iter = cfg.getClassMappings();
+		while ( iter.hasNext() ) {
+			PersistentClass clazz = (PersistentClass) iter.next();
+			cfg.setCacheConcurrencyStrategy( clazz.getEntityName(), "transactional" );
+		}
+		iter = cfg.getCollectionMappings();
+		while ( iter.hasNext() ) {
+			Collection coll = (Collection) iter.next();
+			cfg.setCollectionCacheConcurrencyStrategy( coll.getRole(), "transactional" );
+		}
+		sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 	}
 
 	@After
@@ -103,6 +141,9 @@ public class JBossStandaloneJtaExampleTest {
 			jndiServer.stop();
 		}
 		finally {
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+			}
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
@@ -112,84 +153,76 @@ public class JBossStandaloneJtaExampleTest {
 	@Test
 	public void testPersistAndLoadUnderJta() throws Exception {
 		Item item;
-		SessionFactory sessionFactory = buildSessionFactory();
+		UserTransaction ut = (UserTransaction) ctx.lookup( "UserTransaction" );
+		ut.begin();
 		try {
-			UserTransaction ut = (UserTransaction) ctx.lookup( "UserTransaction" );
-			ut.begin();
-			try {
-				Session session = sessionFactory.openSession();
-				session.getTransaction().begin();
-				item = new Item( "anItem", "An item owned by someone" );
-				session.persist( item );
-				session.getTransaction().commit();
-				session.close();
-			}
-			catch ( Exception e ) {
-				ut.setRollbackOnly();
-				throw e;
-			}
-			finally {
-				if ( ut.getStatus() == Status.STATUS_ACTIVE ) {
-					ut.commit();
-				}
-				else {
-					ut.rollback();
-				}
-			}
-
-			ut = (UserTransaction) ctx.lookup( "UserTransaction" );
-			ut.begin();
-			try {
-				Session session = sessionFactory.openSession();
-				session.getTransaction().begin();
-				Item found = (Item) session.load( Item.class, item.getId() );
-				Statistics stats = session.getSessionFactory().getStatistics();
-				log.info( stats.toString() );
-				assertEquals( item.getDescription(), found.getDescription() );
-				assertEquals( 0, stats.getSecondLevelCacheMissCount() );
-				assertEquals( 1, stats.getSecondLevelCacheHitCount() );
-				session.delete( found );
-				session.getTransaction().commit();
-				session.close();
-			}
-			catch ( Exception e ) {
-				ut.setRollbackOnly();
-				throw e;
-			}
-			finally {
-				if ( ut.getStatus() == Status.STATUS_ACTIVE ) {
-					ut.commit();
-				}
-				else {
-					ut.rollback();
-				}
-			}
-
-			ut = (UserTransaction) ctx.lookup( "UserTransaction" );
-			ut.begin();
-			try {
-				Session session = sessionFactory.openSession();
-				session.getTransaction().begin();
-				assertNull( session.get( Item.class, item.getId() ) );
-				session.getTransaction().commit();
-				session.close();
-			}
-			catch ( Exception e ) {
-				ut.setRollbackOnly();
-				throw e;
-			}
-			finally {
-				if ( ut.getStatus() == Status.STATUS_ACTIVE ) {
-					ut.commit();
-				}
-				else {
-					ut.rollback();
-				}
-			}
+			Session session = sessionFactory.openSession();
+			session.getTransaction().begin();
+			item = new Item( "anItem", "An item owned by someone" );
+			session.persist( item );
+			session.getTransaction().commit();
+			session.close();
+		}
+		catch ( Exception e ) {
+			ut.setRollbackOnly();
+			throw e;
 		}
 		finally {
-			if ( sessionFactory != null ) {
-				sessionFactory.close();
+			if ( ut.getStatus() == Status.STATUS_ACTIVE ) {
+				ut.commit();
+			}
+			else {
+				ut.rollback();
+			}
+		}
+
+		ut = (UserTransaction) ctx.lookup( "UserTransaction" );
+		ut.begin();
+		try {
+			Session session = sessionFactory.openSession();
+			session.getTransaction().begin();
+			Item found = (Item) session.load( Item.class, item.getId() );
+			Statistics stats = session.getSessionFactory().getStatistics();
+			log.info( stats.toString() );
+			assertEquals( item.getDescription(), found.getDescription() );
+			assertEquals( 0, stats.getSecondLevelCacheMissCount() );
+			assertEquals( 1, stats.getSecondLevelCacheHitCount() );
+			session.delete( found );
+			session.getTransaction().commit();
+			session.close();
+		}
+		catch ( Exception e ) {
+			ut.setRollbackOnly();
+			throw e;
+		}
+		finally {
+			if ( ut.getStatus() == Status.STATUS_ACTIVE ) {
+				ut.commit();
+			}
+			else {
+				ut.rollback();
+			}
+		}
+
+		ut = (UserTransaction) ctx.lookup( "UserTransaction" );
+		ut.begin();
+		try {
+			Session session = sessionFactory.openSession();
+			session.getTransaction().begin();
+			assertNull( session.get( Item.class, item.getId() ) );
+			session.getTransaction().commit();
+			session.close();
+		}
+		catch ( Exception e ) {
+			ut.setRollbackOnly();
+			throw e;
+		}
+		finally {
+			if ( ut.getStatus() == Status.STATUS_ACTIVE ) {
+				ut.commit();
+			}
+			else {
+				ut.rollback();
 			}
 		}
 
@@ -266,42 +299,5 @@ public class JBossStandaloneJtaExampleTest {
 		ctx.unbind( jndiName );
 	}
 
-   private SessionFactory buildSessionFactory() {
-      // Extra options located in src/test/resources/hibernate.properties
-      Configuration cfg = new Configuration();
-      cfg.setProperty( Environment.DIALECT, "HSQL" );
-      cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-      cfg.setProperty( Environment.CONNECTION_PROVIDER, JtaAwareConnectionProviderImpl.class.getName() );
-      cfg.setProperty(Environment.JNDI_CLASS, "org.jnp.interfaces.NamingContextFactory");
-      cfg.setProperty(Environment.TRANSACTION_STRATEGY, "jta");
-      cfg.setProperty(Environment.CURRENT_SESSION_CONTEXT_CLASS, "jta");
-      cfg.setProperty(Environment.RELEASE_CONNECTIONS, "auto");
-      cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "true");
-      cfg.setProperty(Environment.USE_QUERY_CACHE, "true");
 
-      Properties envProps = Environment.getProperties();
-	   envProps.putAll( cfg.getProperties() );
-      envProps.put(AvailableSettings.JTA_PLATFORM, new JBossStandAloneJtaPlatform());
-      envProps.setProperty(Environment.CACHE_REGION_FACTORY,
-              "org.hibernate.test.cache.infinispan.functional.SingleNodeTestCase$TestInfinispanRegionFactory");
-
-      serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry(envProps);
-
-		String[] mappings = new String[] { "org/hibernate/test/cache/infinispan/functional/Item.hbm.xml" };
-		for ( String mapping : mappings ) {
-			cfg.addResource( mapping, Thread.currentThread().getContextClassLoader() );
-		}
-		cfg.buildMappings();
-		Iterator iter = cfg.getClassMappings();
-		while ( iter.hasNext() ) {
-			PersistentClass clazz = (PersistentClass) iter.next();
-			cfg.setCacheConcurrencyStrategy( clazz.getEntityName(), "transactional" );
-		}
-		iter = cfg.getCollectionMappings();
-		while ( iter.hasNext() ) {
-			Collection coll = (Collection) iter.next();
-			cfg.setCollectionCacheConcurrencyStrategy( coll.getRole(), "transactional" );
-		}
-		return cfg.buildSessionFactory( serviceRegistry );
-	}
 }

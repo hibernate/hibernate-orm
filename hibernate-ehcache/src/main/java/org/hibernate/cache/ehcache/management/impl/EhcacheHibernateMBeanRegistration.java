@@ -44,17 +44,17 @@ public interface EhcacheHibernateMBeanRegistration {
 	 * MBeans will be registered based on the input session factory name. If the input name is null or blank, the name of the cache-manager
 	 * is used
 	 *
-	 * @param manager
-	 * @param properties
+	 * @param manager the {@link CacheManager} to register the MBean for
+	 * @param properties properties to used to create the associated {@link SessionFactory}
 	 *
-	 * @throws Exception
+	 * @throws Exception reflecting the source of the problem registering the MBean
 	 */
 	public void registerMBeanForCacheManager(CacheManager manager, Properties properties) throws Exception;
 
 	/**
 	 * Enable hibernate statistics in the mbean.
 	 *
-	 * @param sessionFactory
+	 * @param sessionFactory the {@link SessionFactory} to enable stats for
 	 */
 	public void enableHibernateStatisticsSupport(SessionFactory sessionFactory);
 

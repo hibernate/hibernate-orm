@@ -28,6 +28,7 @@ import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.QueryHint;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
@@ -329,6 +330,20 @@ public abstract class QueryBinder {
 		for (org.hibernate.annotations.NamedQuery q : queriesAnn.value()) {
 			bindQuery( q, mappings );
 		}
+	}
+
+	public static void bindNamedStoredProcedureQuery(NamedStoredProcedureQuery annotation, Mappings mappings) {
+		if ( annotation == null ) {
+			return;
+		}
+
+		if ( BinderHelper.isEmptyAnnotationValue( annotation.name() ) ) {
+			throw new AnnotationException( "A named query must have a name when used in class or package level" );
+		}
+
+		final NamedProcedureCallDefinition def = new NamedProcedureCallDefinition( annotation );
+		mappings.addNamedProcedureCallDefinition( def );
+		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegisteredName(), def.getProcedureName() );
 	}
 
 	public static void bindSqlResultsetMappings(SqlResultSetMappings ann, Mappings mappings, boolean isDefault) {

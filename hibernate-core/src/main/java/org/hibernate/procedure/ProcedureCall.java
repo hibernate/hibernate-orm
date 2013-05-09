@@ -25,6 +25,7 @@ package org.hibernate.procedure;
 
 import javax.persistence.ParameterMode;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.BasicQueryContract;
 import org.hibernate.MappingException;
@@ -58,6 +59,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param position The position
 	 * @param type The Java type of the parameter
 	 * @param mode The parameter mode (in, out, inout)
+	 * @param <T> The parameterized Java type of the parameter.
 	 *
 	 * @return The parameter registration memento
 	 */
@@ -89,8 +91,12 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param parameterName The parameter name
 	 * @param type The Java type of the parameter
 	 * @param mode The parameter mode (in, out, inout)
+	 * @param <T> The parameterized Java type of the parameter.
 	 *
 	 * @return The parameter registration memento
+	 *
+	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
+	 * named procedure parameters.
 	 */
 	public <T> ParameterRegistration<T> registerParameter(String parameterName, Class<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
@@ -103,6 +109,9 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param mode The parameter mode (in, out, inout)
 	 *
 	 * @return The parameter registration memento
+	 *
+	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
+	 * named procedure parameters.
 	 */
 	public ProcedureCall registerParameter0(String parameterName, Class type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
@@ -133,4 +142,12 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 */
 	public ProcedureResult getResult();
 
+	/**
+	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query
+	 *
+	 * @param hints The hints to incorporate into the memento
+	 *
+	 * @return The memento
+	 */
+	public ProcedureCallMemento extractMemento(Map<String, Object> hints);
 }

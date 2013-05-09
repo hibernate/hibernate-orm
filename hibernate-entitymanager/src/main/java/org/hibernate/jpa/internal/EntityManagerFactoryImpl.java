@@ -75,6 +75,7 @@ import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -284,19 +285,25 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			throw new IllegalStateException( "EntityManagerFactory is closed" );
 		}
 
-		if ( ! HibernateQuery.class.isInstance( query ) ) {
+		if ( StoredProcedureQueryImpl.class.isInstance( query ) ) {
+			final ProcedureCall procedureCall = ( (StoredProcedureQueryImpl) query ).getHibernateProcedureCall();
+			sessionFactory.getNamedQueryRepository().registerNamedProcedureCallMemento( name, procedureCall.extractMemento( query.getHints() ) );
+		}
+		else if ( ! HibernateQuery.class.isInstance( query ) ) {
 			throw new PersistenceException( "Cannot use query non-Hibernate EntityManager query as basis for named query" );
 		}
-
-		// create and register the proper NamedQueryDefinition...
-		final org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
-		if ( org.hibernate.SQLQuery.class.isInstance( hibernateQuery ) ) {
-			final NamedSQLQueryDefinition namedQueryDefinition = extractSqlQueryDefinition( ( org.hibernate.SQLQuery ) hibernateQuery, name );
-			sessionFactory.registerNamedSQLQueryDefinition( name, namedQueryDefinition );
-		}
 		else {
-			final NamedQueryDefinition namedQueryDefinition = extractHqlQueryDefinition( hibernateQuery, name );
-			sessionFactory.registerNamedQueryDefinition( name, namedQueryDefinition );
+			// create and register the proper NamedQueryDefinition...
+			final org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
+			if ( org.hibernate.SQLQuery.class.isInstance( hibernateQuery ) ) {
+				sessionFactory.registerNamedSQLQueryDefinition(
+						name,
+						extractSqlQueryDefinition( (org.hibernate.SQLQuery) hibernateQuery, name )
+				);
+			}
+			else {
+				sessionFactory.registerNamedQueryDefinition( name, extractHqlQueryDefinition( hibernateQuery, name ) );
+			}
 		}
 	}
 

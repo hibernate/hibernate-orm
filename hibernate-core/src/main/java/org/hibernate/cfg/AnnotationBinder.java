@@ -68,6 +68,8 @@ import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedStoredProcedureQueries;
+import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderColumn;
@@ -253,6 +255,28 @@ public final class AnnotationBinder {
 				}
 			}
 		}
+
+		{
+			final List<NamedStoredProcedureQuery> annotations =
+					(List<NamedStoredProcedureQuery>) defaults.get( NamedStoredProcedureQuery.class );
+			if ( annotations != null ) {
+				for ( NamedStoredProcedureQuery annotation : annotations ) {
+					QueryBinder.bindNamedStoredProcedureQuery( annotation, mappings );
+				}
+			}
+		}
+
+		{
+			final List<NamedStoredProcedureQueries> annotations =
+					(List<NamedStoredProcedureQueries>) defaults.get( NamedStoredProcedureQueries.class );
+			if ( annotations != null ) {
+				for ( NamedStoredProcedureQueries annotation : annotations ) {
+					for ( NamedStoredProcedureQuery queryAnnotation : annotation.value() ) {
+						QueryBinder.bindNamedStoredProcedureQuery( queryAnnotation, mappings );
+					}
+				}
+			}
+		}
 	}
 
 	public static void bindPackage(String packageName, Mappings mappings) {
@@ -357,6 +381,24 @@ public final class AnnotationBinder {
 					org.hibernate.annotations.NamedNativeQueries.class
 			);
 			QueryBinder.bindNativeQueries( ann, mappings );
+		}
+
+		// NamedStoredProcedureQuery handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		{
+			final NamedStoredProcedureQuery annotation = annotatedElement.getAnnotation( NamedStoredProcedureQuery.class );
+			if ( annotation != null ) {
+				QueryBinder.bindNamedStoredProcedureQuery( annotation, mappings );
+			}
+		}
+
+		// NamedStoredProcedureQueries handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		{
+			final NamedStoredProcedureQueries annotation = annotatedElement.getAnnotation( NamedStoredProcedureQueries.class );
+			if ( annotation != null ) {
+				for ( NamedStoredProcedureQuery queryAnnotation : annotation.value() ) {
+					QueryBinder.bindNamedStoredProcedureQuery( queryAnnotation, mappings );
+				}
+			}
 		}
 	}
 

@@ -124,6 +124,7 @@ import org.hibernate.jpa.internal.TransactionImpl;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.transform.BasicTransformerAdapter;
@@ -820,7 +821,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public Query createNativeQuery(String sqlString, String resultSetMapping) {
 		checkOpen();
 		try {
-			SQLQuery q = internalGetSession().createSQLQuery( sqlString );
+			final SQLQuery q = internalGetSession().createSQLQuery( sqlString );
 			q.setResultSetMapping( resultSetMapping );
 			return new QueryImpl( q, this );
 		}
@@ -832,15 +833,30 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
 		checkOpen();
-		throw new NotYetImplementedException();
+		final ProcedureCallMemento memento = ( (SessionImplementor) internalGetSession() ).getFactory()
+				.getNamedQueryRepository().getNamedProcedureCallMemento( name );
+		if ( memento == null ) {
+			throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );
+		}
+		final ProcedureCall procedureCall = memento.makeProcedureCall( internalGetSession() );
+		final StoredProcedureQueryImpl jpaImpl = new StoredProcedureQueryImpl( procedureCall, this );
+		// apply hints
+		if ( memento.getHintsMap() != null ) {
+			for ( Map.Entry<String,Object> hintEntry : memento.getHintsMap().entrySet() ) {
+				jpaImpl.setHint( hintEntry.getKey(), hintEntry.getValue() );
+			}
+		}
+		return jpaImpl;
 	}
 
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
 		checkOpen();
 		try {
-			ProcedureCall procedureCall = internalGetSession().createStoredProcedureCall( procedureName );
-			return new StoredProcedureQueryImpl( procedureCall, this );
+			return new StoredProcedureQueryImpl(
+					internalGetSession().createStoredProcedureCall( procedureName ),
+					this
+			);
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -851,8 +867,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		checkOpen();
 		try {
-			ProcedureCall procedureCall = internalGetSession().createStoredProcedureCall( procedureName, resultClasses );
-			return new StoredProcedureQueryImpl( procedureCall, this );
+			return new StoredProcedureQueryImpl(
+					internalGetSession().createStoredProcedureCall( procedureName, resultClasses ),
+					this
+			);
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );
@@ -862,7 +880,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
-		throw new NotYetImplementedException();
+		try {
+			return new StoredProcedureQueryImpl(
+					internalGetSession().createStoredProcedureCall( procedureName, resultSetMappings ),
+					this
+			);
+		}
+		catch ( HibernateException he ) {
+			throw convert( he );
+		}
 	}
 
 	@Override

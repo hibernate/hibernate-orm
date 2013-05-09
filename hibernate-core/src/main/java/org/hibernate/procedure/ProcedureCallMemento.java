@@ -21,32 +21,43 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure.internal;
+package org.hibernate.procedure;
 
-import javax.persistence.ParameterMode;
+import java.util.Map;
 
-import org.hibernate.type.Type;
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * Represents a registered positional parameter
+ * Represents a "memento" of a ProcedureCall
  *
  * @author Steve Ebersole
  */
-public class PositionalParameterRegistration<T> extends AbstractParameterRegistrationImpl<T> {
-	PositionalParameterRegistration(
-			ProcedureCallImpl procedureCall,
-			Integer position,
-			ParameterMode mode,
-			Class<T> type) {
-		super( procedureCall, position, mode, type );
-	}
+public interface ProcedureCallMemento {
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	public ProcedureCall makeProcedureCall(Session session);
 
-	PositionalParameterRegistration(
-			ProcedureCallImpl procedureCall,
-			Integer position,
-			ParameterMode mode,
-			Class<T> type,
-			Type hibernateType) {
-		super( procedureCall, position, mode, type, hibernateType );
-	}
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	public ProcedureCall makeProcedureCall(SessionImplementor session);
+
+	/**
+	 * Access to any hints associated with the memento.
+	 * <p/>
+	 * IMPL NOTE : exposed separately because only HEM needs access to this.
+	 *
+	 * @return The hints.
+	 */
+	public Map<String, Object> getHintsMap();
 }

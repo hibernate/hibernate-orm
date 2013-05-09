@@ -43,6 +43,8 @@ import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;
 
 /**
+ * Abstract implementation of ParameterRegistration/ParameterRegistrationImplementor
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractParameterRegistrationImpl<T> implements ParameterRegistrationImplementor<T> {
@@ -62,28 +64,53 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	private Type hibernateType;
 	private int[] sqlTypes;
 
+
+	// positional constructors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	protected AbstractParameterRegistrationImpl(
 			ProcedureCallImpl procedureCall,
 			Integer position,
+			ParameterMode mode,
+			Class<T> type) {
+		this( procedureCall, position, null, mode, type );
+	}
+
+	protected AbstractParameterRegistrationImpl(
+			ProcedureCallImpl procedureCall,
+			Integer position,
+			ParameterMode mode,
 			Class<T> type,
-			ParameterMode mode) {
-		this( procedureCall, position, null, type, mode );
+			Type hibernateType) {
+		this( procedureCall, position, null, mode, type, hibernateType );
+	}
+
+
+	// named constructors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	protected AbstractParameterRegistrationImpl(
+			ProcedureCallImpl procedureCall,
+			String name,
+			ParameterMode mode,
+			Class<T> type) {
+		this( procedureCall, null, name, mode, type );
 	}
 
 	protected AbstractParameterRegistrationImpl(
 			ProcedureCallImpl procedureCall,
 			String name,
+			ParameterMode mode,
 			Class<T> type,
-			ParameterMode mode) {
-		this( procedureCall, null, name, type, mode );
+			Type hibernateType) {
+		this( procedureCall, null, name, mode, type, hibernateType );
 	}
 
 	private AbstractParameterRegistrationImpl(
 			ProcedureCallImpl procedureCall,
 			Integer position,
 			String name,
+			ParameterMode mode,
 			Class<T> type,
-			ParameterMode mode) {
+			Type hibernateType) {
 		this.procedureCall = procedureCall;
 
 		this.position = position;
@@ -92,7 +119,23 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 		this.mode = mode;
 		this.type = type;
 
-		setHibernateType( session().getFactory().getTypeResolver().heuristicType( type.getName() ) );
+		setHibernateType( hibernateType );
+	}
+
+	private AbstractParameterRegistrationImpl(
+			ProcedureCallImpl procedureCall,
+			Integer position,
+			String name,
+			ParameterMode mode,
+			Class<T> type) {
+		this(
+				procedureCall,
+				position,
+				name,
+				mode,
+				type,
+				procedureCall.getSession().getFactory().getTypeResolver().heuristicType( type.getName() )
+		);
 	}
 
 	protected SessionImplementor session() {
@@ -120,6 +163,11 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	@Override
+	public Type getHibernateType() {
+		return hibernateType;
+	}
+
+	@Override
 	public void setHibernateType(Type type) {
 		if ( type == null ) {
 			throw new IllegalArgumentException( "Type cannot be null" );
@@ -129,6 +177,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public ParameterBind<T> getBind() {
 		return bind;
 	}
@@ -175,11 +224,12 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 		if ( mode == ParameterMode.IN || mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
 			if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
 				if ( sqlTypes.length > 1 ) {
-					if ( ProcedureParameterExtractionAware.class.isInstance( hibernateType )
-							&& ( (ProcedureParameterExtractionAware) hibernateType ).canDoExtraction() ) {
-						// the type can handle multi-param extraction...
-					}
-					else {
+					// there is more than one column involved; see if the Hibernate Type can handle
+					// multi-param extraction...
+					final boolean canHandleMultiParamExtraction =
+							ProcedureParameterExtractionAware.class.isInstance( hibernateType )
+									&& ( (ProcedureParameterExtractionAware) hibernateType ).canDoExtraction();
+					if ( ! canHandleMultiParamExtraction ) {
 						// it cannot...
 						throw new UnsupportedOperationException(
 								"Type [" + hibernateType + "] does support multi-parameter value extraction"

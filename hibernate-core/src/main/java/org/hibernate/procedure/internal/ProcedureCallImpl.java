@@ -31,25 +31,28 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.AbstractBasicQueryContractImpl;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureResult;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;
@@ -60,6 +63,10 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements ProcedureCall, ResultContext {
+	private static final Logger log = Logger.getLogger( ProcedureCallImpl.class );
+
+	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
+
 	private final String procedureName;
 	private final NativeSQLQueryReturn[] queryReturns;
 
@@ -70,73 +77,166 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 
 	private ProcedureResultImpl outputs;
 
-
-	@SuppressWarnings("unchecked")
+	/**
+	 * The no-returns form.
+	 *
+	 * @param session The session
+	 * @param procedureName The name of the procedure to call
+	 */
 	public ProcedureCallImpl(SessionImplementor session, String procedureName) {
-		this( session, procedureName, (List) null );
+		super( session );
+		this.procedureName = procedureName;
+		this.queryReturns = NO_RETURNS;
 	}
 
-	public ProcedureCallImpl(SessionImplementor session, String procedureName, List<NativeSQLQueryReturn> queryReturns) {
+	/**
+	 * The result Class(es) return form
+	 *
+	 * @param session The session
+	 * @param procedureName The name of the procedure to call
+	 * @param resultClasses The classes making up the result
+	 */
+	public ProcedureCallImpl(final SessionImplementor session, String procedureName, Class... resultClasses) {
 		super( session );
 		this.procedureName = procedureName;
 
-		if ( queryReturns == null || queryReturns.isEmpty() ) {
-			this.queryReturns = new NativeSQLQueryReturn[0];
-		}
-		else {
-			this.queryReturns = queryReturns.toArray( new NativeSQLQueryReturn[ queryReturns.size() ] );
-		}
+		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
+		final Set<String> collectedQuerySpaces = new HashSet<String>();
+
+		Util.resolveResultClasses(
+				new Util.ResultClassesResolutionContext() {
+					@Override
+					public SessionFactoryImplementor getSessionFactory() {
+						return session.getFactory();
+					}
+
+					@Override
+					public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+						Collections.addAll( collectedQueryReturns, queryReturns );
+					}
+
+					@Override
+					public void addQuerySpaces(String... spaces) {
+						Collections.addAll( collectedQuerySpaces, spaces );
+					}
+				},
+				resultClasses
+		);
+
+		this.queryReturns = collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] );
+		this.synchronizedQuerySpaces = collectedQuerySpaces;
 	}
 
-	public ProcedureCallImpl(SessionImplementor session, String procedureName, Class... resultClasses) {
-		this( session, procedureName, collectQueryReturns( resultClasses ) );
+	/**
+	 * The result-set-mapping(s) return form
+	 *
+	 * @param session The session
+	 * @param procedureName The name of the procedure to call
+	 * @param resultSetMappings The names of the result set mappings making up the result
+	 */
+	public ProcedureCallImpl(final SessionImplementor session, String procedureName, String... resultSetMappings) {
+		super( session );
+		this.procedureName = procedureName;
+
+		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
+		final Set<String> collectedQuerySpaces = new HashSet<String>();
+
+		Util.resolveResultSetMappings(
+				new Util.ResultSetMappingResolutionContext() {
+					@Override
+					public SessionFactoryImplementor getSessionFactory() {
+						return session.getFactory();
+					}
+
+					@Override
+					public ResultSetMappingDefinition findResultSetMapping(String name) {
+						return session.getFactory().getResultSetMapping( name );
+					}
+
+					@Override
+					public void addQueryReturns(NativeSQLQueryReturn... queryReturns) {
+						Collections.addAll( collectedQueryReturns, queryReturns );
+					}
+
+					@Override
+					public void addQuerySpaces(String... spaces) {
+						Collections.addAll( collectedQuerySpaces, spaces );
+					}
+				},
+				resultSetMappings
+		);
+
+		this.queryReturns = collectedQueryReturns.toArray( new NativeSQLQueryReturn[ collectedQueryReturns.size() ] );
+		this.synchronizedQuerySpaces = collectedQuerySpaces;
 	}
 
-	private static List<NativeSQLQueryReturn> collectQueryReturns(Class[] resultClasses) {
-		if ( resultClasses == null || resultClasses.length == 0 ) {
-			return null;
+	/**
+	 * The named/stored copy constructor
+	 *
+	 * @param session The session
+	 * @param memento The named/stored memento
+	 */
+	@SuppressWarnings("unchecked")
+	ProcedureCallImpl(SessionImplementor session, ProcedureCallMementoImpl memento) {
+		super( session );
+		this.procedureName = memento.getProcedureName();
+
+		this.queryReturns = memento.getQueryReturns();
+		this.synchronizedQuerySpaces = Util.copy( memento.getSynchronizedQuerySpaces() );
+		this.parameterStrategy = memento.getParameterStrategy();
+		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
+			// nothing else to do in this case
+			return;
 		}
 
-		List<NativeSQLQueryReturn> queryReturns = new ArrayList<NativeSQLQueryReturn>( resultClasses.length );
-		int i = 1;
-		for ( Class resultClass : resultClasses ) {
-			queryReturns.add( new NativeSQLQueryRootReturn( "alias" + i, resultClass.getName(), LockMode.READ ) );
-			i++;
-		}
-		return queryReturns;
-	}
-
-	public ProcedureCallImpl(SessionImplementor session, String procedureName, String... resultSetMappings) {
-		this( session, procedureName, collectQueryReturns( session, resultSetMappings ) );
-	}
-
-	private static List<NativeSQLQueryReturn> collectQueryReturns(SessionImplementor session, String[] resultSetMappings) {
-		if ( resultSetMappings == null || resultSetMappings.length == 0 ) {
-			return null;
+		final List<ProcedureCallMementoImpl.ParameterMemento> storedRegistrations = memento.getParameterDeclarations();
+		if ( storedRegistrations == null ) {
+			// most likely a problem if ParameterStrategy is not UNKNOWN...
+			log.debugf(
+					"ParameterStrategy was [%s] on named copy [%s], but no parameters stored",
+					parameterStrategy,
+					procedureName
+			);
+			return;
 		}
 
-		List<NativeSQLQueryReturn> queryReturns = new ArrayList<NativeSQLQueryReturn>( resultSetMappings.length );
-		for ( String resultSetMapping : resultSetMappings ) {
-			ResultSetMappingDefinition mapping = session.getFactory().getResultSetMapping( resultSetMapping );
-			if ( mapping == null ) {
-				throw new MappingException( "Unknown SqlResultSetMapping [" + resultSetMapping + "]" );
+		final List<ParameterRegistrationImplementor<?>> parameterRegistrations =
+				CollectionHelper.arrayList( storedRegistrations.size() );
+
+		for ( ProcedureCallMementoImpl.ParameterMemento storedRegistration : storedRegistrations ) {
+			final ParameterRegistrationImplementor<?> registration;
+			if ( StringHelper.isNotEmpty( storedRegistration.getName() ) ) {
+				if ( parameterStrategy != ParameterStrategy.NAMED ) {
+					throw new IllegalStateException(
+							"Found named stored procedure parameter associated with positional parameters"
+					);
+				}
+				registration = new NamedParameterRegistration(
+						this,
+						storedRegistration.getName(),
+						storedRegistration.getMode(),
+						storedRegistration.getType(),
+						storedRegistration.getHibernateType()
+				);
 			}
-			queryReturns.addAll( Arrays.asList( mapping.getQueryReturns() ) );
+			else {
+				if ( parameterStrategy != ParameterStrategy.POSITIONAL ) {
+					throw new IllegalStateException(
+							"Found named stored procedure parameter associated with positional parameters"
+					);
+				}
+				registration = new PositionalParameterRegistration(
+						this,
+						storedRegistration.getPosition(),
+						storedRegistration.getMode(),
+						storedRegistration.getType(),
+						storedRegistration.getHibernateType()
+				);
+			}
+			parameterRegistrations.add( registration );
 		}
-		return queryReturns;
+		this.registeredParameters = parameterRegistrations;
 	}
-
-//	public ProcedureCallImpl(
-//			SessionImplementor session,
-//			String procedureName,
-//			List<StoredProcedureParameter> parameters) {
-//		// this form is intended for named stored procedure calls.
-//		// todo : introduce a NamedProcedureCallDefinition object to hold all needed info and pass that in here; will help with EM.addNamedQuery as well..
-//		this( session, procedureName );
-//		for ( StoredProcedureParameter parameter : parameters ) {
-//			registerParameter( (StoredProcedureParameterImplementor) parameter );
-//		}
-//	}
 
 	@Override
 	public SessionImplementor getSession() {
@@ -165,7 +265,8 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(int position, Class<T> type, ParameterMode mode) {
-		final PositionalParameterRegistration parameterRegistration = new PositionalParameterRegistration( this, position, type, mode );
+		final PositionalParameterRegistration parameterRegistration =
+				new PositionalParameterRegistration( this, position, mode, type );
 		registerParameter( parameterRegistration );
 		return parameterRegistration;
 	}
@@ -233,7 +334,8 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
-		final NamedParameterRegistration parameterRegistration = new NamedParameterRegistration( this, name, type, mode );
+		final NamedParameterRegistration parameterRegistration
+				= new NamedParameterRegistration( this, name, mode, type );
 		registerParameter( parameterRegistration );
 		return parameterRegistration;
 	}
@@ -329,6 +431,12 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		throw new NotYetImplementedException();
 	}
 
+	/**
+	 * Use this form instead of {@link #getSynchronizedQuerySpaces()} when you want to make sure the
+	 * underlying Set is instantiated (aka, on add)
+	 *
+	 * @return The spaces
+	 */
 	protected Set<String> synchronizedQuerySpaces() {
 		if ( synchronizedQuerySpaces == null ) {
 			synchronizedQuerySpaces = new HashSet<String>();
@@ -374,6 +482,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		return buildQueryParametersObject();
 	}
 
+	@Override
 	public QueryParameters buildQueryParametersObject() {
 		QueryParameters qp = super.buildQueryParametersObject();
 		// both of these are for documentation purposes, they are actually handled directly...
@@ -382,13 +491,43 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		return qp;
 	}
 
+	/**
+	 * Collects any parameter registrations which indicate a REF_CURSOR parameter type/mode.
+	 *
+	 * @return The collected REF_CURSOR type parameters.
+	 */
 	public ParameterRegistrationImplementor[] collectRefCursorParameters() {
-		List<ParameterRegistrationImplementor> refCursorParams = new ArrayList<ParameterRegistrationImplementor>();
+		final List<ParameterRegistrationImplementor> refCursorParams = new ArrayList<ParameterRegistrationImplementor>();
 		for ( ParameterRegistrationImplementor param : registeredParameters ) {
 			if ( param.getMode() == ParameterMode.REF_CURSOR ) {
 				refCursorParams.add( param );
 			}
 		}
 		return refCursorParams.toArray( new ParameterRegistrationImplementor[refCursorParams.size()] );
+	}
+
+	@Override
+	public ProcedureCallMemento extractMemento(Map<String, Object> hints) {
+		return new ProcedureCallMementoImpl(
+				procedureName,
+				Util.copy( queryReturns ),
+				parameterStrategy,
+				toParameterMementos( registeredParameters ),
+				Util.copy( synchronizedQuerySpaces ),
+				Util.copy( hints )
+		);
+	}
+
+
+	private static List<ProcedureCallMementoImpl.ParameterMemento> toParameterMementos(List<ParameterRegistrationImplementor<?>> registeredParameters) {
+		if ( registeredParameters == null ) {
+			return null;
+		}
+
+		final List<ProcedureCallMementoImpl.ParameterMemento> copy = CollectionHelper.arrayList( registeredParameters.size() );
+		for ( ParameterRegistrationImplementor registration : registeredParameters ) {
+			copy.add( ProcedureCallMementoImpl.ParameterMemento.fromRegistration( registration ) );
+		}
+		return copy;
 	}
 }

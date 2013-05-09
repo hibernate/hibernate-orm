@@ -81,6 +81,7 @@ import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -214,6 +215,7 @@ public class Configuration implements Serializable {
 
 	protected Map<String, NamedQueryDefinition> namedQueries;
 	protected Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	protected Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	protected Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 
 	protected Map<String, TypeDef> typeDefs;
@@ -1772,6 +1774,10 @@ public class Configuration implements Serializable {
 		return namedQueries;
 	}
 
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+		return namedProcedureCallMap;
+	}
+
 	/**
 	 * Create a {@link SessionFactory} using the properties and mappings in this configuration. The
 	 * {@link SessionFactory} will be immutable, so changes made to {@code this} {@link Configuration} after
@@ -2764,7 +2770,7 @@ public class Configuration implements Serializable {
 
 		public Table getTable(String schema, String catalog, String name) {
 			String key = Table.qualify(catalog, schema, name);
-			return tables.get(key);
+			return tables.get( key );
 		}
 
 		public Iterator<Table> iterateTables() {
@@ -2868,6 +2874,16 @@ public class Configuration implements Serializable {
 		private void applySQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException {
 			checkQueryName( name );
 			namedSqlQueries.put( name.intern(), query );
+		}
+
+		@Override
+		public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition)
+				throws DuplicateMappingException {
+			final String name = definition.getRegisteredName();
+			final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
+			if ( previous != null ) {
+				throw new DuplicateMappingException( "named stored procedure query", name );
+			}
 		}
 
 		public void addDefaultSQLQuery(String name, NamedSQLQueryDefinition query) {

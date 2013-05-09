@@ -37,6 +37,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -337,6 +338,15 @@ public interface Mappings {
 	 * @throws DuplicateMappingException If a query already exists with that name.
 	 */
 	public void addSQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException;
+
+	/**
+	 * Adds metadata for a named stored procedure call to this repository.
+	 *
+	 * @param definition The procedure call information
+	 *
+	 * @throws DuplicateMappingException If a query already exists with that name.
+	 */
+	public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition) throws DuplicateMappingException;
 
 	/**
 	 * Get the metadata for a named SQL result set mapping.

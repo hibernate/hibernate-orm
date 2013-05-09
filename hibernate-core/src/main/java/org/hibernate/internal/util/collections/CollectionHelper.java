@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -129,6 +130,17 @@ public final class CollectionHelper {
 
 	public static <T> List<T> arrayList(int anticipatedSize) {
 		return new ArrayList<T>( anticipatedSize );
+	}
+
+	public static <T> Set<T> makeCopy(Set<T> source) {
+		if ( source == null ) {
+			return null;
+		}
+
+		final int size = source.size();
+		final Set<T> copy = new HashSet<T>( size + 1 );
+		copy.addAll( source );
+		return copy;
 	}
 
     public static boolean isEmpty(Collection collection) {

@@ -189,7 +189,7 @@ class GenerationTargetToScript implements GenerationTarget {
 			return new FileWriter( file );
 		}
 		catch (IOException e) {
-			throw new PersistenceException( "Unable to open specified script target file for writing : " + fileUrl );
+			throw new PersistenceException( "Unable to open specified script target file for writing : " + fileUrl, e );
 		}
 	}
 }

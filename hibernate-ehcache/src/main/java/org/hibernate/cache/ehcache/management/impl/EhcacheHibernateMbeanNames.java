@@ -69,11 +69,10 @@ public abstract class EhcacheHibernateMbeanNames {
 	 */
 	public static ObjectName getCacheManagerObjectName(String cacheManagerClusterUUID, String name)
 			throws MalformedObjectNameException {
-		final ObjectName objectName = new ObjectName(
-				GROUP_ID + ":type=" + EHCACHE_HIBERNATE_TYPE + ",name=" + mbeanSafe( name )
-						+ getBeanNameSuffix( cacheManagerClusterUUID )
+		return new ObjectName(
+				GROUP_ID + ":type=" + EHCACHE_HIBERNATE_TYPE
+						+ ",name=" + mbeanSafe( name ) + getBeanNameSuffix( cacheManagerClusterUUID )
 		);
-		return objectName;
 	}
 
 	private static String getBeanNameSuffix(String cacheManagerClusterUUID) {

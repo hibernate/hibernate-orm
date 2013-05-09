@@ -324,8 +324,8 @@ public class QueryStats implements Serializable {
 	 */
 	public static QueryStats[] fromTabularData(final TabularData tabularData) {
 		final List<QueryStats> countList = new ArrayList( tabularData.size() );
-		for ( final Iterator pos = tabularData.values().iterator(); pos.hasNext(); ) {
-			countList.add( new QueryStats( (CompositeData) pos.next() ) );
+		for ( Object o : tabularData.values() ) {
+			countList.add( new QueryStats( (CompositeData) o ) );
 		}
 		return countList.toArray( new QueryStats[countList.size()] );
 	}

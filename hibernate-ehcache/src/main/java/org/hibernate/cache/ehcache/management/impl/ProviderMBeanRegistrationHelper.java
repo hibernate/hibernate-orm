@@ -130,7 +130,6 @@ public class ProviderMBeanRegistrationHelper {
 					);
 					this.cancel();
 				}
-				return;
 			}
 			else {
 				ehcacheHibernateMBeanRegistration.enableHibernateStatisticsSupport( sessionFactory );
@@ -152,9 +151,8 @@ public class ProviderMBeanRegistrationHelper {
 				if ( map == null ) {
 					return null;
 				}
-				final Iterator values = map.values().iterator();
-				while ( values.hasNext() ) {
-					final SessionFactory sessionFactory = (SessionFactory) values.next();
+				for ( Object o : map.values() ) {
+					final SessionFactory sessionFactory = (SessionFactory) o;
 					final Class sessionFactoryType = sessionFactory.getClass();
 					final Field propertiesField = getField( sessionFactoryType, "properties" );
 					if ( propertiesField != null ) {

@@ -32,6 +32,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.ManyToOne;
@@ -212,7 +213,23 @@ public class OneToOneSecondPass implements SecondPass {
 					propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 				}
 
-				value.setReferencedPropertyName( mappedBy );
+				// HHH-6813
+				// If otherSide's id is derived, do not set EntityType#uniqueKeyPropertyName.
+				// EntityType#isReferenceToPrimaryKey() assumes that, if it's set,
+				// a PK is not referenced.  Example:
+				//
+				// Foo: @Id long id, @OneToOne(mappedBy="foo") Bar bar
+				// Bar: @Id @OneToOne Foo foo
+				boolean referencesDerivedId = false;
+				try {
+					referencesDerivedId = otherSide.getIdentifier() instanceof Component
+							&& ( (Component) otherSide.getIdentifier() ).getProperty( mappedBy ) != null;
+				}
+				catch ( MappingException e ) {
+					// ignore
+				}
+				String referencedPropertyName = referencesDerivedId ? null : mappedBy;
+				value.setReferencedPropertyName( referencedPropertyName );
 
 				String propertyRef = value.getReferencedPropertyName();
 				if ( propertyRef != null ) {

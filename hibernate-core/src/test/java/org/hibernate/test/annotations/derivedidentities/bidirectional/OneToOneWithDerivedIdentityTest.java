@@ -23,14 +23,14 @@
  */
 package org.hibernate.test.annotations.derivedidentities.bidirectional;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
 
 public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
@@ -54,6 +54,29 @@ public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase 
 				.uniqueResult();
 		assertNotNull( newBar );
 		assertEquals( "Some details", newBar.getDetails() );
+		s.getTransaction().rollback();
+		s.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-6813")
+	public void testSelectWithDerivedId() {
+		Session s = openSession();
+		s.beginTransaction();
+		Bar bar = new Bar();
+		bar.setDetails( "Some details" );
+		Foo foo = new Foo();
+		foo.setBar( bar );
+		bar.setFoo( foo );
+		s.persist( foo );
+		s.flush();
+		assertNotNull( foo.getId() );
+		assertEquals( foo.getId(), bar.getFoo().getId() );
+
+		s.clear();
+		Foo newFoo = (Foo) s.createQuery( "SELECT f FROM Foo f" ).uniqueResult();
+		assertNotNull( newFoo );
+		assertEquals( "Some details", newFoo.getBar().getDetails() );
 		s.getTransaction().rollback();
 		s.close();
 	}

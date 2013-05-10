@@ -51,6 +51,16 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 
 	private final Map<String,Object> hintsMap;
 
+	/**
+	 * Constructs a ProcedureCallImpl
+	 *
+	 * @param procedureName The name of the procedure to be called
+	 * @param queryReturns The result mappings
+	 * @param parameterStrategy Are parameters named or positional?
+	 * @param parameterDeclarations The parameters registrations
+	 * @param synchronizedQuerySpaces Any query spaces to synchronize on execution
+	 * @param hintsMap Map of JPA query hints
+	 */
 	public ProcedureCallMementoImpl(
 			String procedureName,
 			NativeSQLQueryReturn[] queryReturns,

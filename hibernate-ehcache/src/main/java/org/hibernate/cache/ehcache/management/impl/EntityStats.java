@@ -34,7 +34,6 @@ import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.stat.EntityStatistics;
@@ -154,6 +153,7 @@ public class EntityStats implements Serializable {
 	 * Constructor from compositeDate
 	 * @param cData CompositeData of the stats
 	 */
+	@SuppressWarnings("UnusedAssignment")
 	public EntityStats(final CompositeData cData) {
 		int i = 0;
 		name = (String) cData.get( ITEM_NAMES[i++] );
@@ -164,15 +164,6 @@ public class EntityStats implements Serializable {
 		deleteCount = (Long) cData.get( ITEM_NAMES[i++] );
 		fetchCount = (Long) cData.get( ITEM_NAMES[i++] );
 		optimisticFailureCount = (Long) cData.get( ITEM_NAMES[i++] );
-	}
-
-	private static int safeParseInt(String s) {
-		try {
-			return Integer.parseInt( s );
-		}
-		catch (Exception e) {
-			return -1;
-		}
 	}
 
 	/**
@@ -210,6 +201,7 @@ public class EntityStats implements Serializable {
 	 * The short name of the entity those stats are about
 	 * @return the shortName of the entity
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public String getShortName() {
 		return shortName;
 	}
@@ -293,10 +285,11 @@ public class EntityStats implements Serializable {
 	 * @param tabularData the tabularData with the {@link CompositeData} of stats to extract
 	 * @return all entityStats as an array
 	 */
+	@SuppressWarnings({"unchecked", "UnusedDeclaration"})
 	public static EntityStats[] fromTabularData(final TabularData tabularData) {
 		final List<EntityStats> countList = new ArrayList( tabularData.size() );
-		for ( final Iterator pos = tabularData.values().iterator(); pos.hasNext(); ) {
-			countList.add( new EntityStats( (CompositeData) pos.next() ) );
+		for ( Object o : tabularData.values() ) {
+			countList.add( new EntityStats( (CompositeData) o ) );
 		}
 		return countList.toArray( new EntityStats[countList.size()] );
 	}

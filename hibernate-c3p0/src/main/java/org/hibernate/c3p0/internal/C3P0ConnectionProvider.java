@@ -168,7 +168,7 @@ public class C3P0ConnectionProvider
 				}
 				final String key = (String) o;
 				if ( key.startsWith( "hibernate.c3p0." ) ) {
-					String newKey = key.substring( 15 );
+					final String newKey = key.substring( 15 );
 					if ( props.containsKey( newKey ) ) {
 						warnPropertyConflict( key, newKey );
 					}
@@ -267,6 +267,7 @@ public class C3P0ConnectionProvider
 	 *
 	 * @deprecated Use {@link #stop} instead
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	@Deprecated
 	public void close() {
 		stop();

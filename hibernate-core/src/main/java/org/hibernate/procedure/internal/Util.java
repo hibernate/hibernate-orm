@@ -23,7 +23,6 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,6 +37,8 @@ import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
+ * Utilities used to implement procedure call support.
+ *
  * @author Steve Ebersole
  */
 public class Util {
@@ -51,7 +52,7 @@ public class Util {
 	 *
 	 * @return The copy
 	 */
-	static NativeSQLQueryReturn[] copy(NativeSQLQueryReturn[] queryReturns) {
+	public static NativeSQLQueryReturn[] copy(NativeSQLQueryReturn[] queryReturns) {
 		if ( queryReturns == null ) {
 			return new NativeSQLQueryReturn[0];
 		}
@@ -61,21 +62,69 @@ public class Util {
 		return copy;
 	}
 
+	/**
+	 * Make a (shallow) copy of query spaces to be synchronized
+	 *
+	 * @param synchronizedQuerySpaces The query spaces
+	 *
+	 * @return The copy
+	 */
 	public static Set<String> copy(Set<String> synchronizedQuerySpaces) {
 		return CollectionHelper.makeCopy( synchronizedQuerySpaces );
 	}
 
+	/**
+	 * Make a (shallow) copy of the JPA query hints map
+	 *
+	 * @param hints The JPA query hints to copy
+	 *
+	 * @return The copy
+	 */
 	public static Map<String,Object> copy(Map<String, Object> hints) {
 		return CollectionHelper.makeCopy( hints );
 	}
 
+	/**
+	 * Context for resolving result-set-mapping definitions
+	 */
 	public static interface ResultSetMappingResolutionContext {
+		/**
+		 * Access to the SessionFactory
+		 *
+		 * @return SessionFactory
+		 */
 		public SessionFactoryImplementor getSessionFactory();
+
+		/**
+		 * Locate a ResultSetMappingDefinition by name
+		 *
+		 * @param name The name of the ResultSetMappingDefinition to locate
+		 *
+		 * @return The ResultSetMappingDefinition
+		 */
 		public ResultSetMappingDefinition findResultSetMapping(String name);
+
+		/**
+		 * Callback to add query returns indicated by the result set mapping(s)
+		 *
+		 * @param queryReturns The query returns
+		 */
 		public void addQueryReturns(NativeSQLQueryReturn... queryReturns);
-		public void addQuerySpaces(String... spaces);
+
+		/**
+		 * Callback to add query spaces indicated by the result set mapping(s)
+		 *
+		 * @param querySpaces The query spaces
+		 */
+		public void addQuerySpaces(String... querySpaces);
 	}
 
+	/**
+	 * Resolve the given result set mapping names
+	 *
+	 * @param context The context for the resolution.  See {@link ResultSetMappingResolutionContext}
+	 * @param resultSetMappingNames The names of the result-set-mappings to resolve
+	 */
 	public static void resolveResultSetMappings(ResultSetMappingResolutionContext context, String... resultSetMappingNames) {
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
@@ -92,12 +141,37 @@ public class Util {
 		}
 	}
 
+	/**
+	 * Context for resolving result-class definitions
+	 */
 	public static interface ResultClassesResolutionContext {
+		/**
+		 * Access to the SessionFactory
+		 *
+		 * @return SessionFactory
+		 */
 		public SessionFactoryImplementor getSessionFactory();
+		/**
+		 * Callback to add query returns indicated by the result set mapping(s)
+		 *
+		 * @param queryReturns The query returns
+		 */
 		public void addQueryReturns(NativeSQLQueryReturn... queryReturns);
-		public void addQuerySpaces(String... spaces);
+
+		/**
+		 * Callback to add query spaces indicated by the result set mapping(s)
+		 *
+		 * @param querySpaces The query spaces
+		 */
+		public void addQuerySpaces(String... querySpaces);
 	}
 
+	/**
+	 * Resolve the given result classes
+	 *
+	 * @param context The context for the resolution.  See {@link ResultSetMappingResolutionContext}
+	 * @param resultClasses The Classes to which the results should be mapped
+	 */
 	public static void resolveResultClasses(ResultClassesResolutionContext context, Class... resultClasses) {
 		int i = 1;
 		for ( Class resultClass : resultClasses ) {

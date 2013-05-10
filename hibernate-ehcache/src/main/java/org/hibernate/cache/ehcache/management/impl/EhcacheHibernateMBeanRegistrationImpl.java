@@ -122,9 +122,6 @@ public class EhcacheHibernateMBeanRegistrationImpl
 		ehcacheHibernate.enableHibernateStatistics( sessionFactory );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public synchronized void dispose() throws CacheException {
 		if ( status == Status.STATUS_SHUTDOWN ) {
@@ -145,19 +142,15 @@ public class EhcacheHibernateMBeanRegistrationImpl
 		status = Status.STATUS_SHUTDOWN;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public synchronized Status getStatus() {
 		return status;
 	}
 
 	/**
-	 *
 	 * {@inheritDoc}
-	 *
-	 * No-op in this case
+	 * <p/>
+	 * NOTE : No-op in this case
 	 */
 	@Override
 	public void init() throws CacheException {
@@ -165,10 +158,9 @@ public class EhcacheHibernateMBeanRegistrationImpl
 	}
 
 	/**
-	 *
 	 * {@inheritDoc}
-	 *
-	 * No-op in this case
+	 * <p/>
+	 * NOTE : No-op in this case
 	 */
 	@Override
 	public void notifyCacheAdded(String cacheName) {
@@ -177,8 +169,8 @@ public class EhcacheHibernateMBeanRegistrationImpl
 
 	/**
 	 * {@inheritDoc}
-	 *
-	 * No-op in this case
+	 * <p/>
+	 * NOTE : No-op in this case
 	 */
 	@Override
 	public void notifyCacheRemoved(String cacheName) {

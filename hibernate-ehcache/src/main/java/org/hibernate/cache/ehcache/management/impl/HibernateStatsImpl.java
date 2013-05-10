@@ -75,52 +75,27 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return sessionFactory.getStatistics();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#clearStats()
-	 */
 	@Override
 	public void clearStats() {
 		getStatistics().clear();
 		sendNotification( CACHE_STATISTICS_RESET );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#disableStats()
-	 */
 	@Override
 	public void disableStats() {
 		setStatisticsEnabled( false );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#enableStats()
-	 */
 	@Override
 	public void enableStats() {
 		setStatisticsEnabled( true );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getCloseStatementCount()
-	 */
 	@Override
 	public long getCloseStatementCount() {
 		return getStatistics().getCloseStatementCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getConnectCount()
-	 */
 	@Override
 	public long getConnectCount() {
 		return getStatistics().getConnectCount();
@@ -133,55 +108,31 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 	 * @deprecated DO NOT USE, WILL ONLY THROW AT YOU!
 	 */
 	@Deprecated
+	@SuppressWarnings("UnusedDeclaration")
 	public long getDBSQLExecutionSample() {
 		throw new UnsupportedOperationException( "Use getQueryExecutionCount() instead" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getFlushCount()
-	 */
 	@Override
 	public long getFlushCount() {
 		return getStatistics().getFlushCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getOptimisticFailureCount()
-	 */
 	@Override
 	public long getOptimisticFailureCount() {
 		return getStatistics().getOptimisticFailureCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getPrepareStatementCount()
-	 */
 	@Override
 	public long getPrepareStatementCount() {
 		return getStatistics().getPrepareStatementCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryExecutionCount()
-	 */
 	@Override
 	public long getQueryExecutionCount() {
 		return getStatistics().getQueryExecutionCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryExecutionRate()
-	 */
 	@Override
 	public double getQueryExecutionRate() {
 		final long startTime = getStatistics().getStartTime();
@@ -190,82 +141,42 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return getQueryExecutionCount() / deltaSecs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryExecutionSample()
-	 */
 	@Override
 	public long getQueryExecutionSample() {
 		throw new UnsupportedOperationException( "TODO: need to impl. rates for query execution" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getSessionCloseCount()
-	 */
 	@Override
 	public long getSessionCloseCount() {
 		return getStatistics().getSessionCloseCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getSessionOpenCount()
-	 */
 	@Override
 	public long getSessionOpenCount() {
 		return getStatistics().getSessionOpenCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getSuccessfulTransactionCount()
-	 */
 	@Override
 	public long getSuccessfulTransactionCount() {
 		return getStatistics().getSuccessfulTransactionCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getTransactionCount()
-	 */
 	@Override
 	public long getTransactionCount() {
 		return getStatistics().getTransactionCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#isStatisticsEnabled()
-	 */
 	@Override
 	public boolean isStatisticsEnabled() {
 		return getStatistics().isStatisticsEnabled();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#setStatisticsEnabled(boolean)
-	 */
 	@Override
 	public void setStatisticsEnabled(boolean flag) {
 		getStatistics().setStatisticsEnabled( flag );
 		sendNotification( CACHE_STATISTICS_ENABLED, flag );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getEntityStats()
-	 */
 	@Override
 	public TabularData getEntityStats() {
 		final List<CompositeData> result = new ArrayList<CompositeData>();
@@ -279,11 +190,6 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getCollectionStats()
-	 */
 	@Override
 	public TabularData getCollectionStats() {
 		final List<CompositeData> result = new ArrayList<CompositeData>();
@@ -300,11 +206,6 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryStats()
-	 */
 	@Override
 	public TabularData getQueryStats() {
 		final List<CompositeData> result = new ArrayList<CompositeData>();
@@ -318,9 +219,6 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public TabularData getCacheRegionStats() {
 		final List<CompositeData> list = new ArrayList<CompositeData>();
@@ -337,18 +235,11 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void doDispose() {
 		// no-op
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * @see AbstractEmitterBean#getNotificationInfo()
-	 */
 	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
 		return new MBeanNotificationInfo[] {NOTIFICATION_INFO};

@@ -484,7 +484,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 
 	@Override
 	public QueryParameters buildQueryParametersObject() {
-		QueryParameters qp = super.buildQueryParametersObject();
+		final QueryParameters qp = super.buildQueryParametersObject();
 		// both of these are for documentation purposes, they are actually handled directly...
 		qp.setAutoDiscoverScalarTypes( true );
 		qp.setCallable( true );

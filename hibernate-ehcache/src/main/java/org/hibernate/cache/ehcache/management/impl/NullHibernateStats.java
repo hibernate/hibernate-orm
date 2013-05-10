@@ -124,6 +124,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 * Not supported right now
 	 * @return 0 always
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public long getDBSQLExecutionSample() {
 		// no-op
 		return 0;

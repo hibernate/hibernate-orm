@@ -24,7 +24,6 @@
 package org.hibernate.cache.ehcache.management.impl;
 
 import java.lang.reflect.Field;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimerTask;

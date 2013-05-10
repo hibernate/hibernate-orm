@@ -34,7 +34,6 @@ import javax.management.openmbean.TabularDataSupport;
 import javax.management.openmbean.TabularType;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.stat.QueryStatistics;
@@ -175,6 +174,7 @@ public class QueryStats implements Serializable {
 	 * Constructor
 	 * @param cData CompositeDate to construct an instance from
 	 */
+	@SuppressWarnings("UnusedAssignment")
 	public QueryStats(final CompositeData cData) {
 		int i = 0;
 		query = (String) cData.get( ITEM_NAMES[i++] );
@@ -203,9 +203,6 @@ public class QueryStats implements Serializable {
 		executionMinTime += stats.getExecutionMinTime();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
 		return "query=" + query + ", cacheHitCount=" + cacheHitCount + ", cacheMissCount=" + cacheMissCount
@@ -218,6 +215,7 @@ public class QueryStats implements Serializable {
 	 * Accessor to the queryString
 	 * @return the query string
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public String getQuery() {
 		return query;
 	}
@@ -322,6 +320,7 @@ public class QueryStats implements Serializable {
 	 * @param tabularData the tabularData with the {@link CompositeData} of stats to extract
 	 * @return all queryStats as an array
 	 */
+	@SuppressWarnings({"unchecked", "UnusedDeclaration"})
 	public static QueryStats[] fromTabularData(final TabularData tabularData) {
 		final List<QueryStats> countList = new ArrayList( tabularData.size() );
 		for ( Object o : tabularData.values() ) {

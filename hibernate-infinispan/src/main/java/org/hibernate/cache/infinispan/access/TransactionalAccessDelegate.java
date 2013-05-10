@@ -58,6 +58,7 @@ public class TransactionalAccessDelegate {
     * @param region to control access to
     * @param validator put from load validator
     */
+	@SuppressWarnings("unchecked")
 	public TransactionalAccessDelegate(BaseRegion region, PutFromLoadValidator validator) {
 		this.region = region;
 		this.cache = region.getCache();
@@ -73,6 +74,7 @@ public class TransactionalAccessDelegate {
     * @return the cached object or <tt>null</tt>
     * @throws CacheException if the cache retrieval failed
     */
+	@SuppressWarnings("UnusedParameters")
 	public Object get(Object key, long txTimestamp) throws CacheException {
 		if ( !region.checkValid() ) {
 			return null;
@@ -109,6 +111,7 @@ public class TransactionalAccessDelegate {
     * @return <tt>true</tt> if the object was successfully cached
     * @throws CacheException if storing the object failed
     */
+	@SuppressWarnings("UnusedParameters")
 	public boolean putFromLoad(Object key, Object value, long txTimestamp, Object version, boolean minimalPutOverride)
 			throws CacheException {
 		if ( !region.checkValid() ) {
@@ -154,6 +157,7 @@ public class TransactionalAccessDelegate {
     * @return Were the contents of the cache actual changed by this operation?
     * @throws CacheException if the insert fails
     */
+	@SuppressWarnings("UnusedParameters")
 	public boolean insert(Object key, Object value, Object version) throws CacheException {
 		if ( !region.checkValid() ) {
 			return false;
@@ -174,6 +178,7 @@ public class TransactionalAccessDelegate {
     * @return Whether the contents of the cache actual changed by this operation
     * @throws CacheException if the update fails
     */
+	@SuppressWarnings("UnusedParameters")
 	public boolean update(Object key, Object value, Object currentVersion, Object previousVersion)
 			throws CacheException {
 		// We update whether or not the region is valid. Other nodes
@@ -241,7 +246,8 @@ public class TransactionalAccessDelegate {
 		}
 		final Transaction tx = region.suspend();
 		try {
-			region.invalidateRegion(); // Invalidate the local region and then go remote
+			// Invalidate the local region and then go remote
+			region.invalidateRegion();
 			Caches.broadcastEvictAll( cache );
 		}
 		finally {

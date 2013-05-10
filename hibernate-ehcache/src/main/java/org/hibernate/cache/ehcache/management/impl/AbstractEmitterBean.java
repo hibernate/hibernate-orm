@@ -103,6 +103,7 @@ public abstract class AbstractEmitterBean extends StandardMBean implements Notif
 	/**
 	 * Dispose of this SampledCacheManager and clean up held resources
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public final void dispose() {
 		doDispose();
 		removeAllNotificationListeners();

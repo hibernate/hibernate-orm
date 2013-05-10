@@ -119,7 +119,7 @@ public abstract class AbstractDatabaseProfileImpl implements DatabaseProfile {
     protected Configuration getOrCreateConfiguration(String name) {
         Configuration configuration = project.getConfigurations().findByName( name );
         if ( configuration == null ) {
-            configuration = project.getConfigurations().add( name );
+            configuration = project.getConfigurations().create( name );
         }
         return configuration;
     }

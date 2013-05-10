@@ -101,7 +101,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
      * Prepare compile configuration for matrix source set.
      */
     private Configuration prepareCompileConfiguration() {
-        return project.configurations.add( MATRIX_COMPILE_CONFIG_NAME )
+        return project.configurations.create( MATRIX_COMPILE_CONFIG_NAME )
                 .setDescription( "Dependencies used to compile the matrix tests" )
                 .extendsFrom( project.configurations.getByName( COMPILE_CONFIGURATION_NAME ) )
                 .extendsFrom( project.configurations.getByName( TEST_COMPILE_CONFIGURATION_NAME ) );
@@ -111,7 +111,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
      * Prepare runtime configuration for matrix source set.
      */
     private Configuration prepareRuntimeConfiguration() {
-		return project.configurations.add( MATRIX_RUNTIME_CONFIG_NAME )
+		return project.configurations.create( MATRIX_RUNTIME_CONFIG_NAME )
 				.setDescription( "Dependencies (baseline) used to run the matrix tests" )
 				.extendsFrom( matrixCompileConfig )
 				.extendsFrom( project.configurations.getByName( RUNTIME_CONFIGURATION_NAME ) )
@@ -119,7 +119,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
     }
 
 	private Task prepareGroupingTask() {
-		Task matrixTask = project.tasks.add( MATRIX_TASK_NAME );
+		Task matrixTask = project.tasks.create( MATRIX_TASK_NAME );
         matrixTask.group = "Verification"
         matrixTask.description = "Runs the unit tests on Database Matrix"
 		return matrixTask;
@@ -140,7 +140,7 @@ public class MatrixTestingPlugin implements Plugin<Project> {
     private Task prepareNodeTask(MatrixNode node) {
         String taskName = MATRIX_TASK_NAME + '_' + node.name
         log.debug( "Adding Matrix Testing task $taskName" );
-        final Test nodeTask = project.tasks.add( taskName, Test );
+        final Test nodeTask = project.tasks.create( taskName, Test );
         nodeTask.description = "Runs the matrix against ${node.name}"
         nodeTask.classpath = node.databaseProfile.testingRuntimeConfiguration + testSourceSet.runtimeClasspath
         nodeTask.testClassesDir = testSourceSet.output.classesDir

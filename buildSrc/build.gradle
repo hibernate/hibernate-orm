@@ -39,7 +39,6 @@ dependencies {
     // common
     compile gradleApi()
     compile localGroovy()
-    groovy localGroovy()
     compile 'org.apache.ant:ant:1.8.2'
     // injection plugin
     compile 'org.javassist:javassist:3.15.0-GA'

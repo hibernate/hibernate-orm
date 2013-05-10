@@ -406,14 +406,12 @@ subprojects { subProject ->
                     }
 
                     pom.withXml {
-// sadly for some reason it is not working within the closure above to define the descritpion...
-                        asNode().appendNode( 'description', subProject.pomDescription() )
-
                         // append additional metadata
                         asNode().children().last() + {
+                            resolveStrategy = Closure.DELEGATE_FIRST
+
                             name subProject.pomName()
-// ugh, see above
-//                            description subProject.pomDescription()
+                            description subProject.pomDescription()
                             url 'http://hibernate.org'
                             organization {
                                 name 'Hibernate.org'

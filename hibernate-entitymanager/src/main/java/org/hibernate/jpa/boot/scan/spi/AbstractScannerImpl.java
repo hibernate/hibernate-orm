@@ -68,7 +68,7 @@ public abstract class AbstractScannerImpl implements Scanner {
 
 		if ( persistenceUnit.getPersistenceUnitRootUrl() != null ) {
 			final ArchiveDescriptor descriptor = buildArchiveDescriptor( persistenceUnit.getPersistenceUnitRootUrl(), true, scanOptions );
-			final ArchiveContext context = buildArchiveContext( persistenceUnit, false, resultCollector );
+			final ArchiveContext context = buildArchiveContext( persistenceUnit, true, resultCollector );
 			descriptor.visitArchive( context );
 		}
 

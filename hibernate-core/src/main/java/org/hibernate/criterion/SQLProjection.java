@@ -27,6 +27,8 @@ import org.hibernate.Criteria;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
 
+import java.util.Iterator;
+
 /**
  * A SQL fragment. The string {alias} will be replaced by the
  * alias of the root entity.
@@ -54,12 +56,12 @@ public class SQLProjection implements Projection {
 
 	@Override
 	public String toSqlString(Criteria criteria, int loc, CriteriaQuery criteriaQuery) {
-		return StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
+		return interpolateAliases( criteria, criteriaQuery, sql );
 	}
 
 	@Override
 	public String toGroupSqlString(Criteria criteria, CriteriaQuery criteriaQuery) {
-		return StringHelper.replace( groupBy, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
+		return interpolateAliases( criteria, criteriaQuery, groupBy );
 	}
 
 	@Override
@@ -95,5 +97,19 @@ public class SQLProjection implements Projection {
 	@Override
 	public String[] getColumnAliases(String alias, int loc) {
 		return null;
+	}
+
+	private String interpolateAliases( Criteria criteria, CriteriaQuery criteriaQuery, String sqlString ) {
+		sqlString = StringHelper.replace( sqlString, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
+
+		Iterator<String> aliasIterator = StringHelper.findInterpolationKeys( sqlString ).iterator();
+		while( aliasIterator.hasNext() ) {
+			String alias = aliasIterator.next();
+			String sqlAlias = criteriaQuery.getSQLAlias( alias );
+			if( sqlAlias != null ) {
+				sqlString = StringHelper.interpolateAlias( sqlString, alias, sqlAlias );
+			}
+		}
+		return sqlString;
 	}
 }

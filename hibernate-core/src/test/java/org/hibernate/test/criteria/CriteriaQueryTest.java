@@ -2073,5 +2073,263 @@ public class CriteriaQueryTest extends BaseCoreFunctionalTestCase {
 		s.close();
     }
 
+	@Test
+	public void testTableAliasSQLProjection() {
+		final Session s = openSession();
+		final Transaction t = s.beginTransaction();
+
+		final Course course = new Course();
+		course.setCourseCode( "HIB" );
+		course.setDescription( "Hibernate Training" );
+		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
+		s.save( course );
+		s.flush();
+
+		// Test that a explicitly defined alias on the root works
+		List data = s.createCriteria( CourseMeeting.class , "cm" )
+				.setProjection( Projections.sqlProjection(
+						"{cm}.coursecode",
+						new String[]{"coursecode"},
+						new Type[]{StandardBasicTypes.STRING} )).list();
+
+		assertEquals( "HIB", data.get( 0 ) );
+
+		// test that the implicit alias "{alias}" works
+		data = s.createCriteria( CourseMeeting.class , "cm" )
+				.setProjection( Projections.sqlProjection(
+						"{alias}.day",
+						new String[]{"day"},
+						new Type[]{StandardBasicTypes.STRING} )).list();
+
+		assertEquals( "Monday", data.get( 0 ) );
+
+		// test that using SQL aliases from joined tables works
+		final Student jon = new Student();
+		jon.setName( "Jon Card" );
+		jon.setStudentNumber( 987 );
+		s.save( jon );
+
+		final Enrolment enrolment = new Enrolment();
+		enrolment.setCourse( course );
+		enrolment.setCourseCode( course.getCourseCode() );
+		enrolment.setSemester( (short) 1 );
+		enrolment.setStudent( jon );
+		enrolment.setStudentNumber( jon.getStudentNumber() );
+		jon.getEnrolments().add( enrolment );
+		s.save( enrolment );
+
+		data = s.createCriteria( Enrolment.class )
+				.createAlias( "student", "st" )
+				.createAlias( "course", "co" )
+				.setProjection( Projections.projectionList()
+						.add( Projections.sqlProjection( "{st}.name",
+								new String[]{"name"},
+								new Type[]{StandardBasicTypes.STRING} ))
+						.add( Projections.sqlProjection( "{co}.description",
+								new String[]{"description"},
+								new Type[]{StandardBasicTypes.STRING} )))
+				.list();
+		final Object[] row = (Object[]) data.get( 0 );
+
+		assertEquals( "Jon Card", row[0] );
+		assertEquals( "Hibernate Training", row[1] );
+
+		t.rollback();
+		s.close();
+	}
+
+	@Test
+	public void testTableAliasSQLGroupProjection() {
+		final Session s = openSession();
+		final Transaction t = s.beginTransaction();
+
+		final Student gavin = new Student();
+		gavin.setName( "Gavin King" );
+		gavin.setStudentNumber( 667 );
+		gavin.setCityState( new CityState( "Juneau", "AK" ) );
+		s.save( gavin );
+
+		final Student jon = new Student();
+		jon.setName( "Jon Card" );
+		jon.setStudentNumber( 997 );
+		jon.setCityState( new CityState( "Fairbanks", "AK" ) );
+		s.save( jon );
+
+		// confirm that {} style aliases work in both the select and group by fragments.
+		List data = s.createCriteria( Student.class , "student" )
+				.setProjection( Projections.projectionList()
+						.add( Projections.sqlGroupProjection( "lower({student}.address_state) as st",
+								"{student}.address_state",
+								new String[]{"st"},
+								new Type[]{StandardBasicTypes.STRING}))
+						.add( Projections.count( "studentNumber" ) ))
+				.list();
+
+		Object[] row = (Object[]) data.get( 0 );
+
+		assertEquals( 1, data.size() );
+		assertEquals( "ak", (String) row[0] );
+		assertEquals( 2L, ((Long) row[1]).longValue() );
+
+		// repeat the same test for the implicit '{alias}' alias.
+		data = s.createCriteria( Student.class , "student" )
+				.setProjection( Projections.projectionList()
+						.add( Projections.sqlGroupProjection( "lower({alias}.address_state) as st",
+								"{alias}.address_state",
+								new String[]{"st"},
+								new Type[]{StandardBasicTypes.STRING}))
+						.add( Projections.count( "studentNumber" ) ))
+				.list();
+
+		row = (Object[]) data.get( 0 );
+		assertEquals( 1, data.size() );
+		assertEquals( "ak", (String) row[0] );
+		assertEquals( 2L, ((Long) row[1]).longValue() );
+
+		// test that aliases can be repeated
+		data = s.createCriteria( Student.class, "s" )
+				.setProjection( Projections.sqlProjection(
+					"{s}.address_city as acity, {s}.address_state as astate",
+					new String[] { "acity", "astate" },
+					new Type[] { StandardBasicTypes.STRING, StandardBasicTypes.STRING }) )
+				.add( Restrictions.eq( "studentNumber", 997L ))
+				.list();
+		row = (Object[]) data.get( 0 );
+		assertEquals( "Fairbanks", row[0] );
+		assertEquals( "AK", row[1] );
+
+		t.rollback();
+		s.close();
+	}
+
+	@Test
+	public void testTableAliasSQLRestriction() {
+		final Session s = openSession();
+		final Transaction t = s.beginTransaction();
+
+		final Course course = new Course();
+		course.setCourseCode( "HIB" );
+		course.setDescription( "Hibernate Training" );
+		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
+		s.save( course );
+
+		final Course jbossCourse = new Course();
+		jbossCourse.setCourseCode( "JBOSS" );
+		jbossCourse.setDescription( "{JBoss} Training" );
+		jbossCourse.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "333 Bluejay Way" ) );
+		s.save( jbossCourse );
+		s.flush();
+
+		final Student gavin = new Student();
+		gavin.setName( "Gavin King" );
+		gavin.setStudentNumber( 667 );
+		gavin.setCityState( new CityState( "Juneau", "AK" ) );
+
+		final Student jon = new Student();
+		jon.setName( "Jon Card" );
+		jon.setStudentNumber( 997 );
+		jon.setCityState( new CityState( "Fairbanks", "AK" ) );
+		s.save( jon );
+		s.flush();
+
+		final Enrolment enrolment = new Enrolment();
+		enrolment.setCourse( course );
+		enrolment.setCourseCode( course.getCourseCode() );
+		enrolment.setSemester( (short) 1 );
+		enrolment.setStudent( jon );
+		enrolment.setStudentNumber( jon.getStudentNumber() );
+		jon.getEnrolments().add( enrolment );
+		s.save( enrolment );
+		s.flush();
+
+		List data = s.createCriteria( Course.class, "c" )
+				.add( Restrictions.sqlRestriction( "lower({c}.coursecode) = 'jboss'" ) )
+				.list();
+
+		assertEquals( 1, data.size() );
+
+		final Criteria root = s.createCriteria( Enrolment.class );
+		root.createCriteria( "course", "course" )
+				.add( Restrictions.sqlRestriction( "{course}.coursecode = 'HIB'" ) );
+		root.createCriteria( "student", "student" )
+				.add( Restrictions.sqlRestriction( "{alias}.address_state = 'AK'"));
+		data = root.list();
+
+		assertEquals( 1, data.size() );
+
+		// confirm that {}'s that don't match aliases don't mess up the query
+		data = s.createCriteria( Course.class, "e" )
+				.add( Restrictions.sqlRestriction( "{alias}.description = '{JBoss} Training'" ) )
+				.list();
+		assertEquals( 1, data.size() );
+
+		t.rollback();
+		s.close();
+	}
+
+	@Test
+	public void testTableAliasCorrelatedSubquery() {
+		final Session s = openSession();
+		final Transaction t = s.beginTransaction();
+
+		final Course course = new Course();
+		course.setCourseCode( "HIB" );
+		course.setDescription( "Hibernate Training" );
+		course.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "1313 Mockingbird Lane" ) );
+		s.save( course );
+
+		final Course jbossCourse = new Course();
+		jbossCourse.setCourseCode( "JBOSS" );
+		jbossCourse.setDescription( "JBoss Training" );
+		jbossCourse.getCourseMeetings().add( new CourseMeeting( course, "Monday", 1, "333 Bluejay Way" ) );
+		s.save( jbossCourse );
+		s.flush();
+
+		final Student gavin = new Student();
+		gavin.setName( "Gavin King" );
+		gavin.setStudentNumber( 667 );
+		gavin.setCityState( new CityState( "Juneau", "AK" ) );
+
+		final Student jon = new Student();
+		jon.setName( "Jon Card" );
+		jon.setStudentNumber( 997 );
+		jon.setCityState( new CityState( "Fairbanks", "AK" ) );
+		s.save( jon );
+		s.flush();
+
+		final Enrolment enrolment = new Enrolment();
+		enrolment.setCourse( course );
+		enrolment.setCourseCode( course.getCourseCode() );
+		enrolment.setSemester( (short) 1 );
+		enrolment.setStudent( jon );
+		enrolment.setStudentNumber( jon.getStudentNumber() );
+		jon.getEnrolments().add( enrolment );
+		s.save( enrolment );
+		s.flush();
+
+		// correlated subquery using the root table
+		List data = s.createCriteria( Course.class, "c" )
+				.add( Subqueries.exists(
+					DetachedCriteria.forClass( Enrolment.class, "e" )
+						.setProjection( Projections.id() )
+						.add( Restrictions.sqlRestriction( "{c}.coursecode = {e}.coursecode" ) ) )
+				)
+				.list();
+
+		assertEquals( 1, data.size() );
+
+		// using a non-root table
+		data = s.createCriteria( Student.class )
+				.createAlias( "enrolments", "enrolments" )
+				.add( Subqueries.exists(
+						DetachedCriteria.forClass( Course.class, "course" )
+								.setProjection( Projections.id() )
+								.add( Restrictions.sqlRestriction( "{enrolments}.coursecode = {course}.coursecode" ) ) )
+				)
+				.list();
+
+		assertEquals( 1, data.size() );
+	}
+
 }
 

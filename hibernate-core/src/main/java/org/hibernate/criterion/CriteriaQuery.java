@@ -173,7 +173,17 @@ public interface CriteriaQuery {
 	 * @return The SQL table alias for the given criteria
 	 */
 	public String getSQLAlias(Criteria criteria, String propertyPath);
-	
+
+	/**
+	 * Get the SQL table alias corresponding to a given query alias. This will
+	 * look up the chain to any outer queries if no match was found directly.
+	 *
+	 * @param alias An alias assigned within this criteria or its parents.
+	 *
+	 * @return The matching SQL table alias, if found. Otherwise this will return null.
+	 */
+	public String getSQLAlias( String alias );
+
 	/**
 	 * Get the property name, given a possibly qualified property name
 	 *

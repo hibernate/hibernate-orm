@@ -28,9 +28,14 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.Type;
 
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 /**
- * A SQL fragment. The string {alias} will be replaced by the
- * alias of the root entity.
+ * A SQL fragment. For any criteria aliases that exist, the SQL string will look for the pattern
+ * {myAlias} and replace it with the corresponding table alias that was generated for the query.
+ * As a special case, the string '{alias}' will be replaced by the SQL alias of the root entity.
  */
 public class SQLCriterion implements Criterion {
 	private final String sql;
@@ -56,7 +61,18 @@ public class SQLCriterion implements Criterion {
 
 	@Override
 	public String toSqlString(Criteria criteria, CriteriaQuery criteriaQuery) {
-		return StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
+		String updatedSQL = StringHelper.replace( sql, "{alias}", criteriaQuery.getSQLAlias( criteria ) );
+
+		Iterator<String> aliasIterator = StringHelper.findInterpolationKeys( updatedSQL ).iterator();
+		while( aliasIterator.hasNext() ) {
+			String alias = aliasIterator.next();
+			String sqlAlias = criteriaQuery.getSQLAlias( alias );
+			if( sqlAlias != null ) {
+				updatedSQL = StringHelper.interpolateAlias( updatedSQL, alias, sqlAlias );
+			}
+		}
+
+		return updatedSQL;
 	}
 
 	@Override

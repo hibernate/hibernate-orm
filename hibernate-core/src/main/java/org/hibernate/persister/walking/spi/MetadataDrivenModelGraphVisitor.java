@@ -123,10 +123,10 @@ public class MetadataDrivenModelGraphVisitor {
 		log.debug( "Visiting attribute path : " + subPath.getFullPath() );
 
 		final boolean continueWalk;
-		if ( attributeDefinition.getType().isAssociationType() ) {
-			continueWalk =
-					! isDuplicateAssociationKey( ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey() ) &&
-					strategy.startingAttribute( attributeDefinition );
+		if ( attributeDefinition.getType().isAssociationType() &&
+				isDuplicateAssociationKey( ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey() ) ) {
+			log.debug( "Property path deemed to be circular : " + subPath.getFullPath() );
+			continueWalk = false;
 		}
 		else {
 			continueWalk = strategy.startingAttribute( attributeDefinition );
@@ -152,10 +152,7 @@ public class MetadataDrivenModelGraphVisitor {
 	private void visitAssociation(AssociationAttributeDefinition attribute) {
 		// todo : do "too deep" checks; but see note about adding depth to PropertyPath
 
-		if ( !addAssociationKey( attribute.getAssociationKey() ) ) {
-			log.debug( "Property path deemed to be circular : " + currentPropertyPath.getFullPath() );
-			return;
-		}
+		addAssociationKey( attribute.getAssociationKey() );
 
 		if ( attribute.isCollection() ) {
 			visitCollectionDefinition( attribute.toCollectionDefinition() );
@@ -227,17 +224,26 @@ public class MetadataDrivenModelGraphVisitor {
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();
 
 	/**
-	 * Add association key.
+	 * Add association key to indicate the association is being visited.
 	 * @param associationKey - the association key.
-	 * @return true, if the association key was added;
-	 *         false, otherwise (indicating the association key was already visited).
+	 * @throws WalkingException if the association with the specified association key
+	 *                          has already been visited.
 	 */
-	protected boolean addAssociationKey(AssociationKey associationKey) {
-		return visitedAssociationKeys.add( associationKey );
+	protected void addAssociationKey(AssociationKey associationKey) {
+		if ( ! visitedAssociationKeys.add( associationKey ) ) {
+			throw new WalkingException(
+					String.format( "Association has already been visited: %s", associationKey )
+			);
+		}
 	}
 
+	/**
+	 * Has an association with the specified key been visited already?
+	 * @param associationKey - the association key.
+	 * @return true, if the association with the specified association key has already been visited;
+	 *         false, otherwise.
+	 */
 	protected boolean isDuplicateAssociationKey(AssociationKey associationKey) {
 		return visitedAssociationKeys.contains( associationKey );
 	}
-
 }

@@ -60,9 +60,6 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 		super( sessionFactory, lockMode, owner, ownerProperty, fetchStrategy );
 
 		this.associationType = entityType;
-		//		(EntityType) owner.retrieveFetchSourcePersister().getPropertyType( ownerProperty );
-		//this.associationType =
-		//		(EntityType) owner.retrieveFetchSourcePersister().getPropertyType( getPropertyPath().getFullPath() );
 		this.persister = sessionFactory.getEntityPersister( associationType.getAssociatedEntityName() );
 	}
 

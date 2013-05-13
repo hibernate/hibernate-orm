@@ -85,8 +85,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	private ArrayDeque<FetchOwner> fetchOwnerStack = new ArrayDeque<FetchOwner>();
 	private ArrayDeque<CollectionReference> collectionReferenceStack = new ArrayDeque<CollectionReference>();
 
-	//private AbstractIdentifierAttributeCollector currentIdentifierAttributeCollector = null;
-
 	protected AbstractLoadPlanBuilderStrategy(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
 	}
@@ -121,7 +119,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		MDC.remove( MDC_KEY );
 		fetchOwnerStack.clear();
 		collectionReferenceStack.clear();
-//		currentIdentifierAttributeCollector = null;
 	}
 
 	@Override
@@ -418,21 +415,10 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 			);
 		}
 
-		// If we are collecting fetches for the identifier then
-		// currentIdentifierAttributeCollector will be non-null.
-		// In that case, we do not want to continue walking the association, so
-		// don't push associationFetch to the stack.
-		//final boolean continueWalk = currentIdentifierAttributeCollector == null;
-		//if ( continueWalk && FetchOwner.class.isInstance( associationFetch) ) {
 		if ( FetchOwner.class.isInstance( associationFetch) ) {
 			pushToStack( (FetchOwner) associationFetch );
 		}
 
-		//if ( ! continueWalk ) {
-		//	popFromStack();
-		//}
-
-		//return continueWalk;
 		return true;
 	}
 
@@ -447,21 +433,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	}
 
 	private void pushToStack(FetchOwner fetchOwner) {
-//		if ( fetchOwner instanceof AbstractIdentifierAttributeCollector ) {
-//			if ( currentIdentifierAttributeCollector != null ) {
-//				throw new WalkingException(
-//						String.format(
-//								"An AbstractIdentifierAttributeCollector is already being processed: %s",
-//								currentIdentifierAttributeCollector
-//						)
-//				);
-//			}
-//			currentIdentifierAttributeCollector = (AbstractIdentifierAttributeCollector) fetchOwner;
-//			log.trace( "Pushing AbstractIdentifierAttributeCollector fetch owner to stack : " + fetchOwner );
-//		}
-//		else {
-			log.trace( "Pushing fetch owner to stack : " + fetchOwner );
-//		}
+		log.trace( "Pushing fetch owner to stack : " + fetchOwner );
 		mdcStack().push( fetchOwner.getPropertyPath() );
 		fetchOwnerStack.addFirst( fetchOwner );
 	}
@@ -472,30 +444,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 	private FetchOwner popFromStack() {
 		final FetchOwner last = fetchOwnerStack.removeFirst();
-//		if ( last instanceof AbstractIdentifierAttributeCollector ) {
-//			if ( currentIdentifierAttributeCollector == null ) {
-//				throw new WalkingException(
-//						String.format(
-//								"Popped fetch owner was an AbstractIdentifierAttributeCollector [%s], but none in process (currentIdentifierAttributeCollector == null)",
-//								last
-//						)
-//				);
-//			}
-//			else if ( currentIdentifierAttributeCollector != last ) {
-//				throw new WalkingException(
-//						String.format(
-//								"Expected popped fetch owner to be [%s], but instead it was [%s])",
-//								currentIdentifierAttributeCollector,
-//								last
-//						)
-//				);
-//			}
-//			currentIdentifierAttributeCollector = null;
-//			log.trace( "Popped AbstractIdentifierAttributeCollector fetch owner from stack : " + last );
-//		}
-//		else {
-			log.trace( "Popped fetch owner from stack : " + last );
-//		}
+		log.trace( "Popped fetch owner from stack : " + last );
 		mdcStack().pop();
 		if ( FetchStackAware.class.isInstance( last ) ) {
 			( (FetchStackAware) last ).poppedFromStack();

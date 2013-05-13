@@ -23,7 +23,7 @@ package org.hibernate.metamodel.internal;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.spi.relational.AbstractConstraint;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.UniqueKey;
@@ -51,8 +51,11 @@ public class UniqueKeyHelper {
 			uniqueKey = naturalIdUniqueKeys.get( table );
 		}
 		else {
-			uniqueKey = table.getOrCreateUniqueKey(
-					StringHelper.randomFixedLengthHex( UniqueKey.GENERATED_NAME_PREFIX ) );
+			String keyName = "UK_" + AbstractConstraint.hashedName( table.getLogicalName().getText() + "_NaturalID" ); 
+			uniqueKey = new UniqueKey();
+			uniqueKey.setTable( table );
+			uniqueKey.setName( keyName );
+			table.addUniqueKey( uniqueKey );
 			naturalIdUniqueKeys.put( table, uniqueKey );
 		}
 		uniqueKey.addColumn( column );

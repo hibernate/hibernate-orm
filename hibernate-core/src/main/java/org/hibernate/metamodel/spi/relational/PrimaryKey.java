@@ -36,15 +36,8 @@ import org.hibernate.dialect.Dialect;
  */
 public class PrimaryKey extends AbstractConstraint {
 
-	public static final String GENERATED_NAME_PREFIX = "PK";
-
 	protected PrimaryKey(TableSpecification table) {
 		super( table, null );
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		return getTable().getLoggableValueQualifier() + ".PK";
 	}
 
 	public String sqlConstraintStringInCreateTable(Dialect dialect) {
@@ -77,6 +70,11 @@ public class PrimaryKey extends AbstractConstraint {
 			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return buf.append(')').toString();
+	}
+	
+	@Override
+	public String getExportIdentifier() {
+		return getTable().getLoggableValueQualifier() + ".PK";
 	}
 
 }

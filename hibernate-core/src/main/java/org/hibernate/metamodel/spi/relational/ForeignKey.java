@@ -24,15 +24,16 @@
 package org.hibernate.metamodel.spi.relational;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.jboss.logging.Logger;
 
 /**
  * Models the notion of a foreign key.
@@ -42,10 +43,9 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class ForeignKey extends AbstractConstraint {
-
-	public static final String GENERATED_NAME_PREFIX = "FK";
 	
     private static final Logger LOG = Logger.getLogger( ForeignKey.class );
 
@@ -135,11 +135,6 @@ public class ForeignKey extends AbstractConstraint {
 					)
 			);
 		}
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
 	}
 
 	public ReferentialAction getDeleteRule() {
@@ -257,5 +252,55 @@ public class ForeignKey extends AbstractConstraint {
 			columnMappingList.add( new ColumnMapping( i ) );
 		}
 		return columnMappingList;
+	}
+	
+	/**
+	 * If a constraint is not explicitly named, this is called to generate
+	 * a unique hash using the source/target table and column names.
+	 * Static so the name can be generated prior to creating the Constraint.
+	 * They're cached, keyed by name, in multiple locations.
+	 * 
+	 * @param sourceTable
+	 * @param targetTable
+	 * @param sourceColumns
+	 * @param targetColumns
+	 * @return String The generated name
+	 */
+	public static String generateName(TableSpecification sourceTable, TableSpecification targetTable,
+			List<Column> sourceColumns, List<Column> targetColumns) {
+		// Use a concatenation that guarantees uniqueness, even if identical names
+		// exist between all table and column identifiers.
+
+		StringBuilder sb = new StringBuilder( "table`" + sourceTable.getLogicalName().getText() + "`" );
+		sb.append( "table`" + targetTable.getLogicalName().getText() + "`" );
+		appendColumns( sourceColumns, sb );
+		appendColumns( targetColumns, sb );
+
+		return "FK_" + hashedName( sb.toString() );
+	}
+
+	private static void appendColumns(List<Column> columns, StringBuilder sb) {
+		// Ensure a consistent ordering of columns, regardless of the order
+		// they were bound.
+		// Clone the list, as sometimes a set of order-dependent Column
+		// bindings are given.
+		Column[] alphabeticalColumns = columns.toArray( new Column[columns.size()] );
+		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
+		for ( Column column : alphabeticalColumns ) {
+			sb.append( "column`" + column.getColumnName().getText() + "`" );
+		}
+	}
+
+	private static class ColumnComparator implements Comparator<Column> {
+		public static ColumnComparator INSTANCE = new ColumnComparator();
+
+		public int compare(Column col1, Column col2) {
+			return col1.getColumnName().toString().compareTo( col2.getColumnName().toString() );
+		}
+	}
+	
+	@Override
+	public String getExportIdentifier() {
+		return getSourceTable().getLoggableValueQualifier() + ".FK-" + getName();
 	}
 }

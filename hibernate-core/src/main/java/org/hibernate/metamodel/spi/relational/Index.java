@@ -31,22 +31,10 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Index extends AbstractConstraint{
-
-	public static final String GENERATED_NAME_PREFIX = "IDX";
+public class Index extends AbstractConstraint {
 	
 	protected Index(Table table, String name) {
 		super( table, name );
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier());
-		sb.append( ".IDX" );
-		for ( Column column : getColumns() ) {
-			sb.append( '_' ).append( column.getColumnName().getText() );
-		}
-		return sb.toString();
 	}
 	
 	@Override
@@ -63,5 +51,15 @@ public class Index extends AbstractConstraint{
 			buf.append( column.getColumnName().getText( dialect ) );
 		}
 		return buf.append( ')' ).toString();
+	}
+	
+	@Override
+	public String getExportIdentifier() {
+		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
+		sb.append( ".IDX" );
+		for ( Column column : getColumns() ) {
+			sb.append( '_' ).append( column.getColumnName().getText() );
+		}
+		return sb.toString();
 	}
 }

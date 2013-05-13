@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal;
 
+import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +38,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.MultiTenancyStrategy;
@@ -46,6 +46,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.ObjectNameNormalizer.NamingStrategyHelper;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -176,9 +177,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
-
-import static org.hibernate.cfg.ObjectNameNormalizer.NamingStrategyHelper;
-import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
+import org.jboss.logging.Logger;
 
 /**
  * The common binder shared between annotations and {@code hbm.xml} processing.
@@ -2106,13 +2105,15 @@ public class Binder {
 				)
 		);
 		if ( elementSource.isUnique() ) {
-			UniqueKey uk = collectionTable.getOrCreateUniqueKey( StringHelper.randomFixedLengthHex(
-					UniqueKey.GENERATED_NAME_PREFIX ) );
+			UniqueKey uk = new UniqueKey();
 			for ( RelationalValueBinding relationalValueBinding : elementBinding.getRelationalValueBindings() ) {
 				if ( ! relationalValueBinding.isDerived() )  {
 					uk.addColumn( (Column) relationalValueBinding.getValue() );
 				}
 			}
+			uk.setTable( collectionTable );
+			uk.generateName();
+			collectionTable.addUniqueKey( uk );
 		}
 		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
 				!elementBinding.hasDerivedValue() ) {
@@ -2764,14 +2765,19 @@ public class Binder {
 			final EntitySource entitySource) {
 		for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
 			if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
+				UniqueKey uk = new UniqueKey();
+				
 				final TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
+				final List<String> columnNames = constraintSource.columnNames();
 				final String constraintName = StringHelper.isEmpty( constraintSource.name() )
-						? StringHelper.randomFixedLengthHex( UniqueKey.GENERATED_NAME_PREFIX )
+						? UniqueKey.generateName( table, columnNames.toArray( new String[columnNames.size()] ) )
 						: constraintSource.name();
-				final UniqueKey uniqueKey = table.getOrCreateUniqueKey( constraintName );
-				for ( final String columnName : constraintSource.columnNames() ) {
-					uniqueKey.addColumn( table.locateOrCreateColumn( quotedIdentifier( columnName ) ) );
+				for ( final String columnName : columnNames ) {
+					uk.addColumn( table.locateOrCreateColumn( quotedIdentifier( columnName ) ) );
 				}
+				uk.setTable( table );
+				uk.setName( constraintName );
+				table.addUniqueKey( uk );
 			}
 		}
 	}
@@ -2948,8 +2954,11 @@ public class Binder {
 		column.setComment( columnSource.getComment() );
 		
 		if (columnSource.isUnique()) {
-			table.getOrCreateUniqueKey( StringHelper.randomFixedLengthHex(
-					UniqueKey.GENERATED_NAME_PREFIX ) ).addColumn( column );
+			UniqueKey uk = new UniqueKey();
+			uk.addColumn( column );
+			uk.setTable( table );
+			uk.generateName();
+			table.addUniqueKey( uk );
 		}
 		return column;
 	}

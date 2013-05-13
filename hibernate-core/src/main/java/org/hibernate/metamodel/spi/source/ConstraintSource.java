@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
 /**
  * Contract describing source of table constraints
  *
@@ -44,5 +46,5 @@ public interface ConstraintSource {
 	/**
 	 * @return returns the names of the column which are part of this constraint
 	 */
-	Iterable<String> columnNames();
+	public List<String> columnNames();
 }

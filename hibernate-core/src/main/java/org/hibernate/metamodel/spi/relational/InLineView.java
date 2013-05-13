@@ -79,7 +79,7 @@ public class InLineView extends AbstractTableSpecification {
 	}
 
 	@Override
-	public UniqueKey getOrCreateUniqueKey(String name) {
+	public void addUniqueKey(UniqueKey uk) {
 		throw new UnsupportedOperationException( "Cannot create unique-key on inline view" );
 	}
 

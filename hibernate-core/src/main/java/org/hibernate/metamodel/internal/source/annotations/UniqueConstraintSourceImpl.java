@@ -52,7 +52,7 @@ class UniqueConstraintSourceImpl implements UniqueConstraintSource {
 	}
 
 	@Override
-	public Iterable<String> columnNames() {
+	public List<String> columnNames() {
 		return columnNames;
 	}
 

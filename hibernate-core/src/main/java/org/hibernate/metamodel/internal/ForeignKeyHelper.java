@@ -25,17 +25,17 @@ package org.hibernate.metamodel.internal;
 
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public class ForeignKeyHelper {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
@@ -55,16 +55,14 @@ public class ForeignKeyHelper {
 			final List<Column> sourceColumns,
 			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
-		ForeignKey foreignKey = null;
-		if ( foreignKeyName != null ) {
-			foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
+		if ( StringHelper.isEmpty( foreignKeyName ) ) {
+			foreignKeyName = ForeignKey.generateName( sourceTable, targetTable, sourceColumns, targetColumns );
 		}
-		else {
-			foreignKeyName = StringHelper.randomFixedLengthHex( ForeignKey.GENERATED_NAME_PREFIX );
-		}
+		
+		ForeignKey foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
 		if ( foreignKey == null ) {
 			foreignKey = locateForeignKeyByColumnMapping( sourceTable, sourceColumns, targetTable, targetColumns );
-			if ( foreignKey != null && foreignKeyName != null ) {
+			if ( foreignKey != null ) {
 				if ( foreignKey.getName() == null ) {
 					// the foreign key name has not be initialized; set it to foreignKeyName
 					foreignKey.setName( foreignKeyName );
@@ -163,7 +161,7 @@ public class ForeignKeyHelper {
 				// The located foreign key already has columns bound;
 				// Make sure they are the same columns.
 				if ( !foreignKey.getSourceColumns().equals( sourceColumns ) ||
-						foreignKey.getTargetColumns().equals( targetColumns ) ) {
+						!foreignKey.getTargetColumns().equals( targetColumns ) ) {
 					throw binder.bindingContext().makeMappingException(
 							String.format(
 									"Attempt to bind exisitng foreign key \"%s\" with different columns.",

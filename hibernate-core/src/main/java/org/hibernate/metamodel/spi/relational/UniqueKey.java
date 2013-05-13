@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -30,23 +33,16 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class UniqueKey extends AbstractConstraint {
 
-	public static final String GENERATED_NAME_PREFIX = "UK";
+	public UniqueKey() {
+		super( null, null );
+	}
 
 	protected UniqueKey(Table table, String name) {
 		super( table, name );
-	}
-
-	@Override
-	public String getExportIdentifier() {
-		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
-		sb.append( ".UK" );
-		for ( Column column : getColumns() ) {
-			sb.append( '_' ).append( column.getColumnName().getText() );
-		}
-		return sb.toString();
 	}
 
 	@Override
@@ -63,5 +59,66 @@ public class UniqueKey extends AbstractConstraint {
     public String sqlConstraintStringInAlterTable(Dialect dialect) {
 		// not used
 		return "";
+	}
+	
+	/**
+	 * If a constraint is not explicitly named, this is called to generate
+	 * a unique hash using the table and column names.
+	 * Static so the name can be generated prior to creating the Constraint.
+	 * They're cached, keyed by name, in multiple locations.
+	 * 
+	 * @param table
+	 * @param columnNames
+	 * @return String The generated name
+	 */
+	public static String generateName(TableSpecification table, String... columnNames) {
+		// Use a concatenation that guarantees uniqueness, even if identical names
+		// exist between all table and column identifiers.
+
+		StringBuilder sb = new StringBuilder( "table`" + table.getLogicalName().getText() + "`" );
+
+		// Ensure a consistent ordering of columns, regardless of the order
+		// they were bound.
+		// Clone the list, as sometimes a set of order-dependent Column
+		// bindings are given.
+		String[] alphabeticalColumns = columnNames.clone();
+		Arrays.sort( alphabeticalColumns );
+		for ( String columnName : alphabeticalColumns ) {
+			sb.append( "column`" + columnName + "`" );
+		}
+		return "UK_" + hashedName( sb.toString() );
+	}
+
+	/**
+	 * Helper method for {@link #generateName(String, TableSpecification, String...)}.
+	 * 
+	 * @param table
+	 * @param columns
+	 * @return String The generated name
+	 */
+	public static String generateName(TableSpecification table, List<Column> columns) {
+		String[] columnNames = new String[columns.size()];
+		for ( int i = 0; i < columns.size(); i++ ) {
+			columnNames[i] = columns.get( i ).getColumnName().getText();
+		}
+		return generateName( table, columnNames );
+	}
+
+	/**
+	 * Helper method for {@link #generateName(String, TableSpecification, String...)}.
+	 * Generates and sets a name for this existing constraint.
+	 */
+	public void generateName() {
+		setName( generateName( getTable(), getColumns() ) );
+	}
+	
+	@Override
+	public String getExportIdentifier() {
+		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
+		sb.append( ".UK" );
+		for ( Column column : getColumns() ) {
+			sb.append( '_' ).append( column.getColumnName().getText() );
+		}
+		return sb.toString();
 	}
 }

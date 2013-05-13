@@ -140,7 +140,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 
 	public Iterable<UniqueKey> getUniqueKeys();
 
-	public UniqueKey getOrCreateUniqueKey(String name);
+	public void addUniqueKey(UniqueKey uk);
 	
 	public boolean hasUniqueKey(Column column);
 

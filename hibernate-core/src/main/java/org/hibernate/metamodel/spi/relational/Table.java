@@ -164,19 +164,9 @@ public class Table extends AbstractTableSpecification implements Exportable {
 		return Collections.unmodifiableSet( uniqueKeys );
 	}
 
-	// TODO: The "get" part of this should probably go away -- all callers
-	// should now be creating only.
 	@Override
-	public UniqueKey getOrCreateUniqueKey(String name) {
-		UniqueKey result = null;
-		if ( name != null ) {
-			result = locateConstraint( uniqueKeys, name );
-		}
-		if ( result == null ) {
-			result = new UniqueKey( this, name );
-			uniqueKeys.add( result );
-		}
-		return result;
+	public void addUniqueKey(UniqueKey uk) {
+		uniqueKeys.add( uk );
 	}
 	
 	@Override

@@ -109,6 +109,7 @@ import org.hibernate.metamodel.binding.SimpleValueBinding;
 import org.hibernate.metamodel.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.relational.DerivedValue;
 import org.hibernate.metamodel.relational.Value;
+import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
@@ -5122,129 +5123,20 @@ public abstract class AbstractEntityPersister
 		final Type idType = getIdentifierType();
 
 		if ( !idType.isComponentType() ) {
-			entityIdentifierDefinition = buildSimpleEncapsulatedIdentifierDefinition();
+			entityIdentifierDefinition =
+					EntityIdentifierDefinitionHelper.buildSimpleEncapsulatedIdentifierDefinition( this );
 			return;
 		}
 
 		final CompositeType cidType = (CompositeType) idType;
 		if ( !cidType.isEmbedded() ) {
-			entityIdentifierDefinition = buildEncapsulatedCompositeIdentifierDefinition();
+			entityIdentifierDefinition =
+					EntityIdentifierDefinitionHelper.buildEncapsulatedCompositeIdentifierDefinition( this );
 			return;
 		}
 
-		entityIdentifierDefinition = new NonEncapsulatedEntityIdentifierDefinition() {
-			@Override
-			public Iterable<AttributeDefinition> getAttributes() {
-				// todo : implement
-				throw new NotYetImplementedException();
-			}
-
-			@Override
-			public Class getSeparateIdentifierMappingClass() {
-				// todo : implement
-				throw new NotYetImplementedException();
-			}
-
-			@Override
-			public boolean isEncapsulated() {
-				return false;
-			}
-
-			@Override
-			public EntityDefinition getEntityDefinition() {
-				return AbstractEntityPersister.this;
-			}
-		};
-	}
-
-	private EntityIdentifierDefinition buildSimpleEncapsulatedIdentifierDefinition() {
-		final AttributeDefinition simpleIdentifierAttributeAdapter = new AttributeDefinition() {
-			@Override
-			public String getName() {
-				return entityMetamodel.getIdentifierProperty().getName();
-			}
-
-			@Override
-			public Type getType() {
-				return entityMetamodel.getIdentifierProperty().getType();
-			}
-
-			@Override
-			public AttributeSource getSource() {
-				return AbstractEntityPersister.this;
-			}
-
-			@Override
-			public String toString() {
-				return "<identifier-property:" + getName() + ">";
-			}
-		};
-
-		return new EncapsulatedEntityIdentifierDefinition() {
-			@Override
-			public AttributeDefinition getAttributeDefinition() {
-				return simpleIdentifierAttributeAdapter;
-			}
-
-			@Override
-			public boolean isEncapsulated() {
-				return true;
-			}
-
-			@Override
-			public EntityDefinition getEntityDefinition() {
-				return AbstractEntityPersister.this;
-			}
-		};
-	}
-
-	private EntityIdentifierDefinition buildEncapsulatedCompositeIdentifierDefinition() {
-		final CompositionDefinition compositeIdentifierAttributeAdapter = new CompositionDefinition() {
-			@Override
-			public String getName() {
-				return entityMetamodel.getIdentifierProperty().getName();
-			}
-
-			@Override
-			public Type getType() {
-				return entityMetamodel.getIdentifierProperty().getType();
-			}
-
-			@Override
-			public AttributeSource getSource() {
-				return AbstractEntityPersister.this;
-			}
-
-			@Override
-			public String toString() {
-				return "<identifier-property:" + getName() + ">";
-			}
-
-			@Override
-			public Iterable<AttributeDefinition> getAttributes() {
-				ComponentType componentType = (ComponentType) getType();
-				//for ( Type type : componentType.getSubtypes() ) {
- 					throw new NotYetImplementedException( "cannot create sub-attribute definitions for a ComponentType yet." );
-				//}
-			}
-		};
-
-		return new EncapsulatedEntityIdentifierDefinition() {
-			@Override
-			public AttributeDefinition getAttributeDefinition() {
-				return compositeIdentifierAttributeAdapter;
-			}
-
-			@Override
-			public boolean isEncapsulated() {
-				return true;
-			}
-
-			@Override
-			public EntityDefinition getEntityDefinition() {
-				return AbstractEntityPersister.this;
-			}
-		};
+		entityIdentifierDefinition =
+				EntityIdentifierDefinitionHelper.buildNonEncapsulatedCompositeIdentifierDefinition( this );
 	}
 
 	private void collectAttributeDefinitions() {

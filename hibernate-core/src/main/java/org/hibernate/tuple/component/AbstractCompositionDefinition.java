@@ -101,13 +101,13 @@ public abstract class AbstractCompositionDefinition extends AbstractNonIdentifie
 										getLHSTableName(
 												aType,
 												attributeNumber(),
-												(OuterJoinLoadable) joinable
+												(OuterJoinLoadable) locateOwningPersister()
 										),
 										getLHSColumnNames(
 												aType,
 												attributeNumber(),
 												columnPosition,
-												(OuterJoinLoadable) joinable,
+												(OuterJoinLoadable) locateOwningPersister(),
 												sessionFactory()
 										)
 								);

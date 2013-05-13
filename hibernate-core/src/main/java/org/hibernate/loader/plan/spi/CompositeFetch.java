@@ -73,7 +73,12 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return LoadPlanBuildingHelper.buildStandardEntityFetch(
+				this,
+				attributeDefinition,
+				fetchStrategy,
+				loadPlanBuildingContext
+		);
 	}
 
 	@Override

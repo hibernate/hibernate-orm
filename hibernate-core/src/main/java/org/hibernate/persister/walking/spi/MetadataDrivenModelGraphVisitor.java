@@ -28,11 +28,20 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.type.Type;
+
+import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
 
 /**
  * Provides model graph visitation based on the defined metadata (as opposed to based on the incoming graph
@@ -116,7 +125,7 @@ public class MetadataDrivenModelGraphVisitor {
 		final boolean continueWalk;
 		if ( attributeDefinition.getType().isAssociationType() ) {
 			continueWalk =
-					! isDuplicateAssociation( ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey() ) &&
+					! isDuplicateAssociationKey( ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey() ) &&
 					strategy.startingAttribute( attributeDefinition );
 		}
 		else {
@@ -142,6 +151,11 @@ public class MetadataDrivenModelGraphVisitor {
 
 	private void visitAssociation(AssociationAttributeDefinition attribute) {
 		// todo : do "too deep" checks; but see note about adding depth to PropertyPath
+
+		if ( !addAssociationKey( attribute.getAssociationKey() ) ) {
+			log.debug( "Property path deemed to be circular : " + currentPropertyPath.getFullPath() );
+			return;
+		}
 
 		if ( attribute.isCollection() ) {
 			visitCollectionDefinition( attribute.toCollectionDefinition() );
@@ -212,15 +226,18 @@ public class MetadataDrivenModelGraphVisitor {
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();
 
-	protected boolean isDuplicateAssociation(AssociationKey associationKey) {
-		boolean isDuplicate = !visitedAssociationKeys.add( associationKey );
-		if ( isDuplicate ) {
-			log.debug( "Property path deemed to be circular : " + currentPropertyPath.getFullPath() );
-			return true;
-		}
-		else {
-			return false;
-		}
+	/**
+	 * Add association key.
+	 * @param associationKey - the association key.
+	 * @return true, if the association key was added;
+	 *         false, otherwise (indicating the association key was already visited).
+	 */
+	protected boolean addAssociationKey(AssociationKey associationKey) {
+		return visitedAssociationKeys.add( associationKey );
+	}
+
+	protected boolean isDuplicateAssociationKey(AssociationKey associationKey) {
+		return visitedAssociationKeys.contains( associationKey );
 	}
 
 }

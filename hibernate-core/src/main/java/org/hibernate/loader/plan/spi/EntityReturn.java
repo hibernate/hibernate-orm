@@ -134,7 +134,7 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 
 	@Override
 	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		EntityKey entityKey = context.getDictatedRootEntityKey();
+		EntityKey entityKey = getEntityKeyFromContext( context );
 		if ( entityKey != null ) {
 			context.getIdentifierResolutionContext( this ).registerEntityKey( entityKey );
 			return;
@@ -147,6 +147,19 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 		}
 	}
 
+	private EntityKey getEntityKeyFromContext(ResultSetProcessingContext context) {
+		if ( context.getDictatedRootEntityKey() != null ) {
+			return context.getDictatedRootEntityKey();
+		}
+		else if ( context.getQueryParameters().getOptionalId() != null ) {
+			return context.getSession().generateEntityKey( 
+					context.getQueryParameters().getOptionalId(),
+					getEntityPersister() 
+			);
+		}
+		return null;
+	}
+	
 	@Override
 	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
 		final IdentifierResolutionContext identifierResolutionContext = context.getIdentifierResolutionContext( this );

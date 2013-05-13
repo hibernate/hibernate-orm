@@ -56,6 +56,7 @@ public class CollectionJoinableAssociationImpl extends AbstractJoinableAssociati
 				currentEntityReference,
 				collectionFetch,
 				withClause,
+				true,
 				hasRestriction,
 				enabledFilters
 		);

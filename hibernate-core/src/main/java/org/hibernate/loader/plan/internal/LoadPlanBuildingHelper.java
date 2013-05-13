@@ -33,6 +33,7 @@ import org.hibernate.loader.plan.spi.FetchOwner;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -63,6 +64,7 @@ public class LoadPlanBuildingHelper {
 				LockMode.NONE, // todo : for now
 				fetchOwner,
 				attributeDefinition.getName(),
+				(EntityType) attributeDefinition.getType(),
 				fetchStrategy
 		);
 	}
@@ -73,7 +75,7 @@ public class LoadPlanBuildingHelper {
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		return new CompositeFetch(
 				loadPlanBuildingContext.getSessionFactory(),
-				(AbstractFetchOwner) fetchOwner,
+				fetchOwner,
 				attributeDefinition.getName()
 		);
 	}

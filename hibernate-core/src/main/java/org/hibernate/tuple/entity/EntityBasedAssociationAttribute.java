@@ -34,7 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
-import org.hibernate.persister.walking.internal.Helper;
+import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -129,22 +129,22 @@ public class EntityBasedAssociationAttribute
 	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
 		final EntityPersister owningPersister = getSource().getEntityPersister();
 
-		FetchStyle style = Helper.determineFetchStyleByProfile(
+		FetchStyle style = FetchStrategyHelper.determineFetchStyleByProfile(
 				loadQueryInfluencers,
 				owningPersister,
 				propertyPath,
 				attributeNumber()
 		);
 		if ( style == null ) {
-			style = Helper.determineFetchStyleByMetadata(
-					((OuterJoinLoadable) getSource().getEntityPersister()).getFetchMode( attributeNumber() ),
+			style = FetchStrategyHelper.determineFetchStyleByMetadata(
+					( (OuterJoinLoadable) getSource().getEntityPersister() ).getFetchMode( attributeNumber() ),
 					getType(),
 					sessionFactory()
 			);
 		}
 
 		return new FetchStrategy(
-				Helper.determineFetchTiming( style, getType(), sessionFactory() ),
+				FetchStrategyHelper.determineFetchTiming( style, getType(), sessionFactory() ),
 				style
 		);
 	}

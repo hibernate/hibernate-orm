@@ -25,20 +25,20 @@ package org.hibernate.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.procedure.ProcedureCallMemento;
 
 /**
  * @author Steve Ebersole
@@ -46,14 +46,17 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 public class NamedQueryRepository {
 	private static final Logger log = Logger.getLogger( NamedQueryRepository.class );
 
+	private final Map<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap;
+
 	private volatile Map<String, NamedQueryDefinition> namedQueryDefinitionMap;
 	private volatile Map<String, NamedSQLQueryDefinition> namedSqlQueryDefinitionMap;
-	private final Map<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap;
+	private volatile Map<String, ProcedureCallMemento> procedureCallMementoMap;
 
 	public NamedQueryRepository(
 			Iterable<NamedQueryDefinition> namedQueryDefinitions,
 			Iterable<NamedSQLQueryDefinition> namedSqlQueryDefinitions,
-			Iterable<ResultSetMappingDefinition> namedSqlResultSetMappings) {
+			Iterable<ResultSetMappingDefinition> namedSqlResultSetMappings,
+			List<ProcedureCallMemento> namedProcedureCalls) {
 		final HashMap<String, NamedQueryDefinition> namedQueryDefinitionMap = new HashMap<String, NamedQueryDefinition>();
 		for ( NamedQueryDefinition namedQueryDefinition : namedQueryDefinitions ) {
 			namedQueryDefinitionMap.put( namedQueryDefinition.getName(), namedQueryDefinition );
@@ -81,6 +84,10 @@ public class NamedQueryRepository {
 
 	public NamedSQLQueryDefinition getNamedSQLQueryDefinition(String queryName) {
 		return namedSqlQueryDefinitionMap.get( queryName );
+	}
+
+	public ProcedureCallMemento getNamedProcedureCallMemento(String name) {
+		return procedureCallMementoMap.get( name );
 	}
 
 	public ResultSetMappingDefinition getResultSetMappingDefinition(String mappingName) {
@@ -125,6 +132,20 @@ public class NamedQueryRepository {
 		}
 
 		this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( copy );
+	}
+
+	public synchronized void registerNamedProcedureCallMemento(String name, ProcedureCallMemento memento) {
+		final Map<String, ProcedureCallMemento> copy = CollectionHelper.makeCopy( procedureCallMementoMap );
+		final ProcedureCallMemento previous = copy.put( name, memento );
+		if ( previous != null ) {
+			log.debugf(
+					"registering named procedure call definition [%s] overriding previously registered definition [%s]",
+					name,
+					previous
+			);
+		}
+
+		this.procedureCallMementoMap = Collections.unmodifiableMap( copy );
 	}
 
 	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {

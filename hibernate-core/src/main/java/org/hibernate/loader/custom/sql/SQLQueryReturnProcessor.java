@@ -24,7 +24,10 @@
  */
 package org.hibernate.loader.custom.sql;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -56,8 +59,10 @@ import org.hibernate.loader.custom.NonScalarReturn;
 import org.hibernate.loader.custom.Return;
 import org.hibernate.loader.custom.RootReturn;
 import org.hibernate.loader.custom.ScalarReturn;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -99,7 +104,7 @@ public class SQLQueryReturnProcessor {
 		this.factory = factory;
 	}
 
-	/*package*/ class ResultAliasContext {
+	public class ResultAliasContext {
 		public SQLLoadable getEntityPersister(String alias) {
 			return alias2Persister.get( alias );
 		}
@@ -122,6 +127,25 @@ public class SQLQueryReturnProcessor {
 
 		public Map<String, String[]> getPropertyResultsMap(String alias) {
 			return internalGetPropertyResultsMap( alias );
+		}
+
+		public String[] collectQuerySpaces() {
+			final HashSet<String> spaces = new HashSet<String>();
+			collectQuerySpaces( spaces );
+			return spaces.toArray( new String[ spaces.size() ] );
+		}
+
+		public void collectQuerySpaces(Collection<String> spaces) {
+			for ( EntityPersister persister : alias2Persister.values() ) {
+				Collections.addAll( spaces, (String[]) persister.getQuerySpaces() );
+			}
+			for ( CollectionPersister persister : alias2CollectionPersister.values() ) {
+				final Type elementType = persister.getElementType();
+				if ( elementType.isEntityType() && ! elementType.isAnyType() ) {
+					final Joinable joinable = ( (EntityType) elementType ).getAssociatedJoinable( factory );
+					Collections.addAll( spaces, (String[]) ( (EntityPersister) joinable ).getQuerySpaces() );
+				}
+			}
 		}
 	}
 

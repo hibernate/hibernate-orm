@@ -35,6 +35,8 @@ import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
 
 /**
+ * Region for caching query results.
+ *
  * @author Chris Bredesen
  * @author Galder Zamarreño
  * @since 3.5
@@ -45,6 +47,13 @@ public class QueryResultsRegionImpl extends BaseTransactionalDataRegion implemen
 	private final AdvancedCache putCache;
 	private final AdvancedCache getCache;
 
+   /**
+    * Query region constructor
+    *
+    * @param cache instance to store queries
+    * @param name of the query region
+    * @param factory for the query region
+    */
 	public QueryResultsRegionImpl(AdvancedCache cache, String name, RegionFactory factory) {
 		super( cache, name, null, factory );
 		// If Infinispan is using INVALIDATION for query cache, we don't want to propagate changes.

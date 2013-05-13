@@ -49,7 +49,7 @@ public abstract class EhcacheHibernateMbeanNames {
 	/**
 	 * Filter out invalid ObjectName characters from s.
 	 *
-	 * @param s
+	 * @param s the name to be filtered out
 	 *
 	 * @return A valid JMX ObjectName attribute value.
 	 */
@@ -60,19 +60,19 @@ public abstract class EhcacheHibernateMbeanNames {
 	/**
 	 * Returns an ObjectName for the passed name
 	 *
-	 * @param name
+	 * @param cacheManagerClusterUUID the UUID of the cacheManager within the cluster
+	 * @param name the name to use, which should be made "mbean safe"
 	 *
 	 * @return An {@link javax.management.ObjectName} using the input name of cache manager
 	 *
-	 * @throws javax.management.MalformedObjectNameException
+	 * @throws javax.management.MalformedObjectNameException The name derived from the params does not correspond to a valid ObjectName
 	 */
 	public static ObjectName getCacheManagerObjectName(String cacheManagerClusterUUID, String name)
 			throws MalformedObjectNameException {
-		ObjectName objectName = new ObjectName(
-				GROUP_ID + ":type=" + EHCACHE_HIBERNATE_TYPE + ",name=" + mbeanSafe( name )
-						+ getBeanNameSuffix( cacheManagerClusterUUID )
+		return new ObjectName(
+				GROUP_ID + ":type=" + EHCACHE_HIBERNATE_TYPE
+						+ ",name=" + mbeanSafe( name ) + getBeanNameSuffix( cacheManagerClusterUUID )
 		);
-		return objectName;
 	}
 
 	private static String getBeanNameSuffix(String cacheManagerClusterUUID) {

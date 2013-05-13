@@ -27,9 +27,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import org.osgi.framework.Bundle;
 
@@ -41,12 +43,13 @@ import org.osgi.framework.Bundle;
  * @author Tim Ward
  */
 public class OsgiClassLoader extends ClassLoader {
-	private List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
-	private List<Bundle> bundles = new ArrayList<Bundle>();
+	// Leave these as Sets -- addClassLoader or addBundle may be called more
+	// than once if a SF or EMF is closed and re-created.
+	private Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
+	private Set<Bundle> bundles = new HashSet<Bundle>();
 
 	private Map<String, Class<?>> classCache = new HashMap<String, Class<?>>();
 	private Map<String, URL> resourceCache = new HashMap<String, URL>();
-	private Map<String, Enumeration<URL>> resourceListCache = new HashMap<String, Enumeration<URL>>();
 
 	/**
 	 * Load the class and break on first found match.
@@ -128,16 +131,15 @@ public class OsgiClassLoader extends ClassLoader {
 
 	/**
 	 * Load the class and break on first found match.
+	 * 
+	 * Note: Since they're Enumerations, do not cache these results!  
+	 * 
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Enumeration<URL> findResources(String name) {
-		if ( resourceListCache.containsKey( name ) ) {
-			return resourceListCache.get( name );
-		}
-		
 		final List<Enumeration<URL>> enumerations = new ArrayList<Enumeration<URL>>();
 		
 		for ( Bundle bundle : bundles ) {
@@ -184,8 +186,6 @@ public class OsgiClassLoader extends ClassLoader {
 			}
 		};
 		
-		resourceListCache.put( name, aggEnumeration );
-		
 		return aggEnumeration;
 	}
 
@@ -213,7 +213,6 @@ public class OsgiClassLoader extends ClassLoader {
 	public void clear() {
 		classCache.clear();
 		resourceCache.clear();
-		resourceListCache.clear();
 	}
 
 }

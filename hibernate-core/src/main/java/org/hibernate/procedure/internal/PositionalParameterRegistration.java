@@ -25,15 +25,28 @@ package org.hibernate.procedure.internal;
 
 import javax.persistence.ParameterMode;
 
+import org.hibernate.type.Type;
+
 /**
+ * Represents a registered positional parameter
+ *
  * @author Steve Ebersole
  */
 public class PositionalParameterRegistration<T> extends AbstractParameterRegistrationImpl<T> {
-	public  PositionalParameterRegistration(
+	PositionalParameterRegistration(
 			ProcedureCallImpl procedureCall,
 			Integer position,
+			ParameterMode mode,
+			Class<T> type) {
+		super( procedureCall, position, mode, type );
+	}
+
+	PositionalParameterRegistration(
+			ProcedureCallImpl procedureCall,
+			Integer position,
+			ParameterMode mode,
 			Class<T> type,
-			ParameterMode mode) {
-		super( procedureCall, position, type, mode );
+			Type hibernateType) {
+		super( procedureCall, position, mode, type, hibernateType );
 	}
 }

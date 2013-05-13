@@ -84,6 +84,7 @@ import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
@@ -122,6 +123,7 @@ import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.mapping.AuxiliaryDatabaseObject;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Constraint;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
@@ -213,6 +215,7 @@ public class Configuration implements Serializable {
 
 	protected Map<String, NamedQueryDefinition> namedQueries;
 	protected Map<String, NamedSQLQueryDefinition> namedSqlQueries;
+	protected Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	protected Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
 
 	protected Map<String, TypeDef> typeDefs;
@@ -1398,22 +1401,14 @@ public class Configuration implements Serializable {
 			final Table table = tableListEntry.getKey();
 			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
 			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? StringHelper.randomFixedLengthHex("UK_")
-						: holder.getName();
-				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns() );
+				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns() );
 			}
 		}
 		
 		for(Table table : jpaIndexHoldersByTable.keySet()){
 			final List<JPAIndexHolder> jpaIndexHolders = jpaIndexHoldersByTable.get( table );
-			int uniqueIndexPerTable = 0;
 			for ( JPAIndexHolder holder : jpaIndexHolders ) {
-				uniqueIndexPerTable++;
-				final String keyName = StringHelper.isEmpty( holder.getName() )
-						? "idx_"+table.getName()+"_" + uniqueIndexPerTable
-						: holder.getName();
-				buildUniqueKeyFromColumnNames( table, keyName, holder.getColumns(), holder.getOrdering(), holder.isUnique() );
+				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.getColumns(), holder.getOrdering(), holder.isUnique() );
 			}
 		}
 		
@@ -1576,8 +1571,6 @@ public class Configuration implements Serializable {
 	}
 
 	private void buildUniqueKeyFromColumnNames(Table table, String keyName, String[] columnNames, String[] orderings, boolean unique) {
-		keyName = normalizer.normalizeIdentifierQuoting( keyName );
-
 		int size = columnNames.length;
 		Column[] columns = new Column[size];
 		Set<Column> unbound = new HashSet<Column>();
@@ -1594,6 +1587,12 @@ public class Configuration implements Serializable {
 				unboundNoLogical.add( new Column( column ) );
 			}
 		}
+		
+		if ( StringHelper.isEmpty( keyName ) ) {
+			keyName = Constraint.generateName( "UK_", table, columns );
+		}
+		keyName = normalizer.normalizeIdentifierQuoting( keyName );
+		
 		if ( unique ) {
 			UniqueKey uk = table.getOrCreateUniqueKey( keyName );
 			for ( int i = 0; i < columns.length; i++ ) {
@@ -1773,6 +1772,10 @@ public class Configuration implements Serializable {
 
 	public Map<String, NamedQueryDefinition> getNamedQueries() {
 		return namedQueries;
+	}
+
+	public Map<String, NamedProcedureCallDefinition> getNamedProcedureCallMap() {
+		return namedProcedureCallMap;
 	}
 
 	/**
@@ -2767,7 +2770,7 @@ public class Configuration implements Serializable {
 
 		public Table getTable(String schema, String catalog, String name) {
 			String key = Table.qualify(catalog, schema, name);
-			return tables.get(key);
+			return tables.get( key );
 		}
 
 		public Iterator<Table> iterateTables() {
@@ -2871,6 +2874,16 @@ public class Configuration implements Serializable {
 		private void applySQLQuery(String name, NamedSQLQueryDefinition query) throws DuplicateMappingException {
 			checkQueryName( name );
 			namedSqlQueries.put( name.intern(), query );
+		}
+
+		@Override
+		public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition)
+				throws DuplicateMappingException {
+			final String name = definition.getRegisteredName();
+			final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
+			if ( previous != null ) {
+				throw new DuplicateMappingException( "named stored procedure query", name );
+			}
 		}
 
 		public void addDefaultSQLQuery(String name, NamedSQLQueryDefinition query) {

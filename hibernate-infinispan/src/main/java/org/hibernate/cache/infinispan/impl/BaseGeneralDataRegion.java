@@ -17,6 +17,13 @@ import org.hibernate.cache.spi.RegionFactory;
 public abstract class BaseGeneralDataRegion extends BaseRegion implements GeneralDataRegion {
 	private final AdvancedCache putCache;
 
+   /**
+    * General data region constructor.
+    *
+    * @param cache instance for the region
+    * @param name of the region
+    * @param factory for this region
+    */
 	public BaseGeneralDataRegion(
 			AdvancedCache cache, String name,
 			RegionFactory factory) {

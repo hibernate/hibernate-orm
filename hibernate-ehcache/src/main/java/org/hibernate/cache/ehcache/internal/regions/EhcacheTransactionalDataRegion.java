@@ -212,7 +212,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 *
 	 * @throws CacheException Indicates a problem accessing the cache
 	 */
-	public final void writeLock(Object key) {
+	public final void writeLock(Object key) throws CacheException {
 		try {
 			lockProvider.getSyncForKey( key ).lock( LockType.WRITE );
 		}
@@ -234,7 +234,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 *
  	 * @throws CacheException Indicates a problem accessing the cache
 	 */
-	public final void writeUnlock(Object key) {
+	public final void writeUnlock(Object key) throws CacheException {
 		try {
 			lockProvider.getSyncForKey( key ).unlock( LockType.WRITE );
 		}
@@ -256,7 +256,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 *
 	 * @throws CacheException Indicates a problem accessing the cache
 	 */
-	public final void readLock(Object key) {
+	public final void readLock(Object key) throws CacheException {
 		try {
 			lockProvider.getSyncForKey( key ).lock( LockType.WRITE );
 		}
@@ -278,7 +278,7 @@ public class EhcacheTransactionalDataRegion extends EhcacheDataRegion implements
 	 *
 	 * @throws CacheException Indicates a problem accessing the cache
 	 */
-	public final void readUnlock(Object key) {
+	public final void readUnlock(Object key) throws CacheException {
 		try {
 			lockProvider.getSyncForKey( key ).unlock( LockType.WRITE );
 		}

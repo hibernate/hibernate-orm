@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -85,6 +86,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Settings;
 import org.hibernate.cfg.SettingsFactory;
+import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.context.internal.JTASessionContext;
 import org.hibernate.context.internal.ManagedSessionContext;
 import org.hibernate.context.internal.ThreadLocalSessionContext;
@@ -138,6 +140,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
+import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -499,7 +502,8 @@ public final class SessionFactoryImpl
 		this.namedQueryRepository = new NamedQueryRepository(
 				cfg.getNamedQueries().values(),
 				cfg.getNamedSQLQueries().values(),
-				cfg.getSqlResultSetMappings().values()
+				cfg.getSqlResultSetMappings().values(),
+				toProcedureCallMementos( cfg.getNamedProcedureCallMap(), cfg.getSqlResultSetMappings() )
 		);
 		imports = new HashMap<String,String>( cfg.getImports() );
 
@@ -628,6 +632,18 @@ public final class SessionFactoryImpl
 		else {
 			jpaMetamodel = null;
 		}
+	}
+
+	private List<ProcedureCallMemento> toProcedureCallMementos(
+			Map<String, NamedProcedureCallDefinition> definitions,
+			Map<String, ResultSetMappingDefinition> resultSetMappingMap) {
+		final List<ProcedureCallMemento> rtn = new ArrayList<ProcedureCallMemento>();
+		if ( definitions != null ) {
+			for ( NamedProcedureCallDefinition definition : definitions.values() ) {
+				rtn.add( definition.toMemento( this, resultSetMappingMap ) );
+			}
+		}
+		return rtn;
 	}
 
 	private JdbcConnectionAccess buildLocalConnectionAccess() {
@@ -920,7 +936,8 @@ public final class SessionFactoryImpl
 		namedQueryRepository = new NamedQueryRepository(
 				metadata.getNamedQueryDefinitions(),
 				metadata.getNamedNativeQueryDefinitions(),
-				metadata.getResultSetMappingDefinitions().values()
+				metadata.getResultSetMappingDefinitions().values(),
+				null
 		);
 
 		imports = new HashMap<String,String>();

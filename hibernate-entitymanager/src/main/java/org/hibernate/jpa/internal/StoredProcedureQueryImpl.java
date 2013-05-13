@@ -298,6 +298,10 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		return false;
 	}
 
+	public ProcedureCall getHibernateProcedureCall() {
+		return procedureCall;
+	}
+
 	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
 		private final org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration;
 

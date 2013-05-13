@@ -23,10 +23,16 @@
  */
 package org.hibernate.mapping;
 import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 
@@ -34,11 +40,12 @@ import org.hibernate.engine.spi.Mapping;
  * A relational constraint.
  *
  * @author Gavin King
+ * @author Brett Meyer
  */
 public abstract class Constraint implements RelationalModel, Serializable {
 
 	private String name;
-	private final List<Column> columns = new ArrayList<Column>();
+	private final ArrayList<Column> columns = new ArrayList<Column>();
 	private Table table;
 
 	public String getName() {
@@ -47,6 +54,85 @@ public abstract class Constraint implements RelationalModel, Serializable {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	/**
+	 * If a constraint is not explicitly named, this is called to generate
+	 * a unique hash using the table and column names.
+	 * Static so the name can be generated prior to creating the Constraint.
+	 * They're cached, keyed by name, in multiple locations.
+	 * 
+	 * @param prefix
+	 *            Appended to the beginning of the generated name
+	 * @param table
+	 * @param columns
+	 * @return String The generated name
+	 */
+	public static String generateName(String prefix, Table table, Column... columns) {
+		// Use a concatenation that guarantees uniqueness, even if identical names
+		// exist between all table and column identifiers.
+
+		StringBuilder sb = new StringBuilder( "table`" + table.getName() + "`" );
+
+		// Ensure a consistent ordering of columns, regardless of the order
+		// they were bound.
+		// Clone the list, as sometimes a set of order-dependent Column
+		// bindings are given.
+		Column[] alphabeticalColumns = columns.clone();
+		Arrays.sort( alphabeticalColumns, ColumnComparator.INSTANCE );
+		for ( Column column : alphabeticalColumns ) {
+			String columnName = column == null ? "" : column.getName();
+			sb.append( "column`" + columnName + "`" );
+		}
+		return prefix + hashedName( sb.toString() );
+	}
+
+	/**
+	 * Helper method for {@link #generateName(String, Table, Column...)}.
+	 * 
+	 * @param prefix
+	 *            Appended to the beginning of the generated name
+	 * @param table
+	 * @param columns
+	 * @return String The generated name
+	 */
+	public static String generateName(String prefix, Table table, List<Column> columns) {
+		return generateName( prefix, table, columns.toArray( new Column[columns.size()] ) );
+	}
+
+	/**
+	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
+	 * (full alphanumeric), guaranteeing
+	 * that the length of the name will always be smaller than the 30
+	 * character identifier restriction enforced by a few dialects.
+	 * 
+	 * @param s
+	 *            The name to be hashed.
+	 * @return String The hased name.
+	 */
+	public static String hashedName(String s) {
+		try {
+			MessageDigest md = MessageDigest.getInstance( "MD5" );
+			md.reset();
+			md.update( s.getBytes() );
+			byte[] digest = md.digest();
+			BigInteger bigInt = new BigInteger( 1, digest );
+			// By converting to base 35 (full alphanumeric), we guarantee
+			// that the length of the name will always be smaller than the 30
+			// character identifier restriction enforced by a few dialects.
+			return bigInt.toString( 35 );
+		}
+		catch ( NoSuchAlgorithmException e ) {
+			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
+		}
+	}
+
+	private static class ColumnComparator implements Comparator<Column> {
+		public static ColumnComparator INSTANCE = new ColumnComparator();
+
+		public int compare(Column col1, Column col2) {
+			return col1.getName().compareTo( col2.getName() );
+		}
 	}
 
 	public void addColumn(Column column) {
@@ -133,4 +219,10 @@ public abstract class Constraint implements RelationalModel, Serializable {
 	public String toString() {
 		return getClass().getName() + '(' + getTable().getName() + getColumns() + ") as " + name;
 	}
+	
+	/**
+	 * @return String The prefix to use in generated constraint names.  Examples:
+	 * "UK_", "FK_", and "PK_".
+	 */
+	public abstract String generatedConstraintNamePrefix();
 }

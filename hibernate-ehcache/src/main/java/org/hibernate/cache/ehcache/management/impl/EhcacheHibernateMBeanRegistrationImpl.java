@@ -56,19 +56,15 @@ public class EhcacheHibernateMBeanRegistrationImpl
 			EhcacheHibernateMBeanRegistrationImpl.class.getName()
 	);
 	private static final int MAX_MBEAN_REGISTRATION_RETRIES = 50;
-	private String cacheManagerClusterUUID;
-	private String registeredCacheManagerName;
 	private Status status = Status.STATUS_UNINITIALISED;
 	private volatile EhcacheHibernate ehcacheHibernate;
 	private volatile ObjectName cacheManagerObjectName;
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public synchronized void registerMBeanForCacheManager(final CacheManager manager, final Properties properties)
 			throws Exception {
-		String sessionFactoryName = properties.getProperty( Environment.SESSION_FACTORY_NAME );
-		String name = null;
+		final String sessionFactoryName = properties.getProperty( Environment.SESSION_FACTORY_NAME );
+		final String name;
 		if ( sessionFactoryName == null ) {
 			name = manager.getName();
 		}
@@ -81,17 +77,18 @@ public class EhcacheHibernateMBeanRegistrationImpl
 	private void registerBean(String name, CacheManager manager) throws Exception {
 		ehcacheHibernate = new EhcacheHibernate( manager );
 		int tries = 0;
-		boolean success = false;
+		boolean success;
 		Exception exception = null;
-		cacheManagerClusterUUID = manager.getClusterUUID();
+		final String cacheManagerClusterUUID = manager.getClusterUUID();
+		String registeredCacheManagerName;
 		do {
-			this.registeredCacheManagerName = name;
+			registeredCacheManagerName = name;
 			if ( tries != 0 ) {
 				registeredCacheManagerName += "_" + tries;
 			}
 			try {
 				// register the CacheManager MBean
-				MBeanServer mBeanServer = getMBeanServer();
+				final MBeanServer mBeanServer = getMBeanServer();
 				cacheManagerObjectName = EhcacheHibernateMbeanNames.getCacheManagerObjectName(
 						cacheManagerClusterUUID,
 						registeredCacheManagerName
@@ -120,16 +117,12 @@ public class EhcacheHibernateMBeanRegistrationImpl
 		return ManagementFactory.getPlatformMBeanServer();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void enableHibernateStatisticsSupport(SessionFactory sessionFactory) {
 		ehcacheHibernate.enableHibernateStatistics( sessionFactory );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public synchronized void dispose() throws CacheException {
 		if ( status == Status.STATUS_SHUTDOWN ) {
 			return;
@@ -149,30 +142,37 @@ public class EhcacheHibernateMBeanRegistrationImpl
 		status = Status.STATUS_SHUTDOWN;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public synchronized Status getStatus() {
 		return status;
 	}
 
 	/**
-	 * No-op in this case
+	 * {@inheritDoc}
+	 * <p/>
+	 * NOTE : No-op in this case
 	 */
+	@Override
 	public void init() throws CacheException {
 		// no-op
 	}
 
 	/**
-	 * No-op in this case
+	 * {@inheritDoc}
+	 * <p/>
+	 * NOTE : No-op in this case
 	 */
+	@Override
 	public void notifyCacheAdded(String cacheName) {
 		// no-op
 	}
 
 	/**
-	 * No-op in this case
+	 * {@inheritDoc}
+	 * <p/>
+	 * NOTE : No-op in this case
 	 */
+	@Override
 	public void notifyCacheRemoved(String cacheName) {
 		// no-op
 	}

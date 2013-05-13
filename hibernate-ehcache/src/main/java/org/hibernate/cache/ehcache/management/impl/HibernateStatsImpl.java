@@ -59,9 +59,9 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 	/**
 	 * Constructor accepting the backing {@link SessionFactory}
 	 *
-	 * @param sessionFactory
+	 * @param sessionFactory the {@link SessionFactory} to source stats from
 	 *
-	 * @throws javax.management.NotCompliantMBeanException
+	 * @throws javax.management.NotCompliantMBeanException thrown from JMX super ctor
 	 */
 	public HibernateStatsImpl(SessionFactory sessionFactory) throws NotCompliantMBeanException {
 		super( HibernateStats.class );
@@ -75,254 +75,171 @@ public class HibernateStatsImpl extends AbstractEmitterBean implements Hibernate
 		return sessionFactory.getStatistics();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#clearStats()
-	 */
+	@Override
 	public void clearStats() {
 		getStatistics().clear();
 		sendNotification( CACHE_STATISTICS_RESET );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#disableStats()
-	 */
+	@Override
 	public void disableStats() {
 		setStatisticsEnabled( false );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#enableStats()
-	 */
+	@Override
 	public void enableStats() {
 		setStatisticsEnabled( true );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getCloseStatementCount()
-	 */
+	@Override
 	public long getCloseStatementCount() {
 		return getStatistics().getCloseStatementCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getConnectCount()
-	 */
+	@Override
 	public long getConnectCount() {
 		return getStatistics().getConnectCount();
 	}
 
 	/**
-	 * Not supported right now
+	 * Unsupported operation
+	 * @return nothing ever, this only throws!
+	 * @throws UnsupportedOperationException
+	 * @deprecated DO NOT USE, WILL ONLY THROW AT YOU!
 	 */
+	@Deprecated
+	@SuppressWarnings("UnusedDeclaration")
 	public long getDBSQLExecutionSample() {
 		throw new UnsupportedOperationException( "Use getQueryExecutionCount() instead" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getFlushCount()
-	 */
+	@Override
 	public long getFlushCount() {
 		return getStatistics().getFlushCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getOptimisticFailureCount()
-	 */
+	@Override
 	public long getOptimisticFailureCount() {
 		return getStatistics().getOptimisticFailureCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getPrepareStatementCount()
-	 */
+	@Override
 	public long getPrepareStatementCount() {
 		return getStatistics().getPrepareStatementCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryExecutionCount()
-	 */
+	@Override
 	public long getQueryExecutionCount() {
 		return getStatistics().getQueryExecutionCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryExecutionRate()
-	 */
+	@Override
 	public double getQueryExecutionRate() {
-		long startTime = getStatistics().getStartTime();
-		long now = System.currentTimeMillis();
-		double deltaSecs = (now - startTime) / MILLIS_PER_SECOND;
+		final long startTime = getStatistics().getStartTime();
+		final long now = System.currentTimeMillis();
+		final double deltaSecs = (now - startTime) / MILLIS_PER_SECOND;
 		return getQueryExecutionCount() / deltaSecs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryExecutionSample()
-	 */
+	@Override
 	public long getQueryExecutionSample() {
 		throw new UnsupportedOperationException( "TODO: need to impl. rates for query execution" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getSessionCloseCount()
-	 */
+	@Override
 	public long getSessionCloseCount() {
 		return getStatistics().getSessionCloseCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getSessionOpenCount()
-	 */
+	@Override
 	public long getSessionOpenCount() {
 		return getStatistics().getSessionOpenCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getSuccessfulTransactionCount()
-	 */
+	@Override
 	public long getSuccessfulTransactionCount() {
 		return getStatistics().getSuccessfulTransactionCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getTransactionCount()
-	 */
+	@Override
 	public long getTransactionCount() {
 		return getStatistics().getTransactionCount();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#isStatisticsEnabled()
-	 */
+	@Override
 	public boolean isStatisticsEnabled() {
 		return getStatistics().isStatisticsEnabled();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#setStatisticsEnabled(boolean)
-	 */
+	@Override
 	public void setStatisticsEnabled(boolean flag) {
 		getStatistics().setStatisticsEnabled( flag );
 		sendNotification( CACHE_STATISTICS_ENABLED, flag );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getEntityStats()
-	 */
+	@Override
 	public TabularData getEntityStats() {
-		List<CompositeData> result = new ArrayList<CompositeData>();
-		Statistics statistics = getStatistics();
+		final List<CompositeData> result = new ArrayList<CompositeData>();
+		final Statistics statistics = getStatistics();
 		for ( String entity : statistics.getEntityNames() ) {
-			EntityStats entityStats = new EntityStats( entity, statistics.getEntityStatistics( entity ) );
+			final EntityStats entityStats = new EntityStats( entity, statistics.getEntityStatistics( entity ) );
 			result.add( entityStats.toCompositeData() );
 		}
-		TabularData td = EntityStats.newTabularDataInstance();
+		final TabularData td = EntityStats.newTabularDataInstance();
 		td.putAll( result.toArray( new CompositeData[result.size()] ) );
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getCollectionStats()
-	 */
+	@Override
 	public TabularData getCollectionStats() {
-		List<CompositeData> result = new ArrayList<CompositeData>();
-		Statistics statistics = getStatistics();
+		final List<CompositeData> result = new ArrayList<CompositeData>();
+		final Statistics statistics = getStatistics();
 		for ( String roleName : statistics.getCollectionRoleNames() ) {
-			CollectionStats collectionStats = new CollectionStats(
+			final CollectionStats collectionStats = new CollectionStats(
 					roleName,
 					statistics.getCollectionStatistics( roleName )
 			);
 			result.add( collectionStats.toCompositeData() );
 		}
-		TabularData td = CollectionStats.newTabularDataInstance();
+		final TabularData td = CollectionStats.newTabularDataInstance();
 		td.putAll( result.toArray( new CompositeData[result.size()] ) );
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see HibernateStats#getQueryStats()
-	 */
+	@Override
 	public TabularData getQueryStats() {
-		List<CompositeData> result = new ArrayList<CompositeData>();
-		Statistics statistics = getStatistics();
+		final List<CompositeData> result = new ArrayList<CompositeData>();
+		final Statistics statistics = getStatistics();
 		for ( String query : statistics.getQueries() ) {
-			QueryStats queryStats = new QueryStats( query, statistics.getQueryStatistics( query ) );
+			final QueryStats queryStats = new QueryStats( query, statistics.getQueryStatistics( query ) );
 			result.add( queryStats.toCompositeData() );
 		}
-		TabularData td = QueryStats.newTabularDataInstance();
+		final TabularData td = QueryStats.newTabularDataInstance();
 		td.putAll( result.toArray( new CompositeData[result.size()] ) );
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public TabularData getCacheRegionStats() {
-		List<CompositeData> list = new ArrayList<CompositeData>();
-		Statistics statistics = getStatistics();
+		final List<CompositeData> list = new ArrayList<CompositeData>();
+		final Statistics statistics = getStatistics();
 		for ( String region : statistics.getSecondLevelCacheRegionNames() ) {
-			CacheRegionStats l2CacheStats = new CacheRegionStats(
+			final CacheRegionStats l2CacheStats = new CacheRegionStats(
 					region,
 					statistics.getSecondLevelCacheStatistics( region )
 			);
 			list.add( l2CacheStats.toCompositeData() );
 		}
-		TabularData td = CacheRegionStats.newTabularDataInstance();
+		final TabularData td = CacheRegionStats.newTabularDataInstance();
 		td.putAll( list.toArray( new CompositeData[list.size()] ) );
 		return td;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void doDispose() {
 		// no-op
 	}
 
-	/**
-	 * @see AbstractEmitterBean#getNotificationInfo()
-	 */
 	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
 		return new MBeanNotificationInfo[] {NOTIFICATION_INFO};

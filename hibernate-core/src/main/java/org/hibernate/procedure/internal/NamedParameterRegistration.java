@@ -25,15 +25,28 @@ package org.hibernate.procedure.internal;
 
 import javax.persistence.ParameterMode;
 
+import org.hibernate.type.Type;
+
 /**
+ * Represents a registered named parameter
+ *
  * @author Steve Ebersole
  */
 public class NamedParameterRegistration<T> extends AbstractParameterRegistrationImpl<T> {
-	public NamedParameterRegistration(
+	NamedParameterRegistration(
 			ProcedureCallImpl procedureCall,
 			String name,
+			ParameterMode mode,
+			Class<T> type) {
+		super( procedureCall, name, mode, type );
+	}
+
+	NamedParameterRegistration(
+			ProcedureCallImpl procedureCall,
+			String name,
+			ParameterMode mode,
 			Class<T> type,
-			ParameterMode mode) {
-		super( procedureCall, name, type, mode );
+			Type hibernateType) {
+		super( procedureCall, name, mode, type, hibernateType );
 	}
 }

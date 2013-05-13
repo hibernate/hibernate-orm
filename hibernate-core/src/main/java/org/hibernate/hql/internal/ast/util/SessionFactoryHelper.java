@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.ast.util;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,8 +59,8 @@ import org.hibernate.type.Type;
  */
 public class SessionFactoryHelper {
 
-	private SessionFactoryImplementor sfi;
-	private Map collectionPropertyMappingByRole;
+	private final SessionFactoryImplementor sfi;
+	private final Map<String, PropertyMapping> collectionPropertyMappingByRole;
 
 	/**
 	 * Construct a new SessionFactoryHelper instance.
@@ -68,7 +69,7 @@ public class SessionFactoryHelper {
 	 */
 	public SessionFactoryHelper(SessionFactoryImplementor sfi) {
 		this.sfi = sfi;
-		collectionPropertyMappingByRole = new HashMap();
+		this.collectionPropertyMappingByRole = new HashMap<String, PropertyMapping>();
 	}
 
 	/**
@@ -85,6 +86,7 @@ public class SessionFactoryHelper {
 	 * for the purpose of inheritance discrimination?
 	 *
 	 * @param persister The persister to be checked.
+	 *
 	 * @return True if the persister does define an actual discriminator column.
 	 */
 	public boolean hasPhysicalDiscriminatorColumn(Queryable persister) {
@@ -103,6 +105,7 @@ public class SessionFactoryHelper {
 	 * Given a (potentially unqualified) class name, locate its imported qualified name.
 	 *
 	 * @param className The potentially unqualified class name
+	 *
 	 * @return The qualified class name.
 	 */
 	public String getImportedClassName(String className) {
@@ -113,6 +116,7 @@ public class SessionFactoryHelper {
 	 * Given a (potentially unqualified) class name, locate its persister.
 	 *
 	 * @param className The (potentially unqualified) class name.
+	 *
 	 * @return The defined persister for this class, or null if none found.
 	 */
 	public Queryable findQueryableUsingImports(String className) {
@@ -125,6 +129,7 @@ public class SessionFactoryHelper {
 	 *
 	 * @param sfi The session factory implementor.
 	 * @param className The (potentially unqualified) class name.
+	 *
 	 * @return The defined persister for this class, or null if none found.
 	 */
 	public static Queryable findQueryableUsingImports(SessionFactoryImplementor sfi, String className) {
@@ -133,7 +138,7 @@ public class SessionFactoryHelper {
 			return null;
 		}
 		try {
-			return ( Queryable ) sfi.getEntityPersister( importedClassName );
+			return (Queryable) sfi.getEntityPersister( importedClassName );
 		}
 		catch ( MappingException me ) {
 			return null;
@@ -144,7 +149,9 @@ public class SessionFactoryHelper {
 	 * Locate the persister by class or entity name.
 	 *
 	 * @param name The class or entity name
+	 *
 	 * @return The defined persister for this entity, or null if none found.
+	 *
 	 * @throws MappingException
 	 */
 	private EntityPersister findEntityPersisterByName(String name) throws MappingException {
@@ -169,7 +176,9 @@ public class SessionFactoryHelper {
 	 * exist.
 	 *
 	 * @param name The class or entity name
+	 *
 	 * @return The defined persister for this entity
+	 *
 	 * @throws SemanticException Indicates the persister could not be found
 	 */
 	public EntityPersister requireClassPersister(String name) throws SemanticException {
@@ -190,11 +199,12 @@ public class SessionFactoryHelper {
 	 * Locate the collection persister by the collection role.
 	 *
 	 * @param role The collection role name.
+	 *
 	 * @return The defined CollectionPersister for this collection role, or null.
 	 */
 	public QueryableCollection getCollectionPersister(String role) {
 		try {
-			return ( QueryableCollection ) sfi.getCollectionPersister( role );
+			return (QueryableCollection) sfi.getCollectionPersister( role );
 		}
 		catch ( ClassCastException cce ) {
 			throw new QueryException( "collection is not queryable: " + role );
@@ -209,12 +219,14 @@ public class SessionFactoryHelper {
 	 * such a persister exist.
 	 *
 	 * @param role The collection role name.
+	 *
 	 * @return The defined CollectionPersister for this collection role.
+	 *
 	 * @throws QueryException Indicates that the collection persister could not be found.
 	 */
 	public QueryableCollection requireQueryableCollection(String role) throws QueryException {
 		try {
-			QueryableCollection queryableCollection = ( QueryableCollection ) sfi.getCollectionPersister( role );
+			QueryableCollection queryableCollection = (QueryableCollection) sfi.getCollectionPersister( role );
 			if ( queryableCollection != null ) {
 				collectionPropertyMappingByRole.put( role, new CollectionPropertyMapping( queryableCollection ) );
 			}
@@ -232,10 +244,11 @@ public class SessionFactoryHelper {
 	 * Retrieve a PropertyMapping describing the given collection role.
 	 *
 	 * @param role The collection role for which to retrieve the property mapping.
+	 *
 	 * @return The property mapping.
 	 */
 	public PropertyMapping getCollectionPropertyMapping(String role) {
-		return ( PropertyMapping ) collectionPropertyMappingByRole.get( role );
+		return collectionPropertyMappingByRole.get( role );
 	}
 
 	/**
@@ -244,6 +257,7 @@ public class SessionFactoryHelper {
 	 *
 	 * @param role The collection role
 	 * @param roleAlias The sql column-qualification alias (i.e., the table alias)
+	 *
 	 * @return the collection element columns
 	 */
 	public String[] getCollectionElementColumns(String role, String roleAlias) {
@@ -267,11 +281,12 @@ public class SessionFactoryHelper {
 	 * @param tableAlias The table alias to use in qualifying the join conditions
 	 * @param joinType The type of join to render (inner, outer, etc);  see {@link org.hibernate.sql.JoinFragment}
 	 * @param columns The columns making up the condition of the join.
+	 *
 	 * @return The generated join sequence.
 	 */
 	public JoinSequence createJoinSequence(boolean implicit, AssociationType associationType, String tableAlias, JoinType joinType, String[] columns) {
 		JoinSequence joinSequence = createJoinSequence();
-		joinSequence.setUseThetaStyle( implicit );	// Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (after from)
+		joinSequence.setUseThetaStyle( implicit );    // Implicit joins use theta style (WHERE pk = fk), explicit joins use JOIN (after from)
 		joinSequence.addJoin( associationType, tableAlias, joinType, columns );
 		return joinSequence;
 	}
@@ -281,12 +296,13 @@ public class SessionFactoryHelper {
 	 *
 	 * @param collPersister The persister for the collection at which the join should be rooted.
 	 * @param collectionName The alias to use for qualifying column references.
+	 *
 	 * @return The generated join sequence.
 	 */
 	public JoinSequence createCollectionJoinSequence(QueryableCollection collPersister, String collectionName) {
 		JoinSequence joinSequence = createJoinSequence();
 		joinSequence.setRoot( collPersister, collectionName );
-		joinSequence.setUseThetaStyle( true );		// TODO: figure out how this should be set.
+		joinSequence.setUseThetaStyle( true );        // TODO: figure out how this should be set.
 ///////////////////////////////////////////////////////////////////////////////
 // This was the reason for failures regarding INDEX_OP and subclass joins on
 // theta-join dialects; not sure what behavior we were trying to emulate ;)
@@ -299,7 +315,9 @@ public class SessionFactoryHelper {
 	 * given type which represents the id or unique-key.
 	 *
 	 * @param entityType The type representing the entity.
+	 *
 	 * @return The corresponding property name
+	 *
 	 * @throws QueryException Indicates such a property could not be found.
 	 */
 	public String getIdentifierOrUniqueKeyPropertyName(EntityType entityType) {
@@ -315,6 +333,7 @@ public class SessionFactoryHelper {
 	 * Retrieve the number of columns represented by this type.
 	 *
 	 * @param type The type.
+	 *
 	 * @return The number of columns.
 	 */
 	public int getColumnSpan(Type type) {
@@ -326,6 +345,7 @@ public class SessionFactoryHelper {
 	 * contained within instance of that collection.
 	 *
 	 * @param collectionType The collection type to check.
+	 *
 	 * @return The entity name of the elements of this collection.
 	 */
 	public String getAssociatedEntityName(CollectionType collectionType) {
@@ -337,6 +357,7 @@ public class SessionFactoryHelper {
 	 * within instances of that collection.
 	 *
 	 * @param collectionType The collection type to be checked.
+	 *
 	 * @return The Type of the elements of the collection.
 	 */
 	private Type getElementType(CollectionType collectionType) {
@@ -348,16 +369,18 @@ public class SessionFactoryHelper {
 	 * element type be an association type.
 	 *
 	 * @param collectionType The collection type to be checked.
+	 *
 	 * @return The AssociationType of the elements of the collection.
 	 */
 	public AssociationType getElementAssociationType(CollectionType collectionType) {
-		return ( AssociationType ) getElementType( collectionType );
+		return (AssociationType) getElementType( collectionType );
 	}
 
 	/**
 	 * Locate a registered sql function by name.
 	 *
 	 * @param functionName The name of the function to locate
+	 *
 	 * @return The sql function, or null if not found.
 	 */
 	public SQLFunction findSQLFunction(String functionName) {
@@ -368,7 +391,9 @@ public class SessionFactoryHelper {
 	 * Locate a registered sql function by name, requiring that such a registered function exist.
 	 *
 	 * @param functionName The name of the function to locate
+	 *
 	 * @return The sql function.
+	 *
 	 * @throws QueryException Indicates no matching sql functions could be found.
 	 */
 	private SQLFunction requireSQLFunction(String functionName) {
@@ -383,7 +408,8 @@ public class SessionFactoryHelper {
 	 * Find the function return type given the function name and the first argument expression node.
 	 *
 	 * @param functionName The function name.
-	 * @param first        The first argument expression.
+	 * @param first The first argument expression.
+	 *
 	 * @return the function return type given the function name and the first argument expression node.
 	 */
 	public Type findFunctionReturnType(String functionName, AST first) {
@@ -395,7 +421,7 @@ public class SessionFactoryHelper {
 		// determine the type of the first argument...
 		Type argumentType = null;
 		if ( firstArgument != null ) {
-			if ( "cast".equals(functionName) ) {
+			if ( "cast".equals( functionName ) ) {
 				argumentType = sfi.getTypeResolver().heuristicType( firstArgument.getNextSibling().getText() );
 			}
 			else if ( SqlNode.class.isInstance( firstArgument ) ) {

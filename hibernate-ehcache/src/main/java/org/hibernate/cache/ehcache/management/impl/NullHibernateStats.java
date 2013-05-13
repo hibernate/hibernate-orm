@@ -59,6 +59,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#clearStats()
 	 */
+	@Override
 	public void clearStats() {
 		// no-op
 
@@ -69,6 +70,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#disableStats()
 	 */
+	@Override
 	public void disableStats() {
 		// no-op
 
@@ -79,6 +81,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#enableStats()
 	 */
+	@Override
 	public void enableStats() {
 		// no-op
 
@@ -89,6 +92,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getCloseStatementCount()
 	 */
+	@Override
 	public long getCloseStatementCount() {
 		// no-op
 		return 0;
@@ -99,6 +103,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getCollectionStats()
 	 */
+	@Override
 	public TabularData getCollectionStats() {
 		// no-op
 		return null;
@@ -109,6 +114,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getConnectCount()
 	 */
+	@Override
 	public long getConnectCount() {
 		// no-op
 		return 0;
@@ -116,7 +122,9 @@ public final class NullHibernateStats implements HibernateStats {
 
 	/**
 	 * Not supported right now
+	 * @return 0 always
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	public long getDBSQLExecutionSample() {
 		// no-op
 		return 0;
@@ -127,6 +135,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getEntityStats()
 	 */
+	@Override
 	public TabularData getEntityStats() {
 		// no-op
 		return null;
@@ -137,6 +146,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getFlushCount()
 	 */
+	@Override
 	public long getFlushCount() {
 		// no-op
 		return 0;
@@ -147,6 +157,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getOptimisticFailureCount()
 	 */
+	@Override
 	public long getOptimisticFailureCount() {
 		// no-op
 		return 0;
@@ -157,6 +168,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getPrepareStatementCount()
 	 */
+	@Override
 	public long getPrepareStatementCount() {
 		// no-op
 		return 0;
@@ -167,6 +179,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getQueryExecutionCount()
 	 */
+	@Override
 	public long getQueryExecutionCount() {
 		// no-op
 		return 0;
@@ -177,6 +190,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getQueryExecutionRate()
 	 */
+	@Override
 	public double getQueryExecutionRate() {
 		// no-op
 		return 0;
@@ -187,6 +201,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getQueryExecutionSample()
 	 */
+	@Override
 	public long getQueryExecutionSample() {
 		// no-op
 		return 0;
@@ -197,6 +212,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getQueryStats()
 	 */
+	@Override
 	public TabularData getQueryStats() {
 		// no-op
 		return null;
@@ -207,6 +223,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getSessionCloseCount()
 	 */
+	@Override
 	public long getSessionCloseCount() {
 		// no-op
 		return 0;
@@ -217,6 +234,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getSessionOpenCount()
 	 */
+	@Override
 	public long getSessionOpenCount() {
 		// no-op
 		return 0;
@@ -227,6 +245,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getSuccessfulTransactionCount()
 	 */
+	@Override
 	public long getSuccessfulTransactionCount() {
 		// no-op
 		return 0;
@@ -237,6 +256,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#getTransactionCount()
 	 */
+	@Override
 	public long getTransactionCount() {
 		// no-op
 		return 0;
@@ -247,6 +267,7 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#isStatisticsEnabled()
 	 */
+	@Override
 	public boolean isStatisticsEnabled() {
 		// no-op
 		return false;
@@ -257,43 +278,54 @@ public final class NullHibernateStats implements HibernateStats {
 	 *
 	 * @see HibernateStats#setStatisticsEnabled(boolean)
 	 */
+	@Override
 	public void setStatisticsEnabled(boolean flag) {
 		// no-op
 	}
 
 	/**
+	 * {@inheritDoc}
 	 * @see HibernateStats#getCacheRegionStats()
 	 */
+	@Override
 	public TabularData getCacheRegionStats() {
 		return null;
 	}
 
 	/**
+	 * {@inheritDoc}
 	 * @see javax.management.NotificationEmitter#removeNotificationListener(javax.management.NotificationListener, javax.management.NotificationFilter, java.lang.Object)
 	 */
+	@Override
 	public void removeNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback)
 			throws ListenerNotFoundException {
 		/**/
 	}
 
 	/**
+	 * {@inheritDoc}
 	 * @see javax.management.NotificationBroadcaster#addNotificationListener(javax.management.NotificationListener, javax.management.NotificationFilter, java.lang.Object)
 	 */
+	@Override
 	public void addNotificationListener(NotificationListener listener, NotificationFilter filter, Object handback)
 			throws IllegalArgumentException {
 		/**/
 	}
 
 	/**
+	 * {@inheritDoc}
 	 * @see javax.management.NotificationBroadcaster#getNotificationInfo()
 	 */
+	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
 		return null;
 	}
 
 	/**
+	 * {@inheritDoc}
 	 * @see javax.management.NotificationBroadcaster#removeNotificationListener(javax.management.NotificationListener)
 	 */
+	@Override
 	public void removeNotificationListener(NotificationListener listener) throws ListenerNotFoundException {
 		/**/
 	}

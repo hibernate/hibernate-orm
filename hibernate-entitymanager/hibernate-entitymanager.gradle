@@ -1,6 +1,6 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 
-apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
+apply plugin: 'hibernate-matrix-testing'
 
 dependencies {
     compile( project(':hibernate-core') )

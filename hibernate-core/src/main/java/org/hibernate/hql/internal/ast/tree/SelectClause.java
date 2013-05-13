@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
@@ -139,7 +138,7 @@ public class SelectClause extends SelectExpressionList {
 		// NOTE: This must be done *before* invoking setScalarColumnText() because setScalarColumnText()
 		// changes the AST!!!
 		SelectExpression[] selectExpressions = collectSelectExpressions();
-		
+
 		for ( int i = 0; i < selectExpressions.length; i++ ) {
 			SelectExpression selectExpression = selectExpressions[i];
 
@@ -176,14 +175,14 @@ public class SelectClause extends SelectExpressionList {
 		if ( !getWalker().isShallowQuery() ) {
 			// add the fetched entities
 			List fromElements = fromClause.getProjectionList();
-	
+
 			ASTAppender appender = new ASTAppender( getASTFactory(), this );	// Get ready to start adding nodes.
 			int size = fromElements.size();
 	
 			Iterator iterator = fromElements.iterator();
 			for ( int k = 0; iterator.hasNext(); k++ ) {
 				FromElement fromElement = ( FromElement ) iterator.next();
-	
+
 				if ( fromElement.isFetch() ) {
 					FromElement origin = null;
 					if ( fromElement.getRealOrigin() == null ) {
@@ -226,7 +225,7 @@ public class SelectClause extends SelectExpressionList {
 					}
 				}
 			}
-	
+
 			// generate id select fragment and then property select fragment for
 			// each expression, just like generateSelectFragments().
 			renderNonScalarSelects( collectSelectExpressions(), fromClause );
@@ -326,7 +325,7 @@ public class SelectClause extends SelectExpressionList {
 
 	private void addCollectionFromElement(FromElement fromElement) {
 		if ( fromElement.isFetch() ) {
-			if ( fromElement.isCollectionJoin() || fromElement.getQueryableCollection() != null ) {
+			if ( fromElement.getQueryableCollection() != null ) {
 				String suffix;
 				if (collectionFromElements==null) {
 					collectionFromElements = new ArrayList();

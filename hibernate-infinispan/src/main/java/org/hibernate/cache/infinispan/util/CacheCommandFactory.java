@@ -42,13 +42,29 @@ import org.hibernate.cache.infinispan.impl.BaseRegion;
  * @since 4.0
  */
 public class CacheCommandFactory implements ExtendedModuleCommandFactory {
+
+   /**
+    * Keeps track of regions to which second-level cache specific
+    * commands have been plugged.
+    */
 	private ConcurrentMap<String, BaseRegion> allRegions =
 			new ConcurrentHashMap<String, BaseRegion>();
 
+   /**
+    * Add region so that commands can be cleared on shutdown.
+    *
+    * @param regionName name of the region
+    * @param region instance to keep track of
+    */
 	public void addRegion(String regionName, BaseRegion region) {
 		allRegions.put( regionName, region );
 	}
 
+   /**
+    * Clear all regions from this command factory.
+    *
+    * @param regionNames collection of regions to clear
+    */
 	public void clearRegions(List<String> regionNames) {
 		for ( String regionName : regionNames ) {
 			allRegions.remove( regionName );

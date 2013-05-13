@@ -38,47 +38,50 @@ import org.hibernate.type.Type;
  */
 
 class ComponentCollectionCriteriaInfoProvider implements CriteriaInfoProvider {
-    QueryableCollection persister;
-    Map /* <String,Type> */ subTypes = new HashMap /* <String,Type> */();
+	private final QueryableCollection persister;
+	private final Map<String, Type> subTypes = new HashMap<String, Type>();
 
-    ComponentCollectionCriteriaInfoProvider(QueryableCollection persister) {
-	this.persister = persister;
-	if (!persister.getElementType().isComponentType()) {
-	    throw new IllegalArgumentException("persister for role "+persister.getRole()+" is not a collection-of-component");
+	ComponentCollectionCriteriaInfoProvider(QueryableCollection persister) {
+		this.persister = persister;
+		if ( !persister.getElementType().isComponentType() ) {
+			throw new IllegalArgumentException( "persister for role " + persister.getRole() + " is not a collection-of-component" );
+		}
+
+		ComponentType componentType = (ComponentType) persister.getElementType();
+		String[] names = componentType.getPropertyNames();
+		Type[] types = componentType.getSubtypes();
+
+		for ( int i = 0; i < names.length; i++ ) {
+			subTypes.put( names[i], types[i] );
+		}
+
 	}
 
-	ComponentType componentType = (ComponentType)persister.getElementType();
-	String[] names = componentType.getPropertyNames();
-	Type[] types = componentType.getSubtypes();
-
-	for (int i = 0; i < names.length; i++) {
-	    subTypes.put(names[i], types[i]);
+	@Override
+	public String getName() {
+		return persister.getRole();
 	}
 
-    }
+	@Override
+	public Serializable[] getSpaces() {
+		return persister.getCollectionSpaces();
+	}
 
-    public String getName() {
-	return persister.getRole();
-    }
+	@Override
+	public PropertyMapping getPropertyMapping() {
+		return persister;
+	}
 
-    public Serializable[] getSpaces() {
-	return persister.getCollectionSpaces();
-    }
-
-    public PropertyMapping getPropertyMapping() {
-	return persister;
-    }
-
-    public Type getType(String relativePath) {
-	// TODO: can a component have a nested component? then we may need to do something more here...
-	if (relativePath.indexOf('.') >= 0) 
-	    throw new IllegalArgumentException("dotted paths not handled (yet?!) for collection-of-component");
-
-	Type type = (Type)subTypes.get(relativePath);
-	
-	if (type == null) 
-	    throw new IllegalArgumentException("property "+relativePath+" not found in component of collection "+getName());
-	
-	return type;
-    }
+	@Override
+	public Type getType(String relativePath) {
+		// TODO: can a component have a nested component? then we may need to do something more here...
+		if ( relativePath.indexOf( '.' ) >= 0 ) {
+			throw new IllegalArgumentException( "dotted paths not handled (yet?!) for collection-of-component" );
+		}
+		Type type = subTypes.get( relativePath );
+		if ( type == null ) {
+			throw new IllegalArgumentException( "property " + relativePath + " not found in component of collection " + getName() );
+		}
+		return type;
+	}
 }

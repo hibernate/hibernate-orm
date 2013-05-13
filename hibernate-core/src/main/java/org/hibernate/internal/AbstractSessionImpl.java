@@ -59,6 +59,7 @@ import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.type.Type;
 
@@ -67,11 +68,11 @@ import org.hibernate.type.Type;
  *
  * @author Gavin King
  */
-public abstract class AbstractSessionImpl implements Serializable, SharedSessionContract,
-													 SessionImplementor, TransactionContext {
+public abstract class AbstractSessionImpl
+		implements Serializable, SharedSessionContract, SessionImplementor, TransactionContext {
 	protected transient SessionFactoryImpl factory;
 	private final String tenantIdentifier;
-	private boolean closed = false;
+	private boolean closed;
 
 	protected AbstractSessionImpl(SessionFactoryImpl factory, String tenantIdentifier) {
 		this.factory = factory;
@@ -218,10 +219,10 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public Query createQuery(String queryString) {
 		errorIfClosed();
-		QueryImpl query = new QueryImpl(
+		final QueryImpl query = new QueryImpl(
 				queryString,
-		        this,
-		        getHQLQueryPlan( queryString, false ).getParameterMetadata()
+				this,
+				getHQLQueryPlan( queryString, false ).getParameterMetadata()
 		);
 		query.setComment( queryString );
 		return query;
@@ -230,13 +231,29 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	@Override
 	public SQLQuery createSQLQuery(String sql) {
 		errorIfClosed();
-		SQLQueryImpl query = new SQLQueryImpl(
+		final SQLQueryImpl query = new SQLQueryImpl(
 				sql,
-		        this,
-		        factory.getQueryPlanCache().getSQLParameterMetadata( sql )
+				this,
+				factory.getQueryPlanCache().getSQLParameterMetadata( sql )
 		);
 		query.setComment( "dynamic native SQL query" );
 		return query;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public ProcedureCall getNamedProcedureCall(String name) {
+		errorIfClosed();
+
+		final ProcedureCallMemento memento = factory.getNamedQueryRepository().getNamedProcedureCallMemento( name );
+		if ( memento == null ) {
+			throw new IllegalArgumentException(
+					"Could not find named stored procedure call with that registration name : " + name
+			);
+		}
+		final ProcedureCall procedureCall = memento.makeProcedureCall( this );
+//		procedureCall.setComment( "Named stored procedure call [" + name + "]" );
+		return procedureCall;
 	}
 
 	@Override

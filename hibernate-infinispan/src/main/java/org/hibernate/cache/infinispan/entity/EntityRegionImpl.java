@@ -35,12 +35,22 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 
 /**
+ * Entity region implementation
+ *
  * @author Chris Bredesen
  * @author Galder Zamarreño
  * @since 3.5
  */
 public class EntityRegionImpl extends BaseTransactionalDataRegion implements EntityRegion {
 
+   /**
+    * Construct a entity region
+    *
+    * @param cache instance to store entity instances
+    * @param name of entity type
+    * @param metadata for the entity type
+    * @param factory for the region
+    */
 	public EntityRegionImpl(
 			AdvancedCache cache, String name,
 			CacheDataDescription metadata, RegionFactory factory) {

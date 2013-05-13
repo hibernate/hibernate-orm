@@ -95,7 +95,7 @@ public abstract class CacheRegionUtils {
 			}
 			boolean truncate = true;
 			for ( int i = 0; i < comps.length; i++ ) {
-				String comp = comps[i];
+				final String comp = comps[i];
 				final char c = comp.charAt( 0 );
 				if ( truncate && Character.isUpperCase( c ) ) {
 					truncate = false;

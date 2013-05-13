@@ -90,7 +90,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		osgiClassLoader.addBundle( requestingBundle );
 
-		return super.createEntityManagerFactory( persistenceUnitName, properties );
+		return super.createEntityManagerFactory( persistenceUnitName, settings );
 	}
 
 	@Override
@@ -106,7 +106,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
 
-		return super.createContainerEntityManagerFactory( info, properties );
+		return super.createContainerEntityManagerFactory( info, settings );
 	}
 
 	@SuppressWarnings("unchecked")

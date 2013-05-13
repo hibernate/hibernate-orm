@@ -180,4 +180,8 @@ public class ForeignKey extends Constraint {
 		}
 		
 	}
+	
+	public String generatedConstraintNamePrefix() {
+		return "FK_";
+	}
 }

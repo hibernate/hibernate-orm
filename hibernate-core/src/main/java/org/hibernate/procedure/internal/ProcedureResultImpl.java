@@ -35,6 +35,8 @@ import org.hibernate.result.Return;
 import org.hibernate.result.internal.ResultImpl;
 
 /**
+ * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
+ *
  * @author Steve Ebersole
  */
 public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
@@ -42,7 +44,7 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 	private final CallableStatement callableStatement;
 
 	private final ParameterRegistrationImplementor[] refCursorParameters;
-	private int refCursorParamIndex = 0;
+	private int refCursorParamIndex;
 
 	ProcedureResultImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
 		super( procedureCall, callableStatement );
@@ -80,9 +82,9 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 	@Override
 	protected Return buildExtendedReturn(CurrentReturnDescriptor returnDescriptor) {
 		this.refCursorParamIndex++;
+		final int refCursorParamIndex = ( (ProcedureCurrentReturnDescriptor) returnDescriptor ).refCursorParamIndex;
+		final ParameterRegistrationImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
 		ResultSet resultSet;
-		int refCursorParamIndex = ( (ProcedureCurrentReturnDescriptor) returnDescriptor ).refCursorParamIndex;
-		ParameterRegistrationImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
 		if ( refCursorParam.getName() != null ) {
 			resultSet = procedureCall.getSession().getFactory().getServiceRegistry()
 					.getService( RefCursorSupport.class )

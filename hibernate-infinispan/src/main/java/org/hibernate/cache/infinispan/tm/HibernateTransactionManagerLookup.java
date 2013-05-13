@@ -29,7 +29,8 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * HibernateTransactionManagerLookup.
+ * Hibernate transaction manager lookup class for Infinispan, so that
+ * Hibernate's transaction manager can be hooked onto Infinispan.
  *
  * @author Galder Zamarreño
  * @since 3.5
@@ -37,6 +38,12 @@ import org.hibernate.service.ServiceRegistry;
 public class HibernateTransactionManagerLookup implements org.infinispan.transaction.lookup.TransactionManagerLookup {
 	private final JtaPlatform jtaPlatform;
 
+   /**
+    * Transaction manager lookup constructor.
+    *
+    * @param settings for the Hibernate application
+    * @param properties for the Hibernate application
+    */
 	public HibernateTransactionManagerLookup(Settings settings, Properties properties) {
 		this.jtaPlatform = settings != null ? settings.getJtaPlatform() : null;
 	}

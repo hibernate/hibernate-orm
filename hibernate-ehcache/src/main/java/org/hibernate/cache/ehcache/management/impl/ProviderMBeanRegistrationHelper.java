@@ -24,7 +24,6 @@
 package org.hibernate.cache.ehcache.management.impl;
 
 import java.lang.reflect.Field;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TimerTask;
@@ -116,7 +115,7 @@ public class ProviderMBeanRegistrationHelper {
 					throw new CacheException( e );
 				}
 			}
-			SessionFactory sessionFactory = locateSessionFactory();
+			final SessionFactory sessionFactory = locateSessionFactory();
 			if ( sessionFactory == null ) {
 				LOG.debug(
 						"SessionFactory is probably still being initialized..."
@@ -130,7 +129,6 @@ public class ProviderMBeanRegistrationHelper {
 					);
 					this.cancel();
 				}
-				return;
 			}
 			else {
 				ehcacheHibernateMBeanRegistration.enableHibernateStatisticsSupport( sessionFactory );
@@ -140,29 +138,25 @@ public class ProviderMBeanRegistrationHelper {
 		}
 
 		private SessionFactory locateSessionFactory() {
-			String jndiName = properties.getProperty( Environment.SESSION_FACTORY_NAME );
+			final String jndiName = properties.getProperty( Environment.SESSION_FACTORY_NAME );
 			if ( jndiName != null ) {
 				return SessionFactoryRegistry.INSTANCE.getNamedSessionFactory( jndiName );
 			}
 			try {
-				Class factoryType = SessionFactoryRegistry.class;
-				Field instancesField = getField( factoryType, "sessionFactoryMap" );
-				if ( instancesField == null ) {
-					throw new RuntimeException( "Expected 'sessionFactoryMap' field on " + SessionFactoryRegistry.class.getName() );
-				}
+				final Class factoryType = SessionFactoryRegistry.class;
+				final Field instancesField = getField( factoryType, "sessionFactoryMap" );
 				instancesField.setAccessible( true );
-				Map map = (Map) instancesField.get( SessionFactoryRegistry.INSTANCE );
+				final Map map = (Map) instancesField.get( SessionFactoryRegistry.INSTANCE );
 				if ( map == null ) {
 					return null;
 				}
-				Iterator values = map.values().iterator();
-				while ( values.hasNext() ) {
-					SessionFactory sessionFactory = (SessionFactory) values.next();
-					Class sessionFactoryType = sessionFactory.getClass();
-					Field propertiesField = getField( sessionFactoryType, "properties" );
+				for ( Object o : map.values() ) {
+					final SessionFactory sessionFactory = (SessionFactory) o;
+					final Class sessionFactoryType = sessionFactory.getClass();
+					final Field propertiesField = getField( sessionFactoryType, "properties" );
 					if ( propertiesField != null ) {
 						propertiesField.setAccessible( true );
-						Properties props = (Properties) propertiesField.get( sessionFactory );
+						final Properties props = (Properties) propertiesField.get( sessionFactory );
 						if ( props != null && props.equals( properties ) ) {
 							return sessionFactory;
 						}

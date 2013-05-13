@@ -34,6 +34,12 @@ import org.infinispan.commands.module.ModuleCommandInitializer;
  */
 public class CacheCommandInitializer implements ModuleCommandInitializer {
 
+   /**
+    * Build an instance of {@link EvictAllCommand} for a given region.
+    *
+    * @param regionName name of region for {@link EvictAllCommand}
+    * @return a new instance of {@link EvictAllCommand}
+    */
 	public EvictAllCommand buildEvictAllCommand(String regionName) {
 		// No need to pass region factory because no information on that object
 		// is sent around the cluster. However, when the command factory builds

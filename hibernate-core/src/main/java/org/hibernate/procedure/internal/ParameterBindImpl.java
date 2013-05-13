@@ -36,11 +36,11 @@ public class ParameterBindImpl<T> implements ParameterBind<T> {
 	private final T value;
 	private final TemporalType explicitTemporalType;
 
-	public ParameterBindImpl(T value) {
+	ParameterBindImpl(T value) {
 		this( value, null );
 	}
 
-	public ParameterBindImpl(T value, TemporalType explicitTemporalType) {
+	ParameterBindImpl(T value, TemporalType explicitTemporalType) {
 		this.value = value;
 		this.explicitTemporalType = explicitTemporalType;
 	}

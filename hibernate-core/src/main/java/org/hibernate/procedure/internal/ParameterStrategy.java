@@ -27,7 +27,16 @@ package org.hibernate.procedure.internal;
  * The style/strategy of parameter registration used in a particular procedure call definition.
  */
 public enum ParameterStrategy {
+	/**
+	 * The parameters are named
+	 */
 	NAMED,
+	/**
+	 * The parameters are positional
+	 */
 	POSITIONAL,
+	/**
+	 * We do not (yet) know
+	 */
 	UNKNOWN
 }

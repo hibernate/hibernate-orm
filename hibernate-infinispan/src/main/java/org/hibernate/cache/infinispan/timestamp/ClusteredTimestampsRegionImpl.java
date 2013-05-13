@@ -56,6 +56,13 @@ public class ClusteredTimestampsRegionImpl extends TimestampsRegionImpl {
 	 */
 	private final Map localCache = new ConcurrentHashMap();
 
+   /**
+    * Clustered timestamps region constructor.
+    *
+    * @param cache instance to store update timestamps
+    * @param name of the update timestamps region
+    * @param factory for the update timestamps region
+    */
 	public ClusteredTimestampsRegionImpl(
 			AdvancedCache cache,
 			String name, RegionFactory factory) {

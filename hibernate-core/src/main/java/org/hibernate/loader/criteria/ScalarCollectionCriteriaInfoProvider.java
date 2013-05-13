@@ -36,32 +36,36 @@ import org.hibernate.type.Type;
  */
 
 class ScalarCollectionCriteriaInfoProvider implements CriteriaInfoProvider {
-    String role;
-    QueryableCollection persister;
-    SessionFactoryHelper helper;
+	private final String role;
+	private final QueryableCollection persister;
+	private final SessionFactoryHelper helper;
 
-    ScalarCollectionCriteriaInfoProvider(SessionFactoryHelper helper, String role) {
-	this.role = role;
-	this.helper = helper;
-	this.persister = helper.requireQueryableCollection(role);
-    }
+	ScalarCollectionCriteriaInfoProvider(SessionFactoryHelper helper, String role) {
+		this.role = role;
+		this.helper = helper;
+		this.persister = helper.requireQueryableCollection( role );
+	}
 
-    public String getName() {
-	return role;
-    }
+	@Override
+	public String getName() {
+		return role;
+	}
 
-    public Serializable[] getSpaces() {
-	return persister.getCollectionSpaces();
-    }
+	@Override
+	public Serializable[] getSpaces() {
+		return persister.getCollectionSpaces();
+	}
 
-    public PropertyMapping getPropertyMapping() {
-	return helper.getCollectionPropertyMapping(role);
-    }
+	@Override
+	public PropertyMapping getPropertyMapping() {
+		return helper.getCollectionPropertyMapping( role );
+	}
 
-    public Type getType(String relativePath) {
-	//not sure what things are going to be passed here, how about 'id', maybe 'index' or 'key' or 'elements' ???
-	// todo: wtf!
-	return getPropertyMapping().toType(relativePath);
-    }
+	@Override
+	public Type getType(String relativePath) {
+		//not sure what things are going to be passed here, how about 'id', maybe 'index' or 'key' or 'elements' ???
+		// todo: wtf!
+		return getPropertyMapping().toType( relativePath );
+	}
 
 }

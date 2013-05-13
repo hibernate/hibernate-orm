@@ -414,7 +414,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
 		if ( persistentClass.isPolymorphic() ) {
-			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
+			addSubclassByDiscriminatorValue( discriminatorValue, getEntityName() );
 		}
 
 		// SUBCLASSES
@@ -425,15 +425,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				Subclass sc = (Subclass) iter.next();
 				subclassClosure[k++] = sc.getEntityName();
 				if ( sc.isDiscriminatorValueNull() ) {
-					subclassesByDiscriminatorValue.put( NULL_DISCRIMINATOR, sc.getEntityName() );
+					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, sc.getEntityName() );
 				}
 				else if ( sc.isDiscriminatorValueNotNull() ) {
-					subclassesByDiscriminatorValue.put( NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
+					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, sc.getEntityName() );
 				}
 				else {
 					try {
 						DiscriminatorType dtype = (DiscriminatorType) discriminatorType;
-						subclassesByDiscriminatorValue.put(
+						addSubclassByDiscriminatorValue(
 							dtype.stringToObject( sc.getDiscriminatorValue() ),
 							sc.getEntityName()
 						);
@@ -455,7 +455,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		postConstruct(mapping);
 
 	}
-	@SuppressWarnings( {"UnusedDeclaration"})
+
+	private void addSubclassByDiscriminatorValue(Object discriminatorValue, String entityName) {
+		String mappedEntityName = (String) subclassesByDiscriminatorValue.put( discriminatorValue, entityName );
+		if ( mappedEntityName != null ) {
+			throw new MappingException(
+					"Entities [" + entityName + "] and [" + mappedEntityName
+							+ "] are mapped with the same discriminator value '" + discriminatorValue + "'."
+			);
+		}
+	}
+
 	public SingleTableEntityPersister(
 			final EntityBinding entityBinding,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
@@ -711,7 +721,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		subclassClosure = new String[subclassSpan];
 		subclassClosure[0] = getEntityName();
 		if ( entityBinding.isPolymorphic() ) {
-			subclassesByDiscriminatorValue.put( discriminatorValue, getEntityName() );
+			addSubclassByDiscriminatorValue( discriminatorValue, getEntityName() );
 		}
 
 		// SUBCLASSES
@@ -720,15 +730,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			for ( EntityBinding subEntityBinding : entityBinding.getPostOrderSubEntityBindingClosure() ) {
 				subclassClosure[k++] = subEntityBinding.getEntity().getName();
 				if ( subEntityBinding.isDiscriminatorMatchValueNull() ) {
-					subclassesByDiscriminatorValue.put( NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
+					addSubclassByDiscriminatorValue( NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
 				}
 				else if ( subEntityBinding.isDiscriminatorMatchValueNotNull() ) {
-					subclassesByDiscriminatorValue.put( NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
+					addSubclassByDiscriminatorValue( NOT_NULL_DISCRIMINATOR, subEntityBinding.getEntity().getName() );
 				}
 				else {
 					try {
 						DiscriminatorType dtype = (DiscriminatorType) discriminatorType;
-						subclassesByDiscriminatorValue.put(
+						addSubclassByDiscriminatorValue(
 							dtype.stringToObject( subEntityBinding.getDiscriminatorMatchValue() ),
 							subEntityBinding.getEntity().getName()
 						);

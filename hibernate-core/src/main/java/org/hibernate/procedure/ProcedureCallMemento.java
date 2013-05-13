@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,27 +21,43 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.build.qalab
+package org.hibernate.procedure;
 
-import org.hibernate.build.gradle.testing.database.DatabaseProfile
+import java.util.Map;
+
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
+ * Represents a "memento" of a ProcedureCall
+ *
  * @author Steve Ebersole
  */
-class DisabledDatabaseAllocation implements DatabaseAllocation {
-    private final DatabaseProfile databaseProfile;
+public interface ProcedureCallMemento {
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	public ProcedureCall makeProcedureCall(Session session);
 
-    DisabledDatabaseAllocation(DatabaseProfile databaseProfile) {
-        this.databaseProfile = databaseProfile;
-    }
+	/**
+	 * Convert the memento back into an executable (connected) form.
+	 *
+	 * @param session The session to connect the procedure call to
+	 *
+	 * @return The executable call
+	 */
+	public ProcedureCall makeProcedureCall(SessionImplementor session);
 
-    @Override
-    Map<String, String> getProperties() {
-        return databaseProfile.hibernateProperties;
-    }
-
-    @Override
-    void release() {
-        // nothing to do
-    }
+	/**
+	 * Access to any hints associated with the memento.
+	 * <p/>
+	 * IMPL NOTE : exposed separately because only HEM needs access to this.
+	 *
+	 * @return The hints.
+	 */
+	public Map<String, Object> getHintsMap();
 }

@@ -63,7 +63,8 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 	/**
 	 * Constructor accepting the backing {@link CacheManager}
 	 *
-	 * @throws javax.management.NotCompliantMBeanException
+	 * @param manager The {@link CacheManager} to expose stats for
+	 * @throws javax.management.NotCompliantMBeanException should registering the MBean fail
 	 */
 	public EhcacheStatsImpl(CacheManager manager) throws NotCompliantMBeanException {
 		super( EhcacheStats.class );
@@ -71,79 +72,60 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		this.cacheManager = manager;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isStatisticsEnabled() {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void clearStats() {
 		sampledCacheManager.clearStatistics();
 		statsSince = System.currentTimeMillis();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void disableStats() {
 		setStatisticsEnabled( false );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void enableStats() {
 		setStatisticsEnabled( true );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void flushRegionCache(String region) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.flush();
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void flushRegionCaches() {
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = this.cacheManager.getCache( name );
+			final Cache cache = this.cacheManager.getCache( name );
 			if ( cache != null ) {
 				cache.flush();
 			}
 		}
-
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String generateActiveConfigDeclaration() {
 		return this.cacheManager.getActiveConfigurationText();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String generateActiveConfigDeclaration(String region) {
 		return this.cacheManager.getActiveConfigurationText( region );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getCacheHitCount() {
 		long count = 0;
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				count += cache.getLiveCacheStatistics().getCacheHitCount();
 			}
@@ -151,22 +133,18 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public double getCacheHitRate() {
-		long now = System.currentTimeMillis();
-		double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
+		final long now = System.currentTimeMillis();
+		final double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
 		return getCacheHitCount() / deltaSecs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getCacheHitSample() {
 		long count = 0;
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				count += cache.getSampledCacheStatistics().getCacheHitMostRecentSample();
 			}
@@ -174,13 +152,11 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getCacheMissCount() {
 		long count = 0;
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				count += cache.getLiveCacheStatistics().getCacheMissCount();
 			}
@@ -188,22 +164,18 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public double getCacheMissRate() {
-		long now = System.currentTimeMillis();
-		double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
+		final long now = System.currentTimeMillis();
+		final double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
 		return getCacheMissCount() / deltaSecs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getCacheMissSample() {
 		long count = 0;
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				count += cache.getSampledCacheStatistics().getCacheMissMostRecentSample();
 			}
@@ -211,13 +183,11 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getCachePutCount() {
 		long count = 0;
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				count += cache.getLiveCacheStatistics().getPutCount();
 			}
@@ -225,22 +195,18 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public double getCachePutRate() {
-		long now = System.currentTimeMillis();
-		double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
+		final long now = System.currentTimeMillis();
+		final double deltaSecs = (double) (now - statsSince) / MILLIS_PER_SECOND;
 		return getCachePutCount() / deltaSecs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getCachePutSample() {
 		long count = 0;
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				count += cache.getSampledCacheStatistics().getCacheElementPutMostRecentSample();
 			}
@@ -248,36 +214,28 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return count;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getOriginalConfigDeclaration() {
 		return this.cacheManager.getOriginalConfigurationText();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getOriginalConfigDeclaration(String region) {
 		return this.cacheManager.getOriginalConfigurationText( region );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Map<String, Map<String, Object>> getRegionCacheAttributes() {
-		Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
+		final Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
 		for ( String regionName : this.cacheManager.getCacheNames() ) {
 			result.put( regionName, getRegionCacheAttributes( regionName ) );
 		}
 		return result;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Map<String, Object> getRegionCacheAttributes(String regionName) {
-		Map<String, Object> result = new HashMap<String, Object>();
+		final Map<String, Object> result = new HashMap<String, Object>();
 		result.put( "Enabled", isRegionCacheEnabled( regionName ) );
 		result.put( "LoggingEnabled", isRegionCacheLoggingEnabled( regionName ) );
 		result.put( "MaxTTISeconds", getRegionCacheMaxTTISeconds( regionName ) );
@@ -289,11 +247,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return result;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getRegionCacheMaxTTISeconds(String region) {
-		Cache cache = cacheManager.getCache( region );
+		final Cache cache = cacheManager.getCache( region );
 		if ( cache != null ) {
 			return (int) cache.getCacheConfiguration().getTimeToIdleSeconds();
 		}
@@ -302,11 +258,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getRegionCacheMaxTTLSeconds(String region) {
-		Cache cache = cacheManager.getCache( region );
+		final Cache cache = cacheManager.getCache( region );
 		if ( cache != null ) {
 			return (int) cache.getCacheConfiguration().getTimeToLiveSeconds();
 		}
@@ -315,11 +269,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getRegionCacheOrphanEvictionPeriod(String region) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null && cache.isTerracottaClustered() ) {
 			return cache.getCacheConfiguration().getTerracottaConfiguration().getOrphanEvictionPeriod();
 		}
@@ -328,13 +280,11 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Map<String, int[]> getRegionCacheSamples() {
-		Map<String, int[]> rv = new HashMap<String, int[]>();
+		final Map<String, int[]> rv = new HashMap<String, int[]>();
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				rv.put(
 						name, new int[] {
@@ -349,11 +299,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return rv;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getRegionCacheTargetMaxInMemoryCount(String region) {
-		Cache cache = cacheManager.getCache( region );
+		final Cache cache = cacheManager.getCache( region );
 		if ( cache != null ) {
 			return cache.getCacheConfiguration().getMaxElementsInMemory();
 		}
@@ -362,11 +310,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getRegionCacheTargetMaxTotalCount(String region) {
-		Cache cache = cacheManager.getCache( region );
+		final Cache cache = cacheManager.getCache( region );
 		if ( cache != null ) {
 			return cache.getCacheConfiguration().getMaxElementsOnDisk();
 		}
@@ -375,52 +321,39 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] getTerracottaHibernateCacheRegionNames() {
-		ArrayList<String> rv = new ArrayList<String>();
+		final ArrayList<String> rv = new ArrayList<String>();
 		for ( String name : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( name );
+			final Cache cache = cacheManager.getCache( name );
 			if ( cache != null ) {
 				if ( cache.getCacheConfiguration().isTerracottaClustered() ) {
 					rv.add( name );
 				}
 			}
 		}
-		return rv.toArray( new String[] {} );
+		return rv.toArray( new String[ rv.size() ] );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isRegionCacheEnabled(String region) {
-		Cache cache = this.cacheManager.getCache( region );
-		if ( cache != null ) {
-			return !cache.isDisabled();
-		}
-		else {
-			return false;
-		}
+		final Cache cache = this.cacheManager.getCache( region );
+		return cache != null && !cache.isDisabled();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setRegionCacheEnabled(String region, boolean enabled) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.setDisabled( !enabled );
 		}
 		sendNotification( CACHE_REGION_CHANGED, getRegionCacheAttributes( region ), region );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isRegionCachesEnabled() {
 		for ( String name : this.cacheManager.getCacheNames() ) {
-			Cache cache = this.cacheManager.getCache( name );
+			final Cache cache = this.cacheManager.getCache( name );
 			if ( cache != null ) {
 				if ( cache.isDisabled() ) {
 					return false;
@@ -430,12 +363,10 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return true;
 	}
 
-	/**
-	 * @see EhcacheStats#setRegionCachesEnabled(boolean)
-	 */
+	@Override
 	public void setRegionCachesEnabled(final boolean flag) {
 		for ( String name : this.cacheManager.getCacheNames() ) {
-			Cache cache = this.cacheManager.getCache( name );
+			final Cache cache = this.cacheManager.getCache( name );
 			if ( cache != null ) {
 				cache.setDisabled( !flag );
 			}
@@ -443,107 +374,74 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		sendNotification( CACHE_ENABLED, flag );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isRegionCacheLoggingEnabled(String region) {
-		Cache cache = this.cacheManager.getCache( region );
-		if ( cache != null ) {
-			return cache.getCacheConfiguration().getLogging();
-		}
-		else {
-			return false;
-		}
+		final Cache cache = this.cacheManager.getCache( region );
+		return cache != null && cache.getCacheConfiguration().getLogging();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isRegionCacheOrphanEvictionEnabled(String region) {
-		Cache cache = this.cacheManager.getCache( region );
-		if ( cache != null && cache.isTerracottaClustered() ) {
-			return cache.getCacheConfiguration().getTerracottaConfiguration().getOrphanEviction();
-		}
-		else {
-			return false;
-		}
+		final Cache cache = this.cacheManager.getCache( region );
+		return cache != null && cache.isTerracottaClustered() && cache.getCacheConfiguration()
+				.getTerracottaConfiguration()
+				.getOrphanEviction();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isTerracottaHibernateCache(String region) {
-		Cache cache = cacheManager.getCache( region );
-		if ( cache != null ) {
-			return cache.getCacheConfiguration().isTerracottaClustered();
-		}
-		else {
-			return false;
-		}
+		final Cache cache = cacheManager.getCache( region );
+		return cache != null && cache.getCacheConfiguration().isTerracottaClustered();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setRegionCacheLoggingEnabled(String region, boolean loggingEnabled) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.getCacheConfiguration().setLogging( loggingEnabled );
 			sendNotification( CACHE_REGION_CHANGED, getRegionCacheAttributes( region ), region );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setRegionCacheMaxTTISeconds(String region, int maxTTISeconds) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.getCacheConfiguration().setTimeToIdleSeconds( maxTTISeconds );
 			sendNotification( CACHE_REGION_CHANGED, getRegionCacheAttributes( region ), region );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setRegionCacheMaxTTLSeconds(String region, int maxTTLSeconds) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.getCacheConfiguration().setTimeToLiveSeconds( maxTTLSeconds );
 			sendNotification( CACHE_REGION_CHANGED, getRegionCacheAttributes( region ), region );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setRegionCacheTargetMaxInMemoryCount(String region, int targetMaxInMemoryCount) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.getCacheConfiguration().setMaxElementsInMemory( targetMaxInMemoryCount );
 			sendNotification( CACHE_REGION_CHANGED, getRegionCacheAttributes( region ), region );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setRegionCacheTargetMaxTotalCount(String region, int targetMaxTotalCount) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			cache.getCacheConfiguration().setMaxElementsOnDisk( targetMaxTotalCount );
 			sendNotification( CACHE_REGION_CHANGED, getRegionCacheAttributes( region ), region );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see EhcacheStats#getNumberOfElementsInMemory(java.lang.String)
-	 */
+	@Override
 	public int getNumberOfElementsInMemory(String region) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			return (int) cache.getMemoryStoreSize();
 		}
@@ -552,13 +450,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see EhcacheStats#getNumberOfElementsOffHeap(java.lang.String)
-	 */
+	@Override
 	public int getNumberOfElementsOffHeap(String region) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			return (int) cache.getOffHeapStoreSize();
 		}
@@ -567,13 +461,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see EhcacheStats#getNumberOfElementsOnDisk(java.lang.String)
-	 */
+	@Override
 	public int getNumberOfElementsOnDisk(String region) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			return cache.getDiskStoreSize();
 		}
@@ -582,12 +472,10 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setStatisticsEnabled(boolean flag) {
 		for ( String cacheName : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( cacheName );
+			final Cache cache = cacheManager.getCache( cacheName );
 			if ( cache != null ) {
 				cache.setStatisticsEnabled( flag );
 			}
@@ -598,13 +486,11 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		sendNotification( CACHE_STATISTICS_ENABLED, flag );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getMaxGetTimeMillis() {
 		long rv = 0;
 		for ( String cacheName : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( cacheName );
+			final Cache cache = cacheManager.getCache( cacheName );
 			if ( cache != null ) {
 				rv = Math.max( rv, cache.getLiveCacheStatistics().getMaxGetTimeMillis() );
 			}
@@ -612,13 +498,11 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return rv;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public long getMinGetTimeMillis() {
 		long rv = 0;
 		for ( String cacheName : cacheManager.getCacheNames() ) {
-			Cache cache = cacheManager.getCache( cacheName );
+			final Cache cache = cacheManager.getCache( cacheName );
 			if ( cache != null ) {
 				rv = Math.max( rv, cache.getLiveCacheStatistics().getMinGetTimeMillis() );
 			}
@@ -626,13 +510,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		return rv;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see EhcacheStats#getMaxGetTimeMillis(java.lang.String)
-	 */
+	@Override
 	public long getMaxGetTimeMillis(String cacheName) {
-		Cache cache = cacheManager.getCache( cacheName );
+		final Cache cache = cacheManager.getCache( cacheName );
 		if ( cache != null ) {
 			return cache.getLiveCacheStatistics().getMaxGetTimeMillis();
 		}
@@ -641,13 +521,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see EhcacheStats#getMinGetTimeMillis(java.lang.String)
-	 */
+	@Override
 	public long getMinGetTimeMillis(String cacheName) {
-		Cache cache = cacheManager.getCache( cacheName );
+		final Cache cache = cacheManager.getCache( cacheName );
 		if ( cache != null ) {
 			return cache.getLiveCacheStatistics().getMinGetTimeMillis();
 		}
@@ -656,13 +532,9 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * @see EhcacheStats#getAverageGetTimeMillis(java.lang.String)
-	 */
+	@Override
 	public float getAverageGetTimeMillis(String region) {
-		Cache cache = this.cacheManager.getCache( region );
+		final Cache cache = this.cacheManager.getCache( region );
 		if ( cache != null ) {
 			return cache.getLiveCacheStatistics().getAverageGetTimeMillis();
 		}
@@ -671,17 +543,11 @@ public class EhcacheStatsImpl extends AbstractEmitterBean implements EhcacheStat
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void doDispose() {
 		// no-op
 	}
 
-	/**
-	 * @see AbstractEmitterBean#getNotificationInfo()
-	 */
 	@Override
 	public MBeanNotificationInfo[] getNotificationInfo() {
 		return new MBeanNotificationInfo[] {NOTIFICATION_INFO};

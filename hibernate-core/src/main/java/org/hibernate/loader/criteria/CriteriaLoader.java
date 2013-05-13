@@ -125,23 +125,23 @@ public class CriteriaLoader extends OuterJoinLoader {
 		return list( session, translator.getQueryParameters(), querySpaces, resultTypes );
 
 	}
-
+	@Override
 	protected String[] getResultRowAliases() {
 		return userAliases;
 	}
-
+	@Override
 	protected ResultTransformer resolveResultTransformer(ResultTransformer resultTransformer) {
 		return translator.getRootCriteria().getResultTransformer();
 	}
-
+	@Override
 	protected boolean areResultSetRowsTransformedImmediately() {
 		return true;
 	}
-
+	@Override
 	protected boolean[] includeInResultRow() {
 		return includeInResultRow;
 	}
-
+	@Override
 	protected Object getResultColumnOrRow(Object[] row, ResultTransformer transformer, ResultSet rs, SessionImplementor session)
 	throws SQLException, HibernateException {
 		return resolveResultTransformer( transformer ).transformTuple(
@@ -149,7 +149,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 				getResultRowAliases()
 		);
 	}
-			
+	@Override
 	protected Object[] getResultRow(Object[] row, ResultSet rs, SessionImplementor session)
 			throws SQLException, HibernateException {
 		final Object[] result;
@@ -249,7 +249,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 	}
 
 
-
+	@Override
 	protected LockMode determineFollowOnLockMode(LockOptions lockOptions) {
 		final LockMode lockModeToUse = lockOptions.findGreatestLockMode();
 
@@ -260,7 +260,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 		return lockModeToUse;
 	}
-
+	@Override
 	protected LockMode[] getLockModes(LockOptions lockOptions) {
 		final String[] entityAliases = getAliases();
 		if ( entityAliases == null ) {
@@ -274,15 +274,15 @@ public class CriteriaLoader extends OuterJoinLoader {
 		}
 		return lockModesArray;
 	}
-
+	@Override
 	protected boolean isSubselectLoadingEnabled() {
 		return hasSubselectLoadableCollections();
 	}
-
+	@Override
 	protected List getResultList(List results, ResultTransformer resultTransformer) {
 		return resolveResultTransformer( resultTransformer ).transformList( results );
 	}
-	
+	@Override
 	protected String getQueryIdentifier() { 
 		return "[CRITERIA] " + getSQLString(); 
 	}

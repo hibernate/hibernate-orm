@@ -26,6 +26,7 @@ package org.hibernate;
 import java.io.Serializable;
 
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureCallMemento;
 
 /**
  * Contract methods shared between {@link Session} and {@link StatelessSession}.
@@ -85,6 +86,17 @@ public interface SharedSessionContract extends Serializable {
 	 * @return The query instance for manipulation and execution
 	 */
 	public SQLQuery createSQLQuery(String queryString);
+
+	/**
+	 * Gets a ProcedureCall based on a named template
+	 *
+	 * @param name The name given to the template
+	 *
+	 * @return The ProcedureCall
+	 *
+	 * @see javax.persistence.NamedStoredProcedureQuery
+	 */
+	public ProcedureCall getNamedProcedureCall(String name);
 
 	/**
 	 * Creates a call to a stored procedure.
@@ -154,5 +166,4 @@ public interface SharedSessionContract extends Serializable {
 	 * @return The criteria instance for manipulation and execution
 	 */
 	public Criteria createCriteria(String entityName, String alias);
-
 }

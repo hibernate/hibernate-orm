@@ -455,7 +455,10 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 
 		private Enum fromName(String name) {
 			try {
-				return Enum.valueOf( enumClass, name );
+			    if(name == null) {
+			        return null;
+			    }
+				return Enum.valueOf( enumClass, name.trim() );
 			}
 			catch ( IllegalArgumentException iae ) {
 				throw new IllegalArgumentException(

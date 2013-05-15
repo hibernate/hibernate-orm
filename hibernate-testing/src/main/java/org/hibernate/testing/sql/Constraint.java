@@ -21,16 +21,58 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public abstract class Constraint extends AbstractSqlObject implements NamedObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public Name name;
+
+	public abstract List< Reference > columns();
+
+	Constraint( SqlObject parent ) {
+		super( parent );
 	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.NamedObject#name()
+	 */
+	@Override
+	public Name name() {
+		return name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.NamedObject#setName(org.hibernate.testing.sql.Name)
+	 */
+	@Override
+	public void setName( Name name ) {
+		this.name = name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		if ( name != null ) {
+			builder.append( "CONSTRAINT " ).append( name ).append( ' ' );
+		}
+		builder.append( type() ).append( ' ' );
+		collectionToStringInParentheses( builder, columns() );
+		return builder.toString();
+	}
+
+	public abstract String type();
 }

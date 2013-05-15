@@ -21,16 +21,50 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class CreateIndex extends DdlStatement implements NamedObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public Name name;
+	public Reference table;
+	public List< Reference > columns = new ArrayList< Reference >();
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.NamedObject#name()
+	 */
+	@Override
+	public Name name() {
+		return name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.NamedObject#setName(org.hibernate.testing.sql.Name)
+	 */
+	@Override
+	public void setName( Name name ) {
+		this.name = name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder( "CREATE INDEX " );
+		builder.append( name ).append( " ON " ).append( table ).append( ' ' );
+		collectionToStringInParentheses( builder, columns );
+		return builder.toString();
 	}
 }

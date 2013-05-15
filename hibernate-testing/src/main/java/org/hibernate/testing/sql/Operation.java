@@ -21,16 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public abstract class Operation extends AbstractSqlObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public String operator;
+	public int precedence;
+	public List< SqlObject > operands;
+
+	Operation( SqlObject parent, String operator, int precedence ) {
+		super( parent );
+		this.operator = operator;
+		this.precedence = precedence;
+		operands = constructOperandList();
 	}
+
+	protected List< SqlObject > constructOperandList() {
+		return new ArrayList< SqlObject >();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public abstract String toString();
 }

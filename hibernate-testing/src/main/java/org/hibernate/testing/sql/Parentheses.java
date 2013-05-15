@@ -21,16 +21,24 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class Parentheses extends UnaryOperation {
 
-	FailureExpectedStatement() {
-		super( null );
+	Parentheses( SqlObject parent, String operator, int precedence ) {
+		super( parent, operator, precedence );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "( " + ( operands.isEmpty() ? "" : operands.get( 0 ) ) + " )";
 	}
 }

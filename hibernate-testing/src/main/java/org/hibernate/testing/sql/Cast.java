@@ -21,16 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class Cast extends Function {
 
-	FailureExpectedStatement() {
-		super( null );
+	Cast( SqlObject parent, String name ) {
+		super( parent, name );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sqlparser.Function#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder( name );
+		builder.append( "( " );
+		if ( !parameters.isEmpty() ) {
+			builder.append( parameters.get( 0 ) );
+		}
+		builder.append( " AS " );
+		if ( parameters.size() > 1 ) {
+			builder.append( parameters.get( 1 ) );
+		}
+		builder.append( " )" );
+		return builder.toString();
 	}
 }

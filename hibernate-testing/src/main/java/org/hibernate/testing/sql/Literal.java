@@ -21,16 +21,54 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class Literal extends AbstractSqlObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public static String unquoted( String text ) {
+		StringBuilder builder = new StringBuilder();
+		char chr;
+		char prevChr = '\0';
+		char quote = '\0';
+		for ( int ndx = 0, len = text.length(); ndx < len; ++ndx, prevChr = chr ) {
+			chr = text.charAt( ndx );
+			if ( quote == '\0' ) {
+				if ( chr == '\'' || chr == '"' ) {
+					quote = chr;
+					continue;
+				}
+			} else if ( chr == quote ) {
+				if ( chr == '"' || prevChr != '\'' ) {
+					continue;
+				}
+				builder.append( '\'' );
+			}
+			builder.append( chr );
+		}
+		return builder.toString();
+	}
+
+	public String text;
+
+	Literal( SqlObject parent, String text ) {
+		super( parent );
+		this.text = text;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return text;
+	}
+
+	public String unquoted() {
+		return unquoted( text );
 	}
 }

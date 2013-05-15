@@ -21,16 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class AlterTable extends DdlStatement {
 
-	FailureExpectedStatement() {
-		super( null );
+	public Reference table;
+	public Constraint constraint;
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder( "ALTER TABLE " );
+		builder.append( table ).append( " ADD " ).append( constraint );
+		return builder.toString();
 	}
 }

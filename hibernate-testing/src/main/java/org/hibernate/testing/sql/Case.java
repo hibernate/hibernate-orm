@@ -21,16 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class Case extends UnaryOperation {
 
-	FailureExpectedStatement() {
-		super( null );
+	public SqlObject expression;
+
+	Case( SqlObject parent, String operator, int precedence ) {
+		super( parent, operator, precedence );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.UnaryOperation#constructOperandList()
+	 */
+	@Override
+	protected List< SqlObject > constructOperandList() {
+		return new OptionallyOrderedSet< SqlObject >();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder( operator );
+		if ( expression != null ) {
+			builder.append( ' ' ).append( expression );
+		}
+		for ( SqlObject operand : operands ) {
+			builder.append( ' ' ).append( operand );
+		}
+		builder.append( " END" );
+		return builder.toString();
 	}
 }

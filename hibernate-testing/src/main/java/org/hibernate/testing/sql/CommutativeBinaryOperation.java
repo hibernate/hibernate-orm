@@ -21,16 +21,47 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class CommutativeBinaryOperation extends BinaryOperation {
 
-	FailureExpectedStatement() {
-		super( null );
+	CommutativeBinaryOperation( SqlObject parent, String operator, int precedence ) {
+		super( parent, operator, precedence );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.UnaryOperation#constructOperandList()
+	 */
+	@Override
+	protected List< SqlObject > constructOperandList() {
+		return new OptionallyOrderedSet< SqlObject >();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		if ( operands.isEmpty() ) {
+			builder.append( operator );
+		} else {
+			Iterator< SqlObject > iter = operands.iterator();
+			builder.append( iter.next() );
+			while ( iter.hasNext() ) {
+				builder.append( ' ' ).append( operator ).append( ' ' ).append( iter.next() );
+			}
+		}
+		return builder.toString();
 	}
 }

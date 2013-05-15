@@ -21,16 +21,47 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class ParentheticalOptionallyOrderedSet extends Operation {
 
-	FailureExpectedStatement() {
-		super( null );
+	ParentheticalOptionallyOrderedSet( SqlObject parent, Operation parentheses ) {
+		super( parent, parentheses.operator, parentheses.precedence );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.UnaryOperation#constructOperandList()
+	 */
+	@Override
+	protected List< SqlObject > constructOperandList() {
+		return new OptionallyOrderedSet< SqlObject >();
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder( operator );
+		builder.append( ' ' );
+		if ( !operands.isEmpty() ) {
+			Iterator< SqlObject > iter = operands.iterator();
+			builder.append( iter.next() );
+			while ( iter.hasNext() ) {
+				builder.append( ", " ).append( iter.next() );
+			}
+		}
+		builder.append( " )" );
+		return builder.toString();
 	}
 }

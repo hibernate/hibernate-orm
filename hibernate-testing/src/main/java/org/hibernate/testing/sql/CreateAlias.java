@@ -21,16 +21,43 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class CreateAlias extends DdlStatement implements NamedObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public Name name;
+	public String sourceCode;
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.NamedObject#name()
+	 */
+	@Override
+	public Name name() {
+		return name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sql.NamedObject#setName(org.hibernate.testing.sql.Name)
+	 */
+	@Override
+	public void setName( Name name ) {
+		this.name = name;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "CREATE ALIAS " + name + " AS " + sourceCode;
 	}
 }

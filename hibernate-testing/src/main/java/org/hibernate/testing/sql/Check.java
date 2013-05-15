@@ -21,16 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class Check extends Function {
 
-	FailureExpectedStatement() {
-		super( null );
+	Check( SqlObject parent, String name ) {
+		super( parent, name );
 	}
 }

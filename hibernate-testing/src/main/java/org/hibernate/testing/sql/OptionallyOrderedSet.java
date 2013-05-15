@@ -21,16 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.ArrayList;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
-
-	FailureExpectedStatement() {
-		super( null );
-	}
+public class OptionallyOrderedSet< E > extends ArrayList< E > {
 }

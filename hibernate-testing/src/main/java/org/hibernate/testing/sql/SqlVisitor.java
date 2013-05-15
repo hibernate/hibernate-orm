@@ -21,16 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.lang.reflect.Field;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public abstract class SqlVisitor {
 
-	FailureExpectedStatement() {
-		super( null );
+	protected boolean postVisitElements( List< ? > list, SqlObject parent, Field field, int index ) {
+		return true;
+	}
+
+	protected boolean postVisitFields( SqlObject object, SqlObject parent, Field field, int index ) {
+		return true;
+	}
+
+	protected boolean preVisitElements( List< ? > list, SqlObject parent, Field field, int index ) {
+		return true;
+	}
+
+	protected boolean preVisitFields( SqlObject object, SqlObject parent, Field field, int index ) {
+		return true;
+	}
+
+	protected boolean visit( Object object, SqlObject parent, Field field, int index ) {
+		return true;
 	}
 }

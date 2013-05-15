@@ -21,16 +21,17 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class Alias extends Name {
 
-	FailureExpectedStatement() {
-		super( null );
+	Reference reference;
+
+	Alias( SqlObject parent, String text ) {
+		super( parent, text );
 	}
 }

@@ -21,16 +21,37 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class From extends AbstractSqlObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public Aliasable aliasable;
+	public List< Join > joins = new ArrayList< Join >();
+
+	From( SqlObject parent ) {
+		super( parent );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		if ( aliasable != null ) {
+			builder.append( aliasable );
+		}
+		for ( Join join : joins ) {
+			builder.append( ' ' ).append( join );
+		}
+		return builder.toString();
 	}
 }

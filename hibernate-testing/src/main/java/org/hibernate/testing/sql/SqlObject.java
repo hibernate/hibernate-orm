@@ -21,16 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public interface SqlObject {
 
-	FailureExpectedStatement() {
-		super( null );
-	}
+	SqlObject localObjectInScope( String name, boolean ignoreColumns );
+
+	LocalScope localScope();
+
+	SqlObject parent();
+
+	void setParent( SqlObject parent );
+
+	Statement statement();
 }

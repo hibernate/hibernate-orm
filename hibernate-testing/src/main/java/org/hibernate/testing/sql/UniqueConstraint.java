@@ -21,16 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
+package org.hibernate.testing.sql;
 
-import org.hibernate.testing.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public abstract class UniqueConstraint extends Constraint {
 
-	FailureExpectedStatement() {
-		super( null );
+	public List< Reference > columns = new ArrayList< Reference >();
+
+	UniqueConstraint( SqlObject parent ) {
+		super( parent );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see org.hibernate.testing.sqlparser.Constraint#columns()
+	 */
+	@Override
+	public List< Reference > columns() {
+		return columns;
 	}
 }

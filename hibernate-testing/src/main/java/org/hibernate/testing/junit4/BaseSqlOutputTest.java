@@ -27,8 +27,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,14 +36,13 @@ import java.util.Map.Entry;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.sqlparser.Column;
-import org.hibernate.testing.sqlparser.Index;
-import org.hibernate.testing.sqlparser.Insert;
-import org.hibernate.testing.sqlparser.Name;
-import org.hibernate.testing.sqlparser.Sequence;
-import org.hibernate.testing.sqlparser.SqlParser;
-import org.hibernate.testing.sqlparser.Statement;
-import org.hibernate.testing.sqlparser.Table;
+import org.hibernate.testing.sql.Reference;
+import org.hibernate.testing.sql.SqlComparator;
+import org.hibernate.testing.sql.SqlObject;
+import org.hibernate.testing.sql.SqlParser;
+import org.hibernate.testing.sql.SqlVisitor;
+import org.hibernate.testing.sql.SqlWalker;
+import org.hibernate.testing.sql.Statement;
 import org.jboss.logging.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -54,7 +51,9 @@ import org.w3c.dom.Node;
 
 /**
  * <p>
- * The superclass for test classes that test the SQL output of all other test classes within the enclosing project.
+ * The superclass for test classes that test the SQL output of all other test classes within the enclosing project.  SQL output
+ * will only be tested by subclasses of this class if the system property {@value #TEST_SQL_OUTPUT_PROPERTY} is set to
+ * {@code true}.  If not set, these test subclasses will merely pass successfully without testing the output.
  * </p><p>
  * By merely creating a subclass of this class (with no content) within a project, all SQL output from all tests within that
  * project will be verified against an <a href="#ExpectedResultsFile">expected results file</a> stored within the project's
@@ -103,15 +102,12 @@ import org.w3c.dom.Node;
  * <li>{@code DROP}-related statements are ignored.
  * <li>Names may be different, but must still be semantically equivalent.
  * <li>Column names and references within comma-separated lists in SQL (e.g., within {@code CREATE TABLE}, {@code SELECT}, etc.)
- * may appear in any order.
+ * may appear in any order when order is semantically irrelevant.
  * <li>DDL statements may appear in any order, except that {@code ALTER} and {@code CREATE INDEX} statements must appear after
  * the corresponding {@code CREATE} statements for their referenced tables.
  * <li>SQL statements may be output by either @BeforeClass methods or the associated test.
  * <li>Comparisons between test results and expected test results are case-insensitive
  * </ul>
- * </p><p>
- * Execution of subclasses of this class can be globally skipped by setting the system property
- * {@value #SKIP_SQL_OUTPUT_TESTS_PROPERTY} to {@code true}
  * </p>
  */
 public abstract class BaseSqlOutputTest {
@@ -129,34 +125,18 @@ public abstract class BaseSqlOutputTest {
 	private static final String FAILURE_EXPECTED_PATTERN = CUSTOM_RUNNER_PATTERN_PREFIX + FailureExpected.class.getSimpleName()
 			+ ".*";
 	private static final String BEFORE_CLASS_NAME = BeforeClass.class.getSimpleName();
-	private static final Comparator< Object > NAME_COMPARATOR = new Comparator< Object >() {
-
-		@Override
-		public int compare( Object object1, Object object2 ) {
-			Name name1;
-			Name name2;
-			if ( object1 instanceof Column ) {
-				name1 = ( ( Column ) object1 ).name;
-				name2 = ( ( Column ) object2 ).name;
-			} else {
-				name1 = ( ( Name ) object1 );
-				name2 = ( ( Name ) object2 );
-			}
-			return name1.unquoted().compareTo( name2.unquoted() );
-		}
-	};
+	private static final SqlComparator COMPARATOR = new SqlComparator();
 	private static final String MISSING_EXPECTED_SQL = "Missing expected SQL";
 	private static final String UNEXPECTED_SQL = "Unexpected SQL";
 
-	public static final String SKIP_SQL_OUTPUT_TESTS_PROPERTY = "skipSqlOutputTests";
+	public static final String TEST_SQL_OUTPUT_PROPERTY = "testSqlOutput";
 
 	private final SqlParser parser = new SqlParser();
 	private int failures;
 
 	@Test
 	public void testSqlOutput() throws Exception {
-		System.setProperty( SKIP_SQL_OUTPUT_TESTS_PROPERTY, "true" ); // TODO uncomment
-		if ( Boolean.getBoolean( SKIP_SQL_OUTPUT_TESTS_PROPERTY ) ) {
+		if ( !Boolean.getBoolean( TEST_SQL_OUTPUT_PROPERTY ) ) {
 			return;
 		}
 		File outputFolder = new File( "target/test-results" );
@@ -192,10 +172,7 @@ public abstract class BaseSqlOutputTest {
 					sql = sql.substring( 1, sql.length() - 1 );
 				}
 				try {
-					Statement statement = parser.parse( sql );
-					if ( statement != null ) {
-						statements.add( statement );
-					}
+					statements.add( parser.parse( sql ) );
 				} catch ( Exception error ) {
 					fail( error.getMessage() + "\n\tlogged at " + timestamp + " in file: " + outputFile + "\n\tparsing SQL: "
 							+ sql );
@@ -205,28 +182,11 @@ public abstract class BaseSqlOutputTest {
 		}
 	}
 
-	private void compareTest(
-			String qualifiedTest,
-			List< Statement > statements,
-			List< Statement > expectedStatements,
-			Map< String, String > namesByExpectedName ) throws Exception {
+	private void compareTest( List< Statement > statements, List< Statement > expectedStatements ) throws Exception {
 		if ( statements.get( 0 ) instanceof FailureExpectedStatement ) {
 			return;
 		}
-		for ( Iterator< Statement > iter = statements.iterator(); iter.hasNext(); ) {
-			Statement statement = iter.next();
-			for ( Iterator< Statement > expectedIter = expectedStatements.iterator(); expectedIter.hasNext(); ) {
-				Statement expectedStatement = expectedIter.next();
-				if ( equals( statement, expectedStatement, namesByExpectedName ) ) {
-					iter.remove();
-					expectedIter.remove();
-					if ( statement instanceof Table || statement instanceof Sequence || statement instanceof Index ) {
-						map( statement, expectedStatement, namesByExpectedName );
-					}
-					break;
-				}
-			}
-		}
+		COMPARATOR.compare( statements, expectedStatements );
 	}
 
 	private void compareTestClass(
@@ -236,8 +196,7 @@ public abstract class BaseSqlOutputTest {
 			Map< String, List< Statement > > expectedStatementsByTest ) throws Exception {
 		String testClass = outputFile.getName();
 		testClass = testClass.substring( TEST_OUTPUT_FILE_PREFIX.length(), testClass.length() - TEST_OUTPUT_FILE_SUFFIX.length() );
-		Map< String, String > namesByExpectedName = new HashMap< String, String >();
-		namesByExpectedName.put( "?", "?" );
+		COMPARATOR.clear();
 		Map< String, List< Statement > > statementsByTestCopy = copy( statementsByTest );
 		Map< String, List< Statement > > expectedStatementsByTestCopy = copy( expectedStatementsByTest );
 
@@ -250,39 +209,30 @@ public abstract class BaseSqlOutputTest {
 			beforeClassExpectedStatements = new ArrayList< Statement >();
 		}
 		if ( !beforeClassStatements.isEmpty() && !beforeClassExpectedStatements.isEmpty() ) {
-			compareTest(
-					testClass + ".@" + BEFORE_CLASS_NAME,
-					beforeClassStatements,
-					beforeClassExpectedStatements,
-					namesByExpectedName );
+			compareTest( beforeClassStatements, beforeClassExpectedStatements );
 		}
-		for ( Iterator< Entry< String, List< Statement > > > iter = statementsByTestCopy.entrySet().iterator(); iter.hasNext(); ) {
-			Entry< String, List< Statement > > entry = iter.next();
+		for ( Entry< String, List< Statement > > entry : statementsByTestCopy.entrySet() ) {
 			String test = entry.getKey();
-			List< Statement > statements = entry.getValue();
-			statements.addAll( beforeClassStatements );
+			final List< Statement > statements = entry.getValue();
+			if ( statements.get( 0 ) instanceof FailureExpectedStatement ) {
+				continue;
+			}
+			statements.addAll( 0, beforeClassStatements );
 			List< Statement > expectedStatements = expectedStatementsByTestCopy.get( test );
 			if ( expectedStatements == null ) {
 				expectedStatements = new ArrayList< Statement >();
 			}
-			expectedStatements.addAll( beforeClassExpectedStatements );
+			expectedStatements.addAll( 0, beforeClassExpectedStatements );
 			String qualifiedTest = testClass + '.' + test;
 			if ( !expectedStatements.isEmpty() ) {
-				compareTest( qualifiedTest, statements, expectedStatements, namesByExpectedName );
+				compareTest( statements, expectedStatements );
 			}
-			if ( statements.isEmpty() && expectedStatements.isEmpty() ) {
-				iter.remove();
-				expectedStatementsByTestCopy.remove( test );
-			}
+			// Remove unmatched statements that are due to references to other unmatched statements
+			pruneRedundantUnmatchedStatements( statements );
+			pruneRedundantUnmatchedStatements( expectedStatements );
+			failIfNotEmpty( testClass, qualifiedTest, statements, UNEXPECTED_SQL );
+			failIfNotEmpty( testClass, qualifiedTest, expectedStatements, MISSING_EXPECTED_SQL );
 		}
-		if ( !beforeClassStatements.isEmpty() || !beforeClassExpectedStatements.isEmpty() ) {
-			String qualifiedTest = testClass + ".@" + BEFORE_CLASS_NAME;
-			failIfNotEmpty( testClass, qualifiedTest, beforeClassStatements, UNEXPECTED_SQL );
-			failIfNotEmpty( testClass, qualifiedTest, beforeClassExpectedStatements, MISSING_EXPECTED_SQL );
-			return;
-		}
-		failIfNotEmpty( testClass, statementsByTestCopy, UNEXPECTED_SQL );
-		failIfNotEmpty( testClass, expectedStatementsByTestCopy, MISSING_EXPECTED_SQL );
 	}
 
 	private Map< String, List< Statement > > copy( Map< String, List< Statement > > statementsByTest ) {
@@ -293,159 +243,20 @@ public abstract class BaseSqlOutputTest {
 		return copy;
 	}
 
-	private boolean equals( Statement statement, Object expectedObject, Map< String, String > namesByExpectedName )
-		throws Exception {
-		if ( !( statement instanceof Table || statement instanceof Sequence || statement instanceof Index ) ) { // TODO remove
-			return true;
-		}
-		return equals( statement, expectedObject, namesByExpectedName, statement, null );
-	}
-
-	private boolean equals(
-			Object object,
-			Object expectedObject,
-			Map< String, String > namesByExpectedName,
-			Statement statement,
-			Field field ) throws Exception {
-		if ( object == null ) {
-			if ( expectedObject != null ) {
-				return false;
-			}
-			return true;
-		} else if ( expectedObject == null ) {
-			return false;
-		}
-		if ( object.getClass() != expectedObject.getClass() ) {
-			return false;
-		}
-		if ( object instanceof Name ) {
-			if ( statement instanceof Sequence || statement instanceof Table
-					|| ( statement instanceof Index && field.getName().equals( "name" ) ) ) {
-				return true;
-			}
-			return ( ( Name ) object ).unquoted().equalsIgnoreCase(
-					namesByExpectedName.get( ( ( Name ) expectedObject ).unquoted() ) );
-		}
-		if ( object.getClass().getPackage() == Statement.class.getPackage() ) {
-			Field[] fields = object.getClass().getFields();
-			Field[] expectedFields = expectedObject.getClass().getFields();
-			for ( int fldNdx = fields.length; --fldNdx >= 0; ) {
-				Field fld = fields[ fldNdx ];
-				if ( !equals(
-						fld.get( object ),
-						expectedFields[ fldNdx ].get( expectedObject ),
-						namesByExpectedName,
-						statement,
-						fld ) ) {
-					return false;
-				}
-			}
-			return true;
-		}
-		if ( object instanceof List ) {
-			List< Object > list = ( List< Object > ) object;
-			if ( list.size() != ( ( List< Object > ) expectedObject ).size() ) {
-				return false;
-			}
-			List< Object > expectedList = ( List< Object > ) expectedObject;
-			if ( ( statement instanceof Table || statement instanceof Insert ) && field.getName().equals( "columns" ) ) {
-				List< Object > listCopy = new ArrayList< Object >( list );
-				Collections.sort( listCopy, NAME_COMPARATOR );
-				List< Object > expectedListCopy = new ArrayList< Object >( expectedList );
-				Collections.sort( expectedListCopy, NAME_COMPARATOR );
-				for ( int listNdx = list.size(); --listNdx >= 0; ) {
-					if ( !equals( listCopy.get( listNdx ), expectedListCopy.get( listNdx ), namesByExpectedName, statement, field ) ) {
-						return false;
-					}
-				}
-				expectedList.clear();
-				expectedList.addAll( list );
-			} else {
-				for ( int listNdx = list.size(); --listNdx >= 0; ) {
-					if ( !equals( list.get( listNdx ), expectedList.get( listNdx ), namesByExpectedName, statement, field ) ) {
-						return false;
-					}
-				}
-			}
-			return true;
-		}
-		if ( object instanceof String ) {
-			//			String name = Name.unquoted( object.toString() ); // TODO remove
-			//			if ( !name.equals( "currval" ) && !name.equals( "bigint" ) && !name.equals( "integer" )
-			//					&& !name.equalsIgnoreCase( "varchar" ) && !name.equals( "<=" ) && !name.equals( "decimal" )
-			//					&& !name.equals( ">=" ) && !name.equals( "AND" ) && !name.equalsIgnoreCase( "char" )
-			//					&& !name.equals( "timestamp" ) && !name.equals( "boolean" ) && !name.equals( "blob" )
-			//					&& !name.equals( "time" ) && !name.equals( "date" ) && !name.equals( "longvarchar" )
-			//					&& !name.equals( "binary" ) && !name.equals( "double" ) && !name.equals( "clob" ) && !name.equals( "float" )
-			//					&& !name.equals( "smallint" ) && !name.equals( "tinyint" ) && !name.equals( "longvarbinary" ) ) {
-			//				System.out.println();
-			//			}
-			return object.toString().equalsIgnoreCase( expectedObject.toString() );
-		}
-		return object.equals( expectedObject );
-	}
-
 	private void fail( String message ) {
 		LOG.error( message );
 		failures++;
 	}
 
 	private void failIfNotEmpty( String testClass, String qualifiedTest, List< Statement > statements, String messagePrefix ) {
+		if ( statements.isEmpty() ) {
+			return;
+		}
 		StringBuilder builder = new StringBuilder( messagePrefix + " for " + qualifiedTest + ':' );
 		for ( Statement statement : statements ) {
 			builder.append( "\n\t" ).append( statement );
 		}
 		fail( builder.toString() );
-	}
-
-	private void failIfNotEmpty( String testClass, Map< String, List< Statement >> statementsByTest, String messagePrefix ) {
-		for ( Entry< String, List< Statement > > entry : statementsByTest.entrySet() ) {
-			for ( Iterator< Statement > iter = entry.getValue().iterator(); iter.hasNext(); ) { // TODO remove
-				Statement statement = iter.next();
-				if ( !( statement instanceof Table || statement instanceof Sequence || statement instanceof Index ) ) {
-					iter.remove();
-				}
-			}
-			if ( entry.getValue().isEmpty() ) { // TODO remove
-				continue;
-			}
-			failIfNotEmpty( testClass, testClass + '.' + entry.getKey(), entry.getValue(), messagePrefix );
-		}
-	}
-
-	private void map( Statement statement, Object expectedObject, Map< String, String > namesByExpectedName ) throws Exception {
-		map( statement, expectedObject, namesByExpectedName, statement, null );
-	}
-
-	private void map(
-			Object object,
-			Object expectedObject,
-			Map< String, String > namesByExpectedName,
-			Statement statement,
-			Field field ) throws Exception {
-		if ( object == null ) {
-			return;
-		}
-		if ( object instanceof Name ) {
-			namesByExpectedName.put( ( ( Name ) expectedObject ).unquoted(), ( ( Name ) object ).unquoted() );
-			return;
-		}
-		if ( object.getClass().getPackage() == Statement.class.getPackage() ) {
-			Field[] fields = object.getClass().getFields();
-			Field[] expectedFields = expectedObject.getClass().getFields();
-			for ( int fldNdx = fields.length; --fldNdx >= 0; ) {
-				Field fld = fields[ fldNdx ];
-				map( fld.get( object ), expectedFields[ fldNdx ].get( expectedObject ), namesByExpectedName, statement, fld );
-			}
-			return;
-		}
-		if ( object instanceof List ) {
-			List< ? > list = ( List< ? > ) object;
-			List< ? > expectedList = ( List< ? > ) expectedObject;
-			for ( int listNdx = list.size(); --listNdx >= 0; ) {
-				map( list.get( listNdx ), expectedList.get( listNdx ), namesByExpectedName, statement, field );
-			}
-		}
 	}
 
 	private Map< String, List< Statement > > parse( File outputFile ) throws Exception {
@@ -512,6 +323,32 @@ public abstract class BaseSqlOutputTest {
 			statementsByTest.remove( test );
 		}
 		return statementsByTest;
+	}
+
+	private void pruneRedundantUnmatchedStatements( final List< Statement > statements ) {
+		for ( final Iterator< Statement > iter = statements.iterator(); iter.hasNext(); ) {
+			final Statement statement = iter.next();
+			SqlWalker.INSTANCE.walk( new SqlVisitor() {
+
+				@Override
+				public boolean visit( Object object, SqlObject parent, Field field, int index ) {
+					if ( !( object instanceof Reference ) ) {
+						return true;
+					}
+					Reference ref = ( Reference ) object;
+					if ( ref.referent == null ) {
+						return true;
+					}
+					Statement refStatement = ref.statement();
+					Statement referentStatement = ref.referent.statement();
+					if ( refStatement != referentStatement && statements.contains( referentStatement ) ) {
+						iter.remove();
+						return false;
+					}
+					return true;
+				}
+			}, statement );
+		}
 	}
 
 	private void testClassSqlOutput( File outputFile ) throws Exception {

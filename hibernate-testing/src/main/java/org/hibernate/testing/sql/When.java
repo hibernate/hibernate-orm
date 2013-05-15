@@ -21,16 +21,33 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.testing.junit4;
-
-import org.hibernate.testing.sql.Statement;
+package org.hibernate.testing.sql;
 
 /**
  *
  */
-public class FailureExpectedStatement extends Statement {
+public class When extends AbstractSqlObject {
 
-	FailureExpectedStatement() {
-		super( null );
+	public SqlObject condition;
+	public SqlObject then;
+	public SqlObject elseExpression;
+
+	When( SqlObject parent ) {
+		super( parent );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 *
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder( "WHEN " );
+		builder.append( condition ).append( " THEN " ).append( then );
+		if ( elseExpression != null ) {
+			builder.append( " ELSE " ).append( elseExpression );
+		}
+		return builder.toString();
 	}
 }

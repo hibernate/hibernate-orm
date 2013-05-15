@@ -61,6 +61,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	protected final boolean isEmbeddedInXML;
 	private final boolean eager;
 	private final boolean unwrapProxy;
+	private final boolean referenceToPrimaryKey;
 
 	private transient Class returnedClass;
 
@@ -77,7 +78,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
 	 *
-	 * @deprecated Use {@link #EntityType(TypeFactory.TypeScope, String, String, boolean, boolean )} instead.
+	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
 	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
 	@Deprecated
@@ -88,12 +89,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			boolean eager,
 			boolean isEmbeddedInXML,
 			boolean unwrapProxy) {
-		this.scope = scope;
-		this.associatedEntityName = entityName;
-		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
-		this.isEmbeddedInXML = isEmbeddedInXML;
-		this.eager = eager;
-		this.unwrapProxy = unwrapProxy;
+		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
 	}
 
 	/**
@@ -107,10 +103,36 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
+	 * 
+	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
+	 */
+	@Deprecated
+	protected EntityType(
+			TypeFactory.TypeScope scope,
+			String entityName,
+			String uniqueKeyPropertyName,
+			boolean eager,
+			boolean unwrapProxy) {
+		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
+	}
+
+	/**
+	 * Constructs the requested entity type mapping.
+	 *
+	 * @param scope The type scope
+	 * @param entityName The name of the associated entity.
+	 * @param referenceToPrimaryKey True if association references a primary key.
+	 * @param uniqueKeyPropertyName The property-ref name, or null if we
+	 * reference the PK of the associated entity.
+	 * @param eager Is eager fetching enabled.
+	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
+	 * says to return the "implementation target" of lazy prooxies; typically only possible
+	 * with lazy="no-proxy".
 	 */
 	protected EntityType(
 			TypeFactory.TypeScope scope,
 			String entityName,
+			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
@@ -120,6 +142,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		this.isEmbeddedInXML = true;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
+		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
 	protected TypeFactory.TypeScope scope() {
@@ -174,7 +197,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return True if this association reference the PK of the associated entity.
 	 */
 	public boolean isReferenceToPrimaryKey() {
-		return uniqueKeyPropertyName==null;
+		return referenceToPrimaryKey;
 	}
 
 	public String getRHSUniqueKeyPropertyName() {
@@ -459,21 +482,16 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return value;
 		}
 
-		if ( value == null ) {
-			return null;
-		}
-		else {
-			if ( isNull( owner, session ) ) {
-				return null; //EARLY EXIT!
-			}
-
+		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
 				return resolveIdentifier( (Serializable) value, session );
 			}
-			else {
+			else if ( uniqueKeyPropertyName != null ) {
 				return loadByUniqueKey( getAssociatedEntityName(), uniqueKeyPropertyName, value, session );
 			}
 		}
+		
+		return null;
 	}
 
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
@@ -485,7 +503,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			return value;
 		}
 
-		if ( isReferenceToPrimaryKey() ) {
+		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session ); //tolerates nulls
 		}
 		else if ( value == null ) {
@@ -602,7 +620,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * or unique key property name.
 	 */
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		if ( isReferenceToPrimaryKey() ) {
+		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return getIdentifierType(factory);
 		}
 		else {
@@ -624,7 +642,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
 	throws MappingException {
-		if ( isReferenceToPrimaryKey() ) {
+		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
 		}
 		else {

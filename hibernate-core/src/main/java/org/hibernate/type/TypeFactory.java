@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.classic.Lifecycle;
@@ -39,6 +37,7 @@ import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
+import org.jboss.logging.Logger;
 
 /**
  * Used internally to build instances of {@link Type}, specifically it builds instances of
@@ -235,8 +234,7 @@ public final class TypeFactory implements Serializable {
 	// one-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated Use {@link #oneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String)}
-	 * instead.
+	 * @deprecated Use {@link #oneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
 	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
 	@Deprecated
@@ -249,10 +247,14 @@ public final class TypeFactory implements Serializable {
 			boolean isEmbeddedInXML,
 			String entityName,
 			String propertyName) {
-		return new OneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
-				lazy, unwrapProxy, isEmbeddedInXML, entityName, propertyName );
+		return oneToOne( persistentClass, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName,
+				propertyName );
 	}
 
+	/**
+	 * @deprecated Use {@link #oneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
+	 */
+	@Deprecated
 	public EntityType oneToOne(
 			String persistentClass,
 			ForeignKeyDirection foreignKeyType,
@@ -261,10 +263,27 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		return new OneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
-				lazy, unwrapProxy, entityName, propertyName );
+		return oneToOne( persistentClass, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, entityName,
+				propertyName );
 	}
 
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return new OneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
+	}
+	
+	/**
+	 * @deprecated Use {@link #specialOneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
+	 */
+	@Deprecated
 	public EntityType specialOneToOne(
 			String persistentClass,
 			ForeignKeyDirection foreignKeyType,
@@ -273,8 +292,21 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			String entityName,
 			String propertyName) {
-		return new SpecialOneToOneType( typeScope, persistentClass, foreignKeyType, uniqueKeyPropertyName,
-				lazy, unwrapProxy, entityName, propertyName );
+		return specialOneToOne( persistentClass, foreignKeyType, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy,
+				entityName, propertyName );
+	}
+
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName) {
+		return new SpecialOneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
 	}
 
 
@@ -289,8 +321,7 @@ public final class TypeFactory implements Serializable {
 	}
 
 	/**
-	 * @deprecated Use {@link #manyToOne(String, String, boolean, boolean, boolean, boolean)}
-	 * instead.
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, boolean, boolean, boolean, boolean)} instead.
 	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
 	@Deprecated
@@ -302,20 +333,28 @@ public final class TypeFactory implements Serializable {
 			boolean isEmbeddedInXML,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		return new ManyToOneType(
-				typeScope,
-				persistentClass,
-				uniqueKeyPropertyName,
-				lazy,
-				unwrapProxy,
-				isEmbeddedInXML,
-				ignoreNotFound,
-				isLogicalOneToOne
-		);
+		return manyToOne( persistentClass, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound,
+				isLogicalOneToOne );
+	}
+
+	/**
+	 * @deprecated Use {@link #manyToOne(String, boolean, String, boolean, boolean, boolean, boolean)} instead.
+	 */
+	@Deprecated
+	public EntityType manyToOne(
+			String persistentClass,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne) {
+		return manyToOne( persistentClass, uniqueKeyPropertyName == null, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound,
+				isLogicalOneToOne );
 	}
 
 	public EntityType manyToOne(
 			String persistentClass,
+			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
@@ -324,6 +363,7 @@ public final class TypeFactory implements Serializable {
 		return new ManyToOneType(
 				typeScope,
 				persistentClass,
+				referenceToPrimaryKey,
 				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,

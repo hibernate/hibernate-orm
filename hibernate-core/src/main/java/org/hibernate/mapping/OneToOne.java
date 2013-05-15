@@ -69,7 +69,8 @@ public class OneToOne extends ToOne {
 		if ( getColumnIterator().hasNext() ) {
 			return getMappings().getTypeResolver().getTypeFactory().specialOneToOne(
 					getReferencedEntityName(), 
-					foreignKeyType, 
+					foreignKeyType,
+					referenceToPrimaryKey, 
 					referencedPropertyName,
 					isLazy(),
 					isUnwrapProxy(),
@@ -80,7 +81,8 @@ public class OneToOne extends ToOne {
 		else {
 			return getMappings().getTypeResolver().getTypeFactory().oneToOne(
 					getReferencedEntityName(), 
-					foreignKeyType, 
+					foreignKeyType,
+					referenceToPrimaryKey, 
 					referencedPropertyName,
 					isLazy(),
 					isUnwrapProxy(),

@@ -39,6 +39,7 @@ import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.ForeignKeyDirection;
 
@@ -212,12 +213,10 @@ public class OneToOneSecondPass implements SecondPass {
 				else {
 					propertyHolder.addProperty( prop, inferredData.getDeclaringClass() );
 				}
+				
+				value.setReferencedPropertyName( mappedBy );
 
 				// HHH-6813
-				// If otherSide's id is derived, do not set EntityType#uniqueKeyPropertyName.
-				// EntityType#isReferenceToPrimaryKey() assumes that, if it's set,
-				// a PK is not referenced.  Example:
-				//
 				// Foo: @Id long id, @OneToOne(mappedBy="foo") Bar bar
 				// Bar: @Id @OneToOne Foo foo
 				boolean referencesDerivedId = false;
@@ -228,8 +227,14 @@ public class OneToOneSecondPass implements SecondPass {
 				catch ( MappingException e ) {
 					// ignore
 				}
-				String referencedPropertyName = referencesDerivedId ? null : mappedBy;
-				value.setReferencedPropertyName( referencedPropertyName );
+				boolean referenceToPrimaryKey  = referencesDerivedId || mappedBy == null;
+				value.setReferenceToPrimaryKey( referenceToPrimaryKey );
+				
+				// If the other side is a derived ID, prevent an infinite
+				// loop of attempts to resolve identifiers.
+				if ( referencesDerivedId ) {
+					( (ManyToOne) otherSideProperty.getValue() ).setReferenceToPrimaryKey( false );
+				}
 
 				String propertyRef = value.getReferencedPropertyName();
 				if ( propertyRef != null ) {

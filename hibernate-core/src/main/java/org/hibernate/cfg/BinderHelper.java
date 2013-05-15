@@ -341,6 +341,7 @@ public class BinderHelper {
 			 */
 			if ( value instanceof ToOne ) {
 				( (ToOne) value ).setReferencedPropertyName( syntheticPropertyName );
+				( (ToOne) value ).setReferenceToPrimaryKey( syntheticPropertyName == null );
 				mappings.addUniquePropertyReference( ownerEntity.getEntityName(), syntheticPropertyName );
 			}
 			else if ( value instanceof Collection ) {

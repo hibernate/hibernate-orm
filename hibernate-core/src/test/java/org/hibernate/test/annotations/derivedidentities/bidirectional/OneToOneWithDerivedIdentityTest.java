@@ -27,14 +27,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 public class OneToOneWithDerivedIdentityTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpected(jiraKey = "HHH-5695")
+	@TestForIssue(jiraKey = "HHH-5695")
 	public void testInsertFooAndBarWithDerivedId() {
 		Session s = openSession();
 		s.beginTransaction();

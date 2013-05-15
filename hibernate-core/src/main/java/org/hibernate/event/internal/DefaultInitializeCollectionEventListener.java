@@ -73,8 +73,10 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					source
 				);
 
-			if ( foundInCache && traceEnabled ) {
-				LOG.trace( "Collection initialized from cache" );
+			if ( foundInCache ) {
+				if ( traceEnabled ) {
+					LOG.trace( "Collection initialized from cache" );
+				}
 			}
 			else {
 				if ( traceEnabled ) {

@@ -123,28 +123,6 @@
                 <artifactId>maven-jdocbook-style-plugin</artifactId>
                 <extensions>true</extensions>
             </plugin>
-			<plugin>
-                <groupId>org.codehaus.groovy.maven</groupId>
-                <artifactId>gmaven-plugin</artifactId>
-                <version>1.0</version>
-                <executions>
-                    <execution>
-                        <phase>deploy</phase>
-                        <goals>
-                            <goal>execute</goal>
-                        </goals>
-                        <configuration>
-                            <source><![CDATA[
-								def javaVersion=System.getProperty("java.version")
-								if(!javaVersion.startsWith("1.5")){
-								    fail("Please using JDK5 to do Hibernate release!")
-								}
-                                ]]>
-                            </source>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -475,13 +453,13 @@
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
-            <version>99.0-does-not-exist</version>
+            <version>1.1.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging-api</artifactId>
-            <version>99.0-does-not-exist</version>
+            <version>1.1</version>
             <scope>test</scope>
         </dependency>
         <!-- / test-scoped dependencies for common testing dependencies -->

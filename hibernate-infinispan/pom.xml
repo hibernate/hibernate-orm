@@ -42,7 +42,7 @@
 
     <properties>
       <version.infinispan>4.2.1.CR1</version.infinispan>
-      <version.hsqldb>1.8.0.2</version.hsqldb>
+      <version.hsqldb>1.8.0.4</version.hsqldb>
       <version.cglib>2.2</version.cglib>
       <version.javassist>3.4.GA</version.javassist>
       <version.org.jboss.naming>5.0.3.GA</version.org.jboss.naming>
@@ -67,6 +67,12 @@
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
             <version>${version.infinispan}</version> 
+            <exclusions>
+            	<exclusion>
+            		<groupId>i18nlog</groupId>
+            		<artifactId>i18nlog</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
 
         <!-- test dependencies -->

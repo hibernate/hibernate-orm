@@ -23,17 +23,17 @@
  */
 package org.hibernate.test.annotations.collectionelement.ordered;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Assert;
+import org.hibernate.Session;
 import org.hibernate.persister.collection.BasicCollectionPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -64,6 +64,7 @@ public class ElementCollectionSortingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6875" )
+	@FailureExpectedWithNewMetamodel 
 	public void testSortingEmbeddableCollectionOfPrimitives() {
 		final Session session = openSession();
 		session.beginTransaction();

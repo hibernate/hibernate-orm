@@ -23,12 +23,14 @@
  */
 package org.hibernate.test.annotations.collectionelement;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
-import org.junit.Test;
 
 import org.hibernate.Filter;
 import org.hibernate.Query;
@@ -36,27 +38,21 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.test.annotations.Country;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSimpleElement() throws Exception {
-		assertEquals(
-				"BoyFavoriteNumbers",
-				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
-						.getCollectionTable().getName()
-		);
+		assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
+				.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
 		Session s = openSession();
 		s.getTransaction().begin();
 		Boy boy = new Boy();
@@ -161,11 +157,8 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testLazyCollectionofElements() throws Exception {
-		assertEquals(
-				"BoyFavoriteNumbers",
-				configuration().getCollectionMapping( Boy.class.getName() + '.' + "favoriteNumbers" )
-						.getCollectionTable().getName()
-		);
+		assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
+				.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
 		Session s = openSession();
 		s.getTransaction().begin();
 		Boy boy = new Boy();

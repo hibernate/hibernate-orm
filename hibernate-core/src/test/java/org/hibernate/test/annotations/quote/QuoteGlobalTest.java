@@ -33,8 +33,9 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.UniqueKey;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -43,18 +44,17 @@ import org.junit.Test;
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
-@FailureExpectedWithNewMetamodel
 public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-7890")
 	public void testQuotedUniqueConstraint() {
-		Iterator<UniqueKey> itr = configuration().getClassMapping( Person.class.getName() )
-				.getTable().getUniqueKeyIterator();
+		TableSpecification table = SchemaUtil.getTable( Person.class, metadata() );
+		Iterator<UniqueKey> itr = table.getUniqueKeys().iterator();
 		while ( itr.hasNext() ) {
 			UniqueKey uk = itr.next();
 			assertEquals( uk.getColumns().size(), 1 );
-			assertEquals( uk.getColumn( 0 ).getName(),  "name");
+			assertEquals( uk.getColumns().get( 0 ).getColumnName().getText(),  "name");
 			return;
 		}
 		fail( "GLOBALLY_QUOTED_IDENTIFIERS caused the unique key creation to fail." );
@@ -74,8 +74,8 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		u = (User) s.get( User.class, u.getId() );
 		assertEquals( 1, u.getRoles().size() );
 		tx.rollback();
-		String role = User.class.getName() + ".roles";
-		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
+		assertEquals( "`User_Role`", SchemaUtil.getCollectionTable( User.class, "roles", metadata() ).getLogicalName()
+				.toString() );
 		s.close();
 	}
 

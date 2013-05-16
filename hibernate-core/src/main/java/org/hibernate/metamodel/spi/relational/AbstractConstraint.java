@@ -138,6 +138,13 @@ public abstract class AbstractConstraint implements Constraint {
 	public boolean hasColumn(Column column) {
 		return columnMap.containsKey( column.getColumnName() );
 	}
+	
+	public boolean hasColumn(String columnName) {
+		for ( Identifier key : columnMap.keySet() ) {
+			if ( key.getText().equals( columnName ) ) return true;
+		}
+		return false;
+	}
 
 	protected Map<Identifier, Column> internalColumnAccess() {
 		return columnMap;

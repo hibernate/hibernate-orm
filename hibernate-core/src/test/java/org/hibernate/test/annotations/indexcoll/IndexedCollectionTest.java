@@ -23,31 +23,30 @@
  */
 package org.hibernate.test.annotations.indexcoll;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * Test index collections
@@ -58,34 +57,33 @@ import static org.junit.Assert.assertTrue;
 public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testJPA2DefaultMapColumns() throws Exception {
-		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDef", "_KEY" );
-		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesPerKeyDef", "_KEY" );
-		isDefaultKeyColumnPresent( Atmosphere.class.getName(), "gasesDefLeg", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class, "gasesDef", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class, "gasesPerKeyDef", "_KEY" );
+		isDefaultKeyColumnPresent( Atmosphere.class, "gasesDefLeg", "_KEY" );
 	}
 
 	@Test
 	public void testJPA2DefaultIndexColumns() throws Exception {
-		isDefaultKeyColumnPresent( Drawer.class.getName(), "dresses", "_ORDER" );
+		isDefaultKeyColumnPresent( Drawer.class, "dresses", "_ORDER" );
 	}
 
-	private void isDefaultKeyColumnPresent(String collectionOwner, String propertyName, String suffix) {
+	private void isDefaultKeyColumnPresent(Class collectionOwner, String propertyName, String suffix) {
 		assertTrue( "Could not find " + propertyName + suffix,
 				isDefaultColumnPresent(collectionOwner, propertyName, suffix) );
 	}
 
-	private boolean isDefaultColumnPresent(String collectionOwner, String propertyName, String suffix) {
-		// TODO: Use getCollectionBindings, but unsure of suffix, etc.
-		final Collection collection = configuration().getCollectionMapping( collectionOwner + "." + propertyName );
-		final Iterator columnIterator = collection.getCollectionTable().getColumnIterator();
+	private boolean isDefaultColumnPresent(Class collectionOwner, String propertyName, String suffix) {
+		// TODO: Replaced the use of configuration(), but untested.
+		List<Value> values = SchemaUtil.getCollectionTable(collectionOwner, propertyName, metadata()).values();
 		boolean hasDefault = false;
-		while ( columnIterator.hasNext() ) {
-			Column column = (Column) columnIterator.next();
-			if ( (propertyName + suffix).equals( column.getName() ) ) hasDefault = true;
+		for ( Value value : values ) {
+			Column column = (Column) value;
+			if ( (propertyName + suffix).equals( column.getColumnName().getText() ) ) hasDefault = true;
 		}
 		return hasDefault;
 	}
 
-	private void isNotDefaultKeyColumnPresent(String collectionOwner, String propertyName, String suffix) {
+	private void isNotDefaultKeyColumnPresent(Class collectionOwner, String propertyName, String suffix) {
 		assertFalse( "Could not find " + propertyName + suffix,
 				isDefaultColumnPresent(collectionOwner, propertyName, suffix) );
 	}

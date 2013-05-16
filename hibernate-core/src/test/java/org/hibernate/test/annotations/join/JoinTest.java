@@ -23,10 +23,13 @@
  */
 package org.hibernate.test.annotations.join;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Date;
-
-import org.junit.Test;
 
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
@@ -39,13 +42,11 @@ import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Table;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -54,13 +55,9 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testDefaultValue() throws Exception {
-		// TODO: How to get Joins with EntityBindings?
-		// See testCompositePK()
-		Join join = (Join) configuration().getClassMapping( Life.class.getName() ).getJoinClosureIterator().next();
-		assertEquals( "ExtendedLife", join.getTable().getName() );
-		org.hibernate.mapping.Column owner = new org.hibernate.mapping.Column();
-		owner.setName( "LIFE_ID" );
-		assertTrue( join.getTable().getPrimaryKey().containsColumn( owner ) );
+		TableSpecification joinTable = SchemaUtil.getEntityBinding( Life.class, metadata() ).locateTable( "ExtendedLife" );
+		assertNotNull( joinTable );
+		assertTrue( joinTable.getPrimaryKey().hasColumn( "LIFE_ID" ) );
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
 		Life life = new Life();

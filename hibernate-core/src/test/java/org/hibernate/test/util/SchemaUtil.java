@@ -142,6 +142,12 @@ public abstract class SchemaUtil {
 		return null;
 	}
 	
+	public static TableSpecification getCollectionTable( Class<?> entityClass, String fieldName,
+			Metadata metadata ) {
+		PluralAttributeBinding collection = getCollection( entityClass, fieldName, metadata );
+		return collection.getPluralAttributeKeyBinding().getCollectionTable();
+	}
+	
 	public static boolean hasUniqueKeys(TableSpecification table, String... columnNames) {
 		for (String columnName : columnNames) {
 			if (!table.hasUniqueKey( table.locateColumn( columnName ) ) ) {

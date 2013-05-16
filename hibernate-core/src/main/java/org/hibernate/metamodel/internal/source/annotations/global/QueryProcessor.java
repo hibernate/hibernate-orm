@@ -42,6 +42,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
+import org.hibernate.cfg.BinderHelper;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
@@ -153,28 +154,13 @@ public class QueryProcessor {
 			bindJPANamedQuery( annotation, builder, name, query );
 		} else {
 			builder.setFlushMode(
-					getFlushMode(
-							JandexHelper.getEnumValue(
-									annotation,
-									"flushMode",
-									FlushModeType.class
-							)
-					)
-			)
+					getFlushMode( JandexHelper.getEnumValue( annotation, "flushMode", FlushModeType.class ) ) )
 					.setCacheable( JandexHelper.getValue( annotation, "cacheable", Boolean.class ) )
-					.setCacheRegion( JandexHelper.getValue( annotation, "cacheRegion", String.class ) )
-					.setFetchSize( JandexHelper.getValue( annotation, "fetchSize", Integer.class ) )
-					.setTimeout( JandexHelper.getValue( annotation, "timeout", Integer.class ) )
+					.setCacheRegion( defaultToNull( JandexHelper.getValue( annotation, "cacheRegion", String.class ) ) )
+					.setFetchSize( defaultToNull( JandexHelper.getValue( annotation, "fetchSize", Integer.class ) ) )
+					.setTimeout( defaultToNull( JandexHelper.getValue( annotation, "timeout", Integer.class ) ) )
 					.setComment( JandexHelper.getValue( annotation, "comment", String.class ) )
-					.setCacheMode(
-							getCacheMode(
-									JandexHelper.getValue(
-											annotation,
-											"cacheMode",
-											CacheModeType.class
-									)
-							)
-					)
+					.setCacheMode( getCacheMode( JandexHelper.getValue( annotation, "cacheMode", CacheModeType.class ) ) )
 					.setReadOnly( JandexHelper.getValue( annotation, "readOnly", Boolean.class ) );
 		}
 
@@ -246,33 +232,24 @@ public class QueryProcessor {
 		//TODO this 'javax.persistence.lock.timeout' has been mvoed to {@code AvailableSettings} in master
 		//we should change this when we merge this branch back.
 		Integer lockTimeout =  getInteger( hints, "javax.persistence.lock.timeout" , query );
-		if ( lockTimeout != null && lockTimeout < 0 ) {
-			lockTimeout = null;
-		}
+		lockTimeout = defaultToNull( lockTimeout );
+		
 		LockOptions lockOptions = new LockOptions( LockModeConverter.convertToLockMode( JandexHelper.getEnumValue( annotation, "lockMode",
 				LockModeType.class
 		) ) );
 		if ( lockTimeout != null ) {
 			lockOptions.setTimeOut( lockTimeout );
 		}
-		Integer fetchSize = getInteger( hints, QueryHints.FETCH_SIZE, name );
-		if ( fetchSize != null && fetchSize < 0 ) {
-			fetchSize = null;
-		}
 
-		String comment = getString( hints, QueryHints.COMMENT );
-		if ( StringHelper.isEmpty( comment ) ) {
-			comment = null;
-		}
 		builder.setCacheable( getBoolean( hints, QueryHints.CACHEABLE, name ) )
 				.setCacheRegion( cacheRegion )
 				.setTimeout( timeout )
 				.setLockOptions( lockOptions )
-				.setFetchSize( fetchSize )
+				.setFetchSize( defaultToNull( getInteger( hints, QueryHints.FETCH_SIZE, name ) ) )
 				.setFlushMode( getFlushMode( hints, QueryHints.FLUSH_MODE, name ) )
 				.setCacheMode( getCacheMode( hints, QueryHints.CACHE_MODE, name ) )
 				.setReadOnly( getBoolean( hints, QueryHints.READ_ONLY, name ) )
-				.setComment( comment )
+				.setComment( defaultToNull( getString( hints, QueryHints.COMMENT ) ) )
 				.setParameterTypes( null );
 	}
 
@@ -447,5 +424,13 @@ public class QueryProcessor {
 			return getInteger( hints, QueryHints.TIMEOUT_HIBERNATE, query ); // timeout is already in seconds
 		}
 		return ( ( timeout + 500 ) / 1000 ); // convert milliseconds to seconds (rounded)
+	}
+	
+	private static String defaultToNull( String s ) {
+		return StringHelper.isEmpty( s ) ? null : s;
+	}
+	
+	private static Integer defaultToNull( Integer i ) {
+		return i == null || i < 0 ? null : i;
 	}
 }

@@ -59,7 +59,6 @@ import org.junit.Test;
  *
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -160,6 +159,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSQLQuery() {
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();
@@ -218,6 +218,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSQLQueryWithManyToOne() {
 		cleanupCache();
 		Night n = new Night();
@@ -285,6 +286,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNativeQueryAndCompositePKAndComponents() throws Exception {
 		Session s;
 		Transaction tx;

@@ -26,6 +26,8 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import javax.persistence.QueryHint;
+
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -90,4 +92,7 @@ public @interface NamedQuery {
 	 * Whether the results should be read-only.  Default is {@code false}.
 	 */
 	boolean readOnly() default false;
+
+    /** Query properties and hints.  (May include vendor-specific query hints.) */
+    QueryHint[] hints() default {};
 }

@@ -145,12 +145,14 @@ class GlobalAnnotations implements JPADotNames {
 		}
 		else {
 			AnnotationValue value = annotationInstance.value( "name" );
-			String name = value.asString();
-			isNotExist = ( annName.equals( TABLE_GENERATOR ) && !tableGeneratorMap.containsKey( name ) ) ||
-					( annName.equals( SEQUENCE_GENERATOR ) && !sequenceGeneratorMap.containsKey( name ) ) ||
-					( annName.equals( NAMED_QUERY ) && !namedQueryMap.containsKey( name ) ) ||
-					( annName.equals( NAMED_NATIVE_QUERY ) && !namedNativeQueryMap.containsKey( name ) ) ||
-					( annName.equals( SQL_RESULT_SET_MAPPING ) && !sqlResultSetMappingMap.containsKey( name ) );
+			if ( value != null ) {
+				String name = value.asString();
+				isNotExist = ( annName.equals( TABLE_GENERATOR ) && !tableGeneratorMap.containsKey( name ) ) ||
+						( annName.equals( SEQUENCE_GENERATOR ) && !sequenceGeneratorMap.containsKey( name ) ) ||
+						( annName.equals( NAMED_QUERY ) && !namedQueryMap.containsKey( name ) ) ||
+						( annName.equals( NAMED_NATIVE_QUERY ) && !namedNativeQueryMap.containsKey( name ) ) ||
+						( annName.equals( SQL_RESULT_SET_MAPPING ) && !sqlResultSetMappingMap.containsKey( name ) );
+			}
 		}
 		if ( isNotExist ) {
 			push( annName, annotationInstance );

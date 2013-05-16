@@ -100,7 +100,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		}
 		return create(
 				SQL_RESULT_SET_MAPPINGS, null,
-				new AnnotationValue[] { AnnotationValue.createArrayValue( "values", values ) }
+				new AnnotationValue[] { AnnotationValue.createArrayValue( "value", values ) }
 
 		);
 	}
@@ -209,7 +209,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		}
 		return create(
 				NAMED_NATIVE_QUERIES, null,
-				new AnnotationValue[] { AnnotationValue.createArrayValue( "values", values ) }
+				new AnnotationValue[] { AnnotationValue.createArrayValue( "value", values ) }
 
 		);
 	}
@@ -245,7 +245,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		}
 		return create(
 				NAMED_QUERIES, null,
-				new AnnotationValue[] { AnnotationValue.createArrayValue( "values", values ) }
+				new AnnotationValue[] { AnnotationValue.createArrayValue( "value", values ) }
 
 		);
 	}

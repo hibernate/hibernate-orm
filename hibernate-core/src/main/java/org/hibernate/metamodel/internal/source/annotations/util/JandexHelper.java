@@ -273,6 +273,45 @@ public class JandexHelper {
 		}
 	}
 
+	/**
+	 * Similar to {@link #getSingleAnnotation(Map, DotName)}, but searches for
+	 * the single annotation on the given target.  Useful for annotations that
+	 * can appear both on a Class and Method/Field level.  Ex: custom SQL annotations.
+	 * 
+	 * @param annotations List of annotation instances keyed against their dot name.
+	 * @param annotationName the annotation to retrieve from map
+	 * @param target the annotation target
+	 *
+	 * @return the single annotation of the specified dot name or {@code null} in case the annotation is not specified at all
+	 *
+	 * @throws org.hibernate.AssertionFailure in case there is there is more than one annotation of this type.
+	 */
+	public static AnnotationInstance getSingleAnnotation(Map<DotName, List<AnnotationInstance>> annotations,
+			DotName annotationName, AnnotationTarget target) throws AssertionFailure {
+		List<AnnotationInstance> annotationList = annotations.get( annotationName );
+		if ( annotationList == null ) {
+			return null;
+		}
+
+		List<AnnotationInstance> targetedAnnotationList = new ArrayList<AnnotationInstance>();
+		for ( AnnotationInstance annotation : annotationList ) {
+			if ( getTargetName( annotation.target() ).equals( getTargetName( target ) ) ) {
+				targetedAnnotationList.add( annotation );
+			}
+		}
+
+		if ( targetedAnnotationList.size() == 0 ) {
+			return null;
+		}
+		else if ( targetedAnnotationList.size() == 1 ) {
+			return targetedAnnotationList.get( 0 );
+		}
+		else {
+			throw new AssertionFailure( "Found more than one instance of the annotation "
+					+ targetedAnnotationList.get( 0 ).name().toString() + ". Expected was one." );
+		}
+	}
+
 	public static void throwNotIndexException(String className){
 		throw new MappingException( "Class " + className +" is not indexed, probably means this class should be explicitly added" +
 				"into MatadataSources" );
@@ -368,13 +407,7 @@ public class JandexHelper {
 		Map<DotName, List<AnnotationInstance>> annotations = new HashMap<DotName, List<AnnotationInstance>>();
 		for ( List<AnnotationInstance> annotationList : classInfo.annotations().values() ) {
 			for ( AnnotationInstance instance : annotationList ) {
-				String targetName = null;
-				if ( instance.target() instanceof FieldInfo ) {
-					targetName = ( (FieldInfo) instance.target() ).name();
-				}
-				else if ( instance.target() instanceof MethodInfo ) {
-					targetName = ( (MethodInfo) instance.target() ).name();
-				}
+				String targetName = getTargetName( instance.target() );
 				if ( targetName != null && ( name.equals( targetName )
 						|| getterName.equals( targetName ) ) ) {
 					addAnnotationToMap( instance, annotations );
@@ -482,5 +515,19 @@ public class JandexHelper {
 			}
 		}
 		return value;
+	}
+	
+	private static String getTargetName(AnnotationTarget target) {
+		String targetName = null;
+		if ( target instanceof FieldInfo ) {
+			targetName = ( (FieldInfo) target ).name();
+		}
+		else if ( target instanceof MethodInfo ) {
+			targetName = ( (MethodInfo) target ).name();
+		}
+		else if ( target instanceof ClassInfo ) {
+			targetName = ( (ClassInfo) target ).name().toString();
+		}
+		return targetName;
 	}
 }

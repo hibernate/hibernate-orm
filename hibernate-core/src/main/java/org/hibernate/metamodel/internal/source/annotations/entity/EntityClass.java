@@ -121,15 +121,18 @@ public class EntityClass extends ConfiguredClass {
 
 		this.customInsert = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_INSERT,
-				getClassInfo().annotations()
+				getClassInfo().annotations(),
+				getClassInfo()
 		);
 		this.customUpdate = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_UPDATE,
-				getClassInfo().annotations()
+				getClassInfo().annotations(),
+				getClassInfo()
 		);
 		this.customDelete = AnnotationParserHelper.processCustomSqlAnnotation(
 				HibernateDotNames.SQL_DELETE,
-				getClassInfo().annotations()
+				getClassInfo().annotations(),
+				getClassInfo()
 		);
 
 

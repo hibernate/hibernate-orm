@@ -26,13 +26,13 @@ package org.hibernate.metamodel.internal.source.annotations.util;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * Some annotation processing is identical between entity and attribute level (aka you can place the annotation on
@@ -41,15 +41,22 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
  * @author Hardy Ferentschik
  */
 public class AnnotationParserHelper {
+	
 	// should not be instantiated
 	private AnnotationParserHelper() {
 
 	}
 
-	public static CustomSQL processCustomSqlAnnotation(DotName annotationName, Map<DotName, List<AnnotationInstance>> annotations) {
-		final AnnotationInstance sqlAnnotation = JandexHelper.getSingleAnnotation(
-				annotations, annotationName
-		);
+	public static CustomSQL processCustomSqlAnnotation(DotName annotationName,
+			Map<DotName, List<AnnotationInstance>> annotations) {
+		final AnnotationInstance sqlAnnotation = JandexHelper.getSingleAnnotation( annotations, annotationName );
+
+		return createCustomSQL( sqlAnnotation );
+	}
+
+	public static CustomSQL processCustomSqlAnnotation(DotName annotationName,
+			Map<DotName, List<AnnotationInstance>> annotations, ClassInfo target) {
+		final AnnotationInstance sqlAnnotation = JandexHelper.getSingleAnnotation( annotations, annotationName, target );
 
 		return createCustomSQL( sqlAnnotation );
 	}

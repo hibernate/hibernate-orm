@@ -54,13 +54,13 @@ public class OsgiJtaPlatform implements JtaPlatform {
 	@Override
 	public TransactionManager retrieveTransactionManager() {
 		final ServiceReference sr = bundleContext.getServiceReference( TransactionManager.class.getName() );
-		return (TransactionManager) bundleContext.getService( sr );
+		return sr == null ? null : (TransactionManager) bundleContext.getService( sr );
 	}
 
 	@Override
 	public UserTransaction retrieveUserTransaction() {
 		final ServiceReference sr = bundleContext.getServiceReference( UserTransaction.class.getName() );
-		return (UserTransaction) bundleContext.getService( sr );
+		return sr == null ? null : (UserTransaction) bundleContext.getService( sr );
 	}
 
 	@Override

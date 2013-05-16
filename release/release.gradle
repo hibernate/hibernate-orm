@@ -8,15 +8,23 @@ buildDir = "target"
 idea.module {
 }
 
+final String[] versionComponents = version.split( '\\.' );
+final String majorVersion = versionComponents[0];
+final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
+
+final File documentationDir = mkdir( new File( project.buildDir, 'documentation' ) );
+final File versionedDocumentationDir = mkdir( new File( new File( documentationDir, "orm" ), majorMinorVersion ) );
+final File javadocDir = mkdir( new File( versionedDocumentationDir, 'javadocs' ) );
 
 
-// Javadocs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-ext.javadocBuildDir = mkdir(  "${buildDir}/documentation/javadocs" )
-
-def copyRightYear = new java.util.GregorianCalendar().get( java.util.Calendar.YEAR );
-
+/**
+ * Builds the JavaDocs aggregated (unified) across all the sub-projects
+ */
 task aggregateJavadocs(type: Javadoc) {
+    description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
+
+    final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
+
     // exclude any generated sources (this is not working: http://forums.gradle.org/gradle/topics/excluding_generated_source_from_javadoc)
     exclude "**/generated-src/**"
 
@@ -65,13 +73,13 @@ task aggregateJavadocs(type: Javadoc) {
     // apply standard config
     description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
-    destinationDir = javadocBuildDir
+    destinationDir = javadocDir
     configure( options ) {
         overview = rootProject.file( 'shared/javadoc/overview.html' )
         stylesheetFile = rootProject.file( 'shared/javadoc/stylesheet.css' )
         windowTitle = 'Hibernate JavaDocs'
         docTitle = "Hibernate JavaDoc ($project.version)"
-        bottom = "Copyright &copy; 2001-$copyRightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+        bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
         group( 'API', apiPackages.asList() )
@@ -83,27 +91,83 @@ task aggregateJavadocs(type: Javadoc) {
 // work around:
         addStringOption( "tag", "todo:X" )
     }
-}
 
-aggregateJavadocs.doLast {
-    copy {
-        from rootProject.file( 'shared/javadoc/images' )
-        into new File( javadocBuildDir, "/images" )
+    doLast {
+        copy {
+            from rootProject.file( 'shared/javadoc/images' )
+            into new File( javadocDir, "/images" )
+        }
     }
 }
 
-// release bundles ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/**
+ * Builds the complete documentation set in preparation for upload to the doc server.
+ *
+ * It builds the docbook manuals as well as the aggregated, cross-project JavaDocs and stages them into
+ * a single directory that can be directly rsync-ed to the doc server
+ */
+task buildDocumentation(type: Task, dependsOn: [rootProject.project( 'documentation' ).tasks.buildDocs, aggregateJavadocs]) {
+    description = "Builds and consolidates all documentation"
 
-ext.releaseBuildDir = mkdir( buildDir )
-task prepareReleaseBundles( dependsOn: [parent.project( 'documentation' ).tasks.buildDocs,aggregateJavadocs] )
+    doLast {
+        copy {
+            from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish"
+            into versionedDocumentationDir
+        }
 
+        if ( ! version.endsWith( 'SNAPSHOT' ) ) {
+            final File currentSymLinkContainerDir = new File( documentationDir, 'current' )
+            currentSymLinkContainerDir.mkdirs();
+            ant.symlink(
+                    action: 'delete',
+                    link: "${currentSymLinkContainerDir.absolutePath}/orm"
+            )
+            ant.symlink(
+                    action: 'single',
+                    link: "${currentSymLinkContainerDir.absolutePath}/orm",
+                    resource: "${versionedDocumentationDir.absolutePath}"
+            )
+        }
+    }
+}
+
+/**
+ * Upload the documentation to the JBoss doc server
+ */
+task uploadDocumentation(type:Exec, dependsOn: buildDocumentation) {
+    description = "Uploads documentation to the JBoss doc server"
+
+    final String url = 'filemgmt.jboss.org:/docs_htdocs/hibernate/';
+
+    executable 'rsync'
+    args '-rv', '--links', '--protocol=28', "${documentationDir.absolutePath}/", url
+
+    doFirst {
+        if ( version.endsWith( "SNAPSHOT" ) ) {
+            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
+            throw new RuntimeException( "Cannot perform upload of SNAPSHOT documentation" );
+        }
+        else {
+            logger.lifecycle( "Uploading documentation [{$url}]..." )
+        }
+    }
+
+    doLast {
+        logger.lifecycle( 'Done uploading documentation' )
+    }
+}
+
+
+/**
+ * Configuration of the distribution plugin, used to build release bundle as both ZIP and TGZ
+ */
 distributions {
     main {
         baseName = 'hibernate-release'
         contents {
-            from new File( parent.projectDir, 'lgpl.txt' )
-            from new File( parent.projectDir, 'changelog.txt' )
-            from new File( parent.projectDir, 'hibernate_logo.gif' )
+            from rootProject.file( 'lgpl.txt' )
+            from rootProject.file( 'changelog.txt' )
+            from rootProject.file( 'hibernate_logo.gif' )
 
             into('lib/required') {
                 from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
@@ -145,11 +209,7 @@ distributions {
             }
 
             into('documentation') {
-                from new File( parent.project( 'documentation' ).buildDir, 'docbook/publish' )
-            }
-
-            into('documentation/javadocs') {
-                from javadocBuildDir
+                from versionedDocumentationDir
             }
 
             into( 'project' ) {
@@ -180,12 +240,95 @@ distributions {
     }
 }
 
-distZip.dependsOn prepareReleaseBundles
-distTar.dependsOn prepareReleaseBundles
+distZip.dependsOn buildDocumentation
+distTar.dependsOn buildDocumentation
 distTar {
     compression = Compression.GZIP
 }
 
-task buildReleaseBundles( dependsOn: [distZip,distTar] ) {
-    description = "Build release bundle in all formats"
+/**
+ * "virtual" task for building both types of dist bundles
+ */
+task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
+    description = "Builds all release bundles"
+}
+
+task uploadBundles(type: Exec, dependsOn: buildBundles) {
+    description = "Uploads release bundles to SourceForge"
+
+    final String url = "frs.sourceforge.net:/home/frs/project/hibernate/hibernate${majorVersion}/${version}";
+
+    executable 'rsync'
+    args '-vr', '-e ssh', "${project.buildDir}/distributions/", url
+
+    doFirst {
+        if ( version.endsWith( "SNAPSHOT" ) ) {
+            logger.error( "Cannot perform upload of SNAPSHOT documentation" );
+            throw new RuntimeException( "Cannot perform upload of SNAPSHOT bundles" )
+        }
+        else {
+            logger.lifecycle( "Uploading release bundles [${url}]..." )
+        }
+    }
+
+    doLast {
+        logger.lifecycle( 'Done uploading release bundles' )
+    }
+}
+
+
+// Full release related tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+task cleanAllSubProjects(type: Task) {
+    description = 'Performs clean on all sub-projects'
+}
+
+task testAllSubProjects(type: Task) {
+    description = 'Performs test on all sub-projects'
+}
+
+task publishAllSubProjects(type: Task) {
+    description = 'Performs publish on all sub-projects'
+}
+
+task buildAllSubProjects(type: Task, dependsOn: [testAllSubProjects,publishAllSubProjects])
+
+task uploadReleaseArtifacts(type: Task, dependsOn: [uploadDocumentation, uploadBundles])
+
+task announce(type: Task) { doFirst { println 'Hear ye, hear ye...' } }
+
+task release(type: Task, dependsOn: [cleanAllSubProjects, buildAllSubProjects, uploadReleaseArtifacts, announce]) {
+    description = "Coordinates all release tasks"
+}
+
+
+// must-run-afters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+buildAllSubProjects.mustRunAfter cleanAllSubProjects
+
+publishAllSubProjects.mustRunAfter testAllSubProjects
+publishAllSubProjects.mustRunAfter cleanAllSubProjects
+
+uploadReleaseArtifacts.mustRunAfter buildAllSubProjects
+
+announce.mustRunAfter uploadReleaseArtifacts
+
+
+// sub-project task dependencies ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+rootProject.subprojects { Project subproject ->
+    final Task subprojectCleanTask = subproject.tasks.findByPath( 'clean' );
+    if ( subprojectCleanTask != null ) {
+        cleanAllSubProjects.dependsOn subprojectCleanTask
+    }
+
+    final Task subprojectTestTask = subproject.tasks.findByPath( 'test' );
+    if ( subprojectTestTask != null ) {
+        testAllSubProjects.dependsOn subprojectTestTask
+    }
+
+    final Task subprojectPublishTask = subproject.tasks.findByPath( 'publish' );
+    if ( subprojectPublishTask != null ) {
+        publishAllSubProjects.dependsOn subprojectPublishTask
+    }
 }

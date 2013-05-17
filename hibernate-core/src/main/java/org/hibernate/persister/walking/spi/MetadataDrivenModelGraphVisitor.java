@@ -28,20 +28,11 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.type.Type;
-
-import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
 
 /**
  * Provides model graph visitation based on the defined metadata (as opposed to based on the incoming graph
@@ -211,7 +202,7 @@ public class MetadataDrivenModelGraphVisitor {
 		strategy.startingCollectionElements( elementDefinition );
 
 		if ( elementDefinition.getType().isComponentType() ) {
-			visitCompositeDefinition( elementDefinition.toCompositeDefinition() );
+			visitCompositeElementDefinition( elementDefinition.toCompositeElementDefinition() );
 		}
 		else if ( elementDefinition.getType().isEntityType() ) {
 			visitEntityDefinition( elementDefinition.toEntityDefinition() );
@@ -220,6 +211,13 @@ public class MetadataDrivenModelGraphVisitor {
 		strategy.finishingCollectionElements( elementDefinition );
 	}
 
+	private void visitCompositeElementDefinition(CompositionElementDefinition compositionElementDefinition) {
+		strategy.startingCompositeElement( compositionElementDefinition );
+
+		visitAttributes( compositionElementDefinition );
+
+		strategy.finishingCompositeElement( compositionElementDefinition );
+	}
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();
 

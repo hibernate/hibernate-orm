@@ -42,6 +42,7 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 import org.junit.Test;
 
@@ -60,6 +61,7 @@ import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.test.component.cascading.toone.PersonalInfo;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
@@ -128,12 +130,15 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		session.close();
 	}
 
-	/*
 	@Test
 	public void testNestedCompositeElementCollectionProcessing() throws Exception {
 		// create some test data
 		Session session = openSession();
 		session.beginTransaction();
+		Person person = new Person();
+		person.id = 1;
+		person.name = "Joe Blow";
+		session.save( person );
 		Customer customer = new Customer();
 		customer.id = 1L;
 		Investment investment1 = new Investment();
@@ -142,6 +147,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		investment1.monetaryAmount = new MonetaryAmount();
 		investment1.monetaryAmount.currency = MonetaryAmount.CurrencyCode.USD;
 		investment1.monetaryAmount.amount = BigDecimal.valueOf( 1234, 2 );
+		investment1.performedBy = person;
 		Investment investment2 = new Investment();
 		investment2.description = "bond";
 		investment2.date = new Date();
@@ -173,11 +179,11 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		// clean up test data
 		session = openSession();
 		session.beginTransaction();
-		session.createQuery( "delete Customer" ).executeUpdate();
+		session.delete( customerWork.investments.get( 0 ).performedBy );
+		session.delete( customerWork );
 		session.getTransaction().commit();
 		session.close();
 	}
-	*/
 
 	private List<?> getResults(EntityPersister entityPersister ) {
 			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
@@ -288,6 +294,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		private MonetaryAmount monetaryAmount;
 		private String description;
 		private Date date;
+		private Person performedBy;
 
 		@Embedded
 		public MonetaryAmount getMonetaryAmount() {
@@ -307,6 +314,13 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		}
 		public void setDate(Date date) {
 			this.date = date;
+		}
+		@ManyToOne
+		public Person getPerformedBy() {
+			return performedBy;
+		}
+		public void setPerformedBy(Person performedBy) {
+			this.performedBy = performedBy;
 		}
 	}
 

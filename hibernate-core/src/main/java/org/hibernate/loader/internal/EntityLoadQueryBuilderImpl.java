@@ -149,14 +149,10 @@ public class EntityLoadQueryBuilderImpl implements LoadQueryBuilder {
 
 		@Override
 		public void startingEntityFetch(EntityFetch entityFetch) {
-			final OuterJoinLoadable ownerPersister = (OuterJoinLoadable) entityFetch.getOwner().retrieveFetchSourcePersister();
-			final int propertyNumber = ownerPersister.getEntityMetamodel().getPropertyIndex( entityFetch.getOwnerPropertyName() );
-			final boolean isNullable = ownerPersister.isSubclassPropertyNullable( propertyNumber );
 			EntityJoinableAssociationImpl assoc = new EntityJoinableAssociationImpl(
 					entityFetch,
 					getCurrentCollectionReference(),
 					"",    // getWithClause( entityFetch.getPropertyPath() )
-					isNullable,
 					false, // hasRestriction( entityFetch.getPropertyPath() )
 					loadQueryInfluencers.getEnabledFilters()
 			);

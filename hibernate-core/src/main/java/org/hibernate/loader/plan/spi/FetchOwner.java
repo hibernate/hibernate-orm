@@ -29,6 +29,7 @@ import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.Type;
 
 /**
  * Contract for owners of fetches.  Any non-scalar return could be a fetch owner.
@@ -55,6 +56,12 @@ public interface FetchOwner {
 	 * @return The owned fetches.
 	 */
 	public Fetch[] getFetches();
+
+	public Type getType(Fetch fetch);
+
+	public boolean isNullable(Fetch fetch);
+
+	public String[] getColumnNames(Fetch fetch);
 
 	/**
 	 * Is the asserted plan valid from this owner to a fetch?

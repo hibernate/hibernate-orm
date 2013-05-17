@@ -49,16 +49,20 @@ import org.hibernate.loader.plan.spi.AbstractSingularAttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.CompositeElementGraph;
 import org.hibernate.loader.plan.spi.CompositeFetch;
+import org.hibernate.loader.plan.spi.CompositeFetchOwnerDelegate;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
+import org.hibernate.loader.plan.spi.FetchOwnerDelegate;
 import org.hibernate.loader.plan.spi.IdentifierDescription;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -66,9 +70,11 @@ import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.persister.walking.spi.CompositionElementDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierResolutionContext;
@@ -192,7 +198,12 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 		final FetchOwner identifierAttributeCollector;
 		if ( entityIdentifierDefinition.isEncapsulated() ) {
-			identifierAttributeCollector = new EncapsulatedIdentifierAttributeCollector( entityReference );
+			if ( entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getIdentifierType().isComponentType() ) {
+				identifierAttributeCollector = new EncapsulatedCompositeIdentifierAttributeCollector( entityReference );
+			}
+			else {
+				identifierAttributeCollector = new EncapsulatedIdentifierAttributeCollector( entityReference );
+			}
 		}
 		else {
 			identifierAttributeCollector = new NonEncapsulatedIdentifierAttributeCollector( entityReference );
@@ -305,6 +316,35 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	public void finishingCollectionElements(CollectionElementDefinition elementDefinition) {
 		// nothing to do here
 		// 	- the element graph pushed while starting would be popped in finishing/Entity/finishingComposite
+	}
+
+	@Override
+	public void startingCompositeElement(CompositionElementDefinition compositeElementDefinition) {
+		System.out.println(
+				String.format(
+						"%s Starting composite collection element for (%s)",
+						StringHelper.repeat( ">>", fetchOwnerStack.size() ),
+						compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+				)
+		);
+	}
+
+	@Override
+	public void finishingCompositeElement(CompositionElementDefinition compositeElementDefinition) {
+		// pop the current fetch owner, and make sure what we just popped represents this composition
+		final FetchOwner poppedFetchOwner = popFromStack();
+
+		if ( ! CompositeElementGraph.class.isInstance( poppedFetchOwner ) ) {
+			throw new WalkingException( "Mismatched FetchOwner from stack on pop" );
+		}
+
+		// NOTE : not much else we can really check here atm since on the walking spi side we do not have path
+
+		log.tracef(
+				"%s Finished composite element for  : %s",
+				StringHelper.repeat( "<<", fetchOwnerStack.size() ),
+				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+		);
 	}
 
 	@Override
@@ -514,6 +554,11 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 		@Override
+		public boolean isNullable(Fetch fetch) {
+			return false;
+		}
+
+		@Override
 		public IdentifierDescription getIdentifierDescription() {
 			return entityReference.getIdentifierDescription();
 		}
@@ -596,6 +641,13 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 	}
 
+	protected static abstract class AbstractCompositeIdentifierAttributeCollector extends AbstractIdentifierAttributeCollector {
+
+		public AbstractCompositeIdentifierAttributeCollector(EntityReference entityReference) {
+			super( entityReference );
+		}
+	}
+
 	protected static class EncapsulatedIdentifierAttributeCollector extends AbstractIdentifierAttributeCollector {
 		private final PropertyPath propertyPath;
 
@@ -614,16 +666,75 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 		@Override
+		public Type getType(Fetch fetch) {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public String[] getColumnNames(Fetch fetch) {
+			return ( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames();
+		}
+
+		@Override
 		public PropertyPath getPropertyPath() {
 			return propertyPath;
 		}
 	}
 
-	protected static class NonEncapsulatedIdentifierAttributeCollector extends AbstractIdentifierAttributeCollector {
+	protected static class EncapsulatedCompositeIdentifierAttributeCollector extends AbstractCompositeIdentifierAttributeCollector {
 		private final PropertyPath propertyPath;
+
+		public EncapsulatedCompositeIdentifierAttributeCollector(EntityReference entityReference) {
+			super( entityReference );
+			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath();
+		}
+
+		@Override
+		protected IdentifierDescription buildIdentifierDescription() {
+			return new IdentifierDescriptionImpl(
+					entityReference,
+					identifierFetches.toArray( new AbstractSingularAttributeFetch[ identifierFetches.size() ] ),
+					null
+			);
+		}
+
+		@Override
+		public PropertyPath getPropertyPath() {
+			return propertyPath;
+		}
+
+		@Override
+		public Type getType(Fetch fetch) {
+			if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Fetch owner property name [%s] is not the same as the identifier property name [%s].",
+								fetch.getOwnerPropertyName(),
+								entityReference.getEntityPersister().getIdentifierPropertyName()
+						)
+				);
+			}
+			return entityReference.getEntityPersister().getIdentifierType();
+		}
+
+		@Override
+		public String[] getColumnNames(Fetch fetch) {
+			return ( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames();
+		}
+	}
+
+	protected static class NonEncapsulatedIdentifierAttributeCollector extends AbstractCompositeIdentifierAttributeCollector {
+		private final PropertyPath propertyPath;
+		private final FetchOwnerDelegate fetchOwnerDelegate;
+
 		public NonEncapsulatedIdentifierAttributeCollector(EntityReference entityReference) {
 			super( entityReference );
 			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath().append( "<id>" );
+			this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
+					entityReference.getEntityPersister().getFactory(),
+					(CompositeType) entityReference.getEntityPersister().getIdentifierType(),
+					( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames()
+			);
 		}
 
 		@Override
@@ -638,6 +749,24 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		@Override
 		public PropertyPath getPropertyPath() {
 			return propertyPath;
+		}
+
+
+		public Type getType(Fetch fetch) {
+			if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Fetch owner property name [%s] is not the same as the identifier property name [%s].",
+								fetch.getOwnerPropertyName(),
+								entityReference.getEntityPersister().getIdentifierPropertyName()
+						)
+				);
+			}
+			return fetchOwnerDelegate.getType( fetch );
+		}
+
+		public String[] getColumnNames(Fetch fetch) {
+			return fetchOwnerDelegate.getColumnNames( fetch );
 		}
 	}
 

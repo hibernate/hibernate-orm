@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.CollectionAliases;
@@ -36,6 +35,8 @@ import org.hibernate.loader.EntityAliases;
 import org.hibernate.loader.GeneratedCollectionAliases;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CollectionReturn;
+import org.hibernate.loader.plan.spi.CompositeElementGraph;
+import org.hibernate.loader.plan.spi.CompositeIndexGraph;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.Fetch;
@@ -46,7 +47,6 @@ import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
-import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.EntityType;
 
 /**
@@ -214,9 +214,18 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 			if ( EntityReference.class.isInstance( currentFetch.getOwner() ) ) {
 				lhsAlias = resolveEntityTableAlias( (EntityReference) currentFetch.getOwner() );
 			}
-			else {
-				throw new NotYetImplementedException( "Cannot determine LHS alias for a FetchOwner that is not an EntityReference yet." );
+			else if ( CompositeElementGraph.class.isInstance( currentFetch.getOwner() ) ) {
+				CompositeElementGraph compositeElementGraph = (CompositeElementGraph) currentFetch.getOwner();
+				lhsAlias = resolveCollectionTableAlias( compositeElementGraph.getCollectionReference() );
 			}
+			else if ( CompositeIndexGraph.class.isInstance( currentFetch.getOwner() ) ) {
+				CompositeIndexGraph compositeIndexGraph = (CompositeIndexGraph) currentFetch.getOwner();
+				lhsAlias = resolveCollectionTableAlias( compositeIndexGraph.getCollectionReference() );
+			}
+			else {
+				throw new NotYetImplementedException( "Cannot determine LHS alias for FetchOwner." );
+			}
+			final String[] aliasedLhsColumnNames = StringHelper.qualify( lhsAlias, currentFetch.getColumnNames() );
 			final String rhsAlias;
 			if ( EntityReference.class.isInstance( currentFetch ) ) {
 				rhsAlias = resolveEntityTableAlias( (EntityReference) currentFetch );
@@ -229,15 +238,6 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 			}
 
 			// TODO: can't this be found in CollectionAliases or EntityAliases? should be moved to LoadQueryAliasResolutionContextImpl
-			final OuterJoinLoadable fetchSourcePersister = (OuterJoinLoadable) currentFetch.getOwner().retrieveFetchSourcePersister();
-			final int propertyNumber = fetchSourcePersister.getEntityMetamodel().getPropertyIndex( currentFetch.getOwnerPropertyName() );
-			final String[] aliasedLhsColumnNames = JoinHelper.getAliasedLHSColumnNames(
-					joinableAssociation.getAssociationType(),
-					lhsAlias,
-					propertyNumber,
-					fetchSourcePersister,
-					sessionFactory
-			);
 
 			aliases = new JoinableAssociationAliasesImpl( lhsAlias, aliasedLhsColumnNames, rhsAlias );
 			aliasesByJoinableAssociation.put( joinableAssociation, aliases );

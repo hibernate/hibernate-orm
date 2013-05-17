@@ -24,7 +24,6 @@
 package org.hibernate.loader.plan.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -42,11 +41,10 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 
 	public AbstractSingularAttributeFetch(
 			SessionFactoryImplementor factory,
-			LockMode lockMode,
 			FetchOwner owner,
 			String ownerProperty,
 			FetchStrategy fetchStrategy) {
-		super( factory, lockMode );
+		super( factory );
 		this.owner = owner;
 		this.ownerProperty = ownerProperty;
 		this.fetchStrategy = fetchStrategy;
@@ -75,6 +73,16 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 	@Override
 	public String getOwnerPropertyName() {
 		return ownerProperty;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return owner.isNullable( this );
+	}
+
+	@Override
+	public String[] getColumnNames() {
+		return owner.getColumnNames( this );
 	}
 
 	@Override

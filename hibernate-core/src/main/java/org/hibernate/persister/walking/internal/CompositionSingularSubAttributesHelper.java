@@ -1,0 +1,212 @@
+package org.hibernate.persister.walking.internal;
+
+import java.util.Iterator;
+
+import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.loader.PropertyPath;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.persister.spi.HydratedCompoundValueHandler;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AssociationKey;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeSource;
+import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.persister.walking.spi.CompositionElementDefinition;
+import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.type.AssociationType;
+import org.hibernate.type.CompositeType;
+import org.hibernate.type.Type;
+
+/**
+ * @author Gail Badner
+ */
+public class CompositionSingularSubAttributesHelper {
+
+	public static Iterable<AttributeDefinition> getIdentifierSubAttributes(
+			final AbstractEntityPersister entityPersister) {
+		return getSingularSubAttributes(
+				entityPersister,
+				entityPersister,
+				(CompositeType) entityPersister.getIdentifierType(),
+				entityPersister.getTableName(),
+				entityPersister.getRootTableIdentifierColumnNames()
+		);
+	}
+
+	public static Iterable<AttributeDefinition> getCompositionElementSubAttributes(
+			CompositionElementDefinition compositionElementDefinition) {
+		final QueryableCollection collectionPersister =
+				(QueryableCollection) compositionElementDefinition.getCollectionDefinition().getCollectionPersister();
+		return getSingularSubAttributes(
+				compositionElementDefinition.getSource(),
+				(OuterJoinLoadable) collectionPersister.getOwnerEntityPersister(),
+				(CompositeType) collectionPersister.getElementType(),
+				collectionPersister.getTableName(),
+				collectionPersister.getElementColumnNames()
+		);
+	}
+
+	private static Iterable<AttributeDefinition> getSingularSubAttributes(
+			final AttributeSource source,
+			final OuterJoinLoadable ownerEntityPersister,
+			final CompositeType compositeType,
+			final String lhsTableName,
+			final String[] lhsColumns) {
+		return new Iterable<AttributeDefinition>() {
+			@Override
+			public Iterator<AttributeDefinition> iterator() {
+				return new Iterator<AttributeDefinition>() {
+					private final int numberOfAttributes = compositeType.getSubtypes().length;
+					private int currentSubAttributeNumber = 0;
+					private int currentColumnPosition = 0;
+
+					@Override
+					public boolean hasNext() {
+						return currentSubAttributeNumber < numberOfAttributes;
+					}
+
+					@Override
+					public AttributeDefinition next() {
+						final int subAttributeNumber = currentSubAttributeNumber;
+						currentSubAttributeNumber++;
+
+						final String name = compositeType.getPropertyNames()[subAttributeNumber];
+						final Type type = compositeType.getSubtypes()[subAttributeNumber];
+
+						final int columnPosition = currentColumnPosition;
+						final int columnSpan = type.getColumnSpan( ownerEntityPersister.getFactory() );
+						final String[] subAttributeLhsColumns = ArrayHelper.slice( lhsColumns, columnPosition, columnSpan );
+
+						currentColumnPosition += columnSpan;
+
+						if ( type.isAssociationType() ) {
+							final AssociationType aType = (AssociationType) type;
+							return new AssociationAttributeDefinition() {
+								@Override
+								public AssociationKey getAssociationKey() {
+									/* TODO: is this always correct? */
+									//return new AssociationKey(
+									//		joinable.getTableName(),
+									//		JoinHelper.getRHSColumnNames( aType, getEntityPersister().getFactory() )
+									//);
+									return new AssociationKey(
+											lhsTableName,
+											subAttributeLhsColumns
+									);
+								}
+
+								@Override
+								public boolean isCollection() {
+									return false;
+								}
+
+								@Override
+								public EntityDefinition toEntityDefinition() {
+									return (EntityPersister) aType.getAssociatedJoinable( ownerEntityPersister.getFactory() );
+								}
+
+								@Override
+								public CollectionDefinition toCollectionDefinition() {
+									throw new WalkingException( "A collection cannot be mapped to a composite ID sub-attribute." );
+								}
+
+								@Override
+								public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
+									return new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+								}
+
+								@Override
+								public CascadeStyle determineCascadeStyle() {
+									return CascadeStyles.NONE;
+								}
+
+								@Override
+								public HydratedCompoundValueHandler getHydratedCompoundValueExtractor() {
+									return null;
+								}
+
+								@Override
+								public String getName() {
+									return name;
+								}
+
+								@Override
+								public Type getType() {
+									return type;
+								}
+
+								@Override
+								public AttributeSource getSource() {
+									return source;
+								}
+							};
+						}
+						else if ( type.isComponentType() ) {
+							return new CompositionDefinition() {
+								@Override
+								public String getName() {
+									return name;
+								}
+
+								@Override
+								public Type getType() {
+									return type;
+								}
+
+								@Override
+								public AttributeSource getSource() {
+									return this;
+								}
+
+								@Override
+								public Iterable<AttributeDefinition> getAttributes() {
+									return CompositionSingularSubAttributesHelper.getSingularSubAttributes(
+											this,
+											ownerEntityPersister,
+											(CompositeType) type,
+											lhsTableName,
+											subAttributeLhsColumns
+									);
+								}
+							};
+						}
+						else {
+							return new AttributeDefinition() {
+								@Override
+								public String getName() {
+									return name;
+								}
+
+								@Override
+								public Type getType() {
+									return type;
+								}
+
+								@Override
+								public AttributeSource getSource() {
+									return source;
+								}
+							};
+						}
+					}
+
+					@Override
+					public void remove() {
+						throw new UnsupportedOperationException( "Remove operation not supported here" );
+					}
+				};
+			}
+		};
+	}
+}

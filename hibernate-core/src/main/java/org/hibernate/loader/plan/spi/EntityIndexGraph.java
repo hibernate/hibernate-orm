@@ -23,33 +23,24 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.AssociationType;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityIndexGraph extends AbstractPlanNode implements FetchableCollectionIndex, EntityReference {
+public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCollectionIndex, EntityReference {
 	private final CollectionReference collectionReference;
 	private final CollectionPersister collectionPersister;
 	private final AssociationType indexType;
 	private final EntityPersister indexPersister;
 	private final PropertyPath propertyPath;
-
-	private List<Fetch> fetches;
+	private final FetchOwnerDelegate fetchOwnerDelegate;
 
 	private IdentifierDescription identifierDescription;
 
@@ -63,28 +54,17 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 		this.indexType = (AssociationType) collectionPersister.getIndexType();
 		this.indexPersister = (EntityPersister) this.indexType.getAssociatedJoinable( sessionFactory() );
 		this.propertyPath = collectionPath.append( "<index>" ); // todo : do we want the <index> part?
+		this.fetchOwnerDelegate = new EntityFetchOwnerDelegate( indexPersister );
 	}
 
 	public EntityIndexGraph(EntityIndexGraph original, CopyContext copyContext) {
-		super( original );
+		super( original, copyContext );
 		this.collectionReference = original.collectionReference;
 		this.collectionPersister = original.collectionReference.getCollectionPersister();
 		this.indexType = original.indexType;
 		this.indexPersister = original.indexPersister;
 		this.propertyPath = original.propertyPath;
-
-		copyContext.getReturnGraphVisitationStrategy().startingFetches( original );
-		if ( fetches == null || fetches.size() == 0 ) {
-			this.fetches = Collections.emptyList();
-		}
-		else {
-			List<Fetch> fetchesCopy = new ArrayList<Fetch>();
-			for ( Fetch fetch : fetches ) {
-				fetchesCopy.add( fetch.makeCopy( copyContext, this ) );
-			}
-			this.fetches = fetchesCopy;
-		}
-		copyContext.getReturnGraphVisitationStrategy().finishingFetches( original );
+		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
 	}
 
 	@Override
@@ -108,19 +88,6 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 	}
 
 	@Override
-	public void addFetch(Fetch fetch) {
-		if ( fetches == null ) {
-			fetches = new ArrayList<Fetch>();
-		}
-		fetches.add( fetch );
-	}
-
-	@Override
-	public Fetch[] getFetches() {
-		return fetches == null ? NO_FETCHES : fetches.toArray( new Fetch[ fetches.size() ] );
-	}
-
-	@Override
 	public void validateFetchPlan(FetchStrategy fetchStrategy) {
 	}
 
@@ -135,39 +102,6 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 	}
 
 	@Override
-	public CollectionFetch buildCollectionFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCollectionFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public EntityFetch buildEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardEntityFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCompositeFetch( this, attributeDefinition, loadPlanBuildingContext );
-	}
-
-	@Override
 	public void injectIdentifierDescription(IdentifierDescription identifierDescription) {
 		this.identifierDescription = identifierDescription;
 	}
@@ -175,5 +109,10 @@ public class EntityIndexGraph extends AbstractPlanNode implements FetchableColle
 	@Override
 	public EntityIndexGraph makeCopy(CopyContext copyContext) {
 		return new EntityIndexGraph( this, copyContext );
+	}
+
+	@Override
+	protected FetchOwnerDelegate getFetchOwnerDelegate() {
+		return fetchOwnerDelegate;
 	}
 }

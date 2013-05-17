@@ -35,5 +35,5 @@ public interface CollectionElementDefinition {
 
 	public EntityDefinition toEntityDefinition();
 
-	public CompositionDefinition toCompositeDefinition();
+	public CompositionElementDefinition toCompositeElementDefinition();
 }

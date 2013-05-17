@@ -32,21 +32,19 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityFetch extends AbstractSingularAttributeFetch implements EntityReference {
+public class EntityFetch extends AbstractSingularAttributeFetch implements EntityReference, Fetch {
 
 	private final EntityType associationType;
 	private final EntityPersister persister;
+	private final LockMode lockMode;
+	private final FetchOwnerDelegate fetchOwnerDelegate;
 
 	private IdentifierDescription identifierDescription;
 
@@ -57,10 +55,12 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 			String ownerProperty,
 			EntityType entityType,
 			FetchStrategy fetchStrategy) {
-		super( sessionFactory, lockMode, owner, ownerProperty, fetchStrategy );
+		super( sessionFactory, owner, ownerProperty, fetchStrategy );
 
 		this.associationType = entityType;
 		this.persister = sessionFactory.getEntityPersister( associationType.getAssociatedEntityName() );
+		this.lockMode = lockMode;
+		this.fetchOwnerDelegate = new EntityFetchOwnerDelegate( persister );
 	}
 
 	/**
@@ -73,6 +73,8 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 		super( original, copyContext, fetchOwnerCopy );
 		this.associationType = original.associationType;
 		this.persister = original.persister;
+		this.lockMode = original.lockMode;
+		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
 	}
 
 	public EntityType getAssociationType() {
@@ -95,42 +97,13 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 	}
 
 	@Override
+	public LockMode getLockMode() {
+		return lockMode;
+	}
+
+	@Override
 	public EntityPersister retrieveFetchSourcePersister() {
 		return persister;
-	}
-
-
-	@Override
-	public CollectionFetch buildCollectionFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCollectionFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public EntityFetch buildEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardEntityFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCompositeFetch( this, attributeDefinition, loadPlanBuildingContext );
 	}
 
 	@Override
@@ -267,5 +240,10 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 		final EntityFetch copy = new EntityFetch( this, copyContext, fetchOwnerCopy );
 		copyContext.getReturnGraphVisitationStrategy().finishingEntityFetch( this );
 		return copy;
+	}
+
+	@Override
+	protected FetchOwnerDelegate getFetchOwnerDelegate() {
+		return fetchOwnerDelegate;
 	}
 }

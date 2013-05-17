@@ -48,7 +48,6 @@ public class EntityJoinableAssociationImpl extends AbstractJoinableAssociationIm
 			EntityFetch entityFetch,
 			CollectionReference currentCollectionReference,
 			String withClause,
-			boolean isNullable,
 			boolean hasRestriction,
 			Map<String, Filter> enabledFilters) throws MappingException {
 		super(
@@ -56,7 +55,6 @@ public class EntityJoinableAssociationImpl extends AbstractJoinableAssociationIm
 				entityFetch,
 				currentCollectionReference,
 				withClause,
-				isNullable,
 				hasRestriction,
 				enabledFilters
 		);

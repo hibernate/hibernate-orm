@@ -21,26 +21,11 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple.component;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.CompositeType;
+package org.hibernate.persister.walking.spi;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class CompositionBasedCompositionAttribute
-		extends AbstractCompositionAttribute
-		implements CompositionDefinition {
-	public CompositionBasedCompositionAttribute(
-			CompositionDefinition source,
-			SessionFactoryImplementor sessionFactory,
-			int attributeNumber,
-			String attributeName,
-			CompositeType attributeType,
-			BaselineAttributeInformation baselineInfo) {
-		super( source, sessionFactory, attributeNumber, attributeName, attributeType, baselineInfo );
-	}
+public interface CompositionElementDefinition extends CompositionDefinition{
+	public CollectionDefinition getCollectionDefinition();
 }

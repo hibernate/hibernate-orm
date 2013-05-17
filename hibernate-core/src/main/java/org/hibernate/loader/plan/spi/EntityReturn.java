@@ -32,12 +32,8 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierResolutionContext;
 
@@ -50,24 +46,32 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 
 	private final PropertyPath propertyPath = new PropertyPath(); // its a root
 
+	private final LockMode lockMode;
+
+	private final FetchOwnerDelegate fetchOwnerDelegate;
+
 	private IdentifierDescription identifierDescription;
 
 	public EntityReturn(
 			SessionFactoryImplementor sessionFactory,
 			LockMode lockMode,
 			String entityName) {
-		super( sessionFactory, lockMode );
-
+		super( sessionFactory );
 		this.persister = sessionFactory.getEntityPersister( entityName );
+		this.lockMode = lockMode;
+		this.fetchOwnerDelegate = new EntityFetchOwnerDelegate( persister );
 	}
 
 	protected EntityReturn(EntityReturn original, CopyContext copyContext) {
 		super( original, copyContext );
 		this.persister = original.persister;
+		this.lockMode = original.lockMode;
+		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
 	}
+
 	@Override
 	public LockMode getLockMode() {
-		return super.getLockMode();
+		return lockMode;
 	}
 
 	@Override
@@ -97,39 +101,6 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	@Override
 	public PropertyPath getPropertyPath() {
 		return propertyPath;
-	}
-
-	@Override
-	public CollectionFetch buildCollectionFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCollectionFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public EntityFetch buildEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardEntityFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCompositeFetch( this, attributeDefinition, loadPlanBuildingContext );
 	}
 
 	@Override
@@ -206,5 +177,10 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	@Override
 	public EntityReturn makeCopy(CopyContext copyContext) {
 		return new EntityReturn( this, copyContext );
+	}
+
+	@Override
+	protected FetchOwnerDelegate getFetchOwnerDelegate() {
+		return fetchOwnerDelegate;
 	}
 }

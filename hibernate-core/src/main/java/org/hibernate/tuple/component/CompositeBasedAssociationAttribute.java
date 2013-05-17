@@ -55,7 +55,7 @@ public class CompositeBasedAssociationAttribute
 	private Joinable joinable;
 
 	public CompositeBasedAssociationAttribute(
-			AbstractCompositionDefinition source,
+			AbstractCompositionAttribute source,
 			SessionFactoryImplementor factory,
 			int attributeNumber,
 			String attributeName,

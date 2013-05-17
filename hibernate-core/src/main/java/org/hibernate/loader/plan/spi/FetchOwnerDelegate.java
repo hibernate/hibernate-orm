@@ -21,26 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple.component;
+package org.hibernate.loader.plan.spi;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.tuple.BaselineAttributeInformation;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.Type;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class CompositionBasedCompositionAttribute
-		extends AbstractCompositionAttribute
-		implements CompositionDefinition {
-	public CompositionBasedCompositionAttribute(
-			CompositionDefinition source,
-			SessionFactoryImplementor sessionFactory,
-			int attributeNumber,
-			String attributeName,
-			CompositeType attributeType,
-			BaselineAttributeInformation baselineInfo) {
-		super( source, sessionFactory, attributeNumber, attributeName, attributeType, baselineInfo );
-	}
+public interface FetchOwnerDelegate {
+
+	public boolean isNullable(Fetch fetch);
+
+	public Type getType(Fetch fetch);
+
+	public String[] getColumnNames(Fetch fetch);
 }

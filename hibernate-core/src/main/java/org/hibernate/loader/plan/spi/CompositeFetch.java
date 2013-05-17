@@ -25,8 +25,6 @@ package org.hibernate.loader.plan.spi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -37,6 +35,7 @@ import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.CompositeType;
 
 /**
  * @author Steve Ebersole
@@ -44,15 +43,28 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 public class CompositeFetch extends AbstractSingularAttributeFetch {
 	public static final FetchStrategy FETCH_PLAN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
+	private final FetchOwnerDelegate delegate;
+
 	public CompositeFetch(
 			SessionFactoryImplementor sessionFactory,
 			FetchOwner owner,
 			String ownerProperty) {
-		super( sessionFactory, LockMode.NONE, owner, ownerProperty, FETCH_PLAN );
+		super( sessionFactory, owner, ownerProperty, FETCH_PLAN );
+		this.delegate = new CompositeFetchOwnerDelegate(
+				sessionFactory,
+				(CompositeType) getOwner().getType( this ),
+				getOwner().getColumnNames( this )
+		);
 	}
 
 	public CompositeFetch(CompositeFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
 		super( original, copyContext, fetchOwnerCopy );
+		this.delegate = original.getFetchOwnerDelegate();
+	}
+
+	@Override
+	protected FetchOwnerDelegate getFetchOwnerDelegate() {
+		return delegate;
 	}
 
 	@Override

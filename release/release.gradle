@@ -13,9 +13,7 @@ final String majorVersion = versionComponents[0];
 final String majorMinorVersion = versionComponents[0] + '.' + versionComponents[1];
 
 final File documentationDir = mkdir( new File( project.buildDir, 'documentation' ) );
-final File versionedDocumentationDir = mkdir( new File( new File( documentationDir, "orm" ), majorMinorVersion ) );
-final File javadocDir = mkdir( new File( versionedDocumentationDir, 'javadocs' ) );
-
+final File javadocDir = mkdir( new File( documentationDir, 'javadocs' ) );
 
 /**
  * Builds the JavaDocs aggregated (unified) across all the sub-projects
@@ -71,7 +69,6 @@ task aggregateJavadocs(type: Javadoc) {
     }
 
     // apply standard config
-    description = "Build the aggregated JavaDocs for all modules"
     maxMemory = '512m'
     destinationDir = javadocDir
     configure( options ) {
@@ -100,6 +97,9 @@ task aggregateJavadocs(type: Javadoc) {
     }
 }
 
+final File documentationUploadStagingDir = mkdir( "${project.buildDir}/tmp/documentation" );
+final File versionedDocumentationDir = mkdir( new File( new File( documentationUploadStagingDir, "orm" ), majorMinorVersion ) );
+
 /**
  * Builds the complete documentation set in preparation for upload to the doc server.
  *
@@ -110,13 +110,22 @@ task buildDocumentation(type: Task, dependsOn: [rootProject.project( 'documentat
     description = "Builds and consolidates all documentation"
 
     doLast {
+        // copy docbook outputs into target/documentation (javadocs are already there).  this is used in
+        // building the dist bundles
         copy {
             from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish"
+            into documentationDir
+        }
+
+        // now prepare the upload staging directory
+        versionedDocumentationDir.mkdirs()
+        copy {
+            from documentationDir
             into versionedDocumentationDir
         }
 
         if ( ! version.endsWith( 'SNAPSHOT' ) ) {
-            final File currentSymLinkContainerDir = new File( documentationDir, 'current' )
+            final File currentSymLinkContainerDir = new File( documentationUploadStagingDir, 'stable' )
             currentSymLinkContainerDir.mkdirs();
             ant.symlink(
                     action: 'delete',
@@ -140,7 +149,7 @@ task uploadDocumentation(type:Exec, dependsOn: buildDocumentation) {
     final String url = 'filemgmt.jboss.org:/docs_htdocs/hibernate/';
 
     executable 'rsync'
-    args '-rv', '--links', '--protocol=28', "${documentationDir.absolutePath}/", url
+    args '-rv', '--links', '--protocol=28', "${documentationUploadStagingDir.absolutePath}/", url
 
     doFirst {
         if ( version.endsWith( "SNAPSHOT" ) ) {
@@ -209,7 +218,7 @@ distributions {
             }
 
             into('documentation') {
-                from versionedDocumentationDir
+                from documentationDir
             }
 
             into( 'project' ) {

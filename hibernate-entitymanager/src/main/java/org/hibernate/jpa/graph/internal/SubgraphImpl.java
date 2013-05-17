@@ -68,42 +68,42 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 	}
 
 	@Override
-	public <X> Subgraph<X> addSubgraph(Attribute<T, X> attribute) {
+	public <X> SubgraphImpl<X> addSubgraph(Attribute<T, X> attribute) {
 		return super.addSubgraph( attribute );
 	}
 
 	@Override
-	public <X> Subgraph<? extends X> addSubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
+	public <X> SubgraphImpl<? extends X> addSubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
 		return super.addSubgraph( attribute, type );
 	}
 
 	@Override
-	public <X> Subgraph<X> addSubgraph(String attributeName) {
+	public <X> SubgraphImpl<X> addSubgraph(String attributeName) {
 		return super.addSubgraph( attributeName );
 	}
 
 	@Override
-	public <X> Subgraph<X> addSubgraph(String attributeName, Class<X> type) {
+	public <X> SubgraphImpl<X> addSubgraph(String attributeName, Class<X> type) {
 		return super.addSubgraph( attributeName, type );
 	}
 
 	@Override
-	public <X> Subgraph<X> addKeySubgraph(Attribute<T, X> attribute) {
+	public <X> SubgraphImpl<X> addKeySubgraph(Attribute<T, X> attribute) {
 		return super.addKeySubgraph( attribute );
 	}
 
 	@Override
-	public <X> Subgraph<? extends X> addKeySubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
+	public <X> SubgraphImpl<? extends X> addKeySubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
 		return super.addKeySubgraph( attribute, type );
 	}
 
 	@Override
-	public <X> Subgraph<X> addKeySubgraph(String attributeName) {
+	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName) {
 		return super.addKeySubgraph( attributeName );
 	}
 
 	@Override
-	public <X> Subgraph<X> addKeySubgraph(String attributeName, Class<X> type) {
+	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName, Class<X> type) {
 		return super.addKeySubgraph( attributeName, type );
 	}
 

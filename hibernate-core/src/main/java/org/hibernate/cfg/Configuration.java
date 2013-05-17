@@ -81,6 +81,8 @@ import org.hibernate.annotations.common.reflection.java.JavaReflectionManager;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cache.spi.GeneralDataRegion;
+import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.cfg.annotations.NamedProcedureCallDefinition;
 import org.hibernate.cfg.annotations.reflection.JPAMetadataProvider;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -217,6 +219,7 @@ public class Configuration implements Serializable {
 	protected Map<String, NamedSQLQueryDefinition> namedSqlQueries;
 	protected Map<String, NamedProcedureCallDefinition> namedProcedureCallMap;
 	protected Map<String, ResultSetMappingDefinition> sqlResultSetMappings;
+	protected Map<String, NamedEntityGraphDefinition> namedEntityGraphMap;
 
 	protected Map<String, TypeDef> typeDefs;
 	protected Map<String, FilterDefinition> filterDefinitions;
@@ -299,6 +302,7 @@ public class Configuration implements Serializable {
 		namedQueries = new HashMap<String,NamedQueryDefinition>();
 		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
 		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
 
 		typeDefs = new HashMap<String,TypeDef>();
 		filterDefinitions = new HashMap<String, FilterDefinition>();
@@ -2619,6 +2623,12 @@ public class Configuration implements Serializable {
 		}
 	}
 
+	public java.util.Collection<NamedEntityGraphDefinition> getNamedEntityGraphs() {
+		return namedEntityGraphMap == null
+				? Collections.<NamedEntityGraphDefinition>emptyList()
+				: namedEntityGraphMap.values();
+	}
+
 
 	// Mappings impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2883,6 +2893,16 @@ public class Configuration implements Serializable {
 			final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
 			if ( previous != null ) {
 				throw new DuplicateMappingException( "named stored procedure query", name );
+			}
+		}
+
+		@Override
+		public void addNamedEntityGraphDefintion(NamedEntityGraphDefinition definition)
+				throws DuplicateMappingException {
+			final String name = definition.getRegisteredName();
+			final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
+			if ( previous != null ) {
+				throw new DuplicateMappingException( "NamedEntityGraph", name );
 			}
 		}
 

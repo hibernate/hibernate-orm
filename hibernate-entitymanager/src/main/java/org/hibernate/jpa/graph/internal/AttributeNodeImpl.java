@@ -108,16 +108,16 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> Subgraph<T> makeSubgraph() {
-		return (Subgraph<T>) internalMakeSubgraph( null );
+	public <T> SubgraphImpl<T> makeSubgraph() {
+		return (SubgraphImpl<T>) internalMakeSubgraph( null );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X extends T> Subgraph<X> makeSubgraph(Class<X> type) {
-		return (Subgraph<X>) internalMakeSubgraph( type );
+	public <X extends T> SubgraphImpl<X> makeSubgraph(Class<X> type) {
+		return (SubgraphImpl<X>) internalMakeSubgraph( type );
 	}
 
-	private Subgraph internalMakeSubgraph(Class type) {
+	private SubgraphImpl internalMakeSubgraph(Class type) {
 		if ( attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.BASIC
 				|| attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED ) {
 			throw new IllegalArgumentException(
@@ -193,12 +193,17 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 		return type.isAssignableFrom( entityPersister.getMappedClass() );
 	}
 
-	public <T> Subgraph<T> makeKeySubgraph() {
-		return (SubgraphImpl<T>) makeKeySubgraph( null );
+	@SuppressWarnings("unchecked")
+	public <T> SubgraphImpl<T> makeKeySubgraph() {
+		return (SubgraphImpl<T>) internalMakeKeySubgraph( null );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X extends T> Subgraph<X> makeKeySubgraph(Class<X> type) {
+	public <X extends T> SubgraphImpl<X> makeKeySubgraph(Class<X> type) {
+		return (SubgraphImpl<X>) internalMakeKeySubgraph( type );
+	}
+
+	public SubgraphImpl internalMakeKeySubgraph(Class type) {
 		if ( ! attribute.isCollection() ) {
 			throw new IllegalArgumentException(
 					String.format( "Non-collection attribute [%s] cannot be target of key subgraph", getAttributeName() )

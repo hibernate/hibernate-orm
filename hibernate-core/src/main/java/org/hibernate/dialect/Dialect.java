@@ -283,6 +283,12 @@ public abstract class Dialect implements ConversionContext {
 
 	// database type mapping support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Allows the Dialect to contribute additional types
+	 *
+	 * @param typeContributions Callback to contribute the types
+	 * @param serviceRegistry The service registry
+	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		// by default, nothing to do
 	}
@@ -1346,7 +1352,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @param lockOptions the lock options to apply
 	 * @return The appropriate <tt>FOR UPDATE OF column_list</tt> clause string.
 	 */
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked", "UnusedParameters"})
 	public String getForUpdateString(String aliases, LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
 		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
@@ -1596,6 +1602,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @throws SQLException Indicates problems registering the param.
 	 */
+	@SuppressWarnings("UnusedParameters")
 	public int registerResultSetOutParameter(CallableStatement statement, String name) throws SQLException {
 		throw new UnsupportedOperationException(
 				getClass().getName() +
@@ -1628,6 +1635,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @throws SQLException Indicates problems extracting the result set.
 	 */
+	@SuppressWarnings("UnusedParameters")
 	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
 		throw new UnsupportedOperationException(
 				getClass().getName() + " does not support resultsets via stored procedures"
@@ -1645,6 +1653,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @throws SQLException Indicates problems extracting the result set.
 	 */
+	@SuppressWarnings("UnusedParameters")
 	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
 		throw new UnsupportedOperationException(
 				getClass().getName() + " does not support resultsets via stored procedures"

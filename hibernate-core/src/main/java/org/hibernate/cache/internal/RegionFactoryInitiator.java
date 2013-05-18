@@ -60,14 +60,20 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		Properties p = new Properties();
+		final Properties p = new Properties();
 		if (configurationValues != null) {
 			p.putAll( configurationValues );
 		}
 		
-		boolean useSecondLevelCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_SECOND_LEVEL_CACHE,
-				configurationValues, true );
-		boolean useQueryCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_QUERY_CACHE, configurationValues );
+		final boolean useSecondLevelCache = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_SECOND_LEVEL_CACHE,
+				configurationValues,
+				true
+		);
+		final boolean useQueryCache = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_QUERY_CACHE,
+				configurationValues
+		);
 
 		RegionFactory regionFactory = NoCachingRegionFactory.INSTANCE;
 
@@ -77,7 +83,7 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 				configurationValues, null );
 		if ( ( useSecondLevelCache || useQueryCache ) && setting != null ) {
 			try {
-				Class<? extends RegionFactory> regionFactoryClass = registry.getService( StrategySelector.class )
+				final Class<? extends RegionFactory> regionFactoryClass = registry.getService( StrategySelector.class )
 						.selectStrategyImplementor( RegionFactory.class, setting );
 				try {
 					regionFactory = regionFactoryClass.getConstructor( Properties.class ).newInstance( p );

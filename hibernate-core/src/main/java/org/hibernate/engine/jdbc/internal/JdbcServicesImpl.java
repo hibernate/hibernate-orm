@@ -48,6 +48,7 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SchemaNameResolver;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.exception.internal.SQLExceptionTypeDelegate;
 import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
@@ -122,19 +123,29 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 			try {
 				final Connection connection = jdbcConnectionAccess.obtainConnection();
 				try {
-					DatabaseMetaData meta = connection.getMetaData();
-					if(LOG.isDebugEnabled()) {
-						LOG.debugf( "Database ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
-									meta.getDatabaseProductName(),
-									meta.getDatabaseProductVersion(),
-									meta.getDatabaseMajorVersion(),
-									meta.getDatabaseMinorVersion()
+					final DatabaseMetaData meta = connection.getMetaData();
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf(
+								"Database ->\n"
+										+ "       name : %s\n"
+										+ "    version : %s\n"
+										+ "      major : %s\n"
+										+ "      minor : %s",
+								meta.getDatabaseProductName(),
+								meta.getDatabaseProductVersion(),
+								meta.getDatabaseMajorVersion(),
+								meta.getDatabaseMinorVersion()
 						);
-						LOG.debugf( "Driver ->\n" + "       name : %s\n" + "    version : %s\n" + "      major : %s\n" + "      minor : %s",
-									meta.getDriverName(),
-									meta.getDriverVersion(),
-									meta.getDriverMajorVersion(),
-									meta.getDriverMinorVersion()
+						LOG.debugf(
+								"Driver ->\n"
+										+ "       name : %s\n"
+										+ "    version : %s\n"
+										+ "      major : %s\n"
+										+ "      minor : %s",
+								meta.getDriverName(),
+								meta.getDriverVersion(),
+								meta.getDriverMajorVersion(),
+								meta.getDriverMinorVersion()
 						);
 						LOG.debugf( "JDBC version : %s.%s", meta.getJDBCMajorVersion(), meta.getJDBCMinorVersion() );
 					}
@@ -149,7 +160,7 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 					extraKeywordsString = meta.getSQLKeywords();
 					sqlStateType = meta.getSQLStateType();
 					lobLocatorUpdateCopy = meta.locatorsUpdateCopy();
-					typeInfoSet.addAll( TypeInfoExtracter.extractTypeInfo( meta ) );
+					typeInfoSet.addAll( TypeInfo.extractTypeInfo( meta ) );
 
 					dialect = dialectFactory.buildDialect( configValues, connection );
 

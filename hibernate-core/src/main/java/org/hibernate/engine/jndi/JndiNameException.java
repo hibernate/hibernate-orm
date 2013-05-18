@@ -31,7 +31,13 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class JndiNameException extends HibernateException {
-	public JndiNameException(String string, Throwable root) {
-		super( string, root );
+	/**
+	 * Constructs a JndiNameException
+	 *
+	 * @param message Message explaining the exception condition
+	 * @param cause The underlying cause.
+	 */
+	public JndiNameException(String message, Throwable cause) {
+		super( message, cause );
 	}
 }

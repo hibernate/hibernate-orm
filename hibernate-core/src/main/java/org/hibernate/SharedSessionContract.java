@@ -26,7 +26,6 @@ package org.hibernate;
 import java.io.Serializable;
 
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureCallMemento;
 
 /**
  * Contract methods shared between {@link Session} and {@link StatelessSession}.

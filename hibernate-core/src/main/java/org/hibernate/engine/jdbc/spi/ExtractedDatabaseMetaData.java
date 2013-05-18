@@ -26,8 +26,6 @@ package org.hibernate.engine.jdbc.spi;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.hibernate.engine.jdbc.internal.TypeInfo;
-
 /**
  * Information extracted from {@link java.sql.DatabaseMetaData} regarding what the JDBC driver reports as
  * being supported or not.  Obviously {@link java.sql.DatabaseMetaData} reports many things, these are a few in
@@ -37,10 +35,21 @@ import org.hibernate.engine.jdbc.internal.TypeInfo;
  */
 @SuppressWarnings( {"UnusedDeclaration"})
 public interface ExtractedDatabaseMetaData {
-
+	/**
+	 * Which specification do the reported SQLState codes follow?
+	 */
 	public enum SQLStateType {
+		/**
+		 * The reported codes follow the X/Open spec
+		 */
 		XOpen,
+		/**
+		 * The reported codes follow the SQL spec
+		 */
 		SQL99,
+		/**
+		 * It is unknown.  Might follow another spec completely, or be a mixture.
+		 */
 		UNKOWN
 	}
 

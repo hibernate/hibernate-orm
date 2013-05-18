@@ -95,6 +95,12 @@ public class SqlStatementLogger {
 		logStatement( statement, FormatStyle.BASIC.getFormatter() );
 	}
 
+	/**
+	 * Log a SQL statement string using the specified formatter
+	 *
+	 * @param statement The SQL statement.
+	 * @param formatter The formatter to use.
+	 */
 	public void logStatement(String statement, Formatter formatter) {
 		if ( format ) {
 			if ( logToStdout || LOG.isDebugEnabled() ) {

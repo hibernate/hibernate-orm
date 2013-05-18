@@ -25,6 +25,8 @@ package org.hibernate.engine.jndi.internal;
 
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.InvalidNameException;
@@ -36,8 +38,8 @@ import javax.naming.event.NamespaceChangeListener;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.jndi.JndiHelper;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
@@ -48,19 +50,66 @@ import org.hibernate.engine.jndi.spi.JndiService;
  * @author Steve Ebersole
  */
 public class JndiServiceImpl implements JndiService {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JndiServiceImpl.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			JndiServiceImpl.class.getName()
+	);
 
 	private final Hashtable initialContextSettings;
 
+	/**
+	 * Constructs a JndiServiceImpl
+	 *
+	 * @param configurationValues Map of configuration settings, some of which apply to JNDI support.
+	 */
 	public JndiServiceImpl(Map configurationValues) {
-		this.initialContextSettings = JndiHelper.extractJndiProperties( configurationValues );
+		this.initialContextSettings = extractJndiProperties( configurationValues );
+	}
+
+	/**
+	 * Given a hodgepodge of properties, extract out the ones relevant for JNDI interaction.
+	 *
+	 * @param configurationValues The map of config values
+	 *
+	 * @return The extracted JNDI specific properties.
+	 */
+	@SuppressWarnings({ "unchecked" })
+	public static Properties extractJndiProperties(Map configurationValues) {
+		final Properties jndiProperties = new Properties();
+
+		for ( Map.Entry entry : (Set<Map.Entry>) configurationValues.entrySet() ) {
+			if ( !String.class.isInstance( entry.getKey() ) ) {
+				continue;
+			}
+			final String propertyName = (String) entry.getKey();
+			final Object propertyValue = entry.getValue();
+			if ( propertyName.startsWith( Environment.JNDI_PREFIX ) ) {
+				// write the IntialContextFactory class and provider url to the result only if they are
+				// non-null; this allows the environmental defaults (if any) to remain in effect
+				if ( Environment.JNDI_CLASS.equals( propertyName ) ) {
+					if ( propertyValue != null ) {
+						jndiProperties.put( Context.INITIAL_CONTEXT_FACTORY, propertyValue );
+					}
+				}
+				else if ( Environment.JNDI_URL.equals( propertyName ) ) {
+					if ( propertyValue != null ) {
+						jndiProperties.put( Context.PROVIDER_URL, propertyValue );
+					}
+				}
+				else {
+					final String passThruPropertyname = propertyName.substring( Environment.JNDI_PREFIX.length() + 1 );
+					jndiProperties.put( passThruPropertyname, propertyValue );
+				}
+			}
+		}
+
+		return jndiProperties;
 	}
 
 	@Override
 	public Object locate(String jndiName) {
-		InitialContext initialContext = buildInitialContext();
-		Name name = parseName( jndiName, initialContext );
+		final InitialContext initialContext = buildInitialContext();
+		final Name name = parseName( jndiName, initialContext );
 		try {
 			return initialContext.lookup( name );
 		}
@@ -104,8 +153,8 @@ public class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void bind(String jndiName, Object value) {
-		InitialContext initialContext = buildInitialContext();
-		Name name = parseName( jndiName, initialContext );
+		final InitialContext initialContext = buildInitialContext();
+		final Name name = parseName( jndiName, initialContext );
 		try {
 			bind( name, value, initialContext );
 		}
@@ -172,8 +221,8 @@ public class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void unbind(String jndiName) {
-		InitialContext initialContext = buildInitialContext();
-		Name name = parseName( jndiName, initialContext );
+		final InitialContext initialContext = buildInitialContext();
+		final Name name = parseName( jndiName, initialContext );
 		try {
 			initialContext.unbind( name );
 		}
@@ -187,8 +236,8 @@ public class JndiServiceImpl implements JndiService {
 
 	@Override
 	public void addListener(String jndiName, NamespaceChangeListener listener) {
-		InitialContext initialContext = buildInitialContext();
-		Name name = parseName( jndiName, initialContext );
+		final InitialContext initialContext = buildInitialContext();
+		final Name name = parseName( jndiName, initialContext );
 		try {
 			( (EventContext) initialContext ).addNamingListener( name, EventContext.OBJECT_SCOPE, listener );
 		}

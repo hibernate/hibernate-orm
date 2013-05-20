@@ -152,6 +152,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		
 		return update.toStatementString();
 	}
+	
+	@Override
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
+			throws HibernateException {
+		// nothing to do
+	}
 
 	/**
 	 * Generate the SQL DELETE that deletes a particular row

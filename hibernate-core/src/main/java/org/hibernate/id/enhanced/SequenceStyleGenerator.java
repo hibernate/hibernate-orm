@@ -81,8 +81,9 @@ import org.hibernate.type.Type;
  *     <td><i>depends on defined increment size</i></td>
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
+ *   <tr>
  *     <td>{@link #FORCE_TBL_PARAM}</td>
- *     <td><b><i>false<i/></b></td>
+ *     <td><b><i>false</i></b></td>
  *     <td>Allows explicit definition of which optimization strategy to use</td>
  *   </tr>
  * </table>
@@ -107,32 +108,85 @@ import org.hibernate.type.Type;
 public class SequenceStyleGenerator
 		implements PersistentIdentifierGenerator, BulkInsertionCapableIdentifierGenerator, Configurable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			SequenceStyleGenerator.class.getName()
 	);
 
+
 	// general purpose parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Indicates the name of the sequence (or table) to use.  The default value is {@link #DEF_SEQUENCE_NAME},
+	 * although {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY} effects the default as well.
+	 */
 	public static final String SEQUENCE_PARAM = "sequence_name";
+
+	/**
+	 * The default value for {@link #SEQUENCE_PARAM}, in the absence of any {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}
+	 * setting.
+	 */
 	public static final String DEF_SEQUENCE_NAME = "hibernate_sequence";
 
+	/**
+	 * Indicates the initial value to use.  The default value is {@link #DEFAULT_INITIAL_VALUE}
+	 */
 	public static final String INITIAL_PARAM = "initial_value";
+
+	/**
+	 * The default value for {@link #INITIAL_PARAM}
+	 */
 	public static final int DEFAULT_INITIAL_VALUE = 1;
 
+	/**
+	 * Indicates the increment size to use.  The default value is {@link #DEFAULT_INCREMENT_SIZE}
+	 */
 	public static final String INCREMENT_PARAM = "increment_size";
+
+	/**
+	 * The default value for {@link #INCREMENT_PARAM}
+	 */
 	public static final int DEFAULT_INCREMENT_SIZE = 1;
 
+	/**
+	 * Used to create dedicated sequence for each entity based on the entity name.  Sequence suffix can be
+	 * controlled with {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX} option.
+	 */
+	public static final String CONFIG_PREFER_SEQUENCE_PER_ENTITY = "prefer_sequence_per_entity";
+
+	/**
+	 * Indicates the suffix to use in naming the identifier sequence/table name, by appending the suffix to
+	 * the name of the entity.  Used in conjunction with {@link #CONFIG_PREFER_SEQUENCE_PER_ENTITY}.
+	 */
+	public static final String CONFIG_SEQUENCE_PER_ENTITY_SUFFIX = "sequence_per_entity_suffix";
+
+	/**
+	 * The default value for {@link #CONFIG_SEQUENCE_PER_ENTITY_SUFFIX}
+	 */
+	public static final String DEF_SEQUENCE_SUFFIX = "_SEQ";
+
+	/**
+	 * Indicates the optimizer to use, either naming a {@link Optimizer} implementation class or naming
+	 * a {@link StandardOptimizerDescriptor} by name
+	 */
 	public static final String OPT_PARAM = "optimizer";
 
+	/**
+	 * A flag to force using a table as the underlying structure rather than a sequence.
+	 */
 	public static final String FORCE_TBL_PARAM = "force_table_use";
-
-	public static final String CONFIG_PREFER_SEQUENCE_PER_ENTITY = "prefer_sequence_per_entity";
-	public static final String CONFIG_SEQUENCE_PER_ENTITY_SUFFIX = "sequence_per_entity_suffix";
-	public static final String DEF_SEQUENCE_SUFFIX = "_SEQ";
 
 
 	// table-specific parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Indicates the name of the column holding the identifier values.  The default value is {@link #DEF_VALUE_COLUMN}
+	 */
 	public static final String VALUE_COLUMN_PARAM = "value_column";
+
+	/**
+	 * The default value for {@link #VALUE_COLUMN_PARAM}
+	 */
 	public static final String DEF_VALUE_COLUMN = "next_val";
 
 
@@ -169,6 +223,7 @@ public class SequenceStyleGenerator
 	}
 
 
+
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -187,7 +242,7 @@ public class SequenceStyleGenerator
 		if ( dialect.supportsSequences() && !forceTableUse ) {
 			if ( !dialect.supportsPooledSequences() && OptimizerFactory.isPooledOptimizer( optimizationStrategy ) ) {
 				forceTableUse = true;
-                LOG.forcingTableUse();
+				LOG.forcingTableUse();
 			}
 		}
 
@@ -220,27 +275,26 @@ public class SequenceStyleGenerator
 	 * @return The sequence name
 	 */
 	protected String determineSequenceName(Properties params, Dialect dialect) {
-		String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
+		final String sequencePerEntitySuffix = ConfigurationHelper.getString( CONFIG_SEQUENCE_PER_ENTITY_SUFFIX, params, DEF_SEQUENCE_SUFFIX );
 		// JPA_ENTITY_NAME value honors <class ... entity-name="..."> (HBM) and @Entity#name (JPA) overrides.
 		String sequenceName = ConfigurationHelper.getBoolean( CONFIG_PREFER_SEQUENCE_PER_ENTITY, params, false )
 				? params.getProperty( JPA_ENTITY_NAME ) + sequencePerEntitySuffix
 				: DEF_SEQUENCE_NAME;
-		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
+		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
 		sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params, sequenceName );
 		if ( sequenceName.indexOf( '.' ) < 0 ) {
 			sequenceName = normalizer.normalizeIdentifierQuoting( sequenceName );
-			String schemaName = params.getProperty( SCHEMA );
-			String catalogName = params.getProperty( CATALOG );
+			final String schemaName = params.getProperty( SCHEMA );
+			final String catalogName = params.getProperty( CATALOG );
 			sequenceName = Table.qualify(
 					dialect.quote( catalogName ),
 					dialect.quote( schemaName ),
 					dialect.quote( sequenceName )
 			);
 		}
-		else {
-			// if already qualified there is not much we can do in a portable manner so we pass it
-			// through and assume the user has set up the name correctly.
-		}
+		// if already qualified there is not much we can do in a portable manner so we pass it
+		// through and assume the user has set up the name correctly.
+
 		return sequenceName;
 	}
 
@@ -256,8 +310,8 @@ public class SequenceStyleGenerator
 	 * @return The value column name
 	 */
 	protected String determineValueColumnName(Properties params, Dialect dialect) {
-		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );
-		String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+		final ObjectNameNormalizer normalizer = (ObjectNameNormalizer) params.get( IDENTIFIER_NORMALIZER );
+		final String name = ConfigurationHelper.getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return dialect.quote( normalizer.normalizeIdentifierQuoting( name ) );
 	}
 
@@ -300,11 +354,11 @@ public class SequenceStyleGenerator
 	protected String determineOptimizationStrategy(Properties params, int incrementSize) {
 		// if the increment size is greater than one, we prefer pooled optimization; but we first
 		// need to see if the user prefers POOL or POOL_LO...
-		String defaultPooledOptimizerStrategy = ConfigurationHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
-				? OptimizerFactory.StandardOptimizerDescriptor.POOLED_LO.getExternalName()
-				: OptimizerFactory.StandardOptimizerDescriptor.POOLED.getExternalName();
-		String defaultOptimizerStrategy = incrementSize <= 1
-				? OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName()
+		final String defaultPooledOptimizerStrategy = ConfigurationHelper.getBoolean( Environment.PREFER_POOLED_VALUES_LO, params, false )
+				? StandardOptimizerDescriptor.POOLED_LO.getExternalName()
+				: StandardOptimizerDescriptor.POOLED.getExternalName();
+		final String defaultOptimizerStrategy = incrementSize <= 1
+				? StandardOptimizerDescriptor.NONE.getExternalName()
 				: defaultPooledOptimizerStrategy;
 		return ConfigurationHelper.getString( OPT_PARAM, params, defaultOptimizerStrategy );
 	}
@@ -318,10 +372,9 @@ public class SequenceStyleGenerator
 	 * @return The adjusted increment size.
 	 */
 	protected int determineAdjustedIncrementSize(String optimizationStrategy, int incrementSize) {
-		if ( incrementSize > 1
-				&& OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
-            LOG.honoringOptimizerSetting(
-					OptimizerFactory.StandardOptimizerDescriptor.NONE.getExternalName(),
+		if ( incrementSize > 1 && StandardOptimizerDescriptor.NONE.getExternalName().equals( optimizationStrategy ) ) {
+			LOG.honoringOptimizerSetting(
+					StandardOptimizerDescriptor.NONE.getExternalName(),
 					INCREMENT_PARAM,
 					incrementSize
 			);
@@ -351,12 +404,12 @@ public class SequenceStyleGenerator
 			String sequenceName,
 			int initialValue,
 			int incrementSize) {
-		boolean useSequence = dialect.supportsSequences() && !forceTableUse;
+		final boolean useSequence = dialect.supportsSequences() && !forceTableUse;
 		if ( useSequence ) {
 			return new SequenceStructure( dialect, sequenceName, initialValue, incrementSize, type.getReturnedClass() );
 		}
 		else {
-			String valueColumnName = determineValueColumnName( params, dialect );
+			final String valueColumnName = determineValueColumnName( params, dialect );
 			return new TableStructure( dialect, sequenceName, valueColumnName, initialValue, incrementSize, type.getReturnedClass() );
 		}
 	}
@@ -395,7 +448,7 @@ public class SequenceStyleGenerator
 		// it does, as long as
 		// 		1) there is no (non-noop) optimizer in use
 		//		2) the underlying structure is a sequence
-		return OptimizerFactory.NoopOptimizer.class.isInstance( getOptimizer() )
+		return NoopOptimizer.class.isInstance( getOptimizer() )
 				&& getDatabaseStructure().isPhysicalSequence();
 	}
 

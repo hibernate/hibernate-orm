@@ -50,8 +50,10 @@ import org.hibernate.jdbc.AbstractReturningWork;
  * @author Steve Ebersole
  */
 public class TableStructure implements DatabaseStructure {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, TableStructure.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			TableStructure.class.getName()
+	);
 
 	private final String tableName;
 	private final String valueColumnName;
@@ -125,22 +127,24 @@ public class TableStructure implements DatabaseStructure {
 										.getServiceRegistry()
 										.getService( JdbcServices.class )
 										.getSqlStatementLogger();
-								IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
+								final IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder(
+										numberType
+								);
 								int rows;
 								do {
 									statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
 									PreparedStatement selectStatement = connection.prepareStatement( selectQuery );
 									try {
-										ResultSet selectRS = selectStatement.executeQuery();
+										final ResultSet selectRS = selectStatement.executeQuery();
 										if ( !selectRS.next() ) {
-											String err = "could not read a hi value - you need to populate the table: " + tableName;
+											final String err = "could not read a hi value - you need to populate the table: " + tableName;
 											LOG.error( err );
 											throw new IdentifierGenerationException( err );
 										}
 										value.initialize( selectRS, 1 );
 										selectRS.close();
 									}
-									catch ( SQLException sqle ) {
+									catch (SQLException sqle) {
 										LOG.error( "could not read a hi value", sqle );
 										throw sqle;
 									}
@@ -149,7 +153,7 @@ public class TableStructure implements DatabaseStructure {
 									}
 
 									statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
-									PreparedStatement updatePS = connection.prepareStatement( updateQuery );
+									final PreparedStatement updatePS = connection.prepareStatement( updateQuery );
 									try {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
@@ -157,8 +161,8 @@ public class TableStructure implements DatabaseStructure {
 										value.bind( updatePS, 2 );
 										rows = updatePS.executeUpdate();
 									}
-									catch ( SQLException e ) {
-									    LOG.unableToUpdateQueryHiValue(tableName, e);
+									catch (SQLException e) {
+										LOG.unableToUpdateQueryHiValue( tableName, e );
 										throw e;
 									}
 									finally {
@@ -173,6 +177,11 @@ public class TableStructure implements DatabaseStructure {
 						},
 						true
 				);
+			}
+
+			@Override
+			public String getTenantIdentifier() {
+				return session.getTenantIdentifier();
 			}
 		};
 	}

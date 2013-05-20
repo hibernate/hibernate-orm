@@ -27,7 +27,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
-import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.persister.entity.EntityPersister;
@@ -59,7 +59,7 @@ public class BasicForcedTableSequenceTest extends BaseCoreFunctionalTestCase {
 		);
 		assertTrue(
 				"no-op optimizer was not used",
-				OptimizerFactory.NoopOptimizer.class.isInstance( generator.getOptimizer() )
+				NoopOptimizer.class.isInstance( generator.getOptimizer() )
 		);
 
 		int count = 5;

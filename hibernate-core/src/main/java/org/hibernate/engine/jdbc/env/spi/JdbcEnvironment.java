@@ -26,8 +26,8 @@ package org.hibernate.engine.jdbc.env.spi;
 import java.util.Set;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.internal.TypeInfo;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.Service;
 

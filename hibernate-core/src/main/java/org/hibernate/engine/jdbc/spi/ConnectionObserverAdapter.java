@@ -26,6 +26,8 @@ package org.hibernate.engine.jdbc.spi;
 import java.sql.Connection;
 
 /**
+ * A no-op adapter for ConnectionObserver.
+ *
  * @author Steve Ebersole
  */
 public class ConnectionObserverAdapter implements ConnectionObserver {

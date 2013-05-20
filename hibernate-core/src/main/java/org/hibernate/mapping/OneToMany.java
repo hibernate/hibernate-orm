@@ -46,7 +46,8 @@ public class OneToMany implements Value {
 
 	private EntityType getEntityType() {
 		return mappings.getTypeResolver().getTypeFactory().manyToOne(
-				getReferencedEntityName(), 
+				getReferencedEntityName(),
+				true, 
 				null, 
 				false,
 				false,

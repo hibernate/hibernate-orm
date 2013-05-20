@@ -32,10 +32,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.ElementCollection;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import org.junit.Test;
 
@@ -60,35 +63,65 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gail Badner
  */
 @FailureExpectedWithNewMetamodel
-public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunctionalTestCase {
+public class EntityWithNonLazyOneToManySetResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
+		return new Class[] { Poster.class, Message.class };
 	}
 
 	@Test
 	public void testEntityWithSet() throws Exception {
-		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Person.class.getName() );
+		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
 
 		// create some test data
 		Session session = openSession();
 		session.beginTransaction();
-		Person person = new Person();
-		person.id = 1;
-		person.name = "John Doe";
-		person.nickNames.add( "Jack" );
-		person.nickNames.add( "Johnny" );
-		session.save( person );
+		Poster poster = new Poster();
+		poster.pid = 0;
+		poster.name = "John Doe";
+		Message message1 = new Message();
+		message1.mid = 1;
+		message1.msgTxt = "Howdy!";
+		message1.poster = poster;
+		poster.messages.add( message1 );
+		Message message2 = new Message();
+		message2.mid = 2;
+		message2.msgTxt = "Bye!";
+		message2.poster = poster;
+		poster.messages.add( message2 );
+		session.save( poster );
+		session.getTransaction().commit();
+		session.close();
+
+		session = openSession();
+		session.beginTransaction();
+		Poster posterGotten = (Poster) session.get( Poster.class, poster.pid );
+		assertEquals( 0, posterGotten.pid.intValue() );
+		assertEquals( poster.name, posterGotten.name );
+		assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
+		assertEquals( 2, posterGotten.messages.size() );
+		for ( Message message : posterGotten.messages ) {
+			if ( message.mid == 1 ) {
+				assertEquals( message1.msgTxt, message.msgTxt );
+			}
+			else if ( message.mid == 2 ) {
+				assertEquals( message2.msgTxt, message.msgTxt );
+			}
+			else {
+				fail( "unexpected message id." );
+			}
+			assertSame( posterGotten, message.poster );
+		}
 		session.getTransaction().commit();
 		session.close();
 
@@ -120,7 +153,7 @@ public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunction
 						@Override
 						public void execute(Connection connection) throws SQLException {
 							PreparedStatement ps = connection.prepareStatement( sql );
-							ps.setInt( 1, 1 );
+							ps.setInt( 1, 0 );
 							ResultSet resultSet = ps.executeQuery();
 							results.addAll(
 									resultSetProcessor.extractResults(
@@ -148,15 +181,28 @@ public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunction
 			);
 			assertEquals( 2, results.size() );
 			Object result1 = results.get( 0 );
-			assertSame( result1, results.get( 1 ) );
 			assertNotNull( result1 );
+			assertSame( result1, results.get( 1 ) );
 
-			Person workPerson = ExtraAssertions.assertTyping( Person.class, result1 );
-			assertEquals( 1, workPerson.id.intValue() );
-			assertEquals( person.name, workPerson.name );
-			assertTrue( Hibernate.isInitialized( workPerson.nickNames ) );
-			assertEquals( 2, workPerson.nickNames.size() );
-			assertEquals( person.nickNames, workPerson.nickNames );
+			Poster workPoster = ExtraAssertions.assertTyping( Poster.class, result1 );
+			assertEquals( 0, workPoster.pid.intValue() );
+			assertEquals( poster.name, workPoster.name );
+			assertTrue( Hibernate.isInitialized( workPoster.messages ) );
+			assertEquals( 2, workPoster.messages.size() );
+			assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
+			assertEquals( 2, workPoster.messages.size() );
+			for ( Message message : workPoster.messages ) {
+				if ( message.mid == 1 ) {
+					assertEquals( message1.msgTxt, message.msgTxt );
+				}
+				else if ( message.mid == 2 ) {
+					assertEquals( message2.msgTxt, message.msgTxt );
+				}
+				else {
+					fail( "unexpected message id." );
+				}
+				assertSame( workPoster, message.poster );
+			}
 			workSession.getTransaction().commit();
 			workSession.close();
 		}
@@ -164,17 +210,27 @@ public class EntityWithCollectionResultSetProcessorTest extends BaseCoreFunction
 		// clean up test data
 		session = openSession();
 		session.beginTransaction();
-		session.delete( person );
+		session.delete( poster );
 		session.getTransaction().commit();
 		session.close();
 	}
 
-	@Entity( name = "Person" )
-	public static class Person {
+	@Entity( name = "Message" )
+	public static class Message {
 		@Id
-		private Integer id;
+		private Integer mid;
+		private String msgTxt;
+		@ManyToOne
+		@JoinColumn
+		private Poster poster;
+	}
+
+	@Entity( name = "Poster" )
+	public static class Poster {
+		@Id
+		private Integer pid;
 		private String name;
-		@ElementCollection( fetch = FetchType.EAGER )
-		private Set<String> nickNames = new HashSet<String>();
+		@OneToMany(mappedBy = "poster", fetch = FetchType.EAGER, cascade = CascadeType.ALL )
+		private Set<Message> messages = new HashSet<Message>();
 	}
 }

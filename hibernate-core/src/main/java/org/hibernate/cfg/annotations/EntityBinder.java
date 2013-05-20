@@ -31,6 +31,8 @@ import javax.persistence.Access;
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.SecondaryTable;
 import javax.persistence.SecondaryTables;
@@ -83,7 +85,6 @@ import org.hibernate.cfg.ObjectNameSource;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
@@ -159,7 +160,26 @@ public class EntityBinder {
 		this.annotatedClass = annotatedClass;
 		bindEjb3Annotation( ejb3Ann );
 		bindHibernateAnnotation();
+		processNamedEntityGraphs();
 	}
+
+	private void processNamedEntityGraphs() {
+		processNamedEntityGraph( annotatedClass.getAnnotation( NamedEntityGraph.class ) );
+		final NamedEntityGraphs graphs = annotatedClass.getAnnotation( NamedEntityGraphs.class );
+		if ( graphs != null ) {
+			for ( NamedEntityGraph graph : graphs.value() ) {
+				processNamedEntityGraph( graph );
+			}
+		}
+	}
+
+	private void processNamedEntityGraph(NamedEntityGraph annotation) {
+		if ( annotation == null ) {
+			return;
+		}
+		mappings.addNamedEntityGraphDefintion( new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() ) );
+	}
+
 
 	@SuppressWarnings("SimplifiableConditionalExpression")
 	private void bindHibernateAnnotation() {

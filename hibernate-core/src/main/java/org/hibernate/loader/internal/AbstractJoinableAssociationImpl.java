@@ -59,11 +59,8 @@ public abstract class AbstractJoinableAssociationImpl implements JoinableAssocia
 			boolean hasRestriction,
 			Map<String, Filter> enabledFilters) throws MappingException {
 		this.propertyPath = currentFetch.getPropertyPath();
-		final OuterJoinLoadable ownerPersister = (OuterJoinLoadable) currentFetch.getOwner().retrieveFetchSourcePersister();
-		final int propertyNumber = ownerPersister.getEntityMetamodel().getPropertyIndex( currentFetch.getOwnerPropertyName() );
-		final boolean isNullable = ownerPersister.isSubclassPropertyNullable( propertyNumber );
 		if ( currentFetch.getFetchStrategy().getStyle() == FetchStyle.JOIN ) {
-			joinType = isNullable ? JoinType.LEFT_OUTER_JOIN : JoinType.INNER_JOIN;
+			joinType = currentFetch.isNullable() ? JoinType.LEFT_OUTER_JOIN : JoinType.INNER_JOIN;
 		}
 		else {
 			joinType = JoinType.NONE;

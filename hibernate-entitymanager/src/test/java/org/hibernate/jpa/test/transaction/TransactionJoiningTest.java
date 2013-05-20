@@ -23,7 +23,6 @@
  */
 package org.hibernate.jpa.test.transaction;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -31,14 +30,17 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.internal.jta.CMTTransaction;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -152,32 +154,46 @@ public class TransactionJoiningTest extends BaseEntityManagerFunctionalTestCase 
 	 * See HHH-7910
 	 */
 	@Test
-	@TestForIssue(jiraKey="HHH-7910")
+	@TestForIssue(jiraKey = "HHH-7910")
 	public void testMultiThreadTransactionTimeout() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		
+
 		EntityManager em = entityManagerFactory().createEntityManager();
 		final SessionImpl sImpl = em.unwrap( SessionImpl.class );
-		
-		final CountDownLatch latch = new CountDownLatch(1);
-		
+
+		final CountDownLatch latch = new CountDownLatch( 1 );
+
 		Thread thread = new Thread() {
 			public void run() {
-				sImpl.getTransactionCoordinator().getSynchronizationCallbackCoordinator().afterCompletion( Status.STATUS_ROLLEDBACK );
+				sImpl.getTransactionCoordinator().getSynchronizationCallbackCoordinator()
+						.afterCompletion( Status.STATUS_ROLLEDBACK );
 				latch.countDown();
 			}
 		};
 		thread.start();
-		
-		latch.await();
-		
-		em.persist( new Book( "The Book of Foo", 1 ) );
-		
-		// Ensure that the session was cleared by the background thread.
-		assertEquals( "The background thread did not clear the session as expected!",
-				0, em.createQuery( "from Book" ).getResultList().size() );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+		latch.await();
+
+		boolean caught = false;
+		try {
+			em.persist( new Book( "The Book of Foo", 1 ) );
+		}
+		catch ( PersistenceException e ) {
+			caught = e.getCause().getClass().equals( HibernateException.class );
+		}
+		assertTrue( caught );
+
+		// Ensure that the connection was closed by the background thread.
+		caught = false;
+		try {
+			em.createQuery( "from Book" ).getResultList();
+		}
+		catch ( PersistenceException e ) {
+			caught = e.getCause().getClass().equals( GenericJDBCException.class );
+		}
+		assertTrue( caught );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
 		em.close();
 	}
 

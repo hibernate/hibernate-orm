@@ -27,12 +27,16 @@ import javax.persistence.Cache;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedSubgraph;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnitUtil;
 import javax.persistence.Query;
 import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.spi.LoadState;
@@ -42,6 +46,7 @@ import java.io.InvalidObjectException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +59,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
@@ -63,15 +69,19 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
+import org.hibernate.jpa.graph.internal.AbstractGraphNode;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
+import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 import org.hibernate.jpa.metamodel.internal.EntityTypeImpl;
 import org.hibernate.jpa.metamodel.internal.MetamodelImpl;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.service.ServiceRegistry;
 
@@ -124,7 +134,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			SettingsImpl settings,
 			Map<?, ?> configurationValues,
 			Configuration cfg) {
-		this(persistenceUnitName, sessionFactory, settings, configurationValues, cfg.getProperties() );
+		this(persistenceUnitName, sessionFactory, settings, configurationValues, cfg.getProperties(), null );
 	}
 
 	public EntityManagerFactoryImpl(
@@ -132,7 +142,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			SessionFactoryImplementor sessionFactory,
 			SettingsImpl settings,
 			Map configurationValues,
-			Map<?,?> cfg) {
+			Map<?,?> cfg,
+			MetadataImplementor metadataImplementor) {
 		this.sessionFactory = (SessionFactoryImpl) sessionFactory;
 		this.transactionType = settings.getTransactionType();
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
@@ -155,7 +166,11 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			entityManagerFactoryName = (String) UUID_GENERATOR.generate(null, null);
 		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
-		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory(entityManagerFactoryName, this);
+		if ( metadataImplementor != null ) {
+			applyNamedEntityGraphs( metadataImplementor.getNamedEntityGraphMap().values() );
+		}
+
+		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory( entityManagerFactoryName, this );
 	}
 
 	private static void addAll(HashMap<String, Object> destination, Map<?,?> source) {
@@ -174,6 +189,68 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	private void maskOutIfSet(HashMap<String, Object> props, String setting) {
 		if ( props.containsKey( setting ) ) {
 			props.put( setting, "****" );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
+		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
+			final EntityType entityType = metamodel.getEntityTypeByName( definition.getJpaEntityName() );
+			final EntityGraphImpl entityGraph = new EntityGraphImpl(
+					definition.getRegisteredName(),
+					entityType,
+					this
+			);
+
+			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
+
+			if ( namedEntityGraph.includeAllAttributes() ) {
+				for ( Object attributeObject : entityType.getAttributes() ) {
+					entityGraph.addAttributeNodes( (Attribute) attributeObject );
+				}
+			}
+
+			if ( namedEntityGraph.attributeNodes() != null ) {
+				applyNamedAttributeNodes( namedEntityGraph.attributeNodes(), namedEntityGraph, entityGraph );
+			}
+
+			entityGraphs.put( definition.getRegisteredName(), entityGraph );
+		}
+	}
+
+	private void applyNamedAttributeNodes(
+			NamedAttributeNode[] namedAttributeNodes,
+			NamedEntityGraph namedEntityGraph,
+			AbstractGraphNode graphNode) {
+		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
+			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
+				final SubgraphImpl subgraph = graphNode.addSubgraph( namedAttributeNode.value() );
+				applyNamedSubgraphs(
+						namedEntityGraph,
+						namedAttributeNode.subgraph(),
+						subgraph
+				);
+			}
+			if ( StringHelper.isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
+				final SubgraphImpl subgraph = graphNode.addKeySubgraph( namedAttributeNode.value() );
+				applyNamedSubgraphs(
+						namedEntityGraph,
+						namedAttributeNode.keySubgraph(),
+						subgraph
+				);
+			}
+		}
+	}
+
+	private void applyNamedSubgraphs(NamedEntityGraph namedEntityGraph, String subgraphName, SubgraphImpl subgraph) {
+		for ( NamedSubgraph namedSubgraph : namedEntityGraph.subgraphs() ) {
+			if ( subgraphName.equals( namedSubgraph.name() ) ) {
+				applyNamedAttributeNodes(
+						namedSubgraph.attributeNodes(),
+						namedEntityGraph,
+						subgraph
+				);
+			}
 		}
 	}
 

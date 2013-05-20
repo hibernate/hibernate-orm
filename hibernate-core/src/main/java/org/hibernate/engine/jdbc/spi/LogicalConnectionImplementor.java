@@ -78,14 +78,35 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 * with which to reconnect.  It is an error to pass a connection in the other strategies.
 	 */
 	public void manualReconnect(Connection suppliedConnection);
-	
+
+	/**
+	 * Perform an aggressive release
+	 */
 	public void aggressiveRelease();
-	
+
+	/**
+	 * Release any held connection.
+	 *
+	 * @throws JDBCException Indicates a problem releasing the connection
+	 */
 	public void releaseConnection() throws JDBCException;
 
+	/**
+	 * Is this logical connection in auto-commit mode?
+	 *
+	 * @return {@code true} if auto-commit
+	 */
 	public boolean isAutoCommit();
 
+	/**
+	 * Callback to notify all registered observers of a connection being prepared.
+	 */
 	public void notifyObserversStatementPrepared();
-	
+
+	/**
+	 * Does this logical connection wrap a user/application supplied connection?
+	 *
+	 * @return {@code true} if the underlying connection was user supplied.
+	 */
 	public boolean isUserSuppliedConnection();
 }

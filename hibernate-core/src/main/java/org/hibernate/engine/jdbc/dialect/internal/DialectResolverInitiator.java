@@ -40,7 +40,11 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings("deprecation")
 public class DialectResolverInitiator implements StandardServiceInitiator<DialectResolver> {
+	/**
+	 * Singleton access
+	 */
 	public static final DialectResolverInitiator INSTANCE = new DialectResolverInitiator();
 
 	@Override

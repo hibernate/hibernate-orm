@@ -39,7 +39,7 @@ public abstract class AbstractCompositeBasedAttribute
 	private final int ownerAttributeNumber;
 
 	public AbstractCompositeBasedAttribute(
-			AbstractCompositionDefinition source,
+			AbstractCompositionAttribute source,
 			SessionFactoryImplementor sessionFactory,
 			int attributeNumber,
 			String attributeName,
@@ -55,7 +55,7 @@ public abstract class AbstractCompositeBasedAttribute
 	}
 
 	@Override
-	public AbstractCompositionDefinition getSource() {
-		return (AbstractCompositionDefinition) super.getSource();
+	public AbstractCompositionAttribute getSource() {
+		return (AbstractCompositionAttribute) super.getSource();
 	}
 }

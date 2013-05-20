@@ -153,7 +153,8 @@ public interface JdbcCoordinator extends Serializable {
 	 *
 	 * @throws org.hibernate.TransactionException Indicates the time out period has already been exceeded.
 	 */
-    public int determineRemainingTransactionTimeOutPeriod();
+	public int determineRemainingTransactionTimeOutPeriod();
+
 	/**
 	 * Register a JDBC statement.
 	 *
@@ -199,9 +200,15 @@ public interface JdbcCoordinator extends Serializable {
 	 * Release all registered resources.
 	 */
 	public void releaseResources();
-	
+
+	/**
+	 * Enable connection releases
+	 */
 	public void enableReleases();
-	
+
+	/**
+	 * Disable connection releases
+	 */
 	public void disableReleases();
 
 	/**
@@ -211,5 +218,10 @@ public interface JdbcCoordinator extends Serializable {
 	 */
 	public void registerLastQuery(Statement statement);
 
+	/**
+	 * Can this coordinator be serialized?
+	 *
+	 * @return {@code true} indicates the coordinator can be serialized.
+	 */
 	public boolean isReadyForSerialization();
 }

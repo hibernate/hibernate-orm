@@ -42,7 +42,7 @@ import org.hibernate.type.AssociationType;
 /**
  * @author Steve Ebersole
  */
-public class Helper {
+public class FetchStrategyHelper {
 	/**
 	 * Determine the fetch-style (if one) explicitly set for this association via fetch profiles.
 	 * <p/>

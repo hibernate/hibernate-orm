@@ -38,7 +38,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.LobCreatorBuilder;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameSupport;
 import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
-import org.hibernate.engine.jdbc.internal.TypeInfo;
+import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;

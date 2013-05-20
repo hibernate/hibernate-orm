@@ -34,75 +34,84 @@ import java.sql.Statement;
  * 
  * TODO: This could eventually utilize the new Return interface.  It would be
  * great to have a common API shared.
+ *
+ * Generally the methods here dealing with CallableStatement are extremely limited, relying on the legacy
+ *
  * 
  * @author Brett Meyer
+ * @author Steve Ebersole
  */
 public interface ResultSetReturn {
 	
 	/**
-	 * Extract the ResultSet from the statement. If user passes {@link CallableStatement}
-	 * reference, method calls {@link #extract(CallableStatement)} internally.
+	 * Extract the ResultSet from the PreparedStatement.
+	 * <p/>
+	 * If user passes {@link CallableStatement} reference, this method calls {@link #extract(CallableStatement)}
+	 * internally.  Otherwise, generally speaking, {@link java.sql.PreparedStatement#executeQuery()} is called
 	 *
-	 * @param statement
+	 * @param statement The PreparedStatement from which to extract the ResultSet
 	 *
-	 * @return the ResultSet
+	 * @return The extracted ResultSet
 	 */
-	public ResultSet extract( PreparedStatement statement );
+	public ResultSet extract(PreparedStatement statement);
 	
 	/**
-	 * Extract the ResultSet from the statement.
+	 * Extract the ResultSet from the CallableStatement.  Note that this is the limited legacy form which delegates to
+	 * {@link org.hibernate.dialect.Dialect#getResultSet}.  Better option is to integrate
+	 * {@link org.hibernate.procedure.ProcedureCall}-like hooks
 	 *
-	 * @param statement
+	 * @param callableStatement The CallableStatement from which to extract the ResultSet
 	 *
-	 * @return the ResultSet
+	 * @return The extracted ResultSet
 	 */
-	public ResultSet extract( CallableStatement statement );
+	public ResultSet extract(CallableStatement callableStatement);
 	
 	/**
-	 * Extract the ResultSet from the statement.
+	 * Performs the given SQL statement, expecting a ResultSet in return
 	 *
-	 * @param statement
-	 * @param sql
+	 * @param statement The JDBC Statement object to use
+	 * @param sql The SQL to execute
 	 *
-	 * @return the ResultSet
+	 * @return The resulting ResultSet
 	 */
-	public ResultSet extract( Statement statement, String sql );
+	public ResultSet extract(Statement statement, String sql);
 	
 	/**
-	 * Execute the Statement query and, if results in a ResultSet, extract it.
+	 * Execute the PreparedStatement return its first ResultSet, if any.  If there is no ResultSet, returns {@code null}
 	 *
-	 * @param statement
+	 * @param statement The PreparedStatement to execute
 	 *
-	 * @return the ResultSet
+	 * @return The extracted ResultSet, or {@code null}
 	 */
-	public ResultSet execute( PreparedStatement statement );
+	public ResultSet execute(PreparedStatement statement);
 	
 	/**
-	 * Execute the Statement query and, if results in a ResultSet, extract it.
+	 * Performs the given SQL statement, returning its first ResultSet, if any.  If there is no ResultSet,
+	 * returns {@code null}
 	 *
-	 * @param statement
-	 * @param sql
+	 * @param statement The JDBC Statement object to use
+	 * @param sql The SQL to execute
 	 *
-	 * @return the ResultSet
+	 * @return The extracted ResultSet, or {@code null}
 	 */
-	public ResultSet execute( Statement statement, String sql );
+	public ResultSet execute(Statement statement, String sql);
 	
 	/**
-	 * Execute the Statement queryUpdate.
+	 * Execute the PreparedStatement, returning its "affected row count".
 	 *
-	 * @param statement
+	 * @param statement The PreparedStatement to execute
 	 *
-	 * @return int
+	 * @return The {@link java.sql.PreparedStatement#executeUpdate()} result
 	 */
-	public int executeUpdate( PreparedStatement statement );
+	public int executeUpdate(PreparedStatement statement);
 	
 	/**
-	 * Execute the Statement query and, if results in a ResultSet, extract it.
+	 * Execute the given SQL statement returning its "affected row count".
 	 *
-	 * @param statement
-	 * @param sql
+	 * @param statement The JDBC Statement object to use
+	 * @param sql The SQL to execute
 	 *
-	 * @return the ResultSet
+	 * @return The {@link java.sql.PreparedStatement#executeUpdate(String)} result
 	 */
-	public int executeUpdate( Statement statement, String sql );
+	public int executeUpdate(Statement statement, String sql);
 }

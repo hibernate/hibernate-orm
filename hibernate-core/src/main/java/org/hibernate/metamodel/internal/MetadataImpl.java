@@ -47,6 +47,7 @@ import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -134,7 +135,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final MappingDefaults mappingDefaults;
 	private final ObjectNameNormalizer nameNormalizer;
 
-	private Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
+	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
 	private Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
 
 	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
@@ -145,6 +146,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
 	private Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
 	private Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>(  );
 
     private boolean globallyQuotedIdentifiers = false;
 
@@ -375,6 +377,19 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		return typeDefinitionMap.get( registrationKey );
 	}
 
+	@Override
+	public void addNamedEntityGraph(NamedEntityGraphDefinition definition) {
+		final String name = definition.getRegisteredName();
+		final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
+		if ( previous != null ) {
+			throw new DuplicateMappingException( "NamedEntityGraph", name );
+		}
+	}
+
+	@Override
+	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {
+		return namedEntityGraphMap;
+	}
 
 	// filter definitions  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

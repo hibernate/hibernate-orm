@@ -52,6 +52,10 @@ public interface Fetch extends CopyableFetch {
 	 */
 	public String getOwnerPropertyName();
 
+	public boolean isNullable();
+
+	public String[] getColumnNames();
+
 	public FetchStrategy getFetchStrategy();
 
 	/**

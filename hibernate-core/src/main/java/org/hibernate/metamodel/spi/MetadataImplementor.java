@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.spi;
 
 import org.hibernate.cfg.ObjectNameNormalizer;
+import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
@@ -68,6 +69,8 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 	public void registerIdentifierGenerator(String name, String clazz);
 
 	public void addNamedNativeQuery(NamedSQLQueryDefinition def);
+
+	public void addNamedEntityGraph(NamedEntityGraphDefinition def);
 
 	public void addNamedQuery(NamedQueryDefinition def);
 

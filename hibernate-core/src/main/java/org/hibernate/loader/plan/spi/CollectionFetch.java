@@ -28,8 +28,10 @@ import java.sql.SQLException;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.CollectionType;
 
 /**
@@ -72,6 +74,16 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 	@Override
 	public String getOwnerPropertyName() {
 		return getPropertyPath().getProperty();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return true;
+	}
+
+	@Override
+	public String[] getColumnNames() {
+		return getOwner().getColumnNames( this );
 	}
 
 	@Override

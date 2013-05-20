@@ -61,14 +61,20 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 	@Override
 	@SuppressWarnings({ "unchecked" })
 	public RegionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		Properties p = new Properties();
+		final Properties p = new Properties();
 		if (configurationValues != null) {
 			p.putAll( configurationValues );
 		}
 		
-		boolean useSecondLevelCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_SECOND_LEVEL_CACHE,
-				configurationValues, true );
-		boolean useQueryCache = ConfigurationHelper.getBoolean( AvailableSettings.USE_QUERY_CACHE, configurationValues );
+		final boolean useSecondLevelCache = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_SECOND_LEVEL_CACHE,
+				configurationValues,
+				true
+		);
+		final boolean useQueryCache = ConfigurationHelper.getBoolean(
+				AvailableSettings.USE_QUERY_CACHE,
+				configurationValues
+		);
 
 		RegionFactory regionFactory = NoCachingRegionFactory.INSTANCE;
 
@@ -81,16 +87,6 @@ public class RegionFactoryInitiator implements StandardServiceInitiator<RegionFa
 			try {
 				regionFactory = registry.getService( StrategySelector.class )
 						.resolveStrategy( RegionFactory.class, setting );
-//				try {
-//					regionFactory = regionFactoryClass.getConstructor( Properties.class ).newInstance( p );
-//				}
-//				catch ( NoSuchMethodException e ) {
-//					// no constructor accepting Properties found, try no arg constructor
-//					LOG.debugf(
-//							"%s did not provide constructor accepting java.util.Properties; attempting no-arg constructor.",
-//							regionFactoryClass.getSimpleName() );
-//					regionFactory = regionFactoryClass.getConstructor().newInstance();
-//				}
 			}
 			catch ( Exception e ) {
 				throw new HibernateException( "could not instantiate RegionFactory [" + setting + "]", e );

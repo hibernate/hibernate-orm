@@ -40,6 +40,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	private String referencedEntityName;
 	private boolean lazy = true;
 	protected boolean unwrapProxy;
+	protected boolean referenceToPrimaryKey = true;
 
 	protected ToOne(Mappings mappings, Table table) {
 		super( mappings, table );
@@ -109,6 +110,14 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 
 	public void setUnwrapProxy(boolean unwrapProxy) {
 		this.unwrapProxy = unwrapProxy;
+	}
+
+	public boolean isReferenceToPrimaryKey() {
+		return referenceToPrimaryKey;
+	}
+
+	public void setReferenceToPrimaryKey(boolean referenceToPrimaryKey) {
+		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 	
 }

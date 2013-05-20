@@ -162,42 +162,42 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<X> addSubgraph(Attribute<T, X> attribute) {
+	public <X> SubgraphImpl<X> addSubgraph(Attribute<T, X> attribute) {
 		return addAttribute( attribute ).makeSubgraph();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<? extends X> addSubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
+	public <X> SubgraphImpl<? extends X> addSubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
 		return addAttribute( attribute ).makeSubgraph( type );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<X> addSubgraph(String attributeName) {
+	public <X> SubgraphImpl<X> addSubgraph(String attributeName) {
 		return addAttribute( attributeName ).makeSubgraph();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<X> addSubgraph(String attributeName, Class<X> type) {
+	public <X> SubgraphImpl<X> addSubgraph(String attributeName, Class<X> type) {
 		return addAttribute( attributeName ).makeSubgraph( type );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<X> addKeySubgraph(Attribute<T, X> attribute) {
+	public <X> SubgraphImpl<X> addKeySubgraph(Attribute<T, X> attribute) {
 		return addAttribute( attribute ).makeKeySubgraph();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<? extends X> addKeySubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
+	public <X> SubgraphImpl<? extends X> addKeySubgraph(Attribute<T, X> attribute, Class<? extends X> type) {
 		return addAttribute( attribute ).makeKeySubgraph( type );
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<X> addKeySubgraph(String attributeName) {
+	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName) {
 		return addAttribute( attributeName ).makeKeySubgraph();
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> Subgraph<X> addKeySubgraph(String attributeName, Class<X> type) {
+	public <X> SubgraphImpl<X> addKeySubgraph(String attributeName, Class<X> type) {
 		return addAttribute( attributeName ).makeKeySubgraph( type );
 	}
 }

@@ -27,20 +27,24 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.LockMode;
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public abstract class AbstractFetchOwner extends AbstractPlanNode implements FetchOwner {
-	private final LockMode lockMode;
 
 	private List<Fetch> fetches;
 
-	public AbstractFetchOwner(SessionFactoryImplementor factory, LockMode lockMode) {
+	public AbstractFetchOwner(SessionFactoryImplementor factory) {
 		super( factory );
-		this.lockMode = lockMode;
 		validate();
 	}
 
@@ -50,11 +54,10 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 	/**
 	 * A "copy" constructor.  Used while making clones/copies of this.
 	 *
-	 * @param original
+	 * @param original - the original object to copy.
 	 */
 	protected AbstractFetchOwner(AbstractFetchOwner original, CopyContext copyContext) {
 		super( original );
-		this.lockMode = original.lockMode;
 		validate();
 
 		copyContext.getReturnGraphVisitationStrategy().startingFetches( original );
@@ -62,6 +65,7 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 			this.fetches = Collections.emptyList();
 		}
 		else {
+			// TODO: don't think this is correct...
 			List<Fetch> fetchesCopy = new ArrayList<Fetch>();
 			for ( Fetch fetch : fetches ) {
 				fetchesCopy.add( fetch.makeCopy( copyContext, this ) );
@@ -71,11 +75,6 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 		copyContext.getReturnGraphVisitationStrategy().finishingFetches( original );
 	}
 
-	public LockMode getLockMode() {
-		return lockMode;
-	}
-
-	@Override
 	public void addFetch(Fetch fetch) {
 		if ( fetch.getOwner() != this ) {
 			throw new IllegalArgumentException( "Fetch and owner did not match" );
@@ -92,4 +91,55 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 	public Fetch[] getFetches() {
 		return fetches == null ? NO_FETCHES : fetches.toArray( new Fetch[ fetches.size() ] );
 	}
+
+	protected abstract FetchOwnerDelegate getFetchOwnerDelegate();
+
+	@Override
+	public boolean isNullable(Fetch fetch) {
+		return getFetchOwnerDelegate().isNullable( fetch );
+	}
+
+	@Override
+	public Type getType(Fetch fetch) {
+		return getFetchOwnerDelegate().getType( fetch );
+	}
+
+	@Override
+	public String[] getColumnNames(Fetch fetch) {
+		return getFetchOwnerDelegate().getColumnNames( fetch );
+	}
+
+	@Override
+	public CollectionFetch buildCollectionFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildStandardCollectionFetch(
+				this,
+				attributeDefinition,
+				fetchStrategy,
+				loadPlanBuildingContext
+		);
+	}
+
+	@Override
+	public EntityFetch buildEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildStandardEntityFetch(
+				this,
+				attributeDefinition,
+				fetchStrategy,
+				loadPlanBuildingContext
+		);
+	}
+
+	@Override
+	public CompositeFetch buildCompositeFetch(
+			CompositionDefinition attributeDefinition,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildStandardCompositeFetch( this, attributeDefinition, loadPlanBuildingContext );
+	}
+
 }

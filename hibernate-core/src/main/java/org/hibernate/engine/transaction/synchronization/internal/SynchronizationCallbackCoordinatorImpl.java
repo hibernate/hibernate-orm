@@ -27,6 +27,7 @@ import javax.transaction.SystemException;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
@@ -56,9 +57,9 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	private AfterCompletionAction afterCompletionAction;
 	private ExceptionMapper exceptionMapper;
 
-	private long registrationThreadId;
+	private volatile long registrationThreadId;
 	private final int NO_STATUS = -1;
-	private int delayedCompletionHandlingStatus;
+	private volatile int delayedCompletionHandlingStatus;
 
 	public SynchronizationCallbackCoordinatorImpl(TransactionCoordinator transactionCoordinator) {
 		this.transactionCoordinator = transactionCoordinator;
@@ -154,11 +155,12 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 		if ( delayedCompletionHandlingStatus != NO_STATUS ) {
 			doAfterCompletion( delayedCompletionHandlingStatus );
 			delayedCompletionHandlingStatus = NO_STATUS;
+			throw new HibernateException("Transaction was rolled back in a different thread!");
 		}
 	}
 
 	private void doAfterCompletion(int status) {
-		LOG.tracev( "Transaction after completion callback [status={0}]", status );
+		LOG.tracev( "Transaction afterCompletion callback [status={0}]", status );
 
 		try {
 			afterCompletionAction.doAction( transactionCoordinator, status );

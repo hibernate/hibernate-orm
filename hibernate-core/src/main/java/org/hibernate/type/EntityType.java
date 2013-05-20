@@ -23,6 +23,7 @@
  */
 package org.hibernate.type;
 
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,7 +35,11 @@ import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.internal.ForeignKeys;
-import org.hibernate.engine.spi.*;
+import org.hibernate.engine.spi.EntityUniqueKey;
+import org.hibernate.engine.spi.Mapping;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -53,6 +58,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	protected final String uniqueKeyPropertyName;
 	private final boolean eager;
 	private final boolean unwrapProxy;
+	private final boolean referenceToPrimaryKey;
 
 	private transient Class returnedClass;
 
@@ -67,29 +73,46 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
 	 * says to return the "implementation target" of lazy prooxies; typically only possible
 	 * with lazy="no-proxy".
+	 *
+	 * @deprecated Use {@link #EntityType(org.hibernate.type.TypeFactory.TypeScope, String, boolean, String, boolean, boolean)} instead.
+	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
+	@Deprecated
 	protected EntityType(
 			TypeFactory.TypeScope scope,
 			String entityName,
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
-		this(scope, entityName, uniqueKeyPropertyName, eager, unwrapProxy, null);
+		this( scope, entityName, uniqueKeyPropertyName == null, uniqueKeyPropertyName, eager, unwrapProxy );
 	}
 
+	/**
+	 * Constructs the requested entity type mapping.
+	 *
+	 * @param scope The type scope
+	 * @param entityName The name of the associated entity.
+	 * @param referenceToPrimaryKey True if association references a primary key.
+	 * @param uniqueKeyPropertyName The property-ref name, or null if we
+	 * reference the PK of the associated entity.
+	 * @param eager Is eager fetching enabled.
+	 * @param unwrapProxy Is unwrapping of proxies allowed for this association; unwrapping
+	 * says to return the "implementation target" of lazy prooxies; typically only possible
+	 * with lazy="no-proxy".
+	 */
 	protected EntityType(
 			TypeFactory.TypeScope scope,
 			String entityName,
+			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean eager,
-			boolean unwrapProxy,
-			Class returnedClass) {
+			boolean unwrapProxy) {
 		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
-		this.returnedClass = returnedClass;
+		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
 
 
@@ -146,11 +169,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return True if this association reference the PK of the associated entity.
 	 */
 	public boolean isReferenceToPrimaryKey() {
-		return uniqueKeyPropertyName==null;
+		return referenceToPrimaryKey;
 	}
 
 	public String getRHSUniqueKeyPropertyName() {
-		return uniqueKeyPropertyName;
+		// Return null if this type references a PK.  This is important for
+		// associations' use of mappedBy referring to a derived ID.
+		return referenceToPrimaryKey ? null : uniqueKeyPropertyName;
 	}
 
 	public String getLHSPropertyName() {
@@ -211,7 +236,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
     private Class determineAssociatedEntityClass() {
         final String entityName = getAssociatedEntityName();
         try {
-            return ReflectHelper.classForName(entityName);
+            return ReflectHelper.classForName( entityName );
         }
         catch ( ClassNotFoundException cnfe ) {
             return this.scope.resolveFactory().getEntityPersister(entityName).
@@ -314,7 +339,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 
 		final Serializable id;
-		if (x instanceof HibernateProxy) {
+		if (x instanceof HibernateProxy ) {
 			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
 		}
 		else {
@@ -397,14 +422,15 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			if ( isNull( owner, session ) ) {
 				return null; //EARLY EXIT!
 			}
-
 			if ( isReferenceToPrimaryKey() ) {
 				return resolveIdentifier( (Serializable) value, session );
 			}
-			else {
+			else if ( uniqueKeyPropertyName != null ) {
 				return loadByUniqueKey( getAssociatedEntityName(), uniqueKeyPropertyName, value, session );
 			}
 		}
+		
+		return null;
 	}
 
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
@@ -412,7 +438,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected final Object getIdentifier(Object value, SessionImplementor session) throws HibernateException {
-		if ( isReferenceToPrimaryKey() ) {
+		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved( getAssociatedEntityName(), value, session ); //tolerates nulls
 		}
 		else if ( value == null ) {
@@ -516,7 +542,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * or unique key property name.
 	 */
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		if ( isReferenceToPrimaryKey() ) {
+		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return getIdentifierType(factory);
 		}
 		else {
@@ -538,7 +564,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
 	throws MappingException {
-		if ( isReferenceToPrimaryKey() ) {
+		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
 			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
 		}
 		else {

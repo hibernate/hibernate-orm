@@ -1007,7 +1007,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					sessionFactory,
 					settings,
 					configurationValues,
-					serviceRegistry.getService( ConfigurationService.class ).getSettings()
+					serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+					metadata
 			);
 		}
 		else {

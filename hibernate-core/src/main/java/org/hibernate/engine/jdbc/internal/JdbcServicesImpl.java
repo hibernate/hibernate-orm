@@ -70,7 +70,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 	@Override
 	public void configure(Map configValues) {
 		this.jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
-
 		this.connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
 		final boolean showSQL = ConfigurationHelper.getBoolean( Environment.SHOW_SQL, configValues, false );
 		final boolean formatSQL = ConfigurationHelper.getBoolean( Environment.FORMAT_SQL, configValues, false );

@@ -29,11 +29,13 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.graph.spi.AttributeNodeImplementor;
+import org.hibernate.jpa.internal.metamodel.Helper;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -54,11 +56,16 @@ public class AdviceHelper {
 				);
 			}
 			else {
+				EntityType entityType = (EntityType) Helper.resolveType(
+						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
+						attributeNode.getAttribute()
+				);
 				return new EntityFetch(
 						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
 						LockMode.NONE,
 						fetchOwner,
 						attributeNode.getAttributeName(),
+						entityType,
 						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
 				);
 			}

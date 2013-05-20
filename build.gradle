@@ -483,3 +483,5 @@ subprojects { subProject ->
     }
 
 }
+
+task release(type: Task, dependsOn: 'release:release')

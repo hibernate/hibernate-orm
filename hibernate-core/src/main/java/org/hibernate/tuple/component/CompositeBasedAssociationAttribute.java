@@ -35,7 +35,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
-import org.hibernate.persister.walking.internal.Helper;
+import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -55,7 +55,7 @@ public class CompositeBasedAssociationAttribute
 	private Joinable joinable;
 
 	public CompositeBasedAssociationAttribute(
-			AbstractCompositionDefinition source,
+			AbstractCompositionAttribute source,
 			SessionFactoryImplementor factory,
 			int attributeNumber,
 			String attributeName,
@@ -130,7 +130,7 @@ public class CompositeBasedAssociationAttribute
 			EntityPersister owningPersister,
 			PropertyPath propertyPath,
 			int ownerAttributeNumber) {
-		return Helper.determineFetchStyleByProfile(
+		return FetchStrategyHelper.determineFetchStyleByProfile(
 				loadQueryInfluencers,
 				owningPersister,
 				propertyPath,
@@ -139,11 +139,11 @@ public class CompositeBasedAssociationAttribute
 	}
 
 	protected FetchStyle determineFetchStyleByMetadata(FetchMode fetchMode, AssociationType type) {
-		return Helper.determineFetchStyleByMetadata( fetchMode, type, sessionFactory() );
+		return FetchStrategyHelper.determineFetchStyleByMetadata( fetchMode, type, sessionFactory() );
 	}
 
 	private FetchTiming determineFetchTiming(FetchStyle style) {
-		return Helper.determineFetchTiming( style, getType(), sessionFactory() );
+		return FetchStrategyHelper.determineFetchTiming( style, getType(), sessionFactory() );
 	}
 
 	private EntityPersister locateOwningPersister() {

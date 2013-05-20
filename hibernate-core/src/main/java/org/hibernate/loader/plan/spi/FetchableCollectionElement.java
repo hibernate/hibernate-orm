@@ -23,10 +23,14 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import org.hibernate.persister.collection.CollectionPersister;
+
 /**
  * @author Steve Ebersole
  */
 public interface FetchableCollectionElement extends FetchOwner, CopyableReturn {
 	@Override
 	public FetchableCollectionElement makeCopy(CopyContext copyContext);
+
+	public CollectionReference getCollectionReference();
 }

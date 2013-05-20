@@ -30,6 +30,9 @@ import java.util.LinkedHashSet;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.engine.jdbc.spi.TypeInfo;
+import org.hibernate.engine.jdbc.spi.TypeNullability;
+import org.hibernate.engine.jdbc.spi.TypeSearchability;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 

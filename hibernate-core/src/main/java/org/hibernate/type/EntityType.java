@@ -200,7 +200,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	public String getRHSUniqueKeyPropertyName() {
-		return uniqueKeyPropertyName;
+		// Return null if this type references a PK.  This is important for
+		// associations' use of mappedBy referring to a derived ID.
+		return referenceToPrimaryKey ? null : uniqueKeyPropertyName;
 	}
 
 	public String getLHSPropertyName() {

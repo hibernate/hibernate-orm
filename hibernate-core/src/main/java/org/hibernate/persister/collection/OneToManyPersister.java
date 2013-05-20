@@ -181,21 +181,26 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public void recreate(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		super.recreate( collection, id, session );
-		writeIndex( collection, id, session );
+		writeIndex( collection, collection.entries( this ), id, session );
 	}
 	
 	@Override
 	public void insertRows(PersistentCollection collection, Serializable id, SessionImplementor session)
 			throws HibernateException {
 		super.insertRows( collection, id, session );
-		writeIndex( collection, id, session );
+		writeIndex( collection, collection.entries( this ), id, session );
 	}
 	
-	private void writeIndex(PersistentCollection collection, Serializable id, SessionImplementor session) {
+	@Override
+	protected void doProcessQueuedOps(PersistentCollection collection, Serializable id, SessionImplementor session)
+			throws HibernateException {
+		writeIndex( collection, collection.queuedAdditionIterator(), id, session );
+	}
+	
+	private void writeIndex(PersistentCollection collection, Iterator entries, Serializable id, SessionImplementor session) {
 		// If one-to-many and inverse, still need to create the index.  See HHH-5732.
 		if ( isInverse && hasIndex && !indexContainsFormula ) {
 			try {
-				Iterator entries = collection.entries( this );
 				if ( entries.hasNext() ) {
 					Expectation expectation = Expectations.appropriateExpectation( getUpdateCheckStyle() );
 					int i = 0;

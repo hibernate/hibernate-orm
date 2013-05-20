@@ -1642,6 +1642,16 @@ public abstract class AbstractCollectionPersister
 
 	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SessionImplementor session)
 			throws HibernateException;
+	
+	public void processQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+			throws HibernateException {
+		if ( collection.hasQueuedOperations() ) {
+			doProcessQueuedOps( collection, key, session );
+		}
+	}
+	
+	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+			throws HibernateException;
 
 	public CollectionMetadata getCollectionMetadata() {
 		return this;

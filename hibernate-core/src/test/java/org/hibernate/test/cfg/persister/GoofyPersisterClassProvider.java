@@ -849,5 +849,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public int getBatchSize() {
 			return 0;
 		}
+
+		@Override
+		public void processQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+				throws HibernateException {
+		}
 	}
 }

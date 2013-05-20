@@ -44,7 +44,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
-import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -110,7 +110,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	public static final String MAX_LO = "max_lo";
 
 	private int maxLo;
-	private OptimizerFactory.LegacyHiLoAlgorithmOptimizer hiloOptimizer;
+	private LegacyHiLoAlgorithmOptimizer hiloOptimizer;
 
 	private Class returnClass;
 	private int keySize;
@@ -217,7 +217,15 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		return hiloOptimizer.generate(
 				new AccessCallback() {
 					public IntegralDataTypeHolder getNextValue() {
-						return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork( work, true );
+						return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
+								work,
+								true
+						);
+					}
+
+					@Override
+					public String getTenantIdentifier() {
+						return session.getTenantIdentifier();
 					}
 				}
 		);
@@ -320,7 +328,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		returnClass = type.getReturnedClass();
 
 		if ( maxLo >= 1 ) {
-			hiloOptimizer = new OptimizerFactory.LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
+			hiloOptimizer = new LegacyHiLoAlgorithmOptimizer( returnClass, maxLo );
 		}
 	}
 }

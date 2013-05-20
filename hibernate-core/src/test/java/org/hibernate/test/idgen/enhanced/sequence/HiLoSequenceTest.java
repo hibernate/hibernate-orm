@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
-import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -49,8 +49,8 @@ public class HiLoSequenceTest extends BaseCoreFunctionalTestCase {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
-		assertClassAssignability( OptimizerFactory.HiLoOptimizer.class, generator.getOptimizer().getClass() );
-		OptimizerFactory.HiLoOptimizer optimizer = ( OptimizerFactory.HiLoOptimizer ) generator.getOptimizer();
+		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
+		HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
 
 		int increment = optimizer.getIncrementSize();
 		Entity[] entities = new Entity[ increment + 1 ];

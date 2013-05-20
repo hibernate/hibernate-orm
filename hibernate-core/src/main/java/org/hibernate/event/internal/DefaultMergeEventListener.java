@@ -26,6 +26,11 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.hibernate.Hibernate;
+import org.hibernate.bytecode.instrumentation.spi.LazyPropertyInitializer;
+import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.property.BackrefPropertyAccessor;
+import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -305,6 +310,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				throw new StaleObjectStateException( entityName, id );
 			}
 
+			forceValuesInitialize(
+					persister.getPropertyValues( entity ),
+					persister.getPropertyValues( target ),
+					persister.getPropertyTypes()
+			);
+
 			// cascade first, so that all unsaved objects get their
 			// copy created before we actually copy
 			cascadeOnMerge(source, persister, entity, copyCache);
@@ -316,6 +327,19 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			event.setResult(result);
 		}
 
+	}
+
+	private void forceValuesInitialize(final Object[] original, final Object[] target, final Type[] types) {
+		for ( int i = 0; i < types.length; i++ ) {
+			Object source = original[i];
+			if ( target[i] instanceof PersistentCollection &&
+					source != LazyPropertyInitializer.UNFETCHED_PROPERTY &&
+					source != BackrefPropertyAccessor.UNKNOWN &&
+					source != null &&
+					Hibernate.isInitialized( source ) ) {
+				((PersistentCollection) target[i]).forceInitialization();
+			}
+		}
 	}
 
 	private void markInterceptorDirty(final Object entity, final Object target, EntityPersister persister) {

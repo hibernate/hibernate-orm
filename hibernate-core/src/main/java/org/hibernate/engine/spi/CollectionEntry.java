@@ -89,9 +89,7 @@ public final class CollectionEntry implements Serializable {
 
 		collection.clearDirty(); //a newly wrapped collection is NOT dirty (or we get unnecessary version updates)
 
-		snapshot = persister.isMutable() ?
-				collection.getSnapshot(persister) :
-				null;
+		snapshot = collection.getSnapshot(persister);
 		collection.setSnapshot(loadedKey, role, snapshot);
 	}
 
@@ -172,7 +170,6 @@ public final class CollectionEntry implements Serializable {
 		boolean forceDirty = collection.wasInitialized() &&
 				!collection.isDirty() && //optimization
 				getLoadedPersister() != null &&
-				getLoadedPersister().isMutable() && //optimization
 				( collection.isDirectlyAccessible() || getLoadedPersister().getElementType().isMutable() ) && //optimization
 				!collection.equalsSnapshot( getLoadedPersister() );
 
@@ -212,9 +209,7 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	public void postInitialize(PersistentCollection collection) throws HibernateException {
-		snapshot = getLoadedPersister().isMutable() ?
-				collection.getSnapshot( getLoadedPersister() ) :
-				null;
+		snapshot = collection.getSnapshot( getLoadedPersister() );
 		collection.setSnapshot(loadedKey, role, snapshot);
 		if (getLoadedPersister().getBatchSize() > 1) {
 			((AbstractPersistentCollection) collection).getSession().getPersistenceContext().getBatchFetchQueue().removeBatchLoadableCollection(this); 
@@ -243,10 +238,8 @@ public final class CollectionEntry implements Serializable {
 
 		boolean resnapshot = collection.wasInitialized() &&
 				( isDoremove() || isDorecreate() || isDoupdate() );
-		if ( resnapshot ) {
-			snapshot = loadedPersister==null || !loadedPersister.isMutable() ?
-					null :
-					collection.getSnapshot(loadedPersister); //re-snapshot
+		if ( resnapshot && loadedPersister != null ) {
+			snapshot = collection.getSnapshot( loadedPersister );
 		}
 
 		collection.postAction();
@@ -404,7 +397,7 @@ public final class CollectionEntry implements Serializable {
 		//      does the collection already have
 		//      it's own up-to-date snapshot?
 		return collection.wasInitialized() &&
-			( getLoadedPersister()==null || getLoadedPersister().isMutable() ) &&
+			getLoadedPersister()==null &&
 			collection.isSnapshotEmpty( getSnapshot() );
 	}
 

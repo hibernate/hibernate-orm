@@ -41,12 +41,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
- * Test HHH-6361: Collection events may contain wrong stored snapshot after
- * merging a detached entity into the persistencecontext.
- * 
  * @author Erik-Berndt Scheper
  */
-@TestForIssue( jiraKey = "HHH-6361" )
 public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -55,17 +51,15 @@ public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTest
 	}
 
 	@Override
-	protected void cleanupTest() {
-		Session s = null;
-		s = openSession();
-		s.beginTransaction();
-		s.createQuery("delete MultipleCollectionRefEntity1").executeUpdate();
-		s.createQuery("delete MultipleCollectionRefEntity2").executeUpdate();
-		s.createQuery("delete MultipleCollectionEntity").executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+	protected boolean isCleanupTestDataRequired() {
+		return true;
 	}
 
+	/**
+	 * Test HHH-6361: Collection events may contain wrong stored snapshot after
+	 * merging a detached entity into the persistencecontext.
+	 */
+	@TestForIssue( jiraKey = "HHH-6361" )
 	@Test
 	public void testMergeMultipleCollectionChangeEvents() {
 		MultipleCollectionListeners listeners = new MultipleCollectionListeners(
@@ -230,6 +224,86 @@ public class DetachedMultipleCollectionChangeTest extends BaseCoreFunctionalTest
 		checkEventCount(listeners, eventCount);
 
 		s.close();
+	}
+
+	/**
+	 * @see ImmutableDetachedMultipleCollectionChangeTest
+	 */
+	@TestForIssue(jiraKey = "HHH-3007")
+	@Test
+	public void testCollectionIsNotMarkedDirtyUnlessModified() {
+		final MultipleCollectionListeners listeners =
+				new MultipleCollectionListeners( sessionFactory() );
+
+		Session s = openSession();
+		s.beginTransaction();
+
+		final MultipleCollectionEntity mce = new MultipleCollectionEntity();
+		mce.setText( "MultipleCollectionEntity-1" );
+
+		final MultipleCollectionRefEntity1 re1n1 = new MultipleCollectionRefEntity1();
+		re1n1.setText( "MultipleCollectionRefEntity1-1" );
+		re1n1.setMultipleCollectionEntity( mce );
+
+		final MultipleCollectionRefEntity1 re1n2 = new MultipleCollectionRefEntity1();
+		re1n2.setText( "MultipleCollectionRefEntity1-2" );
+		re1n2.setMultipleCollectionEntity( mce );
+
+		mce.addRefEntity1( re1n1 );
+		mce.addRefEntity1( re1n2 );
+
+		s.save( mce );
+		s.getTransaction().commit();
+		s.close();
+
+		listeners.clear();
+
+		final MultipleCollectionEntity detachedEntity = mce.deepCopy();
+
+		s = openSession();
+		s.beginTransaction();
+
+		s.merge( detachedEntity );
+
+		s.getTransaction().commit();
+		s.close();
+
+		checkListener(
+				listeners, listeners.getInitializeCollectionListener(),
+				detachedEntity, null, 0
+		);
+
+		checkEventCount( listeners, 1 );
+
+		listeners.clear();
+
+		final List<MultipleCollectionRefEntity1> refEntities1 = new ArrayList<MultipleCollectionRefEntity1>(
+				detachedEntity.getRefEntities1()
+		);
+		detachedEntity.removeRefEntity1( re1n1 );
+
+		s = openSession();
+		s.beginTransaction();
+
+		s.merge( detachedEntity );
+
+		s.getTransaction().commit();
+		s.close();
+
+		checkListener(
+				listeners, listeners.getInitializeCollectionListener(),
+				detachedEntity, null, 0
+		);
+		checkListener(
+				listeners, listeners.getPreCollectionUpdateListener(),
+				detachedEntity, refEntities1, 1
+		);
+		checkListener(
+				listeners, listeners.getPostCollectionUpdateListener(),
+				detachedEntity, detachedEntity.getRefEntities1(), 2
+		);
+
+		checkEventCount( listeners, 3 );
 	}
 
 	protected void checkListener(

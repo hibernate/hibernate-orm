@@ -508,6 +508,12 @@ public abstract class CollectionType extends AbstractType implements Association
 			SessionImplementor session) {
 		// TODO: does not work for EntityMode.DOM4J yet!
 		java.util.Collection result = ( java.util.Collection ) target;
+
+		if ( result instanceof PersistentCollection ) {
+			PersistentCollection resultPersistentCollection = (PersistentCollection) result;
+			resultPersistentCollection.forceInitialization();
+		}
+
 		result.clear();
 
 		// copy elements into newly empty target collection
@@ -532,6 +538,18 @@ public abstract class CollectionType extends AbstractType implements Association
 				preserveSnapshot( originalPersistentCollection, resultPersistentCollection, elemType, owner, copyCache, session );
 
 				if ( ! originalPersistentCollection.isDirty() ) {
+					resultPersistentCollection.clearDirty();
+				}
+			}
+		}
+
+		if ( result instanceof PersistentCollection ) {
+			PersistentCollection resultPersistentCollection = (PersistentCollection) result;
+			if ( resultPersistentCollection.isDirty() ) {
+
+				CollectionPersister persister = getPersister( session );
+
+				if ( resultPersistentCollection.equalsSnapshot( persister ) ) {
 					resultPersistentCollection.clearDirty();
 				}
 			}

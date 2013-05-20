@@ -290,7 +290,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		expectedSQLs.add( "update" );
 		// Transaction 4
 		expectedSQLs.add( "select" );
-		expectedSQLs.add( "delete" );
+		expectedSQLs.add( "delete" ); // users_actions
+		expectedSQLs.add( "delete" ); // user
 
 		final Interceptor interceptor = new EmptyInterceptor() {
 			@Override

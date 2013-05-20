@@ -178,9 +178,6 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 		checkListener( 6, PreCollectionUpdateEvent.class, paulo, Collections.EMPTY_LIST );
 		checkListener( 7, PostCollectionUpdateEvent.class, paulo, paul.getAliases() );
 
-		List<Character> alias1CharactersSnapshot = copy( alias1.getCharacters() );
-		List<Character> alias2CharactersSnapshot = copy( alias2.getCharacters() );
-
 		listener.reset();
 
 		s.merge( alias2 );
@@ -189,15 +186,7 @@ public class MergeCollectionEventTest extends BaseCoreFunctionalTestCase {
 
 		s.flush();
 
-		assertEquals( 8, listener.getEventEntryList().size() ); // 4 collections x 2 events per
-		checkListener( 0, PreCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
-		checkListener( 1, PostCollectionUpdateEvent.class, alias1, alias1CharactersSnapshot );
-//		checkListener( 2, PreCollectionUpdateEvent.class, paul, Collections.EMPTY_LIST );
-//		checkListener( 3, PostCollectionUpdateEvent.class, paul, paul.getAliases() );
-		checkListener( 4, PreCollectionUpdateEvent.class, alias2, alias2CharactersSnapshot );
-		checkListener( 5, PostCollectionUpdateEvent.class, alias2, alias2.getCharacters() );
-//		checkListener( 6, PreCollectionUpdateEvent.class, paulo, Collections.EMPTY_LIST );
-//		checkListener( 7, PostCollectionUpdateEvent.class, paulo, paul.getAliases() );
+		assertEquals( 0, listener.getEventEntryList().size() );
 
 		s.getTransaction().commit();
 		s.close();

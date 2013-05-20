@@ -86,6 +86,7 @@ public class SpecialOneToOneType extends OneToOneType {
 			TypeFactory.TypeScope scope,
 			String referencedEntityName,
 			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
 			String uniqueKeyPropertyName,
 			boolean lazy,
 			boolean unwrapProxy,
@@ -96,6 +97,7 @@ public class SpecialOneToOneType extends OneToOneType {
 				scope,
 				referencedEntityName,
 				foreignKeyType,
+				referenceToPrimaryKey,
 				uniqueKeyPropertyName,
 				lazy,
 				unwrapProxy,
@@ -104,7 +106,8 @@ public class SpecialOneToOneType extends OneToOneType {
 				returnedClass
 		);
 	}
-	
+
+
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return super.getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}

@@ -63,6 +63,7 @@ import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.test.component.cascading.toone.PersonalInfo;
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
@@ -131,6 +132,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNestedCompositeElementCollectionProcessing() throws Exception {
 		// create some test data
 		Session session = openSession();

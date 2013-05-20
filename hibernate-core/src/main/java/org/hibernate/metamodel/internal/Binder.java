@@ -1385,6 +1385,7 @@ public class Binder {
 
 				return metadata.getTypeResolver().getTypeFactory().manyToOne(
 						referencedEntityBinding.getEntity().getName(),
+						uniqueKeyAttributeName == null,
 						uniqueKeyAttributeName,
 						attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 						attributeSource.isUnWrapProxy(),
@@ -1492,6 +1493,7 @@ public class Binder {
 					return metadata.getTypeResolver().getTypeFactory().oneToOne(
 							referencedEntityBinding.getEntity().getName(),
 							attributeSource.getForeignKeyDirection(),
+							uniqueKeyAttributeName == null,
 							uniqueKeyAttributeName,
 							attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 							attributeSource.isUnWrapProxy(),
@@ -1504,6 +1506,7 @@ public class Binder {
 					return metadata.getTypeResolver().getTypeFactory().specialOneToOne(
 							referencedEntityBinding.getEntity().getName(),
 							attributeSource.getForeignKeyDirection(),
+							uniqueKeyAttributeName == null,
 							uniqueKeyAttributeName,
 							attributeSource.getFetchTiming() != FetchTiming.IMMEDIATE,
 							attributeSource.isUnWrapProxy(),
@@ -2048,6 +2051,7 @@ public class Binder {
 
 		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
 				referencedEntityBinding.getEntity().getName(),
+				true,
 				null,
 				false,
 				false,

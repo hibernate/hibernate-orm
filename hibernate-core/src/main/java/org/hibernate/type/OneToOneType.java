@@ -81,6 +81,23 @@ public class OneToOneType extends EntityType {
 		this.entityName = entityName;
 	}
 
+	public OneToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName,
+			Class returnedClass) {
+		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy, returnedClass );
+		this.foreignKeyType = foreignKeyType;
+		this.propertyName = propertyName;
+		this.entityName = entityName;
+	}
+
 
 	public String getPropertyName() {
 		return propertyName;

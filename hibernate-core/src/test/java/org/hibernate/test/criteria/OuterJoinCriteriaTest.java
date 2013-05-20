@@ -380,7 +380,7 @@ public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-
+	@Override
 	protected void prepareTest() {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -409,7 +409,7 @@ public class OuterJoinCriteriaTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
-
+  	@Override
 	protected void cleanupTest() {
 		Session s = openSession();
 		s.getTransaction().begin();

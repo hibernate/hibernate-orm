@@ -56,6 +56,7 @@ import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
@@ -75,6 +76,7 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEntityWithList() throws Exception {
 		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
 

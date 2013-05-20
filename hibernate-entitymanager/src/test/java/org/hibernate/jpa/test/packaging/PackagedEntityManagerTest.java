@@ -81,7 +81,6 @@ import static org.junit.Assert.fail;
 @SuppressWarnings("unchecked")
 public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
 		addPackageToClasspath( testPackage );
@@ -117,7 +116,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDefaultParForPersistence_1_0() throws Exception {
 		File testPackage = buildDefaultPar_1_0();
 		addPackageToClasspath( testPackage );
@@ -193,7 +191,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
 		addPackageToClasspath( testPackage );

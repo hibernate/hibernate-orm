@@ -95,10 +95,25 @@ public class ManyToOneType extends EntityType {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
-		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy );
+		this( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne, null);
+	}
+
+
+	public ManyToOneType(
+			TypeFactory.TypeScope scope,
+			String referencedEntityName,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne,
+			Class returnedClass) {
+		super( scope, referencedEntityName, referenceToPrimaryKey, uniqueKeyPropertyName, !lazy, unwrapProxy, returnedClass );
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
+
 	protected boolean isNullable() {
 		return ignoreNotFound;
 	}

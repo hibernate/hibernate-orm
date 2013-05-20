@@ -237,6 +237,20 @@ public final class TypeFactory implements Serializable {
 		return new OneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
 				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
 	}
+
+	public EntityType oneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName,
+			Class returnedClass) {
+		return new OneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, returnedClass );
+	}
 	
 	/**
 	 * @deprecated Use {@link #specialOneToOne(String, ForeignKeyDirection, String, boolean, boolean, String, String, boolean)} instead.
@@ -267,6 +281,20 @@ public final class TypeFactory implements Serializable {
 				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName );
 	}
 
+	public EntityType specialOneToOne(
+			String persistentClass,
+			ForeignKeyDirection foreignKeyType,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			String entityName,
+			String propertyName,
+			Class returnedClass) {
+		return new SpecialOneToOneType( typeScope, persistentClass, foreignKeyType, referenceToPrimaryKey,
+				uniqueKeyPropertyName, lazy, unwrapProxy, entityName, propertyName, returnedClass );
+	}
+
 
 	// many-to-one type builders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -294,7 +322,6 @@ public final class TypeFactory implements Serializable {
 				isLogicalOneToOne );
 	}
 
-
 	public EntityType manyToOne(
 			String persistentClass,
 			boolean referenceToPrimaryKey,
@@ -303,6 +330,18 @@ public final class TypeFactory implements Serializable {
 			boolean unwrapProxy,
 			boolean ignoreNotFound,
 			boolean isLogicalOneToOne) {
+		return manyToOne( persistentClass, referenceToPrimaryKey, uniqueKeyPropertyName, lazy, unwrapProxy, ignoreNotFound, isLogicalOneToOne, null );
+	}
+
+	public EntityType manyToOne(
+			String persistentClass,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean lazy,
+			boolean unwrapProxy,
+			boolean ignoreNotFound,
+			boolean isLogicalOneToOne,
+			Class returnedClass) {
 		return new ManyToOneType(
 				typeScope,
 				persistentClass,
@@ -311,7 +350,8 @@ public final class TypeFactory implements Serializable {
 				lazy,
 				unwrapProxy,
 				ignoreNotFound,
-				isLogicalOneToOne
+				isLogicalOneToOne,
+				returnedClass
 		);
 	}
 

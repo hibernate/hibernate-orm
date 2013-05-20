@@ -107,12 +107,25 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			String uniqueKeyPropertyName,
 			boolean eager,
 			boolean unwrapProxy) {
+		this(scope, entityName, referenceToPrimaryKey, uniqueKeyPropertyName, eager, unwrapProxy, null);
+	}
+
+
+	protected EntityType(
+			TypeFactory.TypeScope scope,
+			String entityName,
+			boolean referenceToPrimaryKey,
+			String uniqueKeyPropertyName,
+			boolean eager,
+			boolean unwrapProxy,
+			Class returnedClass) {
 		this.scope = scope;
 		this.associatedEntityName = entityName;
 		this.uniqueKeyPropertyName = uniqueKeyPropertyName;
 		this.eager = eager;
 		this.unwrapProxy = unwrapProxy;
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
+		this.returnedClass = returnedClass;
 	}
 
 

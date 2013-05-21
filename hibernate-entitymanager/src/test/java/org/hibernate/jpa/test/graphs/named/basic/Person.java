@@ -31,8 +31,8 @@ import javax.persistence.NamedEntityGraph;
  * @author Steve Ebersole
  */
 @Entity(name = "Person")
-@NamedEntityGraph()
+@NamedEntityGraph
 public class Person {
 	@Id
-	private Long id;
+	public Long id;
 }

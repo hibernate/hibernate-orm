@@ -21,43 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg.annotations;
-
-import javax.persistence.NamedEntityGraph;
-
-import org.hibernate.internal.util.StringHelper;
+package org.hibernate.jpa.test.graphs.named.basic;
 
 /**
- * Models the definition of a {@link NamedEntityGraph} annotation
- *
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public class NamedEntityGraphDefinition {
-	private final NamedEntityGraph annotation;
-	private final String jpaEntityName;
-	private final String entityName;
-	private final String name;
-
-	public NamedEntityGraphDefinition(NamedEntityGraph annotation, String jpaEntityName, String entityName) {
-		this.annotation = annotation;
-		this.jpaEntityName = jpaEntityName;
-		this.entityName = entityName;
-		this.name = StringHelper.isEmpty( annotation.name() ) ? jpaEntityName : annotation.name();
-	}
-
-	public String getRegisteredName() {
-		return name;
-	}
-
-	public String getJpaEntityName() {
-		return jpaEntityName;
-	}
-
-	public String getEntityName() {
-		return entityName;
-	}
-
-	public NamedEntityGraph getAnnotation() {
-		return annotation;
+public class BasicOrmNamedEntityGraphTest extends AbstractNamedEntityGraphTest{
+	@Override
+	public String[] getEjb3DD() {
+		return new String[]{"org/hibernate/jpa/test/graphs/named/basic/orm.xml"};
 	}
 }

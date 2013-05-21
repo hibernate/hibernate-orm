@@ -23,26 +23,13 @@
  */
 package org.hibernate.jpa.test.graphs.named.basic;
 
-import javax.persistence.EntityGraph;
-
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static junit.framework.Assert.assertNotNull;
-
 /**
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public class BasicNamedEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
+public class BasicAnnNamedEntityGraphTest extends AbstractNamedEntityGraphTest{
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { Person.class };
 	}
 
-	@Test
-	public void testIt() {
-		EntityGraph graph = getOrCreateEntityManager().getEntityGraph( "Person" );
-		assertNotNull( graph );
-	}
 }

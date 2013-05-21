@@ -25,25 +25,20 @@ package org.hibernate.cfg.annotations;
 
 import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.ParameterMode;
-import javax.persistence.QueryHint;
 import javax.persistence.StoredProcedureParameter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.internal.ParameterStrategy;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
@@ -65,7 +60,7 @@ public class NamedProcedureCallDefinition {
 	private final Class[] resultClasses;
 	private final String[] resultSetMappings;
 	private final ParameterDefinitions parameterDefinitions;
-	private final Map<String,Object> hints;
+	private final Map<String, Object> hints;
 
 	NamedProcedureCallDefinition(NamedStoredProcedureQuery annotation) {
 		this.registeredName = annotation.name();
@@ -73,7 +68,7 @@ public class NamedProcedureCallDefinition {
 		this.resultClasses = annotation.resultClasses();
 		this.resultSetMappings = annotation.resultSetMappings();
 		this.parameterDefinitions = new ParameterDefinitions( annotation.parameters() );
-		this.hints = extract( annotation.hints() );
+		this.hints = new QueryHintDefinition( annotation.hints() ).getHintsMap();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;
 		final boolean specifiesResultSetMappings = resultSetMappings != null && resultSetMappings.length > 0;
@@ -86,17 +81,6 @@ public class NamedProcedureCallDefinition {
 					)
 			);
 		}
-	}
-
-	private Map<String, Object> extract(QueryHint[] hints) {
-		if ( hints == null || hints.length == 0 ) {
-			return Collections.emptyMap();
-		}
-		final Map<String,Object> hintsMap = new HashMap<String, Object>();
-		for ( QueryHint hint : hints ) {
-			hintsMap.put( hint.name(), hint.value() );
-		}
-		return hintsMap;
 	}
 
 	public String getRegisteredName() {
@@ -201,7 +185,7 @@ public class NamedProcedureCallDefinition {
 		public List<ParameterMemento> toMementos(SessionFactoryImpl sessionFactory) {
 			final List<ParameterMemento> mementos = new ArrayList<ParameterMemento>();
 			for ( ParameterDefinition definition : parameterDefinitions ) {
-				definition.toMemento( sessionFactory );
+				mementos.add(definition.toMemento( sessionFactory ));
 			}
 			return mementos;
 		}

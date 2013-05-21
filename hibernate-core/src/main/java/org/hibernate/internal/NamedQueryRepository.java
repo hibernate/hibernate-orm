@@ -56,7 +56,7 @@ public class NamedQueryRepository {
 			Iterable<NamedQueryDefinition> namedQueryDefinitions,
 			Iterable<NamedSQLQueryDefinition> namedSqlQueryDefinitions,
 			Iterable<ResultSetMappingDefinition> namedSqlResultSetMappings,
-			List<ProcedureCallMemento> namedProcedureCalls) {
+			Map<String, ProcedureCallMemento> namedProcedureCalls) {
 		final HashMap<String, NamedQueryDefinition> namedQueryDefinitionMap = new HashMap<String, NamedQueryDefinition>();
 		for ( NamedQueryDefinition namedQueryDefinition : namedQueryDefinitions ) {
 			namedQueryDefinitionMap.put( namedQueryDefinition.getName(), namedQueryDefinition );
@@ -75,6 +75,7 @@ public class NamedQueryRepository {
 			namedSqlResultSetMappingMap.put( resultSetMappingDefinition.getName(), resultSetMappingDefinition );
 		}
 		this.namedSqlResultSetMappingMap = Collections.unmodifiableMap( namedSqlResultSetMappingMap );
+		this.procedureCallMementoMap = Collections.unmodifiableMap( namedProcedureCalls );
 	}
 
 

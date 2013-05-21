@@ -23,13 +23,11 @@
  */
 package org.hibernate.cfg.annotations;
 import java.util.HashMap;
-import javax.persistence.LockModeType;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.QueryHint;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
 
@@ -40,7 +38,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.annotations.CacheModeType;
 import org.hibernate.annotations.FlushModeType;
 import org.hibernate.annotations.QueryHints;
@@ -54,7 +51,6 @@ import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.LockModeConverter;
 
 /**
  * Query binder
@@ -70,19 +66,19 @@ public abstract class QueryBinder {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 		//EJBQL Query
-		QueryHint[] hints = queryAnn.hints();
+		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
 		String queryName = queryAnn.query();
 		NamedQueryDefinition queryDefinition = new NamedQueryDefinitionBuilder( queryAnn.name() )
-				.setLockOptions( determineLockOptions( queryAnn, hints ) )
+				.setLockOptions( hints.determineLockOptions( queryAnn ) )
 				.setQuery( queryName )
-				.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
-				.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
-				.setTimeout( getTimeout( queryName, hints ) )
-				.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
-				.setFlushMode( getFlushMode( queryName, hints ) )
-				.setCacheMode( getCacheMode( queryName, hints ) )
-				.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
-				.setComment( getString( queryName, "org.hibernate.comment", hints ) )
+				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
+				.setCacheRegion( hints.getString( queryName, QueryHints.CACHE_REGION ) )
+				.setTimeout( hints.getTimeout( queryName ) )
+				.setFetchSize( hints.getInteger( queryName, QueryHints.FETCH_SIZE ) )
+				.setFlushMode( hints.getFlushMode( queryName ) )
+				.setCacheMode( hints.getCacheMode( queryName ) )
+				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
+				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
 				.setParameterTypes( null )
 				.createNamedQueryDefinition();
 
@@ -97,17 +93,7 @@ public abstract class QueryBinder {
 		}
 	}
 
-	private static LockOptions determineLockOptions(NamedQuery namedQueryAnnotation, QueryHint[] hints) {
-		LockModeType lockModeType = namedQueryAnnotation.lockMode();
-		Integer lockTimeoutHint = getInteger( namedQueryAnnotation.name(), "javax.persistence.lock.timeout", hints );
 
-		LockOptions lockOptions = new LockOptions( LockModeConverter.convertToLockMode( lockModeType ) );
-		if ( lockTimeoutHint != null ) {
-			lockOptions.setTimeOut( lockTimeoutHint );
-		}
-
-		return lockOptions;
-	}
 
 	public static void bindNativeQuery(NamedNativeQuery queryAnn, Mappings mappings, boolean isDefault) {
 		if ( queryAnn == null ) return;
@@ -116,22 +102,22 @@ public abstract class QueryBinder {
 			throw new AnnotationException( "A named query must have a name when used in class or package level" );
 		}
 		String resultSetMapping = queryAnn.resultSetMapping();
-		QueryHint[] hints = queryAnn.hints();
+		QueryHintDefinition hints = new QueryHintDefinition( queryAnn.hints() );
 		String queryName = queryAnn.query();
 		
 		NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder( queryAnn.name() )
 				.setQuery( queryName )
 				.setQuerySpaces( null )
-				.setCacheable( getBoolean( queryName, "org.hibernate.cacheable", hints ) )
-				.setCacheRegion( getString( queryName, "org.hibernate.cacheRegion", hints ) )
-				.setTimeout( getTimeout( queryName, hints ) )
-				.setFetchSize( getInteger( queryName, "org.hibernate.fetchSize", hints ) )
-				.setFlushMode( getFlushMode( queryName, hints ) )
-				.setCacheMode( getCacheMode( queryName, hints ) )
-				.setReadOnly( getBoolean( queryName, "org.hibernate.readOnly", hints ) )
-				.setComment( getString( queryName, "org.hibernate.comment", hints ) )
+				.setCacheable( hints.getBoolean( queryName, QueryHints.CACHEABLE ) )
+				.setCacheRegion( hints.getString( queryName, QueryHints.CACHE_REGION ) )
+				.setTimeout( hints.getTimeout( queryName ) )
+				.setFetchSize( hints.getInteger( queryName, QueryHints.FETCH_SIZE ) )
+				.setFlushMode( hints.getFlushMode( queryName ) )
+				.setCacheMode( hints.getCacheMode( queryName ) )
+				.setReadOnly( hints.getBoolean( queryName, QueryHints.READ_ONLY ) )
+				.setComment( hints.getString( queryName, QueryHints.COMMENT ) )
 				.setParameterTypes( null )
-				.setCallable( getBoolean( queryName, "org.hibernate.callable", hints ) );
+				.setCallable( hints.getBoolean( queryName, QueryHints.CALLABLE ) );
 		
 		if ( !BinderHelper.isEmptyAnnotationValue( resultSetMapping ) ) {
 			//sql result set usage
@@ -359,109 +345,5 @@ public abstract class QueryBinder {
 		mappings.addSecondPass( new ResultsetMappingSecondPass( ann, mappings, isDefault ) );
 	}
 
-	private static CacheMode getCacheMode(String query, QueryHint[] hints) {
-		for (QueryHint hint : hints) {
-			if ( "org.hibernate.cacheMode".equals( hint.name() ) ) {
-				if ( hint.value().equalsIgnoreCase( CacheMode.GET.toString() ) ) {
-					return CacheMode.GET;
-				}
-				else if ( hint.value().equalsIgnoreCase( CacheMode.IGNORE.toString() ) ) {
-					return CacheMode.IGNORE;
-				}
-				else if ( hint.value().equalsIgnoreCase( CacheMode.NORMAL.toString() ) ) {
-					return CacheMode.NORMAL;
-				}
-				else if ( hint.value().equalsIgnoreCase( CacheMode.PUT.toString() ) ) {
-					return CacheMode.PUT;
-				}
-				else if ( hint.value().equalsIgnoreCase( CacheMode.REFRESH.toString() ) ) {
-					return CacheMode.REFRESH;
-				}
-				else {
-					throw new AnnotationException( "Unknown CacheMode in hint: " + query + ":" + hint.name() );
-				}
-			}
-		}
-		return null;
-	}
 
-	private static FlushMode getFlushMode(String query, QueryHint[] hints) {
-		for (QueryHint hint : hints) {
-			if ( "org.hibernate.flushMode".equals( hint.name() ) ) {
-				if ( hint.value().equalsIgnoreCase( FlushMode.ALWAYS.toString() ) ) {
-					return FlushMode.ALWAYS;
-				}
-				else if ( hint.value().equalsIgnoreCase( FlushMode.AUTO.toString() ) ) {
-					return FlushMode.AUTO;
-				}
-				else if ( hint.value().equalsIgnoreCase( FlushMode.COMMIT.toString() ) ) {
-					return FlushMode.COMMIT;
-				}
-				else if ( hint.value().equalsIgnoreCase( FlushMode.NEVER.toString() ) ) {
-					return FlushMode.MANUAL;
-				}
-				else if ( hint.value().equalsIgnoreCase( FlushMode.MANUAL.toString() ) ) {
-					return FlushMode.MANUAL;
-				}
-				else {
-					throw new AnnotationException( "Unknown FlushMode in hint: " + query + ":" + hint.name() );
-				}
-			}
-		}
-		return null;
-	}
-
-	private static boolean getBoolean(String query, String hintName, QueryHint[] hints) {
-		for (QueryHint hint : hints) {
-			if ( hintName.equals( hint.name() ) ) {
-				if ( hint.value().equalsIgnoreCase( "true" ) ) {
-					return true;
-				}
-				else if ( hint.value().equalsIgnoreCase( "false" ) ) {
-					return false;
-				}
-				else {
-					throw new AnnotationException( "Not a boolean in hint: " + query + ":" + hint.name() );
-				}
-			}
-		}
-		return false;
-	}
-
-	private static String getString(String query, String hintName, QueryHint[] hints) {
-		for (QueryHint hint : hints) {
-			if ( hintName.equals( hint.name() ) ) {
-				return hint.value();
-			}
-		}
-		return null;
-	}
-
-	private static Integer getInteger(String query, String hintName, QueryHint[] hints) {
-		for (QueryHint hint : hints) {
-			if ( hintName.equals( hint.name() ) ) {
-				try {
-					return Integer.decode( hint.value() );
-				}
-				catch (NumberFormatException nfe) {
-					throw new AnnotationException( "Not an integer in hint: " + query + ":" + hint.name(), nfe );
-				}
-			}
-		}
-		return null;
-	}
-
-	private static Integer getTimeout(String queryName, QueryHint[] hints) {
-		Integer timeout = getInteger( queryName, "javax.persistence.query.timeout", hints );
-
-		if ( timeout != null ) {
-			// convert milliseconds to seconds
-			timeout = (int)Math.round(timeout.doubleValue() / 1000.0 );
-		}
-		else {
-			// timeout is already in seconds
-			timeout = getInteger( queryName, "org.hibernate.timeout", hints );
-		}
-		return timeout;
-	}
 }

@@ -49,7 +49,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 
 	private final Set<String> synchronizedQuerySpaces;
 
-	private final Map<String,Object> hintsMap;
+	private final Map<String, Object> hintsMap;
 
 	/**
 	 * Constructs a ProcedureCallImpl
@@ -67,7 +67,7 @@ public class ProcedureCallMementoImpl implements ProcedureCallMemento {
 			ParameterStrategy parameterStrategy,
 			List<ParameterMemento> parameterDeclarations,
 			Set<String> synchronizedQuerySpaces,
-			Map<String,Object> hintsMap) {
+			Map<String, Object> hintsMap) {
 		this.procedureName = procedureName;
 		this.queryReturns = queryReturns;
 		this.parameterStrategy = parameterStrategy;

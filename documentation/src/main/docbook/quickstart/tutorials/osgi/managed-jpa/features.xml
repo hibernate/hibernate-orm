@@ -8,7 +8,6 @@
         <config name="org.apache.aries.transaction">
             aries.transaction.recoverable = true
             aries.transaction.timeout = 600
-            aries.transaction.howl.logFileDir = ${karaf.data}/txlog
             aries.transaction.howl.maxLogFiles = 2
             aries.transaction.howl.maxBlocksPerFile = 512
             aries.transaction.howl.bufferSizeKBytes = 4

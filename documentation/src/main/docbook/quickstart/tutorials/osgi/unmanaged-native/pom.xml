@@ -53,8 +53,8 @@
 				<extensions>true</extensions>
 				<configuration>
 					<instructions>
-						<Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
-						<Bundle-Name>${pom.artifactId}</Bundle-Name>
+						<Bundle-SymbolicName>org.hibernate.osgi.unmanaged-native</Bundle-SymbolicName>
+						<Bundle-Name>unmanaged-native</Bundle-Name>
 						<Bundle-Version>1.0.0</Bundle-Version>
 						<Export-Package>
 						    org.hibernate.osgitest,

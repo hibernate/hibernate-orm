@@ -27,9 +27,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.jboss.logging.Logger;
@@ -44,8 +42,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
-import org.hibernate.loader.plan.spi.AbstractSingularAttributeFetch;
+import org.hibernate.loader.plan.spi.AbstractFetchOwner;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CollectionReturn;
@@ -198,15 +195,10 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 		final FetchOwner identifierAttributeCollector;
 		if ( entityIdentifierDefinition.isEncapsulated() ) {
-			if ( entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getIdentifierType().isComponentType() ) {
-				identifierAttributeCollector = new EncapsulatedCompositeIdentifierAttributeCollector( entityReference );
-			}
-			else {
-				identifierAttributeCollector = new EncapsulatedIdentifierAttributeCollector( entityReference );
-			}
+			identifierAttributeCollector = new EncapsulatedIdentifierAttributeCollector( sessionFactory, entityReference );
 		}
 		else {
-			identifierAttributeCollector = new NonEncapsulatedIdentifierAttributeCollector( entityReference );
+			identifierAttributeCollector = new NonEncapsulatedIdentifierAttributeCollector( sessionFactory, entityReference );
 		}
 		pushToStack( identifierAttributeCollector );
 	}
@@ -525,16 +517,14 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		public void poppedFromStack();
 	}
 
-	protected static abstract class AbstractIdentifierAttributeCollector
+	protected static abstract class AbstractIdentifierAttributeCollector extends AbstractFetchOwner
 			implements FetchOwner, EntityReference, FetchStackAware {
-
 		protected final EntityReference entityReference;
+		protected final Map<Fetch,HydratedCompoundValueHandler> fetchToHydratedStateExtractorMap
+				= new HashMap<Fetch, HydratedCompoundValueHandler>();
 
-		protected final List<AbstractSingularAttributeFetch> identifierFetches = new ArrayList<AbstractSingularAttributeFetch>();
-		protected final Map<AbstractSingularAttributeFetch,HydratedCompoundValueHandler> fetchToHydratedStateExtractorMap
-				= new HashMap<AbstractSingularAttributeFetch, HydratedCompoundValueHandler>();
-
-		public AbstractIdentifierAttributeCollector(EntityReference entityReference) {
+		public AbstractIdentifierAttributeCollector(SessionFactoryImplementor sessionFactory, EntityReference entityReference) {
+			super( sessionFactory );
 			this.entityReference = entityReference;
 		}
 
@@ -551,11 +541,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		@Override
 		public EntityPersister getEntityPersister() {
 			return entityReference.getEntityPersister();
-		}
-
-		@Override
-		public boolean isNullable(Fetch fetch) {
-			return false;
 		}
 
 		@Override
@@ -580,29 +565,24 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 			//
 			// IMPL NOTE: we pass ourselves as the FetchOwner which will route the fetch back through our #addFetch
 			// 		impl.  We collect them there and later build the IdentifierDescription
-			final EntityFetch fetch = LoadPlanBuildingHelper.buildStandardEntityFetch(
-					this,
-					attributeDefinition,
-					fetchStrategy,
-					loadPlanBuildingContext
-			);
+			final EntityFetch fetch = super.buildEntityFetch( attributeDefinition, fetchStrategy, loadPlanBuildingContext );
 			fetchToHydratedStateExtractorMap.put( fetch, attributeDefinition.getHydratedCompoundValueExtractor() );
 
 			return fetch;
 		}
 
 		@Override
-		public CompositeFetch buildCompositeFetch(
-				CompositionDefinition attributeDefinition, LoadPlanBuildingContext loadPlanBuildingContext) {
-			// nested composition.  Unusual, but not disallowed.
-			//
-			// IMPL NOTE: we pass ourselves as the FetchOwner which will route the fetch back through our #addFetch
-			// 		impl.  We collect them there and later build the IdentifierDescription
-			return LoadPlanBuildingHelper.buildStandardCompositeFetch(
-					this,
-					attributeDefinition,
-					loadPlanBuildingContext
-			);
+		public Type getType(Fetch fetch) {
+			if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Fetch owner property name [%s] is not the same as the identifier property name [%s].",
+								fetch.getOwnerPropertyName(),
+								entityReference.getEntityPersister().getIdentifierPropertyName()
+						)
+				);
+			}
+			return super.getType( fetch );
 		}
 
 		@Override
@@ -612,16 +592,6 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 		protected abstract IdentifierDescription buildIdentifierDescription();
-
-		@Override
-		public void addFetch(Fetch fetch) {
-			identifierFetches.add( (AbstractSingularAttributeFetch) fetch );
-		}
-
-		@Override
-		public Fetch[] getFetches() {
-			return ( (FetchOwner) entityReference ).getFetches();
-		}
 
 		@Override
 		public void validateFetchPlan(FetchStrategy fetchStrategy) {
@@ -641,38 +611,64 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 	}
 
-	protected static abstract class AbstractCompositeIdentifierAttributeCollector extends AbstractIdentifierAttributeCollector {
-
-		public AbstractCompositeIdentifierAttributeCollector(EntityReference entityReference) {
-			super( entityReference );
-		}
-	}
-
 	protected static class EncapsulatedIdentifierAttributeCollector extends AbstractIdentifierAttributeCollector {
 		private final PropertyPath propertyPath;
+		private final FetchOwnerDelegate delegate;
 
-		public EncapsulatedIdentifierAttributeCollector(EntityReference entityReference) {
-			super( entityReference );
+		public EncapsulatedIdentifierAttributeCollector(
+				final SessionFactoryImplementor sessionFactory,
+				final EntityReference entityReference) {
+			super( sessionFactory, entityReference );
 			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath();
+			final boolean isCompositeType = entityReference.getEntityPersister().getIdentifierType().isComponentType();
+			this.delegate = new FetchOwnerDelegate() {
+				@Override
+				public boolean isNullable(Fetch fetch) {
+					if ( !isCompositeType ) {
+						throw new IllegalStateException( "Non-composite ID cannot have fetches." );
+					}
+					return true;
+				}
+
+				@Override
+				public Type getType(Fetch fetch) {
+					if ( !isCompositeType ) {
+						throw new IllegalStateException( "Non-composite ID cannot have fetches." );
+					}
+					if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
+						throw new IllegalArgumentException(
+								String.format(
+										"Fetch owner property name [%s] is not the same as the identifier prop" +
+										fetch.getOwnerPropertyName(),
+										entityReference.getEntityPersister().getIdentifierPropertyName()
+								)
+						);
+					}
+					return entityReference.getEntityPersister().getIdentifierType();
+				}
+
+				@Override
+				public String[] getColumnNames(Fetch fetch) {
+					if ( !isCompositeType ) {
+						throw new IllegalStateException( "Non-composite ID cannot have fetches." );
+					}
+					return ( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames();
+				}
+			};
 		}
 
 		@Override
 		protected IdentifierDescription buildIdentifierDescription() {
 			return new IdentifierDescriptionImpl(
 					entityReference,
-					identifierFetches.toArray( new AbstractSingularAttributeFetch[ identifierFetches.size() ] ),
+					getFetches(),
 					null
 			);
 		}
 
 		@Override
-		public Type getType(Fetch fetch) {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public String[] getColumnNames(Fetch fetch) {
-			return ( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames();
+		protected FetchOwnerDelegate getFetchOwnerDelegate() {
+			return delegate;
 		}
 
 		@Override
@@ -681,54 +677,12 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 	}
 
-	protected static class EncapsulatedCompositeIdentifierAttributeCollector extends AbstractCompositeIdentifierAttributeCollector {
-		private final PropertyPath propertyPath;
-
-		public EncapsulatedCompositeIdentifierAttributeCollector(EntityReference entityReference) {
-			super( entityReference );
-			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath();
-		}
-
-		@Override
-		protected IdentifierDescription buildIdentifierDescription() {
-			return new IdentifierDescriptionImpl(
-					entityReference,
-					identifierFetches.toArray( new AbstractSingularAttributeFetch[ identifierFetches.size() ] ),
-					null
-			);
-		}
-
-		@Override
-		public PropertyPath getPropertyPath() {
-			return propertyPath;
-		}
-
-		@Override
-		public Type getType(Fetch fetch) {
-			if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Fetch owner property name [%s] is not the same as the identifier property name [%s].",
-								fetch.getOwnerPropertyName(),
-								entityReference.getEntityPersister().getIdentifierPropertyName()
-						)
-				);
-			}
-			return entityReference.getEntityPersister().getIdentifierType();
-		}
-
-		@Override
-		public String[] getColumnNames(Fetch fetch) {
-			return ( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames();
-		}
-	}
-
-	protected static class NonEncapsulatedIdentifierAttributeCollector extends AbstractCompositeIdentifierAttributeCollector {
+	protected static class NonEncapsulatedIdentifierAttributeCollector extends AbstractIdentifierAttributeCollector {
 		private final PropertyPath propertyPath;
 		private final FetchOwnerDelegate fetchOwnerDelegate;
 
-		public NonEncapsulatedIdentifierAttributeCollector(EntityReference entityReference) {
-			super( entityReference );
+		public NonEncapsulatedIdentifierAttributeCollector(SessionFactoryImplementor sessionfactory, EntityReference entityReference) {
+			super( sessionfactory, entityReference );
 			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath().append( "<id>" );
 			this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
 					entityReference.getEntityPersister().getFactory(),
@@ -741,7 +695,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		protected IdentifierDescription buildIdentifierDescription() {
 			return new IdentifierDescriptionImpl(
 					entityReference,
-					identifierFetches.toArray( new AbstractSingularAttributeFetch[ identifierFetches.size() ] ),
+					getFetches(),
 					fetchToHydratedStateExtractorMap
 			);
 		}
@@ -752,33 +706,21 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		}
 
 
-		public Type getType(Fetch fetch) {
-			if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Fetch owner property name [%s] is not the same as the identifier property name [%s].",
-								fetch.getOwnerPropertyName(),
-								entityReference.getEntityPersister().getIdentifierPropertyName()
-						)
-				);
-			}
-			return fetchOwnerDelegate.getType( fetch );
-		}
-
-		public String[] getColumnNames(Fetch fetch) {
-			return fetchOwnerDelegate.getColumnNames( fetch );
+		@Override
+		protected FetchOwnerDelegate getFetchOwnerDelegate() {
+			return fetchOwnerDelegate;
 		}
 	}
 
 	private static class IdentifierDescriptionImpl implements IdentifierDescription {
 		private final EntityReference entityReference;
-		private final AbstractSingularAttributeFetch[] identifierFetches;
-		private final Map<AbstractSingularAttributeFetch,HydratedCompoundValueHandler> fetchToHydratedStateExtractorMap;
+		private final Fetch[] identifierFetches;
+		private final Map<Fetch,HydratedCompoundValueHandler> fetchToHydratedStateExtractorMap;
 
 		private IdentifierDescriptionImpl(
 				EntityReference entityReference,
-				AbstractSingularAttributeFetch[] identifierFetches,
-				Map<AbstractSingularAttributeFetch, HydratedCompoundValueHandler> fetchToHydratedStateExtractorMap) {
+				Fetch[] identifierFetches,
+				Map<Fetch, HydratedCompoundValueHandler> fetchToHydratedStateExtractorMap) {
 			this.entityReference = entityReference;
 			this.identifierFetches = identifierFetches;
 			this.fetchToHydratedStateExtractorMap = fetchToHydratedStateExtractorMap;
@@ -796,7 +738,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 			final Object ownerIdentifierHydratedState = ownerIdentifierResolutionContext.getHydratedForm();
 
 			if ( ownerIdentifierHydratedState != null ) {
-				for ( AbstractSingularAttributeFetch fetch : identifierFetches ) {
+				for ( Fetch fetch : identifierFetches ) {
 					if ( fetch instanceof EntityFetch ) {
 						final IdentifierResolutionContext identifierResolutionContext =
 								context.getIdentifierResolutionContext( (EntityFetch) fetch );
@@ -833,7 +775,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 		@Override
 		public EntityKey resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-			for ( AbstractSingularAttributeFetch fetch : identifierFetches ) {
+			for ( Fetch fetch : identifierFetches ) {
 				resolveIdentifierFetch( resultSet, context, fetch );
 			}
 
@@ -850,7 +792,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	private static void resolveIdentifierFetch(
 			ResultSet resultSet,
 			ResultSetProcessingContext context,
-			AbstractSingularAttributeFetch fetch) throws SQLException {
+			Fetch fetch) throws SQLException {
 		if ( fetch instanceof EntityFetch ) {
 			EntityFetch entityFetch = (EntityFetch) fetch;
 			final IdentifierResolutionContext identifierResolutionContext =
@@ -863,8 +805,8 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 			identifierResolutionContext.registerEntityKey( fetchKey );
 		}
 		else if ( fetch instanceof CompositeFetch ) {
-			for ( Fetch subFetch : fetch.getFetches() ) {
-				resolveIdentifierFetch( resultSet, context, (AbstractSingularAttributeFetch) subFetch );
+			for ( Fetch subFetch : ( (CompositeFetch) fetch ).getFetches() ) {
+				resolveIdentifierFetch( resultSet, context, subFetch );
 			}
 		}
 	}

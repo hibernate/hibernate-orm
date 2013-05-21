@@ -32,8 +32,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
- * This interface provides a delegate for a composite fetch owner to
- * obtain details about an owned sub-attribute fetch.
+ * A delegate for a composite fetch owner to obtain details about an
+ * owned sub-attribute fetch.
  *
  * @author Gail Badner
  */

@@ -30,8 +30,8 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 
 /**
- * This interface provides a delegate for an entity fetch owner to
- * obtain details about an owned attribute fetch.
+ * A delegate for an entity fetch owner to obtain details about
+ * an owned attribute fetch.
  *
  * @author Gail Badner
  */
@@ -59,6 +59,7 @@ public class EntityFetchOwnerDelegate implements FetchOwnerDelegate {
 
 	@Override
 	public String[] getColumnNames(Fetch fetch) {
+		// TODO: cache this info
 		final OuterJoinLoadable outerJoinLoadable = (OuterJoinLoadable) entityPersister;
 		Type fetchType = getType( fetch );
 		if ( fetchType.isAssociationType() ) {
@@ -75,6 +76,7 @@ public class EntityFetchOwnerDelegate implements FetchOwnerDelegate {
 	}
 
 	private int determinePropertyIndex(Fetch fetch) {
+		// TODO: cache this info
 		return entityPersister.getEntityMetamodel().getPropertyIndex( fetch.getOwnerPropertyName() );
 	}
 }

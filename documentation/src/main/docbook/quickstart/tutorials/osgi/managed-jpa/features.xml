@@ -18,6 +18,9 @@
         
         <!-- JPA -->
         <bundle start-level="30">mvn:org.hibernate.javax.persistence/hibernate-jpa-2.1-api/1.0.0-SNAPSHOT</bundle>
+        <!-- No container currently supports JPA 2.1.  Clone and build Aries JPA from the following fork (upgrades to
+             JPA 2.1).  Aries should be upgrading as soon as the spec is out.
+             https://github.com/brmeyer/aries/tree/jpa21 -->
         <bundle start-level="30">mvn:org.apache.aries/org.apache.aries.util/1.0.0</bundle>
         <bundle start-level="30">mvn:org.apache.aries.jpa/org.apache.aries.jpa.api/1.0.1-SNAPSHOT</bundle>
         <bundle start-level="30">mvn:org.apache.aries.jpa/org.apache.aries.jpa.blueprint.aries/1.0.2-SNAPSHOT</bundle>

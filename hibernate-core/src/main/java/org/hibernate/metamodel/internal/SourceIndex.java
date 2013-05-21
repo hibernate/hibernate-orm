@@ -63,7 +63,7 @@ public class SourceIndex {
 
 	private final Map<String, EntitySourceIndex> entitySourceIndexByEntityName = new HashMap<String, EntitySourceIndex>();
 	private final Map<AttributeSourceKey, AttributeSource> attributeSourcesByKey = new HashMap<AttributeSourceKey, AttributeSource>();
-	private final Map<AttributeSourceKey, AttributeSourceKey> mappedByAttributeNamesByOwnerAttributeNames =
+	private final Map<AttributeSourceKey, AttributeSourceKey> mappedByAttributeKeysByOwnerAttributeKeys =
 			new HashMap<AttributeSourceKey, AttributeSourceKey>();
 
 	public void indexEntitySource(final EntitySource entitySource) {
@@ -98,7 +98,7 @@ public class SourceIndex {
 
 	public AttributeSource locateAttributeSourceOwnedBy(final String entityName, final String attributePath) {
 		AttributeSourceKey ownerKey = new AttributeSourceKey( entityName, attributePath );
-		AttributeSourceKey mappedByKey = mappedByAttributeNamesByOwnerAttributeNames.get( ownerKey );
+		AttributeSourceKey mappedByKey = mappedByAttributeKeysByOwnerAttributeKeys.get( ownerKey );
 		return mappedByKey == null ? null : attributeSourcesByKey.get( mappedByKey );
 	}
 
@@ -173,7 +173,7 @@ public class SourceIndex {
 	}
 
 	void addMappedByAssociationByOwnerAssociation(AttributeSourceKey ownerKey, AttributeSourceKey ownedKey) {
-		mappedByAttributeNamesByOwnerAttributeNames.put(
+		mappedByAttributeKeysByOwnerAttributeKeys.put(
 				ownerKey,
 				ownedKey
 		);
@@ -270,10 +270,12 @@ public class SourceIndex {
 		private final EntitySource entitySource;
 		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> identifierAttributeSourcesByNature =
 				new HashMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>();
+		// TODO: split out inverse and non-inverse SingularAttributeSource maps.
 		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> singularAttributeSourcesByNature =
 				new HashMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>();
 		// TODO: the following should not need to be LinkedHashMap, but it appears that some unit tests
 		//       depend on the ordering
+		// TODO: rework nonInversePluralAttributeSourcesByKey and inversePluralAttributeSourcesByKey
 		private final Map<AttributeSourceKey, PluralAttributeSource> nonInversePluralAttributeSourcesByKey =
 				new LinkedHashMap<AttributeSourceKey, PluralAttributeSource>();
 		private final Map<AttributeSourceKey, PluralAttributeSource> inversePluralAttributeSourcesByKey =
@@ -364,16 +366,21 @@ public class SourceIndex {
 		}
 
 		private void resolveAssociationSources(final EntityBinding entityBinding) {
+			// Cycle through non-inverse plural attributes.
 			for ( Map.Entry<AttributeSourceKey,PluralAttributeSource> entry : inversePluralAttributeSourcesByKey.entrySet() ) {
 				final AttributeSourceKey pluralAttributeSourceKey = entry.getKey();
 				final PluralAttributeSource pluralAttributeSource = entry.getValue();
 				if ( pluralAttributeSource.getMappedBy() != null ) {
+					// This plural attribute is mappedBy the opposite side of the association,
+					// so it needs to be resolved.
+					// TODO: this should really just resolve PluralAttributeElementSource.Nature
 					pluralAttributeSource.resolvePluralAttributeElementSource(
 							new PluralAttributeElementSourceResolver.PluralAttributeElementSourceResolutionContext() {
 								@Override
 								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {
 									AttributeSourceKey ownerAttributeSourceKey = new AttributeSourceKey( referencedEntityName, mappedBy );
 									AttributeSource ownerAttributeSource = sourceIndex.attributeSource( referencedEntityName, mappedBy );
+									// TODO: is this needed? if so, make more obvious and rename method.
 									sourceIndex.addMappedByAssociationByOwnerAssociation(
 											ownerAttributeSourceKey,
 											pluralAttributeSourceKey
@@ -387,6 +394,8 @@ public class SourceIndex {
 			final Map<AttributeSourceKey,SingularAttributeSource> unresolvedSingularAttributeSourceMap =
 					singularAttributeSourcesByNature.get( null );
 			if ( unresolvedSingularAttributeSourceMap != null ) {
+				// cycle through unresolved SingularAttributeSource.
+				// TODO: rework so approach is similar to one-to-many/many-to-many resolution.
 				for ( Iterator<Map.Entry<AttributeSourceKey,SingularAttributeSource>> it = unresolvedSingularAttributeSourceMap.entrySet().iterator(); it.hasNext(); ) {
 					final Map.Entry<AttributeSourceKey,SingularAttributeSource> entry = it.next();
 					final AttributeSourceKey attributeSourceKey = entry.getKey();

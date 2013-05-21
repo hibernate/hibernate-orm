@@ -79,7 +79,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		this.nature = associationAttribute.getPluralAttributeNature();
 		if ( associationAttribute.getMappedBy() == null ) {
 			this.ownerAttributeSource = this;
-			this.elementSource = determineOwnerElementSource( this, associationAttribute, entityClass );
+			this.elementSource = determineElementSource( this, associationAttribute, entityClass );
 		}
 		this.filterSources = determineFilterSources(associationAttribute);
 	}
@@ -166,7 +166,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 		}
 	}
 
-	private static PluralAttributeElementSource determineOwnerElementSource(
+	private static PluralAttributeElementSource determineElementSource(
 			AttributeSource ownerAttributeSource,
 			PluralAssociationAttribute associationAttribute,
 			ConfiguredClass entityClass) {
@@ -353,17 +353,18 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	@Override
 	public PluralAttributeElementSource resolvePluralAttributeElementSource(
 			PluralAttributeElementSourceResolutionContext context) {
-		if ( associationAttribute.getMappedBy() == null ) {
-			return elementSource;
-		}
-		else {
+		if ( elementSource == null ) {
+			// elementSource has not been initialized, so we need to resolve it using the
+			// association owner.
+			// Get the owner attribute source that maps the opposite side of the association.
 			ownerAttributeSource = context.resolveAttributeSource(
 					associationAttribute.getReferencedEntityType(),
 					associationAttribute.getMappedBy()
 			);
-			elementSource = determineOwnerElementSource( ownerAttributeSource, associationAttribute, entityClass );
-			return elementSource;
+			// Initialize resolved entitySource.
+			elementSource = determineElementSource( ownerAttributeSource, associationAttribute, entityClass );
 		}
+		return elementSource;
 	}
 }
 

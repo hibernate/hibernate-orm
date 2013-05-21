@@ -165,6 +165,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 
 	@Override
 	public PluralAttributeElementSource resolvePluralAttributeElementSource(PluralAttributeElementSourceResolutionContext context) {
+		// elementSource is already resolved; nothing to do.
 		return elementSource;
 	}
 

@@ -70,6 +70,10 @@ public class EntityHierarchyHelper {
 	 * Apply executors to a single entity hierarchy.
 	 *
 	 * @param entityHierarchy The entity hierarchy to be binded.
+	 * @param rootEntityExecutor The executor to be applied to the root {@link EntitySource}
+	 *                           in the entity hierarchy.
+	 * @param subEntityExecutor The executer to be applied to each {@link SubclassEntitySource}
+	 *                           in the entity hierarchy.
 	 */
 	public void applyToEntityHierarchy(
 			final EntityHierarchy entityHierarchy,

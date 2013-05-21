@@ -227,6 +227,9 @@ public class Binder {
 	/**
 	 * The entry point of {@linkplain Binder} class, adds all the entity hierarchy one by one.
 	 *
+	 * Indexes all {@link EntitySource} objects in an {@link EntityHierarchy} and
+	 * creates all {@link EntityBinding}.
+	 *
 	 * @param entityHierarchies The entity hierarchies resolved from mappings
 	 */
 	public void addEntityHierarchies(final Iterable<EntityHierarchy> entityHierarchies) {
@@ -250,31 +253,45 @@ public class Binder {
 	}
 
 	public void bindEntityHierarchies() {
-
+		// Bind everything except for (non-ID) attributes.
+		// Need to bind ID attributes before resolving associations.
+		// TODO: when we know the proper order for processing entity hierarchies,
+		//       then applyToAllEntityHierarchies(...) can replace the following method.
 		bindEntityHierarchiesExcludingNonIdAttributeBindings();
 
-		// cannot resolve associations until after entity identifiers are defined.
+		// Resolve associations:
+		// - determine if JPA @OneToOne translates to Hibernate's one-to-one or unique many-to-one;
+		// - determine if JPA @OneToMany translates to Hibernate's one-to-many or unique many-to-many.
 		applyToAllEntityHierarchies( resolveAssociationSourcesExecutor() );
 
+		// At this point, SourceIndex has all necessary information.
+
+		// Bind all composite attribute containers. This excludes composite sub-attributes.
 		applyToAllEntityHierarchies( bindSingularAttributesExecutor( SingularAttributeSource.Nature.COMPOSITE ) );
 
-		// bind singular attributes
+		// bind basic singular attributes, including composite sub-attributes that are basic.
 		applyToAllEntityHierarchies( bindSingularAttributesExecutor( SingularAttributeSource.Nature.BASIC ) );
-		// do many-to-one before one-to-one
+
+		// many-to-one needs to be bound before one-to-one (um, can't remember why).
+
+		// bind many-to-one attributes, including composite sub-attributes that are many-to-one.
 		applyToAllEntityHierarchies( bindSingularAttributesExecutor( SingularAttributeSource.Nature.MANY_TO_ONE ) );
+
+		// bind one-to-one attributes, including composite sub-attributes that are one-to-one.
 		applyToAllEntityHierarchies( bindSingularAttributesExecutor( SingularAttributeSource.Nature.ONE_TO_ONE ) );
 
-		// bind plural attributes (non-mappedBy first).
+		// bind plural attributes (non-mappedBy first), including composite sub-attributes that are plural
 		applyToAllEntityHierarchies( bindPluralAttributesExecutor( false ) );
 		applyToAllEntityHierarchies( bindPluralAttributesExecutor( true ) );
 
-		// Bind unique constraints after all attributes have been bound.
-		// TODO: Add impl note about why...
+		// Bind unique constraints after all attributes have been bound and the
+		// columns used by attributes is already determined.
 		applyToAllEntityHierarchies( bindUniqueConstraintsExecutor() );
 
 		// TODO: check if any many-to-one attribute bindings with logicalOneToOne == false have all columns
 		//       (and no formulas) contained in a defined unique key that only contains these columns.
 		//       if so, mark the many-to-one as a logical one-to-one.
+		// TODO: when does this have to be done.
 	}
 
 	private InheritanceType inheritanceType() {
@@ -336,6 +353,10 @@ public class Binder {
 				bindSecondaryTables( entityBinding, entitySource );
 			}
 		};
+		// TODO: need to determine the proper order for processing EntityHierarchy objects
+		//       so that dependent EntityHierarchy is processed after the EntityHierarchy it
+		//       is dependent on.
+		// For now, just delay processing the dependent entity hierarchies.
 		Set<EntityHierarchy> unresolvedEntityHierarchies = new HashSet<EntityHierarchy>( );
 		for ( final EntityHierarchy entityHierarchy : entityHierarchiesByRootEntityName.values() ) {
 			if ( isIdentifierDependentOnOtherEntityHierarchy( entityHierarchy ) ) {
@@ -346,6 +367,11 @@ public class Binder {
 			}
 		}
 
+		// The following is to try to resolve any dependent entity hierarchies.
+		// It runs through all the dependent entity hierarchies and resolves what it can.
+		// This process repeats until no more can be resolved.
+		// TODO: this will not be necessary once we know the proper order for
+		//       processing entity hierarchies.
 		int oldSize = Integer.MAX_VALUE;
 		while( !unresolvedEntityHierarchies.isEmpty() && unresolvedEntityHierarchies.size() < oldSize ) {
 			oldSize = unresolvedEntityHierarchies.size();
@@ -361,11 +387,14 @@ public class Binder {
 				}
 			}
 		}
+		// If any entity hierarchies cannot be resolved, then throw exception.
 		if ( ! unresolvedEntityHierarchies.isEmpty() ) {
 			throw new IllegalStateException( "could not resolve all EntityHierarchies." );
 		}
 	}
 
+	// TODO: this will not be necessary once we know the proper order for
+	//       processing entity hierarchies.
 	private boolean isIdentifierDependentOnOtherEntityHierarchy(EntityHierarchy entityHierarchy) {
 		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
 		final IdentifierSource identifierSource = rootEntitySource.getIdentifierSource();
@@ -381,6 +410,8 @@ public class Binder {
 		}
 	}
 
+	// TODO: this will not be necessary once we know the proper order for
+	//       processing entity hierarchies.
 	private boolean containsSingularAssociation(List<? extends AttributeSource> subAttributeSources) {
 		for ( AttributeSource attributeSource : subAttributeSources ) {
 			SingularAttributeSource singularAttributeSource = (SingularAttributeSource) attributeSource;
@@ -424,9 +455,11 @@ public class Binder {
 		};
 	}
 
+	// TODO: create separate methods that are more clear for the cases.
 	private void bindSingularAttributes(
 			final EntityBinding entityBinding,
 			final SingularAttributeSource.Nature nature) {
+		// Get the map of all attributes for the entity binding of the specified nature.
 		Map<SourceIndex.AttributeSourceKey, SingularAttributeSource> map = sourceIndex.getSingularAttributeSources(
 				entityBinding.getEntityName(),
 				nature
@@ -437,6 +470,7 @@ public class Binder {
 			final AttributeBindingContainer attributeBindingContainer =
 					locateAttributeBindingContainer( entityBinding, attributeSourceKey.containerPath() );
 			if ( nature == SingularAttributeSource.Nature.COMPOSITE ) {
+				// This only creates the composite attribute container.
 				createAggregatedCompositeAttribute(
 						attributeBindingContainer,
 						(ComponentAttributeSource) attributeSource,
@@ -457,35 +491,45 @@ public class Binder {
 				}
 			}
 			else {
+				// The container is the EntityBinding itself.
 				bindAttribute( attributeBindingContainer, attributeSource );
 			}
 		}
 	}
 
+	// All sub-attributes must be bound before it's type and ComponentMetamodel can be determined.
 	private void completeCompositeAttributeBindingIfPossible(
 			CompositeAttributeBinding compositeAttributeBinding,
 			ComponentAttributeSource compositeAttributeSource
 	) {
+		// Find out the number of sub-attributes, excluding the parent attribute.
 		final int nAttributeSourcesExcludingParent =
 				compositeAttributeBinding.getParentReference() != null ?
 						compositeAttributeSource.attributeSources().size() - 1 :
 						compositeAttributeSource.attributeSources().size();
 		if ( compositeAttributeBinding.attributeBindingSpan() == nAttributeSourcesExcludingParent ) {
+			// All sub-attribute bindings are present; now check if all sub-attributes have
+			// their type resolved.
 			boolean allResolved = true;
 			for ( AttributeBinding attributeBinding : compositeAttributeBinding.attributeBindings() ) {
 				if ( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping() == null ) {
+					// Something is not resolved.
 					allResolved = false;
 					break;
 				}
 			}
 			if ( allResolved ) {
+				// All are resolved, so we can bind the type.
 				typeHelper.bindAggregatedCompositeAttributeType(
 						false,
 						(Aggregate) compositeAttributeBinding.getAttribute().getSingularAttributeType(),
 						null, // TODO: don't have the default value at this point; shouldn't be needed...
 						compositeAttributeBinding
 				);
+				// Now check the container.
 				if ( compositeAttributeBinding.getContainer() instanceof CompositeAttributeBindingContainer ) {
+					// The container is also a CompositeAttributeBindingContainer.
+					// We need this process for the container.
 					final CompositeAttributeBinding parentCompositeAttributeBinding =
 							(CompositeAttributeBinding) compositeAttributeBinding.seekEntityBinding().locateAttributeBinding(
 									( compositeAttributeBinding.getContainer() ).getPathBase()
@@ -517,10 +561,12 @@ public class Binder {
 		};
 	}
 
+	// TODO: may want bind plural attributes of a particular element nature.
 	private void bindPluralAttributes(
 			final EntityBinding entityBinding,
 			final EntitySource entitySource,
 			final boolean isInverse) {
+		// Get the map for inverse or non-inverse (as specified) plural attributes
 		Map<SourceIndex.AttributeSourceKey, PluralAttributeSource> map = sourceIndex.getPluralAttributeSources(
 				entityBinding.getEntityName(),
 				isInverse
@@ -528,16 +574,19 @@ public class Binder {
 		for ( Map.Entry<SourceIndex.AttributeSourceKey, PluralAttributeSource> entry : map.entrySet() ){
 			final SourceIndex.AttributeSourceKey attributeSourceKey = entry.getKey();
 			final PluralAttributeSource attributeSource = entry.getValue();
+			// Bind the attribute into the appropriate container.
 			final AttributeBindingContainer attributeBindingContainer =
 					locateAttributeBindingContainer( entityBinding, attributeSourceKey.containerPath() );
 			bindAttribute( attributeBindingContainer, attributeSource );
 			if ( attributeBindingContainer instanceof CompositeAttributeBinding ) {
+				// We just bound a sub-attribute into a CompositeAttributeBinding.
 				final CompositeAttributeBinding compositeAttributeBinding = (CompositeAttributeBinding) attributeBindingContainer;
 				final ComponentAttributeSource compositeAttributeSource =
 						(ComponentAttributeSource) sourceIndex.attributeSource(
 								entityBinding.getEntityName(),
 								compositeAttributeBinding.getPathBase()
 						);
+				// Resolve the type if types are resolved for all sub-attributes now.
 				completeCompositeAttributeBindingIfPossible( compositeAttributeBinding, compositeAttributeSource );
 			}
 		}

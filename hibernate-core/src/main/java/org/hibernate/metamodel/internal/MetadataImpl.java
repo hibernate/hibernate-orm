@@ -473,6 +473,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private void processMappings(MetadataSourceProcessor[] metadataSourceProcessors) {
 		final Binder binder = new Binder( this, identifierGeneratorFactory );
+		// Add all hierarchies first, before binding.
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
 			binder.addEntityHierarchies( processor.extractEntityHierarchies() );
 		}

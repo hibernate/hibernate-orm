@@ -64,7 +64,6 @@ public class LoadPlanBuildingHelper {
 				LockMode.NONE, // todo : for now
 				fetchOwner,
 				attributeDefinition.getName(),
-				(EntityType) attributeDefinition.getType(),
 				fetchStrategy
 		);
 	}

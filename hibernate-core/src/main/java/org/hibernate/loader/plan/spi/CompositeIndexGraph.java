@@ -12,7 +12,10 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
+ *  Represents the {@link FetchOwner} for a composite collection index.
+ *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class CompositeIndexGraph extends AbstractFetchOwner implements FetchableCollectionIndex {
 	private final CollectionReference collectionReference;
@@ -20,14 +23,21 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 	private final CollectionPersister collectionPersister;
 	private final FetchOwnerDelegate fetchOwnerDelegate;
 
+	/**
+	 * Constructs a {@link CompositeElementGraph}.
+	 *
+	 * @param sessionFactory - the session factory.
+	 * @param collectionReference - the collection reference.
+	 * @param collectionPath - the {@link PropertyPath} for the collection.
+	 */
 	public CompositeIndexGraph(
 			SessionFactoryImplementor sessionFactory,
 			CollectionReference collectionReference,
-			PropertyPath propertyPath) {
+			PropertyPath collectionPath) {
 		super( sessionFactory );
 		this.collectionReference = collectionReference;
 		this.collectionPersister = collectionReference.getCollectionPersister();
-		this.propertyPath = propertyPath.append( "<index>" );
+		this.propertyPath = collectionPath.append( "<index>" );
 		this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
 				sessionFactory,
 				(CompositeType) collectionPersister.getIndexType(),
@@ -52,6 +62,7 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 		return collectionPersister.getOwnerEntityPersister();
 	}
 
+	@Override
 	public CollectionReference getCollectionReference() {
 		return collectionReference;
 	}
@@ -71,6 +82,7 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 		return fetchOwnerDelegate;
 	}
 
+	@Override
 	public CollectionFetch buildCollectionFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,

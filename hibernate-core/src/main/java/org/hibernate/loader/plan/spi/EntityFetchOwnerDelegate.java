@@ -30,11 +30,19 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 
 /**
+ * This interface provides a delegate for an entity fetch owner to
+ * obtain details about an owned attribute fetch.
+ *
  * @author Gail Badner
  */
 public class EntityFetchOwnerDelegate implements FetchOwnerDelegate {
 	private final EntityPersister entityPersister;
 
+	/**
+	 * Constructs an {@link EntityFetchOwnerDelegate}.
+	 *
+	 * @param entityPersister - the entity persister.
+	 */
 	public EntityFetchOwnerDelegate(EntityPersister entityPersister) {
 		this.entityPersister = entityPersister;
 	}

@@ -52,10 +52,25 @@ public interface Fetch extends CopyableFetch {
 	 */
 	public String getOwnerPropertyName();
 
+	/**
+	 * Is this fetch nullable?
+	 *
+	 * @return true, if this fetch is nullable; false, otherwise.
+	 */
 	public boolean isNullable();
 
+	/**
+	 * Gets the column names used for this fetch.
+	 *
+	 * @return the column names used for this fetch.
+	 */
 	public String[] getColumnNames();
 
+	/**
+	 * Gets the fetch strategy for this fetch.
+	 *
+	 * @return the fetch strategy for this fetch.
+	 */
 	public FetchStrategy getFetchStrategy();
 
 	/**

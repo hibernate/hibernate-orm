@@ -32,6 +32,9 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
+ * This interface provides a delegate for a composite fetch owner to
+ * obtain details about an owned sub-attribute fetch.
+ *
  * @author Gail Badner
  */
 public class CompositeFetchOwnerDelegate implements FetchOwnerDelegate {
@@ -39,6 +42,12 @@ public class CompositeFetchOwnerDelegate implements FetchOwnerDelegate {
 	private final CompositeType compositeType;
 	private final String[] columnNames;
 
+	/**
+	 * Constructs a {@link CompositeFetchOwnerDelegate}.
+	 * @param sessionFactory - the session factory.
+	 * @param compositeType - the composite type.
+	 * @param columnNames - the column names used by sub-attribute fetches.
+	 */
 	public CompositeFetchOwnerDelegate(
 			SessionFactoryImplementor sessionFactory,
 			CompositeType compositeType,

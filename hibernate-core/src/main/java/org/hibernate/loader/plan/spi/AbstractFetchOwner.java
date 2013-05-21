@@ -36,10 +36,16 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.Type;
 
 /**
+ * This is a class for fetch owners, providing functionality related to the owned
+ * fetches.
+ *
  * @author Steve Ebersole
  * @author Gail Badner
  */
 public abstract class AbstractFetchOwner extends AbstractPlanNode implements FetchOwner {
+
+	// TODO: I removed lockMode from this method because I *think* it only relates to EntityFetch and EntityReturn.
+	//       lockMode should be moved back here if it applies to all fetch owners.
 
 	private List<Fetch> fetches;
 
@@ -55,17 +61,18 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 	 * A "copy" constructor.  Used while making clones/copies of this.
 	 *
 	 * @param original - the original object to copy.
+	 * @param copyContext - the copy context.
 	 */
 	protected AbstractFetchOwner(AbstractFetchOwner original, CopyContext copyContext) {
 		super( original );
 		validate();
 
+		// TODO: I don't think this is correct; shouldn't the fetches from original be copied into this???
 		copyContext.getReturnGraphVisitationStrategy().startingFetches( original );
 		if ( fetches == null || fetches.size() == 0 ) {
 			this.fetches = Collections.emptyList();
 		}
 		else {
-			// TODO: don't think this is correct...
 			List<Fetch> fetchesCopy = new ArrayList<Fetch>();
 			for ( Fetch fetch : fetches ) {
 				fetchesCopy.add( fetch.makeCopy( copyContext, this ) );
@@ -75,6 +82,7 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 		copyContext.getReturnGraphVisitationStrategy().finishingFetches( original );
 	}
 
+	@Override
 	public void addFetch(Fetch fetch) {
 		if ( fetch.getOwner() != this ) {
 			throw new IllegalArgumentException( "Fetch and owner did not match" );
@@ -92,6 +100,10 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 		return fetches == null ? NO_FETCHES : fetches.toArray( new Fetch[ fetches.size() ] );
 	}
 
+	/**
+	 * Abstract method returning the delegate for obtaining details about an owned fetch.
+	 * @return the delegate
+	 */
 	protected abstract FetchOwnerDelegate getFetchOwnerDelegate();
 
 	@Override

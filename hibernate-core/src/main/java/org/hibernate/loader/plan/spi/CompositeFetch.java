@@ -29,22 +29,29 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
+ * Represents a {@link Fetch} for a composite attribute as well as a
+ * {@link FetchOwner} for any sub-attributes fetches.
+ *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class CompositeFetch extends AbstractSingularAttributeFetch {
 	public static final FetchStrategy FETCH_PLAN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	private final FetchOwnerDelegate delegate;
 
+	/**
+	 * Constructs a {@link CompositeFetch} object.
+	 *
+	 * @param sessionFactory - the session factory.
+	 * @param owner - the fetch owner for this fetch.
+	 * @param ownerProperty - the owner's property referring to this fetch.
+	 */
 	public CompositeFetch(
 			SessionFactoryImplementor sessionFactory,
 			FetchOwner owner,
@@ -70,33 +77,6 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 	@Override
 	public EntityPersister retrieveFetchSourcePersister() {
 		return getOwner().retrieveFetchSourcePersister();
-	}
-
-	@Override
-	public CollectionFetch buildCollectionFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public EntityFetch buildEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardEntityFetch(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				loadPlanBuildingContext
-		);
-	}
-
-	@Override
-	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition, LoadPlanBuildingContext loadPlanBuildingContext) {
-		return LoadPlanBuildingHelper.buildStandardCompositeFetch( this, attributeDefinition, loadPlanBuildingContext );
 	}
 
 	@Override

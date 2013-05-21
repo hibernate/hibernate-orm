@@ -69,8 +69,8 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
+import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.CompositionElementDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
@@ -319,7 +319,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	}
 
 	@Override
-	public void startingCompositeElement(CompositionElementDefinition compositeElementDefinition) {
+	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
 		System.out.println(
 				String.format(
 						"%s Starting composite collection element for (%s)",
@@ -330,7 +330,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	}
 
 	@Override
-	public void finishingCompositeElement(CompositionElementDefinition compositeElementDefinition) {
+	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
 		// pop the current fetch owner, and make sure what we just popped represents this composition
 		final FetchOwner poppedFetchOwner = popFromStack();
 

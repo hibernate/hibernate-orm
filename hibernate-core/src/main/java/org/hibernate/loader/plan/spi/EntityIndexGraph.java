@@ -32,6 +32,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;
 
 /**
+ *  Represents the {@link FetchOwner} for a collection index that is an entity.
+ *
  * @author Steve Ebersole
  */
 public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCollectionIndex, EntityReference {
@@ -44,6 +46,13 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 
 	private IdentifierDescription identifierDescription;
 
+	/**
+	 * Constructs an {@link EntityIndexGraph}.
+	 *
+	 * @param sessionFactory - the session factory.
+	 * @param collectionReference - the collection reference.
+	 * @param collectionPath - the {@link PropertyPath} for the collection.
+	 */
 	public EntityIndexGraph(
 			SessionFactoryImplementor sessionFactory,
 			CollectionReference collectionReference,
@@ -67,6 +76,9 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
 	}
 
+	/**
+	 * TODO: Does lock mode apply to a collection index that is an entity?
+	 */
 	@Override
 	public LockMode getLockMode() {
 		return null;
@@ -109,6 +121,11 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 	@Override
 	public EntityIndexGraph makeCopy(CopyContext copyContext) {
 		return new EntityIndexGraph( this, copyContext );
+	}
+
+	@Override
+	public CollectionReference getCollectionReference() {
+		return collectionReference;
 	}
 
 	@Override

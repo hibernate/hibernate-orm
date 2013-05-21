@@ -31,4 +31,10 @@ package org.hibernate.loader.plan.spi;
 public interface FetchableCollectionIndex extends FetchOwner, CopyableReturn {
 	@Override
 	public FetchableCollectionIndex makeCopy(CopyContext copyContext);
+
+	/**
+	 * Returns the collection reference.
+	 * @return the collection reference.
+	 */
+	public CollectionReference getCollectionReference();
 }

@@ -46,6 +46,8 @@ import static org.hibernate.engine.internal.JoinHelper.getLHSTableName;
 import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
 
 /**
+ * A base class for a composite, non-identifier attribute.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractCompositionAttribute extends AbstractNonIdentifierAttribute implements

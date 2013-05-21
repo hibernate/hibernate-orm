@@ -30,6 +30,8 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.Type;
 
 /**
+ * A base class for a sub-attribute of a composite, non-identifier attribute.
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractCompositeBasedAttribute

@@ -12,7 +12,10 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
+ * Represents the {@link FetchOwner} for a composite collection element.
+ *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class CompositeElementGraph extends AbstractFetchOwner implements FetchableCollectionElement {
 	private final CollectionReference collectionReference;
@@ -20,6 +23,13 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 	private final CollectionPersister collectionPersister;
 	private final FetchOwnerDelegate fetchOwnerDelegate;
 
+	/**
+	 * Constructs a {@link CompositeElementGraph}.
+	 *
+	 * @param sessionFactory - the session factory.
+	 * @param collectionReference - the collection reference.
+	 * @param collectionPath - the {@link PropertyPath} for the collection.
+	 */
 	public CompositeElementGraph(
 			SessionFactoryImplementor sessionFactory,
 			CollectionReference collectionReference,

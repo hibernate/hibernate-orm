@@ -24,8 +24,14 @@
 package org.hibernate.persister.walking.spi;
 
 /**
+ * The definition for a composite collection element.
+ *
  * @author Gail Badner
  */
-public interface CompositionElementDefinition extends CompositionDefinition{
+public interface CompositeCollectionElementDefinition extends CompositionDefinition{
+	/**
+	 * Returns the collection definition.
+	 * @return the collection definition.
+	 */
 	public CollectionDefinition getCollectionDefinition();
 }

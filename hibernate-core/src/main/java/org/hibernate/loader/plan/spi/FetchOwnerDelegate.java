@@ -26,13 +26,36 @@ package org.hibernate.loader.plan.spi;
 import org.hibernate.type.Type;
 
 /**
+ * This interface provides a delegate for a fetch owner to obtain details about an owned fetch.
+ *
  * @author Gail Badner
  */
 public interface FetchOwnerDelegate {
 
+	/**
+	 * Is the specified fetch nullable?
+	 *
+	 * @param fetch - the owned fetch.
+	 *
+	 * @return true, if the fetch is nullable; false, otherwise.
+	 */
 	public boolean isNullable(Fetch fetch);
 
+	/**
+	 * Returns the type of the specified fetch.
+	 *
+	 * @param fetch - the owned fetch.
+	 *
+	 * @return the type of the specified fetch.
+	 */
 	public Type getType(Fetch fetch);
 
+	/**
+	 * Returns the column names used for loading the specified fetch.
+	 *
+	 * @param fetch - the owned fetch.
+	 *
+	 * @return the column names used for loading the specified fetch.
+	 */
 	public String[] getColumnNames(Fetch fetch);
 }

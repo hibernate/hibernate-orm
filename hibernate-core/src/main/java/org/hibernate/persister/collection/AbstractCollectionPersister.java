@@ -86,8 +86,8 @@ import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
+import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.CompositionElementDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Alias;
@@ -2010,15 +2010,13 @@ public abstract class AbstractCollectionPersister
 			}
 
 			@Override
-			public CompositionElementDefinition toCompositeElementDefinition() {
-				final String propertyName = role.substring( entityName.length() + 1 );
-				final int propertyIndex = ownerPersister.getEntityMetamodel().getPropertyIndex( propertyName );
+			public CompositeCollectionElementDefinition toCompositeElementDefinition() {
 
 				if ( ! getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
 				}
 
-				return new CompositionElementDefinition() {
+				return new CompositeCollectionElementDefinition() {
 					@Override
 					public String getName() {
 						return "";
@@ -2038,7 +2036,7 @@ public abstract class AbstractCollectionPersister
 
 					@Override
 					public Iterable<AttributeDefinition> getAttributes() {
-						return CompositionSingularSubAttributesHelper.getCompositionElementSubAttributes( this );
+						return CompositionSingularSubAttributesHelper.getCompositeCollectionElementSubAttributes( this );
 					}
 
 					@Override

@@ -202,7 +202,7 @@ public class MetadataDrivenModelGraphVisitor {
 		strategy.startingCollectionElements( elementDefinition );
 
 		if ( elementDefinition.getType().isComponentType() ) {
-			visitCompositeElementDefinition( elementDefinition.toCompositeElementDefinition() );
+			visitCompositeCollectionElementDefinition( elementDefinition.toCompositeElementDefinition() );
 		}
 		else if ( elementDefinition.getType().isEntityType() ) {
 			visitEntityDefinition( elementDefinition.toEntityDefinition() );
@@ -211,12 +211,12 @@ public class MetadataDrivenModelGraphVisitor {
 		strategy.finishingCollectionElements( elementDefinition );
 	}
 
-	private void visitCompositeElementDefinition(CompositionElementDefinition compositionElementDefinition) {
-		strategy.startingCompositeElement( compositionElementDefinition );
+	private void visitCompositeCollectionElementDefinition(CompositeCollectionElementDefinition compositionElementDefinition) {
+		strategy.startingCompositeCollectionElement( compositionElementDefinition );
 
 		visitAttributes( compositionElementDefinition );
 
-		strategy.finishingCompositeElement( compositionElementDefinition );
+		strategy.finishingCompositeCollectionElement( compositionElementDefinition );
 	}
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();

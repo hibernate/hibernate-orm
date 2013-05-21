@@ -41,7 +41,7 @@ public class LoadingCollectionEntry {
 	private final Serializable key;
 	private final PersistentCollection collection;
 
-	public LoadingCollectionEntry(
+	LoadingCollectionEntry(
 			ResultSet resultSet,
 			CollectionPersister persister,
 			Serializable key,
@@ -68,6 +68,7 @@ public class LoadingCollectionEntry {
 		return collection;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + "<rs=" + resultSet + ", coll=" + MessageHelper.collectionInfoString( persister.getRole(), key ) + ">@" + Integer.toHexString( hashCode() );
 	}

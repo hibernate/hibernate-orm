@@ -38,12 +38,14 @@ import org.hibernate.internal.util.collections.ArrayHelper;
  * @author Steve Ebersole
  */
 public class ParamLocationRecognizer implements ParameterParser.Recognizer {
-
+	/**
+	 * Internal representation of a recognized named parameter
+	 */
 	public static class NamedParameterDescription {
 		private final boolean jpaStyle;
 		private final List<Integer> positions = new ArrayList<Integer>();
 
-		public NamedParameterDescription(boolean jpaStyle) {
+		NamedParameterDescription(boolean jpaStyle) {
 			this.jpaStyle = jpaStyle;
 		}
 
@@ -71,7 +73,7 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 	 * @return The generated recognizer, with journaled location info.
 	 */
 	public static ParamLocationRecognizer parseLocations(String query) {
-		ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
+		final ParamLocationRecognizer recognizer = new ParamLocationRecognizer();
 		ParameterParser.parse( query, recognizer );
 		return recognizer;
 	}
@@ -88,8 +90,8 @@ public class ParamLocationRecognizer implements ParameterParser.Recognizer {
 
 	/**
 	 * Returns the list of ordinal parameter locations.  The list elements
-	 * are Integers, representing the location for that given ordinal.  Thus
-	 * {@link #getOrdinalParameterLocationList()}.elementAt(n) represents the
+	 * are Integers, representing the location for that given ordinal.  Thus calling
+	 * {@code getOrdinalParameterLocationList().elementAt(n)} represents the
 	 * location for the nth parameter.
 	 *
 	 * @return The list of ordinal parameter locations.

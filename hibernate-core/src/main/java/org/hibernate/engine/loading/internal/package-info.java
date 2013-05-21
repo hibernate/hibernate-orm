@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,31 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.query.spi;
-
-import java.io.Serializable;
-
-import org.hibernate.type.Type;
 
 /**
- * Metadata about the query return(s).
- *
- * @author Steve Ebersole
+ * Internal classes used to track loading of data, potentially across multiple ResultSets
  */
-public class ReturnMetadata implements Serializable {
-	private final String[] returnAliases;
-	private final Type[] returnTypes;
-
-	ReturnMetadata(String[] returnAliases, Type[] returnTypes) {
-		this.returnAliases = returnAliases;
-		this.returnTypes = returnTypes;
-	}
-
-	public String[] getReturnAliases() {
-		return returnAliases;
-	}
-
-	public Type[] getReturnTypes() {
-		return returnTypes;
-	}
-}
+package org.hibernate.engine.loading.internal;

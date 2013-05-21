@@ -41,7 +41,8 @@ public class EntityLoadContext {
 
 	private final LoadContexts loadContexts;
 	private final ResultSet resultSet;
-	private final List hydratingEntities = new ArrayList( 20 ); // todo : need map? the prob is a proper key, right?
+	// todo : need map? the prob is a proper key, right?
+	private final List hydratingEntities = new ArrayList( 20 );
 
 	public EntityLoadContext(LoadContexts loadContexts, ResultSet resultSet) {
 		this.loadContexts = loadContexts;

@@ -30,23 +30,17 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
  * Maps {@link ResultSet result-sets} to specific contextual data related to processing that result set
- * <p/>
- * Implementation note: internally an {@link IdentityMap} is used to maintain the mappings mainly because I'd
- * rather not be dependent upon potentially bad {@link Object#equals} and {@link Object#hashCode} implementations on
- * the JDBC result sets
  * <p/>
  * Considering the JDBC-redesign work, would further like this contextual info not mapped separately, but available
  * based on the result set being processed.  This would also allow maintaining a single mapping as we could reliably
@@ -55,8 +49,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Steve Ebersole
  */
 public class LoadContexts {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, LoadContexts.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
 	private Map<ResultSet,CollectionLoadContext> collectionLoadContexts;
@@ -101,11 +94,11 @@ public class LoadContexts {
 	 */
 	public void cleanup(ResultSet resultSet) {
 		if ( collectionLoadContexts != null ) {
-			CollectionLoadContext collectionLoadContext = collectionLoadContexts.remove( resultSet );
+			final CollectionLoadContext collectionLoadContext = collectionLoadContexts.remove( resultSet );
 			collectionLoadContext.cleanup();
 		}
 		if ( entityLoadContexts != null ) {
-			EntityLoadContext entityLoadContext = entityLoadContexts.remove( resultSet );
+			final EntityLoadContext entityLoadContext = entityLoadContexts.remove( resultSet );
 			entityLoadContext.cleanup();
 		}
 	}
@@ -191,7 +184,7 @@ public class LoadContexts {
 	 * @return The loading collection, or null if not found.
 	 */
 	public PersistentCollection locateLoadingCollection(CollectionPersister persister, Serializable ownerKey) {
-		LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey ) );
+		final LoadingCollectionEntry lce = locateLoadingCollectionEntry( new CollectionKey( persister, ownerKey ) );
 		if ( lce != null ) {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracef(
@@ -246,13 +239,13 @@ public class LoadContexts {
 		if ( !hasRegisteredLoadingCollectionEntries() ) {
 			return;
 		}
-		xrefLoadingCollectionEntries.remove(key);
-	 }
+		xrefLoadingCollectionEntries.remove( key );
+	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
 	Map getLoadingCollectionXRefs() {
- 		return xrefLoadingCollectionEntries;
- 	}
+		return xrefLoadingCollectionEntries;
+	}
 
 
 	/**
@@ -271,7 +264,7 @@ public class LoadContexts {
 			return null;
 		}
 		LOG.tracev( "Attempting to locate loading collection entry [{0}] in any result-set context", key );
-		LoadingCollectionEntry rtn = xrefLoadingCollectionEntries.get( key );
+		final LoadingCollectionEntry rtn = xrefLoadingCollectionEntries.get( key );
 		if ( rtn == null ) {
 			LOG.tracev( "Collection [{0}] not located in load context", key );
 		}
@@ -291,6 +284,13 @@ public class LoadContexts {
 	// Entity load contexts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// 	* currently, not yet used...
 
+	/**
+	 * Currently unused
+	 *
+	 * @param resultSet The result set
+	 *
+	 * @return The entity load context
+	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public EntityLoadContext getEntityLoadContext(ResultSet resultSet) {
 		EntityLoadContext context = null;

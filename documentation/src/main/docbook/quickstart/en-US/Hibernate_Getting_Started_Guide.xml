@@ -43,5 +43,6 @@
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_annotations.xml" />
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_jpa.xml" />
     <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_envers.xml" />
+    <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="content/tutorial_osgi.xml" />
 
 </book>

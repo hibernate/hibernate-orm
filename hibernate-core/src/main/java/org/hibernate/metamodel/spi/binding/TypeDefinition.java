@@ -46,7 +46,9 @@ public class TypeDefinition implements Serializable {
 		this.name = name;
 		this.typeImplementorClass = typeImplementorClass;
 		this.registrationKeys= registrationKeys;
-		this.parameters = Collections.unmodifiableMap( parameters );
+		this.parameters = parameters == null ? Collections.<String, String>emptyMap() : Collections.unmodifiableMap(
+				parameters
+		);
 	}
 
 	public String getName() {

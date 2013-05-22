@@ -261,7 +261,7 @@ public class Helper {
 
 	public static Map<String, String> extractParameters(List<JaxbParamElement> xmlParamElements) {
 		if ( xmlParamElements == null || xmlParamElements.isEmpty() ) {
-			return null;
+			return Collections.emptyMap();
 		}
 		final HashMap<String,String> params = new HashMap<String, String>();
 		for ( JaxbParamElement paramElement : xmlParamElements ) {

@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

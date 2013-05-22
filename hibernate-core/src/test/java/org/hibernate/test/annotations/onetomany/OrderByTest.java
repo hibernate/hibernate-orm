@@ -365,13 +365,54 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 			fail(e.getMessage());
 		}
 	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-8083" )
+	public void testInverseIndexCascaded() {
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		Forum forum = new Forum();
+		forum.setName( "forum1" );
+		forum = (Forum) s.merge( forum );
+
+		s.flush();
+		s.clear();
+		sessionFactory().getCache().evictEntityRegions();
+
+		forum = (Forum) s.get( Forum.class, forum.getId() );
+
+		final Post post = new Post();
+		post.setName( "post1" );
+		post.setForum( forum );
+		forum.getPosts().add( post );
+
+		final User user = new User();
+		user.setName( "john" );
+		user.setForum( forum );
+		forum.getUsers().add( user );
+
+		forum = (Forum) s.merge( forum );
+
+		s.flush();
+		s.clear();
+		sessionFactory().getCache().evictEntityRegions();
+
+		forum = (Forum) s.get( Forum.class, forum.getId() );
+
+		assertEquals( 1, forum.getPosts().size() );
+		assertEquals( "post1", forum.getPosts().get( 0 ).getName() );
+		assertEquals( 1, forum.getUsers().size() );
+		assertEquals( "john", forum.getUsers().get( 0 ).getName() );
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Order.class, OrderItem.class, Zoo.class, Tiger.class,
 				Monkey.class, Visitor.class, Box.class, Item.class,
-				BankAccount.class, Transaction.class
+				BankAccount.class, Transaction.class,
+				Comment.class, Forum.class, Post.class, User.class
 		};
 	}
 }

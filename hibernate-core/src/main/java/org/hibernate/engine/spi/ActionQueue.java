@@ -52,6 +52,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
@@ -63,7 +64,7 @@ import org.hibernate.type.Type;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
- * </p>
+ * 
  * The ActionQueue holds the DML operations queued as part of a session's
  * transactional-write-behind semantics.  DML operations are queued here
  * until a flush forces them to be executed against the database.
@@ -91,6 +92,7 @@ public class ActionQueue {
 	// just re-use the same Lists for convenience.
 	private ArrayList collectionCreations;
 	private ArrayList collectionUpdates;
+	private ArrayList collectionQueuedOps;
 	private ArrayList collectionRemovals;
 
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
@@ -115,6 +117,7 @@ public class ActionQueue {
 		collectionCreations = new ArrayList( INIT_QUEUE_LIST_SIZE );
 		collectionRemovals = new ArrayList( INIT_QUEUE_LIST_SIZE );
 		collectionUpdates = new ArrayList( INIT_QUEUE_LIST_SIZE );
+		collectionQueuedOps = new ArrayList( INIT_QUEUE_LIST_SIZE );
 
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
@@ -128,6 +131,7 @@ public class ActionQueue {
 		collectionCreations.clear();
 		collectionRemovals.clear();
 		collectionUpdates.clear();
+		collectionQueuedOps.clear();
 
 		unresolvedInsertions.clear();
 	}
@@ -161,6 +165,11 @@ public class ActionQueue {
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(CollectionUpdateAction action) {
 		collectionUpdates.add( action );
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	public void addAction(QueuedOperationCollectionAction action) {
+		collectionQueuedOps.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -276,6 +285,8 @@ public class ActionQueue {
 		}
 		executeActions( insertions );
 		executeActions( updates );
+		// do before actions are handled in the other collection queues
+		executeActions( collectionQueuedOps );
 		executeActions( collectionRemovals );
 		executeActions( collectionUpdates );
 		executeActions( collectionCreations );
@@ -291,6 +302,7 @@ public class ActionQueue {
 		prepareActions( collectionRemovals );
 		prepareActions( collectionUpdates );
 		prepareActions( collectionCreations );
+		prepareActions( collectionQueuedOps );
 	}
 
 	/**
@@ -325,6 +337,7 @@ public class ActionQueue {
 				areTablesToUpdated( deletions, tables ) ||
 				areTablesToUpdated( collectionUpdates, tables ) ||
 				areTablesToUpdated( collectionCreations, tables ) ||
+				areTablesToUpdated( collectionQueuedOps, tables ) ||
 				areTablesToUpdated( collectionRemovals, tables );
 	}
 
@@ -401,6 +414,7 @@ public class ActionQueue {
 				.append( " collectionCreations=" ).append( collectionCreations )
 				.append( " collectionRemovals=" ).append( collectionRemovals )
 				.append( " collectionUpdates=" ).append( collectionUpdates )
+				.append( " collectionQueuedOps=" ).append( collectionQueuedOps )
 				.append( " unresolvedInsertDependencies=" ).append( unresolvedInsertions )
 				.append( "]" )
 				.toString();
@@ -436,6 +450,7 @@ public class ActionQueue {
 			//sort the updates by fk
 			java.util.Collections.sort( collectionCreations );
 			java.util.Collections.sort( collectionUpdates );
+			java.util.Collections.sort( collectionQueuedOps );
 			java.util.Collections.sort( collectionRemovals );
 		}
 	}
@@ -472,6 +487,7 @@ public class ActionQueue {
 	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
 		collectionCreations.clear();
 		collectionUpdates.clear();
+		collectionQueuedOps.clear();
 		updates.clear();
 		// collection deletions are a special case since update() can add
 		// deletions of collections not loaded by the session.
@@ -495,6 +511,7 @@ public class ActionQueue {
 				! unresolvedInsertions.isEmpty() ||
 				deletions.size() > 0 ||
 				collectionUpdates.size() > 0 ||
+				collectionQueuedOps.size() > 0 ||
 				collectionRemovals.size() > 0 ||
 				collectionCreations.size() > 0;
 	}
@@ -563,6 +580,13 @@ public class ActionQueue {
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( collectionCreations.get( i ) );
+		}
+
+		queueSize = collectionQueuedOps.size();
+		LOG.tracev( "Starting serialization of [{0}] collectionQueuedOps entries", queueSize );
+		oos.writeInt( queueSize );
+		for ( int i = 0; i < queueSize; i++ ) {
+			oos.writeObject( collectionQueuedOps.get( i ) );
 		}
 	}
 
@@ -639,6 +663,15 @@ public class ActionQueue {
 			CollectionAction action = ( CollectionAction ) ois.readObject();
 			action.afterDeserialize( session );
 			rtn.collectionCreations.add( action );
+		}
+
+		queueSize = ois.readInt();
+		LOG.tracev( "Starting deserialization of [{0}] collectionQueuedOps entries", queueSize );
+		rtn.collectionQueuedOps = new ArrayList<Executable>( queueSize );
+		for ( int i = 0; i < queueSize; i++ ) {
+			CollectionAction action = ( CollectionAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.collectionQueuedOps.add( action );
 		}
 		return rtn;
 	}

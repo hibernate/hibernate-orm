@@ -198,6 +198,16 @@ public interface CollectionPersister {
 		Serializable key,
 		SessionImplementor session)
 		throws HibernateException;
+	
+	/**
+	 * Process queued operations within the PersistentCollection.
+	 */
+	public void processQueuedOps(
+			PersistentCollection collection,
+			Serializable key,
+			SessionImplementor session)
+			throws HibernateException;
+	
 	/**
 	 * Get the name of this collection role (the fully qualified class name,
 	 * extended by a "property path")

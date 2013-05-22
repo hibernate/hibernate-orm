@@ -52,6 +52,7 @@
     <xi:include href="JMX.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="Envers.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="chapters/multitenancy/Multi_Tenancy.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
+    <xi:include href="chapters/osgi/OSGi.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="appendix-Configuration_Properties.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
     <xi:include href="appendices/legacy_criteria/Legacy_Criteria.xml" xmlns:xi="http://www.w3.org/2001/XInclude"/>
 </book>

@@ -25,26 +25,37 @@ package org.hibernate.envers.test.integration.proxy;
 
 import javax.persistence.EntityManager;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
+import org.hibernate.envers.test.entities.manytomany.unidirectional.ManyToManyNotAuditedNullEntity;
+import org.hibernate.envers.test.entities.manytoone.unidirectional.ManyToOneNotAuditedNullEntity;
 import org.hibernate.envers.test.entities.manytoone.unidirectional.TargetNotAuditedEntity;
+import org.hibernate.envers.test.entities.onetomany.OneToManyNotAuditedNullEntity;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-
-import org.junit.Test;
-
+import org.hibernate.testing.TestForIssue;
 
 /**
  * @author Eugene Goroschenya
  */
 public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
-	private TargetNotAuditedEntity tnae1;
-	private UnversionedStrTestEntity uste1;
+	private TargetNotAuditedEntity tnae1 = null;
+	private ManyToOneNotAuditedNullEntity mtonane1 = null;
+	private ManyToManyNotAuditedNullEntity mtmnane1 = null;
+	private OneToManyNotAuditedNullEntity otmnane1 = null;
+	private UnversionedStrTestEntity uste1 = null;
+	private UnversionedStrTestEntity uste2 = null;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {TargetNotAuditedEntity.class, UnversionedStrTestEntity.class};
+		return new Class[] {
+				TargetNotAuditedEntity.class, ManyToOneNotAuditedNullEntity.class, UnversionedStrTestEntity.class,
+				ManyToManyNotAuditedNullEntity.class, OneToManyNotAuditedNullEntity.class
+		};
 	}
 
 	@Test
@@ -53,10 +64,12 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 		EntityManager em = getEntityManager();
 
 		uste1 = new UnversionedStrTestEntity( "str1" );
+		uste2 = new UnversionedStrTestEntity( "str2" );
 
 		// No revision
 		em.getTransaction().begin();
 		em.persist( uste1 );
+		em.persist( uste2 );
 		em.getTransaction().commit();
 
 		// Revision 1
@@ -65,24 +78,73 @@ public class ProxyIdentifier extends BaseEnversJPAFunctionalTestCase {
 		tnae1 = new TargetNotAuditedEntity( 1, "tnae1", uste1 );
 		em.persist( tnae1 );
 		em.getTransaction().commit();
+
+		// Revision 2
+		em.getTransaction().begin();
+		uste2 = em.find( UnversionedStrTestEntity.class, uste2.getId() );
+		mtonane1 = new ManyToOneNotAuditedNullEntity( 2, "mtonane1", uste2 );
+		mtmnane1 = new ManyToManyNotAuditedNullEntity( 3, "mtmnane1" );
+		mtmnane1.getReferences().add( uste2 );
+		otmnane1 = new OneToManyNotAuditedNullEntity( 4, "otmnane1" );
+		otmnane1.getReferences().add( uste2 );
+		em.persist( mtonane1 );
+		em.persist( mtmnane1 );
+		em.persist( otmnane1 );
+		em.getTransaction().commit();
+
+		em.clear();
+
+		// Revision 3
+		// Remove not audited target entity, so we can verify null reference
+		// when @NotFound(action = NotFoundAction.IGNORE) applied.
+		em.getTransaction().begin();
+		ManyToOneNotAuditedNullEntity tmp1 = em.find( ManyToOneNotAuditedNullEntity.class, mtonane1.getId() );
+		tmp1.setReference( null );
+		tmp1 = em.merge( tmp1 );
+		ManyToManyNotAuditedNullEntity tmp2 = em.find( ManyToManyNotAuditedNullEntity.class, mtmnane1.getId() );
+		tmp2.setReferences( null );
+		tmp2 = em.merge( tmp2 );
+		OneToManyNotAuditedNullEntity tmp3 = em.find( OneToManyNotAuditedNullEntity.class, otmnane1.getId() );
+		tmp3.setReferences( null );
+		tmp3 = em.merge( tmp3 );
+		em.remove( em.getReference( UnversionedStrTestEntity.class, uste2.getId() ) );
+		em.getTransaction().commit();
+
+		em.close();
 	}
 
 	@Test
 	public void testProxyIdentifier() {
 		TargetNotAuditedEntity rev1 = getAuditReader().find( TargetNotAuditedEntity.class, tnae1.getId(), 1 );
 
-		assert rev1.getReference() instanceof HibernateProxy;
+		Assert.assertTrue( rev1.getReference() instanceof HibernateProxy );
 
 		HibernateProxy proxyCreateByEnvers = (HibernateProxy) rev1.getReference();
 		LazyInitializer lazyInitializer = proxyCreateByEnvers.getHibernateLazyInitializer();
 
-		assert lazyInitializer.isUninitialized();
-		assert lazyInitializer.getIdentifier() != null;
-		assert lazyInitializer.getIdentifier().equals( tnae1.getId() );
-		assert lazyInitializer.isUninitialized();
+		Assert.assertTrue( lazyInitializer.isUninitialized() );
+		Assert.assertNotNull( lazyInitializer.getIdentifier() );
+		Assert.assertEquals( tnae1.getId(), lazyInitializer.getIdentifier() );
+		Assert.assertTrue( lazyInitializer.isUninitialized() );
 
-		assert rev1.getReference().getId().equals( uste1.getId() );
-		assert rev1.getReference().getStr().equals( uste1.getStr() );
-		assert !lazyInitializer.isUninitialized();
+		Assert.assertEquals( uste1.getId(), rev1.getReference().getId() );
+		Assert.assertEquals( uste1.getStr(), rev1.getReference().getStr() );
+		Assert.assertFalse( lazyInitializer.isUninitialized() );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8174" )
+	public void testNullReferenceWithNotFoundActionIgnore() {
+		ManyToOneNotAuditedNullEntity mtoRev2 = getAuditReader().find( ManyToOneNotAuditedNullEntity.class, mtonane1.getId(), 2 );
+		Assert.assertEquals( mtonane1, mtoRev2 );
+		Assert.assertNull( mtoRev2.getReference() );
+
+		ManyToManyNotAuditedNullEntity mtmRev2 = getAuditReader().find( ManyToManyNotAuditedNullEntity.class, mtmnane1.getId(), 2 );
+		Assert.assertEquals( mtmnane1, mtmRev2 );
+		Assert.assertTrue( mtmRev2.getReferences().isEmpty() );
+
+		OneToManyNotAuditedNullEntity otmRev2 = getAuditReader().find( OneToManyNotAuditedNullEntity.class, otmnane1.getId(), 2 );
+		Assert.assertEquals( otmnane1, otmRev2 );
+		Assert.assertTrue( otmRev2.getReferences().isEmpty() );
 	}
 }

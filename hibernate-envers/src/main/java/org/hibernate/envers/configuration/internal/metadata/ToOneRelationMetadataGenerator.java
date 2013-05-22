@@ -77,10 +77,8 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
-				propertyAuditingData.getName(),
-				referencedEntityName,
-				relMapper,
-				insertable
+				propertyAuditingData.getName(), referencedEntityName, relMapper,
+				insertable, MappingTools.ignoreNotFound( value )
 		);
 
 		// If the property isn't insertable, checking if this is not a "fake" bidirectional many-to-one relationship,
@@ -154,10 +152,8 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneNotOwningRelation(
-				propertyAuditingData.getName(),
-				owningReferencePropertyName,
-				referencedEntityName,
-				ownedIdMapper
+				propertyAuditingData.getName(), owningReferencePropertyName, referencedEntityName,
+				ownedIdMapper, MappingTools.ignoreNotFound( value )
 		);
 
 		// Adding mapper for the id
@@ -191,10 +187,8 @@ public final class ToOneRelationMetadataGenerator {
 
 		// Storing information about this relation
 		mainGenerator.getEntitiesConfigurations().get( entityName ).addToOneRelation(
-				propertyAuditingData.getName(),
-				referencedEntityName,
-				relMapper,
-				insertable
+				propertyAuditingData.getName(), referencedEntityName, relMapper, insertable,
+				MappingTools.ignoreNotFound( value )
 		);
 
 		// Adding mapper for the id

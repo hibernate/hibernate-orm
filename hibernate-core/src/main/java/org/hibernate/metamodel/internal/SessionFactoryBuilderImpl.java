@@ -28,9 +28,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.ObjectNotFoundException;
@@ -39,6 +41,8 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Settings;
+import org.hibernate.cfg.SettingsFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.DefaultCustomEntityDirtinessStrategy;
@@ -46,6 +50,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * @author Gail Badner
@@ -97,6 +102,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 	}
 
 	@Override
+	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass){
+		this.options.settings.getEntityTuplizerFactory().registerDefaultTuplizerClass( entityMode, tuplizerClass );
+		return this;
+	}
+
+	@Override
 	public SessionFactory build() {
 		return new SessionFactoryImpl( metadata, options );
 	}
@@ -110,6 +121,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		private List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<SessionFactoryObserver>();
 		private List<EntityNameResolver> entityNameResolvers = new ArrayList<EntityNameResolver>();
 		private EntityNotFoundDelegate entityNotFoundDelegate;
+		private Settings settings;
 
 		public SessionFactoryOptionsImpl(StandardServiceRegistry serviceRegistry) {
 			this.serviceRegistry = serviceRegistry;
@@ -141,6 +153,9 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 					CurrentTenantIdentifierResolver.class,
 					configurationSettings.get( AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLVER )
 			);
+			Properties properties = new Properties();
+			properties.putAll( configurationSettings );
+			this.settings = new SettingsFactory().buildSettings( properties, serviceRegistry );
 		}
 
 		@Override
@@ -161,6 +176,11 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilder {
 		@Override
 		public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
 			return currentTenantIdentifierResolver;
+		}
+
+		@Override
+		public Settings getSettings() {
+			return settings;
 		}
 
 		@Override

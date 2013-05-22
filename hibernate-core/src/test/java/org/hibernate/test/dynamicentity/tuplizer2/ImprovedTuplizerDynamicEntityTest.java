@@ -31,12 +31,12 @@ import org.hibernate.EntityMode;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.test.dynamicentity.Address;
 import org.hibernate.test.dynamicentity.Company;
 import org.hibernate.test.dynamicentity.Customer;
 import org.hibernate.test.dynamicentity.Person;
 import org.hibernate.test.dynamicentity.ProxyHelper;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -65,10 +65,13 @@ public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCas
 		super.configure( cfg );
 		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( EntityMode.POJO, MyEntityTuplizer.class );
 	}
+	@Override
+	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+		sessionFactoryBuilder.with( EntityMode.POJO, MyEntityTuplizer.class );
+	}
 
 	@Test
 	@SuppressWarnings( {"unchecked"})
-	@FailureExpectedWithNewMetamodel
 	public void testIt() {
 		// Test saving these dyna-proxies
 		Session session = openSession();

@@ -153,6 +153,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
@@ -224,7 +225,7 @@ public final class SessionFactoryImpl
 			final Configuration cfg,
 			Mapping mapping,
 			final ServiceRegistry serviceRegistry,
-			Settings settings,
+			final Settings settings,
 			final SessionFactoryObserver userObserver) throws HibernateException {
 			LOG.debug( "Building session factory" );
 
@@ -274,6 +275,11 @@ public final class SessionFactoryImpl
 			}
 
 			@Override
+			public Settings getSettings() {
+				return settings;
+			}
+
+			@Override
 			public CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy() {
 				return customEntityDirtinessStrategy;
 			}
@@ -301,7 +307,7 @@ public final class SessionFactoryImpl
 			}
 		};
 
-		this.settings = settings;
+		this.settings = sessionFactoryOptions.getSettings();
 
 		this.properties = new Properties();
 		this.properties.putAll( cfg.getProperties() );
@@ -515,6 +521,11 @@ public final class SessionFactoryImpl
 			registerEntityNameResolvers( persister );
 
 		}
+		if ( sessionFactoryOptions.getEntityNameResolvers() != null ) {
+			for ( EntityNameResolver resolver : sessionFactoryOptions.getEntityNameResolvers() ) {
+				registerEntityNameResolver( resolver );
+			}
+		}
 		iter = collectionPersisters.values().iterator();
 		while ( iter.hasNext() ) {
 			final CollectionPersister persister = ( ( CollectionPersister ) iter.next() );
@@ -693,12 +704,7 @@ public final class SessionFactoryImpl
 		this.properties = createPropertiesFromMap(
 				metadata.getServiceRegistry().getService( ConfigurationService.class ).getSettings()
 		);
-
-		// TODO: these should be moved into SessionFactoryOptions
-		this.settings = new SettingsFactory().buildSettings(
-				properties,
-				metadata.getServiceRegistry()
-		);
+		this.settings = sessionFactoryOptions.getSettings();
 
 		this.serviceRegistry =
 				sessionFactoryOptions.getServiceRegistry()
@@ -952,6 +958,11 @@ public final class SessionFactoryImpl
 			persister.postInstantiate();
 			registerEntityNameResolvers( persister );
 
+		}
+		if ( sessionFactoryOptions.getEntityNameResolvers() != null ) {
+			for ( EntityNameResolver resolver : sessionFactoryOptions.getEntityNameResolvers() ) {
+				registerEntityNameResolver( resolver );
+			}
 		}
 		iter = collectionPersisters.values().iterator();
 		while ( iter.hasNext() ) {

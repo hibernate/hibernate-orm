@@ -30,6 +30,7 @@ import java.util.Set;
 import javax.naming.Referenceable;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cfg.Settings;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.metadata.ClassMetadata;
@@ -75,6 +76,7 @@ public interface SessionFactory extends Referenceable, Serializable {
 		public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
 		public SessionFactoryObserver[] getSessionFactoryObservers();
 		public EntityNameResolver[] getEntityNameResolvers();
+		public Settings getSettings();
 
 		/**
 		 * Get the delegate for handling entity-not-found exception conditions.

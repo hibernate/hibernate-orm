@@ -24,12 +24,14 @@
 package org.hibernate.metamodel;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.tuple.entity.EntityTuplizer;
 
 /**
  * The contract for building a {@link SessionFactory} given a number of options.
@@ -103,6 +105,16 @@ public interface SessionFactoryBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public SessionFactoryBuilder with(EntityNotFoundDelegate entityNotFoundDelegate);
+
+	/**
+	 * Register the default {@link EntityTuplizer} to be applied to the SessionFactory.
+	 *
+	 * @param entityMode The entity mode that which this tuplizer will be applied.
+	 * @param tuplizerClass The custom tuplizer class.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SessionFactoryBuilder with(EntityMode entityMode, Class<? extends EntityTuplizer> tuplizerClass);
 
 	/**
 	 * After all options have been set, build the SessionFactory.

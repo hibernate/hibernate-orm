@@ -200,6 +200,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		properties.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		properties.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		properties.put( Environment.DIALECT, getDialect().getClass().getName() );
+		if(createSchema()){
+			properties.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+		}
 		return properties;
 	}
 

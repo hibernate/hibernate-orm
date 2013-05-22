@@ -5,6 +5,28 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.2.Final (2013.05.22)
+------------------------------------------------------------------------------------------------------------------------
+
+Sub-task
+    [HHH-7944] - Envers OSGi support
+    [HHH-7995] - Auto-discovery of Hibernate extension points in OSGi
+
+Bug
+    [HHH-2664] - full join not working
+    [HHH-6813] - @Id @OneToOne cause NullPointerException during query
+    [HHH-8083] - @OrderColumn not updated on @OneToMany cascade
+    [HHH-8225] - EMF cannot be created, closed, then re-created in OSGi
+    [HHH-8236] - Update to hibernate-commons-annotations 4.0.2.Final
+    [HHH-8250] - DefaultInitializeCollectionEventListener not finding collections in cache
+    [HHH-8254] - throw HibernateException when transaction is rolledback by a reaper thread
+
+Improvement
+    [HHH-8217] - Make generated constraint names short and non-random
+    [HHH-8226] - table synonyms cannot find columns on Oracle
+    [HHH-8238] - OsgiJtaPlatform null pointer exception
+
+
 Changes in version 4.2.1.Final (2013.04.24)
 ------------------------------------------------------------------------------------------------------------------------
 

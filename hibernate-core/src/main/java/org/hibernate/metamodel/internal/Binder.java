@@ -900,6 +900,8 @@ public class Binder {
 									entityBinding.getPrimaryTable().getLogicalName().getText()
 							)
 					);
+					joinColumn.setNullable( false );
+					table.getPrimaryKey().addColumn( joinColumn );
 					joinRelationalValueBindings.add( new RelationalValueBinding( entityBinding.getPrimaryTable(), joinColumn, true, false ) );
 				}
 			}
@@ -926,6 +928,8 @@ public class Binder {
 						if ( joinColumnSource.getSqlType() != null ) {
 							column.setSqlType( joinColumnSource.getSqlType() );
 						}
+						column.setNullable( false );
+						table.getPrimaryKey().addColumn( column );
 					}
 					joinRelationalValueBindings.add( new RelationalValueBinding( table, column, true, false ) );
 				}
@@ -953,6 +957,9 @@ public class Binder {
 			secondaryTable.setInverse( secondaryTableSource.isInverse() );
 			secondaryTable.setOptional( secondaryTableSource.isOptional() );
 			secondaryTable.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
+			if ( secondaryTable.isCascadeDeleteEnabled() ) {
+				foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
+			}
 			entityBinding.addSecondaryTable( secondaryTable );
 		}
 	}

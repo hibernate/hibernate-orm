@@ -92,7 +92,6 @@ public class ABCTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSubclassing() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

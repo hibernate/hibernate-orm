@@ -53,9 +53,9 @@ import org.junit.Test;
  *
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJPA2DefaultMapColumns() throws Exception {
 		isDefaultKeyColumnPresent( Atmosphere.class, "gasesDef", "_KEY" );
 		isDefaultKeyColumnPresent( Atmosphere.class, "gasesPerKeyDef", "_KEY" );
@@ -63,6 +63,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJPA2DefaultIndexColumns() throws Exception {
 		isDefaultKeyColumnPresent( Drawer.class, "dresses", "_ORDER" );
 	}
@@ -184,6 +185,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKey() throws Exception {
 		Session s;
 		Transaction tx;
@@ -239,6 +241,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultMapKey() throws Exception {
 		Session s;
 		Transaction tx;
@@ -285,6 +288,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKeyToEntity() throws Exception {
 		Session s;
 		Transaction tx;
@@ -331,6 +335,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@RequiresDialect({HSQLDialect.class, H2Dialect.class})
 	public void testComponentSubPropertyMapKey() throws Exception {
 		Session s;
@@ -376,6 +381,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKeyOnManyToMany() throws Exception {
 		Session s;
 		s = openSession();
@@ -434,6 +440,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKeyAndIdClass() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -457,6 +464,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testRealMap() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -487,6 +495,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testTemporalKeyMap() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -507,6 +516,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEnumKeyType() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -525,6 +535,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKeyEntityEntity() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -553,6 +564,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testEntityKeyElementTarget() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -575,6 +587,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSortedMap() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -600,6 +613,7 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKeyLoad() throws Exception {
 		Session s;
 		Transaction tx;

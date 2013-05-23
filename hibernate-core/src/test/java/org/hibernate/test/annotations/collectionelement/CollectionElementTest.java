@@ -51,6 +51,7 @@ import org.junit.Test;
 //@FailureExpectedWithNewMetamodel
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSimpleElement() throws Exception {
 		assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
 				.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
@@ -101,6 +102,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCompositeElement() throws Exception {
 		Session s = openSession();
 		s.getTransaction().begin();
@@ -157,6 +159,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testLazyCollectionofElements() throws Exception {
 		assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
 				.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
@@ -198,6 +201,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testFetchEagerAndFilter() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -228,6 +232,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testMapKeyType() throws Exception {
 		Matrix m = new Matrix();
 		m.getMvalues().put( 1, 1.1f );
@@ -251,6 +256,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testDefaultFKNameForElementCollection() throws Exception {
 		isCollectionColumnPresent( Boy.class.getName(), "Boy_id" );
 	}

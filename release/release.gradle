@@ -149,7 +149,7 @@ task uploadDocumentation(type:Exec, dependsOn: buildDocumentation) {
     final String url = 'filemgmt.jboss.org:/docs_htdocs/hibernate/';
 
     executable 'rsync'
-    args '-rv', '--links', '--protocol=28', "${documentationUploadStagingDir.absolutePath}/", url
+    args '-avz', '--links', '--protocol=28', "${documentationUploadStagingDir.absolutePath}/", url
 
     doFirst {
         if ( version.endsWith( "SNAPSHOT" ) ) {

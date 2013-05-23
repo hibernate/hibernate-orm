@@ -350,6 +350,17 @@ public interface Mappings {
 	public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition) throws DuplicateMappingException;
 
 	/**
+	 * Adds metadata for a named stored procedure call to this repository.
+	 *
+	 * @param definition The procedure call information
+	 *
+	 * @throws DuplicateMappingException If a query already exists with that name.
+	 */
+	public void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinition definition) throws DuplicateMappingException;
+
+
+
+	/**
 	 * Adds metadata for a named entity graph to this repository
 	 *
 	 * @param namedEntityGraphDefinition The procedure call information

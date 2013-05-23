@@ -263,6 +263,8 @@ public class Configuration implements Serializable {
 	private Set<String> defaultNamedQueryNames;
 	private Set<String> defaultNamedNativeQueryNames;
 	private Set<String> defaultSqlResultSetMappingNames;
+	private Set<String> defaultNamedProcedure;
+
 	private Set<String> defaultNamedGenerators;
 	private Map<String, Properties> generatorTables;
 	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
@@ -339,6 +341,7 @@ public class Configuration implements Serializable {
 		defaultNamedQueryNames = new HashSet<String>();
 		defaultNamedNativeQueryNames = new HashSet<String>();
 		defaultSqlResultSetMappingNames = new HashSet<String>();
+		defaultNamedProcedure =  new HashSet<String>(  );
 		defaultNamedGenerators = new HashSet<String>();
 		uniqueConstraintHoldersByTable = new HashMap<Table, List<UniqueConstraintHolder>>();
 		jpaIndexHoldersByTable = new HashMap<Table,List<JPAIndexHolder>>(  );
@@ -2890,16 +2893,25 @@ public class Configuration implements Serializable {
 		public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition)
 				throws DuplicateMappingException {
 			final String name = definition.getRegisteredName();
-			final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
-			if ( previous != null ) {
-				throw new DuplicateMappingException( "named stored procedure query", name );
+			if ( !defaultNamedProcedure.contains( name ) ) {
+				final NamedProcedureCallDefinition previous = namedProcedureCallMap.put( name, definition );
+				if ( previous != null ) {
+					throw new DuplicateMappingException( "named stored procedure query", name );
+				}
 			}
+		}
+		@Override
+		public void addDefaultNamedProcedureCallDefinition(NamedProcedureCallDefinition definition)
+				throws DuplicateMappingException {
+			addNamedProcedureCallDefinition( definition );
+			defaultNamedProcedure.add( definition.getRegisteredName() );
 		}
 
 		@Override
 		public void addNamedEntityGraphDefintion(NamedEntityGraphDefinition definition)
 				throws DuplicateMappingException {
 			final String name = definition.getRegisteredName();
+
 			final NamedEntityGraphDefinition previous = namedEntityGraphMap.put( name, definition );
 			if ( previous != null ) {
 				throw new DuplicateMappingException( "NamedEntityGraph", name );

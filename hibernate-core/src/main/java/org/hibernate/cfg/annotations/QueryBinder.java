@@ -318,7 +318,7 @@ public abstract class QueryBinder {
 		}
 	}
 
-	public static void bindNamedStoredProcedureQuery(NamedStoredProcedureQuery annotation, Mappings mappings) {
+	public static void bindNamedStoredProcedureQuery(NamedStoredProcedureQuery annotation, Mappings mappings, boolean isDefault) {
 		if ( annotation == null ) {
 			return;
 		}
@@ -328,7 +328,12 @@ public abstract class QueryBinder {
 		}
 
 		final NamedProcedureCallDefinition def = new NamedProcedureCallDefinition( annotation );
-		mappings.addNamedProcedureCallDefinition( def );
+
+		if(isDefault){
+			mappings.addDefaultNamedProcedureCallDefinition( def );
+		} else{
+			mappings.addNamedProcedureCallDefinition( def );
+		}
 		LOG.debugf( "Bound named stored procedure query : %s => %s", def.getRegisteredName(), def.getProcedureName() );
 	}
 

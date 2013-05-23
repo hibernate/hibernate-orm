@@ -272,7 +272,7 @@ public final class AnnotationBinder {
 					(List<NamedStoredProcedureQuery>) defaults.get( NamedStoredProcedureQuery.class );
 			if ( annotations != null ) {
 				for ( NamedStoredProcedureQuery annotation : annotations ) {
-					bindNamedStoredProcedureQuery( mappings, annotation );
+					bindNamedStoredProcedureQuery( mappings, annotation, true );
 				}
 			}
 		}
@@ -281,7 +281,7 @@ public final class AnnotationBinder {
 					(List<NamedStoredProcedureQueries>) defaults.get( NamedStoredProcedureQueries.class );
 			if ( annotations != null ) {
 				for ( NamedStoredProcedureQueries annotation : annotations ) {
-					bindNamedStoredProcedureQueries( mappings, annotation );
+					bindNamedStoredProcedureQueries( mappings, annotation, true );
 				}
 			}
 		}
@@ -392,26 +392,27 @@ public final class AnnotationBinder {
 		}
 
 		// NamedStoredProcedureQuery handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		bindNamedStoredProcedureQuery( mappings, annotatedElement.getAnnotation( NamedStoredProcedureQuery.class ) );
+		bindNamedStoredProcedureQuery( mappings, annotatedElement.getAnnotation( NamedStoredProcedureQuery.class ), false );
 
 		// NamedStoredProcedureQueries handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		bindNamedStoredProcedureQueries(
 				mappings,
-				annotatedElement.getAnnotation( NamedStoredProcedureQueries.class )
+				annotatedElement.getAnnotation( NamedStoredProcedureQueries.class ),
+				false
 		);
 	}
 
-	private static void bindNamedStoredProcedureQueries(Mappings mappings, NamedStoredProcedureQueries annotation) {
+	private static void bindNamedStoredProcedureQueries(Mappings mappings, NamedStoredProcedureQueries annotation, boolean isDefault) {
 		if ( annotation != null ) {
 			for ( NamedStoredProcedureQuery queryAnnotation : annotation.value() ) {
-				bindNamedStoredProcedureQuery( mappings, queryAnnotation );
+				bindNamedStoredProcedureQuery( mappings, queryAnnotation, isDefault );
 			}
 		}
 	}
 
-	private static void bindNamedStoredProcedureQuery(Mappings mappings, NamedStoredProcedureQuery annotation) {
+	private static void bindNamedStoredProcedureQuery(Mappings mappings, NamedStoredProcedureQuery annotation, boolean isDefault) {
 		if ( annotation != null ) {
-			QueryBinder.bindNamedStoredProcedureQuery( annotation, mappings );
+			QueryBinder.bindNamedStoredProcedureQuery( annotation, mappings, isDefault );
 		}
 	}
 

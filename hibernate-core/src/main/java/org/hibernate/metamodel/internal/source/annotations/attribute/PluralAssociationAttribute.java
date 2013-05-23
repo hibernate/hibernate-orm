@@ -232,18 +232,25 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.COLLECTION_ID
 		) != null;
 		final AnnotationInstance sortAnnotation =  JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT );
-		if ( sortAnnotation == null ) {
-			this.sorted = false;
-			this.comparatorName = null;
+		final AnnotationInstance sortNaturalAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT_NATURAL );
+		final AnnotationInstance sortComparatorAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.SORT_COMPARATOR );
+
+		if ( sortNaturalAnnotation != null ) {
+			this.sorted = true;
+			this.comparatorName = "natural";
 		}
-		else {
+		else if ( sortComparatorAnnotation != null ) {
+			this.sorted = true;
+			this.comparatorName = JandexHelper.getValue( sortComparatorAnnotation, "value", String.class );
+		}
+		else if ( sortAnnotation != null ) {
 			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class );
 			this.sorted = sortType != SortType.UNSORTED;
 			if ( this.sorted && sortType == SortType.COMPARATOR ) {
 				String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class );
 				if ( StringHelper.isEmpty( comparatorName ) ) {
 					throw new MappingException(
-							"Comparator class must be provided when using SortType.COMPARATOR on property: "+ getRole(),
+							"Comparator class must be provided when using SortType.COMPARATOR on property: " + getRole(),
 							getContext().getOrigin()
 					);
 				}
@@ -253,6 +260,11 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				this.comparatorName = null;
 			}
 		}
+		else {
+			this.sorted = false;
+			this.comparatorName = null;
+		}
+
 
 		AnnotationInstance orderColumnAnnotation =  JandexHelper.getSingleAnnotation( annotations, JPADotNames.ORDER_COLUMN );
 		AnnotationInstance indexColumnAnnotation = JandexHelper.getSingleAnnotation( annotations, HibernateDotNames.INDEX_COLUMN );

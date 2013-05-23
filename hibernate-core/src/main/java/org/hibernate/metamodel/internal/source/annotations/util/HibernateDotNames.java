@@ -91,6 +91,8 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.annotations.Sort;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Source;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
@@ -175,6 +177,8 @@ public interface HibernateDotNames {
 	DotName ROW_ID = DotName.createSimple( RowId.class.getName() );
 	DotName SELECT_BEFORE_UPDATE = DotName.createSimple( SelectBeforeUpdate.class.getName() );
 	DotName SORT = DotName.createSimple( Sort.class.getName() );
+	DotName SORT_COMPARATOR = DotName.createSimple( SortComparator.class.getName());
+	DotName SORT_NATURAL = DotName.createSimple( SortNatural.class.getName() );
 	DotName SOURCE = DotName.createSimple( Source.class.getName() );
 	DotName SQL_DELETE = DotName.createSimple( SQLDelete.class.getName() );
 	DotName SQL_DELETE_ALL = DotName.createSimple( SQLDeleteAll.class.getName() );

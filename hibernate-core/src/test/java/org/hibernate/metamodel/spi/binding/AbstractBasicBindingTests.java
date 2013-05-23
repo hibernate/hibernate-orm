@@ -108,8 +108,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 		assertEquals( "version is nullable", false, versionAttributeBinding.getRelationalValueBindings().get( 0 ).isNullable() );
 	}
 
-	@Test
-	public void testEntityWithManyToOneMapping() {
+	protected void testEntityWithManyToOneMapping(String defaultManyToOneColumnReferencingId) {
 		MetadataSources sources = new MetadataSources( serviceRegistry );
 		addSourcesForSimpleEntityBinding( sources );
 		addSourcesForManyToOne( sources );
@@ -128,7 +127,7 @@ public abstract class AbstractBasicBindingTests extends BaseUnitTestCase {
 				SingularAttributeBinding.class.cast( 
 						simpleEntityBinding.getHierarchyDetails().getEntityIdentifier().getAttributeBinding()
 				),
-				"simpleEntity",
+				defaultManyToOneColumnReferencingId,
 				false
 		);
 

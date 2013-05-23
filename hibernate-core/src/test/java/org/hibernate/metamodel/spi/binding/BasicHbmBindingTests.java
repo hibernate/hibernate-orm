@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.junit.Test;
+
 import org.hibernate.metamodel.MetadataSources;
 
 /**
@@ -50,5 +52,10 @@ public class BasicHbmBindingTests extends AbstractBasicBindingTests {
 	@Override
 	public void addSourcesForComponentBinding(MetadataSources sources) {
 		sources.addResource( "org/hibernate/metamodel/spi/binding/SimpleEntityWithSimpleComponent.hbm.xml" );
+	}
+
+	@Test
+	public void testEntityWithManyToOneMapping() {
+		super.testEntityWithManyToOneMapping( "simpleEntity" );
 	}
 }

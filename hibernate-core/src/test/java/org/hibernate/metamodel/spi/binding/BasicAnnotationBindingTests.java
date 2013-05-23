@@ -55,9 +55,8 @@ public class BasicAnnotationBindingTests extends AbstractBasicBindingTests {
 		sources.addAnnotatedClass( SimpleEntityWithSimpleComponent.SimpleComponent.class );
 	}
 
-	@Override
 	@Test
 	public void testEntityWithManyToOneMapping() {
-		super.testEntityWithManyToOneMapping();
+		super.testEntityWithManyToOneMapping( "simpleEntity_id");
 	}
 }

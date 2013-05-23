@@ -335,7 +335,6 @@ public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	@RequiresDialect({HSQLDialect.class, H2Dialect.class})
 	@FailureExpectedWithNewMetamodel
 	public void testComponentSubPropertyMapKey() throws Exception {

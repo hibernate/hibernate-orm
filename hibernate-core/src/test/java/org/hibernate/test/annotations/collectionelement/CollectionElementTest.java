@@ -257,7 +257,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testDefaultFKNameForElementCollection() throws Exception {
 		isCollectionColumnPresent( Boy.class, "hatedNames", "Boy_id" );
 	}

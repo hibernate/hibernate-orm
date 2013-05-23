@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.persister.collection.BasicCollectionPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
@@ -64,7 +63,6 @@ public class ElementCollectionSortingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6875" )
-	@FailureExpectedWithNewMetamodel 
 	public void testSortingEmbeddableCollectionOfPrimitives() {
 		final Session session = openSession();
 		session.beginTransaction();

@@ -2013,6 +2013,7 @@ public class Binder {
 			final String defaultIndexJavaTypeName) {
 		final BasicPluralAttributeIndexBinding indexBinding =
 				(BasicPluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding();
+		// TODO: need to resolve default column names.
 		indexBinding.setRelationalValueBindings(
 				bindValues(
 						attributeBinding.getContainer(),
@@ -2907,7 +2908,7 @@ public class Binder {
 
 		}
 		else {
-			final String name = attribute.getName();
+			final String name = defaultNamingStrategyList.get( 0 ).defaultName();
 			for ( final RelationalValueSource valueSource : valueSourceContainer.relationalValueSources() ) {
 				final TableSpecification table =
 						valueSource.getContainingTableName() == null

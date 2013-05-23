@@ -36,7 +36,9 @@ import org.hibernate.Filter;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
@@ -48,7 +50,6 @@ import org.junit.Test;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-//@FailureExpectedWithNewMetamodel
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
@@ -249,31 +250,29 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testDefaultValueColumnForBasic() throws Exception {
-		isCollectionColumnPresent( Boy.class.getName(), "hatedNames" );
-		isCollectionColumnPresent( Boy.class.getName(), "preferredNames" );
-		isCollectionColumnPresent( Boy.class.getName(), "nickNames" );
-		isCollectionColumnPresent( Boy.class.getName(), "scorePerPreferredName");
+		isDefaultValueCollectionColumnPresent( Boy.class, "hatedNames" );
+		isDefaultValueCollectionColumnPresent( Boy.class, "preferredNames" );
+		isCollectionColumnPresent( Boy.class, "nickNames", "nickNames" );
+		isDefaultValueCollectionColumnPresent( Boy.class, "scorePerPreferredName");
 	}
 
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testDefaultFKNameForElementCollection() throws Exception {
-		isCollectionColumnPresent( Boy.class.getName(), "Boy_id" );
+		isCollectionColumnPresent( Boy.class, "hatedNames", "Boy_id" );
 	}
 
-	private void isCollectionColumnPresent(String collectionOwner, String columnName) {
-		// TODO: Is this correct?  Cannot test due to ManyToOne issues.
-		Iterator<PluralAttributeBinding> bindings = getCollectionBindings();
-		boolean hasDefault = false;
-		while ( bindings.hasNext() ) {
-			PluralAttributeBinding binding = bindings.next();
-			if ( binding.getAttribute().getName().equals( columnName )
-					&& binding.getAttribute().getAttributeContainer().getClassName().equals( collectionOwner ) ) {
-				hasDefault = true;
-				break;
-			}
-		}
-		assertTrue( "Could not find " + columnName, hasDefault );
+	private void isDefaultValueCollectionColumnPresent(Class<?> collectionOwnerClass, String propertyName) {
+		isCollectionColumnPresent( collectionOwnerClass, propertyName, propertyName );
+	}
+
+	private void isCollectionColumnPresent(Class<?> collectionOwnerClass, String collectionName, String columnName) {
+		final EntityBinding entityBinding = getEntityBinding( collectionOwnerClass );
+		final PluralAttributeBinding binding = (PluralAttributeBinding) entityBinding.locateAttributeBinding( collectionName );
+		final TableSpecification table = binding.getPluralAttributeKeyBinding().getCollectionTable();
+
+		boolean hasColumn = table.locateColumn( collectionName ) != null;
+		assertTrue( "Could not find " + columnName, hasColumn );
 	}
 
 	@Override

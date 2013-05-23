@@ -245,19 +245,27 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		else if ( sortAnnotation != null ) {
 			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class );
-			this.sorted = sortType != SortType.UNSORTED;
-			if ( this.sorted && sortType == SortType.COMPARATOR ) {
-				String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class );
-				if ( StringHelper.isEmpty( comparatorName ) ) {
-					throw new MappingException(
-							"Comparator class must be provided when using SortType.COMPARATOR on property: " + getRole(),
-							getContext().getOrigin()
-					);
-				}
-				this.comparatorName = comparatorName;
-			}
-			else {
-				this.comparatorName = null;
+			switch ( sortType ){
+
+				case NATURAL:
+					this.sorted = true;
+					this.comparatorName = "natural";
+					break;
+				case COMPARATOR:
+					String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class );
+					if ( StringHelper.isEmpty( comparatorName ) ) {
+						throw new MappingException(
+								"Comparator class must be provided when using SortType.COMPARATOR on property: " + getRole(),
+								getContext().getOrigin()
+						);
+					}
+					this.sorted = true;
+					this.comparatorName = comparatorName;
+					break;
+				default:
+					this.sorted = false;
+					this.comparatorName = null;
+					break;
 			}
 		}
 		else {

@@ -53,7 +53,7 @@ import org.junit.Test;
  */
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel
+//	@FailureExpectedWithNewMetamodel
 	public void testDefaultValue() throws Exception {
 		TableSpecification joinTable = SchemaUtil.getEntityBinding( Life.class, metadata() ).locateTable( "ExtendedLife" );
 		assertNotNull( joinTable );
@@ -77,7 +77,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
+//	@FailureExpectedWithNewMetamodel
 	public void testCompositePK() throws Exception {
 		if ( isMetadataUsed() ) {
 			SecondaryTable secondaryTable =

@@ -6,6 +6,7 @@ import java.util.List;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -14,9 +15,9 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  * @author Hardy Ferentschik
  */
 public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttributeElementSource {
-	private final AssociationAttribute associationAttribute;
+	private final PluralAssociationAttribute associationAttribute;
 
-	public BasicPluralAttributeElementSourceImpl(AssociationAttribute associationAttribute) {
+	public BasicPluralAttributeElementSourceImpl(PluralAssociationAttribute associationAttribute) {
 		this.associationAttribute = associationAttribute;
 	}
 

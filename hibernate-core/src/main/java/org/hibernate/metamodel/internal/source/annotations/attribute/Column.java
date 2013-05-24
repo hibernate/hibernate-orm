@@ -66,6 +66,7 @@ public class Column {
 					|| JPADotNames.ORDER_COLUMN.equals( name )
 					|| HibernateDotNames.INDEX_COLUMN.equals( name )
 					|| JPADotNames.PRIMARY_KEY_JOIN_COLUMN.equals( name )
+					|| JPADotNames.MAP_KEY_COLUMN.equals( name )
 			) ) {
 				throw new AssertionFailure( "A @Column or @JoinColumn annotation needs to be passed to the constructor" );
 

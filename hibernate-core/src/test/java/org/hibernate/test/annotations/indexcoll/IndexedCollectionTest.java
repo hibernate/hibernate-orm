@@ -53,6 +53,7 @@ import org.junit.Test;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel( message = "@MapKeyJoinColumns not supported yet." )
 public class IndexedCollectionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel

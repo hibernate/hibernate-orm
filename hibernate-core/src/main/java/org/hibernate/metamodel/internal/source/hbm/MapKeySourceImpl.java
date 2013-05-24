@@ -29,6 +29,7 @@ import java.util.Map;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
@@ -182,6 +183,11 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
 		return nature;
+	}
+
+	@Override
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

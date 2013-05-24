@@ -2009,7 +2009,7 @@ public class Binder {
 
 	private void bindBasicCollectionIndex(
 			final IndexedPluralAttributeBinding attributeBinding,
-			final BasicPluralAttributeIndexSource attributeSource,
+			final BasicPluralAttributeIndexSource indexSource,
 			final String defaultIndexJavaTypeName) {
 		final BasicPluralAttributeIndexBinding indexBinding =
 				(BasicPluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding();
@@ -2017,9 +2017,10 @@ public class Binder {
 		indexBinding.setRelationalValueBindings(
 				bindValues(
 						attributeBinding.getContainer(),
-						attributeSource,
+						indexSource,
 						attributeBinding.getAttribute(),
 						attributeBinding.getPluralAttributeKeyBinding().getCollectionTable(),
+						indexSource.getDefaultNamingStrategies(),
 						attributeBinding.getPluralAttributeElementBinding()
 								.getNature() != PluralAttributeElementBinding.Nature.ONE_TO_MANY
 				)
@@ -2028,7 +2029,7 @@ public class Binder {
 
 		typeHelper.bindHibernateTypeDescriptor(
 				indexBinding.getHibernateTypeDescriptor(),
-				attributeSource.explicitHibernateTypeSource(),
+				indexSource.explicitHibernateTypeSource(),
 				defaultIndexJavaTypeName
 		);
 		typeHelper.bindJdbcDataType(
@@ -2908,13 +2909,25 @@ public class Binder {
 
 		}
 		else {
-			final String name = defaultNamingStrategyList.get( 0 ).defaultName();
-			for ( final RelationalValueSource valueSource : valueSourceContainer.relationalValueSources() ) {
+			for ( int i = 0 ; i <  valueSourceContainer.relationalValueSources().size(); i++ ) {
+				final RelationalValueSource valueSource = valueSourceContainer.relationalValueSources().get( i );
 				final TableSpecification table =
 						valueSource.getContainingTableName() == null
 								? defaultTable
 								: attributeBindingContainer.seekEntityBinding()
 								.locateTable( valueSource.getContainingTableName() );
+				final String name;
+				if ( ColumnSource.class.isInstance( valueSource ) ) {
+					ColumnSource columnSource = (ColumnSource) valueSource;
+					// Use default if a name is not provided.
+					name = StringHelper.isNotEmpty( columnSource.getName() ) ?
+							columnSource.getName() :
+							defaultNamingStrategyList.get( i ).defaultName();
+				}
+				else {
+					// name should be null for derived values.
+					name = null;
+				}
 				if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 					final ColumnSource columnSource = (ColumnSource) valueSource;
 					Column column = createColumn(

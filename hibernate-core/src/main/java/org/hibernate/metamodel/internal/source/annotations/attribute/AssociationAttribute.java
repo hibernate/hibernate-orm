@@ -74,6 +74,7 @@ public class AssociationAttribute extends MappedAttribute {
 
 	private final boolean ignoreNotFound;
 	private final String referencedEntityType;
+	private final Class<?> referencedAttributeType;
 	private final String mappedBy;
 	private final Set<CascadeType> cascadeTypes;
 	private final Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes;
@@ -146,6 +147,7 @@ public class AssociationAttribute extends MappedAttribute {
 
 		// using jandex we don't really care which exact type of annotation we are dealing with
 		this.referencedEntityType = determineReferencedEntityType( associationAnnotation, referencedAttributeType );
+		this.referencedAttributeType = referencedAttributeType;
 		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
 		this.isOptional = determineOptionality( associationAnnotation );
 		this.isLazy = determineIsLazy( associationAnnotation );
@@ -172,6 +174,10 @@ public class AssociationAttribute extends MappedAttribute {
 
 	public String getReferencedEntityType() {
 		return referencedEntityType;
+	}
+
+	public Class<?> getReferencedAttributeType() {
+		return referencedAttributeType;
 	}
 
 	public String getMappedBy() {

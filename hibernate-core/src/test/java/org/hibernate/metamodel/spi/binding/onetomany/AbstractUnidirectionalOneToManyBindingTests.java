@@ -48,6 +48,7 @@ import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;

@@ -37,7 +37,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class ArrayTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToMany() throws Exception {

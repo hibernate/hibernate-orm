@@ -31,6 +31,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbCompositeIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbCompositeMapKeyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -87,6 +88,11 @@ public class CompositePluralAttributeIndexSourceImpl
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
 		return PluralAttributeIndexBinding.Nature.AGGREGATE;
+	}
+
+	@Override
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

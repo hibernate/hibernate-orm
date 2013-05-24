@@ -25,9 +25,18 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.EnumSet;
 
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.JandexAntTask;
+
+import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
@@ -44,7 +53,8 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 			MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC,
 			MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE);
 
-	public IndexedPluralAttributeSourceImpl(PluralAssociationAttribute attribute,
+	public IndexedPluralAttributeSourceImpl(
+			final PluralAssociationAttribute attribute,
 			ConfiguredClass entityClass ) {
 		super( attribute, entityClass );
 		if ( !VALID_NATURES.contains( attribute.getNature() ) ) {
@@ -53,12 +63,70 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 					attribute.getContext().getOrigin()
 			);
 		}
+		// TODO: add checks for inconsistent annotations
 		if ( attribute.isSequentiallyIndexed() ) {
-			indexSource = new SequentialPluralAttributeIndexSourceImpl( this, attribute );
+			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
+				@Override
+				public String defaultName() {
+					return attribute.getName() + "_ORDER";
+				}
+			};
+			indexSource = new SequentialPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY ) ) {
+			// basic
+			throw new NotYetImplementedException( "@MapKey is not supported yet." );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_COLUMN ) ) {
+			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
+				@Override
+				public String defaultName() {
+					return attribute.getName() + "_KEY";
+				}
+			};
+			indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_ENUMERATED ) ) {
+			// basic
+			throw new NotYetImplementedException( "@MapKeyEnumerated is not supported yet." );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_TEMPORAL ) ) {
+			// basic
+			throw new NotYetImplementedException( "@MapKeyTemporal is not supported yet." );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_CLASS ) ) {
+			// can be anything
+			throw new NotYetImplementedException( "@MapKeyClass is not supported yet." );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_JOIN_COLUMN ) ) {
+			// association
+			throw new NotYetImplementedException( "@MapKeyJoinColumn is not supported yet." );
+		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_JOIN_COLUMNS ) ) {
+			// association
+			throw new NotYetImplementedException( "@MapKeyJoinColumns is not supported yet." );
+		}
+		else if ( String.class.equals( attribute.getIndexType() ) || attribute.getIndexType().isPrimitive() ) {
+			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
+				@Override
+				public String defaultName() {
+					return attribute.getName() + "_KEY";
+				}
+			};
+			indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );
 		}
 		else {
-			// for now assume the index is basic type
-			indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute );
+			// either @Embeddable or entity type.
+
+			// composite:
+			// index is @Embeddable
+			// @MapKeyClass is not basic, not entity type
+
+			// association:
+			// MapKeyJoinColumn, MapKeyJoinColumns are present
+			// If the primary key of the referenced entity is not a simple primary key, must have MapKeyJoinColumns.
+			//indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute );
+			throw new NotYetImplementedException( "Embeddable and entity keys are not supported yet." );
 		}
 	}
 

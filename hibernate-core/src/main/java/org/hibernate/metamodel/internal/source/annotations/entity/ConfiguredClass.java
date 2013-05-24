@@ -451,7 +451,10 @@ public class ConfiguredClass {
 		);
 		Class<?> attributeType = resolvedMember.getType().getErasedType();
 		Class<?> referencedCollectionType = resolveCollectionValuedReferenceType( resolvedMember, annotations );
-
+		Class<?> indexType = null;
+		if(Map.class.isAssignableFrom( attributeType )){
+			indexType = resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();
+		}
 		MappedAttribute.Nature attributeNature = determineAttributeNature( 
 				annotations, attributeType, referencedCollectionType );
 		String accessTypeString = accessType.toString().toLowerCase();
@@ -536,6 +539,7 @@ public class ConfiguredClass {
 						classInfo,
 						attributeName,
 						resolvedMember.getType().getErasedType(),
+						indexType,
 						referencedCollectionType,
 						attributeNature,
 						accessTypeString,

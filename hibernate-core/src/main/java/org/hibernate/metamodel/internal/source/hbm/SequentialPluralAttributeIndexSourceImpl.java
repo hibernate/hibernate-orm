@@ -31,6 +31,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -155,6 +156,11 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
 		return PluralAttributeIndexBinding.Nature.BASIC;
+	}
+
+	@Override
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

@@ -43,6 +43,12 @@ import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SortType;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.EnumeratedTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.LobTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.TemporalTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -60,6 +66,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
  * @author Strong Liu
  */
 public class PluralAssociationAttribute extends AssociationAttribute {
+	private final Class<?> indexType;
 	private final String whereClause;
 	private final String orderBy;
 	private final boolean sorted;
@@ -93,6 +100,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			ClassInfo entityClassInfo,
 			String name,
 			Class<?> attributeType,
+			Class<?> indexType,
 			Class<?> referencedAttributeType,
 			Nature attributeNature,
 			String accessType,
@@ -102,6 +110,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				entityClassInfo,
 				name,
 				attributeType,
+				indexType,
 				referencedAttributeType,
 				attributeNature,
 				accessType,
@@ -112,6 +121,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 	public PluralAttributeSource.Nature getPluralAttributeNature() {
 		return pluralAttributeNature;
+	}
+
+	public Class<?> getIndexType() {
+		return indexType;
 	}
 
 	public String getWhereClause() {
@@ -185,6 +198,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			final ClassInfo entityClassInfo,
 			final String name,
 			final Class<?> attributeType,
+			final Class<?> indexType,
 			final Class<?> referencedAttributeType,
 			final Nature associationType,
 			final String accessType,
@@ -192,6 +206,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			final EntityBindingContext context) {
 		super( entityClassInfo, name, attributeType, referencedAttributeType, associationType, accessType, annotations, context );
 		this.entityClassInfo = entityClassInfo;
+		this.indexType = indexType;
 		this.whereClause = determineWereClause();
 		this.orderBy = determineOrderBy();
 
@@ -525,6 +540,19 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	public boolean isMutable() {
 		return mutable;
 	}
+
+	/*
+	@Override
+	public AttributeTypeResolver getHibernateTypeResolver() {
+		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver( this );
+		resolver.addHibernateTypeResolver( new AttributeTypeResolverImpl( this ) );
+		// TODO: make it work for temporal elements
+		//resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+		return resolver;
+	}
+	*/
 }
 
 

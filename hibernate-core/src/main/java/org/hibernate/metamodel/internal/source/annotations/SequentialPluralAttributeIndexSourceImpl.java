@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -38,8 +39,11 @@ public class SequentialPluralAttributeIndexSourceImpl
 		extends BasicPluralAttributeIndexSourceImpl
 		implements SequentialPluralAttributeIndexSource {
 	private final int base;
-	public SequentialPluralAttributeIndexSourceImpl(IndexedPluralAttributeSourceImpl indexedPluralAttributeSource, PluralAssociationAttribute attribute) {
-		super( indexedPluralAttributeSource, attribute );
+	public SequentialPluralAttributeIndexSourceImpl(
+			IndexedPluralAttributeSourceImpl indexedPluralAttributeSource,
+			PluralAssociationAttribute attribute,
+			Binder.DefaultNamingStrategy defaultNamingStrategy) {
+		super( indexedPluralAttributeSource, attribute, defaultNamingStrategy );
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				attribute.annotations(),
 				HibernateDotNames.INDEX_COLUMN

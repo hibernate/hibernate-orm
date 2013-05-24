@@ -24,11 +24,13 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -46,7 +48,11 @@ public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttribute
 	private final PluralAssociationAttribute attribute;
 	private final IndexedPluralAttributeSourceImpl indexedPluralAttributeSource;
 	private final List<RelationalValueSource> relationalValueSources =  new ArrayList<RelationalValueSource>( 1 );
-	public BasicPluralAttributeIndexSourceImpl(IndexedPluralAttributeSourceImpl indexedPluralAttributeSource, PluralAssociationAttribute attribute) {
+	private final Binder.DefaultNamingStrategy defaultNamingStrategy;
+	public BasicPluralAttributeIndexSourceImpl(
+			IndexedPluralAttributeSourceImpl indexedPluralAttributeSource,
+			PluralAssociationAttribute attribute,
+			Binder.DefaultNamingStrategy defaultNamingStrategy) {
 		this.attribute = attribute;
 		this.indexedPluralAttributeSource = indexedPluralAttributeSource;
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
@@ -59,14 +65,25 @@ public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttribute
 					JPADotNames.ORDER_COLUMN
 			);
 		}
+		if ( columnAnnotation == null) {
+			columnAnnotation = JandexHelper.getSingleAnnotation(
+					attribute.annotations(),
+					JPADotNames.MAP_KEY_COLUMN
+			);
+		}
 		Column indexColumn = new Column( columnAnnotation );
 		relationalValueSources.add( new ColumnValuesSourceImpl( indexColumn ) );
-
+		this.defaultNamingStrategy = defaultNamingStrategy;
 	}
 
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
 		return PluralAttributeIndexBinding.Nature.BASIC;
+	}
+
+	@Override
+	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
+		return Collections.singletonList( defaultNamingStrategy );
 	}
 
 	@Override

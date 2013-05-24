@@ -30,25 +30,26 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.jboss.logging.Logger;
 
 /**
- * SqlScriptInput implementation for File references.  A reader is opened here and then explicitly closed on
+ * SqlScriptInput implementation for URL references.  A reader is opened here and then explicitly closed on
  * {@link #release}.
  *
- * @author Steve Ebersole
+ * @author Christian Beikov
  */
-class SqlScriptFileInput extends SqlScriptReaderInput implements SqlScriptInput {
-	private static final Logger log = Logger.getLogger( SqlScriptFileInput.class );
+class SqlScriptUrlInput extends SqlScriptReaderInput implements SqlScriptInput {
+	private static final Logger log = Logger.getLogger( SqlScriptUrlInput.class );
 
-	public SqlScriptFileInput(String fileUrl) {
-		super( toFileReader( fileUrl ) );
+	public SqlScriptUrlInput(String fileUrl) {
+		super( toReader( fileUrl ) );
 	}
 	
-	public SqlScriptFileInput(URL fileUrl) {
-		super( toFileReader( fileUrl ) );
+	public SqlScriptUrlInput(URL fileUrl) {
+		super( toReader( fileUrl ) );
 	}
 
 	@Override
@@ -61,35 +62,19 @@ class SqlScriptFileInput extends SqlScriptReaderInput implements SqlScriptInput 
 		}
 	}
 
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	private static Reader toFileReader(String fileUrl) {
-		final File file = new File( fileUrl );
-		if ( ! file.exists() ) {
-			log.warnf( "Specified schema generation script file [%s] did not exist for reading", fileUrl );
-			return new Reader() {
-				@Override
-				public int read(char[] cbuf, int off, int len) throws IOException {
-					return -1;
-				}
-
-				@Override
-				public void close() throws IOException {
-				}
-			};
-		}
-
+	private static Reader toReader(String fileUrl) {
 		try {
-			return new FileReader( file );
+			return toReader( new URL( fileUrl ) );
 		}
-		catch (IOException e) {
+		catch ( MalformedURLException e ) {
 			throw new PersistenceException(
-					"Unable to open specified script target file [" + fileUrl + "] for reading",
+					"Invalid url specified for script target file [" + fileUrl + "] for reading",
 					e
 			);
 		}
 	}
 	
-	private static Reader toFileReader(URL fileUrl) {
+	private static Reader toReader(URL fileUrl) {
 		try {
 			return new InputStreamReader(fileUrl.openStream());
 		}

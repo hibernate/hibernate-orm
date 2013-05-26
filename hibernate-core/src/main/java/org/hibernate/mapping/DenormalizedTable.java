@@ -49,7 +49,7 @@ public class DenormalizedTable extends Table {
 		while ( iter.hasNext() ) {
 			ForeignKey fk = (ForeignKey) iter.next();
 			createForeignKey( 
-					fk.getName() + Integer.toHexString( getName().hashCode() ), 
+					Constraint.generateName( fk.generatedConstraintNamePrefix(), this, fk.getColumns() ),
 					fk.getColumns(), 
 					fk.getReferencedEntityName() 
 				);

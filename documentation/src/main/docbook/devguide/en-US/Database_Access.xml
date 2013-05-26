@@ -522,9 +522,8 @@
             The <option>not-null</option> and <option>UNIQUE</option> attributes generate constraints on table columns.
           </para>
           <para>
-            The unique-key attribute groups columns in a single, unique key constraint. Currently, the specified value
-            of the unique-key attribute does not name the constraint in the generated DDL. It only groups the columns in
-            the mapping file.
+            The unique-key attribute groups columns in a single, unique key constraint. The attribute overrides
+            the name of any generated unique key constraint.
           </para>
           <programlisting language="XML" role="XML"><xi:include href="extras/notnull-unique.xml" xmlns:xi="http://www.w3.org/2001/XInclude" parse="text" /></programlisting>
         </step>

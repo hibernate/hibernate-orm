@@ -552,7 +552,7 @@ public class EntityMetamodel implements Serializable {
 			             ReflectHelper.isAbstractClass( mappedClass );
 		}
 		else {
-			isAbstract = entityBinding.isAbstract().booleanValue();
+			isAbstract = entityBinding.isAbstract();
 			if ( !isAbstract && hasPojoRepresentation &&
 					ReflectHelper.isAbstractClass( mappedClass ) ) {
 				LOG.entityMappedAsNonAbstract(name);

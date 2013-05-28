@@ -28,14 +28,17 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
@@ -314,7 +317,14 @@ public class EntityIdentifier {
 							identifierGeneratorFactory.getDialect()
 					)
 			);
-			params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
+			if ( entityBinding.getHierarchyDetails().getInheritanceType() != InheritanceType.TABLE_PER_CLASS ) {
+				params.setProperty( PersistentIdentifierGenerator.TABLES, tableName );
+			} else {
+				params.setProperty(
+						PersistentIdentifierGenerator.TABLES,
+						resolveTableNames( identifierGeneratorFactory.getDialect(), entityBinding )
+				);
+			}
 			params.putAll( getIdGenerator().getParameters() );
 			return identifierGeneratorFactory.createIdentifierGenerator(
 					getIdGenerator().getStrategy(),
@@ -322,6 +332,34 @@ public class EntityIdentifier {
 					params
 			);
 		}
+	}
+
+	private String resolveTableNames(Dialect dialect, EntityBinding entityBinding) {
+		EntityBinding[] ebs = entityBinding.getPostOrderSubEntityBindingClosure();
+		StringBuilder tableNames = new StringBuilder();
+		String tbName = resolveTableName( dialect, entityBinding );
+		if( StringHelper.isNotEmpty( tbName )){
+			tableNames.append( tbName );
+		}
+
+		for ( EntityBinding eb : ebs ) {
+			tbName = resolveTableName( dialect, eb );
+			if(StringHelper.isNotEmpty( tbName )){
+				tableNames.append( ", " ).append( tbName );
+			}
+		}
+		return tableNames.toString();
+	}
+
+	private String resolveTableName(Dialect dialect, EntityBinding entityBinding) {
+		TableSpecification tableSpecification = entityBinding.getPrimaryTable();
+		if ( tableSpecification instanceof Table ) {
+			Table tb = (Table) tableSpecification;
+			if ( tb.isPhysicalTable() ) {
+				return tb.getTableName().toText( dialect );
+			}
+		}
+		return null;
 	}
 
 	private class AggregatedComponentIdentifierBindingImpl extends EntityIdentifierBinding {

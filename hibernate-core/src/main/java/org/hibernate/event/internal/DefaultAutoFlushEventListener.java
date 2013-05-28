@@ -78,9 +78,8 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	}
 
 	private boolean flushIsReallyNeeded(AutoFlushEvent event, final EventSource source) {
-		return source.getActionQueue()
-				.areTablesToBeUpdated( event.getQuerySpaces() ) ||
-						source.getFlushMode()==FlushMode.ALWAYS;
+		return source.getFlushMode()==FlushMode.ALWAYS || source.getActionQueue()
+				.areTablesToBeUpdated( event.getQuerySpaces() );
 	}
 
 	private boolean flushMightBeNeeded(final EventSource source) {

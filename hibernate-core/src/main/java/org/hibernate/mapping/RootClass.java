@@ -343,7 +343,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 		Iterator iter = getSubclassClosureIterator();
 		while ( iter.hasNext() ) {
 			PersistentClass clazz = (PersistentClass) iter.next();
-			if ( clazz.isAbstract() == null || !clazz.isAbstract().booleanValue() ) tables.add( clazz.getIdentityTable() );
+			if ( clazz.isAbstract() == null || !clazz.isAbstract() ) tables.add( clazz.getIdentityTable() );
 		}
 		return tables;
 	}

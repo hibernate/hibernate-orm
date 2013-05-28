@@ -320,7 +320,22 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		HashSet<String> subclassTables = new HashSet<String>();
 		final EntityBinding[] subEntityBindings = entityBinding.getPreOrderSubEntityBindingClosure();
-		for ( EntityBinding subEntityBinding : entityBinding.getPreOrderSubEntityBindingClosure() ) {
+		/*
+		 TODO: here we actually need all entitybindings in the hierarchy, for example:
+		 			A
+		 		  /   \
+		 		 B     C
+		 		/      \
+		 	  D	        E
+
+		if the current entity is A, then here we need to process all A,B,C,D,E
+		but if the current entity D, then here we need D,B,A
+		if the current entity is B, then still A,B,D
+		 */
+
+
+		EntityBinding[] ebs = ArrayHelper.join( entityBinding.getEntityBindingClosure(), subEntityBindings );
+		for ( EntityBinding subEntityBinding : ebs ) {
 			subclassTables.add( subEntityBinding.getPrimaryTable().getQualifiedName( factory.getDialect() ) );
 		}
 		subclassSpaces = ArrayHelper.toStringArray( subclassTables );
@@ -335,7 +350,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 				tableNames.add( tableName );
 				keyColumns.add( getIdentifierColumnNames() );
 			}
-			EntityBinding[] ebs = ArrayHelper.join( new EntityBinding[]{entityBinding}, subEntityBindings );
+			ebs = ArrayHelper.join( new EntityBinding[]{entityBinding}, subEntityBindings );
 			for(final EntityBinding eb : ebs){
 				TableSpecification tab = eb.getPrimaryTable();
 				if ( isNotAbstractUnionTable( eb ) ) {
@@ -520,10 +535,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		visitSubEntityBindings( rootEntityBinding, callback );
 	}
 	private void visitSubEntityBindings(EntityBinding superEntityBinding, Callback callback){
+		callback.execute( superEntityBinding );
 		Iterable<EntityBinding> entityBindings= superEntityBinding.getDirectSubEntityBindings();
-		for(EntityBinding entityBinding : entityBindings){
-			callback.execute( entityBinding );
-		}
+//		for(EntityBinding entityBinding : entityBindings){
+//			callback.execute( entityBinding );
+//		}
 		for(EntityBinding entityBinding : entityBindings){
 			visitSubEntityBindings( entityBinding, callback );
 		}
@@ -552,7 +568,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 //			}
 //		}
 
-		visitEntityHierarchy(
+		visitSubEntityBindings(
 				entityBinding, new Callback() {
 			@Override
 			public void execute(EntityBinding eb) {
@@ -572,7 +588,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		final StringBuilder buf = new StringBuilder()
 				.append("( ");
 
-		visitEntityHierarchy( entityBinding, new Callback() {
+		visitSubEntityBindings( entityBinding, new Callback() {
 			@Override
 			public void execute(EntityBinding eb) {
 				TableSpecification table = eb.getPrimaryTable();

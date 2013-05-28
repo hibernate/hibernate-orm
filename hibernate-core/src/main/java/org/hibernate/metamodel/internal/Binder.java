@@ -259,6 +259,11 @@ public class Binder {
 		//       then applyToAllEntityHierarchies(...) can replace the following method.
 		bindEntityHierarchiesExcludingNonIdAttributeBindings();
 
+		// Bind identifier generator for root entitybinding, we have to wait for all entiybindings created,
+		// since for union-subclass, it may change the root entitybinding in case of root entity is abstract
+		// so the root table is not physical
+		applyToAllEntityHierarchies( bindIdentifierGeneratorExecutor() );
+
 		// Resolve associations:
 		// - determine if JPA @OneToOne translates to Hibernate's one-to-one or unique many-to-one;
 		// - determine if JPA @OneToMany translates to Hibernate's one-to-many or unique many-to-many.
@@ -292,6 +297,18 @@ public class Binder {
 		//       (and no formulas) contained in a defined unique key that only contains these columns.
 		//       if so, mark the many-to-one as a logical one-to-one.
 		// TODO: when does this have to be done.
+	}
+
+	private LocalBindingContextExecutor bindIdentifierGeneratorExecutor() {
+		return new LocalBindingContextExecutor() {
+			@Override
+			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
+				EntityBinding entityBinding = bindingContextContext.getEntityBinding();
+				if ( entityBinding.getSuperEntityBinding() == null ) {
+					bindIdentifierGenerator( entityBinding );
+				}
+			}
+		};
 	}
 
 	private InheritanceType inheritanceType() {
@@ -328,7 +345,6 @@ public class Binder {
 				bindSecondaryTables( rootEntityBinding, rootEntitySource );
 				bindVersion( rootEntityBinding, rootEntitySource.getVersioningAttributeSource() );
 				bindDiscriminator( rootEntityBinding, rootEntitySource );
-				bindIdentifierGenerator( rootEntityBinding );
 				bindMultiTenancy( rootEntityBinding, rootEntitySource );
 				rootEntityBinding.getHierarchyDetails().setCaching( rootEntitySource.getCaching() );
 				rootEntityBinding.getHierarchyDetails().setNaturalIdCaching( rootEntitySource.getNaturalIdCaching() );

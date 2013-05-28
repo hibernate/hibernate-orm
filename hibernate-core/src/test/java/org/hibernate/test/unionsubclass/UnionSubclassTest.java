@@ -34,7 +34,6 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -46,7 +45,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
+@SuppressWarnings("ForLoopReplaceableByForEach")
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -114,7 +113,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			assertTrue( Hibernate.isInitialized( h.getLocation().getBeings() ) );
 			s.delete(h);
 		}
-		s.delete( s.get( Location.class, new Long(mel.getId()) ) );
+		s.delete( s.get( Location.class, mel.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -186,8 +185,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 		x23y4 = (Alien) s.createCriteria(Alien.class).addOrder( Order.asc("identity") ).list().get(0);
 		s.delete( x23y4.getHive() );
-		s.delete( s.get(Location.class, new Long( mel.getId() ) ) );
-		s.delete( s.get(Location.class, new Long( mars.getId() ) ) );
+		s.delete( s.get(Location.class, mel.getId() ) );
+		s.delete( s.get(Location.class, mars.getId() ) );
 		assertTrue( s.createQuery("from Being").list().isEmpty() );
 		t.commit();
 		s.close();
@@ -274,15 +273,15 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 		s.clear();
 
-		thing = (Thing) s.get( Thing.class, new Long( thing.getId() ) );
+		thing = (Thing) s.get( Thing.class, thing.getId() );
 		assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "x23y4$$hu%3" );
 
 		s.delete(thing);
 		x23y4 = (Alien) s.createCriteria(Alien.class).uniqueResult();
 		s.delete( x23y4.getHive() );
-		s.delete( s.get(Location.class, new Long( mel.getId() ) ) );
-		s.delete( s.get(Location.class, new Long( mars.getId() ) ) );
+		s.delete( s.get(Location.class, mel.getId() ) );
+		s.delete( s.get(Location.class, mars.getId() ) );
 		assertTrue( s.createQuery("from Being").list().isEmpty() );
 		t.commit();
 		s.close();
@@ -317,11 +316,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		x23y4.setHive(hive);
 		s.persist(hive);
 
-		assertEquals( s.createQuery("from Being").list().size(), 2 );
-		assertEquals( s.createQuery("from Being b where b.class = Alien").list().size(), 1 );
-		assertEquals( s.createQuery("from Being b where type(b) = :what").setParameter("what", Alien.class).list().size(), 1 );
-		assertEquals( s.createQuery("from Being b where type(b) in :what").setParameterList("what", new Class[] { Alien.class, Human.class }).list().size(), 2 );
-		assertEquals( s.createQuery("from Alien").list().size(), 1 );
+		assertEquals( 2, s.createQuery("from Being").list().size() );
+		assertEquals( 1, s.createQuery("from Being b where b.class = Alien").list().size() );
+		assertEquals( 1, s.createQuery("from Being b where type(b) = :what").setParameter("what", Alien.class).list().size() );
+		assertEquals( 2, s.createQuery("from Being b where type(b) in :what").setParameterList("what", new Class[] { Alien.class, Human.class }).list().size() );
+		assertEquals( 1, s.createQuery("from Alien").list().size() );
 		s.clear();
 
 		List beings = s.createQuery("from Being b left join fetch b.location").list();
@@ -332,7 +331,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( b.getIdentity() );
 			assertNotNull( b.getSpecies() );
 		}
-		assertEquals( beings.size(), 2 );
+		assertEquals( 2, beings.size() );
 		s.clear();
 
 		beings = s.createQuery("from Being").list();
@@ -343,7 +342,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			assertNotNull( b.getIdentity() );
 			assertNotNull( b.getSpecies() );
 		}
-		assertEquals( beings.size(), 2 );
+		assertEquals( 2, beings.size() );
 		s.clear();
 
 		List locations = s.createQuery("from Location").list();
@@ -357,8 +356,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 				assertSame( ( (Being) iter2.next() ).getLocation(), l );
 			}
 		}
-		assertEquals(count, 2);
-		assertEquals( locations.size(), 3 );
+		assertEquals(2, count);
+		assertEquals( 3, locations.size() );
 		s.clear();
 
 		locations = s.createQuery("from Location loc left join fetch loc.beings").list();
@@ -376,11 +375,11 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		assertEquals( locations.size(), 3 );
 		s.clear();
 
-		gavin = (Human) s.get( Human.class, new Long( gavin.getId() ) );
-		atl = (Location) s.get( Location.class, new Long( atl.getId() ) );
+		gavin = (Human) s.get( Human.class, gavin.getId() );
+		atl = (Location) s.get( Location.class, atl.getId() );
 
  		atl.addBeing(gavin);
-		assertEquals( s.createQuery("from Human h where h.location.name like '%GA'").list().size(), 1 );
+		assertEquals( 1, s.createQuery("from Human h where h.location.name like '%GA'").list().size() );
 		s.delete(gavin);
 		x23y4 = (Alien) s.createCriteria(Alien.class).uniqueResult();
 		s.delete( x23y4.getHive() );

@@ -43,6 +43,15 @@ public class InvalidMappingException extends org.hibernate.InvalidMappingExcepti
 		this.origin = origin;
 	}
 
+	public InvalidMappingException(Origin origin, Throwable e) {
+		super(
+				String.format( "Could not parse mapping document: %s (%s)", origin.getName(), origin.getType() ),
+				origin,
+				e
+		);
+		this.origin = origin;
+	}
+
 	public Origin getOrigin() {
 		return origin;
 	}

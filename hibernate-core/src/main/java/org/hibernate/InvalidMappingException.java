@@ -124,7 +124,7 @@ public class InvalidMappingException extends MappingException {
 	 * @param origin The origin of the invalid mapping document
 	 * @param cause The underlying cause
 	 */
-	public InvalidMappingException(String customMessage, Origin origin, Exception cause) {
+	public InvalidMappingException(String customMessage, Origin origin, Throwable cause) {
 		this( customMessage, origin.getType().name(), origin.getName(), cause );
 	}
 

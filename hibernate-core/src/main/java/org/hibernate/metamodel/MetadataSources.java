@@ -255,7 +255,7 @@ public class MetadataSources {
 			return jaxbRoot;
 		}
 		catch ( Exception e ) {
-			throw new InvalidMappingException( origin );
+			throw new InvalidMappingException( origin, e );
 		}
 		finally {
 			if ( close ) {

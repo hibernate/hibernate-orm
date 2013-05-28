@@ -23,37 +23,40 @@ arbitrary number of queries, and import declarations of arbitrary classes.
        -->
     <xs:element name="hibernate-mapping">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <simplify:as-element-property/>
+                    </xs:appinfo>
+                </xs:annotation>
+                <xs:element name="meta" type="meta-element"/>
 
                 <!-- <identifier-generator.../> allows customized short-naming of IdentifierGenerator implementations. -->
                 <xs:element name="identifier-generator"
-                            minOccurs="0"
-                            maxOccurs="unbounded"
                             type="identifier-generator-element"/>
 
                 <!--
                     <typedef.../> allows defining a customized type mapping for a Hibernate type. May
                     contain parameters for parameterizable types.
                 -->
-                <xs:element name="typedef" minOccurs="0" maxOccurs="unbounded" type="typedef-element"/>
+                <xs:element name="typedef"  type="typedef-element"/>
 
                 <!--
                     FILTER-DEF element; top-level filter definition.
                 -->
-                <xs:element name="filter-def" minOccurs="0" maxOccurs="unbounded" type="filter-def-element"/>
+                <xs:element name="filter-def"  type="filter-def-element"/>
 
                 <!--
                     IMPORT element definition; an explicit query language "import"
                 -->
-                <xs:element name="import" minOccurs="0" maxOccurs="unbounded" type="import-element"/>
+                <xs:element name="import"  type="import-element"/>
 
-                <xs:choice minOccurs="0" maxOccurs="unbounded">
-                    <xs:annotation>
-                        <xs:appinfo>
-                            <simplify:as-element-property/>
-                        </xs:appinfo>
-                    </xs:annotation>
+                <!--<xs:choice minOccurs="0" maxOccurs="unbounded">-->
+                    <!--<xs:annotation>-->
+                        <!--<xs:appinfo>-->
+                            <!--<simplify:as-element-property/>-->
+                        <!--</xs:appinfo>-->
+                    <!--</xs:annotation>-->
                     <!--
                         Root entity mapping.  Poorly named as entities do not have to be represented by
                         classes at all.  Mapped entities may be represented via different methodologies
@@ -63,18 +66,19 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                     <xs:element name="subclass" type="subclass-element"/>
                     <xs:element name="joined-subclass" type="joined-subclass-element"/>
                     <xs:element name="union-subclass" type="union-subclass-element"/>
-                </xs:choice>
+                <!--</xs:choice>-->
 
-                <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
-                <xs:choice minOccurs="0" maxOccurs="unbounded">
-                    <xs:annotation>
-                        <xs:appinfo>
-                            <simplify:as-element-property/>
-                        </xs:appinfo>
-                    </xs:annotation>
-                    <xs:group ref="query-or-sql-query"/>
-                </xs:choice>
-                <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
+                <xs:element name="resultset"  type="resultset-element"/>
+                <!--<xs:choice minOccurs="0" maxOccurs="unbounded">-->
+                    <!--<xs:annotation>-->
+                        <!--<xs:appinfo>-->
+                            <!--<simplify:as-element-property/>-->
+                        <!--</xs:appinfo>-->
+                    <!--</xs:annotation>-->
+                    <!--<xs:group ref="query-or-sql-query"/>-->
+                <!--</xs:choice>-->
+                <xs:group ref="query-or-sql-query"/>
+                <xs:element name="fetch-profile"  type="fetch-profile-element"/>
 
                 <!--
                     Element for defining "auxiliary" database objects.  Must be one of two forms:
@@ -88,8 +92,8 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                                     <drop>DROP ....</drop>
                                 </database-object>
                 -->
-                <xs:element name="database-object" minOccurs="0" maxOccurs="unbounded" type="database-object-element"/>
-            </xs:sequence>
+                <xs:element name="database-object"  type="database-object-element"/>
+            </xs:choice>
 
             <xs:attribute name="auto-import" default="true" type="xs:boolean"/>
             <xs:attribute name="catalog" type="xs:string"/>

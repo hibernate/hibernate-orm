@@ -134,7 +134,7 @@ task buildDocumentation(type: Task, dependsOn: [rootProject.project( 'documentat
             ant.symlink(
                     action: 'single',
                     link: "${currentSymLinkContainerDir.absolutePath}/orm",
-                    resource: "${versionedDocumentationDir.absolutePath}"
+                    resource: "../orm/${majorMinorVersion}"
             )
         }
     }

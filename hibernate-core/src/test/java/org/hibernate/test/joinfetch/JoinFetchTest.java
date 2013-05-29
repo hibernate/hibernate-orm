@@ -45,7 +45,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -75,6 +74,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -213,6 +213,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCollectionFilter() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -245,6 +246,7 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testJoinFetchManyToMany() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

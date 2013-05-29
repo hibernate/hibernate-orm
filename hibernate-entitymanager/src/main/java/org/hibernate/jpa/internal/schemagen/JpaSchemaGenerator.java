@@ -24,7 +24,11 @@
 package org.hibernate.jpa.internal.schemagen;
 
 import javax.persistence.PersistenceException;
+import java.io.File;
 import java.io.Reader;
+import java.io.Writer;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -38,6 +42,7 @@ import java.util.List;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
@@ -64,188 +69,328 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 public class JpaSchemaGenerator {
 	private static final Logger log = Logger.getLogger( JpaSchemaGenerator.class );
 
+	private JpaSchemaGenerator() {
+	}
+
 	public static void performGeneration(Configuration hibernateConfiguration, ServiceRegistry serviceRegistry) {
+		new Generation( serviceRegistry ).execute( hibernateConfiguration );
+	}
 
-		// First, determine the actions (if any) to be performed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	/**
+	 * Defines the process of performing a schema generation
+	 */
+	public static class Generation {
+		private final ServiceRegistry serviceRegistry;
+		private final ImportSqlCommandExtractor scriptCommandExtractor;
+		private final ClassLoaderService classLoaderService;
 
-		final SchemaGenAction databaseAction = SchemaGenAction.interpret(
-				hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION )
-		);
-		final SchemaGenAction scriptsAction = SchemaGenAction.interpret(
-				hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_SCRIPTS_ACTION )
-		);
-
-		if ( databaseAction == SchemaGenAction.NONE && scriptsAction == SchemaGenAction.NONE ) {
-			// no actions needed
-			return;
+		/**
+		 * Constructs a generation process
+		 *
+		 * @param serviceRegistry The Hibernate service registry to use
+		 */
+		public Generation(ServiceRegistry serviceRegistry) {
+			this.serviceRegistry = serviceRegistry;
+			this.scriptCommandExtractor = serviceRegistry.getService( ImportSqlCommandExtractor.class );
+			this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		}
 
+		/**
+		 * Perform the generation, as indicated by the settings
+		 *
+		 * @param hibernateConfiguration
+		 */
+		public void execute(Configuration hibernateConfiguration) {
+			// First, determine the actions (if any) to be performed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-		// Figure out the JDBC Connection context, if any ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-		final JdbcConnectionContext jdbcConnectionContext = determineAppropriateJdbcConnectionContext(
-				hibernateConfiguration,
-				serviceRegistry
-		);
-
-		try {
-			final Dialect dialect = determineDialect( jdbcConnectionContext, hibernateConfiguration, serviceRegistry );
-
-
-			// determine sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-			final List<GenerationSource> createSourceList = databaseAction.includesCreate() || scriptsAction.includesCreate()
-					? buildCreateSourceList( hibernateConfiguration, serviceRegistry, dialect )
-					: Collections.<GenerationSource>emptyList();
-
-			final List<GenerationSource> dropSourceList = databaseAction.includesDrop() || scriptsAction.includesDrop()
-					? buildDropSourceList( hibernateConfiguration, serviceRegistry, dialect )
-					: Collections.<GenerationSource>emptyList();
-
-
-			// determine targets ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-			final GenerationTarget databaseTarget = new GenerationTargetToDatabase( jdbcConnectionContext, databaseAction );
-
-			final Object createScriptTargetSetting = hibernateConfiguration.getProperties().get(
-					AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET
+			final SchemaGenAction databaseAction = SchemaGenAction.interpret(
+					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DATABASE_ACTION )
 			);
-			final Object dropScriptTargetSetting = hibernateConfiguration.getProperties().get(
-					AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET
+			final SchemaGenAction scriptsAction = SchemaGenAction.interpret(
+					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_SCRIPTS_ACTION )
 			);
-			final GenerationTarget scriptsTarget = new GenerationTargetToScript( createScriptTargetSetting, dropScriptTargetSetting, scriptsAction );
 
-			final List<GenerationTarget> targets = Arrays.asList( databaseTarget, scriptsTarget );
-
-
-			// See if native Hibernate schema generation has also been requested and warn the user if so...
-
-			final String hbm2ddl = hibernateConfiguration.getProperty( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO );
-			if ( StringHelper.isNotEmpty( hbm2ddl ) ) {
-				log.warnf(
-						"Hibernate hbm2ddl-auto setting was specified [%s] in combination with JPA schema-generation; " +
-								"combination will likely cause trouble",
-						hbm2ddl
-				);
+			if ( databaseAction == SchemaGenAction.NONE && scriptsAction == SchemaGenAction.NONE ) {
+				// no actions needed
+				return;
 			}
 
 
-			// finally, do the generation
+			// Figure out the JDBC Connection context, if any ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			final JdbcConnectionContext jdbcConnectionContext = determineAppropriateJdbcConnectionContext(
+					hibernateConfiguration,
+					serviceRegistry
+			);
 
 			try {
-				doGeneration( createSourceList, dropSourceList, targets );
+				final Dialect dialect = determineDialect( jdbcConnectionContext, hibernateConfiguration, serviceRegistry );
+
+
+				// determine sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				final List<GenerationSource> createSourceList = databaseAction.includesCreate() || scriptsAction.includesCreate()
+						? buildCreateSourceList( hibernateConfiguration, dialect )
+						: Collections.<GenerationSource>emptyList();
+
+				final List<GenerationSource> dropSourceList = databaseAction.includesDrop() || scriptsAction.includesDrop()
+						? buildDropSourceList( hibernateConfiguration, dialect )
+						: Collections.<GenerationSource>emptyList();
+
+
+				// determine targets ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+				final GenerationTarget databaseTarget = new GenerationTargetToDatabase( jdbcConnectionContext, databaseAction );
+
+				final Object createScriptTargetSetting = hibernateConfiguration.getProperties().get(
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET
+				);
+				final Object dropScriptTargetSetting = hibernateConfiguration.getProperties().get(
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET
+				);
+				final GenerationTarget scriptsTarget = new GenerationTargetToScript(
+						interpretScriptTargetSetting(
+								createScriptTargetSetting,
+								scriptsAction.includesCreate(),
+								AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET
+						),
+						interpretScriptTargetSetting(
+								dropScriptTargetSetting,
+								scriptsAction.includesDrop(),
+								AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET
+						),
+						scriptsAction
+				);
+
+				final List<GenerationTarget> targets = Arrays.asList( databaseTarget, scriptsTarget );
+
+
+				// See if native Hibernate schema generation has also been requested and warn the user if so...
+
+				final String hbm2ddl = hibernateConfiguration.getProperty( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO );
+				if ( StringHelper.isNotEmpty( hbm2ddl ) ) {
+					log.warnf(
+							"Hibernate hbm2ddl-auto setting was specified [%s] in combination with JPA schema-generation; " +
+									"combination will likely cause trouble",
+							hbm2ddl
+					);
+				}
+
+
+				// finally, do the generation
+
+				try {
+					doGeneration( createSourceList, dropSourceList, targets );
+				}
+				finally {
+					releaseTargets( targets );
+					releaseSources( createSourceList );
+					releaseSources( dropSourceList );
+				}
 			}
 			finally {
-				releaseTargets( targets );
-				releaseSources( createSourceList );
-				releaseSources( dropSourceList );
+				releaseJdbcConnectionContext( jdbcConnectionContext );
 			}
 		}
-		finally {
-			releaseJdbcConnectionContext( jdbcConnectionContext );
-		}
-	}
 
-	private static List<GenerationSource> buildCreateSourceList(
-			Configuration hibernateConfiguration,
-			ServiceRegistry serviceRegistry,
-			Dialect dialect) {
-		final List<GenerationSource> generationSourceList = new ArrayList<GenerationSource>();
-
-		final boolean createSchemas = ConfigurationHelper.getBoolean(
-				AvailableSettings.SCHEMA_GEN_CREATE_SCHEMAS,
-				hibernateConfiguration.getProperties(),
-				false
-		);
-		if ( createSchemas ) {
-			generationSourceList.add( new CreateSchemaCommandSource( hibernateConfiguration, dialect ) );
-		}
-
-		SchemaGenSource sourceType = SchemaGenSource.interpret(
-				hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_CREATE_SOURCE )
-		);
-
-		final Object createScriptSourceSetting = hibernateConfiguration.getProperties().get(
-				AvailableSettings.SCHEMA_GEN_CREATE_SCRIPT_SOURCE
-		);
-
-		if ( sourceType == null ) {
-			if ( createScriptSourceSetting != null ) {
-				sourceType = SchemaGenSource.SCRIPT;
+		private ScriptTargetOutput interpretScriptTargetSetting(
+				Object scriptTargetSetting,
+				boolean actionIndicatedScripting,
+				String settingName) {
+			if ( actionIndicatedScripting ) {
+				if ( scriptTargetSetting == null ) {
+					throw new PersistenceException( "Scripting was requested, but no target was specified" );
+				}
+				if ( Writer.class.isInstance( scriptTargetSetting ) ) {
+					return new ScriptTargetOutputToWriter( (Writer) scriptTargetSetting );
+				}
+				else {
+					final String scriptTargetSettingString = scriptTargetSetting.toString();
+					try {
+						final URL url = new URL( scriptTargetSettingString );
+						return new ScriptTargetOutputToUrl( url );
+					}
+					catch (MalformedURLException ignore) {
+					}
+					return new ScriptTargetOutputToFile( new File( scriptTargetSettingString ) );
+				}
 			}
 			else {
-				sourceType = SchemaGenSource.METADATA;
+				if ( scriptTargetSetting != null ) {
+					// the wording in the spec hints that this maybe should be an error, but does not explicitly
+					// call out an exception to use.
+					log.debugf(
+							"Value was specified for '%s' [%s], but scripting action was not requested",
+							settingName,
+							scriptTargetSetting
+					);
+				}
+				return NoOpScriptTargetOutput.INSTANCE;
 			}
 		}
 
-		final ImportSqlCommandExtractor scriptCommandExtractor = serviceRegistry.getService( ImportSqlCommandExtractor.class );
+		private static class NoOpScriptTargetOutput implements ScriptTargetOutput {
+			/**
+			 * Singleton access
+			 */
+			public static final NoOpScriptTargetOutput INSTANCE = new NoOpScriptTargetOutput();
 
-		if ( sourceType == SchemaGenSource.METADATA ) {
-			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
-		}
-		else if ( sourceType == SchemaGenSource.SCRIPT ) {
-			generationSourceList.add( new GenerationSourceFromScript( createScriptSourceSetting, scriptCommandExtractor ) );
-		}
-		else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
-			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
-			generationSourceList.add( new GenerationSourceFromScript( createScriptSourceSetting, scriptCommandExtractor ) );
-		}
-		else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
-			generationSourceList.add( new GenerationSourceFromScript( createScriptSourceSetting, scriptCommandExtractor ) );
-			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+			@Override
+			public void accept(String command) {
+			}
+
+			@Override
+			public void release() {
+			}
 		}
 
-		final Object importScriptSetting = hibernateConfiguration.getProperties().get(
-				AvailableSettings.SCHEMA_GEN_LOAD_SCRIPT_SOURCE
-		);
-		if ( importScriptSetting != null ) {
-			generationSourceList.add( new ImportScriptSource( importScriptSetting, scriptCommandExtractor ) );
+		private List<GenerationSource> buildCreateSourceList(Configuration hibernateConfiguration, Dialect dialect) {
+			final List<GenerationSource> generationSourceList = new ArrayList<GenerationSource>();
+
+			// If we are asked to perform CREATE SCHEMA commands do them first ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			final boolean createSchemas = ConfigurationHelper.getBoolean(
+					AvailableSettings.SCHEMA_GEN_CREATE_SCHEMAS,
+					hibernateConfiguration.getProperties(),
+					false
+			);
+			if ( createSchemas ) {
+				generationSourceList.add( new CreateSchemaCommandSource( hibernateConfiguration, dialect ) );
+			}
+
+
+			// Next figure out the intended sources of generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			SchemaGenSource sourceType = SchemaGenSource.interpret(
+					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_CREATE_SOURCE )
+			);
+
+			final Object createScriptSourceSetting = hibernateConfiguration.getProperties().get(
+					AvailableSettings.SCHEMA_GEN_CREATE_SCRIPT_SOURCE
+			);
+
+			if ( sourceType == null ) {
+				if ( createScriptSourceSetting != null ) {
+					sourceType = SchemaGenSource.SCRIPT;
+				}
+				else {
+					sourceType = SchemaGenSource.METADATA;
+				}
+			}
+
+			final boolean includesScripts = sourceType != SchemaGenSource.METADATA;
+			if ( includesScripts && createScriptSourceSetting == null ) {
+				throw new PersistenceException(
+						"Schema generation configuration indicated to include CREATE scripts, but no script was specified"
+				);
+			}
+			final ScriptSourceInput scriptSourceInput = includesScripts
+					? interpretScriptSourceSetting( createScriptSourceSetting )
+					: null;
+
+			if ( sourceType == SchemaGenSource.METADATA ) {
+				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+			}
+			else if ( sourceType == SchemaGenSource.SCRIPT ) {
+				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
+			}
+			else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
+				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
+			}
+			else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
+				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, true ) );
+			}
+
+
+			// finally, see if there is an import script specified ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+			final Object importScriptSetting = hibernateConfiguration.getProperties().get(
+					AvailableSettings.SCHEMA_GEN_LOAD_SCRIPT_SOURCE
+			);
+			if ( importScriptSetting != null ) {
+				final ScriptSourceInput importScriptInput = interpretScriptSourceSetting( importScriptSetting );
+				generationSourceList.add( new ImportScriptSource( importScriptInput, scriptCommandExtractor ) );
+			}
+
+			return generationSourceList;
 		}
 
-		return generationSourceList;
-	}
-
-	private static List<GenerationSource> buildDropSourceList(
-			Configuration hibernateConfiguration,
-			ServiceRegistry serviceRegistry,
-			Dialect dialect) {
-		final List<GenerationSource> generationSourceList = new ArrayList<GenerationSource>();
-
-		SchemaGenSource sourceType = SchemaGenSource.interpret(
-				hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DROP_SOURCE )
-		);
-
-		final Object dropScriptSourceSetting = hibernateConfiguration.getProperties().get(
-				AvailableSettings.SCHEMA_GEN_DROP_SCRIPT_SOURCE
-		);
-
-		if ( sourceType == null ) {
-			if ( dropScriptSourceSetting != null ) {
-				sourceType = SchemaGenSource.SCRIPT;
+		private ScriptSourceInput interpretScriptSourceSetting(Object scriptSourceSetting) {
+			if ( Reader.class.isInstance( scriptSourceSetting ) ) {
+				return new ScriptSourceInputFromReader( (Reader) scriptSourceSetting );
 			}
 			else {
-				sourceType = SchemaGenSource.METADATA;
+				final String scriptSourceSettingString = scriptSourceSetting.toString();
+				log.debugf( "Attempting to resolve script source setting : %s", scriptSourceSettingString );
+
+				// setting could be either:
+				//		1) string URL representation (i.e., "file://...")
+				//		2) relative file path (resource lookup)
+				//		3) absolute file path
+
+				log.trace( "Trying as URL..." );
+				// ClassLoaderService.locateResource() first tries the given resource name as url form...
+				final URL url = classLoaderService.locateResource( scriptSourceSettingString );
+				if ( url != null ) {
+					return new ScriptSourceInputFromUrl( url );
+				}
+
+				// assume it is a File path
+				final File file = new File( scriptSourceSettingString );
+				return new ScriptSourceInputFromFile( file );
 			}
 		}
 
-		final ImportSqlCommandExtractor scriptCommandExtractor = serviceRegistry.getService( ImportSqlCommandExtractor.class );
+		private List<GenerationSource> buildDropSourceList(Configuration hibernateConfiguration, Dialect dialect) {
+			final List<GenerationSource> generationSourceList = new ArrayList<GenerationSource>();
 
-		if ( sourceType == SchemaGenSource.METADATA ) {
-			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
-		}
-		else if ( sourceType == SchemaGenSource.SCRIPT ) {
-			generationSourceList.add( new GenerationSourceFromScript( dropScriptSourceSetting, scriptCommandExtractor ) );
-		}
-		else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
-			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
-			generationSourceList.add( new GenerationSourceFromScript( dropScriptSourceSetting, scriptCommandExtractor ) );
-		}
-		else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
-			generationSourceList.add( new GenerationSourceFromScript( dropScriptSourceSetting, scriptCommandExtractor ) );
-			generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
-		}
+			SchemaGenSource sourceType = SchemaGenSource.interpret(
+					hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DROP_SOURCE )
+			);
 
-		return generationSourceList;
+			final Object dropScriptSourceSetting = hibernateConfiguration.getProperties().get(
+					AvailableSettings.SCHEMA_GEN_DROP_SCRIPT_SOURCE
+			);
+
+			if ( sourceType == null ) {
+				if ( dropScriptSourceSetting != null ) {
+					sourceType = SchemaGenSource.SCRIPT;
+				}
+				else {
+					sourceType = SchemaGenSource.METADATA;
+				}
+			}
+
+
+			final boolean includesScripts = sourceType != SchemaGenSource.METADATA;
+			if ( includesScripts && dropScriptSourceSetting == null ) {
+				throw new PersistenceException(
+						"Schema generation configuration indicated to include CREATE scripts, but no script was specified"
+				);
+			}
+			final ScriptSourceInput scriptSourceInput = includesScripts
+					? interpretScriptSourceSetting( dropScriptSourceSetting )
+					: null;
+
+			if ( sourceType == SchemaGenSource.METADATA ) {
+				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+			}
+			else if ( sourceType == SchemaGenSource.SCRIPT ) {
+				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
+			}
+			else if ( sourceType == SchemaGenSource.METADATA_THEN_SCRIPT ) {
+				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
+			}
+			else if ( sourceType == SchemaGenSource.SCRIPT_THEN_METADATA ) {
+				generationSourceList.add( new GenerationSourceFromScript( scriptSourceInput, scriptCommandExtractor ) );
+				generationSourceList.add( new GenerationSourceFromMetadata( hibernateConfiguration, dialect, false ) );
+			}
+
+			return generationSourceList;
+		}
 	}
 
 	private static JdbcConnectionContext determineAppropriateJdbcConnectionContext(
@@ -383,7 +528,7 @@ public class JpaSchemaGenerator {
 	private static Dialect determineDialectBasedOnJdbcMetadata(
 			JdbcConnectionContext jdbcConnectionContext,
 			ServiceRegistry serviceRegistry) {
-		DialectResolver dialectResolver = serviceRegistry.getService( DialectResolver.class );
+		final DialectResolver dialectResolver = serviceRegistry.getService( DialectResolver.class );
 		try {
 			final DatabaseMetaData databaseMetaData = jdbcConnectionContext.getJdbcConnection().getMetaData();
 			final Dialect dialect = dialectResolver.resolveDialect( databaseMetaData );
@@ -508,18 +653,12 @@ public class JpaSchemaGenerator {
 	}
 
 	private static class ImportScriptSource implements GenerationSource {
-		private final SqlScriptInput sourceReader;
+		private final ScriptSourceInput sourceReader;
 		private final ImportSqlCommandExtractor scriptCommandExtractor;
 
-		public ImportScriptSource(Object scriptSourceSetting, ImportSqlCommandExtractor scriptCommandExtractor) {
+		public ImportScriptSource(ScriptSourceInput sourceReader, ImportSqlCommandExtractor scriptCommandExtractor) {
+			this.sourceReader = sourceReader;
 			this.scriptCommandExtractor = scriptCommandExtractor;
-
-			if ( Reader.class.isInstance( scriptSourceSetting ) ) {
-				sourceReader = new SqlScriptReaderInput( (Reader) scriptSourceSetting );
-			}
-			else {
-				sourceReader = new SqlScriptFileInput( scriptSourceSetting.toString() );
-			}
 		}
 
 		@Override

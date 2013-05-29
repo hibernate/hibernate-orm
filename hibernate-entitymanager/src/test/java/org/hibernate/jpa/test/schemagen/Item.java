@@ -21,32 +21,49 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.internal.schemagen;
+package org.hibernate.jpa.test.schemagen;
 
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import java.io.Serializable;
 
 /**
- * Handles schema generation source from a "script"
+ * Test entity
  *
+ * @author Christian Beikov
  * @author Steve Ebersole
  */
-public class GenerationSourceFromScript implements GenerationSource {
-	private final ScriptSourceInput inputSource;
-	private final ImportSqlCommandExtractor scriptCommandExtractor;
+@Entity(name = "Item")
+public class Item implements Serializable {
 
-	public GenerationSourceFromScript(ScriptSourceInput inputSource, ImportSqlCommandExtractor scriptCommandExtractor) {
-		this.inputSource = inputSource;
-		this.scriptCommandExtractor = scriptCommandExtractor;
+	private String name;
+	private String descr;
+
+	public Item() {
 	}
 
-	@Override
-	public Iterable<String> getCommands() {
-		return inputSource.read( scriptCommandExtractor );
+	public Item(String name, String desc) {
+		this.name = name;
+		this.descr = desc;
 	}
 
-	@Override
-	public void release() {
-		inputSource.release();
+	@Column(length = 200)
+	public String getDescr() {
+		return descr;
 	}
 
+	public void setDescr(String desc) {
+		this.descr = desc;
+	}
+
+	@Id
+	@Column(length = 30)
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 }

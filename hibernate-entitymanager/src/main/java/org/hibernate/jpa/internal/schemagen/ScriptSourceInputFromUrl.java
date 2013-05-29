@@ -23,41 +23,52 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
+import javax.persistence.PersistenceException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Arrays;
-import java.util.Collections;
+import java.net.URL;
 
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import org.jboss.logging.Logger;
 
 /**
- * SqlScriptInput implementation for explicitly given Readers.  The readers are not released by this class.
+ * ScriptSourceInput implementation for URL references.  A reader is opened here and then explicitly closed on
+ * {@link #release}.
  *
+ * @author Christian Beikov
  * @author Steve Ebersole
  */
-class SqlScriptReaderInput implements SqlScriptInput {
-	private final Reader reader;
+public class ScriptSourceInputFromUrl extends ScriptSourceInputFromReader implements ScriptSourceInput {
+	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
 
-	public SqlScriptReaderInput(Reader reader) {
-		this.reader = reader;
-	}
-
-	@Override
-	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor) {
-		final String[] commands = commandExtractor.extractCommands( reader );
-		if ( commands == null ) {
-			return Collections.emptyList();
-		}
-		else {
-			return Arrays.asList( commands );
-		}
+	/**
+	 * Constructs a ScriptSourceInputFromUrl instance
+	 *
+	 * @param url The url to read from
+	 */
+	public ScriptSourceInputFromUrl(URL url) {
+		super( toReader( url ) );
 	}
 
 	@Override
 	public void release() {
-		// nothing to do here
+		try {
+			reader().close();
+		}
+		catch (IOException e) {
+			log.warn( "Unable to close file reader for generation script source" );
+		}
 	}
 
-	protected Reader reader() {
-		return reader;
+	private static Reader toReader(URL url) {
+		try {
+			return new InputStreamReader( url.openStream() );
+
+		}
+		catch (IOException e) {
+			throw new PersistenceException(
+					"Unable to open specified script source url [" + url + "] for reading"
+			);
+		}
 	}
 }

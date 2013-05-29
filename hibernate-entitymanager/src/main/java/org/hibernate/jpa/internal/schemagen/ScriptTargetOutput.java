@@ -23,14 +23,22 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
-
 /**
- * Contract for handling Reader/File differences
+ * Contract for hiding the differences between a passed Writer, File or URL in terms of how we write output
+ * scripts.
  *
  * @author Steve Ebersole
  */
-public interface SqlScriptInput {
-	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor);
+public interface ScriptTargetOutput {
+	/**
+	 * Accept the given command and write it to the abstracted script
+	 *
+	 * @param command The command
+	 */
+	public void accept(String command);
+
+	/**
+	 * Release this output
+	 */
 	public void release();
 }

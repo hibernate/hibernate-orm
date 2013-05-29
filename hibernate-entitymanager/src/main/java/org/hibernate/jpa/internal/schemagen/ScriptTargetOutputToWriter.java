@@ -23,30 +23,44 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import javax.persistence.PersistenceException;
+import java.io.IOException;
+import java.io.Writer;
 
 /**
- * Handles schema generation source from a "script"
+ * ScriptTargetOutput implementation for supplied Writer references
  *
  * @author Steve Ebersole
  */
-public class GenerationSourceFromScript implements GenerationSource {
-	private final ScriptSourceInput inputSource;
-	private final ImportSqlCommandExtractor scriptCommandExtractor;
+public class ScriptTargetOutputToWriter implements ScriptTargetOutput {
+	private final Writer writer;
 
-	public GenerationSourceFromScript(ScriptSourceInput inputSource, ImportSqlCommandExtractor scriptCommandExtractor) {
-		this.inputSource = inputSource;
-		this.scriptCommandExtractor = scriptCommandExtractor;
+	/**
+	 * Constructs a ScriptTargetOutputToWriter
+	 *
+	 * @param writer The writer to write to
+	 */
+	public ScriptTargetOutputToWriter(Writer writer) {
+		this.writer = writer;
 	}
 
 	@Override
-	public Iterable<String> getCommands() {
-		return inputSource.read( scriptCommandExtractor );
+	public void accept(String command) {
+		try {
+			writer.write( command );
+			writer.flush();
+		}
+		catch (IOException e) {
+			throw new PersistenceException( "Could not write to target script file", e );
+		}
 	}
 
 	@Override
 	public void release() {
-		inputSource.release();
+		// nothing to do for a supplied writer
 	}
 
+	protected Writer writer() {
+		return writer;
+	}
 }

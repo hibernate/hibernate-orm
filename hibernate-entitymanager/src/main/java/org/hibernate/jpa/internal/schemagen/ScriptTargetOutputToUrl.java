@@ -25,61 +25,58 @@ package org.hibernate.jpa.internal.schemagen;
 
 import javax.persistence.PersistenceException;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.jpa.internal.HEMLogging;
+
 /**
- * SqlScriptInput implementation for File references.  A reader is opened here and then explicitly closed on
- * {@link #release}.
+ * ScriptTargetOutput implementation for writing to supplied URL references
  *
  * @author Steve Ebersole
  */
-class SqlScriptFileInput extends SqlScriptReaderInput implements SqlScriptInput {
-	private static final Logger log = Logger.getLogger( SqlScriptFileInput.class );
+public class ScriptTargetOutputToUrl extends ScriptTargetOutputToWriter implements ScriptTargetOutput {
+	private static final Logger log = HEMLogging.logger( ScriptTargetOutputToUrl.class );
 
-	public SqlScriptFileInput(String fileUrl) {
-		super( toFileReader( fileUrl ) );
+	/**
+	 * Constructs a ScriptTargetOutputToUrl
+	 *
+	 * @param url The url to write to
+	 */
+	public ScriptTargetOutputToUrl(URL url) {
+		super( toWriter( url ) );
 	}
 
 	@Override
 	public void release() {
 		try {
-			reader().close();
+			writer().close();
 		}
 		catch (IOException e) {
-			log.warn( "Unable to close file reader for generation script source" );
+			throw new PersistenceException( "Unable to close file writer : " + e.toString() );
 		}
 	}
 
-	@SuppressWarnings("ResultOfMethodCallIgnored")
-	private static Reader toFileReader(String fileUrl) {
-		final File file = new File( fileUrl );
-		if ( ! file.exists() ) {
-			log.warnf( "Specified schema generation script file [%s] did not exist for reading", fileUrl );
-			return new Reader() {
-				@Override
-				public int read(char[] cbuf, int off, int len) throws IOException {
-					return -1;
-				}
 
-				@Override
-				public void close() throws IOException {
-				}
-			};
-		}
-
+	private static Writer toWriter(URL url) {
+		log.debug( "Attempting to resolve writer for URL : " + url );
+		// technically only "strings corresponding to file URLs" are supported, which I take to mean URLs whose
+		// protocol is "file"
 		try {
-			return new FileReader( file );
+			return ScriptTargetOutputToFile.toFileWriter( new File( url.toURI() ) );
 		}
-		catch (IOException e) {
+		catch (URISyntaxException e) {
 			throw new PersistenceException(
-					"Unable to open specified script target file [" + fileUrl + "] for reading",
+					String.format(
+							"Could not convert specified URL[%s] to a File reference",
+							url
+					),
 					e
 			);
 		}
 	}
-
 }

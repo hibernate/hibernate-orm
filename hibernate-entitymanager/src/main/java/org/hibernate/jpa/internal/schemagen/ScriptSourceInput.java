@@ -26,27 +26,23 @@ package org.hibernate.jpa.internal.schemagen;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 
 /**
- * Handles schema generation source from a "script"
+ * Contract for hiding the differences between a passed Reader, File or URL in terms of how we read input
+ * scripts.
  *
  * @author Steve Ebersole
  */
-public class GenerationSourceFromScript implements GenerationSource {
-	private final ScriptSourceInput inputSource;
-	private final ImportSqlCommandExtractor scriptCommandExtractor;
+public interface ScriptSourceInput {
+	/**
+	 * Read the abstracted script, using the given extractor to split up the input into individual commands.
+	 *
+	 * @param commandExtractor The extractor for individual commands within the input.
+	 *
+	 * @return The scripted commands
+	 */
+	public Iterable<String> read(ImportSqlCommandExtractor commandExtractor);
 
-	public GenerationSourceFromScript(ScriptSourceInput inputSource, ImportSqlCommandExtractor scriptCommandExtractor) {
-		this.inputSource = inputSource;
-		this.scriptCommandExtractor = scriptCommandExtractor;
-	}
-
-	@Override
-	public Iterable<String> getCommands() {
-		return inputSource.read( scriptCommandExtractor );
-	}
-
-	@Override
-	public void release() {
-		inputSource.release();
-	}
-
+	/**
+	 * Release this input.
+	 */
+	public void release();
 }

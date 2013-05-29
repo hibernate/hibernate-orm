@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.MappingException;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
@@ -193,6 +194,7 @@ public class HierarchyBuilder {
 		// For backward compatibility, store named queries prefixed with
 		// the class name.
 		String queryNamePrefix = entityElement.getEntityName();
+		queryNamePrefix = StringHelper.isNotEmpty( queryNamePrefix ) ? queryNamePrefix : currentMappingDocument.getMappingLocalBindingContext().qualifyClassName( entityElement.getName() );
 		for ( final JaxbQueryElement element : entityElement.getQuery() ) {
 			element.setName( queryNamePrefix + "." + element.getName() );
 			BindHelper.bindNamedQuery( element, metadata );

@@ -34,7 +34,6 @@ import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.ResultTransformer;
@@ -45,7 +44,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Sharath Reddy
  */
-@FailureExpectedWithNewMetamodel
 public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

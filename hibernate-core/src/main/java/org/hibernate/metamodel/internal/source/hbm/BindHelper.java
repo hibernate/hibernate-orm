@@ -110,7 +110,7 @@ public class BindHelper {
 			Origin origin, MetadataImplementor metadata, LocalBindingContext bindingContext) {
 		final String alias = getAlias( returnElement, elementCount );
 		final String clazz = returnElement.getClazz();
-		final String entityName = returnElement.getEntityName();
+		String entityName = returnElement.getEntityName();
 		if ( StringHelper.isEmpty( clazz )
 				&& StringHelper.isEmpty( entityName ) ) {
 			throw bindingContext.makeMappingException(
@@ -121,14 +121,15 @@ public class BindHelper {
 		final LockMode lockMode = Helper.interpretLockMode(
 				returnElement.getLockMode(), origin
 		);
+		entityName = StringHelper.isNotEmpty( entityName ) ? entityName : bindingContext.qualifyClassName( clazz );
 		final EntityBinding entityBinding = metadata.getEntityBinding(
-				StringHelper.isNotEmpty( entityName ) ? entityName : bindingContext.qualifyClassName( clazz )
+				entityName
 		);
-		if ( entityBinding == null ) {
-			throw bindingContext.makeMappingException( "Can't locate entitybinding" );
-		}
+//		if ( entityBinding == null ) {
+//			throw bindingContext.makeMappingException( "Can't locate entitybinding" );
+//		}
 		return new NativeSQLQueryRootReturn(
-				alias, entityBinding.getEntityName(),
+				alias, entityName,
 				bindPropertyResults( alias, returnElement, entityBinding ),
 				lockMode
 		);
@@ -185,7 +186,7 @@ public class BindHelper {
 		final String roleProperty = roleAttribute.substring( dot + 1 );
 		return new NativeSQLQueryJoinReturn( alias, roleOwnerAlias,
 				roleProperty, bindPropertyResults( alias, returnJoinElement,
-						null ), lockMode );
+						null, origin ), lockMode );
 	}
 
 	public static NativeSQLQueryReturn bindLoadCollection(
@@ -216,10 +217,18 @@ public class BindHelper {
 				+ elementCount : element.getAlias();
 	}
 
+
 	private static Map bindPropertyResults(String alias,
 			JaxbReturnJoinElement returnJoinElement,
-			EntityBinding entityBinding) {
-		throw new NotYetImplementedException();
+			EntityBinding entityBinding,
+			Origin origin) {
+		HashMap<String, String[]> propertyresults
+				= new HashMap<String, String[]>();
+		returnJoinElement.getReturnProperty();
+
+
+		return propertyresults.isEmpty() ? Collections.EMPTY_MAP
+				: propertyresults;
 	}
 
 	// and org.hibernate.cfg.ResultSetMappingBinder.bindPropertyResults()
@@ -238,7 +247,7 @@ public class BindHelper {
 		List<JaxbReturnPropertyElement> returnPropertyElements
 				= returnElement.getReturnProperty();
 
-		return propertyresults.isEmpty() ? Collections.EMPTY_MAP
+		return propertyresults.isEmpty() ? Collections.<String, String[]>emptyMap()
 				: propertyresults;
 	}
 
@@ -337,7 +346,7 @@ public class BindHelper {
 						"class is not a valid property name to use in a <return-property>, use <return-discriminator> instead" );
 			}
 			// TODO: validate existing of property with the chosen name. (secondpass )
-			ArrayList allResultColumns = getResultColumns( propertyElement );
+			ArrayList<String> allResultColumns = getResultColumns( propertyElement );
 
 			if ( allResultColumns.isEmpty() ) {
 				throw new org.hibernate.MappingException( "return-property for alias " + alias
@@ -385,10 +394,10 @@ public class BindHelper {
 
 	}
 
-	private static ArrayList getResultColumns(
+	private static ArrayList<String> getResultColumns(
 			JaxbReturnPropertyElement propertyresult) {
 		String column = StringHelper.unquote( propertyresult.getColumn() );
-		ArrayList allResultColumns = new ArrayList();
+		ArrayList<String> allResultColumns = new ArrayList<String>();
 		if ( column != null ) {
 			allResultColumns.add( column );
 		}

@@ -91,6 +91,17 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 		final ResultSetMappingDefinition definition
 				= new ResultSetMappingDefinition( name );
 		int cnt = 0;
+		for ( final JaxbReturnElement r : returnElements ) {
+			definition.addQueryReturn( BindHelper.bindReturn(
+					r, cnt++, origin, metadata, bindingContext ) );
+
+		}
+		for ( final JaxbLoadCollectionElement r : loadCollectionElements ) {
+			definition.addQueryReturn(
+					BindHelper.bindLoadCollection(
+							r, cnt++, origin, bindingContext ) );
+
+		}
 		for ( final JaxbReturnScalarElement r : returnScalarElements ) {
 			String column = r.getColumn();
 			String typeFromXML = r.getType();
@@ -105,17 +116,8 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 					BindHelper.bindReturnJoin( r, cnt++, origin ) );
 
 		}
-		for ( final JaxbLoadCollectionElement r : loadCollectionElements ) {
-			definition.addQueryReturn( 
-					BindHelper.bindLoadCollection(
-							r, cnt++, origin, bindingContext ) );
 
-		}
-		for ( final JaxbReturnElement r : returnElements ) {
-			definition.addQueryReturn( BindHelper.bindReturn(
-					r, cnt++, origin, metadata, bindingContext ) );
 
-		}
 		
 		return builder.setQueryReturns( definition.getQueryReturns() )
 				.setQuerySpaces( synchronizedTables )

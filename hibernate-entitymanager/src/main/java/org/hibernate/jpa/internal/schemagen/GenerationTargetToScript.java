@@ -36,7 +36,7 @@ import org.hibernate.jpa.SchemaGenAction;
 
 /**
  * GenerationTarget implementation for handling generation to scripts
- *
+ * 
  * @author Steve Ebersole
  */
 class GenerationTargetToScript implements GenerationTarget {
@@ -46,9 +46,7 @@ class GenerationTargetToScript implements GenerationTarget {
 	private final ScriptTargetTarget dropScriptTarget;
 	private final SchemaGenAction scriptsAction;
 
-	public GenerationTargetToScript(
-			Object createScriptTargetSetting,
-			Object dropScriptTargetSetting,
+	public GenerationTargetToScript(Object createScriptTargetSetting, Object dropScriptTargetSetting,
 			SchemaGenAction scriptsAction) {
 		this.scriptsAction = scriptsAction;
 
@@ -64,11 +62,8 @@ class GenerationTargetToScript implements GenerationTarget {
 			if ( createScriptTargetSetting != null ) {
 				// the wording in the spec hints that this maybe should be an error, but does not explicitly
 				// call out an exception to use.
-				log.debugf(
-						"Value was specified for '%s' [%s], but create scripting was not requested",
-						AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET,
-						createScriptTargetSetting
-				);
+				log.debugf( "Value was specified for '%s' [%s], but create scripting was not requested",
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_CREATE_TARGET, createScriptTargetSetting );
 			}
 			createScriptTarget = null;
 		}
@@ -85,11 +80,8 @@ class GenerationTargetToScript implements GenerationTarget {
 			if ( dropScriptTargetSetting != null ) {
 				// the wording in the spec hints that this maybe should be an error, but does not explicitly
 				// call out an exception to use.
-				log.debugf(
-						"Value was specified for '%s' [%s], but drop scripting was not requested",
-						AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET,
-						dropScriptTargetSetting
-				);
+				log.debugf( "Value was specified for '%s' [%s], but drop scripting was not requested",
+						AvailableSettings.SCHEMA_GEN_SCRIPTS_DROP_TARGET, dropScriptTargetSetting );
 			}
 			dropScriptTarget = null;
 		}
@@ -97,7 +89,7 @@ class GenerationTargetToScript implements GenerationTarget {
 
 	@Override
 	public void acceptCreateCommands(Iterable<String> commands) {
-		if ( ! scriptsAction.includesCreate() ) {
+		if ( !scriptsAction.includesCreate() ) {
 			return;
 		}
 
@@ -108,7 +100,7 @@ class GenerationTargetToScript implements GenerationTarget {
 
 	@Override
 	public void acceptDropCommands(Iterable<String> commands) {
-		if ( ! scriptsAction.includesDrop() ) {
+		if ( !scriptsAction.includesDrop() ) {
 			return;
 		}
 
@@ -119,8 +111,13 @@ class GenerationTargetToScript implements GenerationTarget {
 
 	@Override
 	public void release() {
-		createScriptTarget.release();
-		dropScriptTarget.release();
+		// with NONE setting these targets are null
+		if ( createScriptTarget != null ) {
+			createScriptTarget.release();
+		}
+		if ( dropScriptTarget != null ) {
+			dropScriptTarget.release();
+		}
 	}
 
 	/**
@@ -128,6 +125,7 @@ class GenerationTargetToScript implements GenerationTarget {
 	 */
 	private static interface ScriptTargetTarget {
 		public void accept(String command);
+
 		public void release();
 	}
 
@@ -144,7 +142,7 @@ class GenerationTargetToScript implements GenerationTarget {
 				writer.write( command );
 				writer.flush();
 			}
-			catch (IOException e) {
+			catch ( IOException e ) {
 				throw new PersistenceException( "Could not write to target script file", e );
 			}
 		}
@@ -169,7 +167,7 @@ class GenerationTargetToScript implements GenerationTarget {
 			try {
 				writer().close();
 			}
-			catch (IOException e) {
+			catch ( IOException e ) {
 				throw new PersistenceException( "Unable to close file writer : " + e.toString() );
 			}
 		}
@@ -182,13 +180,13 @@ class GenerationTargetToScript implements GenerationTarget {
 			// best effort, since this is very well not allowed in EE environments
 			file.createNewFile();
 		}
-		catch (Exception e) {
+		catch ( Exception e ) {
 			log.debug( "Exception calling File#createNewFile : " + e.toString() );
 		}
 		try {
 			return new FileWriter( file );
 		}
-		catch (IOException e) {
+		catch ( IOException e ) {
 			throw new PersistenceException( "Unable to open specified script target file for writing : " + fileUrl, e );
 		}
 	}

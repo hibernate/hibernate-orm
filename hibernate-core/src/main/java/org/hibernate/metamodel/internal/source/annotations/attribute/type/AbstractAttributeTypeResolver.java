@@ -26,26 +26,40 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * @author Strong Liu
  * @author Brett Meyer
+ * @author Gail Badner
  */
 public abstract class AbstractAttributeTypeResolver implements AttributeTypeResolver {
-	
-	protected final MappedAttribute mappedAttribute;
 
-	public AbstractAttributeTypeResolver( MappedAttribute mappedAttribute ) {
-		this.mappedAttribute = mappedAttribute;
+	private final String name;
+	private final Class<?> javaClass;
+	private final AnnotationInstance annotation;
+	private final EntityBindingContext context;
+
+	public AbstractAttributeTypeResolver(
+			String name,
+			Class<?> javaClass,
+			AnnotationInstance annotation,
+			EntityBindingContext context){
+		this.name = name;
+		this.javaClass = javaClass;
+		this.annotation = annotation;
+		this.context = context;
 	}
-	
+
 	@Override
 	final public String getExplicitHibernateTypeName() {
 		String type = getExplicitAnnotatedHibernateTypeName();
@@ -54,42 +68,60 @@ public abstract class AbstractAttributeTypeResolver implements AttributeTypeReso
 		if ( !StringHelper.isEmpty( type ) ) {
 			return type;
 		} else {
-			return hasEntityTypeDef() ? mappedAttribute.getAttributeType().getName() : null;
+			return hasTypeDef() ? javaClass().getName() : null;
 		}
 	}
 	
 	@Override
 	final public String getExplicitAnnotatedHibernateTypeName() {
-		return resolveAnnotatedHibernateTypeName( 
-				getTypeDeterminingAnnotationInstance() );
+		return resolveHibernateTypeName();
 	}
 
 	@Override
 	final public Map<String, String> getExplicitHibernateTypeParameters() {
 		Map<String, String> result = new HashMap<String, String>(  );
 		//this is only use by enum type and serializable blob type, but we put there anyway
+		// TODO: why?
 		result.put(
 				DynamicParameterizedType.RETURNED_CLASS,
-				mappedAttribute.getAttributeType().getName()
+				javaClass().getName()
 		);
 		if ( StringHelper.isNotEmpty( getExplicitHibernateTypeName() ) ) {
-			result.putAll( resolveHibernateTypeParameters(
-					getTypeDeterminingAnnotationInstance() ) );
+			result.putAll( resolveHibernateTypeParameters() );
 		}
 		return result;
 	}
 	
-	final protected boolean hasEntityTypeDef() {
-		return mappedAttribute.getContext()
-				.getMetadataImplementor().hasTypeDefinition( 
-						mappedAttribute.getAttributeType().getName() );
+	final protected boolean hasTypeDef() {
+		return context.getMetadataImplementor().hasTypeDefinition(
+				javaClass().getName()
+		);
 	}
-	
-	protected abstract AnnotationInstance getTypeDeterminingAnnotationInstance();
 
-	protected abstract String resolveAnnotatedHibernateTypeName(AnnotationInstance annotationInstance);
+	protected abstract String resolveHibernateTypeName();
 
-	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
+	protected Map<String, String> resolveHibernateTypeParameters() {
 		return Collections.emptyMap();
+	}
+
+	protected String name() {
+		return name;
+	}
+
+	protected Class<?> javaClass() {
+		return javaClass;
+	}
+
+	protected AnnotationInstance annotation() {
+		return annotation;
+	}
+
+	protected static AnnotationInstance resolveAnnotationInstance(
+			Map<DotName, List<AnnotationInstance>> annotations,
+			DotName dotName) {
+		return JandexHelper.getSingleAnnotation(
+				annotations,
+				dotName
+		);
 	}
 }

@@ -26,27 +26,30 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.EnumSet;
 
 import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.JandexAntTask;
 
-import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
+import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
+import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		implements IndexedPluralAttributeSource {
-	private final PluralAttributeIndexSource indexSource;
+	private PluralAttributeIndexSource indexSource;
 	private final static EnumSet<MappedAttribute.Nature> VALID_NATURES = EnumSet.of(
 			MappedAttribute.Nature.MANY_TO_MANY,
 			MappedAttribute.Nature.ONE_TO_MANY,
@@ -74,8 +77,8 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 			indexSource = new SequentialPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );
 		}
 		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY ) ) {
-			// basic
-			throw new NotYetImplementedException( "@MapKey is not supported yet." );
+			// need to wait until the ID or attribute source can be resolved.
+			indexSource = null;
 		}
 		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_COLUMN ) ) {
 			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
@@ -128,6 +131,78 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 			//indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute );
 			throw new NotYetImplementedException( "Embeddable and entity keys are not supported yet." );
 		}
+	}
+
+	@Override
+	public PluralAttributeIndexSource resolvePluralAttributeIndexSource(AttributeSourceResolutionContext attributeSourceResolutionContext) {
+		if ( indexSource == null ) {
+			if ( pluralAssociationAttribute().annotations().containsKey( JPADotNames.MAP_KEY ) ) {
+				indexSource = resolveMapKeyPluralAttributeIndexSource( attributeSourceResolutionContext );
+			}
+			else {
+				throw new NotYetImplementedException( "caonnot resolve index source." );
+			}
+		}
+		return indexSource;
+	}
+
+	private PluralAttributeIndexSource resolveMapKeyPluralAttributeIndexSource(AttributeSourceResolutionContext attributeSourceResolutionContext) {
+		final AnnotationInstance mapKeyAnnotation =
+				JandexHelper.getSingleAnnotation( pluralAssociationAttribute().annotations(), JPADotNames.MAP_KEY );
+		final String attributeName = JandexHelper.getValue( mapKeyAnnotation, "name", String.class );
+		final PluralAttributeIndexSource innerIndexSource;
+		if ( attributeName == null ) {
+			IdentifierSource identifierSource = attributeSourceResolutionContext.resolveIdentifierSource(
+							pluralAssociationAttribute().getReferencedEntityType()
+			);
+			switch ( identifierSource.getNature() ) {
+				case SIMPLE:
+					innerIndexSource = new BasicPluralAttributeIndexSourceImpl(
+							this,
+							pluralAssociationAttribute(),
+							null,
+							( (SimpleIdentifierSource) identifierSource ).getIdentifierAttributeSource().relationalValueSources() );
+					break;
+				default:
+					throw new NotYetImplementedException( "Only simple IDs are supported for @MapKey" );
+			}
+		}
+		else {
+			AttributeSource attributeSource = attributeSourceResolutionContext.resolveAttributeSource(
+					pluralAssociationAttribute().getReferencedEntityType(),
+					attributeName
+			);
+			if ( ! attributeSource.isSingular() ) {
+				throw new MappingException(
+						String.format(
+								"Plural attribute index [%s.%s] is not a singular attribute.",
+								pluralAssociationAttribute().getReferencedEntityType(),
+								attributeName
+						),
+						pluralAssociationAttribute().getContext().getOrigin()
+				);
+			}
+			final SingularAttributeSource mapKeyAttributeSource = (SingularAttributeSource) attributeSource;
+			switch ( mapKeyAttributeSource.getNature() ) {
+				case BASIC:
+					innerIndexSource = new BasicPluralAttributeIndexSourceImpl(
+							this,
+							pluralAssociationAttribute(),
+							null,
+							mapKeyAttributeSource.relationalValueSources() );
+					break;
+				case COMPOSITE:
+					innerIndexSource = new CompositePluralAttributeIndexSourceImpl(
+							pluralAssociationAttribute(),
+							( ( ComponentAttributeSource) attributeSource  ).attributeSources(),
+							null
+					);
+					break;
+				default:
+					throw new NotYetImplementedException( "Only basic plural attribute index sources are supported for @MapKey" );
+			}
+		}
+		return new MapKeyPluralAttributeIndexSourceImpl( pluralAssociationAttribute(), innerIndexSource, attributeName );
 	}
 
 	@Override

@@ -36,7 +36,6 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -44,7 +43,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SortType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.EnumeratedTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.LobTypeResolver;
@@ -95,6 +94,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final boolean mutable;
 	private final int batchSize;
 
+	private AttributeTypeResolver elementTypeResolver;
+	private AttributeTypeResolver indexTypeResolver;
 
 	public static PluralAssociationAttribute createPluralAssociationAttribute(
 			ClassInfo entityClassInfo,
@@ -541,18 +542,38 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		return mutable;
 	}
 
-	/*
 	@Override
 	public AttributeTypeResolver getHibernateTypeResolver() {
+		if ( elementTypeResolver == null ) {
+			elementTypeResolver = getDefaultElementHibernateTypeResolver();
+		}
+		return elementTypeResolver;
+	}
+
+	private AttributeTypeResolver getDefaultElementHibernateTypeResolver() {
 		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver( this );
-		resolver.addHibernateTypeResolver( new AttributeTypeResolverImpl( this ) );
-		// TODO: make it work for temporal elements
-		//resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
-		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
-		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( HibernateTypeResolver.createCollectionElementTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( TemporalTypeResolver.createCollectionElementTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( LobTypeResolver.createCollectionElementTypeResolve( this ) );
+		resolver.addHibernateTypeResolver( EnumeratedTypeResolver.createCollectionElementTypeResolver( this ) );
 		return resolver;
 	}
-	*/
+
+	public AttributeTypeResolver getIndexTypeResolver() {
+		if ( indexType == null ) {
+				return getDefaultHibernateTypeResolver();
+		}
+		else if ( indexTypeResolver == null ) {
+			CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver( this );
+			final String name = getName() + ".index";
+			resolver.addHibernateTypeResolver( HibernateTypeResolver.createCollectionIndexTypeResolver( this ) );
+			// TODO: Lob allowed as collection index? I don't see an annotation for that.
+			resolver.addHibernateTypeResolver( EnumeratedTypeResolver.createCollectionIndexTypeResolver( this ) );
+			resolver.addHibernateTypeResolver( TemporalTypeResolver.createCollectionIndexTypeResolver( this ) );
+			indexTypeResolver = resolver;
+		}
+		return indexTypeResolver;
+	}
 }
 
 

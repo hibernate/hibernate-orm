@@ -41,6 +41,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -352,7 +353,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 
 	@Override
 	public PluralAttributeElementSource resolvePluralAttributeElementSource(
-			PluralAttributeElementSourceResolutionContext context) {
+			AttributeSourceResolutionContext context) {
 		if ( elementSource == null ) {
 			// elementSource has not been initialized, so we need to resolve it using the
 			// association owner.
@@ -365,6 +366,10 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 			elementSource = determineElementSource( ownerAttributeSource, associationAttribute, entityClass );
 		}
 		return elementSource;
+	}
+
+	protected PluralAssociationAttribute pluralAssociationAttribute() {
+		return associationAttribute;
 	}
 }
 

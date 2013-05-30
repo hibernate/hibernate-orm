@@ -31,6 +31,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -191,8 +192,13 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource explicitHibernateTypeSource() {
+	public ExplicitHibernateTypeSource getTypeInformation() {
 		return typeSource;
+	}
+
+	@Override
+	public boolean isReferencedEntityAttribute() {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

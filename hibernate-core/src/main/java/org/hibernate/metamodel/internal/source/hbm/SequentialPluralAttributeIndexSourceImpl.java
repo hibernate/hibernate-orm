@@ -164,8 +164,13 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource explicitHibernateTypeSource() {
+	public ExplicitHibernateTypeSource getTypeInformation() {
 		return typeSource;
+	}
+
+	@Override
+	public boolean isReferencedEntityAttribute() {
+		return false;
 	}
 
 	@Override

@@ -23,10 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -38,23 +36,34 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttributeIndexSource {
-	private final PluralAssociationAttribute attribute;
+public class BasicPluralAttributeIndexSourceImpl extends AbstractPluralAttributeIndexSourceImpl implements BasicPluralAttributeIndexSource {
 	private final IndexedPluralAttributeSourceImpl indexedPluralAttributeSource;
-	private final List<RelationalValueSource> relationalValueSources =  new ArrayList<RelationalValueSource>( 1 );
+	private final List<RelationalValueSource> relationalValueSources;
 	private final Binder.DefaultNamingStrategy defaultNamingStrategy;
 	public BasicPluralAttributeIndexSourceImpl(
 			IndexedPluralAttributeSourceImpl indexedPluralAttributeSource,
 			PluralAssociationAttribute attribute,
 			Binder.DefaultNamingStrategy defaultNamingStrategy) {
-		this.attribute = attribute;
+		this( indexedPluralAttributeSource, attribute, defaultNamingStrategy, createRelationalValueSources( attribute ) );
+	}
+
+	public BasicPluralAttributeIndexSourceImpl(
+			IndexedPluralAttributeSourceImpl indexedPluralAttributeSource,
+			PluralAssociationAttribute attribute,
+			Binder.DefaultNamingStrategy defaultNamingStrategy,
+			List<RelationalValueSource> relationalValueSources) {
+		super( attribute );
 		this.indexedPluralAttributeSource = indexedPluralAttributeSource;
+		this.relationalValueSources = relationalValueSources;
+		this.defaultNamingStrategy = defaultNamingStrategy;
+	}
+
+	private static List<RelationalValueSource> createRelationalValueSources(PluralAssociationAttribute attribute) {
 		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				attribute.annotations(),
 				HibernateDotNames.INDEX_COLUMN
@@ -72,10 +81,8 @@ public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttribute
 			);
 		}
 		Column indexColumn = new Column( columnAnnotation );
-		relationalValueSources.add( new ColumnValuesSourceImpl( indexColumn ) );
-		this.defaultNamingStrategy = defaultNamingStrategy;
+		return Collections.singletonList( (RelationalValueSource) new ColumnValuesSourceImpl( indexColumn ) );
 	}
-
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {
 		return PluralAttributeIndexBinding.Nature.BASIC;
@@ -87,37 +94,8 @@ public class BasicPluralAttributeIndexSourceImpl implements BasicPluralAttribute
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource explicitHibernateTypeSource() {
-		return new ExplicitHibernateTypeSource() {
-			@Override
-			public String getName() {
-				return "integer";
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return null;
-			}
-		};
-	}
-
-	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		return relationalValueSources;
 	}
 
-	@Override
-	public boolean areValuesIncludedInInsertByDefault() {
-		return false;
-	}
-
-	@Override
-	public boolean areValuesIncludedInUpdateByDefault() {
-		return false;
-	}
-
-	@Override
-	public boolean areValuesNullableByDefault() {
-		return false;
-	}
 }

@@ -92,6 +92,7 @@ public class EntityHierarchyHelper {
 				applyToSubEntities(
 						executionContext.getEntityBinding(),
 						rootEntitySource,
+						rootEntitySource,
 						subEntityExecutor );
 			}
 		}
@@ -127,27 +128,28 @@ public class EntityHierarchyHelper {
 		bindingContexts.push( rootEntitySource.getLocalBindingContext() );
 	}
 
-
 	private void applyToSubEntities(
 			final EntityBinding entityBinding,
+			final RootEntitySource rootEntitySource,
 			final EntitySource entitySource,
 			final LocalBindingContextExecutor subEntityExecutor) {
 		for ( final SubclassEntitySource subEntitySource : entitySource.subclassEntitySources() ) {
-			applyToSubEntity( entityBinding, subEntitySource, subEntityExecutor );
+			applyToSubEntity( entityBinding, rootEntitySource, subEntitySource, subEntityExecutor );
 		}
 	}
 
 	private void applyToSubEntity(
 			final EntityBinding superEntityBinding,
+			final RootEntitySource rootEntitySource,
 			final EntitySource entitySource,
 			final LocalBindingContextExecutor subEntityExecutor) {
 		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
 		bindingContexts.push( bindingContext );
 		try {
 			LocalBindingContextExecutionContext executionContext =
-					new LocalBindingContextExecutionContextImpl( entitySource, superEntityBinding );
+					new LocalBindingContextExecutionContextImpl( rootEntitySource, entitySource, superEntityBinding );
 			subEntityExecutor.execute( executionContext );
-			applyToSubEntities( executionContext.getEntityBinding(), entitySource, subEntityExecutor );
+			applyToSubEntities( executionContext.getEntityBinding(), rootEntitySource, entitySource, subEntityExecutor );
 		}
 		finally {
 			bindingContexts.pop();
@@ -155,22 +157,38 @@ public class EntityHierarchyHelper {
 	}
 
 	public interface LocalBindingContextExecutionContext {
+		RootEntitySource getRootEntitySource();
 		EntitySource getEntitySource();
 		EntityBinding getEntityBinding();
 		EntityBinding getSuperEntityBinding();
 	}
 
 	private class LocalBindingContextExecutionContextImpl implements LocalBindingContextExecutionContext {
+		private final RootEntitySource rootEntitySource;
 		private final EntitySource entitySource;
 		private final EntityBinding superEntityBinding;
 
 		private LocalBindingContextExecutionContextImpl(
+				RootEntitySource rootEntitySource,
+				EntityBinding superEntityBinding) {
+			this.rootEntitySource = rootEntitySource;
+			this.entitySource = rootEntitySource;
+			this.superEntityBinding = superEntityBinding;
+		}
+
+		private LocalBindingContextExecutionContextImpl(
+				RootEntitySource rootEntitySource,
 				EntitySource entitySource,
 				EntityBinding superEntityBinding) {
+			this.rootEntitySource = rootEntitySource;
 			this.entitySource = entitySource;
 			this.superEntityBinding = superEntityBinding;
 		}
 
+		@Override
+		public RootEntitySource getRootEntitySource() {
+			return rootEntitySource;
+		}
 		@Override
 		public EntitySource getEntitySource() {
 			return entitySource;

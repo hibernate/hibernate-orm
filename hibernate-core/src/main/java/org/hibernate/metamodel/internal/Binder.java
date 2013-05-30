@@ -131,6 +131,7 @@ import org.hibernate.metamodel.spi.source.CompositePluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.ConstraintSource;
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
+import org.hibernate.metamodel.spi.source.EntityAttributePluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.FilterSource;
@@ -233,10 +234,11 @@ public class Binder {
 	 * @param entityHierarchies The entity hierarchies resolved from mappings
 	 */
 	public void addEntityHierarchies(final Iterable<EntityHierarchy> entityHierarchies) {
+
 		LocalBindingContextExecutor executor = new LocalBindingContextExecutor() {
 			@Override
 			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
-				sourceIndex.indexEntitySource( bindingContextContext.getEntitySource() );
+				sourceIndex.indexEntitySource( bindingContextContext.getRootEntitySource(), bindingContextContext.getEntitySource() );
 				createEntityBinding(
 						bindingContextContext.getSuperEntityBinding(),
 						bindingContextContext.getEntitySource()
@@ -2031,6 +2033,13 @@ public class Binder {
 		}
 	}
 
+	private void bindEntityAttributePluralAttributeIndex(
+			final IndexedPluralAttributeBinding attributeBinding,
+			final EntityAttributePluralAttributeIndexSource indexSource,
+			final String defaultIndexJavaTypeName) {
+		throw new NotYetImplementedException( "Plural attribute index that is an attribute of the referenced entity is not supported yet." );
+	}
+
 	private void bindBasicCollectionIndex(
 			final IndexedPluralAttributeBinding attributeBinding,
 			final BasicPluralAttributeIndexSource indexSource,
@@ -2053,7 +2062,7 @@ public class Binder {
 
 		typeHelper.bindHibernateTypeDescriptor(
 				indexBinding.getHibernateTypeDescriptor(),
-				indexSource.explicitHibernateTypeSource(),
+				indexSource.getTypeInformation(),
 				defaultIndexJavaTypeName
 		);
 		typeHelper.bindJdbcDataType(
@@ -2069,9 +2078,11 @@ public class Binder {
 
 	private void bindCompositeCollectionIndex(
 		final CompositePluralAttributeIndexBinding indexBinding,
-		final CompositePluralAttributeIndexSource indexSource,
+		final IndexedPluralAttributeSource indexedPluralAttributeSource,
 		final String defaultIndexJavaTypeName) {
 		final PluralAttributeBinding pluralAttributeBinding = indexBinding.getIndexedPluralAttributeBinding();
+		final CompositePluralAttributeIndexSource indexSource =
+				(CompositePluralAttributeIndexSource) indexedPluralAttributeSource.getIndexSource();
 		ValueHolder<Class<?>> defaultElementJavaClassReference = null;
 		// Create the aggregate type
 		// TODO: aggregateName should be set to elementSource.getPath() (which is currently not implemented)
@@ -2105,6 +2116,19 @@ public class Binder {
 				);
 
 		bindAttributes( compositeAttributeBindingContainer, indexSource );
+		/*
+		final boolean isAssociation = pluralAttributeBinding.getPluralAttributeElementBinding().getNature().isAssociation();
+		switch( pluralAttributeBinding.getPluralAttributeElementBinding().getNature() ) {
+			case ONE_TO_MANY:
+				OneToManyPluralAttributeElementSource elementSource =
+						(OneToManyPluralAttributeElementSource) indexedPluralAttributeSource.getElementSource();
+				final EntityBinding referencedEntityBinding = locateEntityBinding( elementSource.getReferencedEntityName() );
+				for ( final AttributeSource attributeSource : indexSource.attributeSources() ) {
+					bindAttribute( compositeAttributeBindingContainer, attributeSource );
+				}
+		}
+		*/
+
 		Type resolvedType = metadata.getTypeResolver().getTypeFactory().component(
 				new ComponentMetamodel( compositeAttributeBindingContainer, false, false )
 		);
@@ -2331,39 +2355,49 @@ public class Binder {
 			final ReflectedCollectionJavaTypes reflectedCollectionJavaTypes) {
 		final String defaultCollectionIndexJavaTypeName =
 				HibernateTypeHelper.defaultCollectionIndexJavaTypeName( reflectedCollectionJavaTypes );
-		switch ( attributeSource.getIndexSource().getNature() ) {
-			case BASIC: {
-				bindBasicCollectionIndex(
-						attributeBinding,
-						(BasicPluralAttributeIndexSource) attributeSource.getIndexSource(),
-						defaultCollectionIndexJavaTypeName
-				);
-				break;
-			}
-			case AGGREGATE: {
-				bindCompositeCollectionIndex(
-						(CompositePluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding(),
-						(CompositePluralAttributeIndexSource) attributeSource.getIndexSource(),
-						defaultCollectionIndexJavaTypeName
-				);
-				break;
-			}
-			default: {
-				throw new NotYetImplementedException(
-						String.format(
-								"%s collection indexes are not supported yet.",
-								attributeSource.getIndexSource().getNature()
-						)
-				);
-			}
+		final PluralAttributeIndexSource indexSource = attributeSource.getIndexSource();
+		if ( indexSource.isReferencedEntityAttribute() ) {
+			bindEntityAttributePluralAttributeIndex(
+					attributeBinding,
+					(EntityAttributePluralAttributeIndexSource) indexSource,
+					defaultCollectionIndexJavaTypeName
+			);
 		}
-		if ( attributeBinding.getPluralAttributeElementBinding()
-				.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
-			for ( RelationalValueBinding relationalValueBinding : attributeBinding.getPluralAttributeIndexBinding().getRelationalValueBindings() ) {
-				if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
-					// TODO: fix this when column nullability is refactored
-					Column column = (Column) relationalValueBinding.getValue();
-					column.setNullable( true );
+		else {
+			switch ( attributeSource.getIndexSource().getNature() ) {
+				case BASIC: {
+					bindBasicCollectionIndex(
+							attributeBinding,
+							(BasicPluralAttributeIndexSource) attributeSource.getIndexSource(),
+							defaultCollectionIndexJavaTypeName
+					);
+					break;
+				}
+				case AGGREGATE: {
+					bindCompositeCollectionIndex(
+							(CompositePluralAttributeIndexBinding) attributeBinding.getPluralAttributeIndexBinding(),
+							attributeSource,
+							defaultCollectionIndexJavaTypeName
+					);
+					break;
+				}
+				default: {
+					throw new NotYetImplementedException(
+							String.format(
+									"%s collection indexes are not supported yet.",
+									attributeSource.getIndexSource().getNature()
+							)
+					);
+				}
+			}
+			if ( attributeBinding.getPluralAttributeElementBinding()
+					.getNature() == PluralAttributeElementBinding.Nature.ONE_TO_MANY ) {
+				for ( RelationalValueBinding relationalValueBinding : attributeBinding.getPluralAttributeIndexBinding().getRelationalValueBindings() ) {
+					if ( Column.class.isInstance( relationalValueBinding.getValue() ) ) {
+						// TODO: fix this when column nullability is refactored
+						Column column = (Column) relationalValueBinding.getValue();
+						column.setNullable( true );
+					}
 				}
 			}
 		}
@@ -3240,9 +3274,8 @@ public class Binder {
 
 	private static void bindIndexedCollectionTablePrimaryKey(
 			final IndexedPluralAttributeBinding attributeBinding) {
-		final PrimaryKey primaryKey = attributeBinding.getPluralAttributeKeyBinding()
-				.getCollectionTable()
-				.getPrimaryKey();
+		final TableSpecification collectionTable =  attributeBinding.getPluralAttributeKeyBinding().getCollectionTable();
+		final PrimaryKey primaryKey = collectionTable.getPrimaryKey();
 		final List<RelationalValueBinding> keyRelationalValueBindings =
 				attributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings();
 		final PluralAttributeIndexBinding indexBinding = attributeBinding.getPluralAttributeIndexBinding();
@@ -3250,7 +3283,7 @@ public class Binder {
 			primaryKey.addColumn( (Column) keyRelationalValueBinding.getValue() );
 		}
 		for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
-			if ( !relationalValueBinding.isDerived() ) {
+			if ( !relationalValueBinding.isDerived() && relationalValueBinding.getTable().equals( collectionTable ) ) {
 				primaryKey.addColumn( (Column) relationalValueBinding.getValue() );
 			}
 		}

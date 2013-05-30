@@ -43,7 +43,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainer;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.EnumeratedTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.LobTypeResolver;
@@ -422,10 +422,10 @@ public class BasicAttribute extends MappedAttribute {
 
 	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
 		CompositeAttributeTypeResolver resolver = new CompositeAttributeTypeResolver( this );
-		resolver.addHibernateTypeResolver( new AttributeTypeResolverImpl( this ) );
-		resolver.addHibernateTypeResolver( new TemporalTypeResolver( this ) );
-		resolver.addHibernateTypeResolver( new LobTypeResolver( this ) );
-		resolver.addHibernateTypeResolver( new EnumeratedTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( HibernateTypeResolver.createAttributeTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( TemporalTypeResolver.createAttributeTypeResolver( this ) );
+		resolver.addHibernateTypeResolver( LobTypeResolver.createAttributeTypeResolve( this ) );
+		resolver.addHibernateTypeResolver( EnumeratedTypeResolver.createAttributeTypeResolver( this ) );
 		return resolver;
 	}
 }

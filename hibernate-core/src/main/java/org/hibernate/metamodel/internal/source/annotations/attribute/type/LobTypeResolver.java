@@ -27,14 +27,13 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.util.Collections;
-import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.CharacterArrayClobType;
 import org.hibernate.type.PrimitiveCharacterArrayClobType;
 import org.hibernate.type.SerializableToBlobType;
@@ -44,54 +43,65 @@ import org.hibernate.type.WrappedMaterializedBlobType;
 /**
  * @author Strong Liu
  * @author Brett Meyer
+ * @author Gail Badner
  */
 public class LobTypeResolver extends AbstractAttributeTypeResolver {
+	public static LobTypeResolver createAttributeTypeResolve(MappedAttribute attribute) {
+		return new LobTypeResolver(
+				attribute.getName(),
+				attribute.getAttributeType(),
+				resolveAnnotationInstance( attribute.annotations(), JPADotNames.LOB ),
+				attribute.getContext()
+		);
+	}
 
-	public LobTypeResolver(MappedAttribute mappedAttribute) {
-		super( mappedAttribute );
+	public static LobTypeResolver createCollectionElementTypeResolve(PluralAssociationAttribute pluralAssociationAttribute) {
+		return new LobTypeResolver(
+				pluralAssociationAttribute.getName(),
+				pluralAssociationAttribute.getReferencedAttributeType(),
+				resolveAnnotationInstance( pluralAssociationAttribute.annotations(), JPADotNames.LOB ),
+				pluralAssociationAttribute.getContext()
+		);
+	}
+
+	private LobTypeResolver(String name,
+						   Class<?> javaClass,
+						   AnnotationInstance annotation,
+						   EntityBindingContext context) {
+		super( name, javaClass, annotation, context );
 	}
 
 	@Override
-	protected AnnotationInstance getTypeDeterminingAnnotationInstance() {
-		return JandexHelper.getSingleAnnotation( mappedAttribute.annotations(), JPADotNames.LOB );
-	}
-
-	@Override
-	public String resolveAnnotatedHibernateTypeName(AnnotationInstance annotationInstance) {
-		if ( annotationInstance == null ) {
+	public String resolveHibernateTypeName() {
+		if ( annotation() == null ) {
 			//only check attributes annotated with @Lob
 			return null;
 		}
 		String type = "blob";
-		if ( Clob.class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		if ( Clob.class.isAssignableFrom( javaClass() ) ) {
 			type = StandardBasicTypes.CLOB.getName();
 		}
-		else if ( Blob.class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( Blob.class.isAssignableFrom( javaClass() ) ) {
 			type = StandardBasicTypes.BLOB.getName();
 		}
-		else if ( String.class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( String.class.isAssignableFrom( javaClass() ) ) {
 			type = StandardBasicTypes.MATERIALIZED_CLOB.getName();
 		}
-		else if ( Character[].class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( Character[].class.isAssignableFrom( javaClass() ) ) {
 			type = CharacterArrayClobType.class.getName();
 		}
-		else if ( char[].class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( char[].class.isAssignableFrom( javaClass() ) ) {
 			type = PrimitiveCharacterArrayClobType.class.getName();
 		}
-		else if ( Byte[].class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( Byte[].class.isAssignableFrom( javaClass() ) ) {
 			type = WrappedMaterializedBlobType.class.getName();
 		}
-		else if ( byte[].class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( byte[].class.isAssignableFrom( javaClass() ) ) {
 			type = StandardBasicTypes.MATERIALIZED_BLOB.getName();
 		}
-		else if ( Serializable.class.isAssignableFrom( mappedAttribute.getAttributeType() ) ) {
+		else if ( Serializable.class.isAssignableFrom( javaClass() ) ) {
 			type = SerializableToBlobType.class.getName();
 		}
 		return type;
-	}
-
-	@Override
-	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
-		return Collections.emptyMap();
 	}
 }

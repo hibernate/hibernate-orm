@@ -34,66 +34,88 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.EnumType;
-import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * @author Strong Liu
  * @author Brett Meyer
+ * @author Gail Badner
  */
 public class EnumeratedTypeResolver extends AbstractAttributeTypeResolver {
-	private final boolean isMapKey;
 	private final boolean isEnum;
-//	private final String attributeType;
+	private final javax.persistence.EnumType enumType;
 
-	public EnumeratedTypeResolver(MappedAttribute mappedAttribute) {
-		super( mappedAttribute );
-		isEnum = mappedAttribute.getAttributeType().isEnum();
-		isMapKey = false;//todo
-//		attributeType = mappedAttribute.getAttributeType().getName();
-	}
-
-	public EnumeratedTypeResolver(PluralAssociationAttribute pluralAssociationAttribute) {
-		super( pluralAssociationAttribute );
-		isEnum = pluralAssociationAttribute.getReferencedAttributeType().isEnum();
-		isMapKey = false;//todo
-//		attributeType = pluralAssociationAttribute.getReferencedAttributeType().getName();
-	}
-
-	@Override
-	protected AnnotationInstance getTypeDeterminingAnnotationInstance() {
-		return JandexHelper.getSingleAnnotation(
-				mappedAttribute.annotations(),
-				JPADotNames.ENUMERATED
+	public static EnumeratedTypeResolver createAttributeTypeResolver(MappedAttribute attribute) {
+		return new EnumeratedTypeResolver(
+				attribute.getName(),
+				attribute.getAttributeType(),
+				resolveAnnotationInstance( attribute.annotations(),JPADotNames.ENUMERATED ),
+				attribute.getContext()
 		);
 	}
 
+	public static EnumeratedTypeResolver createCollectionElementTypeResolver(
+			PluralAssociationAttribute pluralAssociationAttribute) {
+		return new EnumeratedTypeResolver(
+				pluralAssociationAttribute.getName(),
+				pluralAssociationAttribute.getReferencedAttributeType(),
+				resolveAnnotationInstance( pluralAssociationAttribute.annotations(),JPADotNames.ENUMERATED ),
+				pluralAssociationAttribute.getContext()
+		);
+	}
+
+	public static EnumeratedTypeResolver createCollectionIndexTypeResolver(
+			PluralAssociationAttribute pluralAssociationAttribute) {
+		return new EnumeratedTypeResolver(
+				pluralAssociationAttribute.getName(),
+				pluralAssociationAttribute.getIndexType(),
+				resolveAnnotationInstance( pluralAssociationAttribute.annotations(), JPADotNames.MAP_KEY_ENUMERATED ),
+				pluralAssociationAttribute.getContext()
+		);
+	}
+
+	private EnumeratedTypeResolver(
+			String name,
+			Class<?> javaClass,
+			AnnotationInstance annotation,
+			EntityBindingContext context) {
+		super( name, javaClass, annotation, context );
+		this.isEnum = javaClass().isEnum();
+		this.enumType = annotation == null ?
+				null :
+				JandexHelper.getEnumValue( annotation, "value", javax.persistence.EnumType.class );
+	}
+
 	@Override
-	public String resolveAnnotatedHibernateTypeName(AnnotationInstance enumeratedAnnotation) {
-		if ( enumeratedAnnotation != null ) {
+	public String resolveHibernateTypeName() {
+		if ( annotation() != null ) {
 			if ( isEnum ) {
 				return EnumType.class.getName();
 			} else {
-				throw new AnnotationException( "Attribute " + mappedAttribute.getName() + " is not a Enumerated type, but has a @Enumerated annotation." );
+				throw new AnnotationException(
+						String.format(
+								"Attribute %s is not a Enumerated type, but has %s or %s annotation.",
+								name(),
+								JPADotNames.ENUMERATED,
+								JPADotNames.MAP_KEY_ENUMERATED
+						)
+				);
 			}
 		} 
-		else if ( !hasEntityTypeDef() && isEnum ) {
+		else if ( !hasTypeDef() && isEnum ) {
 			return EnumType.class.getName();
 		}
 		return null;
 	}
 
 	@Override
-	protected Map<String, String> resolveHibernateTypeParameters(AnnotationInstance annotationInstance) {
+	protected Map<String, String> resolveHibernateTypeParameters() {
 		HashMap<String, String> typeParameters = new HashMap<String, String>();
-		if ( annotationInstance != null ) {
-			javax.persistence.EnumType enumType = JandexHelper.getEnumValue(
-					annotationInstance,
-					"value",
-					javax.persistence.EnumType.class
-			);
+
+		if ( enumType != null ) {
 			if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
 				typeParameters.put( EnumType.TYPE, String.valueOf( Types.INTEGER ) );
 				typeParameters.put( EnumType.NAMED, String.valueOf( false ) );

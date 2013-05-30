@@ -23,61 +23,58 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.Collections;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
-import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 
 /**
  * @author Gail Badner
  */
-public class SequentialPluralAttributeIndexSourceImpl
-		extends BasicPluralAttributeIndexSourceImpl
-		implements SequentialPluralAttributeIndexSource {
-	private final int base;
-	public SequentialPluralAttributeIndexSourceImpl(
-			IndexedPluralAttributeSourceImpl indexedPluralAttributeSource,
-			PluralAssociationAttribute attribute,
-			Binder.DefaultNamingStrategy defaultNamingStrategy) {
-		super( indexedPluralAttributeSource, attribute, defaultNamingStrategy );
-		AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
-				attribute.annotations(),
-				HibernateDotNames.INDEX_COLUMN
-		);
-		if(columnAnnotation == null){
-			columnAnnotation   = JandexHelper.getSingleAnnotation(
-					attribute.annotations(),
-					JPADotNames.ORDER_COLUMN
-			);
-		}
-		this.base = columnAnnotation.value( "base" ) != null ? columnAnnotation.value( "base" )
-				.asInt() : 0;
+public abstract class AbstractPluralAttributeIndexSourceImpl implements PluralAttributeIndexSource {
+	private final PluralAssociationAttribute attribute;
+
+	public AbstractPluralAttributeIndexSourceImpl(PluralAssociationAttribute attribute) {
+		this.attribute = attribute;
 	}
 
-	@Override
-	public int base() {
-		return base;
-	}
 	@Override
 	public ExplicitHibernateTypeSource getTypeInformation() {
 		return new ExplicitHibernateTypeSource() {
 			@Override
 			public String getName() {
-				return "integer";
+				return attribute.getIndexTypeResolver().getExplicitHibernateTypeName();
 			}
 
 			@Override
 			public Map<String, String> getParameters() {
-				return Collections.emptyMap();
+				return attribute.getIndexTypeResolver().getExplicitHibernateTypeParameters();
 			}
 		};
+	}
+
+	@Override
+	public boolean isReferencedEntityAttribute() {
+		return false;
+	}
+
+	@Override
+	public boolean areValuesIncludedInInsertByDefault() {
+		return false;
+	}
+
+	@Override
+	public boolean areValuesIncludedInUpdateByDefault() {
+		return false;
+	}
+
+	@Override
+	public boolean areValuesNullableByDefault() {
+		return false;
+	}
+
+	protected PluralAssociationAttribute pluralAssociationAttribute() {
+		return attribute;
 	}
 }

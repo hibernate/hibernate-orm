@@ -27,10 +27,5 @@ package org.hibernate.metamodel.spi.source;
  * @author Gail Badner
  */
 public interface PluralAttributeElementSourceResolver {
-
-	PluralAttributeElementSource resolvePluralAttributeElementSource(PluralAttributeElementSourceResolutionContext context);
-
-	public static interface PluralAttributeElementSourceResolutionContext {
-		public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy);
-	}
+	PluralAttributeElementSource resolvePluralAttributeElementSource(AttributeSourceResolutionContext context);
 }

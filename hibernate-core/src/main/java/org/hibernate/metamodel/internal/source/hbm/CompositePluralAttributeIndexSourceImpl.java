@@ -34,8 +34,10 @@ import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
@@ -93,6 +95,16 @@ public class CompositePluralAttributeIndexSourceImpl
 	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
 		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public ExplicitHibernateTypeSource getTypeInformation() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public boolean isReferencedEntityAttribute() {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

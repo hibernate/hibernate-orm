@@ -37,7 +37,6 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
@@ -50,7 +49,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolverImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
@@ -275,8 +274,11 @@ public class AssociationAttribute extends MappedAttribute {
 		return PropertyGeneration.NEVER;
 	}
 
-	private AttributeTypeResolver getDefaultHibernateTypeResolver() {
-		return new CompositeAttributeTypeResolver( this, new AttributeTypeResolverImpl( this ) );
+	protected AttributeTypeResolver getDefaultHibernateTypeResolver() {
+		return new CompositeAttributeTypeResolver(
+				this,
+				HibernateTypeResolver.createAttributeTypeResolver( this )
+		);
 	}
 
 	private boolean determineNotFoundBehavior() {

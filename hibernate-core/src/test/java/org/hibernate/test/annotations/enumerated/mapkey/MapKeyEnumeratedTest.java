@@ -32,7 +32,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class MapKeyEnumeratedTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

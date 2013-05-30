@@ -34,4 +34,23 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 public interface PluralAttributeIndexSource extends RelationalValueSourceContainer {
 	PluralAttributeIndexBinding.Nature getNature();
 	List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies();
+	/**
+	 * Obtain information about the Hibernate index type ({@link org.hibernate.type.Type})
+	 * for this plural attribute index.
+	 *
+	 * @return The Hibernate type information
+	 */
+	public ExplicitHibernateTypeSource getTypeInformation();
+
+	/**
+	 * Is this plural attribute index source for an attribute of the referenced entity
+	 * (relevant only for one-to-many and many-to-many associations)?
+	 *
+	 * If this method returns {@code true}, then this object can safely
+	 * be cast to EntityAttributePluralAttributeIndexSource.
+	 *
+	 * @return true, if this plural attribute index source for an attribute of the referenced
+	 * entity; false, otherwise.
+	 */
+	public boolean isReferencedEntityAttribute();
 }

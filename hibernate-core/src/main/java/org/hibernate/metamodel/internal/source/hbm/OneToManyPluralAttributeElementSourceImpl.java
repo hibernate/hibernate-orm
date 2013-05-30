@@ -39,7 +39,7 @@ public class OneToManyPluralAttributeElementSourceImpl
 
 	public OneToManyPluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
-			JaxbOneToManyElement oneToManyElement,
+			final JaxbOneToManyElement oneToManyElement,
 			String cascadeString) {
 		super( mappingDocument );
 		this.oneToManyElement = oneToManyElement;

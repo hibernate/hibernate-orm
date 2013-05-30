@@ -33,8 +33,11 @@ import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.SourceType;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.StandardBasicTypes;
@@ -42,26 +45,58 @@ import org.hibernate.type.StandardBasicTypes;
 /**
  * @author Strong Liu
  * @author Brett Meyer
+ * @author Gail Badner
  */
 public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
-	private final BasicAttribute basicAttribute;
-	private final boolean isMapKey;
-	
-	public TemporalTypeResolver(BasicAttribute mappedAttribute) {
-		super( mappedAttribute );
-		this.basicAttribute = mappedAttribute;
-		this.isMapKey = false;//todo
+	private final SourceType versionSourceType;
+
+	public static TemporalTypeResolver createAttributeTypeResolver(BasicAttribute attribute) {
+		return new TemporalTypeResolver(
+				attribute.getName(),
+				attribute.getAttributeType(),
+				resolveAnnotationInstance( attribute.annotations(), JPADotNames.TEMPORAL ),
+				attribute.getContext(),
+				attribute.isVersioned() ? attribute.getVersionSourceType() : null
+		);
+	}
+
+	public static TemporalTypeResolver createCollectionElementTypeResolver(PluralAssociationAttribute attribute) {
+		return new TemporalTypeResolver(
+				attribute.getName(),
+				attribute.getReferencedAttributeType(),
+				resolveAnnotationInstance( attribute.annotations(), JPADotNames.TEMPORAL ),
+				attribute.getContext(),
+				null
+		);
+	}
+
+	public static TemporalTypeResolver createCollectionIndexTypeResolver(PluralAssociationAttribute attribute) {
+		return new TemporalTypeResolver(
+				attribute.getName(),
+				attribute.getIndexType(),
+				resolveAnnotationInstance( attribute.annotations(), JPADotNames.MAP_KEY_TEMPORAL ),
+				attribute.getContext(),
+				null
+		);
+	}
+	private TemporalTypeResolver(String name,
+								Class<?> javaClass,
+								AnnotationInstance annotation,
+								EntityBindingContext context,
+								SourceType versionSourceType) {
+		super( name, javaClass, annotation, context );
+		this.versionSourceType = versionSourceType;
 	}
 
 	@Override
-	public String resolveAnnotatedHibernateTypeName(AnnotationInstance temporalAnnotation) {
-		Class attributeType = mappedAttribute.getAttributeType();
+	public String resolveHibernateTypeName() {
+		Class attributeType = javaClass();
 		
 		if ( isTemporalType( attributeType ) ) {
-			if ( basicAttribute.isVersioned() && basicAttribute.getVersionSourceType() != null ) {
-				return basicAttribute.getVersionSourceType().typeName();
+			if (versionSourceType != null ) {
+				return versionSourceType.typeName();
 			}
-			if ( temporalAnnotation == null ) {
+			if ( annotation() == null ) {
 				// Although JPA 2.1 states that @Temporal is required on
 				// Date/Calendar attributes, allow it to be left off in order
 				// to support legacy mappings.
@@ -80,7 +115,11 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 					return StandardBasicTypes.TIMESTAMP.getName();
 				}
 			} else {
-				final TemporalType temporalType = JandexHelper.getEnumValue( temporalAnnotation, "value", TemporalType.class );
+				final TemporalType temporalType = JandexHelper.getEnumValue(
+						annotation(),
+						"value",
+						TemporalType.class
+				);
 				final boolean isDate = Date.class.isAssignableFrom( attributeType );
 				String type;
 				switch ( temporalType ) {
@@ -102,22 +141,13 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 				return type;
 			}
 		} else {
-			if ( temporalAnnotation != null ) {
+			if ( annotation() != null ) {
 				throw new AnnotationException(
-						"@Temporal should only be set on a java.util.Date or java.util.Calendar property: " + mappedAttribute
-								.getName()
+						"@Temporal should only be set on a java.util.Date or java.util.Calendar property: " + name()
 				);
 			}
 		}
 		return null;
-	}
-
-	@Override
-	protected AnnotationInstance getTypeDeterminingAnnotationInstance() {
-		return JandexHelper.getSingleAnnotation(
-				mappedAttribute.annotations(),
-				JPADotNames.TEMPORAL
-		);
 	}
 
 	private static boolean isTemporalType(Class type) {

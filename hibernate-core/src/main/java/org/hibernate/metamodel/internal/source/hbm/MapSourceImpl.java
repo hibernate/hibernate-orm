@@ -27,6 +27,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.jaxb.spi.hbm.JaxbMapElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 
@@ -71,6 +72,15 @@ public class MapSourceImpl extends AbstractPluralAttributeSourceImpl implements 
 		else {
 			throw new AssertionFailure( "No map key found" );
 		}
+	}
+
+	@Override
+	public PluralAttributeIndexSource resolvePluralAttributeIndexSource(AttributeSourceResolutionContext context) {
+		if ( indexSource == null ) {
+			throw new NotYetImplementedException( "Plural attribute index source resolution not implemented yet." );
+
+		}
+		return indexSource;
 	}
 
 	@Override

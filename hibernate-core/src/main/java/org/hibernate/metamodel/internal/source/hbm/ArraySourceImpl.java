@@ -23,9 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
@@ -48,6 +50,14 @@ public class ArraySourceImpl extends AbstractPluralAttributeSourceImpl implement
 		} else {
 			this.indexSource = new SequentialPluralAttributeIndexSourceImpl( sourceMappingDocument(), listIndexElement );
 		}
+	}
+
+	@Override
+	public PluralAttributeIndexSource resolvePluralAttributeIndexSource(AttributeSourceResolutionContext context) {
+		if ( indexSource == null ) {
+			throw new AssertionFailure( "Array index source should have been resolved already." );
+		}
+		return indexSource;
 	}
 
 	@Override

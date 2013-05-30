@@ -27,5 +27,4 @@ package org.hibernate.metamodel.spi.source;
  * @author Gail Badner
  */
 public interface BasicPluralAttributeIndexSource extends PluralAttributeIndexSource {
-	ExplicitHibernateTypeSource explicitHibernateTypeSource();
 }

@@ -52,7 +52,6 @@ import org.junit.Test;
 @SuppressWarnings("unchecked")
 public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	@Test
-	@FailureExpectedWithNewMetamodel( message = "Map with EnumType value not supported yet.")
 	public void testSimpleElement() throws Exception {
 		assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
 				.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
@@ -160,7 +159,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( message = "Collection with EnumType element not supported yet.")
 	public void testLazyCollectionofElements() throws Exception {
 		assertEquals( "BoyFavoriteNumbers", SchemaUtil.getCollection( Boy.class, "favoriteNumbers", metadata() )
 				.getPluralAttributeKeyBinding().getCollectionTable().getLogicalName().toString() );
@@ -202,7 +200,6 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( message = "Map with EnumType key not supported yet.")
 	public void testFetchEagerAndFilter() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

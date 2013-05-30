@@ -39,11 +39,12 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
+import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeElementSourceResolver;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
@@ -66,9 +67,13 @@ public class SourceIndex {
 	private final Map<AttributeSourceKey, AttributeSourceKey> mappedByAttributeKeysByOwnerAttributeKeys =
 			new HashMap<AttributeSourceKey, AttributeSourceKey>();
 
-	public void indexEntitySource(final EntitySource entitySource) {
+	public void indexRootEntitySource(final RootEntitySource entitySource) {
+		indexEntitySource( entitySource, entitySource );
+	}
+
+	public void indexEntitySource(final RootEntitySource rootEntitySource, final EntitySource entitySource) {
 		String entityName = entitySource.getEntityName();
-		EntitySourceIndex entitySourceIndex = new EntitySourceIndex( this, entitySource );
+		EntitySourceIndex entitySourceIndex = new EntitySourceIndex( this, rootEntitySource, entitySource );
 		entitySourceIndexByEntityName.put( entityName, entitySourceIndex );
 		log.debugf( "Mapped entity source \"%s\"", entityName );
 		indexAttributes( entitySourceIndex );
@@ -104,6 +109,10 @@ public class SourceIndex {
 
 	public EntitySource entitySource(final String entityName) {
 		return entitySourceIndexByEntityName.get( entityName ).entitySource;
+	}
+
+	private EntitySourceIndex entitySourceIndex(String entityName) {
+		return entitySourceIndexByEntityName.get( entityName );
 	}
 
 	private void indexAttributes(EntitySourceIndex entitySourceIndex) {
@@ -267,6 +276,7 @@ public class SourceIndex {
 
 	private static class EntitySourceIndex {
 		private final SourceIndex sourceIndex;
+		private final RootEntitySource rootEntitySource;
 		private final EntitySource entitySource;
 		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> identifierAttributeSourcesByNature =
 				new HashMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>();
@@ -281,8 +291,16 @@ public class SourceIndex {
 		private final Map<AttributeSourceKey, PluralAttributeSource> inversePluralAttributeSourcesByKey =
 				new LinkedHashMap<AttributeSourceKey, PluralAttributeSource>();
 
-		private EntitySourceIndex(final SourceIndex sourceIndex, final EntitySource entitySource) {
+		private EntitySourceIndex(final SourceIndex sourceIndex, final RootEntitySource rootEntitySource) {
+			this( sourceIndex, rootEntitySource, rootEntitySource );
+		}
+
+		private EntitySourceIndex(
+				final SourceIndex sourceIndex,
+				final RootEntitySource rootEntitySource,
+				final EntitySource entitySource) {
 			this.sourceIndex = sourceIndex;
+			this.rootEntitySource = rootEntitySource;
 			this.entitySource = entitySource;
 		}
 
@@ -375,12 +393,20 @@ public class SourceIndex {
 					// so it needs to be resolved.
 					// TODO: this should really just resolve PluralAttributeElementSource.Nature
 					pluralAttributeSource.resolvePluralAttributeElementSource(
-							new PluralAttributeElementSourceResolver.PluralAttributeElementSourceResolutionContext() {
+							new AttributeSourceResolutionContext() {
+								@Override
+								public IdentifierSource resolveIdentifierSource(String entityName) {
+									return sourceIndex.entitySourceIndex( entityName ).rootEntitySource.getIdentifierSource();
+								}
+
 								@Override
 								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {
 									AttributeSourceKey ownerAttributeSourceKey = new AttributeSourceKey( referencedEntityName, mappedBy );
 									AttributeSource ownerAttributeSource = sourceIndex.attributeSource( referencedEntityName, mappedBy );
 									// TODO: is this needed? if so, make more obvious and rename method.
+									// If it's not needed, then resolvePluralAttributeElementSource() and
+									// and resolvePluralAttributeIndexSource() can use the same
+									// AttributeSourceResolutionContext.
 									sourceIndex.addMappedByAssociationByOwnerAssociation(
 											ownerAttributeSourceKey,
 											pluralAttributeSourceKey
@@ -388,9 +414,49 @@ public class SourceIndex {
 									return ownerAttributeSource;
 								}
 							}
-						);
+					);
+				}
+				if ( IndexedPluralAttributeSource.class.isInstance( pluralAttributeSource ) ) {
+					IndexedPluralAttributeSource indexedPluralAttributeSource =
+							(IndexedPluralAttributeSource) pluralAttributeSource;
+					indexedPluralAttributeSource.resolvePluralAttributeIndexSource(
+							new AttributeSourceResolutionContext() {
+								@Override
+								public IdentifierSource resolveIdentifierSource(String entityName) {
+									return sourceIndex.entitySourceIndex( entityName ).rootEntitySource.getIdentifierSource();
+								}
+
+								@Override
+								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {;
+									return sourceIndex.attributeSource( referencedEntityName, mappedBy );
+								}
+							}
+					);
 				}
 			}
+
+			for ( Map.Entry<AttributeSourceKey,PluralAttributeSource> entry : nonInversePluralAttributeSourcesByKey.entrySet() ) {
+				final AttributeSourceKey pluralAttributeSourceKey = entry.getKey();
+				final PluralAttributeSource pluralAttributeSource = entry.getValue();
+				if ( IndexedPluralAttributeSource.class.isInstance( pluralAttributeSource ) ) {
+					IndexedPluralAttributeSource indexedPluralAttributeSource =
+							(IndexedPluralAttributeSource) pluralAttributeSource;
+					indexedPluralAttributeSource.resolvePluralAttributeIndexSource(
+							new AttributeSourceResolutionContext() {
+								@Override
+								public IdentifierSource resolveIdentifierSource(String entityName) {
+									return sourceIndex.entitySourceIndex( entityName ).rootEntitySource.getIdentifierSource();
+								}
+
+								@Override
+								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {;
+									return sourceIndex.attributeSource( referencedEntityName, mappedBy );
+								}
+							}
+					);
+				}
+			}
+
 			final Map<AttributeSourceKey,SingularAttributeSource> unresolvedSingularAttributeSourceMap =
 					singularAttributeSourcesByNature.get( null );
 			if ( unresolvedSingularAttributeSourceMap != null ) {

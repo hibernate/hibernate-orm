@@ -37,6 +37,7 @@ import org.hibernate.jaxb.spi.hbm.PluralAttributeElement;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MappingException;
@@ -164,7 +165,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public PluralAttributeElementSource resolvePluralAttributeElementSource(PluralAttributeElementSourceResolutionContext context) {
+	public PluralAttributeElementSource resolvePluralAttributeElementSource(AttributeSourceResolutionContext context) {
 		// elementSource is already resolved; nothing to do.
 		return elementSource;
 	}

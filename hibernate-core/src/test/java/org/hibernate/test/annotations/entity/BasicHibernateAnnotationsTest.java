@@ -45,6 +45,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -101,7 +103,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
-	@FailureExpectedWithNewMetamodel
 	public void testVersioning() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -328,7 +329,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCascadedDeleteOfChildEntitiesBug2() {
 		// Relationship is one SoccerTeam to many Players.
 		// Create a SoccerTeam (parent) and three Players (child).
@@ -379,7 +379,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCascadedDeleteOfChildOneToOne() {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
@@ -454,7 +453,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, count );
 		s.disableFilter( "betweenLength" );
 		s.enableFilter( "minLength" ).setParameter( "minLength", 5 );
-		count = ( (Long) s.createQuery( "select count(*) from Forest" ).iterate().next() ).longValue();
+		count = (Long) s.createQuery( "select count(*) from Forest" ).iterate().next();
 		assertEquals( 2l, count );
 		s.disableFilter( "minLength" );
 		tx.rollback();
@@ -466,7 +465,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	 * defined on a parent MappedSuperclass(s)
 	 */
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testInheritFiltersFromMappedSuperclass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -500,9 +498,9 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.disableFilter( "byName" );
 
 		s.enableFilter( "byCategory" ).setParameter( "category", "Industrial" );
-		count = ( (Long) s.createQuery( "select count(*) from Drill" ).iterate().next() ).longValue();
+		count = (Long) s.createQuery( "select count(*) from Drill" ).iterate().next();
 		assertEquals( 1, count );
-		count = ( (Long) s.createQuery( "select count(*) from PowerDrill" ).iterate().next() ).longValue();
+		count = (Long) s.createQuery( "select count(*) from PowerDrill" ).iterate().next();
 		assertEquals( 1, count );
 		s.disableFilter( "byCategory" );
 
@@ -655,10 +653,19 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
 		SessionFactory sf=null;
+		ServiceRegistry serviceRegistry= null;
 		try {
 			Configuration config = new Configuration();
-			config.addAnnotatedClass(LocalContactDetails.class);
-			sf = config.buildSessionFactory( ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() ) );
+			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
+			if ( isMetadataUsed ) {
+				MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+				metadataSources.addAnnotatedClass( LocalContactDetails.class ).buildMetadata();
+			}
+			else {
+				config.addAnnotatedClass( LocalContactDetails.class );
+				sf = config.buildSessionFactory( serviceRegistry );
+			}
+
 			fail("Did not throw expected exception");
 		}
 		catch( AnnotationException ex ) {
@@ -668,6 +675,9 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		} finally {
 			if( sf != null){
 				sf.close();
+			}
+			if( serviceRegistry != null ){
+				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
 		}
 	}

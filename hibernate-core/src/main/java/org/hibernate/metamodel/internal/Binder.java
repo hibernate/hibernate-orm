@@ -781,13 +781,16 @@ public class Binder {
 		if ( discriminatorValue != null ) {
 			rootEntityBinding.setDiscriminatorMatchValue( discriminatorValue );
 		}
-		else if ( !Modifier.isAbstract(
-				bindingContext().locateClassByName( rootEntitySource.getEntityName() )
-						.getModifiers()
-		) ) {
+		else
+//		if ( !Modifier.isAbstract(
+//				bindingContext().locateClassByName( rootEntitySource.getEntityName() )
+//						.getModifiers()
+//		) )
+		{
 			// Use the class name as a default if no discriminator value.
 			// However, skip abstract classes -- obviously no discriminators there.
-			rootEntityBinding.setDiscriminatorMatchValue( rootEntitySource.getEntityName() );
+			// But this is not correct, since for single table entity hierarchy, even the root class is abstract, it still should has discriminator
+			rootEntityBinding.setDiscriminatorMatchValue( StringHelper.unqualify( rootEntitySource.getEntityName() ) );
 		}
 		// Configure discriminator hibernate type
 		typeHelper.bindDiscriminatorType( discriminator, value );
@@ -969,14 +972,19 @@ public class Binder {
 					targetColumns
 			);
 			SecondaryTable secondaryTable = new SecondaryTable( table, foreignKey );
+			if(secondaryTableSource.getFetchStyle()!=null)
 			secondaryTable.setFetchStyle( secondaryTableSource.getFetchStyle() );
 			secondaryTable.setInverse( secondaryTableSource.isInverse() );
 			secondaryTable.setOptional( secondaryTableSource.isOptional() );
 			secondaryTable.setCascadeDeleteEnabled( secondaryTableSource.isCascadeDeleteEnabled() );
+			secondaryTable.setCustomDelete( secondaryTableSource.getCustomSqlDelete() );
+			secondaryTable.setCustomInsert( secondaryTableSource.getCustomSqlInsert() );
+			secondaryTable.setCustomUpdate( secondaryTableSource.getCustomSqlUpdate() );
 			if ( secondaryTable.isCascadeDeleteEnabled() ) {
 				foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
 			}
 			entityBinding.addSecondaryTable( secondaryTable );
+			metadata.addSecondaryTable( secondaryTable );
 		}
 	}
 

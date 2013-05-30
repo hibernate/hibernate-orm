@@ -57,6 +57,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.Index;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
@@ -153,6 +154,7 @@ public interface JPADotNames {
 	DotName GENERATED_VALUE = DotName.createSimple( GeneratedValue.class.getName() );
 	DotName ID = DotName.createSimple( Id.class.getName() );
 	DotName ID_CLASS = DotName.createSimple( IdClass.class.getName() );
+	DotName INDEX = DotName.createSimple( Index.class.getName() );
 	DotName INHERITANCE = DotName.createSimple( Inheritance.class.getName() );
 	DotName INHERITANCE_TYPE = DotName.createSimple( InheritanceType.class.getName() );
 	DotName JOIN_COLUMN = DotName.createSimple( JoinColumn.class.getName() );

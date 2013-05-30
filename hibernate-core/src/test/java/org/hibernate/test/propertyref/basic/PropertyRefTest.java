@@ -35,8 +35,9 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
@@ -52,7 +53,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
 public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -111,6 +111,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyPropertyRef() {
 		// prepare some test data relating to the Group->Person many-to-many association
 		Session s = openSession();
@@ -281,25 +282,25 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testForeignKeyCreation() {
+		if ( !isMetadataUsed ) {
+			return;
+		}
 		TableSpecification table = SchemaUtil.getTable( Account.class, metadata() );
-
+		EntityBinding personEntityBinding = getEntityBinding( Person.class );
 		Iterator foreignKeyIterator = table.getForeignKeys().iterator();
 		boolean found = false;
 		while ( foreignKeyIterator.hasNext() ) {
 			ForeignKey element = (ForeignKey) foreignKeyIterator.next();
-			if(element.getReferencedEntityName().equals(Person.class.getName() ) ) {
-
-				if(!element.isReferenceToPrimaryKey() ) {
-					List referencedColumns = element.getReferencedColumns();
-					Column column = (Column) referencedColumns.get(0);
-					if(column.getName().equals("person_userid") ) {
-						found = true; // extend test to include the columns
+			if ( element.getTargetTable().equals( personEntityBinding.getPrimaryTable() ) ) {
+				for ( Column column : element.getTargetColumns() ) {
+					if ( column.getColumnName().getText( getDialect() ).equals( "person_userid" ) ) {
+						found = true;
 					}
 				}
 			}
 		}
 
-		assertTrue("Property ref foreign key not found",found);
+		assertTrue( "Property ref foreign key not found", found );
 	}
 }
 

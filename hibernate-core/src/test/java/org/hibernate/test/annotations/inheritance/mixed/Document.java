@@ -11,7 +11,7 @@ import javax.persistence.Table;
  */
 @Entity
 @DiscriminatorValue("D")
-@SecondaryTable(name = "DocumentMixed")
+@SecondaryTable(name = "DocumentSecondaryTable")
 @Table(name="Document_Wrong") //illegal use, a warn is raised
 public class Document extends File {
 	private int size;
@@ -24,7 +24,7 @@ public class Document extends File {
 		this.size = size;
 	}
 
-	@Column(table = "DocumentMixed", name="doc_size", nullable = false)
+	@Column(table = "DocumentSecondaryTable", name="doc_size", nullable = false)
 	public int getSize() {
 		return size;
 	}

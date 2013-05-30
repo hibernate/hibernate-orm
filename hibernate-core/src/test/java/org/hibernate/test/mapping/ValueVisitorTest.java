@@ -52,6 +52,10 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public class ValueVisitorTest extends BaseUnitTestCase {
 	@Test
 	public void testProperCallbacks() {
+		if ( isMetadataUsed ) {
+			//doesn't mean anything for new metamodel
+			return;
+		}
 		final Mappings mappings = new Configuration().createMappings();
 		final Table tbl = new Table();
 		final RootClass rootClass = new RootClass();

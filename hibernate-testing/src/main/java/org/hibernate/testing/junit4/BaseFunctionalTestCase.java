@@ -24,14 +24,14 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
  */
 public class BaseFunctionalTestCase extends BaseUnitTestCase {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
-	public static final String USE_NEW_METADATA_MAPPINGS = MetadataSources.USE_NEW_METADATA_MAPPINGS;
+
 	public static final Dialect DIALECT = Dialect.getDialect();
 	protected static final String[] NO_MAPPINGS = new String[0];
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
 	protected Configuration configuration;
 	protected MetadataImplementor metadata;
 	protected StandardServiceRegistryImpl serviceRegistry;
-	protected boolean isMetadataUsed;
+
 
 	protected static Dialect getDialect() {
 		return DIALECT;
@@ -50,9 +50,7 @@ public class BaseFunctionalTestCase extends BaseUnitTestCase {
 		return metadata;
 	}
 
-	protected boolean isMetadataUsed() {
-		return isMetadataUsed;
-	}
+
 
 	//----------------------- services and service registry
 	protected BootstrapServiceRegistry buildBootstrapServiceRegistry() {

@@ -31,6 +31,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFetchStyleAttribute;
 import org.hibernate.jaxb.spi.hbm.JaxbJoinElement;
 import org.hibernate.jaxb.spi.hbm.JaxbOnDeleteAttribute;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
@@ -144,6 +145,22 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return fkJoinColumnResolutionDelegate;
 	}
+
+	@Override
+	public CustomSQL getCustomSqlInsert() {
+		return Helper.buildCustomSql( joinElement.getSqlInsert() );
+	}
+
+	@Override
+	public CustomSQL getCustomSqlUpdate() {
+		return Helper.buildCustomSql( joinElement.getSqlUpdate() );
+	}
+
+	@Override
+	public CustomSQL getCustomSqlDelete() {
+		return Helper.buildCustomSql( joinElement.getSqlDelete() );
+	}
+
 
 	public String getLogicalTableNameForContainedColumns() {
 		return TableSource.class.isInstance( joinTable )

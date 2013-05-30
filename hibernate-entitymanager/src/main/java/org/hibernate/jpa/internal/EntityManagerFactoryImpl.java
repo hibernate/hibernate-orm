@@ -167,7 +167,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 		this.entityManagerFactoryName = entityManagerFactoryName;
 		if ( metadataImplementor != null ) {
-			applyNamedEntityGraphs( metadataImplementor.getNamedEntityGraphMap().values() );
+			applyNamedEntityGraphs( metadataImplementor.getNamedEntityGraphs().values() );
 		}
 
 		EntityManagerFactoryRegistry.INSTANCE.addEntityManagerFactory( entityManagerFactoryName, this );

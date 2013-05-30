@@ -36,6 +36,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ordering.antlr.ColumnMapper;
@@ -113,7 +114,13 @@ public class TemplateTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration();
 		cfg.setProperty( AvailableSettings.DIALECT, DIALECT.getClass().getName() );
 		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		SESSION_FACTORY = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		if ( isMetadataUsed ) {
+			SESSION_FACTORY = (SessionFactoryImplementor) new MetadataSources( serviceRegistry ).buildMetadata()
+					.buildSessionFactory();
+		}
+		else {
+			SESSION_FACTORY = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+		}
 	}
 
 	@AfterClass

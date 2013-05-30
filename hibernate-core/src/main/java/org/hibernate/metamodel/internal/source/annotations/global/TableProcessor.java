@@ -29,12 +29,17 @@ import org.jboss.jandex.AnnotationInstance;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.MappingException;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
+import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.ObjectName;
@@ -83,11 +88,19 @@ public class TableProcessor {
 		Schema schema = metadata.getDatabase().getSchema( objectName.getCatalog(), objectName.getSchema() );
 		Table table = schema.locateTable( objectName.getName() );
 		if ( table != null ) {
-			bindHibernateTableAnnotation( table, tableAnnotation );
+			boolean isSecondaryTable = metadata.getSecondaryTables().containsKey( table.getLogicalName() );
+			bindHibernateTableAnnotation( table, tableAnnotation,isSecondaryTable, metadata );
+		}
+		else {
+			throw new MappingException( "Can't find table[" + tableName + "] from Annotation @Table" );
 		}
 	}
 
-	private static void bindHibernateTableAnnotation(Table table, AnnotationInstance tableAnnotation) {
+	private static void bindHibernateTableAnnotation(
+			final Table table,
+			final AnnotationInstance tableAnnotation,
+			final boolean isSecondaryTable,
+			final MetadataImplementor metadata) {
 		for ( AnnotationInstance indexAnnotation : JandexHelper.getValue(
 				tableAnnotation,
 				"indexes",
@@ -99,10 +112,61 @@ public class TableProcessor {
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			table.addComment( comment.trim() );
 		}
+		if ( !isSecondaryTable ) {
+			return;
+		}
+		SecondaryTable secondaryTable = metadata.getSecondaryTables().get( table.getLogicalName() );
+		if ( tableAnnotation.value( "fetch" ) != null ) {
+			FetchMode fetchMode = JandexHelper.getEnumValue( tableAnnotation, "fetch", FetchMode.class );
+			secondaryTable.setFetchStyle( EnumConversionHelper.annotationFetchModeToFetchStyle( fetchMode ) );
+		}
+		if ( tableAnnotation.value( "inverse" ) != null ) {
+			secondaryTable.setInverse( tableAnnotation.value( "inverse" ).asBoolean() );
+		}
+		if ( tableAnnotation.value( "optional" ) != null ) {
+			secondaryTable.setOptional( tableAnnotation.value( "optional" ).asBoolean() );
+		}
+
+		if ( tableAnnotation.value( "sqlInsert" ) != null ) {
+			secondaryTable.setCustomInsert(
+					AnnotationParserHelper.createCustomSQL(
+							tableAnnotation.value( "sqlInsert" )
+									.asNested()
+					)
+			);
+		}
+		if ( tableAnnotation.value( "sqlUpdate" ) != null ) {
+			secondaryTable.setCustomUpdate(
+					AnnotationParserHelper.createCustomSQL(
+							tableAnnotation.value( "sqlUpdate" )
+									.asNested()
+					)
+			);
+
+		}
+		if ( tableAnnotation.value( "sqlDelete" ) != null ) {
+			secondaryTable.setCustomDelete(
+					AnnotationParserHelper.createCustomSQL(
+							tableAnnotation.value( "sqlDelete" )
+									.asNested()
+					)
+			);
+		}
+		// TODO: ForeignKey is not binded right now, because constrint name is not modifyable after it is set
+		// another option would be create something like tableDefinition and look up it when we bind table / secondary table
+
+//		if ( tableAnnotation.value( "foreignKey" ) != null ) {
+//			AnnotationInstance foreignKeyAnnotation = tableAnnotation.value( "foreignKey" ).asNested();
+//			if ( foreignKeyAnnotation.value( "name" ) != null ) {
+//				secondaryTable.getForeignKeyReference().setName( foreignKeyAnnotation.value( "name" ).asString() );
+//			}
+//		}
+
+
 	}
 
 	private static void bindIndexAnnotation(Table table, AnnotationInstance tableAnnotation, AnnotationInstance indexAnnotation) {
-		String indexName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class );
+		String indexName = JandexHelper.getValue( indexAnnotation, "name", String.class );
 		String[] columnNames = JandexHelper.getValue( indexAnnotation, "columnNames", String[].class );
 		if ( columnNames == null ) {
 			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );

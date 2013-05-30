@@ -33,10 +33,13 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 public class SecondaryTable {
 	private final TableSpecification secondaryTableReference;
 	private final ForeignKey foreignKeyReference;
-	private FetchStyle fetchStyle;
-	private boolean isInverse;
-	private boolean isOptional;
+	private FetchStyle fetchStyle  = FetchStyle.JOIN;
+	private boolean isInverse = false;
+	private boolean isOptional = true;
 	private boolean isCascadeDeleteEnabled;
+	private CustomSQL customInsert;
+	private CustomSQL customUpdate;
+	private CustomSQL customDelete;
 
 	public SecondaryTable(TableSpecification secondaryTableReference, ForeignKey foreignKeyReference) {
 		this.secondaryTableReference = secondaryTableReference;
@@ -85,5 +88,29 @@ public class SecondaryTable {
 	public boolean isLazy() {
 		// TODO: need to check attribute bindings using this table
 		return false;
+	}
+
+	public CustomSQL getCustomDelete() {
+		return customDelete;
+	}
+
+	public void setCustomDelete(CustomSQL customDelete) {
+		this.customDelete = customDelete;
+	}
+
+	public CustomSQL getCustomInsert() {
+		return customInsert;
+	}
+
+	public void setCustomInsert(CustomSQL customInsert) {
+		this.customInsert = customInsert;
+	}
+
+	public CustomSQL getCustomUpdate() {
+		return customUpdate;
+	}
+
+	public void setCustomUpdate(CustomSQL customUpdate) {
+		this.customUpdate = customUpdate;
 	}
 }

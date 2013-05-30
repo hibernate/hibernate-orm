@@ -61,7 +61,7 @@ public class AnnotationParserHelper {
 		return createCustomSQL( sqlAnnotation );
 	}
 
-	private static CustomSQL createCustomSQL(AnnotationInstance customSqlAnnotation) {
+	public static CustomSQL createCustomSQL(AnnotationInstance customSqlAnnotation) {
 		if ( customSqlAnnotation == null ) {
 			return null;
 		}

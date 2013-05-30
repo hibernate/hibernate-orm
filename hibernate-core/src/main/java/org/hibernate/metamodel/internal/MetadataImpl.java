@@ -87,11 +87,13 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeKeyBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.domain.BasicType;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.domain.Type;
 import org.hibernate.metamodel.spi.relational.Database;
+import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
@@ -136,22 +138,24 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final ObjectNameNormalizer nameNormalizer;
 
 	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<String, TypeDefinition>();
-	private Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
+	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<String, FilterDefinition>();
 
-	private Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
-	private Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
-	private Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
-	private Map<String, String> imports = new HashMap<String, String>();
-	private Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
-	private Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
-	private Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
-	private Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
+	private final Map<String, EntityBinding> entityBindingMap = new HashMap<String, EntityBinding>();
+	private final Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
+	private final Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
+	private final Map<String, String> imports = new HashMap<String, String>();
+	private final Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
+	private final Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
+	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
+	private final Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
 	private final Map<String, NamedEntityGraphDefinition> namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>(  );
+	private final Map<Identifier, SecondaryTable> secondaryTableMap = new HashMap<Identifier, SecondaryTable>(  );
 
     private boolean globallyQuotedIdentifiers = false;
 
 	public MetadataImpl(MetadataSources metadataSources, Options options) {
 		this.serviceRegistry =  options.getServiceRegistry();
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		this.options = options;
 		this.identifierGeneratorFactory = serviceRegistry.getService( MutableIdentifierGeneratorFactory.class );
 		this.database = new Database( options, serviceRegistry.getService( JdbcServices.class ).getJdbcEnvironment() );
@@ -189,7 +193,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 			};
 		}
 
-		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 //		this.persisterClassResolverService = new ValueHolder<PersisterClassResolver>(
 //				new ValueHolder.DeferredInitializer<PersisterClassResolver>() {
 //					@Override
@@ -387,7 +390,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphMap() {
+	public Map<String, NamedEntityGraphDefinition> getNamedEntityGraphs() {
 		return namedEntityGraphMap;
 	}
 
@@ -726,6 +729,16 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( StringHelper.isNotEmpty( className ) && !entityBindingMap.containsKey( className ) ) {
 			entityBindingMap.put( className, entityBinding );
 		}
+	}
+
+	@Override
+	public void addSecondaryTable(SecondaryTable secondaryTable) {
+		secondaryTableMap.put( secondaryTable.getSecondaryTableReference().getLogicalName(), secondaryTable );
+	}
+
+	@Override
+	public Map<Identifier, SecondaryTable> getSecondaryTables() {
+		return secondaryTableMap;
 	}
 
 	public PluralAttributeBinding getCollection(String collectionRole) {

@@ -27,7 +27,7 @@
 		
 		<id name="id" unsaved-value="0" 
 		        column="bid">
-			<generator class="hilo"/>
+			<generator class="seqhilo"/>
 		</id>
 		
 		<property name="name" 
@@ -49,7 +49,7 @@
 		
 		<id name="id" unsaved-value="0" 
 		        column="bid">
-			<generator class="hilo"/>
+			<generator class="seqhilo"/>
 		</id>
 		
 		<property name="identity" 

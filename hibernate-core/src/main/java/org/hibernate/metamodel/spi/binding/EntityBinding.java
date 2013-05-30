@@ -804,8 +804,7 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	}
 
 	public boolean isClassOrSuperclassSecondaryTable(SecondaryTable secondaryTable) {
-		String secondaryTableName = secondaryTable.getSecondaryTableReference().getLogicalName().getText();
-		return secondaryTables.containsKey( Identifier.toIdentifier( secondaryTableName ) ) ||
+		return secondaryTables.containsKey( secondaryTable.getSecondaryTableReference().getLogicalName() ) ||
 				( superEntityBinding != null && superEntityBinding.isClassOrSuperclassSecondaryTable( secondaryTable ) );
 	}
 

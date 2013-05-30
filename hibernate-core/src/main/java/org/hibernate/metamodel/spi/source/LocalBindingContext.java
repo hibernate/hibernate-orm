@@ -32,4 +32,5 @@ public interface LocalBindingContext extends BindingContext {
 	public Origin getOrigin();
 	public MappingException makeMappingException(String message);
 	public MappingException makeMappingException(String message, Exception cause);
+
 }

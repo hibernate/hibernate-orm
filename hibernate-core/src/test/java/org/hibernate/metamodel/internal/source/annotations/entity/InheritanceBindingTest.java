@@ -37,6 +37,7 @@ import org.junit.Test;
 
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
@@ -168,7 +169,7 @@ public class InheritanceBindingTest extends BaseAnnotationBindingTestCase {
 		EntityBinding subclassOfSubclassEntityBinding = getEntityBinding( SubclassOfSubclassOfSingleTableInheritance.class );
 
 		assertTrue( rootEntityBinding.isRoot() );
-		assertEquals( rootEntityBinding.getEntity().getName(), rootEntityBinding.getDiscriminatorMatchValue() );
+		assertEquals( StringHelper.unqualify( rootEntityBinding.getEntity().getName() ), rootEntityBinding.getDiscriminatorMatchValue() );
 		assertNull( rootEntityBinding.getSuperEntityBinding() );
 		assertSame( rootEntityBinding, getRootEntityBinding( RootOfSingleTableInheritance.class ) );
 		assertTrue( rootEntityBinding.isPolymorphic() );

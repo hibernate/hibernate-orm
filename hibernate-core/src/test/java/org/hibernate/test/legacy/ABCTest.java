@@ -29,12 +29,16 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.metamodel.spi.relational.Index;
+import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 @SuppressWarnings( {"UnnecessaryBoxing"})
 public class ABCTest extends LegacyTestCase {
@@ -79,16 +83,16 @@ public class ABCTest extends LegacyTestCase {
 	@Test
 	@FailureExpectedWithNewMetamodel
 	public void testHigherLevelIndexDefinition() throws Throwable {
-		String[] commands = configuration().generateSchemaCreationScript( getDialect() );
-		int max = commands.length;
-		boolean found = false;
-		for (int indx = 0; indx < max; indx++) {
-			System.out.println("Checking command : " + commands[indx]);
-			found = commands[indx].indexOf("create index indx_a_name") >= 0;
-			if (found)
-				break;
+		for ( Schema schema : metadata().getDatabase().getSchemas() ) {
+			for ( Table table : schema.getTables() ) {
+				for ( Index index : table.getIndexes() ) {
+					if ( index.getName().equals( "indx_a_name" ) ) {
+						return;
+					}
+				}
+			}
 		}
-		assertTrue("Unable to locate indx_a_name index creation", found);
+		fail( "Unable to locate indx_a_name index creation" );
 	}
 
 	@Test

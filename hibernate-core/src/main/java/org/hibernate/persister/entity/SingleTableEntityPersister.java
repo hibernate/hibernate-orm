@@ -267,8 +267,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		joinIter = persistentClass.getSubclassJoinClosureIterator();
 		while ( joinIter.hasNext() ) {
 			Join join = (Join) joinIter.next();
-			isConcretes.add( persistentClass.isClassOrSuperclassJoin(join) );
-			isDeferreds.add( join.isSequentialSelect() );
+			isConcretes.add( persistentClass.isClassOrSuperclassJoin(join) );  //if the secondary table is defined in the current class or its super class
+			isDeferreds.add( join.isSequentialSelect() );  //defaults to 'false' unless there is a org.hibernate.annotations.Table defines its fetch model to others then JOIN
+			//see org.hibernate.cfg.annotations.EntityBinder#addJoin
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
@@ -515,9 +516,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			cascadeDeleteEnabled[j] = join.isCascadeDeleteEnabled() &&
 					factory.getDialect().supportsCascadeDelete();
 
-			initializeCustomSql( entityBinding.getCustomInsert(), j, customSQLInsert, insertCallable, insertResultCheckStyles );
-			initializeCustomSql( entityBinding.getCustomUpdate(), j, customSQLUpdate, updateCallable, updateResultCheckStyles );
-			initializeCustomSql( entityBinding.getCustomDelete(), j, customSQLDelete, deleteCallable, deleteResultCheckStyles );
+			initializeCustomSql( join.getCustomInsert(), j, customSQLInsert, insertCallable, insertResultCheckStyles );
+			initializeCustomSql( join.getCustomUpdate(), j, customSQLUpdate, updateCallable, updateResultCheckStyles );
+			initializeCustomSql( join.getCustomDelete(), j, customSQLDelete, deleteCallable, deleteResultCheckStyles );
 
 			final List<org.hibernate.metamodel.spi.relational.Column> joinColumns = join.getForeignKeyReference().getSourceColumns();
 			keyColumnNames[j] = new String[ joinColumns.size() ];
@@ -566,9 +567,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			isInverses.add( join.isInverse() );
 			isNullables.add( join.isOptional() );
 			isLazies.add( lazyAvailable && join.isLazy() );
-			if ( isDeferred && !isConcrete ) {
-				hasDeferred = true;
-			}
+			hasDeferred = isDeferred && !isConcrete;
 			subclassTables.add( join.getSecondaryTableReference().getQualifiedName( factory.getDialect() ) );
 			final List<org.hibernate.metamodel.spi.relational.Column> joinColumns = join.getForeignKeyReference().getSourceColumns();
 			String[] keyCols = new String[ joinColumns.size() ];
@@ -686,15 +685,16 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		ArrayList<Integer> propertyJoinNumbers = new ArrayList<Integer>();
 
 		for ( AttributeBinding attributeBinding : entityBinding.getNonIdEntitiesAttributeBindingClosure() ) {
+			final String entityName = attributeBinding.getContainer().seekEntityBinding().getEntityName();
+			String path = StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ?
+					entityName + '.' + attributeBinding.getAttribute().getName() :
+					entityName + '.' + attributeBinding.getContainer().getPathBase() + '.' +  attributeBinding.getAttribute().getName();
 			if ( attributeBinding.getAttribute().isSingular() ) {
 				SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
 				int join = entityBinding.getSecondaryTableNumber( singularAttributeBinding );
 				propertyJoinNumbers.add( join );
 				// We need the name of the actual entity that contains this attribute binding.
-				final String entityName = attributeBinding.getContainer().seekEntityBinding().getEntityName();
-				String path = StringHelper.isEmpty( attributeBinding.getContainer().getPathBase() ) ?
-						entityName + '.' + attributeBinding.getAttribute().getName() :
-						entityName + '.' + attributeBinding.getContainer().getPathBase() + '.' +  attributeBinding.getAttribute().getName();
+				//TODO it should be folder.children but now it is ".children"
 				propertyTableNumbersByNameAndSubclass.put( path, join );
 				for ( RelationalValueBinding relationalValueBinding : singularAttributeBinding.getRelationalValueBindings() ) {
 					if ( DerivedValue.class.isInstance( relationalValueBinding.getValue() ) ) {
@@ -707,10 +707,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			else {
 				propertyJoinNumbers.add( 0 );
-				propertyTableNumbersByNameAndSubclass.put(
-						attributeBinding.getContainer().getPathBase() + '.' + attributeBinding.getAttribute().getName(),
-						0
-				);
+				propertyTableNumbersByNameAndSubclass.put( path, 0 );
 			}
 		}
 		subclassColumnTableNumberClosure = ArrayHelper.toIntArray(columnJoinNumbers);
@@ -1059,7 +1056,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 		return qualifiedTableNames[ propertyTableNumbers[ index ] ];
 	}
-	
+	@Override
 	public void postInstantiate() {
 		super.postInstantiate();
 		if (hasSequentialSelects) {

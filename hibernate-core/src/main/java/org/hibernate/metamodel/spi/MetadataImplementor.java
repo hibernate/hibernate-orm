@@ -35,6 +35,7 @@ import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.source.BindingContext;
@@ -55,6 +56,8 @@ public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 	public void addImport(String entityName, String entityName1);
 
 	public void addEntity(EntityBinding entityBinding);
+
+	public void addSecondaryTable(SecondaryTable secondaryTable);
 
 	public void addCollection(PluralAttributeBinding collectionBinding);
 

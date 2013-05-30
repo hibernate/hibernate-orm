@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
@@ -80,27 +81,42 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 
 	@Override
 	public String getComment() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public FetchStyle getFetchStyle() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
 	public boolean isInverse() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return false;
 	}
 
 	@Override
 	public boolean isOptional() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return true;
 	}
 
 	@Override
 	public boolean isCascadeDeleteEnabled() {
-		return false;  //To change body of implemented methods use File | Settings | File Templates.
+		return false;
+	}
+
+	@Override
+	public CustomSQL getCustomSqlDelete() {
+		return null;
+	}
+
+	@Override
+	public CustomSQL getCustomSqlInsert() {
+		return null;
+	}
+
+	@Override
+	public CustomSQL getCustomSqlUpdate() {
+		return null;
 	}
 
 	@Override

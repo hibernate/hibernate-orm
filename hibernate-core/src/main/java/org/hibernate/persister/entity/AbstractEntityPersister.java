@@ -3800,22 +3800,26 @@ public abstract class AbstractEntityPersister
 		return false;
 	}
 
-	protected JoinFragment createJoin(String name, boolean innerJoin, boolean includeSubclasses) {
-		final String[] idCols = StringHelper.qualify( name, getIdentifierColumnNames() ); //all joins join to the pk of the driving table
+	protected JoinFragment createJoin(final String name, final boolean innerJoin, final boolean includeSubclasses) {
 		final JoinFragment join = getFactory().getDialect().createOuterJoinFragment();
 		final int tableSpan = getSubclassTableSpan();
+		final String[] idCols = StringHelper.qualify( name, getIdentifierColumnNames() ); //all joins join to the pk of the driving table
 		for ( int j = 1; j < tableSpan; j++ ) { //notice that we skip the first table; it is the driving table!
-			final boolean joinIsIncluded = isClassOrSuperclassTable( j ) ||
+			final boolean classOrSupperClassTable = isClassOrSuperclassTable( j );
+			final boolean joinIsIncluded = classOrSupperClassTable ||
 					( includeSubclasses && !isSubclassTableSequentialSelect( j ) && !isSubclassTableLazy( j ) );
 			if ( joinIsIncluded ) {
-				join.addJoin( getSubclassTableName( j ),
+				final JoinType joinType = innerJoin && classOrSupperClassTable && !isInverseTable( j ) && !isNullableTable( j ) ?
+						JoinType.INNER_JOIN : //we can inner join to superclass tables (the row MUST be there)
+						JoinType.LEFT_OUTER_JOIN; //we can never inner join to subclass tables
+
+				join.addJoin(
+						getSubclassTableName( j ),
 						generateTableAlias( name, j ),
 						idCols,
 						getSubclassTableKeyColumns( j ),
-						innerJoin && isClassOrSuperclassTable( j ) && !isInverseTable( j ) && !isNullableTable( j ) ?
-						JoinType.INNER_JOIN : //we can inner join to superclass tables (the row MUST be there)
-						JoinType.LEFT_OUTER_JOIN //we can never inner join to subclass tables
-					);
+						joinType
+				);
 			}
 		}
 		return join;

@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.hibernate.id.IdentifierGeneratorHelper.BasicHolder;
@@ -38,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class BasicTableTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

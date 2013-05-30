@@ -8,7 +8,7 @@ import javax.persistence.SecondaryTable;
 
 @Entity
 @DiscriminatorValue("L")
-@SecondaryTable(name = "SymbolicLinkMixed")
+@SecondaryTable(name = "SymbolicLinkSecondaryTable")
 public class SymbolicLink extends File {
 
 	File target;
@@ -21,7 +21,7 @@ public class SymbolicLink extends File {
 	}
 
 	@ManyToOne(optional = false)
-	@JoinColumn(table = "SymbolicLinkMixed")
+	@JoinColumn(table = "SymbolicLinkSecondaryTable")
 	public File getTarget() {
 		return target;
 	}

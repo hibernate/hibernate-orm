@@ -15,8 +15,8 @@ import javax.persistence.Table;
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@Table(name = "FileMixed")
-@SecondaryTable(name = "FileFolderMixed")
+@Table(name = "File")
+@SecondaryTable(name = "FileSecondaryTable")
 @DiscriminatorColumn(length = 1)
 public abstract class File {
 	private String name;
@@ -39,7 +39,7 @@ public abstract class File {
 	}
 
 	@ManyToOne
-	@JoinColumn(table = "FileFolderMixed")
+	@JoinColumn(table = "FileSecondaryTable")
 	public Folder getParent() {
 		return parent;
 	}

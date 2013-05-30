@@ -1638,7 +1638,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		int size = implementors.length;
 
 		CriteriaLoader[] loaders = new CriteriaLoader[size];
-		Set spaces = new HashSet();
+		Set<Serializable> spaces = new HashSet<Serializable>();
 		for( int i=0; i <size; i++ ) {
 
 			loaders[i] = new CriteriaLoader(

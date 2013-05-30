@@ -30,6 +30,9 @@ import org.junit.Test;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -39,20 +42,37 @@ import static org.junit.Assert.fail;
  * @author Guenther Demetz
  */
 public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
-	
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-7446" )
+	@TestForIssue(jiraKey = "HHH-7446")
 	public void testUniqueConstraintAnnotationOnNaturalIds() throws Exception {
 		Configuration configuration = new Configuration();
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		configuration.addAnnotatedClass(Month.class);
+		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( configuration.getProperties() );
 		SessionFactory sf = null;
 		try {
-			sf = configuration.buildSessionFactory();
-			sf.close();
+			if ( isMetadataUsed ) {
+				MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+				sf = metadataSources.addAnnotatedClass( Month.class ).buildMetadata().buildSessionFactory();
+
+			}
+			else {
+				configuration.addAnnotatedClass( Month.class );
+				sf = configuration.buildSessionFactory();
+
+			}
 		}
-		catch (ConcurrentModificationException e) {
-			fail(e.toString()); 
+		catch ( ConcurrentModificationException e ) {
+			fail( e.toString() );
 		}
+		finally {
+			if( sf != null ){
+				sf.close();
+			}
+			if( serviceRegistry != null ){
+				ServiceRegistryBuilder.destroy( serviceRegistry );
+			}
+		}
+
 	}
 }

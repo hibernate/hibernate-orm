@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-@FailureExpectedWithNewMetamodel
+
 public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -59,6 +59,7 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked", "UnnecessaryBoxing"})
 	public void testIndexFormulaMap() {
 		Session s = openSession();
@@ -113,6 +114,7 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	public void testSQLQuery() {
 		Session s = openSession();

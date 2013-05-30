@@ -44,7 +44,6 @@ import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -53,7 +52,6 @@ import org.junit.Test;
  */
 public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Test
-//	@FailureExpectedWithNewMetamodel
 	public void testDefaultValue() throws Exception {
 		TableSpecification joinTable = SchemaUtil.getEntityBinding( Life.class, metadata() ).locateTable( "ExtendedLife" );
 		assertNotNull( joinTable );
@@ -77,7 +75,6 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-//	@FailureExpectedWithNewMetamodel
 	public void testCompositePK() throws Exception {
 		if ( isMetadataUsed() ) {
 			SecondaryTable secondaryTable =
@@ -144,7 +141,6 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel( message = "sequential selects not supported yet.")
 	public void testManyToOne() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -209,7 +205,6 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testFetchModeOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );
@@ -228,7 +223,6 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCustomSQL() throws Exception {
 		Cat cat = new Cat();
 		String storyPart2 = "My long story";

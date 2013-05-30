@@ -9,9 +9,12 @@ import javax.persistence.UniqueConstraint;
 import org.junit.Test;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
@@ -23,6 +26,7 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 
 	@Test(expected = AnnotationException.class)
 	@TestForIssue(jiraKey = "HHH-4084")
+	@FailureExpectedWithNewMetamodel
 	public void testUniqueConstraintWithEmptyColumnName() {
 		buildSessionFactory(EmptyColumnNameEntity.class);
 	}
@@ -33,18 +37,28 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 	}
 
 	@Test(expected = AnnotationException.class)
+	@FailureExpectedWithNewMetamodel
 	public void testUniqueConstraintWithNotExistsColumnName() {
 		buildSessionFactory(NotExistsColumnEntity.class);
 	}
 
 	private void buildSessionFactory(Class<?> entity) {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass(entity);
-		cfg.buildMappings();
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-				.applySettings(cfg.getProperties()).build();
-		cfg.buildSessionFactory(serviceRegistry).close();
-		serviceRegistry.destroy();
+		if ( isMetadataUsed ) {
+			StandardServiceRegistry registry = new StandardServiceRegistryBuilder().build();
+			MetadataSources metadataSources = new MetadataSources( registry );
+			metadataSources.addAnnotatedClass( entity );
+			metadataSources.buildMetadata();
+			StandardServiceRegistryBuilder.destroy( registry );
+		}
+		else {
+			Configuration cfg = new Configuration();
+			cfg.addAnnotatedClass( entity );
+			cfg.buildMappings();
+			ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+					.applySettings( cfg.getProperties() ).build();
+			cfg.buildSessionFactory( serviceRegistry ).close();
+			serviceRegistry.destroy();
+		}
 	}
 
 	@Entity

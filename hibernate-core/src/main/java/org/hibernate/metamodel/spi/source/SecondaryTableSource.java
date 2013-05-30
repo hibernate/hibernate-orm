@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.source;
 import java.util.List;
 
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.metamodel.spi.binding.CustomSQL;
 
 /**
  * @author Steve Ebersole
@@ -56,4 +57,25 @@ public interface SecondaryTableSource extends ForeignKeyContributingSource {
 	public boolean isOptional();
 
 	public boolean isCascadeDeleteEnabled();
+
+	/**
+	 * Obtain the custom SQL to be used for inserts for this entity
+	 *
+	 * @return The custom insert SQL
+	 */
+	public CustomSQL getCustomSqlInsert();
+
+	/**
+	 * Obtain the custom SQL to be used for updates for this entity
+	 *
+	 * @return The custom update SQL
+	 */
+	public CustomSQL getCustomSqlUpdate();
+
+	/**
+	 * Obtain the custom SQL to be used for deletes for this entity
+	 *
+	 * @return The custom delete SQL
+	 */
+	public CustomSQL getCustomSqlDelete();
 }

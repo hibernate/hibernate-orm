@@ -131,7 +131,7 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 
 		// Wrap the query within a with statement:
 		sb.insert(0, "WITH query AS (").append(") SELECT * FROM query ");
-		sb.append("WHERE __hibernate_row_nr__ BETWEEN ? AND ?");
+		sb.append("WHERE __hibernate_row_nr__ BETWEEN ? AND ? ORDER BY __hibernate_row_nr__");
 
 		return sb.toString();
 	}

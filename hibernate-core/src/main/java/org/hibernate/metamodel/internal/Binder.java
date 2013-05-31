@@ -306,9 +306,7 @@ public class Binder {
 			@Override
 			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
 				EntityBinding entityBinding = bindingContextContext.getEntityBinding();
-				if ( entityBinding.getSuperEntityBinding() == null ) {
-					bindIdentifierGenerator( entityBinding );
-				}
+				bindIdentifierGenerator( entityBinding );
 			}
 		};
 	}

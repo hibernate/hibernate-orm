@@ -58,6 +58,7 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.AbstractEntityManagerImpl;
 import org.hibernate.jpa.spi.AbstractQueryImpl;
+import org.hibernate.type.CompositeCustomType;
 
 import static javax.persistence.TemporalType.DATE;
 import static javax.persistence.TemporalType.TIME;
@@ -102,7 +103,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		for ( String name : (Set<String>) parameterMetadata.getNamedParameterNames() ) {
 			final NamedParameterDescriptor descriptor = parameterMetadata.getNamedParameterDescriptor( name );
 			Class javaType = namedParameterTypeRedefinition.get( name );
-			if ( javaType != null && mightNeedRedefinition( javaType ) ) {
+			if ( javaType != null && mightNeedRedefinition( javaType, descriptor.getExpectedType().getClass() ) ) {
 				descriptor.resetExpectedType(
 						sfi().getTypeResolver().heuristicType( javaType.getName() )
 				);
@@ -135,12 +136,11 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		return (SessionFactoryImplementor) getEntityManager().getFactory().getSessionFactory();
 	}
 
-	private boolean mightNeedRedefinition(Class javaType) {
-		// for now, only really no for dates/times/timestamps
-		return java.util.Date.class.isAssignableFrom( javaType );
+	private boolean mightNeedRedefinition(Class javaType, Class expectedType) {
+		// only redefine dates/times/timestamps that are not wrapped in a CompositeCustomType
+		return java.util.Date.class.isAssignableFrom( javaType ) 
+				&& !CompositeCustomType.class.isAssignableFrom( expectedType );
 	}
-
-
 
 	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
 		private final org.hibernate.Query query;

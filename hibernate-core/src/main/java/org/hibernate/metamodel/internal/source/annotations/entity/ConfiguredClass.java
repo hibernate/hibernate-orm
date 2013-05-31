@@ -520,12 +520,10 @@ public class ConfiguredClass {
 						annotations,
 						getLocalBindingContext()
 				);
-				if ( attribute.isId() ) {
+				if(attribute.isId()){
 					idAttributeMap.put( attributeName, attribute );
 				}
-				else {
-					associationAttributeMap.put( attributeName, attribute );
-				}
+				associationAttributeMap.put( attributeName, attribute );
 				break;
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE:

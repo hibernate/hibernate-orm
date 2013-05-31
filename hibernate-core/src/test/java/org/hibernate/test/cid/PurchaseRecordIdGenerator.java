@@ -25,6 +25,7 @@ package org.hibernate.test.cid;
 import java.io.Serializable;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 
 /**
@@ -32,7 +33,7 @@ import org.hibernate.id.IdentityGenerator;
  * 
  * @author Jacob Robertson
  */
-public class PurchaseRecordIdGenerator extends IdentityGenerator {
+public class PurchaseRecordIdGenerator implements IdentifierGenerator {
 
 	private static int nextPurchaseNumber = 2;
 	private static int nextPurchaseSequence = 3;

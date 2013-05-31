@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
@@ -40,6 +41,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.property.Setter;
 
 import static org.hibernate.id.EntityIdentifierNature.AGGREGATED_COMPOSITE;
 import static org.hibernate.id.EntityIdentifierNature.NON_AGGREGATED_COMPOSITE;
@@ -256,23 +258,12 @@ public class EntityIdentifier {
 			return getAttributeBinding().equals( attributeBinding );
 		}
 
-		public abstract IdentifierGenerator createIdentifierGenerator(IdentifierGeneratorFactory factory, Properties properties);
-	}
-
-	private class SimpleAttributeIdentifierBindingImpl extends EntityIdentifierBinding {
-		SimpleAttributeIdentifierBindingImpl(
-				SingularNonAssociationAttributeBinding identifierAttributeBinding,
-				IdGenerator idGenerator,
-				String unsavedValue) {
-			super( SIMPLE, identifierAttributeBinding, idGenerator, unsavedValue );
-		}
-		@Override
 		public IdentifierGenerator createIdentifierGenerator(
 				IdentifierGeneratorFactory identifierGeneratorFactory,
 				Properties properties) {
 			final List<RelationalValueBinding> relationalValueBindings =
 					getAttributeBinding().getRelationalValueBindings();
-			
+
 			// TODO: If multiple @Column annotations exist within an id's
 			// @Columns, we need a more solid solution than simply grabbing
 			// the first one to get the TableSpecification.
@@ -334,6 +325,16 @@ public class EntityIdentifier {
 		}
 	}
 
+	private class SimpleAttributeIdentifierBindingImpl extends EntityIdentifierBinding {
+		SimpleAttributeIdentifierBindingImpl(
+				SingularNonAssociationAttributeBinding identifierAttributeBinding,
+				IdGenerator idGenerator,
+				String unsavedValue) {
+			super( SIMPLE, identifierAttributeBinding, idGenerator, unsavedValue );
+		}
+
+	}
+
 	private String resolveTableNames(Dialect dialect, EntityBinding entityBinding) {
 		EntityBinding[] ebs = entityBinding.getPostOrderSubEntityBindingClosure();
 		StringBuilder tableNames = new StringBuilder();
@@ -385,6 +386,13 @@ public class EntityIdentifier {
 				throw new AssertionError( "Creating an identifier generator for a component on a subclass." );
 			}
 			final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
+
+			final boolean hasCustomGenerator = ! "assigned".equals( getIdGenerator().getStrategy() );
+			if ( hasCustomGenerator ) {
+				return super.createIdentifierGenerator(
+						factory, properties
+				);
+			}
 			final Class entityClass = entityBinding.getEntity().getClassReference();
 			final Class attributeDeclarer; // what class is the declarer of the composite pk attributes
 			// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
@@ -399,6 +407,35 @@ public class EntityIdentifier {
 					};
 			// TODO: set up IdentifierGenerator for non-assigned sub-attributes
 			return new CompositeNestedGeneratedValueGenerator( locator );
+		}
+	}
+
+	private static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
+		private final String propertyName;
+		private final IdentifierGenerator subGenerator;
+		private final Setter injector;
+
+		public ValueGenerationPlan(
+				String propertyName,
+				IdentifierGenerator subGenerator,
+				Setter injector) {
+			this.propertyName = propertyName;
+			this.subGenerator = subGenerator;
+			this.injector = injector;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
+			final Object generatedValue = subGenerator.generate( session, incomingObject );
+			injector.set( injectionContext, generatedValue, session.getFactory() );
+		}
+
+		public void registerPersistentGenerators(Map generatorMap) {
+			if ( PersistentIdentifierGenerator.class.isInstance( subGenerator ) ) {
+				generatorMap.put( ( (PersistentIdentifierGenerator) subGenerator ).generatorKey(), subGenerator );
+			}
 		}
 	}
 

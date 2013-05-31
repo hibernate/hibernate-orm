@@ -31,7 +31,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -52,7 +51,6 @@ import static org.junit.Assert.assertTrue;
  * @author Jacob Robertson
  */
 @TestForIssue( jiraKey = "HHH-2060" )
-@FailureExpectedWithNewMetamodel
 public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
 

@@ -264,11 +264,15 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
 			for ( MappedAttribute attr : rootEntitySource.getEntityClass().getIdAttributes() ) {
-				SingularAttributeSource attributeSource  =
-						attr instanceof SingularAssociationAttribute ?
-								new ToOneAttributeSourceImpl( (SingularAssociationAttribute) attr ) :
-								new SingularAttributeSourceImpl( attr );
-				attributeSources.add( attributeSource );
+				switch ( attr.getNature() ) {
+					case BASIC:
+						attributeSources.add( new SingularAttributeSourceImpl( attr ) );
+						break;
+					case MANY_TO_ONE:
+					case ONE_TO_ONE:
+						//others??
+						attributeSources.add( new ToOneAttributeSourceImpl( (SingularAssociationAttribute) attr ) );
+				}
 			}
 			return attributeSources;
 		}

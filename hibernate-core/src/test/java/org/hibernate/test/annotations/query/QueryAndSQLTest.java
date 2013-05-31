@@ -159,7 +159,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSQLQuery() {
 		Night n = new Night();
 		Calendar c = new GregorianCalendar();
@@ -218,7 +217,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSQLQueryWithManyToOne() {
 		cleanupCache();
 		Night n = new Night();

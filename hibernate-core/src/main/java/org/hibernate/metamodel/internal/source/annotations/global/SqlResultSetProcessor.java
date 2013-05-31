@@ -163,7 +163,7 @@ public class SqlResultSetProcessor {
 		);
 
 		for ( final FieldResult fieldResult : fieldResultList ) {
-			insert( StringHelper.root( fieldResult.name ), fieldResult.column, propertyResults );
+			insert(  fieldResult.column, StringHelper.root( fieldResult.name ), propertyResults );
 		}
 
 		final NativeSQLQueryRootReturn result = new NativeSQLQueryRootReturn(

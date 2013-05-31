@@ -76,13 +76,15 @@ public interface FetchOwner {
 	public boolean isNullable(Fetch fetch);
 
 	/**
-	 * Returns the column names used for loading the specified fetch.
+	 * Generates the SQL select fragments for the specified fetch.  A select fragment is the column and formula
+	 * references.
 	 *
 	 * @param fetch - the owned fetch.
+	 * @param alias The table alias to apply to the fragments (used to qualify column references)
 	 *
-	 * @return the column names used for loading the specified fetch.
+	 * @return the select fragments
 	 */
-	public String[] getColumnNames(Fetch fetch);
+	public String[] toSqlSelectFragments(Fetch fetch, String alias);
 
 	/**
 	 * Is the asserted plan valid from this owner to a fetch?

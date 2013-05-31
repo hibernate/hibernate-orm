@@ -43,6 +43,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.spi.AbstractFetchOwner;
+import org.hibernate.loader.plan.spi.AbstractFetchOwnerDelegate;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CollectionReturn;
@@ -573,16 +574,17 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 		@Override
 		public Type getType(Fetch fetch) {
-			if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Fetch owner property name [%s] is not the same as the identifier property name [%s].",
-								fetch.getOwnerPropertyName(),
-								entityReference.getEntityPersister().getIdentifierPropertyName()
-						)
-				);
-			}
-			return super.getType( fetch );
+			return getFetchOwnerDelegate().locateFetchMetadata( fetch ).getType();
+		}
+
+		@Override
+		public boolean isNullable(Fetch fetch) {
+			return getFetchOwnerDelegate().locateFetchMetadata( fetch ).isNullable();
+		}
+
+		@Override
+		public String[] toSqlSelectFragments(Fetch fetch, String alias) {
+			return getFetchOwnerDelegate().locateFetchMetadata( fetch ).toSqlSelectFragments( alias );
 		}
 
 		@Override
@@ -620,39 +622,42 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 				final EntityReference entityReference) {
 			super( sessionFactory, entityReference );
 			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath();
-			final boolean isCompositeType = entityReference.getEntityPersister().getIdentifierType().isComponentType();
-			this.delegate = new FetchOwnerDelegate() {
-				@Override
-				public boolean isNullable(Fetch fetch) {
-					if ( !isCompositeType ) {
-						throw new IllegalStateException( "Non-composite ID cannot have fetches." );
-					}
-					return true;
-				}
+			this.delegate = new AbstractFetchOwnerDelegate() {
+				final boolean isCompositeType = entityReference.getEntityPersister().getIdentifierType().isComponentType();
 
 				@Override
-				public Type getType(Fetch fetch) {
+				protected FetchMetadata buildFetchMetadata(Fetch fetch) {
 					if ( !isCompositeType ) {
-						throw new IllegalStateException( "Non-composite ID cannot have fetches." );
+						throw new WalkingException( "Non-composite identifier cannot be a fetch owner" );
 					}
+
 					if ( !fetch.getOwnerPropertyName().equals( entityReference.getEntityPersister().getIdentifierPropertyName() ) ) {
 						throw new IllegalArgumentException(
 								String.format(
 										"Fetch owner property name [%s] is not the same as the identifier prop" +
-										fetch.getOwnerPropertyName(),
+												fetch.getOwnerPropertyName(),
 										entityReference.getEntityPersister().getIdentifierPropertyName()
 								)
 						);
 					}
-					return entityReference.getEntityPersister().getIdentifierType();
-				}
 
-				@Override
-				public String[] getColumnNames(Fetch fetch) {
-					if ( !isCompositeType ) {
-						throw new IllegalStateException( "Non-composite ID cannot have fetches." );
-					}
-					return ( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames();
+					return new FetchMetadata() {
+						@Override
+						public boolean isNullable() {
+							return false;
+						}
+
+						@Override
+						public Type getType() {
+							return entityReference.getEntityPersister().getIdentifierType();
+						}
+
+						@Override
+						public String[] toSqlSelectFragments(String alias) {
+							// should not ever be called iiuc...
+							throw new WalkingException( "Should not be called" );
+						}
+					};
 				}
 			};
 		}
@@ -681,14 +686,63 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		private final PropertyPath propertyPath;
 		private final FetchOwnerDelegate fetchOwnerDelegate;
 
-		public NonEncapsulatedIdentifierAttributeCollector(SessionFactoryImplementor sessionfactory, EntityReference entityReference) {
+		public NonEncapsulatedIdentifierAttributeCollector(
+				final SessionFactoryImplementor sessionfactory,
+				final EntityReference entityReference) {
 			super( sessionfactory, entityReference );
 			this.propertyPath = ( (FetchOwner) entityReference ).getPropertyPath().append( "<id>" );
-			this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
-					entityReference.getEntityPersister().getFactory(),
-					(CompositeType) entityReference.getEntityPersister().getIdentifierType(),
-					( (Loadable) entityReference.getEntityPersister() ).getIdentifierColumnNames()
-			);
+			this.fetchOwnerDelegate = new AbstractFetchOwnerDelegate() {
+				final boolean isCompositeType = entityReference.getEntityPersister().getIdentifierType().isComponentType();
+				final CompositeType idType = (CompositeType) entityReference.getEntityPersister().getIdentifierType();
+
+
+				@Override
+				protected FetchMetadata buildFetchMetadata(Fetch fetch) {
+					if ( !isCompositeType ) {
+						throw new WalkingException( "Non-composite identifier cannot be a fetch owner" );
+					}
+
+					final int subPropertyIndex = locateSubPropertyIndex( idType, fetch.getOwnerPropertyName() );
+
+					return new FetchMetadata() {
+						final Type subType = idType.getSubtypes()[ subPropertyIndex ];
+
+						@Override
+						public boolean isNullable() {
+							return false;
+						}
+
+						@Override
+						public Type getType() {
+							return subType;
+						}
+
+						@Override
+						public String[] toSqlSelectFragments(String alias) {
+							// should not ever be called iiuc...
+							throw new WalkingException( "Should not be called" );
+						}
+					};
+				}
+
+				private int locateSubPropertyIndex(CompositeType idType, String ownerPropertyName) {
+					for ( int i = 0; i < idType.getPropertyNames().length; i++ ) {
+						if ( ownerPropertyName.equals( idType.getPropertyNames()[i] ) ) {
+							return i;
+						}
+					}
+					// does not bode well if we get here...
+					throw new IllegalStateException(
+							String.format(
+									"Unable to locate fetched attribute [%s] as part of composite identifier [%s]",
+									ownerPropertyName,
+									getPropertyPath().getFullPath()
+							)
+
+					);
+				}
+
+			};
 		}
 
 		@Override
@@ -710,6 +764,7 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		protected FetchOwnerDelegate getFetchOwnerDelegate() {
 			return fetchOwnerDelegate;
 		}
+
 	}
 
 	private static class IdentifierDescriptionImpl implements IdentifierDescription {

@@ -41,7 +41,12 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 		this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
 				sessionFactory,
 				(CompositeType) collectionPersister.getIndexType(),
-				( (QueryableCollection) collectionPersister ).getIndexColumnNames()
+				new CompositeFetchOwnerDelegate.PropertyMappingDelegate() {
+					@Override
+					public String[] toSqlSelectFragments(String alias) {
+						return ( (QueryableCollection) collectionPersister ).getIndexColumnNames( alias );
+					}
+				}
 		);
 	}
 

@@ -31,31 +31,39 @@ import org.hibernate.type.Type;
  * @author Gail Badner
  */
 public interface FetchOwnerDelegate {
+	public static interface FetchMetadata {
+		/**
+		 * Is the fetch nullable?
+		 *
+		 * @return true, if the fetch is nullable; false, otherwise.
+		 */
+		public boolean isNullable();
+
+		/**
+		 * Returns the type of the fetched attribute
+		 *
+		 * @return the type of the fetched attribute.
+		 */
+		public Type getType();
+
+		/**
+		 * Generates the SQL select fragments for the specified fetch.  A select fragment is the column and formula
+		 * references.
+		 *
+		 * @param alias The table alias to apply to the fragments (used to qualify column references)
+		 *
+		 * @return the select fragments
+		 */
+		public String[] toSqlSelectFragments(String alias);
+	}
 
 	/**
-	 * Is the specified fetch nullable?
+	 * Locate the metadata for the specified Fetch.  Allows easier caching of the resolved information.
 	 *
-	 * @param fetch - the owned fetch.
+	 * @param fetch The fetch for which to locate metadata
 	 *
-	 * @return true, if the fetch is nullable; false, otherwise.
+	 * @return The metadata; never {@code null}, rather an exception is thrown if the information for the fetch cannot
+	 * be located.
 	 */
-	public boolean isNullable(Fetch fetch);
-
-	/**
-	 * Returns the type of the specified fetch.
-	 *
-	 * @param fetch - the owned fetch.
-	 *
-	 * @return the type of the specified fetch.
-	 */
-	public Type getType(Fetch fetch);
-
-	/**
-	 * Returns the column names used for loading the specified fetch.
-	 *
-	 * @param fetch - the owned fetch.
-	 *
-	 * @return the column names used for loading the specified fetch.
-	 */
-	public String[] getColumnNames(Fetch fetch);
+	public FetchMetadata locateFetchMetadata(Fetch fetch);
 }

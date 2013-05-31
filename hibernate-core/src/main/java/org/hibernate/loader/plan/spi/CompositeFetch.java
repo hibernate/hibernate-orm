@@ -41,7 +41,7 @@ import org.hibernate.type.CompositeType;
  * @author Gail Badner
  */
 public class CompositeFetch extends AbstractSingularAttributeFetch {
-	public static final FetchStrategy FETCH_PLAN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	private static final FetchStrategy FETCH_PLAN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	private final FetchOwnerDelegate delegate;
 
@@ -54,13 +54,18 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 	 */
 	public CompositeFetch(
 			SessionFactoryImplementor sessionFactory,
-			FetchOwner owner,
+			final FetchOwner owner,
 			String ownerProperty) {
 		super( sessionFactory, owner, ownerProperty, FETCH_PLAN );
 		this.delegate = new CompositeFetchOwnerDelegate(
 				sessionFactory,
 				(CompositeType) getOwner().getType( this ),
-				getOwner().getColumnNames( this )
+				new CompositeFetchOwnerDelegate.PropertyMappingDelegate() {
+					@Override
+					public String[] toSqlSelectFragments(String alias) {
+						return owner.toSqlSelectFragments( CompositeFetch.this, alias );
+					}
+				}
 		);
 	}
 

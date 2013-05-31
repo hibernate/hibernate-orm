@@ -92,8 +92,8 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 	}
 
 	@Override
-	public String[] getColumnNames() {
-		return owner.getColumnNames( this );
+	public String[] toSqlSelectFragments(String alias) {
+		return owner.toSqlSelectFragments( this, alias );
 	}
 
 	@Override

@@ -225,7 +225,8 @@ public class LoadQueryAliasResolutionContextImpl implements LoadQueryAliasResolu
 			else {
 				throw new NotYetImplementedException( "Cannot determine LHS alias for FetchOwner." );
 			}
-			final String[] aliasedLhsColumnNames = StringHelper.qualify( lhsAlias, currentFetch.getColumnNames() );
+
+			final String[] aliasedLhsColumnNames = currentFetch.toSqlSelectFragments( lhsAlias );
 			final String rhsAlias;
 			if ( EntityReference.class.isInstance( currentFetch ) ) {
 				rhsAlias = resolveEntityTableAlias( (EntityReference) currentFetch );

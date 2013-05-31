@@ -60,11 +60,11 @@ public interface Fetch extends CopyableFetch {
 	public boolean isNullable();
 
 	/**
-	 * Gets the column names used for this fetch.
+	 * Generates the SQL select fragments for this fetch.  A select fragment is the column and formula references.
 	 *
-	 * @return the column names used for this fetch.
+	 * @return the select fragments
 	 */
-	public String[] getColumnNames();
+	public String[] toSqlSelectFragments(String alias);
 
 	/**
 	 * Gets the fetch strategy for this fetch.

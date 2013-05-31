@@ -42,7 +42,12 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 		this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
 				sessionFactory,
 				(CompositeType) collectionPersister.getElementType(),
-				( (QueryableCollection) collectionPersister ).getElementColumnNames()
+				new CompositeFetchOwnerDelegate.PropertyMappingDelegate() {
+					@Override
+					public String[] toSqlSelectFragments(String alias) {
+						return  ( (QueryableCollection) collectionPersister ).getElementColumnNames( alias );
+					}
+				}
 		);
 	}
 

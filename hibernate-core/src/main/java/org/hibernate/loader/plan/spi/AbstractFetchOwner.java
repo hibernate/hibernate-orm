@@ -108,17 +108,17 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 
 	@Override
 	public boolean isNullable(Fetch fetch) {
-		return getFetchOwnerDelegate().isNullable( fetch );
+		return getFetchOwnerDelegate().locateFetchMetadata( fetch ).isNullable();
 	}
 
 	@Override
 	public Type getType(Fetch fetch) {
-		return getFetchOwnerDelegate().getType( fetch );
+		return getFetchOwnerDelegate().locateFetchMetadata( fetch ).getType();
 	}
 
 	@Override
-	public String[] getColumnNames(Fetch fetch) {
-		return getFetchOwnerDelegate().getColumnNames( fetch );
+	public String[] toSqlSelectFragments(Fetch fetch, String alias) {
+		return getFetchOwnerDelegate().locateFetchMetadata( fetch ).toSqlSelectFragments( alias );
 	}
 
 	@Override

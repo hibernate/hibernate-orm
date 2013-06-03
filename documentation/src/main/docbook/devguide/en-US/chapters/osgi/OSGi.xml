@@ -70,7 +70,7 @@
         
         <para>
         	Quickstart tutorial project, demonstrating a container-managed JPA client bundle:
-        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa">managed-jpa</link>
+        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa">managed-jpa</link>
         </para>
         
         <section>
@@ -92,25 +92,14 @@
         </section>
         
         <section>
-        	<title>JPA 2.1</title>
-
-				<para>
-					No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released). For
-					testing, the managed-jpa example makes use of
-					<link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>. To work
-					with Hibernate 4.3, clone the fork and build Aries JPA.
-				</para>
-        </section>
-        
-        <section>
         	<title>DataSource</title>
         	<para>
         		Typical Enterprise OSGi JPA usage includes a DataSource installed in the container.  The client
         		bundle's <literal>persistence.xml</literal> uses the DataSource through JNDI.  For an example,
         		see the QuickStart's DataSource:
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/datasource-h2.xml">datasource-h2.xml</link>
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/datasource-h2.xml">datasource-h2.xml</link>
         		The DataSource is then called out in
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/src/main/resources/META-INF/persistence.xml">
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/src/main/resources/META-INF/persistence.xml">
         		persistence.xml's</link> <literal>jta-data-source</literal>.
         	</para>
         </section>
@@ -120,7 +109,7 @@
         	<para>
         		Hibernate currently requires fairly specific bundle activation ordering.  See the managed-jpa
         		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/features.xml">features.xml</link>
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/features.xml">features.xml</link>
         		for the best supported sequence.
         	</para>
         </section>
@@ -132,7 +121,7 @@
         		<literal>blueprint.xml</literal>.  The container takes the name of your persistence unit, then injects
         		an <literal>EntityManager</literal> instance into your given bean attribute.  See the
         		<literal>dpService</literal> bean in the managed-jpa QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/src/main/resources/OSGI-INF/blueprint/blueprint.xml">blueprint.xml</link>
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa/src/main/resources/OSGI-INF/blueprint/blueprint.xml">blueprint.xml</link>
         		for an example.
         	</para>
         </section>
@@ -148,7 +137,7 @@
         
         <para>
         	Quickstart tutorial project, demonstrating an unmanaged JPA client bundle:
-        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa">unmanaged-jpa</link>
+        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa">unmanaged-jpa</link>
         </para>
         
         <section>
@@ -184,7 +173,7 @@
         	<para>
         		Hibernate currently requires fairly specific bundle activation ordering.  See the unmanaged-jpa
         		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa/features.xml">features.xml</link>
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa/features.xml">features.xml</link>
         		for the best supported sequence.
         	</para>
         </section>
@@ -201,7 +190,7 @@
         	<para>
         		For an example on how to discover and use the service, see the unmanaged-jpa
         		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa/src/main/java/org/hibernate/osgitest/HibernateUtil.java">HibernateUtil.java</link>.
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa/src/main/java/org/hibernate/osgitest/HibernateUtil.java">HibernateUtil.java</link>.
         	</para>
         </section>
     </section>
@@ -216,7 +205,7 @@
         
         <para>
         	Quickstart tutorial project, demonstrating an unmanaged native client bundle:
-        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">unmanaged-native</link>
+        	<link xl:href="https://github.com/hibernate/hibernate-orm/tree/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">unmanaged-native</link>
         </para>
         
         <section>
@@ -257,7 +246,7 @@
         	<para>
         		Hibernate currently requires fairly specific bundle activation ordering.  See the unmanaged-native
         		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/features.xml">features.xml</link>
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/features.xml">features.xml</link>
         		for the best supported sequence.
         	</para>
         </section>
@@ -274,7 +263,7 @@
         	<para>
         		For an example on how to discover and use the service, see the unmanaged-native
         		QuickStart's
-        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/src/main/java/org/hibernate/osgitest/HibernateUtil.java">HibernateUtil.java</link>.
+        		<link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/src/main/java/org/hibernate/osgitest/HibernateUtil.java">HibernateUtil.java</link>.
         	</para>
         </section>
     </section>
@@ -283,11 +272,11 @@
     	<title>Optional Modules</title>
     	
     	<para>
-    		The <link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">unmanaged-native</link>
+    		The <link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">unmanaged-native</link>
     		QuickStart project demonstrates the use of optional Hibernate modules.  Each module adds additional
     		dependency bundles that must first be activated
-    		(see <link xl:href="https://github.com/hibernate/hibernate-orm/blob/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/features.xml">features.xml</link>).
-    		As of ORM 4.2, Envers is fully supported.  Support for C3P0, Proxool, EhCache, and Infinispan were added in
+    		(see <link xl:href="https://github.com/hibernate/hibernate-orm/blob/4.2/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native/features.xml">features.xml</link>).
+    		As of ORM 4.2, only Envers is fully supported.  Support for C3P0, Proxool, EhCache, and Infinispan will be added in
     		4.3, however none of their 3rd party libraries currently work in OSGi (lots of ClassLoader problems, etc.).
     		We're tracking the issues in JIRA.
     	</para>
@@ -305,17 +294,11 @@
     		
     		<itemizedlist>
 	            <listitem>
-	                <literal>org.hibernate.integrator.spi.Integrator</literal> (as of 4.2)
-	            </listitem>
-	            <listitem>
-	                <literal>org.hibernate.boot.registry.selector.StrategyRegistrationProvider</literal> (as of 4.3)
-	            </listitem>
-	            <listitem>
-	                <literal>org.hibernate.metamodel.spi.TypeContributor</literal> (as of 4.3)
+	                <literal>org.hibernate.integrator.spi.Integrator</literal>
 	            </listitem>
 	            <listitem>
 	                JTA's <literal>javax.transaction.TransactionManager</literal> and
-	                <literal>javax.transaction.UserTransaction</literal> (as of 4.2), however these are typically
+	                <literal>javax.transaction.UserTransaction</literal>, however these are typically
 	                provided by the OSGi container.
 	            </listitem>
 	        </itemizedlist>
@@ -386,14 +369,6 @@
                 	to dynamically add and remove client bundles during runtime.  Doing so is typically
                 	catastrophic.  We hope to better support at least partially-dynamic environments in
                 	Hibernate 5.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
-                	No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released).  For
-                	testing, the managed-jpa example makes use of
-                	<link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>.  To work
-                	with Hibernate 4.3, clone the fork and build Aries JPA.
                 </para>
             </listitem>
         </itemizedlist>

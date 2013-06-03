@@ -87,14 +87,12 @@ public class DenormalizedTable extends Table {
 
 	@Override
     public Iterator getUniqueKeyIterator() {
-		//wierd implementation because of hacky behavior
-		//of Table.sqlCreateString() which modifies the
-		//list of unique keys by side-effect on some
-		//dialects
-		Map uks = new HashMap();
-		uks.putAll( getUniqueKeys() );
-		uks.putAll( includedTable.getUniqueKeys() );
-		return uks.values().iterator();
+		Iterator iter = includedTable.getUniqueKeyIterator();
+		while ( iter.hasNext() ) {
+			UniqueKey uk = (UniqueKey) iter.next();
+			createUniqueKey( uk.getColumns() );
+		}
+		return getUniqueKeys().values().iterator();
 	}
 
 	@Override

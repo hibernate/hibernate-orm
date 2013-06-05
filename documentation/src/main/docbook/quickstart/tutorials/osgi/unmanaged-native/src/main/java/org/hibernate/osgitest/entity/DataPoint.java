@@ -20,6 +20,8 @@
  */
 package org.hibernate.osgitest.entity;
 
+import java.io.Serializable;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -31,7 +33,7 @@ import org.hibernate.envers.Audited;
  */
 @Entity
 @Audited
-public class DataPoint {
+public class DataPoint implements Serializable {
 	@Id
 	@GeneratedValue
 	private long id;

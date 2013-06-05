@@ -61,9 +61,10 @@
                             org.apache.karaf.shell.console,
                             org.apache.karaf.shell.commands,
                             org.h2,
+                            javax.persistence;version="[1.0.0,2.1.0]",
+                            <!-- Needed for proxying's Javassist enhancement during runtime -->
                             org.hibernate.proxy,
                             javassist.util.proxy,
-                            javax.persistence;version="[1.0.0,2.1.0]",
                             * 
 						</Import-Package>
 					</instructions>

@@ -37,6 +37,8 @@ public interface DataPointService {
 
 	public DataPoint get(long id);
 
+	public DataPoint load(long id);
+
 	public List<DataPoint> getAll();
 
 	public Map<Number, DefaultRevisionEntity> getRevisions(long id);

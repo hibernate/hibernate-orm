@@ -84,7 +84,8 @@
 		            <listitem>
 		                <para>
 		                    <literal>org.hibernate.proxy</literal> and <literal>javassist.util.proxy</literal>, due to
-		                    Hibernate's ability to return proxies for lazy initialization
+		                    Hibernate's ability to return proxies for lazy initialization (Javassist enhancement
+		                    occurs on the entity's ClassLoader during runtime).
 		                </para>
 		            </listitem>
 		        </itemizedlist>
@@ -151,7 +152,8 @@
 		            <listitem>
 		                <para>
 		                    <literal>org.hibernate.proxy</literal> and <literal>javassist.util.proxy</literal>, due to
-		                    Hibernate's ability to return proxies for lazy initialization
+		                    Hibernate's ability to return proxies for lazy initialization (Javassist enhancement
+		                    occurs on the entity's ClassLoader during runtime)
 		                </para>
 		            </listitem>
 		            <listitem>
@@ -219,7 +221,8 @@
 		            <listitem>
 		                <para>
 		                    <literal>org.hibernate.proxy</literal> and <literal>javassist.util.proxy</literal>, due to
-		                    Hibernate's ability to return proxies for lazy initialization
+		                    Hibernate's ability to return proxies for lazy initialization (Javassist enhancement
+		                    occurs on the entity's ClassLoader during runtime)
 		                </para>
 		            </listitem>
 		            <listitem>

@@ -43,6 +43,16 @@
                 <property name="dpService" ref="dpService"/>
             </action>
         </command>
+        <command name="dp:get">
+            <action class="org.hibernate.osgitest.command.GetCommand">
+                <property name="dpService" ref="dpService"/>
+            </action>
+        </command>
+        <command name="dp:load">
+            <action class="org.hibernate.osgitest.command.LoadCommand">
+                <property name="dpService" ref="dpService"/>
+            </action>
+        </command>
         <command name="dp:getAll">
             <action class="org.hibernate.osgitest.command.GetAllCommand">
                 <property name="dpService" ref="dpService"/>

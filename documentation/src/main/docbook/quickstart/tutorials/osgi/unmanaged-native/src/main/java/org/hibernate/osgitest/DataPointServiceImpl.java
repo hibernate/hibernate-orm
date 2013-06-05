@@ -22,6 +22,7 @@ package org.hibernate.osgitest;
 
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.osgitest.entity.DataPoint;
@@ -52,6 +53,18 @@ public class DataPointServiceImpl implements DataPointService {
 		s.getTransaction().begin();
 		DataPoint dp = (DataPoint) s.createCriteria( DataPoint.class ).add(
 				Restrictions.eq( "id", id ) ).uniqueResult();
+		s.getTransaction().commit();
+		s.close();
+		return dp;
+	}
+
+	// Test lazy loading (mainly to make sure the proxy classes work in OSGi)
+	public DataPoint load(long id) {
+		Session s = HibernateUtil.getSession();
+		s.getTransaction().begin();
+		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long(id) );
+		// initialize
+		dp.getName();
 		s.getTransaction().commit();
 		s.close();
 		return dp;

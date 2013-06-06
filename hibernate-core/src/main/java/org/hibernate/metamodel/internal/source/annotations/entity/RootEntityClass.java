@@ -107,9 +107,7 @@ public class RootEntityClass extends EntityClass {
 
 		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
 			processDiscriminator();
-			if ( hasSubclasses || isDiscriminatorForced ) {
-				needsDiscriminatorColumn = true;
-			}
+			this.needsDiscriminatorColumn = hasSubclasses || isDiscriminatorForced;
 		}
 
 		this.idType = determineIdType();
@@ -207,28 +205,22 @@ public class RootEntityClass extends EntityClass {
 	}
 
 	private IdType determineIdType() {
-		List<AnnotationInstance> idAnnotations = findIdAnnotations( JPADotNames.ID );
-		List<AnnotationInstance> embeddedIdAnnotations = findIdAnnotations( JPADotNames.EMBEDDED_ID );
-
-		if ( !idAnnotations.isEmpty() && !embeddedIdAnnotations.isEmpty() ) {
-			throw new MappingException(
-					"@EmbeddedId and @Id cannot be used together. Check the configuration for " + getName() + "."
-			);
+		Collection<MappedAttribute> idAttributes = getIdAttributes();
+		int size = idAttributes.size();
+		switch ( size ){
+			case 0:
+				return IdType.NONE;
+			case 1:
+				MappedAttribute idAttribute = idAttributes.iterator().next();
+				switch ( idAttribute.getNature() ){
+					case BASIC:
+						return IdType.SIMPLE;
+					case EMBEDDED_ID:
+						return IdType.EMBEDDED;
+				}
+			default:
+				return IdType.COMPOSED;
 		}
-
-		if ( !embeddedIdAnnotations.isEmpty() ) {
-			if ( embeddedIdAnnotations.size() == 1 ) {
-				return IdType.EMBEDDED;
-			}
-			else {
-				throw new AnnotationException( "Multiple @EmbeddedId annotations are not allowed" );
-			}
-		}
-
-		if ( !idAnnotations.isEmpty() ) {
-			return idAnnotations.size() == 1 ? IdType.SIMPLE : IdType.COMPOSED;
-		}
-		return IdType.NONE;
 	}
 
 	private List<AnnotationInstance> findIdAnnotations(DotName idAnnotationType) {

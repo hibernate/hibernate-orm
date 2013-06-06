@@ -455,8 +455,9 @@ public class ConfiguredClass {
 		if(Map.class.isAssignableFrom( attributeType )){
 			indexType = resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();
 		}
-		MappedAttribute.Nature attributeNature = determineAttributeNature( 
-				annotations, attributeType, referencedCollectionType );
+		MappedAttribute.Nature attributeNature = determineAttributeNature(
+				annotations, attributeType, referencedCollectionType
+		);
 		String accessTypeString = accessType.toString().toLowerCase();
 		switch ( attributeNature ) {
 			case BASIC: {
@@ -643,7 +644,7 @@ public class ConfiguredClass {
 		if ( embeddedId != null ) {
 			discoveredAttributeTypes.add( MappedAttribute.Nature.EMBEDDED_ID );
 		}
-
+		AnnotationInstance id = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ID );
 		AnnotationInstance embedded = JandexHelper.getSingleAnnotation( 
 				annotations, JPADotNames.EMBEDDED );
 		if ( embedded != null ) {
@@ -658,9 +659,11 @@ public class ConfiguredClass {
 				LOG.warn( attributeType.getName() + " has @Embeddable on it, but the attribute of this type in entity["
 						+ getName()
 						+ "] doesn't have @Embedded, which may cause compatibility issue" );
-				discoveredAttributeTypes.add( MappedAttribute.Nature.EMBEDDED );
+				discoveredAttributeTypes.add( id!=null? MappedAttribute.Nature.EMBEDDED_ID :   MappedAttribute.Nature.EMBEDDED );
 			}
 		}
+
+
 
 		AnnotationInstance elementCollection = JandexHelper.getSingleAnnotation(
 				annotations,
@@ -682,7 +685,7 @@ public class ConfiguredClass {
 		}
 	}
 
-	private boolean isEmbeddableType(Class<?> referencedCollectionType) {
+	protected boolean isEmbeddableType(Class<?> referencedCollectionType) {
 		// class info can be null for types like string, etc where there are no annotations
 		ClassInfo classInfo = getLocalBindingContext().getIndex().getClassByName(
 				DotName.createSimple(

@@ -31,7 +31,6 @@ import org.hibernate.test.annotations.inheritance.Carrot;
 import org.hibernate.test.annotations.inheritance.Tomato;
 import org.hibernate.test.annotations.inheritance.Vegetable;
 import org.hibernate.test.annotations.inheritance.VegetablePk;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -41,7 +40,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testDefaultValues() {

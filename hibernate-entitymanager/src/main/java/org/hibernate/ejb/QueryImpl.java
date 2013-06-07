@@ -58,6 +58,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.type.CompositeCustomType;
 
 import static javax.persistence.TemporalType.DATE;
 import static javax.persistence.TemporalType.TIME;
@@ -110,7 +111,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			final NamedParameterDescriptor descriptor =
 					queryImpl.getParameterMetadata().getNamedParameterDescriptor( name );
 			Class javaType = namedParameterTypeRedefinition.get( name );
-			if ( javaType != null && mightNeedRedefinition( javaType ) ) {
+			if ( javaType != null && mightNeedRedefinition( javaType, descriptor.getExpectedType().getClass() ) ) {
 				descriptor.resetExpectedType(
 						sfi().getTypeResolver().heuristicType( javaType.getName() )
 				);
@@ -150,9 +151,10 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		return (SessionFactoryImplementor) getEntityManager().getFactory().getSessionFactory();
 	}
 
-	private boolean mightNeedRedefinition(Class javaType) {
-		// for now, only really no for dates/times/timestamps
-		return java.util.Date.class.isAssignableFrom( javaType );
+	private boolean mightNeedRedefinition(Class javaType, Class expectedType) {
+		// only redefine dates/times/timestamps that are not wrapped in a CompositeCustomType
+		return java.util.Date.class.isAssignableFrom( javaType ) 
+				&& !CompositeCustomType.class.isAssignableFrom( expectedType );
 	}
 
 	private static class ParameterImpl implements Parameter {

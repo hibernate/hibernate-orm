@@ -23,19 +23,25 @@
  */
 package org.hibernate.ejb.criteria.basic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import java.math.BigDecimal;
+import java.util.Date;
+import java.util.List;
+
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
 
-import org.junit.Test;
-
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.hibernate.ejb.criteria.basic.Payment_;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -43,7 +49,7 @@ import static org.junit.Assert.assertNotNull;
 public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] { Wall.class };
+		return new Class[] { Wall.class, Payment.class };
 	}
 
 	@Test
@@ -71,6 +77,31 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		CriteriaQuery<Wall> criteria = em.getCriteriaBuilder().createQuery( Wall.class );
 		criteria.from( Wall.class );
 		em.createQuery( criteria ).getResultList();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8283")
+	public void testDateCompositeCustomType() {
+		Payment payment = new Payment();
+		payment.setAmount( new BigDecimal( 1000 ) );
+		payment.setDate( new Date() );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( payment );
+
+		CriteriaQuery<Payment> criteria = em.getCriteriaBuilder().createQuery( Payment.class );
+		Root<Payment> rp = criteria.from( Payment.class );
+		Predicate predicate = em.getCriteriaBuilder().equal( rp.get( Payment_.date ), new Date() );
+		criteria.where( predicate );
+
+		TypedQuery<Payment> q = em.createQuery( criteria );
+		List<Payment> payments = q.getResultList();
+
+		assertEquals( 1, payments.size() );
+
 		em.getTransaction().commit();
 		em.close();
 	}

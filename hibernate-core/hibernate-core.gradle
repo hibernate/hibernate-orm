@@ -49,7 +49,14 @@ jar {
             'javax.validation.constraints;resolution:=optional',
             'javax.validation.groups;resolution:=optional',
             'javax.validation.metadata;resolution:=optional',
-            '*'
+            // optionals
+            'javax.management;resolution:=optional',
+            'javax.naming.event;resolution:=optional',
+            'javax.naming.spi;resolution:=optional',
+            'org.apache.tools.ant;resolution:=optional',
+			'org.apache.tools.ant.taskdefs;resolution:=optional',
+			'org.apache.tools.ant.types;resolution:=optional',
+			'*'
 
         // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
         // uses ClassLoaderServiceImpl.

@@ -366,6 +366,23 @@
             </listitem>
             <listitem>
                 <para>
+                	Some containers (ex: Aries) always return true for
+                	<literal>PersistenceUnitInfo#excludeUnlistedClasses</literal>,
+                	even if your persistence.xml explicitly has <literal>exclude-unlisted-classes</literal> set
+                	to <literal>false</literal>.  They claim it's to protect JPA providers from having to implement
+                	scanning ("we handle it for you"), even though we still want to support it in many cases.  The work
+                	around is to set <literal>hibernate.archive.autodetection</literal> to, for example,
+                	<literal>hbm,class</literal>.  This tells hibernate to ignore the excludeUnlistedClasses value and
+                	scan for <literal>*.hbm.xml</literal> and entities regardless.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
+                	Scanning does not currently support annotated packages on <literal>package-info.java</literal>.
+                </para>
+            </listitem>
+            <listitem>
+                <para>
                 	Currently, Hibernate OSGi is primarily tested using Apache Karaf and Apache Aries JPA.  Additional
                 	testing is needed with Equinox, Gemini, and other container providers.
                 </para>

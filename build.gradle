@@ -73,6 +73,9 @@ subprojects { subProject ->
 
     group = 'org.hibernate'
     version = rootProject.hibernateTargetVersion
+    // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final"
+    exportPackageVersion = version.replaceAll("-SNAPSHOT", "");
+    exportPackageVersion = exportPackageVersion.replaceAll(".Final", "");
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -232,7 +235,7 @@ subprojects { subProject ->
                             privatePackages.add( packageName );
                         }
                         else {
-                            exportPackages.add( packageName );
+                            exportPackages.add( packageName + ";version=\"" + exportPackageVersion + "\"" );
                         }
                     }
                 }

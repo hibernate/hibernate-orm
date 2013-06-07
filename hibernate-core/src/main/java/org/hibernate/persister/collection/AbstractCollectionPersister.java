@@ -847,7 +847,7 @@ public abstract class AbstractCollectionPersister
 		// INDEX AND ROW SELECT
 
 		hasIndex = collection.hasIndex();
-		indexContainsFormula = false;
+
 		if ( hasIndex ) {
 			// NativeSQL: collect index column and auto-aliases
 			IndexedPluralAttributeBinding indexedBinding = (IndexedPluralAttributeBinding) collection;
@@ -856,6 +856,7 @@ public abstract class AbstractCollectionPersister
 			baseIndex = indexBinding instanceof ListBinding ? ( ( ListBinding ) indexBinding ).base() : 0;
 			final java.util.List<RelationalValueBinding> indexRelationalValueBindings = indexBinding.getRelationalValueBindings();
 			int indexSpan = indexRelationalValueBindings.size();
+			boolean hasFormulas = false;
 			indexColumnNames = new String[indexSpan];
 			indexFormulaTemplates = new String[indexSpan];
 			indexFormulas = new String[indexSpan];
@@ -873,8 +874,10 @@ public abstract class AbstractCollectionPersister
 					DerivedValue derivedValue = ( DerivedValue ) value;
 					indexFormulaTemplates[ i ] = getTemplateFromString( derivedValue.getExpression(), factory);
 					indexFormulas[ i ] = derivedValue.getExpression();
+					hasFormulas = true;
 				}
 			}
+			this.indexContainsFormula = hasFormulas;
 		} else {
 			indexColumnIsSettable = null;
 			indexFormulaTemplates = null;
@@ -883,6 +886,7 @@ public abstract class AbstractCollectionPersister
 			indexColumnNames = null;
 			indexColumnAliases = null;
 			baseIndex = 0;
+			indexContainsFormula = false;
 		}
 
 		hasIdentifier = collection.getAttribute().getNature() == PluralAttribute.Nature.IDBAG;

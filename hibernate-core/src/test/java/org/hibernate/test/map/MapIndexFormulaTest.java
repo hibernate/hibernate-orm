@@ -29,7 +29,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -59,7 +58,6 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked", "UnnecessaryBoxing"})
 	public void testIndexFormulaMap() {
 		Session s = openSession();
@@ -114,7 +112,6 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	@SuppressWarnings( {"unchecked"})
 	public void testSQLQuery() {
 		Session s = openSession();

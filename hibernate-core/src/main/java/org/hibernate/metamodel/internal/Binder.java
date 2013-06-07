@@ -3276,15 +3276,39 @@ public class Binder {
 			final IndexedPluralAttributeBinding attributeBinding) {
 		final TableSpecification collectionTable =  attributeBinding.getPluralAttributeKeyBinding().getCollectionTable();
 		final PrimaryKey primaryKey = collectionTable.getPrimaryKey();
+
 		final List<RelationalValueBinding> keyRelationalValueBindings =
 				attributeBinding.getPluralAttributeKeyBinding().getRelationalValueBindings();
+
+
 		final PluralAttributeIndexBinding indexBinding = attributeBinding.getPluralAttributeIndexBinding();
+
+
 		for ( final RelationalValueBinding keyRelationalValueBinding : keyRelationalValueBindings ) {
 			primaryKey.addColumn( (Column) keyRelationalValueBinding.getValue() );
 		}
+
+		boolean hasDerivedValue = false;
 		for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
-			if ( !relationalValueBinding.isDerived() && relationalValueBinding.getTable().equals( collectionTable ) ) {
-				primaryKey.addColumn( (Column) relationalValueBinding.getValue() );
+			if ( relationalValueBinding.isDerived() ) {
+				hasDerivedValue = true;
+				break;
+			}
+		}
+		if ( hasDerivedValue ) {
+			//if it is a formula index, use the element columns in the PK
+			final PluralAttributeElementBinding pluralAttributeElementBinding =  attributeBinding.getPluralAttributeElementBinding();
+			for(RelationalValueBinding relationalValueBinding : pluralAttributeElementBinding.getRelationalValueBindings()){
+				if(!relationalValueBinding.isDerived() && relationalValueBinding.getTable().equals( collectionTable )){
+					primaryKey.addColumn( (Column)relationalValueBinding.getValue() );
+				}
+			}
+		}
+		else {
+			for ( RelationalValueBinding relationalValueBinding : indexBinding.getRelationalValueBindings() ) {
+				if ( relationalValueBinding.getTable().equals( collectionTable ) ) {
+					primaryKey.addColumn( (Column) relationalValueBinding.getValue() );
+				}
 			}
 		}
 	}

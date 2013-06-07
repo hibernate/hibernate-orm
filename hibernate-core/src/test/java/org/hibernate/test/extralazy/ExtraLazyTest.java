@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -87,7 +86,6 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testGet() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -123,7 +121,6 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testRemoveClear() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -167,7 +164,6 @@ public class ExtraLazyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testIndexFormulaMap() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

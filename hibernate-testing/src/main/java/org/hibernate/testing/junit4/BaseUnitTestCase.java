@@ -52,7 +52,7 @@ public abstract class BaseUnitTestCase {
 	 */
 	protected static final String OUTPUT_PREFIX = SqlStatementLogger.OUTPUT_PREFIX;
 	protected static boolean isMetadataUsed = Boolean.valueOf(  System.getProperty( USE_NEW_METADATA_MAPPINGS, "true" ) );
-	protected static boolean isMetadataUsed() {
+	public static boolean isMetadataUsed() {
 		return isMetadataUsed;
 	}
 	@Rule

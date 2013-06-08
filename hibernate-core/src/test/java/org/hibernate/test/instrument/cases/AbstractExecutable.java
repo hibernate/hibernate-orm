@@ -3,8 +3,10 @@ package org.hibernate.test.instrument.cases;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Steve Ebersole
@@ -16,12 +18,21 @@ public abstract class AbstractExecutable implements Executable {
     @Override
 	public final void prepare() {
 		Configuration cfg = new Configuration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		String[] resources = getResources();
-		for ( String resource : resources ) {
-			cfg.addResource( resource );
-		}
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		factory = cfg.buildSessionFactory( serviceRegistry );
+		String[] resources = getResources();
+		if( BaseUnitTestCase.isMetadataUsed()){
+			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+			for(String resource : resources){
+				metadataSources.addResource( resource );
+			}
+			factory = metadataSources.buildMetadata().buildSessionFactory();
+		}else{
+			for ( String resource : resources ) {
+				cfg.addResource( resource );
+			}
+			factory = cfg.buildSessionFactory( serviceRegistry );
+		}
+
 	}
     @Override
 	public final void complete() {

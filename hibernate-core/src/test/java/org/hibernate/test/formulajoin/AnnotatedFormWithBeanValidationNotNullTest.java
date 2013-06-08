@@ -23,22 +23,25 @@
  */
 package org.hibernate.test.formulajoin;
 
-import org.hibernate.cfg.Configuration;
 
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Steve Ebersole
  */
-public class AnnotatedFormWithBeanValidationNotNullTest extends BaseUnitTestCase {
+public class AnnotatedFormWithBeanValidationNotNullTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { AnnotatedMaster.class, AnnotatedDetail.class };
+	}
+
 	@Test
-	@TestForIssue( jiraKey = "HHH-8167" )
+	@TestForIssue(jiraKey = "HHH-8167")
 	public void testAnnotatedFormWithBeanValidationNotNull() {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( AnnotatedMaster.class ).addAnnotatedClass( AnnotatedDetail.class );
-		cfg.buildSessionFactory();
+		//doing noting, we here only testing the mapping binding
 	}
 }

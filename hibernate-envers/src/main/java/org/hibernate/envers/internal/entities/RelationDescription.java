@@ -55,7 +55,8 @@ public class RelationDescription {
 											 String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
 											 PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable) {
 		// Envers populates collections by executing dedicated queries. Special handling of
-		// @NotFound(action = NotFoundAction.IGNORE) can be omitted in such case as exceptions are never thrown.
+		// @NotFound(action = NotFoundAction.IGNORE) can be omitted in such case as exceptions
+		// (e.g. EntityNotFoundException) are never thrown. Therefore assigning false to ignoreNotFound.
 		return new RelationDescription(
 				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
 				fakeBidirectionalRelationIndexMapper, insertable, false

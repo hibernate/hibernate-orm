@@ -41,7 +41,7 @@ import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
  */
 @Audited
 @Entity
-@Table(name = "M2O_NOT_AUD_NULL")
+@Table(name = "M2O_N_AUD_NULL")
 public class ManyToOneNotAuditedNullEntity implements Serializable {
 	@Id
 	private Integer id;

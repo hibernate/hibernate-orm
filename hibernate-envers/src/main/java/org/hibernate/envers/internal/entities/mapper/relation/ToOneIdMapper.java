@@ -26,6 +26,8 @@ package org.hibernate.envers.internal.entities.mapper.relation;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
@@ -45,11 +47,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 	private final String referencedEntityName;
 	private final boolean nonInsertableFake;
 
-	public ToOneIdMapper(
-			IdMapper delegate,
-			PropertyData propertyData,
-			String referencedEntityName,
-			boolean nonInsertableFake) {
+	public ToOneIdMapper(IdMapper delegate, PropertyData propertyData, String referencedEntityName,
+						 boolean nonInsertableFake) {
 		super( propertyData );
 		this.delegate = delegate;
 		this.referencedEntityName = referencedEntityName;
@@ -57,11 +56,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 	}
 
 	@Override
-	public boolean mapToMapFromEntity(
-			SessionImplementor session,
-			Map<String, Object> data,
-			Object newObj,
-			Object oldObj) {
+	public boolean mapToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj,
+									  Object oldObj) {
 		final HashMap<String, Object> newData = new HashMap<String, Object>();
 
 		// If this property is originally non-insertable, but made insertable because it is in a many-to-one "fake"
@@ -77,11 +73,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 	}
 
 	@Override
-	public void mapModifiedFlagsToMapFromEntity(
-			SessionImplementor session,
-			Map<String, Object> data,
-			Object newObj,
-			Object oldObj) {
+	public void mapModifiedFlagsToMapFromEntity(SessionImplementor session, Map<String, Object> data, Object newObj,
+												Object oldObj) {
 		if ( getPropertyData().isUsingModifiedFlag() ) {
 			data.put( getPropertyData().getModifiedFlagPropertyName(), checkModified( session, newObj, oldObj ) );
 		}
@@ -103,9 +96,8 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 	}
 
 	@Override
-	public void nullSafeMapToEntityFromMap(
-			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-			AuditReaderImplementor versionsReader, Number revision) {
+	public void nullSafeMapToEntityFromMap(AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+										   AuditReaderImplementor versionsReader, Number revision) {
 		final Object entityId = delegate.mapToIdFromMap( data );
 		Object value = null;
 		if ( entityId != null ) {
@@ -114,27 +106,39 @@ public class ToOneIdMapper extends AbstractToOneMapper {
 			}
 			else {
 				final EntityInfo referencedEntity = getEntityInfo( verCfg, referencedEntityName );
-				value = ToOneEntityLoader.createProxyOrLoadImmediate(
-						versionsReader, referencedEntity.getEntityClass(), referencedEntityName,
-						entityId, revision, RevisionType.DEL.equals(
-						data.get(
-								verCfg.getAuditEntCfg()
-										.getRevisionTypePropName()
-						)
-				), verCfg
-				);
+				boolean ignoreNotFound = false;
+				if ( !referencedEntity.isAudited() ) {
+					final String referencingEntityName = verCfg.getEntCfg().getEntityNameForVersionsEntityName( (String) data.get( "$type$" ) );
+					ignoreNotFound = verCfg.getEntCfg().get( referencingEntityName ).getRelationDescription( getPropertyData().getName() ).isIgnoreNotFound();
+				}
+				if ( ignoreNotFound ) {
+					// Eagerly loading referenced entity to silence potential EntityNotFoundException exception.
+					try {
+						value = ToOneEntityLoader.loadImmediate(
+								versionsReader, referencedEntity.getEntityClass(), referencedEntityName,
+								entityId, revision, RevisionType.DEL.equals( data.get( verCfg.getAuditEntCfg().getRevisionTypePropName() ) ),
+								verCfg
+						);
+					}
+					catch ( EntityNotFoundException e ) {
+						value = null;
+					}
+				}
+				else {
+					value = ToOneEntityLoader.createProxyOrLoadImmediate(
+							versionsReader, referencedEntity.getEntityClass(), referencedEntityName,
+							entityId, revision, RevisionType.DEL.equals( data.get( verCfg.getAuditEntCfg().getRevisionTypePropName() ) ),
+							verCfg
+					);
+				}
 			}
 		}
 
 		setPropertyValue( obj, value );
 	}
 
-	public void addMiddleEqualToQuery(
-			Parameters parameters,
-			String idPrefix1,
-			String prefix1,
-			String idPrefix2,
-			String prefix2) {
+	public void addMiddleEqualToQuery(Parameters parameters, String idPrefix1, String prefix1,
+									  String idPrefix2, String prefix2) {
 		delegate.addIdsEqualToQuery( parameters, prefix1, delegate, prefix2 );
 	}
 }

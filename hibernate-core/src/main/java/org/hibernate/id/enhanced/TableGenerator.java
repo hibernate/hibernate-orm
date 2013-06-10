@@ -33,8 +33,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -58,7 +56,9 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
+import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * An enhanced version of table-based id generation.
@@ -170,6 +170,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private Identifier qualifiedValueColumnName;
 
 	private String tableName;
+	private Table table;
 
 	private String segmentColumnName;
 	private String segmentValue;
@@ -207,6 +208,15 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	 */
 	public final String getTableName() {
 		return tableName;
+	}
+
+	/**
+	 * The bound Table for this generator.
+	 *
+	 * @return The table.
+	 */
+	public final Table getTable() {
+		return table;
 	}
 
 	/**
@@ -563,7 +573,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	public void registerExportables(Database database) {
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
-		org.hibernate.metamodel.spi.relational.Table table = database.getSchemaFor( qualifiedTableName )
+		table = database.getSchemaFor( qualifiedTableName )
 				.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
 
 		Column segmentColumn = table.createColumn( qualifiedSegmentColumnName );

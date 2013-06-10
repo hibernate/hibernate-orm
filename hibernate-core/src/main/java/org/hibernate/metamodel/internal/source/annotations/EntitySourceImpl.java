@@ -331,6 +331,36 @@ public class EntitySourceImpl implements EntitySource {
 			}
 		}
 
+		if ( entityClass.hostsAnnotation( JPADotNames.COLLECTION_TABLE ) ) {
+			List<AnnotationInstance> collectionTables = JandexHelper.getAnnotations( 
+					entityClass.getClassInfo(), JPADotNames.COLLECTION_TABLE );
+			for (AnnotationInstance collectionTable : collectionTables) {
+				String tableName = JandexHelper.getValue( collectionTable, "name", String.class );
+				addUniqueConstraints( constraintSources, collectionTable, tableName );
+			}
+
+		}
+
+		if ( entityClass.hostsAnnotation( JPADotNames.JOIN_TABLE ) ) {
+			List<AnnotationInstance> joinTables = JandexHelper.getAnnotations( 
+					entityClass.getClassInfo(), JPADotNames.JOIN_TABLE );
+			for (AnnotationInstance joinTable : joinTables) {
+				String tableName = JandexHelper.getValue( joinTable, "name", String.class );
+				addUniqueConstraints( constraintSources, joinTable, tableName );
+			}
+
+		}
+
+		if ( entityClass.hostsAnnotation( JPADotNames.TABLE_GENERATOR ) ) {
+			List<AnnotationInstance> tableGenerators = JandexHelper.getAnnotations( 
+					entityClass.getClassInfo(), JPADotNames.TABLE_GENERATOR );
+			for (AnnotationInstance tableGenerator : tableGenerators) {
+				String tableName = JandexHelper.getValue( tableGenerator, "table", String.class );
+				addUniqueConstraints( constraintSources, tableGenerator, tableName );
+			}
+
+		}
+
 		return constraintSources;
 	}
 

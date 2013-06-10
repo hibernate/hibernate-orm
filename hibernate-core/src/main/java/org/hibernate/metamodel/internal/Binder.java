@@ -25,7 +25,6 @@ package org.hibernate.metamodel.internal;
 
 import static org.hibernate.engine.spi.SyntheticAttributeHelper.SYNTHETIC_COMPOSITE_ID_ATTRIBUTE_NAME;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -56,7 +55,9 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
+import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterConfiguration;
@@ -2887,7 +2888,8 @@ public class Binder {
 			if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
 				UniqueKey uk = new UniqueKey();
 				
-				final TableSpecification table = entityBinding.locateTable( constraintSource.getTableName() );
+				TableSpecification table = findUniqueConstraintTable( entityBinding, constraintSource.getTableName() );
+				
 				final List<String> columnNames = constraintSource.columnNames();
 				final String constraintName = StringHelper.isEmpty( constraintSource.name() )
 						? UniqueKey.generateName( table, columnNames.toArray( new String[columnNames.size()] ) )
@@ -2900,6 +2902,52 @@ public class Binder {
 				table.addUniqueKey( uk );
 			}
 		}
+	}
+	
+	private TableSpecification findUniqueConstraintTable(EntityBinding entityBinding, String tableName) {
+		try {
+			return entityBinding.locateTable( tableName );
+		}
+		catch ( AssertionFailure e ) {
+			Identifier identifier = Identifier.toIdentifier( tableName );
+			
+			// TODO: Make TableGenerator & MultipleHiLoPerTableGenerator extend an abstract?
+			// @TableGenerator
+			IdentifierGenerator idGenerator = entityBinding.getHierarchyDetails().getEntityIdentifier().getIdentifierGenerator();
+			if (idGenerator instanceof TableGenerator) {
+				Table generatorTable = ((TableGenerator) idGenerator).getTable();
+				if (generatorTable != null && generatorTable.getLogicalName().equals( identifier ) ) {
+					return generatorTable;
+				}
+			}
+			else if (idGenerator instanceof MultipleHiLoPerTableGenerator) {
+				Table generatorTable = ((MultipleHiLoPerTableGenerator) idGenerator).getTable();
+				if (generatorTable != null && generatorTable.getLogicalName().equals( identifier ) ) {
+					return generatorTable;
+				}
+			}
+			
+			// @JoinTable and @CollectionTable
+			Iterator<AttributeBinding> attributeBindings = entityBinding.attributeBindings().iterator();
+			while (attributeBindings.hasNext()) {
+				AttributeBinding attributeBinding = attributeBindings.next();
+				if (attributeBinding instanceof PluralAttributeBinding) {
+					PluralAttributeBinding pluralAttributeBinding = (PluralAttributeBinding) attributeBinding;
+					
+					TableSpecification pluralTable = pluralAttributeBinding.getPluralAttributeKeyBinding().getCollectionTable();
+					if (pluralTable != null && pluralTable.getLogicalName().equals( identifier ) ) {
+						return pluralTable;
+					}
+				}
+			}
+		}
+		
+		throw new AssertionFailure(
+				String.format(
+						"Unable to find locate table %s",
+						tableName
+				)
+		);
 	}
 
 	private List<RelationalValueBinding> bindValues(

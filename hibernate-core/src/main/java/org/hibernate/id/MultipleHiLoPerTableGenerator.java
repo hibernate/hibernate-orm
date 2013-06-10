@@ -108,6 +108,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	private Identifier qualifiedValueColumnName;
 
 	private String tableName;
+	private Table table;
 	private String pkColumnName;
 	private String valueColumnName;
 
@@ -127,6 +128,15 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 
 	public Object generatorKey() {
 		return tableName;
+	}
+
+	/**
+	 * The bound Table for this generator.
+	 *
+	 * @return The table.
+	 */
+	public final Table getTable() {
+		return table;
 	}
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
@@ -279,7 +289,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		final Dialect dialect = database.getJdbcEnvironment().getDialect();
 
 		final Schema schema = database.getSchemaFor( qualifiedTableName );
-		final Table table = schema.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
+		table = schema.createTable( qualifiedTableName.getName(), qualifiedTableName.getName() );
 
 		final Column pkColumn = table.createColumn( qualifiedPkColumnName );
 		table.getPrimaryKey().addColumn( pkColumn );

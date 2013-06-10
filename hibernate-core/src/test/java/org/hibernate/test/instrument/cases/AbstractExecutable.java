@@ -1,6 +1,9 @@
 package org.hibernate.test.instrument.cases;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.MetadataSources;
@@ -17,8 +20,22 @@ public abstract class AbstractExecutable implements Executable {
 	private SessionFactory factory;
     @Override
 	public final void prepare() {
+		prepare( null );
+	}
+
+	@Override
+	public final void prepare(ClassLoader instrumentedClassLoader) {
 		Configuration cfg = new Configuration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+		BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder = new BootstrapServiceRegistryBuilder();
+		if ( instrumentedClassLoader != null ) // old metamodel case
+		{
+			bootstrapServiceRegistryBuilder.with( instrumentedClassLoader );
+		}
+		BootstrapServiceRegistry bootstrapServiceRegistry = bootstrapServiceRegistryBuilder.build();
+
+		StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder(bootstrapServiceRegistry);
+		serviceRegistry = standardServiceRegistryBuilder.applySettings( cfg.getProperties() ).build();
+
 		String[] resources = getResources();
 		if( BaseUnitTestCase.isMetadataUsed()){
 			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
@@ -34,7 +51,8 @@ public abstract class AbstractExecutable implements Executable {
 		}
 
 	}
-    @Override
+
+	@Override
 	public final void complete() {
 		try {
 			cleanup();

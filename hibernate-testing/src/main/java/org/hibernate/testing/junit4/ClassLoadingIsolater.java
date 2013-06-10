@@ -42,6 +42,10 @@ public class ClassLoadingIsolater implements MethodRule {
 		this.provider = provider;
 	}
 
+	public IsolatedClassLoaderProvider getProvider() {
+		return provider;
+	}
+
 	@Override
 	public Statement apply(final Statement base, FrameworkMethod method, Object target) {
 		return new Statement() {

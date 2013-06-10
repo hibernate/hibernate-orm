@@ -34,6 +34,7 @@ import org.hibernate.bytecode.buildtime.spi.FieldFilter;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.InstrumentedClassLoader;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ClassLoadingIsolater;
@@ -136,8 +137,10 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 
 	// reflection code to ensure isolation into the created classloader ~~~~~~~
 
-	private static final Class[] SIG = new Class[] {};
-	private static final Object[] ARGS = new Object[] {};
+	private static final Class[] SIG_METAMODEL = new Class[]{ClassLoader.class};
+	private static final String PREPARE = "prepare";
+	private static final String EXECUTE = "execute";
+	private static final String COMPLETE = "complete";
 
 	public void executeExecutable(String name) {
 		Class execClass = null;
@@ -150,8 +153,14 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 			throw new HibernateException( "could not load executable", t );
 		}
 		try {
-			execClass.getMethod( "prepare", SIG ).invoke( executable, ARGS );
-			execClass.getMethod( "execute", SIG ).invoke( executable, ARGS );
+			if ( BaseUnitTestCase.isMetadataUsed() ) {
+				execClass.getMethod( PREPARE, SIG_METAMODEL )
+						.invoke( executable, new ClassLoader[] { Thread.currentThread().getContextClassLoader() } );
+			}
+			else {
+				execClass.getMethod( PREPARE, ReflectHelper.NO_PARAM_SIGNATURE ).invoke( executable, ReflectHelper.NO_PARAMS );
+			}
+			execClass.getMethod( EXECUTE, ReflectHelper.NO_PARAM_SIGNATURE ).invoke( executable, ReflectHelper.NO_PARAMS );
 		}
 		catch ( NoSuchMethodException e ) {
 			throw new HibernateException( "could not exeucte executable", e );
@@ -164,7 +173,7 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 		}
 		finally {
 			try {
-				execClass.getMethod( "complete", SIG ).invoke( executable, ARGS );
+				execClass.getMethod( COMPLETE, ReflectHelper.NO_PARAM_SIGNATURE ).invoke( executable, ReflectHelper.NO_PARAMS );
 			}
 			catch ( Throwable ignore ) {
 			}

@@ -29,7 +29,7 @@ import java.io.Serializable;
  * A JavaBean bulk accessor, which provides methods capable of getting/setting multiple properties
  * of a JavaBean at once.
  *
- * IMPORTANT NOTE!!! Apparently the order of the methods here is important as I think BulkAccessorFactory
+ * IMPORTANT NOTE!!! Apparently the order of the methods here is important as I think {@link BulkAccessorFactory}
  * makes use of that information in terms of accessing the constructor.  Anyway, when I tried to re-arrange them
  * the BulkAccessor creation failed and tests started to fail.
  *

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -36,6 +37,7 @@ import org.hibernate.internal.util.ReflectHelper;
 
 /**
  * Accesses fields directly.
+ *
  * @author Gavin King
  */
 public class DirectPropertyAccessor implements PropertyAccessor {
@@ -51,57 +53,46 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object get(Object target) throws HibernateException {
 			try {
-				return field.get(target);
+				return field.get( target );
 			}
-			catch (Exception e) {
-				throw new PropertyAccessException(e, "could not get a field value by reflection", false, clazz, name);
+			catch ( Exception e ) {
+				throw new PropertyAccessException( e, "could not get a field value by reflection", false, clazz, name );
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object getForInsert(Object target, Map mergeMap, SessionImplementor session) {
 			return get( target );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getMember() {
 			return field;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class getReturnType() {
 			return field.getType();
 		}
 
 		Object readResolve() {
-			return new DirectGetter( getField(clazz, name), clazz, name );
+			return new DirectGetter( getField( clazz, name ), clazz, name );
 		}
-		
+
+		@Override
 		public String toString() {
 			return "DirectGetter(" + clazz.getName() + '.' + name + ')';
 		}
@@ -111,95 +102,90 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 		private final transient Field field;
 		private final Class clazz;
 		private final String name;
+
 		DirectSetter(Field field, Class clazz, String name) {
 			this.field = field;
 			this.clazz = clazz;
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void set(Object target, Object value, SessionFactoryImplementor factory) throws HibernateException {
 			try {
-				field.set(target, value);
+				field.set( target, value );
 			}
-			catch (Exception e) {
-				if(value == null && field.getType().isPrimitive()) {
-					throw new PropertyAccessException(
-							e, 
-							"Null value was assigned to a property of primitive type", 
-							true, 
-							clazz, 
-							name
-						);					
-				} else {
-					throw new PropertyAccessException(e, "could not set a field value by reflection", true, clazz, name);
-				}
+			catch ( Exception e ) {
+				String errorMsg = ( value == null && field.getType().isPrimitive() ) ?
+						"Null value was assigned to a property of primitive type"
+						: "could not set a field value by reflection";
+				throw new PropertyAccessException( e, errorMsg, true, clazz, name );
 			}
 		}
 
+		@Override
 		public String toString() {
 			return "DirectSetter(" + clazz.getName() + '.' + name + ')';
 		}
-		
+
 		Object readResolve() {
-			return new DirectSetter( getField(clazz, name), clazz, name );
+			return new DirectSetter( getField( clazz, name ), clazz, name );
 		}
 	}
 
 	private static Field getField(Class clazz, String name) throws PropertyNotFoundException {
-		if ( clazz==null || clazz==Object.class ) {
-			throw new PropertyNotFoundException("field not found: " + name); 
+		if ( clazz == null || clazz == Object.class ) {
+			throw new PropertyNotFoundException( "field not found: " + name );
 		}
 		Field field;
 		try {
-			field = clazz.getDeclaredField(name);
+			field = clazz.getDeclaredField( name );
 		}
-		catch (NoSuchFieldException nsfe) {
+		catch ( NoSuchFieldException nsfe ) {
 			field = getField( clazz, clazz.getSuperclass(), name );
 		}
-		if ( !ReflectHelper.isPublic(clazz, field) ) field.setAccessible(true);
+		if ( !ReflectHelper.isPublic( clazz, field ) ) {
+			field.setAccessible( true );
+		}
 		return field;
 	}
 
 	private static Field getField(Class root, Class clazz, String name) throws PropertyNotFoundException {
-		if ( clazz==null || clazz==Object.class ) {
-			throw new PropertyNotFoundException("field [" + name + "] not found on " + root.getName()); 
+		if ( clazz == null || clazz == Object.class ) {
+			throw new PropertyNotFoundException( "field [" + name + "] not found on " + root.getName() );
 		}
 		Field field;
 		try {
-			field = clazz.getDeclaredField(name);
+			field = clazz.getDeclaredField( name );
 		}
-		catch (NoSuchFieldException nsfe) {
+		catch ( NoSuchFieldException nsfe ) {
 			field = getField( root, clazz.getSuperclass(), name );
 		}
-		if ( !ReflectHelper.isPublic(clazz, field) ) field.setAccessible(true);
+		if ( !ReflectHelper.isPublic( clazz, field ) ) {
+			field.setAccessible( true );
+		}
 		return field;
 	}
-	
+
+	@Override
 	public Getter getGetter(Class theClass, String propertyName)
-		throws PropertyNotFoundException {
-		return new DirectGetter( getField(theClass, propertyName), theClass, propertyName );
+			throws PropertyNotFoundException {
+		return new DirectGetter( getField( theClass, propertyName ), theClass, propertyName );
 	}
 
+	@Override
 	public Setter getSetter(Class theClass, String propertyName)
-		throws PropertyNotFoundException {
-		return new DirectSetter( getField(theClass, propertyName), theClass, propertyName );
+			throws PropertyNotFoundException {
+		return new DirectSetter( getField( theClass, propertyName ), theClass, propertyName );
 	}
 
 }

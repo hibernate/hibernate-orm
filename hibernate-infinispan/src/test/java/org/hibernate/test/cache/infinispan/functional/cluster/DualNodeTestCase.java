@@ -90,6 +90,7 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 	protected void cleanupTransactionManagement() {
 		DualNodeJtaTransactionManagerImpl.cleanupTransactions();
 		DualNodeJtaTransactionManagerImpl.cleanupTransactionManagers();
+		ClusterAwareRegionFactory.clearCacheManagers();
 	}
 
 	@Before

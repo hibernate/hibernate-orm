@@ -37,16 +37,12 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Michael Bartmann
  */
 public class NoopAccessor implements PropertyAccessor {
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Getter getGetter(Class arg0, String arg1) throws PropertyNotFoundException {
 		return new NoopGetter();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Setter getSetter(Class arg0, String arg1) throws PropertyNotFoundException {
 		return new NoopSetter();
 	}
@@ -56,46 +52,35 @@ public class NoopAccessor implements PropertyAccessor {
 	 */
 	private static class NoopGetter implements Getter {
 		/**
-		 * {@inheritDoc}
-		 * <p/>
 		 * Here we always return <tt>null</tt>
 		 */
+		@Override
 		public Object get(Object target) throws HibernateException {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object getForInsert(Object target, Map map, SessionImplementor arg1)
 				throws HibernateException {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class getReturnType() {
 			return Object.class;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getMember() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
@@ -105,23 +90,17 @@ public class NoopAccessor implements PropertyAccessor {
 	 * A Setter which will just do nothing.
 	 */
 	private static class NoopSetter implements Setter {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void set(Object target, Object value, SessionFactoryImplementor arg2) {
 			// nothing to do
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}

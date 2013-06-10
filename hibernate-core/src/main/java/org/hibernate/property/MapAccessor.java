@@ -35,98 +35,77 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Gavin King
  */
 public class MapAccessor implements PropertyAccessor {
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Getter getGetter(Class theClass, String propertyName)
 		throws PropertyNotFoundException {
 		return new MapGetter(propertyName);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Setter getSetter(Class theClass, String propertyName)
 		throws PropertyNotFoundException {
 		return new MapSetter(propertyName);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static final class MapSetter implements Setter {
-		private String name;
+		private final String name;
 
 		MapSetter(String name) {
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void set(Object target, Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
-			( (Map) target ).put(name, value);
+				throws HibernateException {
+			( (Map) target ).put( name, value );
 		}
 
 	}
 
 	public static final class MapGetter implements Getter {
-		private String name;
+		private final String name;
 
 		MapGetter(String name) {
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getMember() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object get(Object target) throws HibernateException {
-			return ( (Map) target ).get(name);
+			return ( (Map) target ).get( name );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object getForInsert(Object target, Map mergeMap, SessionImplementor session) {
 			return get( target );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class getReturnType() {
 			return Object.class;
 		}

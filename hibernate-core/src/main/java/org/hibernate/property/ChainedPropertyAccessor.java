@@ -35,32 +35,28 @@ public class ChainedPropertyAccessor implements PropertyAccessor {
 	public ChainedPropertyAccessor(PropertyAccessor[] chain) {
 		this.chain = chain;
 	}
-	
+	@Override
 	public Getter getGetter(Class theClass, String propertyName)
 			throws PropertyNotFoundException {
-		Getter result = null;
-		for (int i = 0; i < chain.length; i++) {
-			PropertyAccessor candidate = chain[i];
+		for ( PropertyAccessor candidate : chain ) {
 			try {
-				result = candidate.getGetter(theClass, propertyName);
-				return result;
-			} catch (PropertyNotFoundException pnfe) {
+				return candidate.getGetter( theClass, propertyName );
+			}
+			catch ( PropertyNotFoundException pnfe ) {
 				// ignore
 			}
 		}
 		throw new PropertyNotFoundException("Could not find getter for " + propertyName + " on " + theClass);
 	}
-
+	@Override
 	public Setter getSetter(Class theClass, String propertyName)
 			throws PropertyNotFoundException {
-		Setter result = null;
-		for (int i = 0; i < chain.length; i++) {
-			PropertyAccessor candidate = chain[i];
+		for ( PropertyAccessor candidate : chain ) {
 			try {
-				result = candidate.getSetter(theClass, propertyName);
-				return result;
-			} catch (PropertyNotFoundException pnfe) {
-				//
+				return candidate.getSetter( theClass, propertyName );
+			}
+			catch ( PropertyNotFoundException pnfe ) {
+				// ignore
 			}
 		}
 		throw new PropertyNotFoundException("Could not find setter for " + propertyName + " on " + theClass);

@@ -23,14 +23,47 @@
  */
 package org.hibernate.test.instrument.runtime;
 
+import org.junit.Test;
+
 import org.hibernate.bytecode.internal.javassist.BytecodeProviderImpl;
 import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Steve Ebersole
  */
 public class JavassistInstrumentationTest extends AbstractTransformingClassLoaderInstrumentTestCase {
+	@Override
 	protected BytecodeProvider buildBytecodeProvider() {
 		return new BytecodeProviderImpl();
 	}
+
+	@FailureExpectedWithNewMetamodel
+	@Test
+	@Override
+	public void testLazy() {
+		super.testLazy();
+	}
+
+	@FailureExpectedWithNewMetamodel
+	@Test
+	@Override
+	public void testLazyManyToOne() {
+		super.testLazyManyToOne();
+	}
+
+	@FailureExpectedWithNewMetamodel
+	@Test
+	@Override
+	public void testSharedPKOneToOne() {
+		super.testSharedPKOneToOne();
+	}
+
+	@FailureExpectedWithNewMetamodel
+	@Test
+	@Override
+	public void testManyToOneProxy() {
+		super.testManyToOneProxy();
+	}
+
 }

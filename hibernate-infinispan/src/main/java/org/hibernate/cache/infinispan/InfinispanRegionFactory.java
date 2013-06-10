@@ -508,7 +508,6 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       TypeOverrides regionOverride = typeOverrides.get(regionName);
       if (!definedConfigurations.contains(regionName)) {
          String templateCacheName;
-         Configuration regionCacheCfg;
          ConfigurationBuilder builder = new ConfigurationBuilder();
          if (regionOverride != null) {
             if (log.isDebugEnabled()) log.debug("Cache region specific configuration exists: " + regionOverride);
@@ -556,8 +555,7 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
             .getGlobalComponentRegistry();
 
       Map<Byte, ModuleCommandFactory> factories =
-         (Map<Byte, ModuleCommandFactory>) globalCr
-               .getComponent("org.infinispan.modules.command.factories");
+         globalCr.getComponent("org.infinispan.modules.command.factories");
 
       for (ModuleCommandFactory factory : factories.values()) {
          if (factory instanceof CacheCommandFactory)

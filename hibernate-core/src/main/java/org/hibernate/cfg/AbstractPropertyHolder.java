@@ -72,7 +72,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 
 	@Override
 	public boolean isInIdClass() {
-		return isInIdClass != null ? isInIdClass : parent != null ? parent.isInIdClass() : false;
+		return isInIdClass != null ? isInIdClass : parent != null && parent.isInIdClass();
 	}
 
 	@Override

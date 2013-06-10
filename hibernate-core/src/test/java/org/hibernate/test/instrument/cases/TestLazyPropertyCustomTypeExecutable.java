@@ -13,11 +13,11 @@ import org.hibernate.test.instrument.domain.Problematic;
  * @author Steve Ebersole
  */
 public class TestLazyPropertyCustomTypeExecutable extends AbstractExecutable {
-
+	@Override
 	protected String[] getResources() {
 		return new String[] { "org/hibernate/test/instrument/domain/Problematic.hbm.xml" };
 	}
-
+	@Override
 	public void execute() throws Exception {
 		Session s = getFactory().openSession();
 		Problematic p = new Problematic();
@@ -76,7 +76,7 @@ public class TestLazyPropertyCustomTypeExecutable extends AbstractExecutable {
 			s.close();
 		}
 	}
-
+	@Override
 	protected void cleanup() {
 		Session s = getFactory().openSession();
 		s.beginTransaction();

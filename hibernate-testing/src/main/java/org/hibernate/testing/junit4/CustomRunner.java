@@ -84,7 +84,6 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
     private Boolean isAllTestsIgnored = null;
 	private Object testInstance;
 	private List<FrameworkMethod> computedTestMethods;
-	private Boolean useNewMetamodel;
 	private boolean beforeClassMethodFailed;
 
 	public CustomRunner(Class<?> clazz) throws InitializationError {
@@ -268,10 +267,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	}
 
 	boolean useNewMetamodel() {
-		if ( useNewMetamodel == null ) {
-			useNewMetamodel = Boolean.valueOf( System.getProperty( BaseCoreFunctionalTestCase.USE_NEW_METADATA_MAPPINGS, "true" ) );
-		}
-		return useNewMetamodel;
+		return BaseUnitTestCase.isMetadataUsed();
 	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {

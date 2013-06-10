@@ -42,49 +42,37 @@ public class EmbeddedPropertyAccessor implements PropertyAccessor {
 		EmbeddedGetter(Class clazz) {
 			this.clazz = clazz;
 		}
-		
-		/**
-		 * {@inheritDoc}
-		 */
+
+		@Override
 		public Object get(Object target) throws HibernateException {
 			return target;
 		}
-		
-		/**
-		 * {@inheritDoc}
-		 */
+
+		@Override
 		public Object getForInsert(Object target, Map mergeMap, SessionImplementor session) {
 			return get( target );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getMember() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class getReturnType() {
 			return clazz;
 		}
-		
+		@Override
 		public String toString() {
 			return "EmbeddedGetter(" + clazz.getName() + ')';
 		}
@@ -96,43 +84,37 @@ public class EmbeddedPropertyAccessor implements PropertyAccessor {
 		EmbeddedSetter(Class clazz) {
 			this.clazz = clazz;
 		}
-		
-		/**
-		 * {@inheritDoc}
-		 */
+
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void set(Object target, Object value, SessionFactoryImplementor factory) {
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String toString() {
 			return "EmbeddedSetter(" + clazz.getName() + ')';
 		}
 	}
 
+	@Override
 	public Getter getGetter(Class theClass, String propertyName)
-	throws PropertyNotFoundException {
-		return new EmbeddedGetter(theClass);
+			throws PropertyNotFoundException {
+		return new EmbeddedGetter( theClass );
 	}
 
+	@Override
 	public Setter getSetter(Class theClass, String propertyName)
-	throws PropertyNotFoundException {
-		return new EmbeddedSetter(theClass);
+			throws PropertyNotFoundException {
+		return new EmbeddedSetter( theClass );
 	}
 
 }

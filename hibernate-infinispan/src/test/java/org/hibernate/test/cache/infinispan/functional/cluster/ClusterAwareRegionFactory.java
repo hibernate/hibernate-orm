@@ -71,15 +71,17 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 	}
 
 	public static void clearCacheManagers() {
-		for ( EmbeddedCacheManager manager : cacheManagers.values() ) {
-			try {
+		try {
+			for ( EmbeddedCacheManager manager : cacheManagers.values() ) {
 				manager.stop();
 			}
-			catch ( Exception e ) {
-				log.error( "Exception cleaning up CacheManager " + manager, e );
-			}
 		}
-		cacheManagers.clear();
+		catch ( Exception e ) {
+			log.error( "Exception cleaning up CacheManager ", e );
+		}
+		finally {
+			cacheManagers.clear();
+		}
 	}
 
 	@Override
@@ -109,11 +111,11 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 			delegate.setCacheManager( existing );
 		}
 	}
-
+	@Override
 	public void start(Settings settings, Properties properties) throws CacheException {
 		start();
 	}
-
+	@Override
 	public void stop() {
 		if ( locallyAdded ) {
 			cacheManagers.remove( cacheManagerName );
@@ -121,11 +123,12 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 		delegate.stop();
 	}
 
+	@Override
 	public CollectionRegion buildCollectionRegion(String regionName, Properties properties,
 												  CacheDataDescription metadata) throws CacheException {
 		return delegate.buildCollectionRegion( regionName, properties, metadata );
 	}
-
+	@Override
 	public EntityRegion buildEntityRegion(String regionName, Properties properties,
 										  CacheDataDescription metadata) throws CacheException {
 		return delegate.buildEntityRegion( regionName, properties, metadata );
@@ -136,17 +139,17 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 			throws CacheException {
 		return delegate.buildNaturalIdRegion( regionName, properties, metadata );
 	}
-
+	@Override
 	public QueryResultsRegion buildQueryResultsRegion(String regionName, Properties properties)
 			throws CacheException {
 		return delegate.buildQueryResultsRegion( regionName, properties );
 	}
-
+	@Override
 	public TimestampsRegion buildTimestampsRegion(String regionName, Properties properties)
 			throws CacheException {
 		return delegate.buildTimestampsRegion( regionName, properties );
 	}
-
+	@Override
 	public boolean isMinimalPutsEnabledByDefault() {
 		return delegate.isMinimalPutsEnabledByDefault();
 	}
@@ -155,7 +158,7 @@ public class ClusterAwareRegionFactory extends AbstractRegionFactory {
 	public AccessType getDefaultAccessType() {
 		return AccessType.TRANSACTIONAL;
 	}
-
+	@Override
 	public long nextTimestamp() {
 		return delegate.nextTimestamp();
 	}

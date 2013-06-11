@@ -380,8 +380,12 @@
         <para>
             If you want to audit a relation, where the target entity is not audited (that is the case for example with
             dictionary-like entities, which don't change and don't have to be audited), just annotate it with
-            <literal>@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)</literal>. Then, when reading historic
-            versions of your entity, the relation will always point to the "current" related entity.
+            <literal>@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)</literal>. Then, while reading historic
+            versions of your entity, the relation will always point to the "current" related entity. By default Envers
+            throws <classname>javax.persistence.EntityNotFoundException</classname> when "current" entity does not
+            exist in the database. Apply <literal>@NotFound(action = NotFoundAction.IGNORE)</literal> annotation
+            to silence the exception and assign null value instead. Hereby solution causes implicit eager loading
+            of to-one relations.
         </para>
 
         <para>

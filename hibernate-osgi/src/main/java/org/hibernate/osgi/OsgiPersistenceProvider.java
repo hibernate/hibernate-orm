@@ -35,6 +35,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -90,7 +92,8 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		osgiClassLoader.addBundle( requestingBundle );
 
-		return super.createEntityManagerFactory( persistenceUnitName, settings );
+		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, settings, osgiClassLoader );
+		return builder == null ? null : builder.build();
 	}
 
 	@Override
@@ -106,7 +109,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		osgiClassLoader.addClassLoader( info.getClassLoader() );
 
-		return super.createContainerEntityManagerFactory( info, settings );
+		return Bootstrap.getEntityManagerFactoryBuilder( info, settings, osgiClassLoader ).build();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -138,7 +141,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
 
 		final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
-		TypeContributorList typeContributorList = new TypeContributorList() {
+		final TypeContributorList typeContributorList = new TypeContributorList() {
 			@Override
 			public List<TypeContributor> getTypeContributors() {
 				return typeContributors;

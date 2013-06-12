@@ -26,7 +26,6 @@ import java.util.Collection;
 
 import javax.persistence.PersistenceException;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
@@ -43,10 +42,7 @@ import org.osgi.framework.wiring.BundleWiring;
  * @author Tim Ward
  */
 public class OsgiArchiveDescriptor implements ArchiveDescriptor {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			OsgiArchiveDescriptor.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( OsgiArchiveDescriptor.class );
 
 	private final Bundle persistenceBundle;
 	private final BundleWiring bundleWiring;
@@ -119,7 +115,7 @@ public class OsgiArchiveDescriptor implements ArchiveDescriptor {
 					context.obtainArchiveEntryHandler( entry ).handleEntry( entry, context );
 				}
 				catch ( Exception e ) {
-					LOG.unableToLoadScannedClassOrResource( e );
+					LOG.warn( "Exception while loading a class or resource found during scanning", e );
 				}
 			}
 		}

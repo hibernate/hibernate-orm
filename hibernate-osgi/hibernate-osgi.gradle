@@ -1,28 +1,123 @@
+configurations {
+	osgiRuntime
+}
+
+sourceSets {
+	testResult
+	testClientBundle
+}
+
+sourceSets.test {
+	compileClasspath += sourceSets.testResult.output
+	runtimeClasspath += sourceSets.testResult.output
+}
+
+sourceSets.testClientBundle {
+	compileClasspath += sourceSets.testResult.output
+	runtimeClasspath += sourceSets.testResult.output
+}
+
 dependencies {
-    compile( project( ':hibernate-core' ) )
-    compile( project( ':hibernate-entitymanager' ) )
-    // MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
-    // http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
-    compile( "org.osgi:org.osgi.core:4.3.1" )
+	compile( project( ':hibernate-core' ) )
+	compile( project( ':hibernate-entitymanager' ) )
+	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
+	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
+	compile( "org.osgi:org.osgi.core:4.3.1" )
+	
+	testCompile( libraries.shrinkwrap_api )
+	testCompile( libraries.shrinkwrap )
+	testCompile( "org.jboss.arquillian.junit:arquillian-junit-container:1.0.3.Final" )
+	testCompile( "org.jboss.osgi.metadata:jbosgi-metadata:3.0.0.CR1" )
+	testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
+	testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
+	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
+	testRuntime( "org.jboss.logmanager:jboss-logmanager:1.4.1.Final" )
+	
+	// Local copies of all jars needed fur the OSGi runtime.
+	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" )
+	osgiRuntime( "org.ops4j.pax.url:pax-url-wrap:1.5.2" )
+	osgiRuntime( "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0-SNAPSHOT" )
+	osgiRuntime( "javax.enterprise:cdi-api:1.1-PFD" )
+	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" )
+	osgiRuntime( "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.0.Alpha1" )
+	osgiRuntime( "commons-collections:commons-collections:3.2.1" )
+	osgiRuntime( "commons-pool:commons-pool:1.6" )
+	osgiRuntime( "commons-dbcp:commons-dbcp:1.4" )
+	osgiRuntime( "commons-lang:commons-lang:2.6" )
+	osgiRuntime( "net.sourceforge.serp:serp:1.14.1" )
+	osgiRuntime( "com.h2database:h2:1.3.170" )
+	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" )
+	osgiRuntime( libraries.javassist )
+	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.jsr303-api-1.0.0:2.2.0" )
+	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.ant:1.8.2_2" )
+	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
+	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
+	osgiRuntime( libraries.commons_annotations )
+	osgiRuntime( libraries.jandex )
+	osgiRuntime( libraries.classmate )
+	osgiRuntime( libraries.logging )
+	
+	testClientBundleCompile( project( ':hibernate-core' ) )
+	testClientBundleCompile( project( ':hibernate-entitymanager' ) )
+	// MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
+	// http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
+	testClientBundleCompile( "org.osgi:org.osgi.core:4.3.1" )
 }
 
 def pomName() {
-    return 'Hibernate OSGi Support'
+	return 'Hibernate OSGi Support'
 }
 
 def pomDescription() {
-    return 'Support for running Hibernate O/RM in OSGi environments'
+	return 'Support for running Hibernate O/RM in OSGi environments'
 }
 
 jar {
-    manifest {
-        instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
-        instruction 'Bundle-Description', 'Hibernate ORM OSGi'
+	manifest {
+		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
+		instruction 'Bundle-Description', 'Hibernate ORM OSGi'
 
-        instruction 'Import-Package',
-            // TODO: Shouldn't have to explicitly list this, but the plugin
-            // generates it with a [1.0,2) version.
-            'javax.persistence;version="2.1.0"',
-            'javax.persistence.spi;version="2.1.0"'
-    }
+		instruction 'Import-Package',
+			// TODO: Shouldn't have to explicitly list this, but the plugin
+			// generates it with a [1.0,2) version.
+			'javax.persistence;version="2.1.0"',
+			'javax.persistence.spi;version="2.1.0"'
+	}
 }
+
+task copyBnd(type: Copy) {
+	into "$buildDir/osgi-lib/bnd"
+	from "src/test/resources/bnd"
+}
+
+task runBnd(type: JavaExec){
+	main = "-jar"
+	args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/javassist.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
+}
+
+task copyToLib(type: Copy) {
+	into "$buildDir/osgi-lib"
+	from configurations.osgiRuntime
+}
+
+task testClientBundleJar(type: Jar) {
+	from sourceSets.testClientBundle.output, sourceSets.testResult.output
+	destinationDir new File("$buildDir/osgi-lib")
+	archiveName "testClientBundle.jar"
+	
+	// The OSGi plugin acts up when we need to export multiple source sets.  Just do it manually.
+	manifest {
+		attributes("Export-Package" : "org.hibernate.osgi.test.client,org.hibernate.osgi.test.result",
+					"Bundle-Name" : "testClientBundle",
+					"Bundle-Activator" : "org.hibernate.osgi.test.client.OsgiTestActivator",
+					"Bundle-ManifestVersion" : "2",
+					"Bundle-SymbolicName" : "testClientBundle",
+					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.hibernate,org.hibernate.proxy,org.osgi.framework")
+	}
+}
+
+runBnd.dependsOn copyToLib
+runBnd.dependsOn copyBnd
+test.dependsOn runBnd
+test.dependsOn testClientBundleJar
+test.dependsOn jar

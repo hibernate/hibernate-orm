@@ -1,0 +1,5 @@
+ Bundle-SymbolicName: el-api
+ Bundle-Version: 2.2
+
+ Include-Resource: @../el-api-2.2.jar
+-exportcontents: *

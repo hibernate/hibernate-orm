@@ -1,0 +1,5 @@
+ Bundle-SymbolicName: dom4j
+ Bundle-Version: 1.6.1
+Import-Package: javax.xml.namespace,javax.xml.stream,javax.xml.stream.events,javax.xml.stream.util
+ Include-Resource: @../dom4j-1.6.1.jar
+-exportcontents: *

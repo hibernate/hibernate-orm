@@ -1,0 +1,5 @@
+ Bundle-SymbolicName: jandex
+ Bundle-Version: 1.1.0
+
+ Include-Resource: @../jandex-1.1.0.Alpha1.jar
+-exportcontents: *

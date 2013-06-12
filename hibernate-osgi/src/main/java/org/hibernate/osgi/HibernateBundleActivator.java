@@ -59,6 +59,7 @@ import org.osgi.framework.FrameworkUtil;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class HibernateBundleActivator implements BundleActivator {
+	
 	@Override
 	@SuppressWarnings("unchecked")
 	public void start(BundleContext context) throws Exception {
@@ -75,14 +76,17 @@ public class HibernateBundleActivator implements BundleActivator {
 		final Dictionary properties = new Hashtable();
 		// In order to support existing persistence.xml files, register using the legacy provider name.
 		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
+		osgiPersistenceProviderService = new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context );
 		context.registerService(
 				PersistenceProvider.class.getName(),
-				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ),
+				osgiPersistenceProviderService,
 				properties
 		);
+		
+		osgiSessionFactoryService = new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context );
 		context.registerService(
 				SessionFactory.class.getName(),
-				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ),
+				osgiSessionFactoryService,
 				new Hashtable()
 		);
 	}
@@ -90,5 +94,21 @@ public class HibernateBundleActivator implements BundleActivator {
 	@Override
 	public void stop(BundleContext context) throws Exception {
 		// Nothing else to do?
+	}
+	
+	// These exist entirely for testing.  See comments on the unit tests for more info.
+	private OsgiSessionFactoryService osgiSessionFactoryService;
+	private OsgiPersistenceProviderService osgiPersistenceProviderService;
+	public OsgiSessionFactoryService getOsgiSessionFactoryService() {
+		return osgiSessionFactoryService;
+	}
+	public void setOsgiSessionFactoryService(OsgiSessionFactoryService osgiSessionFactoryService) {
+		this.osgiSessionFactoryService = osgiSessionFactoryService;
+	}
+	public OsgiPersistenceProviderService getOsgiPersistenceProviderService() {
+		return osgiPersistenceProviderService;
+	}
+	public void setOsgiPersistenceProviderService(OsgiPersistenceProviderService osgiPersistenceProviderService) {
+		this.osgiPersistenceProviderService = osgiPersistenceProviderService;
 	}
 }

@@ -1,0 +1,4 @@
+Bundle-SymbolicName: cdi-api
+Bundle-Version: 1.1
+Include-Resource: @../cdi-api-1.1-PFD.jar
+-exportcontents: *

@@ -75,6 +75,10 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties) {
+		return getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, null );
+	}
+
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(String persistenceUnitName, Map properties, ClassLoader providedClassLoader) {
 		log.tracef( "Attempting to obtain correct EntityManagerFactoryBuilder for persistenceUnitName : %s", persistenceUnitName );
 
 		final Map integration = wrap( properties );
@@ -118,7 +122,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 				continue;
 			}
 
-			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration );
+			return Bootstrap.getEntityManagerFactoryBuilder( persistenceUnit, integration, providedClassLoader );
 		}
 
 		log.debug( "Found no matching persistence units" );

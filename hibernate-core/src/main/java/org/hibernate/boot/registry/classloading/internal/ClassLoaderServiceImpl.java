@@ -77,7 +77,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	public ClassLoaderServiceImpl(Collection<ClassLoader> providedClassLoaders) {
 		final LinkedHashSet<ClassLoader> orderedClassLoaderSet = new LinkedHashSet<ClassLoader>();
 
-		// first add all provided class loaders, if any
+		// normalize adding known class-loaders...
+		// first, the Hibernate class loader
+		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
+
+		// then add all provided class loaders, if any
 		if ( providedClassLoaders != null ) {
 			for ( ClassLoader classLoader : providedClassLoaders ) {
 				if ( classLoader != null ) {
@@ -85,10 +89,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 				}
 			}
 		}
-
-		// normalize adding known class-loaders...
-		// first, the Hibernate class loader
-		orderedClassLoaderSet.add( ClassLoaderServiceImpl.class.getClassLoader() );
+		
 		// then the TCCL, if one...
 		final ClassLoader tccl = locateTCCL();
 		if ( tccl != null ) {

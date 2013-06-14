@@ -11,6 +11,6 @@
         <property name="hibernate.connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE</property>
         <property name="hibernate.hbm2ddl.auto">create-drop</property>
         <property name="hibernate.cache.use_second_level_cache">false</property>
-        <mapping class="org.hibernate.osgi.test.entity.DataPoint"/>
+        <mapping class="org.hibernate.osgi.test.client.DataPoint"/>
     </session-factory>
 </hibernate-configuration>

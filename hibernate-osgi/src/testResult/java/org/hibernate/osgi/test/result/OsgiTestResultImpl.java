@@ -18,37 +18,25 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.osgi.test.entity;
+package org.hibernate.osgi.test.result;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Brett Meyer
  */
-@Entity
-public class DataPoint {
+public class OsgiTestResultImpl implements OsgiTestResult {
 	
-	@Id
-	@GeneratedValue
-	private long id;
+	private List<String> failures = new ArrayList<String>();
+
+	@Override
+	public void addFailure(String failure) {
+		failures.add(failure);
+	}
 	
-	private String name;
-
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
+	@Override
+	public List<String> getFailures() {
+		return failures;
 	}
 }

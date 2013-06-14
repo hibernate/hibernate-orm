@@ -2,6 +2,21 @@ configurations {
 	osgiRuntime
 }
 
+sourceSets {
+    testResult
+    testClientBundle
+}
+
+sourceSets.test {
+    compileClasspath += sourceSets.testResult.output
+    runtimeClasspath += sourceSets.testResult.output
+}
+
+sourceSets.testClientBundle {
+    compileClasspath += sourceSets.testResult.output
+    runtimeClasspath += sourceSets.testResult.output
+}
+
 dependencies {
     compile( project( ':hibernate-core' ) )
     compile( project( ':hibernate-entitymanager' ) )
@@ -9,9 +24,10 @@ dependencies {
     // http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
     compile( "org.osgi:org.osgi.core:4.3.1" )
     
-    //testCompile( libraries.shrinkwrap_api )
-    //testCompile( libraries.shrinkwrap )
+    testCompile( libraries.shrinkwrap_api )
+    testCompile( libraries.shrinkwrap )
     testCompile( "org.jboss.arquillian.junit:arquillian-junit-container:1.0.3.Final" )
+    testCompile( "org.jboss.osgi.metadata:jbosgi-metadata:3.0.0.CR1" )
     testRuntime( "org.jboss.arquillian.container:arquillian-osgi-felix:2.0.0.CR4" )
     testRuntime( "org.apache.felix:org.apache.felix.framework:4.0.3" )
     testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
@@ -33,21 +49,18 @@ dependencies {
 	osgiRuntime( "org.jboss.javassist:com.springsource.javassist:3.15.0.GA" )
 	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.jsr303-api-1.0.0:2.2.0" )
 	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.ant:1.8.2_2" )
-	//osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
-	//osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
-	osgiRuntime( "dom4j:dom4j:1.6.1" )
+	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
+	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
 	osgiRuntime( "org.hibernate.common:hibernate-commons-annotations:4.0.2.Final" )
 	osgiRuntime( "org.jboss:jandex:1.1.0.Alpha1" )
 	osgiRuntime( "com.fasterxml:classmate:0.5.4" )
 	osgiRuntime( "org.jboss.logging:jboss-logging:3.1.0.GA" )
-	osgiRuntime( "org.hibernate:hibernate-core:4.3.0-SNAPSHOT" )
-	osgiRuntime( "org.hibernate:hibernate-entitymanager:4.3.0-SNAPSHOT" )
-	osgiRuntime( "org.hibernate:hibernate-osgi:4.3.0-SNAPSHOT" )
-}
-
-task copyToLib(type: Copy) {
-    into "$buildDir/osgi-lib"
-    from configurations.osgiRuntime
+	
+    testClientBundleCompile( project( ':hibernate-core' ) )
+    testClientBundleCompile( project( ':hibernate-entitymanager' ) )
+    // MUST use 4.3.1!  4.3.0 was compiled with "-target jsr14".
+    // http://blog.osgi.org/2012/10/43-companion-code-for-java-7.html
+    testClientBundleCompile( "org.osgi:org.osgi.core:4.3.1" )
 }
 
 def pomName() {
@@ -70,3 +83,40 @@ jar {
             'javax.persistence.spi;version="2.1.0"'
     }
 }
+
+task copyBnd(type: Copy) {
+    into "$buildDir/osgi-lib/bnd"
+    from "src/test/resources/bnd"
+}
+
+task runBnd(type: JavaExec){
+    main = "-jar"
+    args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
+}
+
+task copyToLib(type: Copy) {
+    into "$buildDir/osgi-lib"
+    from configurations.osgiRuntime
+}
+
+task testClientBundleJar(type: Jar) {
+    from sourceSets.testClientBundle.output, sourceSets.testResult.output
+    destinationDir new File("$buildDir/osgi-lib")
+    archiveName "testClientBundle.jar"
+    
+    // The OSGi plugin acts up when we need to export multiple source sets.  Just do it manually.
+    manifest {
+    	attributes("Export-Package" : "org.hibernate.osgi.test.client,org.hibernate.osgi.test.result",
+					"Bundle-Name" : "testClientBundle",
+					"Bundle-Activator" : "org.hibernate.osgi.test.client.OsgiTestActivator",
+					"Bundle-ManifestVersion" : "2",
+					"Bundle-SymbolicName" : "testClientBundle",
+					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.hibernate,org.hibernate.proxy,org.osgi.framework")
+    }
+}
+
+runBnd.dependsOn copyToLib
+runBnd.dependsOn copyBnd
+test.dependsOn runBnd
+test.dependsOn testClientBundleJar
+test.dependsOn jar

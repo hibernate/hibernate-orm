@@ -96,7 +96,7 @@ public class SybaseASE157Dialect extends SybaseASE15Dialect {
 	}
 
 	@Override
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
+	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 

@@ -459,7 +459,7 @@ public class CustomLoader extends Loader {
 			);
 		}
 		if ( loc instanceof Integer ) {
-			return new int[] { ( ( Integer ) loc ).intValue() };
+			return new int[] { (Integer) loc };
 		}
 		else {
 			return ArrayHelper.toIntArray( ( List ) loc );

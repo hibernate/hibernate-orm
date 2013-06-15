@@ -36,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ColumnNameCache {
 	private static final float LOAD_FACTOR = .75f;
 
-	private final Map<String, Integer> columnNameToIndexCache;
+	private final ConcurrentHashMap<String, Integer> columnNameToIndexCache;
 
 	/**
 	 * Constructs a ColumnNameCache

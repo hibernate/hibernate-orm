@@ -35,7 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ColumnNameCache {
 	public static final float LOAD_FACTOR = .75f;
 
-	private final Map<String, Integer> columnNameToIndexCache;
+	private final ConcurrentHashMap<String, Integer> columnNameToIndexCache;
 
 	public ColumnNameCache(int columnCount) {
 		// should *not* need to grow beyond the size of the total number of columns in the rs

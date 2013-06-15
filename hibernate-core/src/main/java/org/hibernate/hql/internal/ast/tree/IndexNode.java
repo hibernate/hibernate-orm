@@ -147,14 +147,14 @@ public class IndexNode extends FromReferenceNode {
 		}
 		String selectorExpression = gen.getSQL();
 		joinSequence.addCondition( collectionTableAlias + '.' + indexCols[0] + " = " + selectorExpression );
-		List paramSpecs = gen.getCollectedParameters();
+		List<ParameterSpecification> paramSpecs = gen.getCollectedParameters();
 		if ( paramSpecs != null ) {
 			switch ( paramSpecs.size() ) {
 				case 0 :
 					// nothing to do
 					break;
 				case 1 :
-					ParameterSpecification paramSpec = ( ParameterSpecification ) paramSpecs.get( 0 );
+					ParameterSpecification paramSpec = paramSpecs.get( 0 );
 					paramSpec.setExpectedType( queryableCollection.getIndexType() );
 					fromElement.setIndexCollectionSelectorParamSpec( paramSpec );
 					break;
@@ -176,39 +176,40 @@ public class IndexNode extends FromReferenceNode {
 	 * In the (rare?) case where the index selector contains multiple parameters...
 	 */
 	private static class AggregatedIndexCollectionSelectorParameterSpecifications implements ParameterSpecification {
-		private final List paramSpecs;
+		private final List<ParameterSpecification> paramSpecs;
 
-		public AggregatedIndexCollectionSelectorParameterSpecifications(List paramSpecs) {
+		public AggregatedIndexCollectionSelectorParameterSpecifications(List<ParameterSpecification> paramSpecs) {
 			this.paramSpecs = paramSpecs;
 		}
 
+		@Override
 		public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position)
 		throws SQLException {
 			int bindCount = 0;
-			Iterator itr = paramSpecs.iterator();
-			while ( itr.hasNext() ) {
-				final ParameterSpecification paramSpec = ( ParameterSpecification ) itr.next();
+			for ( ParameterSpecification paramSpec : paramSpecs ) {
 				bindCount += paramSpec.bind( statement, qp, session, position + bindCount );
 			}
 			return bindCount;
 		}
 
+		@Override
 		public Type getExpectedType() {
 			return null;
 		}
 
+		@Override
 		public void setExpectedType(Type expectedType) {
 		}
 
+		@Override
 		public String renderDisplayInfo() {
 			return "index-selector [" + collectDisplayInfo() + "]" ;
 		}
 
 		private String collectDisplayInfo() {
 			StringBuilder buffer = new StringBuilder();
-			Iterator itr = paramSpecs.iterator();
-			while ( itr.hasNext() ) {
-				buffer.append( ( ( ParameterSpecification ) itr.next() ).renderDisplayInfo() );
+			for ( ParameterSpecification paramSpec : paramSpecs ) {
+				buffer.append( ( paramSpec ).renderDisplayInfo() );
 			}
 			return buffer.toString();
 		}

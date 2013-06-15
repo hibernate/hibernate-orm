@@ -37,7 +37,7 @@ import org.hibernate.type.VersionType;
  * @author Steve Ebersole
  */
 public class VersionTypeSeedParameterSpecification implements ParameterSpecification {
-	private VersionType type;
+	private final VersionType type;
 
 	/**
 	 * Constructs a version seed parameter bind specification.
@@ -48,32 +48,24 @@ public class VersionTypeSeedParameterSpecification implements ParameterSpecifica
 		this.type = type;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position)
 	        throws SQLException {
 		type.nullSafeSet( statement, type.seed( session ), position, session );
 		return 1;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getExpectedType() {
 		return type;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setExpectedType(Type expectedType) {
 		// expected type is intrinsic here...
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String renderDisplayInfo() {
 		return "version-seed, type=" + type;
 	}

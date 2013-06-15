@@ -162,7 +162,8 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return lockOptions.getLockMode().greaterThan( LockMode.READ ) ? tableName + " holdlock" : tableName;
 	}
 
-	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map keyColumnNames) {
+	@Override
+	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
 		// TODO:  merge additional lockoptions support in Dialect.applyLocksToSql
 		Iterator itr = aliasedLockOptions.getAliasLockIterator();
 		StringBuilder buffer = new StringBuilder( sql );

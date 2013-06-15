@@ -76,7 +76,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	private SessionFactoryImplementor sessionFactory;
 	private LinkedList<SqlWriter> outputStack = new LinkedList<SqlWriter>();
 	private final ASTPrinter printer = new ASTPrinter( SqlTokenTypes.class );
-	private List collectedParameters = new ArrayList();
+	private List<ParameterSpecification> collectedParameters = new ArrayList<ParameterSpecification>();
 
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,7 +106,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		LOG.trace( prefix + ruleName );
 	}
 
-	public List getCollectedParameters() {
+	public List<ParameterSpecification> getCollectedParameters() {
 		return collectedParameters;
 	}
 

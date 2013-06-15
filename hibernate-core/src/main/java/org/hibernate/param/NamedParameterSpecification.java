@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.TypedValue;
  *
  * @author Steve Ebersole
  */
-public class NamedParameterSpecification extends AbstractExplicitParameterSpecification implements ParameterSpecification {
+public class NamedParameterSpecification extends AbstractExplicitParameterSpecification {
 	private final String name;
 
 	/**

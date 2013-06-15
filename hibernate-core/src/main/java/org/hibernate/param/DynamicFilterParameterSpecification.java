@@ -60,9 +60,7 @@ public class DynamicFilterParameterSpecification implements ParameterSpecificati
 		this.definedParameterType = definedParameterType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int bind(
 			PreparedStatement statement,
 			QueryParameters qp,
@@ -85,23 +83,17 @@ public class DynamicFilterParameterSpecification implements ParameterSpecificati
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getExpectedType() {
 		return definedParameterType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setExpectedType(Type expectedType) {
 		// todo : throw exception?  maybe warn if not the same?
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String renderDisplayInfo() {
 		return "dynamic-filter={filterName=" + filterName + ",paramName=" + parameterName + "}";
 	}

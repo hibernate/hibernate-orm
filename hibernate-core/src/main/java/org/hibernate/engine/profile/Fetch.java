@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine.profile;
 
-
 /**
  * Models an individual fetch within a profile.
  *
@@ -33,6 +32,12 @@ public class Fetch {
 	private final Association association;
 	private final Style style;
 
+	/**
+	 * Constructs a Fetch
+	 *
+	 * @param association The association to be fetched
+	 * @param style How to fetch it
+	 */
 	public Fetch(Association association, Style style) {
 		this.association = association;
 		this.style = style;
@@ -54,7 +59,13 @@ public class Fetch {
 	 * needed for other things as well anyway).
 	 */
 	public enum Style {
+		/**
+		 * Fetch via a join
+		 */
 		JOIN( "join" ),
+		/**
+		 * Fetch via a subsequent select
+		 */
 		SELECT( "select" );
 
 		private final String name;
@@ -63,10 +74,18 @@ public class Fetch {
 			this.name = name;
 		}
 
+		@Override
 		public String toString() {
 			return name;
 		}
 
+		/**
+		 * Parses a style given an externalized string representation
+		 *
+		 * @param name The externalized representation
+		 *
+		 * @return The style; {@link #JOIN} is returned if not recognized
+		 */
 		public static Style parse(String name) {
 			if ( SELECT.name.equals( name ) ) {
 				return SELECT;
@@ -78,6 +97,7 @@ public class Fetch {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return "Fetch[" + style + "{" + association.getRole() + "}]";
 	}

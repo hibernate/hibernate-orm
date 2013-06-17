@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.1"
+        >
+    <package>org.hibernate.jpa.test.graphs.named.basic</package>
+    <entity class="Person" metadata-complete="true" access="FIELD">
+        <named-entity-graph/>
+        <attributes>
+            <id name="id">
+                <column name="fld_id"/>
+            </id>
+        </attributes>
+    </entity>
+</entity-mappings>

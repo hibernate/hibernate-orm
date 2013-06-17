@@ -56,16 +56,11 @@ public class AdviceHelper {
 				);
 			}
 			else {
-				EntityType entityType = (EntityType) Helper.resolveType(
-						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-						attributeNode.getAttribute()
-				);
 				return new EntityFetch(
 						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
 						LockMode.NONE,
 						fetchOwner,
 						attributeNode.getAttributeName(),
-						entityType,
 						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
 				);
 			}

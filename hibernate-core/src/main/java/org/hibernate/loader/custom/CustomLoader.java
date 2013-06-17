@@ -439,7 +439,12 @@ public class CustomLoader extends Loader {
 					sql
 			);
 		}
-		return Integer.class.isInstance( loc ) ? new int[] {Integer.class.cast( loc )} : ArrayHelper.toIntArray( (List)loc );
+		if ( loc instanceof Integer ) {
+			return new int[] { (Integer) loc };
+		}
+		else {
+			return ArrayHelper.toIntArray( ( List ) loc );
+		}
 	}
 
 

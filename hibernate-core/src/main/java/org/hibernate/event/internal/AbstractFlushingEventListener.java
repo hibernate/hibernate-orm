@@ -32,6 +32,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -290,6 +291,16 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 								ce.getLoadedPersister(),
 								ce.getLoadedKey(),
 								ce.isSnapshotEmpty(coll),
+								session
+							)
+					);
+			}
+			if ( !coll.wasInitialized() && coll.hasQueuedOperations() ) {
+				actionQueue.addAction(
+						new QueuedOperationCollectionAction(
+								coll,
+								ce.getLoadedPersister(),
+								ce.getLoadedKey(),
 								session
 							)
 					);

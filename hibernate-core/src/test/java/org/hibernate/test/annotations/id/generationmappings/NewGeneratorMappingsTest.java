@@ -31,7 +31,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.NoopOptimizer;
+import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.util.StringHelper;
@@ -92,7 +93,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, seqGenerator.getDatabaseStructure().getInitialValue() );
 		// 50 is the annotation default
 		assertEquals( 50, seqGenerator.getDatabaseStructure().getIncrementSize() );
-		assertFalse( OptimizerFactory.NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
+		assertFalse( NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
 	}
 
 	@Test
@@ -104,7 +105,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "my_catalog.my_schema."+CompleteSequenceEntity.SEQ_NAME, seqGenerator.getDatabaseStructure().getName() );
 		assertEquals( 1000, seqGenerator.getDatabaseStructure().getInitialValue() );
 		assertEquals( 52, seqGenerator.getDatabaseStructure().getIncrementSize() );
-		assertFalse( OptimizerFactory.NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
+		assertFalse( NoopOptimizer.class.isInstance( seqGenerator.getOptimizer() ) );
 	}
 
 	@Test
@@ -132,7 +133,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 1, tabGenerator.getInitialValue() );
 		// 50 is the annotation default
 		assertEquals( 50, tabGenerator.getIncrementSize() );
-		assertTrue( OptimizerFactory.PooledOptimizer.class.isInstance( tabGenerator.getOptimizer() ) );
+		assertTrue( PooledOptimizer.class.isInstance( tabGenerator.getOptimizer() ) );
 	}
 
 	@Test

@@ -25,6 +25,8 @@ package org.hibernate.cfg.annotations;
 
 import javax.persistence.NamedEntityGraph;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * Models the definition of a {@link NamedEntityGraph} annotation
  *
@@ -34,15 +36,17 @@ public class NamedEntityGraphDefinition {
 	private final NamedEntityGraph annotation;
 	private final String jpaEntityName;
 	private final String entityName;
+	private final String name;
 
 	public NamedEntityGraphDefinition(NamedEntityGraph annotation, String jpaEntityName, String entityName) {
 		this.annotation = annotation;
 		this.jpaEntityName = jpaEntityName;
 		this.entityName = entityName;
+		this.name = StringHelper.isEmpty( annotation.name() ) ? jpaEntityName : annotation.name();
 	}
 
 	public String getRegisteredName() {
-		return jpaEntityName;
+		return name;
 	}
 
 	public String getJpaEntityName() {

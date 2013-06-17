@@ -88,14 +88,21 @@ import javax.persistence.MapKeyJoinColumns;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.MapsId;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.NamedEntityGraphs;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedStoredProcedureQueries;
+import javax.persistence.NamedStoredProcedureQuery;
+import javax.persistence.NamedSubgraph;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.OrderColumn;
+import javax.persistence.ParameterMode;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
 import javax.persistence.PostRemove;
@@ -111,6 +118,7 @@ import javax.persistence.SecondaryTables;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.SqlResultSetMappings;
+import javax.persistence.StoredProcedureParameter;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
@@ -176,10 +184,14 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( DiscriminatorColumn.class, "discriminator-column" );
 		annotationToXml.put( SequenceGenerator.class, "sequence-generator" );
 		annotationToXml.put( TableGenerator.class, "table-generator" );
+		annotationToXml.put( NamedEntityGraph.class, "named-entity-graph" );
+		annotationToXml.put( NamedEntityGraphs.class, "named-entity-graph" );
 		annotationToXml.put( NamedQuery.class, "named-query" );
 		annotationToXml.put( NamedQueries.class, "named-query" );
 		annotationToXml.put( NamedNativeQuery.class, "named-native-query" );
 		annotationToXml.put( NamedNativeQueries.class, "named-native-query" );
+		annotationToXml.put( NamedStoredProcedureQuery.class, "named-stored-procedure-query" );
+		annotationToXml.put( NamedStoredProcedureQueries.class, "named-stored-procedure-query" );
 		annotationToXml.put( SqlResultSetMapping.class, "sql-result-set-mapping" );
 		annotationToXml.put( SqlResultSetMappings.class, "sql-result-set-mapping" );
 		annotationToXml.put( ExcludeDefaultListeners.class, "exclude-default-listeners" );
@@ -357,6 +369,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, getTableGenerator( tree, defaults ) );
 				addIfNotNull( annotationList, getNamedQueries( tree, defaults ) );
 				addIfNotNull( annotationList, getNamedNativeQueries( tree, defaults ) );
+				addIfNotNull( annotationList, getNamedStoredProcedureQueries( tree, defaults ) );
+				addIfNotNull( annotationList, getNamedEntityGraphs( tree, defaults ) );
 				addIfNotNull( annotationList, getSqlResultSetMappings( tree, defaults ) );
 				addIfNotNull( annotationList, getExcludeDefaultListeners( tree, defaults ) );
 				addIfNotNull( annotationList, getExcludeSuperclassListeners( tree, defaults ) );
@@ -1743,6 +1757,142 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	public static List<NamedEntityGraph> buildNamedEntityGraph(Element element, XMLContext.Default defaults) {
+		if ( element == null ) {
+			return new ArrayList<NamedEntityGraph>();
+		}
+		List<NamedEntityGraph> namedEntityGraphList = new ArrayList<NamedEntityGraph>();
+		List<Element> namedEntityGraphElements = element.elements( "named-entity-graph" );
+		for ( Element subElement : namedEntityGraphElements ) {
+			AnnotationDescriptor ann = new AnnotationDescriptor( NamedEntityGraph.class );
+			copyStringAttribute( ann, subElement, "name", false );
+			copyBooleanAttribute( ann, subElement, "include-all-attributes" );
+			bindNamedAttributeNodes( subElement, ann );
+
+			List<Element> subgraphNodes = subElement.elements( "subgraph" );
+			bindNamedSubgraph( defaults, ann, subgraphNodes );
+			List<Element> subclassSubgraphNodes = subElement.elements( "subclass-subgraph" );
+			bindNamedSubgraph( defaults, ann, subclassSubgraphNodes );
+			namedEntityGraphList.add( (NamedEntityGraph) AnnotationFactory.create( ann ) );
+		}
+		//TODO
+		return namedEntityGraphList;
+	}
+
+	private static void bindNamedSubgraph(XMLContext.Default defaults, AnnotationDescriptor ann, List<Element> subgraphNodes) {
+		List<NamedSubgraph> annSubgraphNodes = new ArrayList<NamedSubgraph>(  );
+		for(Element subgraphNode : subgraphNodes){
+			AnnotationDescriptor annSubgraphNode = new AnnotationDescriptor( NamedSubgraph.class );
+			copyStringAttribute( annSubgraphNode, subgraphNode, "name", true );
+			String clazzName = subgraphNode.attributeValue( "class" );
+			Class clazz;
+			try {
+				clazz = ReflectHelper.classForName(
+						XMLContext.buildSafeClassName( clazzName, defaults ),
+						JPAOverriddenAnnotationReader.class
+				);
+			}
+			catch ( ClassNotFoundException e ) {
+				throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+			}
+			annSubgraphNode.setValue( "type", clazz );
+			bindNamedAttributeNodes(subgraphNode, annSubgraphNode);
+			annSubgraphNodes.add( (NamedSubgraph) AnnotationFactory.create( annSubgraphNode ) );
+		}
+		ann.setValue( "subgraphs", annSubgraphNodes.toArray( new NamedSubgraph[annSubgraphNodes.size()] ) );
+	}
+
+	private static void bindNamedAttributeNodes(Element subElement, AnnotationDescriptor ann) {
+		List<Element> namedAttributeNodes = subElement.elements("named-attribute-node");
+		List<NamedAttributeNode> annNamedAttributeNodes = new ArrayList<NamedAttributeNode>(  );
+		for(Element namedAttributeNode : namedAttributeNodes){
+			AnnotationDescriptor annNamedAttributeNode = new AnnotationDescriptor( NamedAttributeNode.class );
+			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "value", true );
+			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "subgraph", false );
+			copyStringAttribute( annNamedAttributeNode, namedAttributeNode, "key-subgraph", false );
+			annNamedAttributeNodes.add( (NamedAttributeNode) AnnotationFactory.create( annNamedAttributeNode ) );
+		}
+		ann.setValue( "attributeNodes", annNamedAttributeNodes.toArray( new NamedAttributeNode[annNamedAttributeNodes.size()] ) );
+	}
+
+	public static List<NamedStoredProcedureQuery> buildNamedStoreProcedureQueries(Element element, XMLContext.Default defaults) {
+		if ( element == null ) {
+			return new ArrayList<NamedStoredProcedureQuery>();
+		}
+		List namedStoredProcedureElements = element.elements( "named-stored-procedure-query" );
+		List<NamedStoredProcedureQuery> namedStoredProcedureQueries = new ArrayList<NamedStoredProcedureQuery>();
+		for ( Object obj : namedStoredProcedureElements ) {
+			Element subElement = (Element) obj;
+			AnnotationDescriptor ann = new AnnotationDescriptor( NamedStoredProcedureQuery.class );
+			copyStringAttribute( ann, subElement, "name", true );
+			copyStringAttribute( ann, subElement, "procedure-name", true );
+
+			List<Element> elements = subElement.elements( "parameter" );
+			List<StoredProcedureParameter> storedProcedureParameters = new ArrayList<StoredProcedureParameter>();
+
+			for ( Element parameterElement : elements ) {
+				AnnotationDescriptor parameterDescriptor = new AnnotationDescriptor( StoredProcedureParameter.class );
+				copyStringAttribute( parameterDescriptor, parameterElement, "name", false );
+				String modeValue = parameterElement.attributeValue( "mode" );
+				if ( modeValue == null ) {
+					parameterDescriptor.setValue( "mode", ParameterMode.IN );
+				}
+				else {
+					parameterDescriptor.setValue( "mode", ParameterMode.valueOf( modeValue.toUpperCase() ) );
+				}
+				String clazzName = parameterElement.attributeValue( "class" );
+				Class clazz;
+				try {
+					clazz = ReflectHelper.classForName(
+							XMLContext.buildSafeClassName( clazzName, defaults ),
+							JPAOverriddenAnnotationReader.class
+					);
+				}
+				catch ( ClassNotFoundException e ) {
+					throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+				}
+				parameterDescriptor.setValue( "type", clazz );
+				storedProcedureParameters.add( (StoredProcedureParameter) AnnotationFactory.create( parameterDescriptor ) );
+			}
+
+			ann.setValue(
+					"parameters",
+					storedProcedureParameters.toArray( new StoredProcedureParameter[storedProcedureParameters.size()] )
+			);
+
+			elements = subElement.elements( "result-class" );
+			List<Class> returnClasses = new ArrayList<Class>();
+			for ( Element classElement : elements ) {
+				String clazzName = classElement.getTextTrim();
+				Class clazz;
+				try {
+					clazz = ReflectHelper.classForName(
+							XMLContext.buildSafeClassName( clazzName, defaults ),
+							JPAOverriddenAnnotationReader.class
+					);
+				}
+				catch ( ClassNotFoundException e ) {
+					throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+				}
+				returnClasses.add( clazz );
+			}
+			ann.setValue( "resultClasses", returnClasses.toArray( new Class[returnClasses.size()] ) );
+
+
+			elements = subElement.elements( "result-set-mapping" );
+			List<String> resultSetMappings = new ArrayList<String>();
+			for ( Element resultSetMappingElement : elements ) {
+				resultSetMappings.add( resultSetMappingElement.getTextTrim() );
+			}
+			ann.setValue( "resultSetMappings", resultSetMappings.toArray( new String[resultSetMappings.size()] ) );
+			elements = subElement.elements( "hint" );
+			buildQueryHints( elements, ann );
+			namedStoredProcedureQueries.add( (NamedStoredProcedureQuery) AnnotationFactory.create( ann ) );
+		}
+		return namedStoredProcedureQueries;
+
+	}
+
 	public static List<SqlResultSetMapping> buildSqlResultsetMappings(Element element, XMLContext.Default defaults) {
 		if ( element == null ) {
 			return new ArrayList<SqlResultSetMapping>();
@@ -1872,6 +2022,84 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private NamedEntityGraphs getNamedEntityGraphs(Element tree, XMLContext.Default defaults) {
+		List<NamedEntityGraph> queries = buildNamedEntityGraph( tree, defaults );
+		if ( defaults.canUseJavaAnnotations() ) {
+			NamedEntityGraph annotation = getJavaAnnotation( NamedEntityGraph.class );
+			addNamedEntityGraphIfNeeded( annotation, queries );
+			NamedEntityGraphs annotations = getJavaAnnotation( NamedEntityGraphs.class );
+			if ( annotations != null ) {
+				for ( NamedEntityGraph current : annotations.value() ) {
+					addNamedEntityGraphIfNeeded( current, queries );
+				}
+			}
+		}
+		if ( queries.size() > 0 ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( NamedEntityGraphs.class );
+			ad.setValue( "value", queries.toArray( new NamedEntityGraph[queries.size()] ) );
+			return AnnotationFactory.create( ad );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private void addNamedEntityGraphIfNeeded(NamedEntityGraph annotation, List<NamedEntityGraph> queries) {
+		if ( annotation != null ) {
+			String queryName = annotation.name();
+			boolean present = false;
+			for ( NamedEntityGraph current : queries ) {
+				if ( current.name().equals( queryName ) ) {
+					present = true;
+					break;
+				}
+			}
+			if ( !present ) {
+				queries.add( annotation );
+			}
+		}
+
+	}
+
+	private NamedStoredProcedureQueries getNamedStoredProcedureQueries(Element tree, XMLContext.Default defaults) {
+		List<NamedStoredProcedureQuery> queries = buildNamedStoreProcedureQueries( tree, defaults );
+		if ( defaults.canUseJavaAnnotations() ) {
+			NamedStoredProcedureQuery annotation = getJavaAnnotation( NamedStoredProcedureQuery.class );
+			addNamedStoredProcedureQueryIfNeeded( annotation, queries );
+			NamedStoredProcedureQueries annotations = getJavaAnnotation( NamedStoredProcedureQueries.class );
+			if ( annotations != null ) {
+				for ( NamedStoredProcedureQuery current : annotations.value() ) {
+					addNamedStoredProcedureQueryIfNeeded( current, queries );
+				}
+			}
+		}
+		if ( queries.size() > 0 ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( NamedStoredProcedureQueries.class );
+			ad.setValue( "value", queries.toArray( new NamedStoredProcedureQuery[queries.size()] ) );
+			return AnnotationFactory.create( ad );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private void addNamedStoredProcedureQueryIfNeeded(NamedStoredProcedureQuery annotation, List<NamedStoredProcedureQuery> queries) {
+		if ( annotation != null ) {
+			String queryName = annotation.name();
+			boolean present = false;
+			for ( NamedStoredProcedureQuery current : queries ) {
+				if ( current.name().equals( queryName ) ) {
+					present = true;
+					break;
+				}
+			}
+			if ( !present ) {
+				queries.add( annotation );
+			}
+		}
+	}
+
+
 	private NamedNativeQueries getNamedNativeQueries(Element tree, XMLContext.Default defaults) {
 		List<NamedNativeQuery> queries = (List<NamedNativeQuery>) buildNamedQueries( tree, true, defaults );
 		if ( defaults.canUseJavaAnnotations() ) {
@@ -1910,6 +2138,25 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private static void buildQueryHints(List<Element> elements, AnnotationDescriptor ann){
+		List<QueryHint> queryHints = new ArrayList<QueryHint>( elements.size() );
+		for ( Element hint : elements ) {
+			AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
+			String value = hint.attributeValue( "name" );
+			if ( value == null ) {
+				throw new AnnotationException( "<hint> without name. " + SCHEMA_VALIDATION );
+			}
+			hintDescriptor.setValue( "name", value );
+			value = hint.attributeValue( "value" );
+			if ( value == null ) {
+				throw new AnnotationException( "<hint> without value. " + SCHEMA_VALIDATION );
+			}
+			hintDescriptor.setValue( "value", value );
+			queryHints.add( (QueryHint) AnnotationFactory.create( hintDescriptor ) );
+		}
+		ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
+	}
+
 	public static List buildNamedQueries(Element element, boolean isNative, XMLContext.Default defaults) {
 		if ( element == null ) {
 			return new ArrayList();
@@ -1931,22 +2178,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 			}
 			copyStringElement( queryElt, ann, "query" );
 			List<Element> elements = subelement.elements( "hint" );
-			List<QueryHint> queryHints = new ArrayList<QueryHint>( elements.size() );
-			for ( Element hint : elements ) {
-				AnnotationDescriptor hintDescriptor = new AnnotationDescriptor( QueryHint.class );
-				String value = hint.attributeValue( "name" );
-				if ( value == null ) {
-					throw new AnnotationException( "<hint> without name. " + SCHEMA_VALIDATION );
-				}
-				hintDescriptor.setValue( "name", value );
-				value = hint.attributeValue( "value" );
-				if ( value == null ) {
-					throw new AnnotationException( "<hint> without value. " + SCHEMA_VALIDATION );
-				}
-				hintDescriptor.setValue( "value", value );
-				queryHints.add( (QueryHint) AnnotationFactory.create( hintDescriptor ) );
-			}
-			ann.setValue( "hints", queryHints.toArray( new QueryHint[queryHints.size()] ) );
+			buildQueryHints( elements, ann );
 			String clazzName = subelement.attributeValue( "result-class" );
 			if ( StringHelper.isNotEmpty( clazzName ) ) {
 				Class clazz;

@@ -95,10 +95,8 @@
 
             <para>
                 A <literal>unique-key</literal> attribute can be used to group columns in
-                a single, unique key constraint. Currently, the specified value of the 
-                <literal>unique-key</literal> attribute is <emphasis>not</emphasis> used 
-                to name the constraint in the generated DDL. It is only used to group the columns in 
-                the mapping file.
+                a single, unique key constraint.  The attribute overrides
+            	the name of any generated unique key constraint.
             </para>
             
             <programlisting role="XML"><![CDATA[<many-to-one name="org" column="orgId" unique-key="OrgEmployeeId"/>

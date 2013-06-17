@@ -48,7 +48,7 @@ public class ForUpdateFragment {
 		this.dialect = dialect;
 	}
 
-	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map keyColumnNames) throws QueryException {
+	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNames) throws QueryException {
 		this( dialect );
 		LockMode upgradeType = null;
 		Iterator iter = lockOptions.getAliasLockIterator();
@@ -68,13 +68,13 @@ public class ForUpdateFragment {
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				final String tableAlias = ( String ) me.getKey();
 				if ( dialect.forUpdateOfColumns() ) {
-					String[] keyColumns = ( String[] ) keyColumnNames.get( tableAlias ); //use the id column alias
+					String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
 					if ( keyColumns == null ) {
 						throw new IllegalArgumentException( "alias not found: " + tableAlias );
 					}
 					keyColumns = StringHelper.qualify( tableAlias, keyColumns );
-					for ( int i = 0; i < keyColumns.length; i++ ) {
-						addTableAlias( keyColumns[i] );
+					for ( String keyColumn : keyColumns ) {
+						addTableAlias( keyColumn );
 					}
 				}
 				else {

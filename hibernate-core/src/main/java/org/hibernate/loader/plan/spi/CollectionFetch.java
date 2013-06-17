@@ -28,11 +28,8 @@ import java.sql.SQLException;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.spi.ResultSetProcessingContext;
-import org.hibernate.persister.entity.Joinable;
-import org.hibernate.type.CollectionType;
 
 /**
  * @author Steve Ebersole
@@ -82,8 +79,8 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 	}
 
 	@Override
-	public String[] getColumnNames() {
-		return getOwner().getColumnNames( this );
+	public String[] toSqlSelectFragments(String alias) {
+		return getOwner().toSqlSelectFragments( this, alias );
 	}
 
 	@Override

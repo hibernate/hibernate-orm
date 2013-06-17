@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+
+<chapter xmlns="http://docbook.org/ns/docbook"
+         xmlns:xl="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+	<title>OSGi Tutorial</title>
+
+	<para>
+		Hibernate targets the OSGi 4.3 spec or later and supports three types
+		of configurations.
+
+		<orderedlist>
+			<listitem>
+				<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/managed-jpa">Container-Managed JPA</link>
+			</listitem>
+			<listitem>
+				<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-jpa">Unmanaged JPA</link>
+			</listitem>
+			<listitem>
+				<link xl:href="https://github.com/hibernate/hibernate-orm/tree/master/documentation/src/main/docbook/quickstart/tutorials/osgi/unmanaged-native">Unmanaged Native</link>
+			</listitem>
+		</orderedlist>
+	</para>
+	
+	<para>
+		For more details about OSGi, the three configurations, hibernate-osgi, extensions points, and caveats, please
+		see the OSGi chapter of the Developer's Guide!
+	</para>
+
+	<section>
+		<title>
+			Project Overview
+		</title>
+		<para>
+			Each configuration has a QuickStart project located within the download bundle (under <filename>osgi</filename>).
+			The bundles can be used as-is within Apache Karaf. Feel free to use them as literal
+			"quick start" bundle templates.
+		</para>
+	</section>
+	
+	<section>
+		<title>
+			Project Structure
+		</title>
+		<itemizedlist>
+			<listitem>
+				<filename>osgi/datasource-h2.xml</filename>: Enterprise OSGi JPA usage can include a DataSource installed in the container.
+				The client bundle's <literal>persistence.xml</literal> references the DataSource through JNDI. For an
+				example, see how managed-jpa's <literal>persistence.xml</literal> calls out the
+				<literal>jta-data-source</literal>.
+			</listitem>
+			<listitem>
+				<filename>osgi/[project]/features.xml</filename>: This is arguably the most important "quick start" material. It defines
+				a single Karaf feature ("hibernate-test") that demonstrates the necessary 3rd party libraries and
+				bundle activation ordering.
+			</listitem>
+			<listitem>
+				<filename>osgi/[project]/pom.xml</filename>: The POM includes typical compile-time dependencies (JPA, OSGi Core,
+				OSGi Enterprise), as well as OSGi manifest data.
+			</listitem>
+			<listitem>
+				<filename>osgi/[project]/src/main/resources/OSGI-INF/blueprint/blueprint.xml</filename>:
+				The Blueprint includes container-managed EntityManager
+				injection (for managed-jpa), as well as demonstrations showing how to register
+				your custom implementations of Hibernate extension points.
+			</listitem>
+			<listitem>
+				<filename>osgi/[project]/src/main/resources/META-INF/persistence.xml</filename> or
+				<filename>osgi/[project]/src/main/resources/hibernate.cfg.xml</filename>: Note that the configurations
+				are no different than typical uses of Hibernate!
+			</listitem>
+			<listitem>
+				<filename>osgi/[project]/src/main/java/org/hibernate/osgitest/HibernateUtil.java</filename>: Demonstrates how to create an
+				EntityManagerFactory (JPA) or SessionFactory (Native) using hibernate-osgi's services.  Note that in
+				managed-jpa, this is replaced by <literal>DataPointServiceImpl#entityManager</literal>, injected by
+				<filename>blueprint.xml</filename> (described above).
+			</listitem>
+		</itemizedlist>
+	</section>
+
+	<section xml:id="hibernate-gsg-tutorial-envers-config">
+		<title>
+			TODOs
+		</title>
+		<itemizedlist>
+			<listitem>
+				If using managed-jpa, <filename>features.xml</filename> will need the path to
+				<filename>datasource-h2.xml</filename> updated.
+			</listitem>
+		</itemizedlist>
+	</section>
+
+	<section xml:id="hibernate-gsg-tutorial-envers-config">
+		<title>
+			Karaf Commands
+		</title>
+		<para>
+			All three bundles include Karaf Commands that can be used directly on the Karaf command line to test
+			basic persistence operations ("dp:add [name]", "dp:getall", "dp:deleteall", etc.).  I leave them in the
+			QuickStarts as a useful sanity check.
+		</para>
+	</section>
+
+</chapter>

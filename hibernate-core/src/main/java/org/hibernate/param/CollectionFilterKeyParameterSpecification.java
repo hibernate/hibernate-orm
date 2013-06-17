@@ -55,9 +55,7 @@ public class CollectionFilterKeyParameterSpecification implements ParameterSpeci
 		this.queryParameterPosition = queryParameterPosition;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int bind(
 			PreparedStatement statement,
 			QueryParameters qp,
@@ -68,23 +66,17 @@ public class CollectionFilterKeyParameterSpecification implements ParameterSpeci
 		return keyType.getColumnSpan( session.getFactory() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getExpectedType() {
 		return keyType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setExpectedType(Type expectedType) {
 		// todo : throw exception?
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String renderDisplayInfo() {
 		return "collection-filter-key=" + collectionRole;
 	}

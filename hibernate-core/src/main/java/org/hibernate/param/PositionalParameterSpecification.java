@@ -35,7 +35,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class PositionalParameterSpecification extends AbstractExplicitParameterSpecification implements ParameterSpecification {
+public class PositionalParameterSpecification extends AbstractExplicitParameterSpecification  {
 	private final int hqlPosition;
 
 	/**

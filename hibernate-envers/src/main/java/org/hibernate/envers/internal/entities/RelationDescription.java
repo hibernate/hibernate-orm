@@ -34,21 +34,44 @@ public class RelationDescription {
 	private final RelationType relationType;
 	private final String toEntityName;
 	private final String mappedByPropertyName;
+	private final boolean ignoreNotFound;
 	private final IdMapper idMapper;
 	private final PropertyMapper fakeBidirectionalRelationMapper;
 	private final PropertyMapper fakeBidirectionalRelationIndexMapper;
 	private final boolean insertable;
 	private boolean bidirectional;
 
-	public RelationDescription(
-			String fromPropertyName, RelationType relationType, String toEntityName,
-			String mappedByPropertyName, IdMapper idMapper,
-			PropertyMapper fakeBidirectionalRelationMapper,
-			PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable) {
+	public static RelationDescription toOne(String fromPropertyName, RelationType relationType, String toEntityName,
+											String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
+											PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable,
+											boolean ignoreNotFound) {
+		return new RelationDescription(
+				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
+				fakeBidirectionalRelationIndexMapper, insertable, ignoreNotFound
+		);
+	}
+
+	public static RelationDescription toMany(String fromPropertyName, RelationType relationType, String toEntityName,
+											 String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
+											 PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable) {
+		// Envers populates collections by executing dedicated queries. Special handling of
+		// @NotFound(action = NotFoundAction.IGNORE) can be omitted in such case as exceptions
+		// (e.g. EntityNotFoundException, ObjectNotFoundException) are never thrown.
+		// Therefore assigning false to ignoreNotFound.
+		return new RelationDescription(
+				fromPropertyName, relationType, toEntityName, mappedByPropertyName, idMapper, fakeBidirectionalRelationMapper,
+				fakeBidirectionalRelationIndexMapper, insertable, false
+		);
+	}
+
+	private RelationDescription(String fromPropertyName, RelationType relationType, String toEntityName,
+								String mappedByPropertyName, IdMapper idMapper, PropertyMapper fakeBidirectionalRelationMapper,
+								PropertyMapper fakeBidirectionalRelationIndexMapper, boolean insertable, boolean ignoreNotFound) {
 		this.fromPropertyName = fromPropertyName;
 		this.relationType = relationType;
 		this.toEntityName = toEntityName;
 		this.mappedByPropertyName = mappedByPropertyName;
+		this.ignoreNotFound = ignoreNotFound;
 		this.idMapper = idMapper;
 		this.fakeBidirectionalRelationMapper = fakeBidirectionalRelationMapper;
 		this.fakeBidirectionalRelationIndexMapper = fakeBidirectionalRelationIndexMapper;
@@ -71,6 +94,10 @@ public class RelationDescription {
 
 	public String getMappedByPropertyName() {
 		return mappedByPropertyName;
+	}
+
+	public boolean isIgnoreNotFound() {
+		return ignoreNotFound;
 	}
 
 	public IdMapper getIdMapper() {

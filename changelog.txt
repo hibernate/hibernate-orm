@@ -5,6 +5,53 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.0.Beta3 (2013.05.29)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/13451
+
+** Sub-task
+    * [HHH-8144] - Create a 'release' task that performs all tasks needed for doing a release
+
+** Bug
+    * [HHH-2664] - full join not working
+    * [HHH-5465] - HQL left join fetch of an element collection following a left join fetch of a one-to-one relationship causes NullPointerException
+    * [HHH-6813] - @Id @OneToOne cause NullPointerException during query
+    * [HHH-8083] - @OrderColumn not updated on @OneToMany cascade
+    * [HHH-8219] - Protect against JDK 7 API usage
+    * [HHH-8220] - pom dependencies scope changed from compile to runtime
+    * [HHH-8225] - EMF cannot be created, closed, then re-created in OSGi
+    * [HHH-8233] - exclude-unlisted-classes is not excluding unlisted classes in root
+    * [HHH-8236] - Update to hibernate-commons-annotations 4.0.2.Final
+    * [HHH-8241] - Reusing of scanner instance is impossible with Apache Aries JPA
+    * [HHH-8250] - DefaultInitializeCollectionEventListener not finding collections in cache
+    * [HHH-8254] - throw HibernateException when transaction is rolledback by a reaper thread
+    * [HHH-8266] - Binding of named-stored-procedure XML element tries to create duplicate
+    * [HHH-8269] - DenormalizedTable FK constraint names can be too long
+    * [HHH-8270] - Support for accessing JPA schema export script files specified by URL
+    * [HHH-8271] - Handling of javax.persistence.sql-load-script-source
+    * [HHH-8273] - Incorrect "unique-key" naming comment in docs
+
+** Improvement
+    * [HHH-6875] - @OrderBy on @ElementCollection of basic type should "order by value"
+    * [HHH-7214] - DiscriminatorValue
+    * [HHH-7582] - TableGenerator does not distinguish between different tenants (MultiTenant Schema based)
+    * [HHH-8211] - Checkstyle and FindBugs fix-ups
+    * [HHH-8217] - Make generated constraint names short and non-random
+    * [HHH-8226] - table synonyms cannot find columns on Oracle
+    * [HHH-8231] - Pass along IOException as cause when trying to open script outputs
+    * [HHH-8238] - OsgiJtaPlatform null pointer exception
+    * [HHH-8257] - More concisely obtaining a JBoss logger
+
+** Task
+    * [HHH-8218] - Update to final versions of BV 1.1 and HV 5
+    * [HHH-8222] - Implement @NamedStoredProcedureQuery binding
+    * [HHH-8223] - Implement @NamedEntityGraph binding
+    * [HHH-8232] - Upgrade to Gradle 1.6
+    * [HHH-8235] - Drop database profiles upstream
+    * [HHH-8246] - Implement XML binding of NamedStoredProcedureQuery
+    * [HHH-8247] - Implement XML binding of NamedEntityGraph
+
+
 Changes in version 4.3.0.Beta2 (2013.05.02)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/13052

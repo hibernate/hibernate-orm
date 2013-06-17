@@ -24,6 +24,7 @@
 package org.hibernate.jpa;
 import java.util.HashSet;
 import java.util.Set;
+import static org.hibernate.annotations.QueryHints.*;
 
 /**
  * Defines the supported JPA query hints
@@ -37,52 +38,52 @@ public class QueryHints {
 	 * @deprecated use {@link #SPEC_HINT_TIMEOUT} instead
 	 */
 	@Deprecated
-	public static final String HINT_TIMEOUT = "org.hibernate.timeout";
+	public static final String HINT_TIMEOUT = TIMEOUT_HIBERNATE;
 
 	/**
 	 * The hint key for specifying a query timeout per JPA, which defines the timeout in milliseconds
 	 */
-	public static final String SPEC_HINT_TIMEOUT = "javax.persistence.query.timeout";
+	public static final String SPEC_HINT_TIMEOUT = TIMEOUT_JPA;
 
 	/**
 	 * The hint key for specifying a comment which is to be embedded into the SQL sent to the database.
 	 */
-	public static final String HINT_COMMENT = "org.hibernate.comment";
+	public static final String HINT_COMMENT = COMMENT;
 
 	/**
 	 * The hint key for specifying a JDBC fetch size, used when executing the resulting SQL.
 	 */
-	public static final String HINT_FETCH_SIZE = "org.hibernate.fetchSize";
+	public static final String HINT_FETCH_SIZE = FETCH_SIZE;
 
 	/**
 	 * The hint key for specifying whether the query results should be cached for the next (cached) execution of the
 	 * "same query".
 	 */
-	public static final String HINT_CACHEABLE = "org.hibernate.cacheable";
+	public static final String HINT_CACHEABLE = CACHEABLE;
 
 	/**
 	 * The hint key for specifying the name of the cache region (within Hibernate's query result cache region)
 	 * to use for storing the query results.
 	 */
-	public static final String HINT_CACHE_REGION = "org.hibernate.cacheRegion";
+	public static final String HINT_CACHE_REGION = CACHE_REGION;
 
 	/**
 	 * The hint key for specifying that objects loaded into the persistence context as a result of this query execution
 	 * should be associated with the persistence context as read-only.
 	 */
-	public static final String HINT_READONLY = "org.hibernate.readOnly";
+	public static final String HINT_READONLY = READ_ONLY;
 
 	/**
 	 * The hint key for specifying the cache mode ({@link org.hibernate.CacheMode}) to be in effect for the
 	 * execution of the hinted query.
 	 */
-	public static final String HINT_CACHE_MODE = "org.hibernate.cacheMode";
+	public static final String HINT_CACHE_MODE = CACHE_MODE;
 
 	/**
 	 * The hint key for specifying the flush mode ({@link org.hibernate.FlushMode}) to be in effect for the
 	 * execution of the hinted query.
 	 */
-	public static final String HINT_FLUSH_MODE = "org.hibernate.flushMode";
+	public static final String HINT_FLUSH_MODE = FLUSH_MODE;
 
 	private static final Set<String> HINTS = buildHintsSet();
 

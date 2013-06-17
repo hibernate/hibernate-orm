@@ -1,7 +1,11 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
+<<<<<<< HEAD
  * Copyright (c) 2008, 2012, Red Hat Inc. or third-party contributors as
+=======
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
+>>>>>>> master
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -45,7 +49,10 @@ import org.hibernate.metamodel.spi.relational.Sequence;
  * @author Steve Ebersole
  */
 public class SequenceStructure implements DatabaseStructure {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SequenceStructure.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			SequenceStructure.class.getName()
+	);
 
 	private ObjectName qualifiedSequenceName;
 	private final String sequenceName;
@@ -97,12 +104,12 @@ public class SequenceStructure implements DatabaseStructure {
 			public IntegralDataTypeHolder getNextValue() {
 				accessCounter++;
 				try {
-					PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
+					final PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 					try {
-						ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+						final ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 						try {
 							rs.next();
-							IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
+							final IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
 							value.initialize( rs, 1 );
 							if ( LOG.isDebugEnabled() ) {
 								LOG.debugf( "Sequence value obtained: %s", value.makeValue() );
@@ -131,6 +138,11 @@ public class SequenceStructure implements DatabaseStructure {
 					);
 				}
 			}
+
+			@Override
+			public String getTenantIdentifier() {
+				return session.getTenantIdentifier();
+			}
 		};
 	}
 
@@ -154,7 +166,7 @@ public class SequenceStructure implements DatabaseStructure {
 
 	@Override
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
-		int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
+		final int sourceIncrementSize = applyIncrementSizeToSourceValues ? incrementSize : 1;
 		return dialect.getCreateSequenceStrings( sequenceName, initialValue, sourceIncrementSize );
 	}
 

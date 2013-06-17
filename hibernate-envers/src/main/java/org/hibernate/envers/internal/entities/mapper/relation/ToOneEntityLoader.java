@@ -35,7 +35,8 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class ToOneEntityLoader {
 	/**
-	 * Immediately loads historical entity or its current state when excluded from audit process.
+	 * Immediately loads historical entity or its current state when excluded from audit process. Returns {@code null}
+	 * reference if entity has not been found in the database.
 	 */
 	public static Object loadImmediate(
 			AuditReaderImplementor versionsReader,

@@ -23,8 +23,6 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import java.io.Reader;
-
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
 
 /**
@@ -33,28 +31,22 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
  * @author Steve Ebersole
  */
 public class GenerationSourceFromScript implements GenerationSource {
-	private final SqlScriptInput reader;
+	private final ScriptSourceInput inputSource;
 	private final ImportSqlCommandExtractor scriptCommandExtractor;
 
-	public GenerationSourceFromScript(Object scriptSourceSetting, ImportSqlCommandExtractor scriptCommandExtractor) {
+	public GenerationSourceFromScript(ScriptSourceInput inputSource, ImportSqlCommandExtractor scriptCommandExtractor) {
+		this.inputSource = inputSource;
 		this.scriptCommandExtractor = scriptCommandExtractor;
-
-		if ( Reader.class.isInstance( scriptSourceSetting ) ) {
-			reader = new SqlScriptReaderInput( (Reader) scriptSourceSetting );
-		}
-		else {
-			reader = new SqlScriptFileInput( scriptSourceSetting.toString() );
-		}
 	}
 
 	@Override
 	public Iterable<String> getCommands() {
-		return reader.read( scriptCommandExtractor );
+		return inputSource.read( scriptCommandExtractor );
 	}
 
 	@Override
 	public void release() {
-		reader.release();
+		inputSource.release();
 	}
 
 }

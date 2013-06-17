@@ -200,12 +200,14 @@ public abstract class AbstractScannerImpl implements Scanner {
 		}
 	}
 
-	private static class ArchiveDescriptorInfo {
-		private final ArchiveDescriptor archiveDescriptor;
-		private final boolean isRoot;
-		private final ScanOptions scanOptions;
+	// This needs to be protected and attributes/constructor visible in case
+	// a custom scanner needs to override validateReuse.
+	protected static class ArchiveDescriptorInfo {
+		public final ArchiveDescriptor archiveDescriptor;
+		public final boolean isRoot;
+		public final ScanOptions scanOptions;
 
-		private ArchiveDescriptorInfo(
+		public ArchiveDescriptorInfo(
 				ArchiveDescriptor archiveDescriptor,
 				boolean isRoot,
 				ScanOptions scanOptions) {

@@ -9,6 +9,9 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.AssociationType;
 
 /**
+ *  Represents the {@link FetchOwner} for a collection element that is
+ *  an entity association type.
+ *
  * @author Steve Ebersole
  */
 public class EntityElementGraph extends AbstractFetchOwner implements FetchableCollectionElement, EntityReference {
@@ -21,6 +24,13 @@ public class EntityElementGraph extends AbstractFetchOwner implements FetchableC
 
 	private IdentifierDescription identifierDescription;
 
+	/**
+	 * Constructs an {@link EntityElementGraph}.
+	 *
+	 * @param sessionFactory - the session factory.
+	 * @param collectionReference - the collection reference.
+	 * @param collectionPath - the {@link PropertyPath} for the collection.
+	 */
 	public EntityElementGraph(
 			SessionFactoryImplementor sessionFactory,
 			CollectionReference collectionReference,

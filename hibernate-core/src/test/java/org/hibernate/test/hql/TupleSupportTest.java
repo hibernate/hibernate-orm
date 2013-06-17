@@ -46,6 +46,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+
 /**
  * @author Steve Ebersole
  */
@@ -93,7 +94,7 @@ public class TupleSupportTest extends BaseUnitTestCase {
 	public void testImplicitTupleNotEquals() {
 		final String hql = "from TheEntity e where e.compositeValue <> :p1";
 		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryPlanCache()
-				.getHQLQueryPlan( hql, false, Collections.<String, Filter>emptyMap() );
+				.getHQLQueryPlan( hql, false, Collections.<String,Filter>emptyMap() );
 
 		assertEquals( 1, queryPlan.getSqlStrings().length );
 		System.out.println( " SQL : " + queryPlan.getSqlStrings()[0] );
@@ -104,7 +105,7 @@ public class TupleSupportTest extends BaseUnitTestCase {
 	public void testImplicitTupleNotInList() {
 		final String hql = "from TheEntity e where e.compositeValue not in (:p1,:p2)";
 		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryPlanCache()
-				.getHQLQueryPlan( hql, false, Collections.<String, Filter>emptyMap() );
+				.getHQLQueryPlan( hql, false, Collections.<String,Filter>emptyMap() );
 
 		assertEquals( 1, queryPlan.getSqlStrings().length );
 		System.out.println( " SQL : " + queryPlan.getSqlStrings()[0] );

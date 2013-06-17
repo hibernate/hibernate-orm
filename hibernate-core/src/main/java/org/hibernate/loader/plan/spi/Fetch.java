@@ -52,10 +52,25 @@ public interface Fetch extends CopyableFetch {
 	 */
 	public String getOwnerPropertyName();
 
+	/**
+	 * Is this fetch nullable?
+	 *
+	 * @return true, if this fetch is nullable; false, otherwise.
+	 */
 	public boolean isNullable();
 
-	public String[] getColumnNames();
+	/**
+	 * Generates the SQL select fragments for this fetch.  A select fragment is the column and formula references.
+	 *
+	 * @return the select fragments
+	 */
+	public String[] toSqlSelectFragments(String alias);
 
+	/**
+	 * Gets the fetch strategy for this fetch.
+	 *
+	 * @return the fetch strategy for this fetch.
+	 */
 	public FetchStrategy getFetchStrategy();
 
 	/**

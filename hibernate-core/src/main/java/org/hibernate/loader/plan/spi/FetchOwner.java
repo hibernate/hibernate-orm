@@ -57,11 +57,34 @@ public interface FetchOwner {
 	 */
 	public Fetch[] getFetches();
 
+	/**
+	 * Returns the type of the specified fetch.
+	 *
+	 * @param fetch - the owned fetch.
+	 *
+	 * @return the type of the specified fetch.
+	 */
 	public Type getType(Fetch fetch);
 
+	/**
+	 * Is the specified fetch nullable?
+	 *
+	 * @param fetch - the owned fetch.
+	 *
+	 * @return true, if the fetch is nullable; false, otherwise.
+	 */
 	public boolean isNullable(Fetch fetch);
 
-	public String[] getColumnNames(Fetch fetch);
+	/**
+	 * Generates the SQL select fragments for the specified fetch.  A select fragment is the column and formula
+	 * references.
+	 *
+	 * @param fetch - the owned fetch.
+	 * @param alias The table alias to apply to the fragments (used to qualify column references)
+	 *
+	 * @return the select fragments
+	 */
+	public String[] toSqlSelectFragments(Fetch fetch, String alias);
 
 	/**
 	 * Is the asserted plan valid from this owner to a fetch?

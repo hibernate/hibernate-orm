@@ -33,6 +33,7 @@ import java.util.Map;
 import javax.persistence.EntityListeners;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQuery;
+import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.TableGenerator;
@@ -49,6 +50,7 @@ import org.hibernate.internal.util.ReflectHelper;
  *
  * @author Emmanuel Bernard
  */
+@SuppressWarnings("unchecked")
 public class JPAMetadataProvider implements MetadataProvider, Serializable {
 	private transient MetadataProvider delegate = new JavaMetadataProvider();
 	private transient Map<Object, Object> defaults;
@@ -152,6 +154,16 @@ public class JPAMetadataProvider implements MetadataProvider, Serializable {
 						element, xmlDefaults
 				);
 				sqlResultSetMappings.addAll( currentSqlResultSetMappings );
+
+				List<NamedStoredProcedureQuery> namedStoredProcedureQueries = (List<NamedStoredProcedureQuery>)defaults.get( NamedStoredProcedureQuery.class );
+				if(namedStoredProcedureQueries==null){
+					namedStoredProcedureQueries = new ArrayList<NamedStoredProcedureQuery>(  );
+					defaults.put( NamedStoredProcedureQuery.class, namedStoredProcedureQueries );
+				}
+				List<NamedStoredProcedureQuery> currentNamedStoredProcedureQueries = JPAOverriddenAnnotationReader.buildNamedStoreProcedureQueries(
+						element, xmlDefaults
+				);
+				namedStoredProcedureQueries.addAll( currentNamedStoredProcedureQueries );
 			}
 		}
 		return defaults;

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.query.spi;
+
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -36,12 +36,45 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class ParameterParser {
-
+	/**
+	 * Maybe better named a Journaler.  Essentially provides a callback contract for things that recognize parameters
+	 */
 	public static interface Recognizer {
+		/**
+		 * Called when an output parameter is recognized
+		 *
+		 * @param position The position within the query
+		 */
 		public void outParameter(int position);
+
+		/**
+		 * Called when an ordinal parameter is recognized
+		 *
+		 * @param position The position within the query
+		 */
 		public void ordinalParameter(int position);
+
+		/**
+		 * Called when a named parameter is recognized
+		 *
+		 * @param name The recognized parameter name
+		 * @param position The position within the query
+		 */
 		public void namedParameter(String name, int position);
+
+		/**
+		 * Called when a JPA-style named parameter is recognized
+		 *
+		 * @param name The name of the JPA-style parameter
+		 * @param position The position within the query
+		 */
 		public void jpaPositionalParameter(String name, int position);
+
+		/**
+		 * Called when a character that is not a parameter (or part of a parameter dfinition) is recognized.
+		 *
+		 * @param character The recognized character
+		 */
 		public void other(char character);
 	}
 
@@ -64,13 +97,13 @@ public class ParameterParser {
 	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
 	public static void parse(String sqlString, Recognizer recognizer) throws QueryException {
-		boolean hasMainOutputParameter = startsWithEscapeCallTemplate( sqlString );
+		final boolean hasMainOutputParameter = startsWithEscapeCallTemplate( sqlString );
 		boolean foundMainOutputParam = false;
 
-		int stringLength = sqlString.length();
+		final int stringLength = sqlString.length();
 		boolean inQuote = false;
 		for ( int indx = 0; indx < stringLength; indx++ ) {
-			char c = sqlString.charAt( indx );
+			final char c = sqlString.charAt( indx );
 			if ( inQuote ) {
 				if ( '\'' == c ) {
 					inQuote = false;
@@ -88,9 +121,9 @@ public class ParameterParser {
 			else {
 				if ( c == ':' ) {
 					// named parameter
-					int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS_BITSET, indx + 1 );
-					int chopLocation = right < 0 ? sqlString.length() : right;
-					String param = sqlString.substring( indx + 1, chopLocation );
+					final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS_BITSET, indx + 1 );
+					final int chopLocation = right < 0 ? sqlString.length() : right;
+					final String param = sqlString.substring( indx + 1, chopLocation );
 					if ( StringHelper.isEmpty( param ) ) {
 						throw new QueryException(
 								"Space is not allowed after parameter prefix ':' [" + sqlString + "]"
@@ -103,12 +136,12 @@ public class ParameterParser {
 					// could be either an ordinal or JPA-positional parameter
 					if ( indx < stringLength - 1 && Character.isDigit( sqlString.charAt( indx + 1 ) ) ) {
 						// a peek ahead showed this as an JPA-positional parameter
-						int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
-						int chopLocation = right < 0 ? sqlString.length() : right;
-						String param = sqlString.substring( indx + 1, chopLocation );
+						final int right = StringHelper.firstIndexOfChar( sqlString, ParserHelper.HQL_SEPARATORS, indx + 1 );
+						final int chopLocation = right < 0 ? sqlString.length() : right;
+						final String param = sqlString.substring( indx + 1, chopLocation );
 						// make sure this "name" is an integral
 						try {
-                            Integer.valueOf( param );
+							Integer.valueOf( param );
 						}
 						catch( NumberFormatException e ) {
 							throw new QueryException( "JPA-style positional param was not an integral ordinal" );
@@ -133,12 +166,19 @@ public class ParameterParser {
 		}
 	}
 
+	/**
+	 * Exposed as public solely for use from tests
+	 *
+	 * @param sqlString The SQL string to check
+	 *
+	 * @return true/false
+	 */
 	public static boolean startsWithEscapeCallTemplate(String sqlString) {
 		if ( ! ( sqlString.startsWith( "{" ) && sqlString.endsWith( "}" ) ) ) {
 			return false;
 		}
 
-		int chopLocation = sqlString.indexOf( "call" );
+		final int chopLocation = sqlString.indexOf( "call" );
 		if ( chopLocation <= 0 ) {
 			return false;
 		}
@@ -147,7 +187,8 @@ public class ParameterParser {
 		final String fixture = "?=call";
 		int fixturePosition = 0;
 		boolean matches = true;
-		for ( int i = 0, max = checkString.length(); i < max; i++ ) {
+		final int max = checkString.length();
+		for ( int i = 0; i < max; i++ ) {
 			final char c = Character.toLowerCase( checkString.charAt( i ) );
 			if ( Character.isWhitespace( c ) ) {
 				continue;

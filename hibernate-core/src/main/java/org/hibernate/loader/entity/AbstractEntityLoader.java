@@ -57,17 +57,13 @@ public abstract class AbstractEntityLoader extends OuterJoinLoader
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session) {
 		// this form is deprecated!
 		return load( id, optionalObject, session, LockOptions.NONE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object load(Serializable id, Object optionalObject, SessionImplementor session, LockOptions lockOptions) {
 		return load( session, id, optionalObject, id, lockOptions );
 	}

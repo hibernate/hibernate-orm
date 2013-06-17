@@ -452,16 +452,12 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 			this.alias = alias;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getSqlFragment() {
 			return persisterDiscriminatorMetadata.getSqlFragment( alias );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Type getResolutionType() {
 			return persisterDiscriminatorMetadata.getResolutionType();
 		}
@@ -660,21 +656,24 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 
 	// ParameterContainer impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	private List embeddedParameters;
+	private List<ParameterSpecification> embeddedParameters;
 
+	@Override
 	public void addEmbeddedParameter(ParameterSpecification specification) {
 		if ( embeddedParameters == null ) {
-			embeddedParameters = new ArrayList();
+			embeddedParameters = new ArrayList<ParameterSpecification>();
 		}
 		embeddedParameters.add( specification );
 	}
 
+	@Override
 	public boolean hasEmbeddedParameters() {
 		return embeddedParameters != null && ! embeddedParameters.isEmpty();
 	}
 
+	@Override
 	public ParameterSpecification[] getEmbeddedParameters() {
-		return ( ParameterSpecification[] ) embeddedParameters.toArray( new ParameterSpecification[ embeddedParameters.size() ] );
+		return embeddedParameters.toArray( new ParameterSpecification[ embeddedParameters.size() ] );
 	}
 
 	public ParameterSpecification getIndexCollectionSelectorParamSpec() {

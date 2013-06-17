@@ -79,6 +79,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FetchingScrollableResultsImpl;
 import org.hibernate.internal.ScrollableResultsImpl;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -110,7 +111,7 @@ import org.hibernate.type.VersionType;
 public abstract class Loader {
 
     protected static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Loader.class.getName());
-
+   	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 	private final SessionFactoryImplementor factory;
 	private ColumnNameCache columnNameCache;
 
@@ -931,9 +932,9 @@ public abstract class Loader {
 		EntityKey[] keys = new EntityKey[entitySpan]; //we can reuse it for each row
 		LOG.trace( "Processing result set" );
 		int count;
-		boolean isDebugEnabled = LOG.isDebugEnabled();
+
 		for ( count = 0; count < maxRows && rs.next(); count++ ) {
-		   if ( isDebugEnabled ) 
+		   if ( DEBUG_ENABLED )
 			   LOG.debugf( "Result set row: %s", count );
 			Object result = getRowFromResultSet(
 					rs,
@@ -975,8 +976,10 @@ public abstract class Loader {
 
 	protected boolean hasSubselectLoadableCollections() {
 		final Loadable[] loadables = getEntityPersisters();
-		for (int i=0; i<loadables.length; i++ ) {
-			if ( loadables[i].hasSubselectLoadableCollections() ) return true;
+		for ( Loadable loadable : loadables ) {
+			if ( loadable.hasSubselectLoadableCollections() ) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -985,8 +988,8 @@ public abstract class Loader {
 		Set[] result = new Set[ ( ( EntityKey[] ) keys.get(0) ).length ];
 		for ( int j=0; j<result.length; j++ ) {
 			result[j] = new HashSet( keys.size() );
-			for ( int i=0; i<keys.size(); i++ ) {
-				result[j].add( ( ( EntityKey[] ) keys.get(i) ) [j] );
+			for ( Object key : keys ) {
+				result[j].add( ( (EntityKey[]) key )[j] );
 			}
 		}
 		return result;
@@ -1032,13 +1035,11 @@ public abstract class Loader {
 	private Map buildNamedParameterLocMap(QueryParameters queryParameters) {
 		if ( queryParameters.getNamedParameters()!=null ) {
 			final Map namedParameterLocMap = new HashMap();
-			Iterator piter = queryParameters.getNamedParameters().keySet().iterator();
-			while ( piter.hasNext() ) {
-				String name = (String) piter.next();
+			for(String name : queryParameters.getNamedParameters().keySet()){
 				namedParameterLocMap.put(
 						name,
 						getNamedParameterLocs(name)
-					);
+				);
 			}
 			return namedParameterLocMap;
 		}
@@ -1992,30 +1993,33 @@ public abstract class Loader {
 	 */
 	protected int bindNamedParameters(
 			final PreparedStatement statement,
-			final Map namedParams,
+			final Map<String, TypedValue> namedParams,
 			final int startIndex,
 			final SessionImplementor session) throws SQLException, HibernateException {
-		if ( namedParams != null ) {
-			// assumes that types are all of span 1
-			Iterator iter = namedParams.entrySet().iterator();
-			final boolean debugEnabled = LOG.isDebugEnabled();
-			int result = 0;
-			while ( iter.hasNext() ) {
-				Map.Entry e = ( Map.Entry ) iter.next();
-				String name = ( String ) e.getKey();
-				TypedValue typedval = ( TypedValue ) e.getValue();
-				int[] locs = getNamedParameterLocs( name );
-				for ( int i = 0; i < locs.length; i++ ) {
-					if ( debugEnabled ) LOG.debugf( "bindNamedParameters() %s -> %s [%s]", typedval.getValue(), name, locs[i] + startIndex );
-					typedval.getType().nullSafeSet( statement, typedval.getValue(), locs[i] + startIndex, session );
-				}
-				result += locs.length;
-			}
+		int result = 0;
+		if ( CollectionHelper.isEmpty( namedParams ) ) {
 			return result;
 		}
-		else {
-			return 0;
+
+		for ( String name : namedParams.keySet() ) {
+			TypedValue typedValue = namedParams.get( name );
+			int columnSpan = typedValue.getType().getColumnSpan( getFactory() );
+			int[] locs = getNamedParameterLocs( name );
+			for ( int loc : locs ) {
+				if ( DEBUG_ENABLED ) {
+					LOG.debugf(
+							"bindNamedParameters() %s -> %s [%s]",
+							typedValue.getValue(),
+							name,
+							loc + startIndex
+					);
+				}
+				int start = loc * columnSpan + startIndex;
+				typedValue.getType().nullSafeSet( statement, typedValue.getValue(), start, session );
+			}
+			result += locs.length;
 		}
+		return result;
 	}
 
 	public int[] getNamedParameterLocs(String name) {
@@ -2080,7 +2084,7 @@ public abstract class Loader {
 
 	private ColumnNameCache retreiveColumnNameToIndexCache(ResultSet rs) throws SQLException {
 		if ( columnNameCache == null ) {
-			LOG.trace( "Building columnName->columnIndex cache" );
+			LOG.trace( "Building columnName -> columnIndex cache" );
 			columnNameCache = new ColumnNameCache( rs.getMetaData().getColumnCount() );
 		}
 
@@ -2293,7 +2297,7 @@ public abstract class Loader {
 	        final Serializable[] ids,
 	        final Object[] parameterValues,
 	        final Type[] parameterTypes,
-	        final Map namedParameters,
+	        final Map<String, TypedValue> namedParameters,
 	        final Type type) throws HibernateException {
 
 		Type[] idTypes = new Type[ids.length];
@@ -2551,7 +2555,6 @@ public abstract class Loader {
 		// whether scrolling of their result set should be allowed.
 		//
 		// By default it is allowed.
-		return;
 	}
 
 	/**

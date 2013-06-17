@@ -1,3 +1,26 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
 package org.hibernate.persister.walking.internal;
 
 import java.util.Iterator;
@@ -20,8 +43,8 @@ import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
+import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.CompositionElementDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.AssociationType;
@@ -29,10 +52,22 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
+ * A helper for getting attributes from a composition that is known
+ * to have only singular attributes; for example, sub-attributes of a
+ * composite ID or a composite collection element.
+ *
+ * TODO: This should be refactored into a delegate and renamed.
+ *
  * @author Gail Badner
  */
 public class CompositionSingularSubAttributesHelper {
 
+	/**
+	 * Get composite ID sub-attribute definitions.
+	 *
+	 * @param entityPersister - the entity persister.
+	 * @return composite ID sub-attribute definitions.
+	 */
 	public static Iterable<AttributeDefinition> getIdentifierSubAttributes(
 			final AbstractEntityPersister entityPersister) {
 		return getSingularSubAttributes(
@@ -44,8 +79,13 @@ public class CompositionSingularSubAttributesHelper {
 		);
 	}
 
-	public static Iterable<AttributeDefinition> getCompositionElementSubAttributes(
-			CompositionElementDefinition compositionElementDefinition) {
+	/**
+	 * Get sub-attribute definitions for a composite collection element.
+	 * @param compositionElementDefinition - composite collection element definition.
+	 * @return sub-attribute definitions for a composite collection element.
+	 */
+	public static Iterable<AttributeDefinition> getCompositeCollectionElementSubAttributes(
+			CompositeCollectionElementDefinition compositionElementDefinition) {
 		final QueryableCollection collectionPersister =
 				(QueryableCollection) compositionElementDefinition.getCollectionDefinition().getCollectionPersister();
 		return getSingularSubAttributes(

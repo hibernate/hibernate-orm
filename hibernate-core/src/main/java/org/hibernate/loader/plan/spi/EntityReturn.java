@@ -38,13 +38,18 @@ import org.hibernate.persister.entity.EntityPersister;
 import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierResolutionContext;
 
 /**
+ * Represents an entity return value in the query results.  Not the same
+ * as a result (column) in the JDBC ResultSet!
+ *
+ * @see Return
+ *
  * @author Steve Ebersole
  */
 public class EntityReturn extends AbstractFetchOwner implements Return, EntityReference, CopyableReturn {
 
 	private final EntityPersister persister;
 
-	private final PropertyPath propertyPath = new PropertyPath(); // its a root
+	private final PropertyPath propertyPath = new PropertyPath(); // it's a root
 
 	private final LockMode lockMode;
 
@@ -52,6 +57,13 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 
 	private IdentifierDescription identifierDescription;
 
+	/**
+	 * Construct an {@link EntityReturn}.
+	 *
+	 * @param sessionFactory - the session factory.
+	 * @param lockMode - the lock mode.
+	 * @param entityName - the entity name.
+	 */
 	public EntityReturn(
 			SessionFactoryImplementor sessionFactory,
 			LockMode lockMode,

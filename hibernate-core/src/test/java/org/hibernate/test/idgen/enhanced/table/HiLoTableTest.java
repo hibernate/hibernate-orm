@@ -26,7 +26,7 @@ package org.hibernate.test.idgen.enhanced.table;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.HiLoOptimizer;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -49,8 +49,8 @@ public class HiLoTableTest extends BaseCoreFunctionalTestCase {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( TableGenerator.class, persister.getIdentifierGenerator().getClass() );
 		TableGenerator generator = ( TableGenerator ) persister.getIdentifierGenerator();
-		assertClassAssignability( OptimizerFactory.HiLoOptimizer.class, generator.getOptimizer().getClass() );
-		OptimizerFactory.HiLoOptimizer optimizer = ( OptimizerFactory.HiLoOptimizer ) generator.getOptimizer();
+		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
+		HiLoOptimizer optimizer = (HiLoOptimizer) generator.getOptimizer();
 
 		int increment = optimizer.getIncrementSize();
 		Entity[] entities = new Entity[ increment + 1 ];

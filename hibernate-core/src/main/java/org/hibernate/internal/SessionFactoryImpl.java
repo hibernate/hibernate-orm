@@ -645,13 +645,13 @@ public final class SessionFactoryImpl
 		}
 	}
 
-	private List<ProcedureCallMemento> toProcedureCallMementos(
+	private Map<String, ProcedureCallMemento> toProcedureCallMementos(
 			Map<String, NamedProcedureCallDefinition> definitions,
 			Map<String, ResultSetMappingDefinition> resultSetMappingMap) {
-		final List<ProcedureCallMemento> rtn = new ArrayList<ProcedureCallMemento>();
+		final Map<String, ProcedureCallMemento> rtn = new HashMap<String, ProcedureCallMemento>();
 		if ( definitions != null ) {
-			for ( NamedProcedureCallDefinition definition : definitions.values() ) {
-				rtn.add( definition.toMemento( this, resultSetMappingMap ) );
+			for (String name : definitions.keySet()){
+				rtn.put( name,  definitions.get( name ).toMemento( this, resultSetMappingMap ));
 			}
 		}
 		return rtn;
@@ -943,7 +943,7 @@ public final class SessionFactoryImpl
 				metadata.getNamedQueryDefinitions(),
 				metadata.getNamedNativeQueryDefinitions(),
 				metadata.getResultSetMappingDefinitions().values(),
-				null
+				new HashMap<String, ProcedureCallMemento>(  )
 		);
 
 		imports = new HashMap<String,String>();

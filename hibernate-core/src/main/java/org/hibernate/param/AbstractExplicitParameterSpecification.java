@@ -46,30 +46,22 @@ public abstract class AbstractExplicitParameterSpecification implements Explicit
 		this.sourceColumn = sourceColumn;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getSourceLine() {
 		return sourceLine;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getSourceColumn() {
 		return sourceColumn;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getExpectedType() {
 		return expectedType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setExpectedType(Type expectedType) {
 		this.expectedType = expectedType;
 	}

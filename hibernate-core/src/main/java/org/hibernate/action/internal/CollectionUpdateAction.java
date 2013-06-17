@@ -77,7 +77,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 			if ( !collection.hasQueuedOperations() ) {
 				throw new AssertionFailure( "no queued adds" );
 			}
-			//do nothing - we only need to notify the cache...
+			//do nothing - we only need to notify the cache... 
 		}
 		else if ( !affectedByFilters && collection.empty() ) {
 			if ( !emptySnapshot ) {

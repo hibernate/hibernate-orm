@@ -29,10 +29,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.ProtectionDomain;
+import java.util.HashSet;
+import java.util.Iterator;
 
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.bytecode.ClassFile;
+import javassist.bytecode.FieldInfo;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -85,6 +88,7 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 		cp.appendSystemPath();
 		cp.appendClassPath( new ClassClassPath( this.getClass() ) );
 		cp.appendClassPath( new ClassClassPath( classfile.getClass() ) );
+        appendFieldClassPaths(cp, loader, classfile);
 
 		try {
 			cp.makeClassIfNew( new ByteArrayInputStream( classfileBuffer ) );
@@ -123,7 +127,29 @@ public class JavassistClassTransformer extends AbstractClassTransformerImpl {
 		return classfileBuffer;
 	}
 
-	protected FieldTransformer getFieldTransformer(final ClassFile classfile, final ClassPool classPool) {
+    private void appendFieldClassPaths(ClassPool cp, ClassLoader loader, ClassFile classfile) {
+        Iterator fieldIterator = classfile.getFields().iterator();
+        HashSet<String> classNames = new HashSet<String>();
+        while (fieldIterator.hasNext()) {
+            FieldInfo field = (FieldInfo) fieldIterator.next();
+            String fieldClass = field.getDescriptor().replaceAll("/", ".").replaceAll("L", "").replaceAll(";", "");
+            if (!classNames.contains(fieldClass))
+                classNames.add(fieldClass);
+        }
+
+        for (String className : classNames) {
+            Class<?> clazz;
+            try {
+                clazz = loader.loadClass(className);
+                cp.appendClassPath(new ClassClassPath(clazz));
+            } catch (ClassNotFoundException e) {
+                //swallow
+            }
+        }
+
+    }
+
+    protected FieldTransformer getFieldTransformer(final ClassFile classfile, final ClassPool classPool) {
 		if ( alreadyInstrumented( classfile ) ) {
 			return null;
 		}

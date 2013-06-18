@@ -46,6 +46,7 @@ import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -451,6 +452,21 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-8318" )
+	@FailureExpected( jiraKey = "HHH-8318" )
+	public void testDeleteMemberOf() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.createQuery(
+				"delete Attrvalue aval where aval.id in ( "
+						+ "select val2.id from Employee e, Employeegroup eg, Attrset aset, Attrvalue val2 "
+						+ "where eg.id = e.employeegroup.id " + "and aset.id = e.attrset.id "
+						+ "and val2.id member of aset.attrvalues)" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -468,7 +484,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				Captain.class,
 				Chaos.class,
 				CasimirParticle.class,
-				AllTables.class
+				AllTables.class,
+				Attrset.class,
+				Attrvalue.class,
+				Employee.class,
+				Employeegroup.class
 		};
 	}
 

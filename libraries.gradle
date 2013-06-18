@@ -51,7 +51,7 @@ ext {
             dom4j:          'dom4j:dom4j:1.6.1@jar',
 
             // Javassist
-            javassist:      'org.javassist:javassist:3.15.0-GA',
+            javassist:      'org.javassist:javassist:3.18.0-GA',
 
             // javax
             jpa:            'org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0.Draft-16',

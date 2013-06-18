@@ -167,7 +167,11 @@ public class SessionFactoryRegistry {
 	public SessionFactory getNamedSessionFactory(String name) {
 		LOG.debugf( "Lookup: name=%s", name );
 		final String uuid = nameUuidXref.get( name );
-		return getSessionFactory( uuid );
+		if ( uuid != null ) {
+			return getSessionFactory( uuid );
+		} else {
+			return null;
+		}
 	}
 
 	public SessionFactory getSessionFactory(String uuid) {

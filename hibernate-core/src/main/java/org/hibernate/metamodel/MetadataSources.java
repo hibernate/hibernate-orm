@@ -605,7 +605,7 @@ public class MetadataSources {
 		// For backward compatibility, don't require @Embeddable
 		// classes to be explicitly identified.
 		// Automatically find them by checking the fields' types.
-		for ( Class<?> fieldType : ReflectHelper.getFieldTypes( clazz ) ) {		
+		for ( Class<?> fieldType : ReflectHelper.getMemberTypes( clazz ) ) {		
 			if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
 				try {
 					IndexView fieldIndex = JandexHelper.indexForClass(

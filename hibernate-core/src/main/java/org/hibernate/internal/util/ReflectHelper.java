@@ -30,8 +30,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -45,11 +43,20 @@ import org.hibernate.property.PropertyAccessor;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
 
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.TypeResolver;
+import com.fasterxml.classmate.members.ResolvedField;
+import com.fasterxml.classmate.members.ResolvedMethod;
+import com.fasterxml.classmate.types.ResolvedArrayType;
+
 /**
  * Utility class for various reflection operations.
  *
  * @author Gavin King
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public final class ReflectHelper {
 
@@ -64,6 +71,8 @@ public final class ReflectHelper {
 
 	private static final Method OBJECT_EQUALS;
 	private static final Method OBJECT_HASHCODE;
+	
+	private static final TypeResolver TYPE_RESOLVER = new TypeResolver();
 
 	static {
 		Method eq;
@@ -444,35 +453,41 @@ public final class ReflectHelper {
 	 * @param clazz
 	 * @return Set<Class<?>>
 	 */
-	public static Set<Class<?>> getFieldTypes( Class<?> clazz ) {
+	// TODO: This should be moved out of ReflectHelper.  Partial duplication with
+	// AnnotationBindingContextImpl#resolveMemberTypes
+	public static Set<Class<?>> getMemberTypes( Class<?> clazz ) {
 		Set<Class<?>> fieldTypes = new HashSet<Class<?>>();
-
-		for ( Field declaredField : clazz.getDeclaredFields() ) {
-			Class<?> fieldClass = declaredField.getType();
-			if ( fieldClass.isArray() ) {
-				fieldTypes.add( fieldClass.getComponentType() );
-			}
-			else if ( declaredField.getGenericType() instanceof ParameterizedType ) {
-				final java.lang.reflect.Type[] types
-						= ( (ParameterizedType) declaredField.getGenericType() )
-								.getActualTypeArguments();
-				if ( types != null ) {
-					// assumes we want to check values *and* map keys
-					for ( java.lang.reflect.Type type : types ) {
-						if ( type instanceof TypeVariable ) {
-							fieldTypes.add( (Class<?>) ( (TypeVariable) type )
-									.getGenericDeclaration() );
-						}
-						else {
-							fieldTypes.add( (Class<?>) type );
-						}
-					}
-				}
-			}
-			else {
-				fieldTypes.add( fieldClass );
+		
+		ResolvedType resolvedType = TYPE_RESOLVER.resolve( clazz );
+		MemberResolver memberResolver = new MemberResolver( TYPE_RESOLVER );
+		ResolvedTypeWithMembers resolvedTypes = memberResolver.resolve( resolvedType, null, null );
+		ResolvedField[] resolvedFields = resolvedTypes.getMemberFields();
+		
+		for ( ResolvedField resolvedField : resolvedFields ) {
+			resolveAllTypes( resolvedField.getType(), fieldTypes );
+		}
+		
+		// TODO: This should really just be checking getters, but for now do everything.
+		ResolvedMethod[] resolvedMethods = resolvedTypes.getMemberMethods();
+		for ( ResolvedMethod resolvedMethod : resolvedMethods ) {
+			if ( resolvedMethod.getReturnType() != null ) {
+				resolveAllTypes( resolvedMethod.getReturnType(), fieldTypes );
 			}
 		}
+		
 		return fieldTypes;
+	}
+	
+	private static void resolveAllTypes(ResolvedType fieldType, Set<Class<?>> fieldTypes) {
+		if ( fieldType instanceof ResolvedArrayType ) {
+			ResolvedArrayType arrayType = (ResolvedArrayType) fieldType;
+			resolveAllTypes( arrayType.getArrayElementType(), fieldTypes );
+		} else {
+			fieldTypes.add( fieldType.getErasedType() );
+		}
+		
+		for ( ResolvedType typeParameter : fieldType.getTypeBindings().getTypeParameters() ) {
+			resolveAllTypes( typeParameter, fieldTypes );
+		}
 	}
 }

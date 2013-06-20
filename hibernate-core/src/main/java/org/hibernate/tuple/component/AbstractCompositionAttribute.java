@@ -25,7 +25,9 @@ package org.hibernate.tuple.component;
 
 import java.util.Iterator;
 
+import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -98,21 +100,53 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 							final AssociationKey associationKey;
 							final AssociationType aType = (AssociationType) type;
 							final Joinable joinable = aType.getAssociatedJoinable( sessionFactory() );
-							if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT ) {
+
+							if ( aType.isAnyType() ) {
 								associationKey = new AssociationKey(
-										getLHSTableName(
+										JoinHelper.getLHSTableName(
 												aType,
 												attributeNumber(),
-												(OuterJoinLoadable) locateOwningPersister()
+												(OuterJoinLoadable) getSource()
 										),
-										getLHSColumnNames(
+										JoinHelper.getLHSColumnNames(
 												aType,
 												attributeNumber(),
-												columnPosition,
-												(OuterJoinLoadable) locateOwningPersister(),
+												0,
+												(OuterJoinLoadable) getSource(),
 												sessionFactory()
 										)
 								);
+							}
+							else if ( aType.getForeignKeyDirection() == ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT ) {
+								final String lhsTableName;
+								final String[] lhsColumnNames;
+
+								if ( joinable.isCollection() ) {
+									final QueryableCollection collectionPersister = (QueryableCollection) joinable;
+									lhsTableName = collectionPersister.getTableName();
+									lhsColumnNames = collectionPersister.getElementColumnNames();
+								}
+								else {
+									final OuterJoinLoadable entityPersister = (OuterJoinLoadable) locateOwningPersister();
+									lhsTableName = getLHSTableName( aType, attributeNumber(), entityPersister );
+									lhsColumnNames = getLHSColumnNames( aType, attributeNumber(), entityPersister, sessionFactory() );
+								}
+								associationKey = new AssociationKey( lhsTableName, lhsColumnNames );
+
+//								associationKey = new AssociationKey(
+//										getLHSTableName(
+//												aType,
+//												attributeNumber(),
+//												(OuterJoinLoadable) locateOwningPersister()
+//										),
+//										getLHSColumnNames(
+//												aType,
+//												attributeNumber(),
+//												columnPosition,
+//												(OuterJoinLoadable) locateOwningPersister(),
+//												sessionFactory()
+//										)
+//								);
 							}
 							else {
 								associationKey = new AssociationKey(
@@ -120,6 +154,11 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 										getRHSColumnNames( aType, sessionFactory() )
 								);
 							}
+
+							final CompositeType cType = getType();
+							final boolean nullable = cType.getPropertyNullability() == null
+									? true
+									: cType.getPropertyNullability()[ subAttributeNumber ];
 
 							return new CompositeBasedAssociationAttribute(
 									AbstractCompositionAttribute.this,
@@ -132,7 +171,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
 											.setInsertGenerated( AbstractCompositionAttribute.this.isInsertGenerated() )
 											.setUpdateGenerated( AbstractCompositionAttribute.this.isUpdateGenerated() )
-											.setNullable( getType().getPropertyNullability()[subAttributeNumber] )
+											.setNullable( nullable )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
 											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
@@ -163,6 +202,11 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 							);
 						}
 						else {
+							final CompositeType cType = getType();
+							final boolean nullable = cType.getPropertyNullability() == null
+									? true
+									: cType.getPropertyNullability()[ subAttributeNumber ];
+
 							return new CompositeBasedBasicAttribute(
 									AbstractCompositionAttribute.this,
 									sessionFactory(),
@@ -174,7 +218,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
 											.setInsertGenerated( AbstractCompositionAttribute.this.isInsertGenerated() )
 											.setUpdateGenerated( AbstractCompositionAttribute.this.isUpdateGenerated() )
-											.setNullable( getType().getPropertyNullability()[subAttributeNumber] )
+											.setNullable( nullable )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
 											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )

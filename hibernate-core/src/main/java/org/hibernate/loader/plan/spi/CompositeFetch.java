@@ -25,12 +25,19 @@ package org.hibernate.loader.plan.spi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan.exec.process.internal.Helper;
+import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -43,27 +50,28 @@ import org.hibernate.type.CompositeType;
 public class CompositeFetch extends AbstractSingularAttributeFetch {
 	private static final FetchStrategy FETCH_PLAN = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
-	private final FetchOwnerDelegate delegate;
+	private final CompositeBasedSqlSelectFragmentResolver sqlSelectFragmentResolver;
 
 	/**
 	 * Constructs a {@link CompositeFetch} object.
 	 *
 	 * @param sessionFactory - the session factory.
 	 * @param owner - the fetch owner for this fetch.
-	 * @param ownerProperty - the owner's property referring to this fetch.
+	 * @param fetchedAttribute - the owner's property referring to this fetch.
 	 */
 	public CompositeFetch(
 			SessionFactoryImplementor sessionFactory,
 			final FetchOwner owner,
-			String ownerProperty) {
-		super( sessionFactory, owner, ownerProperty, FETCH_PLAN );
-		this.delegate = new CompositeFetchOwnerDelegate(
+			final AttributeDefinition fetchedAttribute) {
+		super( sessionFactory, owner, fetchedAttribute, FETCH_PLAN );
+
+		this.sqlSelectFragmentResolver = new CompositeBasedSqlSelectFragmentResolver(
 				sessionFactory,
-				(CompositeType) getOwner().getType( this ),
-				new CompositeFetchOwnerDelegate.PropertyMappingDelegate() {
+				(CompositeType) fetchedAttribute.getType(),
+				new CompositeBasedSqlSelectFragmentResolver.BaseSqlSelectFragmentResolver() {
 					@Override
 					public String[] toSqlSelectFragments(String alias) {
-						return owner.toSqlSelectFragments( CompositeFetch.this, alias );
+						return owner.toSqlSelectFragmentResolver().toSqlSelectFragments( alias, fetchedAttribute );
 					}
 				}
 		);
@@ -71,12 +79,12 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 
 	public CompositeFetch(CompositeFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
 		super( original, copyContext, fetchOwnerCopy );
-		this.delegate = original.getFetchOwnerDelegate();
+		this.sqlSelectFragmentResolver = original.sqlSelectFragmentResolver;
 	}
 
 	@Override
-	protected FetchOwnerDelegate getFetchOwnerDelegate() {
-		return delegate;
+	public SqlSelectFragmentResolver toSqlSelectFragmentResolver() {
+		return sqlSelectFragmentResolver;
 	}
 
 	@Override
@@ -86,12 +94,26 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 
 	@Override
 	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		//To change body of implemented methods use File | Settings | File Templates.
+		// anything to do?
 	}
 
 	@Override
 	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		// anything to do?
+		return null;
+	}
+
+	@Override
+	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
+		final EntityReference ownerEntityReference = Helper.INSTANCE.findOwnerEntityReference( this );
+		final ResultSetProcessingContext.EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState(
+				ownerEntityReference
+		);
+		final EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
+		final Object entity = context.resolveEntityKey( entityKey, Helper.INSTANCE.findOwnerEntityReference( (FetchOwner) ownerEntityReference ) );
+		for ( Fetch fetch : getFetches() ) {
+			fetch.read( resultSet, context, entity );
+		}
 	}
 
 	@Override
@@ -100,5 +122,19 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 		final CompositeFetch copy = new CompositeFetch( this, copyContext, fetchOwnerCopy );
 		copyContext.getReturnGraphVisitationStrategy().finishingCompositeFetch( this );
 		return copy;
+	}
+
+	@Override
+	public CollectionFetch buildCollectionFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return new CollectionFetch(
+				loadPlanBuildingContext.getSessionFactory(),
+				LockMode.NONE, // todo : for now
+				this,
+				fetchStrategy,
+				attributeDefinition
+		);
 	}
 }

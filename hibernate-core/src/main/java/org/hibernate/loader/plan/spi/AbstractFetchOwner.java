@@ -31,7 +31,9 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.internal.LoadPlanBuildingHelper;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.Type;
 
@@ -100,25 +102,34 @@ public abstract class AbstractFetchOwner extends AbstractPlanNode implements Fet
 		return fetches == null ? NO_FETCHES : fetches.toArray( new Fetch[ fetches.size() ] );
 	}
 
-	/**
-	 * Abstract method returning the delegate for obtaining details about an owned fetch.
-	 * @return the delegate
-	 */
-	protected abstract FetchOwnerDelegate getFetchOwnerDelegate();
-
 	@Override
 	public boolean isNullable(Fetch fetch) {
-		return getFetchOwnerDelegate().locateFetchMetadata( fetch ).isNullable();
+		return fetch.isNullable();
 	}
 
 	@Override
 	public Type getType(Fetch fetch) {
-		return getFetchOwnerDelegate().locateFetchMetadata( fetch ).getType();
+		return fetch.getFetchedType();
 	}
 
 	@Override
 	public String[] toSqlSelectFragments(Fetch fetch, String alias) {
-		return getFetchOwnerDelegate().locateFetchMetadata( fetch ).toSqlSelectFragments( alias );
+		return fetch.toSqlSelectFragments( alias );
+	}
+
+	@Override
+	public AnyFetch buildAnyFetch(
+			AttributeDefinition attribute,
+			AnyMappingDefinition anyDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return LoadPlanBuildingHelper.buildAnyFetch(
+				this,
+				attribute,
+				anyDefinition,
+				fetchStrategy,
+				loadPlanBuildingContext
+		);
 	}
 
 	@Override

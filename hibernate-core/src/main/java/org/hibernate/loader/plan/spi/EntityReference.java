@@ -24,7 +24,7 @@
 package org.hibernate.loader.plan.spi;
 
 import org.hibernate.LockMode;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

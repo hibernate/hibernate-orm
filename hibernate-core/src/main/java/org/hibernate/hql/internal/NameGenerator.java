@@ -52,12 +52,22 @@ public final class NameGenerator {
 	}
 
 	public static String scalarName(int x, int y) {
-		return new StringBuilder()
-				.append( "col_" )
-				.append( x )
-				.append( '_' )
-				.append( y )
-				.append( '_' )
-				.toString();
+		return scalarName( "col_" + x, y );
+	}
+
+	public static String scalarName(String base, int num) {
+		return base + '_' + num + '_';
+	}
+
+	public static String[] scalarNames(String base, int count) {
+		final String[] names = new String[count];
+		for ( int j = 0; j < count; j++ ) {
+			names[j] = scalarName( base, j );
+		}
+		return names;
+	}
+
+	public static String[] scalarNames(int uniqueness, int count) {
+		return scalarNames( "col_" + uniqueness, count );
 	}
 }

@@ -33,6 +33,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyAccessException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.PropertySetterAccessException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -114,14 +115,16 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 						);
 				}
 				else {
-                    LOG.illegalPropertySetterArgument(clazz.getName(), propertyName);
-                    LOG.expectedType(method.getParameterTypes()[0].getName(), value == null ? null : value.getClass().getName());
-					throw new PropertyAccessException(
+					final Class expectedType = method.getParameterTypes()[0];
+					LOG.illegalPropertySetterArgument( clazz.getName(), propertyName );
+					LOG.expectedType( expectedType.getName(), value == null ? null : value.getClass().getName() );
+					throw new PropertySetterAccessException(
 							iae,
-							"IllegalArgumentException occurred while calling",
-							true,
 							clazz,
-							propertyName
+							propertyName,
+							expectedType,
+							target,
+							value
 						);
 				}
 			}

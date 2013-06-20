@@ -40,8 +40,10 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
 /**
- * The base contract for loaders capable of performing batch-fetch loading of entities using multiple primary key
- * values in the SQL <tt>WHERE</tt> clause.
+ * The base contract for UniqueEntityLoader implementations capable of performing batch-fetch loading of entities
+ * using multiple primary key values in the SQL <tt>WHERE</tt> clause.
+ * <p/>
+ * Typically these are
  *
  * @author Gavin King
  * @author Steve Ebersole

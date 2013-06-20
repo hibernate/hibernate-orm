@@ -45,7 +45,6 @@ import org.hibernate.jpa.test.Cat;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Kitten;
-import org.hibernate.jpa.test.TestHelper;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
 import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
 import org.hibernate.jpa.test.pack.defaultpar.IncrementListener;
@@ -86,17 +85,28 @@ public abstract class PackagingTestCase extends BaseCoreFunctionalTestCase {
 		URL myUrl = originalClassLoader.getResource(
 				PackagingTestCase.class.getName().replace( '.', '/' ) + ".class"
 		);
-		int index;
-		if (myUrl.getFile().contains( "target" )) {
+
+		if ( myUrl == null ) {
+			fail( "Unable to setup packaging test : could not resolve 'known class' url" );
+		}
+
+		int index = -1;
+		if ( myUrl.getFile().contains( "target" ) ) {
 			// assume there's normally a /target
 			index = myUrl.getFile().lastIndexOf( "target" );
-		} else {
+		}
+		else if ( myUrl.getFile().contains( "bin" ) ) {
 			// if running in some IDEs, may be in /bin instead
 			index = myUrl.getFile().lastIndexOf( "bin" );
 		}
-		
-		if ( index == -1 ) {
-			fail( "Unable to setup packaging test" );
+		else if ( myUrl.getFile().contains( "out/test" ) ) {
+			// intellij... intellij sets up project outputs little different
+			int outIndex = myUrl.getFile().lastIndexOf( "out/test" );
+			index = myUrl.getFile().lastIndexOf( '/', outIndex+1 );
+		}
+
+		if ( index < 0 ) {
+			fail( "Unable to setup packaging test : could not interpret url" );
 		}
 
 		String baseDirPath = myUrl.getFile().substring( 0, index );

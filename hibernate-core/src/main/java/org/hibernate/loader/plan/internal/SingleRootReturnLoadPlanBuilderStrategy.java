@@ -91,7 +91,15 @@ public class SingleRootReturnLoadPlanBuilderStrategy
 
 	@Override
 	public LoadPlan buildLoadPlan() {
-		return new LoadPlanImpl( false, rootReturn );
+		if ( EntityReturn.class.isInstance( rootReturn ) ) {
+			return new LoadPlanImpl( (EntityReturn) rootReturn );
+		}
+		else if ( CollectionReturn.class.isInstance( rootReturn ) ) {
+			return new LoadPlanImpl( (CollectionReturn) rootReturn );
+		}
+		else {
+			throw new IllegalStateException( "Unexpected root Return type : " + rootReturn );
+		}
 	}
 
 	@Override

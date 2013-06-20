@@ -24,6 +24,7 @@
 package org.hibernate.loader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -91,6 +92,9 @@ public class JoinWalker {
 
 	}
 
+	public List getAssociations() {
+		return Collections.unmodifiableList( associations );
+	}
 
 	public String[] getCollectionSuffixes() {
 		return collectionSuffixes;

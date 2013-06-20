@@ -9,6 +9,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -21,7 +22,7 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 	private final CollectionReference collectionReference;
 	private final PropertyPath propertyPath;
 	private final CollectionPersister collectionPersister;
-	private final FetchOwnerDelegate fetchOwnerDelegate;
+	private final CompositeBasedSqlSelectFragmentResolver sqlSelectFragmentResolver;
 
 	/**
 	 * Constructs a {@link CompositeElementGraph}.
@@ -39,15 +40,16 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 		this.collectionReference = collectionReference;
 		this.collectionPersister = collectionReference.getCollectionPersister();
 		this.propertyPath = collectionPath.append( "<elements>" );
-		this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
+		this.sqlSelectFragmentResolver = new CompositeBasedSqlSelectFragmentResolver(
 				sessionFactory,
 				(CompositeType) collectionPersister.getElementType(),
-				new CompositeFetchOwnerDelegate.PropertyMappingDelegate() {
+				new CompositeBasedSqlSelectFragmentResolver.BaseSqlSelectFragmentResolver() {
 					@Override
 					public String[] toSqlSelectFragments(String alias) {
-						return  ( (QueryableCollection) collectionPersister ).getElementColumnNames( alias );
+						return ( (QueryableCollection) collectionPersister ).getElementColumnNames( alias );
 					}
 				}
+
 		);
 	}
 
@@ -56,7 +58,7 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 		this.collectionReference = original.collectionReference;
 		this.collectionPersister = original.collectionPersister;
 		this.propertyPath = original.propertyPath;
-		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
+		this.sqlSelectFragmentResolver = original.sqlSelectFragmentResolver;
 	}
 
 	@Override
@@ -65,7 +67,7 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 	}
 
 	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy) {
+	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
 	}
 
 	@Override
@@ -84,15 +86,15 @@ public class CompositeElementGraph extends AbstractFetchOwner implements Fetchab
 	}
 
 	@Override
-	protected FetchOwnerDelegate getFetchOwnerDelegate() {
-		return fetchOwnerDelegate;
-	}
-
-	@Override
 	public CollectionFetch buildCollectionFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		throw new HibernateException( "Collection composite element cannot define collections" );
+	}
+
+	@Override
+	public SqlSelectFragmentResolver toSqlSelectFragmentResolver() {
+		return sqlSelectFragmentResolver;
 	}
 }

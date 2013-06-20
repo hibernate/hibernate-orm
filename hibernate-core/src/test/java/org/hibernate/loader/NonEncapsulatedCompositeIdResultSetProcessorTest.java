@@ -28,24 +28,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
-import org.hibernate.loader.internal.LoadQueryAliasResolutionContextImpl;
-import org.hibernate.loader.internal.ResultSetProcessorImpl;
-import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
+import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl;
+import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
-import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
-import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -163,24 +158,12 @@ public class NonEncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFu
 	}
 
 	private List getResults(final EntityPersister entityPersister, final Callback callback) {
-		final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
-				sessionFactory(),
-				LoadQueryInfluencers.NONE
-		);
-		final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-		final LoadQueryAliasResolutionContext aliasResolutionContext =
-				new LoadQueryAliasResolutionContextImpl(
-						sessionFactory(),
-						0,
-						Collections.singletonMap( plan.getReturns().get( 0 ), new String[] { "abc" } )
-				);
-		final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
-				LoadQueryInfluencers.NONE,
-				plan
-		);
-		final String sql = queryBuilder.generateSql( 1, sessionFactory(), aliasResolutionContext );
+		final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
+		final AliasResolutionContext aliasResolutionContext = new AliasResolutionContextImpl( sessionFactory(), 0 );
 
-		final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan );
+		final String sql = Helper.INSTANCE.generateSql( sessionFactory(), plan, aliasResolutionContext );
+
+		final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan, true );
 		final List results = new ArrayList();
 
 		final Session workSession = openSession();

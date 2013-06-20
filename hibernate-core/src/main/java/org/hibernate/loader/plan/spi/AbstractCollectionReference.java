@@ -27,6 +27,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -44,14 +45,15 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 			SessionFactoryImplementor sessionFactory,
 			LockMode lockMode,
 			CollectionPersister collectionPersister,
-			PropertyPath propertyPath) {
+			PropertyPath propertyPath,
+			EntityReference ownerEntityReference) {
 		super( sessionFactory );
 		this.lockMode = lockMode;
 		this.collectionPersister = collectionPersister;
 		this.propertyPath = propertyPath;
 
 		this.indexGraph = buildIndexGraph( getCollectionPersister() );
-		this.elementGraph = buildElementGraph( getCollectionPersister() );
+		this.elementGraph = buildElementGraph( getCollectionPersister(), ownerEntityReference );
 	}
 
 	private FetchableCollectionIndex buildIndexGraph(CollectionPersister persister) {
@@ -70,10 +72,30 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 		return null;
 	}
 
-	private FetchableCollectionElement buildElementGraph(CollectionPersister persister) {
+	private FetchableCollectionElement buildElementGraph(
+			CollectionPersister persister,
+			EntityReference ownerEntityReference) {
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
 			if ( type.isEntityType() ) {
+				final EntityType elementEntityType = (EntityType) type;
+
+				if ( ownerEntityReference != null ) {
+					// check for bi-directionality
+					final boolean sameType = elementEntityType.getAssociatedEntityName().equals(
+							ownerEntityReference.getEntityPersister().getEntityName()
+					);
+					if ( sameType ) {
+						// todo : check for columns too...
+
+						return new BidirectionalEntityElementGraph(
+								sessionFactory(),
+								this,
+								getPropertyPath(),
+								ownerEntityReference
+						);
+					}
+				}
 				return new EntityElementGraph( sessionFactory(), this, getPropertyPath() );
 			}
 		}
@@ -119,8 +141,22 @@ public abstract class AbstractCollectionReference extends AbstractPlanNode imple
 		return elementGraph;
 	}
 
-	@Override
-	public boolean hasEntityElements() {
-		return getCollectionPersister().isOneToMany() || getCollectionPersister().isManyToMany();
+
+	private class BidirectionalEntityElementGraph extends EntityElementGraph implements BidirectionalEntityFetch {
+		private final EntityReference targetEntityReference;
+
+		private BidirectionalEntityElementGraph(
+				SessionFactoryImplementor sessionFactory,
+				CollectionReference collectionReference,
+				PropertyPath propertyPath,
+				EntityReference targetEntityReference) {
+			super( sessionFactory, collectionReference, propertyPath );
+			this.targetEntityReference = targetEntityReference;
+		}
+
+		@Override
+		public EntityReference getTargetEntityReference() {
+			return targetEntityReference;
+		}
 	}
 }

@@ -23,19 +23,34 @@
  */
 package org.hibernate.loader.plan.spi;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.LockMode;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.CollectionAliases;
+import org.hibernate.loader.plan.exec.process.internal.Helper;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.CollectionType;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionFetch extends AbstractCollectionReference implements Fetch {
+	private static final Logger log = CoreLogging.logger( CollectionFetch.class );
+
 	private final FetchOwner fetchOwner;
+	private final AttributeDefinition fetchedAttribute;
 	private final FetchStrategy fetchStrategy;
 
 	public CollectionFetch(
@@ -43,16 +58,16 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 			LockMode lockMode,
 			FetchOwner fetchOwner,
 			FetchStrategy fetchStrategy,
-			String ownerProperty) {
+			AttributeDefinition fetchedAttribute) {
 		super(
 				sessionFactory,
 				lockMode,
-				sessionFactory.getCollectionPersister(
-						fetchOwner.retrieveFetchSourcePersister().getEntityName() + '.' + ownerProperty
-				),
-				fetchOwner.getPropertyPath().append( ownerProperty )
+				sessionFactory.getCollectionPersister( ( (CollectionType) fetchedAttribute.getType() ).getRole() ),
+				fetchOwner.getPropertyPath().append( fetchedAttribute.getName() ),
+				(EntityReference) fetchOwner
 		);
 		this.fetchOwner = fetchOwner;
+		this.fetchedAttribute = fetchedAttribute;
 		this.fetchStrategy = fetchStrategy;
 		fetchOwner.addFetch( this );
 	}
@@ -60,6 +75,7 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 	protected CollectionFetch(CollectionFetch original, CopyContext copyContext, FetchOwner fetchOwnerCopy) {
 		super( original, copyContext );
 		this.fetchOwner = fetchOwnerCopy;
+		this.fetchedAttribute = original.fetchedAttribute;
 		this.fetchStrategy = original.fetchStrategy;
 	}
 
@@ -69,8 +85,8 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 	}
 
 	@Override
-	public String getOwnerPropertyName() {
-		return getPropertyPath().getProperty();
+	public CollectionType getFetchedType() {
+		return (CollectionType) fetchedAttribute.getType();
 	}
 
 	@Override
@@ -79,8 +95,14 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 	}
 
 	@Override
+	public String getAdditionalJoinConditions() {
+		// only pertinent for HQL...
+		return null;
+	}
+
+	@Override
 	public String[] toSqlSelectFragments(String alias) {
-		return getOwner().toSqlSelectFragments( this, alias );
+		return getOwner().toSqlSelectFragmentResolver().toSqlSelectFragments( alias, fetchedAttribute );
 	}
 
 	@Override
@@ -95,7 +117,84 @@ public class CollectionFetch extends AbstractCollectionReference implements Fetc
 
 	@Override
 	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
+	}
+
+	@Override
+	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
+		final Serializable collectionRowKey = (Serializable) getCollectionPersister().readKey(
+				resultSet,
+				context.getAliasResolutionContext().resolveAliases( this ).getCollectionColumnAliases().getSuffixedKeyAliases(),
+				context.getSession()
+		);
+
+		final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();
+
+		if ( collectionRowKey == null ) {
+			// we did not find a collection element in the result set, so we
+			// ensure that a collection is created with the owner's identifier,
+			// since what we have is an empty collection
+			final EntityKey ownerEntityKey = findOwnerEntityKey( context );
+			if ( ownerEntityKey == null ) {
+				// should not happen
+				throw new IllegalStateException(
+						"Could not locate owner's EntityKey during attempt to read collection element fro JDBC row : " +
+								getPropertyPath().getFullPath()
+				);
+			}
+
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Result set contains (possibly empty) collection: %s",
+						MessageHelper.collectionInfoString(
+								getCollectionPersister(),
+								ownerEntityKey,
+								context.getSession().getFactory()
+						)
+				);
+			}
+
+			persistenceContext.getLoadContexts()
+					.getCollectionLoadContext( resultSet )
+					.getLoadingCollection( getCollectionPersister(), ownerEntityKey );
+		}
+		else {
+			// we found a collection element in the result set
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Found row of collection: %s",
+						MessageHelper.collectionInfoString(
+								getCollectionPersister(),
+								collectionRowKey,
+								context.getSession().getFactory()
+						)
+				);
+			}
+
+			PersistentCollection rowCollection = persistenceContext.getLoadContexts()
+					.getCollectionLoadContext( resultSet )
+					.getLoadingCollection( getCollectionPersister(), collectionRowKey );
+
+			final CollectionAliases descriptor = context.getAliasResolutionContext().resolveAliases( this ).getCollectionColumnAliases();
+
+			if ( rowCollection != null ) {
+				final Object element = rowCollection.readFrom( resultSet, getCollectionPersister(), descriptor, owner );
+
+				if ( getElementGraph() != null ) {
+					for ( Fetch fetch : getElementGraph().getFetches() ) {
+						fetch.read( resultSet, context, element );
+					}
+				}
+			}
+		}
+	}
+
+	private EntityKey findOwnerEntityKey(ResultSetProcessingContext context) {
+		return context.getProcessingState( findOwnerEntityReference( getOwner() ) ).getEntityKey();
+	}
+
+	private EntityReference findOwnerEntityReference(FetchOwner owner) {
+		return Helper.INSTANCE.findOwnerEntityReference( owner );
 	}
 
 	@Override

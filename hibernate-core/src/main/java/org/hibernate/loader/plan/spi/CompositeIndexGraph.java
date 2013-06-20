@@ -9,6 +9,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -21,7 +22,7 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 	private final CollectionReference collectionReference;
 	private final PropertyPath propertyPath;
 	private final CollectionPersister collectionPersister;
-	private final FetchOwnerDelegate fetchOwnerDelegate;
+	private final CompositeBasedSqlSelectFragmentResolver sqlSelectFragmentResolver;
 
 	/**
 	 * Constructs a {@link CompositeElementGraph}.
@@ -38,10 +39,10 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 		this.collectionReference = collectionReference;
 		this.collectionPersister = collectionReference.getCollectionPersister();
 		this.propertyPath = collectionPath.append( "<index>" );
-		this.fetchOwnerDelegate = new CompositeFetchOwnerDelegate(
+		this.sqlSelectFragmentResolver = new CompositeBasedSqlSelectFragmentResolver(
 				sessionFactory,
 				(CompositeType) collectionPersister.getIndexType(),
-				new CompositeFetchOwnerDelegate.PropertyMappingDelegate() {
+				new CompositeBasedSqlSelectFragmentResolver.BaseSqlSelectFragmentResolver() {
 					@Override
 					public String[] toSqlSelectFragments(String alias) {
 						return ( (QueryableCollection) collectionPersister ).getIndexColumnNames( alias );
@@ -55,11 +56,11 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 		this.collectionReference = original.collectionReference;
 		this.collectionPersister = original.collectionPersister;
 		this.propertyPath = original.propertyPath;
-		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
+		this.sqlSelectFragmentResolver = original.sqlSelectFragmentResolver;
 	}
 
 	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy) {
+	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
 	}
 
 	@Override
@@ -83,16 +84,16 @@ public class CompositeIndexGraph extends AbstractFetchOwner implements Fetchable
 	}
 
 	@Override
-	protected FetchOwnerDelegate getFetchOwnerDelegate() {
-		return fetchOwnerDelegate;
-	}
-
-	@Override
 	public CollectionFetch buildCollectionFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
 		throw new HibernateException( "Composite index cannot define collections" );
+	}
+
+	@Override
+	public SqlSelectFragmentResolver toSqlSelectFragmentResolver() {
+		return sqlSelectFragmentResolver;
 	}
 
 }

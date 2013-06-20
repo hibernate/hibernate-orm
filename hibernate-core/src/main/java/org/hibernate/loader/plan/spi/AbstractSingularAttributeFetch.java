@@ -28,6 +28,8 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.type.Type;
 
 /**
  * Represents a singular attribute that is both a {@link FetchOwner} and a {@link Fetch}.
@@ -37,7 +39,7 @@ import org.hibernate.loader.PropertyPath;
  */
 public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner implements Fetch {
 	private final FetchOwner owner;
-	private final String ownerProperty;
+	private final AttributeDefinition fetchedAttribute;
 	private final FetchStrategy fetchStrategy;
 
 	private final PropertyPath propertyPath;
@@ -47,22 +49,22 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 	 *
 	 * @param factory - the session factory.
 	 * @param owner - the fetch owner for this fetch.
-	 * @param ownerProperty - the owner's property referring to this fetch.
+	 * @param fetchedAttribute - the attribute being fetched
 	 * @param fetchStrategy - the fetch strategy for this fetch.
 	 */
 	public AbstractSingularAttributeFetch(
 			SessionFactoryImplementor factory,
 			FetchOwner owner,
-			String ownerProperty,
+			AttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy) {
 		super( factory );
 		this.owner = owner;
-		this.ownerProperty = ownerProperty;
+		this.fetchedAttribute = fetchedAttribute;
 		this.fetchStrategy = fetchStrategy;
 
 		owner.addFetch( this );
 
-		this.propertyPath = owner.getPropertyPath().append( ownerProperty );
+		this.propertyPath = owner.getPropertyPath().append( fetchedAttribute.getName() );
 	}
 
 	public AbstractSingularAttributeFetch(
@@ -71,7 +73,7 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 			FetchOwner fetchOwnerCopy) {
 		super( original, copyContext );
 		this.owner = fetchOwnerCopy;
-		this.ownerProperty = original.ownerProperty;
+		this.fetchedAttribute = original.fetchedAttribute;
 		this.fetchStrategy = original.fetchStrategy;
 		this.propertyPath = original.propertyPath;
 	}
@@ -81,14 +83,19 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 		return owner;
 	}
 
+	public AttributeDefinition getFetchedAttribute() {
+		return fetchedAttribute;
+	}
+
 	@Override
-	public String getOwnerPropertyName() {
-		return ownerProperty;
+	public Type getFetchedType() {
+		return fetchedAttribute.getType();
 	}
 
 	@Override
 	public boolean isNullable() {
-		return owner.isNullable( this );
+		return fetchedAttribute.isNullable();
+//		return owner.isNullable( this );
 	}
 
 	@Override
@@ -102,10 +109,23 @@ public abstract class AbstractSingularAttributeFetch extends AbstractFetchOwner 
 	}
 
 	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy) {
+	public String getAdditionalJoinConditions() {
+		// only pertinent for HQL...
+		return null;
+	}
+
+	@Override
+	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
 		if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 			if ( this.fetchStrategy.getStyle() != FetchStyle.JOIN ) {
-				throw new HibernateException( "Cannot specify join fetch from owner that is a non-joined fetch" );
+
+				throw new HibernateException(
+						String.format(
+								"Cannot specify join fetch from owner [%s] that is a non-joined fetch : %s",
+								getPropertyPath().getFullPath(),
+								attributeDefinition.getName()
+						)
+				);
 			}
 		}
 	}

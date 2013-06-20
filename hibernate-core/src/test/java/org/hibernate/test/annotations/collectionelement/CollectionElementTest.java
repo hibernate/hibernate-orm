@@ -120,6 +120,7 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		Transaction tx = s.beginTransaction();
 		boy = (Boy) s.get( Boy.class, boy.getId() );
+		assertNotNull( boy );
 		assertNotNull( boy.getFavoriteToys() );
 		assertTrue( boy.getFavoriteToys().contains( toy ) );
 		assertEquals( "@Parent is failing", boy, boy.getFavoriteToys().iterator().next().getOwner() );

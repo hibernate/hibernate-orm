@@ -26,7 +26,7 @@ package org.hibernate.loader.spi;
 import org.hibernate.loader.plan.spi.LoadPlan;
 
 /**
- * An advisor that can be made available to the {@link ResultSetProcessor} and {@link ScrollableResultSetProcessor}.
+ * An advisor that can be made available to the {@link org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor} and {@link org.hibernate.loader.plan.exec.process.spi.ScrollableResultSetProcessor}.
  *
  * The processors consult with the advisor, if one is provided, as a means to influence the load plan, meaning that
  * the advisor might add fetches.  A caveat is that any added fetches cannot be join fetches (they cannot alter the

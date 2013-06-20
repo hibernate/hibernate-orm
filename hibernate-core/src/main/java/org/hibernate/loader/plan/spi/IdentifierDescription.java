@@ -27,7 +27,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
+import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 
 /**
  * @author Steve Ebersole
@@ -38,4 +39,6 @@ public interface IdentifierDescription {
 	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
 
 	public EntityKey resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
+
+	HydratedCompoundValueHandler getHydratedStateHandler(Fetch fetch);
 }

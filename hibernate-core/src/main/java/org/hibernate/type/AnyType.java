@@ -34,6 +34,7 @@ import java.util.Map;
 import org.dom4j.Node;
 
 import org.hibernate.EntityMode;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -46,8 +47,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
+import org.hibernate.proxy.LazyInitializer;
 
 /**
  * Handles "any" mappings
@@ -55,352 +59,469 @@ import org.hibernate.proxy.HibernateProxyHelper;
  * @author Gavin King
  */
 public class AnyType extends AbstractType implements CompositeType, AssociationType {
+	private final TypeFactory.TypeScope scope;
 	private final Type identifierType;
-	private final Type metaType;
+	private final Type discriminatorType;
 
-	public AnyType(Type metaType, Type identifierType) {
+	/**
+	 * Intended for use only from legacy {@link ObjectType} type definition
+	 *
+	 * @param discriminatorType
+	 * @param identifierType
+	 */
+	protected AnyType(Type discriminatorType, Type identifierType) {
+		this( null, discriminatorType, identifierType );
+	}
+
+	public AnyType(TypeFactory.TypeScope scope, Type discriminatorType, Type identifierType) {
+		this.scope = scope;
+		this.discriminatorType = discriminatorType;
 		this.identifierType = identifierType;
-		this.metaType = metaType;
 	}
 
-	public Object deepCopy(Object value, SessionFactoryImplementor factory)
-	throws HibernateException {
-		return value;
-	}
-	
-	public boolean isMethodOf(Method method) {
-		return false;
+	public Type getIdentifierType() {
+		return identifierType;
 	}
 
-	public boolean isSame(Object x, Object y) throws HibernateException {
-		return x==y;
+	public Type getDiscriminatorType() {
+		return discriminatorType;
 	}
 
-	public int compare(Object x, Object y) {
-		return 0; //TODO: entities CAN be compared, by PK and entity name, fix this!
-	}
 
-	public int getColumnSpan(Mapping session)
-	throws MappingException {
-		return 2;
-	}
+	// general Type metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public String getName() {
 		return "object";
 	}
 
-	public boolean isMutable() {
-		return false;
-	}
-
-	public Object nullSafeGet(ResultSet rs,	String name, SessionImplementor session, Object owner)
-	throws HibernateException, SQLException {
-
-		throw new UnsupportedOperationException("object is a multicolumn type");
-	}
-
-	public Object nullSafeGet(ResultSet rs,	String[] names,	SessionImplementor session,	Object owner)
-	throws HibernateException, SQLException {
-		return resolveAny(
-				(String) metaType.nullSafeGet(rs, names[0], session, owner),
-				(Serializable) identifierType.nullSafeGet(rs, names[1], session, owner),
-				session
-			);
-	}
-
-	public Object hydrate(ResultSet rs,	String[] names,	SessionImplementor session,	Object owner)
-	throws HibernateException, SQLException {
-		String entityName = (String) metaType.nullSafeGet(rs, names[0], session, owner);
-		Serializable id = (Serializable) identifierType.nullSafeGet(rs, names[1], session, owner);
-		return new ObjectTypeCacheEntry(entityName, id);
-	}
-
-	public Object resolve(Object value, SessionImplementor session, Object owner)
-	throws HibernateException {
-		ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) value;
-		return resolveAny(holder.entityName, holder.id, session);
-	}
-
-	public Object semiResolve(Object value, SessionImplementor session, Object owner)
-	throws HibernateException {
-		throw new UnsupportedOperationException("any mappings may not form part of a property-ref");
-	}
-	
-	private Object resolveAny(String entityName, Serializable id, SessionImplementor session)
-	throws HibernateException {
-		return entityName==null || id==null ?
-				null : session.internalLoad( entityName, id, false, false );
-	}
-
-	public void nullSafeSet(PreparedStatement st, Object value,	int index, SessionImplementor session)
-	throws HibernateException, SQLException {
-		nullSafeSet(st, value, index, null, session);
-	}
-	
-	public void nullSafeSet(PreparedStatement st, Object value,	int index, boolean[] settable, SessionImplementor session)
-	throws HibernateException, SQLException {
-
-		Serializable id;
-		String entityName;
-		if (value==null) {
-			id=null;
-			entityName=null;
-		}
-		else {
-			entityName = session.bestGuessEntityName(value);
-			id = ForeignKeys.getEntityIdentifierIfNotUnsaved(entityName, value, session);
-		}
-		
-		// metaType is assumed to be single-column type
-		if ( settable==null || settable[0] ) {
-			metaType.nullSafeSet(st, entityName, index, session);
-		}
-		if (settable==null) {
-			identifierType.nullSafeSet(st, id, index+1, session);
-		}
-		else {
-			boolean[] idsettable = new boolean[ settable.length-1 ];
-			System.arraycopy(settable, 1, idsettable, 0, idsettable.length);
-			identifierType.nullSafeSet(st, id, index+1, idsettable, session);
-		}
-	}
-
+	@Override
 	public Class getReturnedClass() {
 		return Object.class;
 	}
 
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join(
-				metaType.sqlTypes( mapping ),
-				identifierType.sqlTypes( mapping )
-		);
+		return ArrayHelper.join( discriminatorType.sqlTypes( mapping ), identifierType.sqlTypes( mapping ) );
 	}
 
 	@Override
 	public Size[] dictatedSizes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join(
-				metaType.dictatedSizes( mapping ),
-				identifierType.dictatedSizes( mapping )
-		);
+		return ArrayHelper.join( discriminatorType.dictatedSizes( mapping ), identifierType.dictatedSizes( mapping ) );
 	}
 
 	@Override
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join(
-				metaType.defaultSizes( mapping ),
-				identifierType.defaultSizes( mapping )
-		);
+		return ArrayHelper.join( discriminatorType.defaultSizes( mapping ), identifierType.defaultSizes( mapping ) );
 	}
 
-	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory) {
-		throw new UnsupportedOperationException("any types cannot be stringified");
+	@Override
+	public Object[] getPropertyValues(Object component, EntityMode entityMode) {
+		throw new UnsupportedOperationException();
 	}
 
-	public String toLoggableString(Object value, SessionFactoryImplementor factory) 
-	throws HibernateException {
-		//TODO: terrible implementation!
-		return value == null
-				? "null"
-				: factory.getTypeHelper()
-						.entity( HibernateProxyHelper.getClassWithoutInitializingProxy( value ) )
-						.toLoggableString( value, factory );
-	}
-
-	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
-		throw new UnsupportedOperationException(); //TODO: is this right??
-	}
-
-	public static final class ObjectTypeCacheEntry implements Serializable {
-		String entityName;
-		Serializable id;
-		ObjectTypeCacheEntry(String entityName, Serializable id) {
-			this.entityName = entityName;
-			this.id = id;
-		}
-	}
-
-	public Object assemble(
-		Serializable cached,
-		SessionImplementor session,
-		Object owner)
-	throws HibernateException {
-
-		ObjectTypeCacheEntry e = (ObjectTypeCacheEntry) cached;
-		return e==null ? null : session.internalLoad(e.entityName, e.id, false, false);
-	}
-
-	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
-	throws HibernateException {
-		return value==null ?
-			null :
-			new ObjectTypeCacheEntry(
-						session.bestGuessEntityName(value),
-						ForeignKeys.getEntityIdentifierIfNotUnsaved( 
-								session.bestGuessEntityName(value), value, session 
-							)
-					);
-	}
-
+	@Override
 	public boolean isAnyType() {
 		return true;
 	}
 
-	public Object replace(
-			Object original, 
-			Object target,
-			SessionImplementor session, 
-			Object owner, 
-			Map copyCache)
-	throws HibernateException {
-		if (original==null) {
+	@Override
+	public boolean isAssociationType() {
+		return true;
+	}
+
+	@Override
+	public boolean isComponentType() {
+		return true;
+	}
+
+	@Override
+	public boolean isEmbedded() {
+		return false;
+	}
+
+	@Override
+	public boolean isMutable() {
+		return false;
+	}
+
+	@Override
+	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
+		return value;
+	}
+
+
+	// general Type functionality ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public int compare(Object x, Object y) {
+		if ( x == null ) {
+			// if y is also null, return that they are the same (no option for "UNKNOWN")
+			// if y is not null, return that y is "greater" (-1 because the result is from the perspective of
+			// 		the first arg: x)
+			return y == null ? 0 : -1;
+		}
+		else if ( y == null ) {
+			// x is not null, but y is.  return that x is "greater"
+			return 1;
+		}
+
+		// At this point we know both are non-null.
+		final Object xId = extractIdentifier( x );
+		final Object yId = extractIdentifier( y );
+
+		return getIdentifierType().compare( xId, yId );
+	}
+
+	private Object extractIdentifier(Object entity) {
+		final EntityPersister concretePersister = guessEntityPersister( entity );
+		return concretePersister == null
+				? null
+				: concretePersister.getEntityTuplizer().getIdentifier( entity, null );
+	}
+
+	private EntityPersister guessEntityPersister(Object object) {
+		if ( scope == null ) {
+			return null;
+		}
+
+		String entityName = null;
+
+		// this code is largely copied from Session's bestGuessEntityName
+		Object entity = object;
+		if ( entity instanceof HibernateProxy ) {
+			final LazyInitializer initializer = ( (HibernateProxy) entity ).getHibernateLazyInitializer();
+			if ( initializer.isUninitialized() ) {
+				entityName = initializer.getEntityName();
+			}
+			entity = initializer.getImplementation();
+		}
+
+		if ( entityName == null ) {
+			for ( EntityNameResolver resolver : scope.resolveFactory().iterateEntityNameResolvers() ) {
+				entityName = resolver.resolveEntityName( entity );
+				if ( entityName != null ) {
+					break;
+				}
+			}
+		}
+
+		if ( entityName == null ) {
+			// the old-time stand-by...
+			entityName = object.getClass().getName();
+		}
+
+		return scope.resolveFactory().getEntityPersister( entityName );
+	}
+
+	@Override
+	public boolean isSame(Object x, Object y) throws HibernateException {
+		return x == y;
+	}
+
+	@Override
+	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
+			throws HibernateException {
+		if ( current == null ) {
+			return old != null;
+		}
+		else if ( old == null ) {
+			return true;
+		}
+
+		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) old;
+		final boolean[] idCheckable = new boolean[checkable.length-1];
+		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
+		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName( current ) ) )
+				|| identifierType.isModified( holder.id, getIdentifier( current, session ), idCheckable, session );
+	}
+
+	@Override
+	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+		final boolean[] result = new boolean[ getColumnSpan( mapping ) ];
+		if ( value != null ) {
+			Arrays.fill( result, true );
+		}
+		return result;
+	}
+
+	@Override
+	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session)
+			throws HibernateException {
+		return isDirty( old, current, session );
+	}
+
+	@Override
+	public int getColumnSpan(Mapping session) {
+		return 2;
+	}
+
+	@Override
+	public Object nullSafeGet(ResultSet rs,	String[] names,	SessionImplementor session,	Object owner)
+			throws HibernateException, SQLException {
+		return resolveAny(
+				(String) discriminatorType.nullSafeGet( rs, names[0], session, owner ),
+				(Serializable) identifierType.nullSafeGet( rs, names[1], session, owner ),
+				session
+		);
+	}
+
+	@Override
+	public Object hydrate(ResultSet rs,	String[] names,	SessionImplementor session,	Object owner)
+			throws HibernateException, SQLException {
+		final String entityName = (String) discriminatorType.nullSafeGet( rs, names[0], session, owner );
+		final Serializable id = (Serializable) identifierType.nullSafeGet( rs, names[1], session, owner );
+		return new ObjectTypeCacheEntry( entityName, id );
+	}
+
+	@Override
+	public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
+		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) value;
+		return resolveAny( holder.entityName, holder.id, session );
+	}
+
+	private Object resolveAny(String entityName, Serializable id, SessionImplementor session)
+			throws HibernateException {
+		return entityName==null || id==null
+				? null
+				: session.internalLoad( entityName, id, false, false );
+	}
+
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value,	int index, SessionImplementor session)
+			throws HibernateException, SQLException {
+		nullSafeSet( st, value, index, null, session );
+	}
+
+	@Override
+	public void nullSafeSet(PreparedStatement st, Object value,	int index, boolean[] settable, SessionImplementor session)
+			throws HibernateException, SQLException {
+		Serializable id;
+		String entityName;
+		if ( value == null ) {
+			id = null;
+			entityName = null;
+		}
+		else {
+			entityName = session.bestGuessEntityName( value );
+			id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, value, session );
+		}
+
+		// discriminatorType is assumed to be single-column type
+		if ( settable == null || settable[0] ) {
+			discriminatorType.nullSafeSet( st, entityName, index, session );
+		}
+		if ( settable == null ) {
+			identifierType.nullSafeSet( st, id, index+1, session );
+		}
+		else {
+			final boolean[] idSettable = new boolean[ settable.length-1 ];
+			System.arraycopy( settable, 1, idSettable, 0, idSettable.length );
+			identifierType.nullSafeSet( st, id, index+1, idSettable, session );
+		}
+	}
+
+	@Override
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) throws HibernateException {
+		//TODO: terrible implementation!
+		return value == null
+				? "null"
+				: factory.getTypeHelper()
+				.entity( HibernateProxyHelper.getClassWithoutInitializingProxy( value ) )
+				.toLoggableString( value, factory );
+	}
+
+	@Override
+	public Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
+		final ObjectTypeCacheEntry e = (ObjectTypeCacheEntry) cached;
+		return e == null ? null : session.internalLoad( e.entityName, e.id, false, false );
+	}
+
+	@Override
+	public Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException {
+		if ( value == null ) {
 			return null;
 		}
 		else {
-			String entityName = session.bestGuessEntityName(original);
-			Serializable id = ForeignKeys.getEntityIdentifierIfNotUnsaved(
-					entityName,
-					original,
-					session
+			return new ObjectTypeCacheEntry(
+					session.bestGuessEntityName( value ),
+					ForeignKeys.getEntityIdentifierIfNotUnsaved(
+							session.bestGuessEntityName( value ),
+							value,
+							session
+					)
 			);
-			return session.internalLoad( 
-					entityName, 
-					id, 
-					false, 
-					false
-				);
 		}
 	}
-	public CascadeStyle getCascadeStyle(int i) {
-		return CascadeStyles.NONE;
+
+	@Override
+	public Object replace(Object original, Object target, SessionImplementor session, Object owner, Map copyCache)
+			throws HibernateException {
+		if ( original == null ) {
+			return null;
+		}
+		else {
+			final String entityName = session.bestGuessEntityName( original );
+			final Serializable id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
+			return session.internalLoad( entityName, id, false, false );
+		}
 	}
 
-	public FetchMode getFetchMode(int i) {
-		return FetchMode.SELECT;
+	@Override
+	public Object nullSafeGet(ResultSet rs,	String name, SessionImplementor session, Object owner) {
+		throw new UnsupportedOperationException( "object is a multicolumn type" );
+	}
+
+	@Override
+	public Object semiResolve(Object value, SessionImplementor session, Object owner) {
+		throw new UnsupportedOperationException( "any mappings may not form part of a property-ref" );
+	}
+
+	@Override
+	public void setToXMLNode(Node xml, Object value, SessionFactoryImplementor factory) {
+		throw new UnsupportedOperationException("any types cannot be stringified");
+	}
+
+	@Override
+	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
+		throw new UnsupportedOperationException();
+	}
+
+
+
+	// CompositeType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public boolean isMethodOf(Method method) {
+		return false;
 	}
 
 	private static final String[] PROPERTY_NAMES = new String[] { "class", "id" };
 
+	@Override
 	public String[] getPropertyNames() {
 		return PROPERTY_NAMES;
 	}
 
-	public Object getPropertyValue(Object component, int i, SessionImplementor session)
-		throws HibernateException {
-
-		return i==0 ?
-				session.bestGuessEntityName(component) :
-				getIdentifier(component, session);
+	@Override
+	public Object getPropertyValue(Object component, int i, SessionImplementor session) throws HibernateException {
+		return i==0
+				? session.bestGuessEntityName( component )
+				: getIdentifier( component, session );
 	}
 
-	public Object[] getPropertyValues(Object component, SessionImplementor session)
-		throws HibernateException {
-
-		return new Object[] { session.bestGuessEntityName(component), getIdentifier(component, session) };
+	@Override
+	public Object[] getPropertyValues(Object component, SessionImplementor session) throws HibernateException {
+		return new Object[] {
+				session.bestGuessEntityName( component ),
+				getIdentifier( component, session )
+		};
 	}
 
 	private Serializable getIdentifier(Object value, SessionImplementor session) throws HibernateException {
 		try {
-			return ForeignKeys.getEntityIdentifierIfNotUnsaved( session.bestGuessEntityName(value), value, session );
+			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					session.bestGuessEntityName( value ),
+					value,
+					session
+			);
 		}
 		catch (TransientObjectException toe) {
 			return null;
 		}
 	}
 
+	@Override
+	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode) {
+		throw new UnsupportedOperationException();
+	}
+
+	private static final boolean[] NULLABILITY = new boolean[] { false, false };
+
+	@Override
+	public boolean[] getPropertyNullability() {
+		return NULLABILITY;
+	}
+
+	@Override
 	public Type[] getSubtypes() {
-		return new Type[] { metaType, identifierType };
+		return new Type[] {discriminatorType, identifierType };
 	}
 
-	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode)
-		throws HibernateException {
-
-		throw new UnsupportedOperationException();
-
+	@Override
+	public CascadeStyle getCascadeStyle(int i) {
+		return CascadeStyles.NONE;
 	}
 
-	public Object[] getPropertyValues(Object component, EntityMode entityMode) {
-		throw new UnsupportedOperationException();
+	@Override
+	public FetchMode getFetchMode(int i) {
+		return FetchMode.SELECT;
 	}
 
-	public boolean isComponentType() {
-		return true;
-	}
 
+	// AssociationType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
-		//return AssociationType.FOREIGN_KEY_TO_PARENT; //this is better but causes a transient object exception...
 		return ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT;
 	}
 
-	public boolean isAssociationType() {
-		return true;
-	}
-
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}
 
-	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) {
-		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
-	}
-
-	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
-	throws HibernateException {
-		if (current==null) return old!=null;
-		if (old==null) return current!=null;
-		ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) old;
-		boolean[] idcheckable = new boolean[checkable.length-1];
-		System.arraycopy(checkable, 1, idcheckable, 0, idcheckable.length);
-		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName(current) ) ) ||
-				identifierType.isModified(holder.id, getIdentifier(current, session), idcheckable, session);
-	}
-
-	public String getAssociatedEntityName(SessionFactoryImplementor factory)
-		throws MappingException {
-		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
-	}
-	
-	public boolean[] getPropertyNullability() {
-		return null;
-	}
-
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
-	throws MappingException {
-		throw new UnsupportedOperationException();
-	}
-	
-	public boolean isReferenceToPrimaryKey() {
-		return true;
-	}
-	
-	public String getRHSUniqueKeyPropertyName() {
-		return null;
-	}
-
+	@Override
 	public String getLHSPropertyName() {
 		return null;
 	}
 
+	public boolean isReferenceToPrimaryKey() {
+		return true;
+	}
+
+	@Override
+	public String getRHSUniqueKeyPropertyName() {
+		return null;
+	}
+
+	@Override
 	public boolean isAlwaysDirtyChecked() {
 		return false;
 	}
 
+	@Override
 	public boolean isEmbeddedInXML() {
 		return false;
 	}
-	
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
-		boolean[] result = new boolean[ getColumnSpan(mapping) ];
-		if (value!=null) Arrays.fill(result, true);
-		return result;
+
+	@Override
+	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) {
+		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
 	}
 
-	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) 
-	throws HibernateException {
-		//TODO!!!
-		return isDirty(old, current, session);
+	@Override
+	public String getAssociatedEntityName(SessionFactoryImplementor factory) {
+		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
 	}
 
-	public boolean isEmbedded() {
-		return false;
+	@Override
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) {
+		throw new UnsupportedOperationException();
+	}
+
+
+	/**
+	 * Used to externalize discrimination per a given identifier.  For example, when writing to
+	 * second level cache we write the discrimination resolved concrete type for each entity written.
+	 */
+	public static final class ObjectTypeCacheEntry implements Serializable {
+		final String entityName;
+		final Serializable id;
+
+		ObjectTypeCacheEntry(String entityName, Serializable id) {
+			this.entityName = entityName;
+			this.id = id;
+		}
 	}
 }

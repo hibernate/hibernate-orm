@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan.spi.visit;
 
+import org.hibernate.loader.plan.spi.AnyFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.CompositeFetch;
@@ -114,5 +115,15 @@ public class DelegatedLoadPlanVisitationStrategy implements LoadPlanVisitationSt
 	@Override
 	public void finishingCompositeFetch(CompositeFetch fetch) {
 		returnGraphVisitationStrategy.finishingCompositeFetch( fetch );
+	}
+
+	@Override
+	public void startingAnyFetch(AnyFetch fetch) {
+		returnGraphVisitationStrategy.startingAnyFetch( fetch );
+	}
+
+	@Override
+	public void finishingAnyFetch(AnyFetch fetch) {
+		returnGraphVisitationStrategy.finishingAnyFetch( fetch );
 	}
 }

@@ -29,7 +29,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor;
 
 /**
- * Coordinates building of a {@link org.hibernate.loader.plan.spi.LoadPlan} between the {@link org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor} and
+ * Coordinates building of a {@link org.hibernate.loader.plan.spi.LoadPlan} between the
+ * {@link org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor} and
  * {@link LoadPlanBuilderStrategy}
  *
  * @author Steve Ebersole

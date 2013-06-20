@@ -32,6 +32,8 @@ import java.util.List;
 
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -206,6 +208,10 @@ public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void finishingAttribute(AttributeDefinition attributeDefinition) {
 						// nothing to do
+					}
+
+					@Override
+					public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
 					}
 				},
 				ep

@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +21,6 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.jdbc.ColumnNameCache;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
@@ -32,17 +30,14 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
-import org.hibernate.loader.internal.LoadQueryAliasResolutionContextImpl;
-import org.hibernate.loader.internal.ResultSetProcessorImpl;
+import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
 import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
-import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
-import org.hibernate.loader.spi.ResultSetProcessor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
@@ -63,63 +58,41 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 	private final String entityName;
 
 	private final LoadPlan plan;
-	private final String staticSql;
-	private final LoadQueryAliasResolutionContext staticAliasResolutionContext;
-	private final ResultSetProcessor staticResultSetProcessor;
+	private final LoadQueryDetails staticLoadQuery;
 
 	private ColumnNameCache columnNameCache;
 
 	public AbstractLoadPlanBasedEntityLoader(
 			OuterJoinLoadable entityPersister,
-			Type uniqueKeyType,
 			SessionFactoryImplementor factory,
-			LoadQueryInfluencers loadQueryInfluencers) {
+			String[] uniqueKeyColumnNames,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters) {
+		this.entityPersister = entityPersister;
 		this.factory = factory;
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
-		this.entityPersister = entityPersister;
 
 		final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
 				factory,
-				loadQueryInfluencers
+				buildingParameters.getQueryInfluencers()
 		);
 
 		this.plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-		this.staticAliasResolutionContext = buildAliasResolutionContext( plan, factory );
-		this.staticSql = generateStaticSql( plan, staticAliasResolutionContext, factory, loadQueryInfluencers );
-		this.staticResultSetProcessor = generateStaticResultSetProcessor( plan );
-	}
-
-	protected LoadQueryAliasResolutionContext buildAliasResolutionContext(LoadPlan plan, SessionFactoryImplementor factory) {
-		return new LoadQueryAliasResolutionContextImpl(
+		this.staticLoadQuery = LoadQueryDetails.makeForBatching(
+				uniqueKeyColumnNames,
+				plan,
 				factory,
-				0,
-				Collections.singletonMap( plan.getReturns().get( 0 ), new String[] {"abc"} )
+				buildingParameters
 		);
-	}
-
-	protected String generateStaticSql(
-			LoadPlan plan,
-			LoadQueryAliasResolutionContext aliasResolutionContext,
-			SessionFactoryImplementor factory,
-			LoadQueryInfluencers loadQueryInfluencers) {
-		return new EntityLoadQueryBuilderImpl( loadQueryInfluencers, plan ).generateSql(
-				1,
-				factory,
-				aliasResolutionContext
-		);
-	}
-
-	protected ResultSetProcessor generateStaticResultSetProcessor(LoadPlan plan) {
-		return new ResultSetProcessorImpl( plan );
 	}
 
 	protected SessionFactoryImplementor getFactory() {
 		return factory;
 	}
 
-	protected String getSqlStatement() {
-		return staticSql;
+	protected LoadQueryDetails getStaticLoadQuery() {
+		return staticLoadQuery;
 	}
 
 	protected String getEntityName() {
@@ -152,17 +125,12 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 			final QueryParameters qp = new QueryParameters();
 			qp.setPositionalParameterTypes( types );
 			qp.setPositionalParameterValues( ids );
-			qp.setOptionalObject( optionalObject );
-			qp.setOptionalEntityName( optionalEntityName );
-			qp.setOptionalId( optionalId );
 			qp.setLockOptions( lockOptions );
 
 			result = executeLoad(
 					session,
 					qp,
-					staticSql,
-					staticResultSetProcessor,
-					staticAliasResolutionContext,
+					staticLoadQuery,
 					false,
 					null
 			);
@@ -171,7 +139,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 			throw factory.getSQLExceptionHelper().convert(
 					sqle,
 					"could not load an entity batch: " + MessageHelper.infoString( entityPersister, ids, getFactory() ),
-					getSqlStatement()
+					staticLoadQuery.getSqlStatement()
 			);
 		}
 
@@ -203,9 +171,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 			final List results = executeLoad(
 					session,
 					qp,
-					staticSql,
-					staticResultSetProcessor,
-					staticAliasResolutionContext,
+					staticLoadQuery,
 					false,
 					null
 			);
@@ -220,7 +186,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 							entityPersister.getIdentifierType(),
 							factory
 					),
-					getSqlStatement()
+					staticLoadQuery.getSqlStatement()
 			);
 		}
 
@@ -231,18 +197,14 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 	protected List executeLoad(
 			SessionImplementor session,
 			QueryParameters queryParameters,
-			String sql,
-			ResultSetProcessor resultSetProcessor,
-			LoadQueryAliasResolutionContext aliasResolutionContext,
+			LoadQueryDetails loadQueryDetails,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer) throws SQLException {
 		final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
 		return executeLoad(
 				session,
 				queryParameters,
-				sql,
-				resultSetProcessor,
-				aliasResolutionContext,
+				loadQueryDetails,
 				returnProxies,
 				forcedResultTransformer,
 				afterLoadActions
@@ -252,9 +214,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 	protected List executeLoad(
 			SessionImplementor session,
 			QueryParameters queryParameters,
-			String sql,
-			ResultSetProcessor resultSetProcessor,
-			LoadQueryAliasResolutionContext aliasResolutionContext,
+			LoadQueryDetails loadQueryDetails,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer,
 			List<AfterLoadAction> afterLoadActions) throws SQLException {
@@ -273,9 +233,10 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 		persistenceContext.beforeLoad();
 		try {
 			List results;
+			final String sql = loadQueryDetails.getSqlStatement();
 			try {
 				final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
-				results = resultSetProcessor.extractResults(
+				results = loadQueryDetails.getResultSetProcessor().extractResults(
 						// todo : hook in the JPA 2.1 entity graph advisor
 						NoOpLoadPlanAdvisor.INSTANCE,
 						wrapper.getResultSet(),
@@ -287,7 +248,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 								return AbstractLoadPlanBasedEntityLoader.this.getNamedParameterLocs( name );
 							}
 						},
-						aliasResolutionContext,
+						loadQueryDetails.getAliasResolutionContext(),
 						returnProxies,
 						queryParameters.isReadOnly(),
 						forcedResultTransformer,
@@ -334,9 +295,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 	protected Object doQueryAndLoadEntity(
 			SessionImplementor session,
 			QueryParameters queryParameters,
-			String sql,
-			ResultSetProcessor resultSetProcessor,
-			LoadQueryAliasResolutionContext aliasResolutionContext,
+			LoadQueryDetails loadQueryDetails,
 			boolean returnProxies,
 			ResultTransformer forcedResultTransformer) throws SQLException {
 
@@ -345,7 +304,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 		final SqlStatementWrapper wrapper = executeQueryStatement( queryParameters, false, afterLoadActions, session );
 
 		try {
-			final List results = resultSetProcessor.extractResults(
+			final List results = loadQueryDetails.getResultSetProcessor().extractResults(
 					NoOpLoadPlanAdvisor.INSTANCE,
 					wrapper.getResultSet(),
 					session,
@@ -356,7 +315,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 							return AbstractLoadPlanBasedEntityLoader.this.getNamedParameterLocs( name );
 						}
 					},
-					staticAliasResolutionContext,
+					loadQueryDetails.getAliasResolutionContext(),
 					returnProxies,
 					queryParameters.isReadOnly(),
 					forcedResultTransformer,
@@ -398,7 +357,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 			final boolean scroll,
 			List<AfterLoadAction> afterLoadActions,
 			final SessionImplementor session) throws SQLException {
-		return executeQueryStatement( getSqlStatement(), queryParameters, scroll, afterLoadActions, session );
+		return executeQueryStatement( staticLoadQuery.getSqlStatement(), queryParameters, scroll, afterLoadActions, session );
 	}
 
 	protected SqlStatementWrapper executeQueryStatement(

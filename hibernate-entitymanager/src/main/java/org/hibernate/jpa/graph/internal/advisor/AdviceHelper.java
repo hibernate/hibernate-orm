@@ -24,6 +24,7 @@
 package org.hibernate.jpa.graph.internal.advisor;
 
 import org.hibernate.LockMode;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -45,32 +46,33 @@ public class AdviceHelper {
 	}
 
 	static Fetch buildFetch(FetchOwner fetchOwner, AttributeNodeImplementor attributeNode) {
-		if ( attributeNode.getAttribute().isAssociation() ) {
-			if ( attributeNode.getAttribute().isCollection() ) {
-				return new CollectionFetch(
-						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-						LockMode.NONE,
-						fetchOwner,
-						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT ),
-						attributeNode.getAttributeName()
-				);
-			}
-			else {
-				return new EntityFetch(
-						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-						LockMode.NONE,
-						fetchOwner,
-						attributeNode.getAttributeName(),
-						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
-				);
-			}
-		}
-		else {
-			return new CompositeFetch(
-					(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
-					fetchOwner,
-					attributeNode.getAttributeName()
-			);
-		}
+		throw new NotYetImplementedException();
+//		if ( attributeNode.getAttribute().isAssociation() ) {
+//			if ( attributeNode.getAttribute().isCollection() ) {
+//				return new CollectionFetch(
+//						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
+//						LockMode.NONE,
+//						fetchOwner,
+//						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT ),
+//						attributeNode.getAttributeName()
+//				);
+//			}
+//			else {
+//				return new EntityFetch(
+//						(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
+//						LockMode.NONE,
+//						fetchOwner,
+//						attributeNode.getAttributeName(),
+//						new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
+//				);
+//			}
+//		}
+//		else {
+//			return new CompositeFetch(
+//					(SessionFactoryImplementor) attributeNode.entityManagerFactory().getSessionFactory(),
+//					fetchOwner,
+//					attributeNode.getAttributeName()
+//			);
+//		}
 	}
 }

@@ -26,8 +26,15 @@ package org.hibernate.loader.plan.spi.build;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
+ * Provides access to context needed in building a LoadPlan.
+ *
  * @author Steve Ebersole
  */
 public interface LoadPlanBuildingContext {
+	/**
+	 * Access to the SessionFactory
+	 *
+	 * @return The SessionFactory
+	 */
 	public SessionFactoryImplementor getSessionFactory();
 }

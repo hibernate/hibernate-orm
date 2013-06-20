@@ -32,148 +32,125 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
 
 /**
+ * UniqueEntityLoader implementation that is the main functionality for LoadPlan-based Entity loading.
+ * <p/>
+ * Can handle batch-loading as well as non-pk, unique-key loading,
+ * <p/>
+ * Much is ultimately delegated to its superclass, AbstractLoadPlanBasedEntityLoader.  However:
+ * todo How much of AbstractLoadPlanBasedEntityLoader is actually needed?
+ *
  * Loads an entity instance using outerjoin fetching to fetch associated entities.
  * <br>
  * The <tt>EntityPersister</tt> must implement <tt>Loadable</tt>. For other entities,
  * create a customized subclass of <tt>Loader</tt>.
  *
  * @author Gavin King
+ * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class EntityLoader extends AbstractLoadPlanBasedEntityLoader  {
 	private static final Logger log = CoreLogging.logger( EntityLoader.class );
 
-//	private final boolean batchLoader;
-//	private final int[][] compositeKeyManyToOneTargetIndices;
-//
-//	public EntityLoader(
-//			OuterJoinLoadable persister,
-//			LockMode lockMode,
-//			SessionFactoryImplementor factory,
-//			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-//		this( persister, 1, lockMode, factory, loadQueryInfluencers );
-//	}
-//
-//	public EntityLoader(
-//			OuterJoinLoadable persister,
-//			LockOptions lockOptions,
-//			SessionFactoryImplementor factory,
-//			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-//		this( persister, 1, lockOptions, factory, loadQueryInfluencers );
-//	}
-
-	public EntityLoader(
-			OuterJoinLoadable persister,
-			int batchSize,
-			LockMode lockMode,
-			SessionFactoryImplementor factory,
-			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		this(
-				persister,
-				persister.getIdentifierColumnNames(),
-				persister.getIdentifierType(),
-				batchSize,
-				lockMode,
-				factory,
-				loadQueryInfluencers
-			);
+	public static Builder forEntity(OuterJoinLoadable persister) {
+		return new Builder( persister );
 	}
 
-	public EntityLoader(
-			OuterJoinLoadable persister,
-			int batchSize,
-			LockOptions lockOptions,
-			SessionFactoryImplementor factory,
-			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		this(
-				persister,
-				persister.getIdentifierColumnNames(),
-				persister.getIdentifierType(),
-				batchSize,
-				lockOptions,
-				factory,
-				loadQueryInfluencers
-			);
-	}
+	public static class Builder {
+		private final OuterJoinLoadable persister;
+		private int batchSize = 1;
+		private LoadQueryInfluencers influencers = LoadQueryInfluencers.NONE;
+		private LockMode lockMode = LockMode.NONE;
+		private LockOptions lockOptions;
 
-	public EntityLoader(
-			OuterJoinLoadable persister,
-			String[] uniqueKey,
-			Type uniqueKeyType,
-			int batchSize,
-			LockMode lockMode,
-			SessionFactoryImplementor factory,
-			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
-
-//		EntityJoinWalker walker = new EntityJoinWalker(
-//				persister,
-//				uniqueKey,
-//				batchSize,
-//				lockMode,
-//				factory,
-//				loadQueryInfluencers
-//		);
-//		initFromWalker( walker );
-//		this.compositeKeyManyToOneTargetIndices = walker.getCompositeKeyManyToOneTargetIndices();
-//		postInstantiate();
-//
-//		batchLoader = batchSize > 1;
-//
-		if ( log.isDebugEnabled() ) {
-			log.debugf( "Static select for entity %s [%s]: %s", getEntityName(), lockMode, getSqlStatement() );
+		public Builder(OuterJoinLoadable persister) {
+			this.persister = persister;
 		}
-	}
 
-	public EntityLoader(
-			OuterJoinLoadable persister,
-			String[] uniqueKey,
-			Type uniqueKeyType,
-			int batchSize,
-			LockOptions lockOptions,
-			SessionFactoryImplementor factory,
-			LoadQueryInfluencers loadQueryInfluencers) throws MappingException {
-		super( persister, uniqueKeyType, factory, loadQueryInfluencers );
-//
-//		EntityJoinWalker walker = new EntityJoinWalker(
-//				persister,
-//				uniqueKey,
-//				batchSize,
-//				lockOptions,
-//				factory,
-//				loadQueryInfluencers
-//		);
-//		initFromWalker( walker );
-//		this.compositeKeyManyToOneTargetIndices = walker.getCompositeKeyManyToOneTargetIndices();
-//		postInstantiate();
-//
-//		batchLoader = batchSize > 1;
-//
-		if ( log.isDebugEnabled() ) {
-			log.debugf(
-					"Static select for entity %s [%s:%s]: %s",
-					getEntityName(),
-					lockOptions.getLockMode(),
-					lockOptions.getTimeOut(),
-					getSqlStatement()
+		public Builder withBatchSize(int batchSize) {
+			this.batchSize = batchSize;
+			return this;
+		}
+
+		public Builder withInfluencers(LoadQueryInfluencers influencers) {
+			this.influencers = influencers;
+			return this;
+		}
+
+		public Builder withLockMode(LockMode lockMode) {
+			this.lockMode = lockMode;
+			return this;
+		}
+
+		public Builder withLockOptions(LockOptions lockOptions) {
+			this.lockOptions = lockOptions;
+			return this;
+		}
+
+		public EntityLoader byPrimaryKey() {
+			return byUniqueKey( persister.getIdentifierColumnNames(), persister.getIdentifierType() );
+		}
+
+		public EntityLoader byUniqueKey(String[] keyColumnNames, Type keyType) {
+			return new EntityLoader(
+					persister.getFactory(),
+					persister,
+					keyColumnNames,
+					keyType,
+					new QueryBuildingParameters() {
+						@Override
+						public LoadQueryInfluencers getQueryInfluencers() {
+							return influencers;
+						}
+
+						@Override
+						public int getBatchSize() {
+							return batchSize;
+						}
+
+						@Override
+						public LockMode getLockMode() {
+							return lockMode;
+						}
+
+						@Override
+						public LockOptions getLockOptions() {
+							return lockOptions;
+						}
+					}
 			);
 		}
 	}
 
-//	public Object loadByUniqueKey(SessionImplementor session,Object key) {
-//		return load( session, key, null, null, LockOptions.NONE );
-//	}
-//
-//	@Override
-//    protected boolean isSingleRowLoader() {
-//		return !batchLoader;
-//	}
-//
-//	@Override
-//    public int[][] getCompositeKeyManyToOneTargetIndices() {
-//		return compositeKeyManyToOneTargetIndices;
-//	}
+	private EntityLoader(
+			SessionFactoryImplementor factory,
+			OuterJoinLoadable persister,
+			String[] uniqueKeyColumnNames,
+			Type uniqueKeyType,
+			QueryBuildingParameters buildingParameters) throws MappingException {
+		super( persister, factory, uniqueKeyColumnNames, uniqueKeyType, buildingParameters );
+		if ( log.isDebugEnabled() ) {
+			if ( buildingParameters.getLockOptions() != null ) {
+				log.debugf(
+						"Static select for entity %s [%s:%s]: %s",
+						getEntityName(),
+						buildingParameters.getLockOptions().getLockMode(),
+						buildingParameters.getLockOptions().getTimeOut(),
+						getStaticLoadQuery().getSqlStatement()
+				);
+			}
+			else if ( buildingParameters.getLockMode() != null ) {
+				log.debugf(
+						"Static select for entity %s [%s]: %s",
+						getEntityName(),
+						buildingParameters.getLockMode(),
+						getStaticLoadQuery().getSqlStatement()
+				);
+			}
+		}
+	}
 }

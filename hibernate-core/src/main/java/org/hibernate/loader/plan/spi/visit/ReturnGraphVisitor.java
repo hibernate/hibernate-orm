@@ -51,7 +51,7 @@ public class ReturnGraphVisitor {
 		}
 	}
 
-	public void visit(List<Return> rootReturns) {
+	public void visit(List<? extends Return> rootReturns) {
 		for ( Return rootReturn : rootReturns ) {
 			visitRootReturn( rootReturn );
 		}

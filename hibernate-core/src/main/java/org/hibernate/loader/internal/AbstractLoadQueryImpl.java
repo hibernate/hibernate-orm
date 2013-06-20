@@ -30,10 +30,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
+import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
+import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.spi.JoinableAssociation;
-import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.sql.ConditionFragment;
 import org.hibernate.sql.DisjunctionFragment;
 import org.hibernate.sql.InFragment;
@@ -58,7 +60,7 @@ public abstract class AbstractLoadQueryImpl {
 		this.associations = associations;
 	}
 
-	protected String orderBy(final String orderBy, LoadQueryAliasResolutionContext aliasResolutionContext) {
+	protected String orderBy(final String orderBy, AliasResolutionContext aliasResolutionContext) {
 		return mergeOrderings( orderBy( associations, aliasResolutionContext ), orderBy );
 	}
 
@@ -77,7 +79,7 @@ public abstract class AbstractLoadQueryImpl {
 	/**
 	 * Generate a sequence of <tt>LEFT OUTER JOIN</tt> clauses for the given associations.
 	 */
-	protected final JoinFragment mergeOuterJoins(SessionFactoryImplementor factory, LoadQueryAliasResolutionContext aliasResolutionContext)
+	protected final JoinFragment mergeOuterJoins(SessionFactoryImplementor factory, AliasResolutionContext aliasResolutionContext)
 	throws MappingException {
 		JoinFragment joinFragment = factory.getDialect().createOuterJoinFragment();
 		JoinableAssociation previous = null;
@@ -120,7 +122,7 @@ public abstract class AbstractLoadQueryImpl {
 	// TODO: why is this static?
 	protected static String orderBy(
 			List<JoinableAssociation> associations,
-			LoadQueryAliasResolutionContext aliasResolutionContext)
+			AliasResolutionContext aliasResolutionContext)
 	throws MappingException {
 		StringBuilder buf = new StringBuilder();
 		JoinableAssociation previous = null;
@@ -197,7 +199,7 @@ public abstract class AbstractLoadQueryImpl {
 	/**
 	 * Generate a select list of columns containing all properties of the entity classes
 	 */
-	protected final String associationSelectString(LoadQueryAliasResolutionContext aliasResolutionContext)
+	protected final String associationSelectString(AliasResolutionContext aliasResolutionContext)
 	throws MappingException {
 
 		if ( associations.size() == 0 ) {
@@ -210,15 +212,19 @@ public abstract class AbstractLoadQueryImpl {
 				JoinableAssociation next = ( i == associations.size() - 1 )
 				        ? null
 				        : associations.get( i + 1 );
+				if ( !shouldAddToSql( association.getCurrentFetch() ) ) {
+					continue;
+				}
+
 				final Joinable joinable = association.getJoinable();
 				final EntityAliases currentEntityAliases =
 						association.getCurrentEntityReference() == null ?
 								null :
-								aliasResolutionContext.resolveEntityColumnAliases( association.getCurrentEntityReference() );
+								aliasResolutionContext.resolveAliases( association.getCurrentEntityReference() ).getColumnAliases();
 				final CollectionAliases currentCollectionAliases =
 						association.getCurrentCollectionReference() == null ?
 								null :
-								aliasResolutionContext.resolveCollectionColumnAliases( association.getCurrentCollectionReference() );
+								aliasResolutionContext.resolveAliases( association.getCurrentCollectionReference() ).getCollectionColumnAliases();
 				final String selectFragment = joinable.selectFragment(
 						next == null ? null : next.getJoinable(),
 						next == null ? null : aliasResolutionContext.resolveAssociationRhsTableAlias( next ),
@@ -234,6 +240,10 @@ public abstract class AbstractLoadQueryImpl {
 			}
 			return buf.toString();
 		}
+	}
+
+	private boolean shouldAddToSql(Fetch fetch) {
+		return FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() );
 	}
 
 	private void addJoins(
@@ -260,7 +270,7 @@ public abstract class AbstractLoadQueryImpl {
 	private String resolveOnCondition(
 			SessionFactoryImplementor factory,
 			JoinableAssociation joinableAssociation,
-			LoadQueryAliasResolutionContext aliasResolutionContext) {
+			AliasResolutionContext aliasResolutionContext) {
 		final String withClause = StringHelper.isEmpty( joinableAssociation.getWithClause() ) ?
 				"" :
 				" and ( " + joinableAssociation.getWithClause() + " )";

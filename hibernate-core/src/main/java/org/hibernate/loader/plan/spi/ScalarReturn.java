@@ -23,16 +23,15 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.type.Type;
 
 /**
  * Represent a simple scalar return within a query result.  Generally this would be values of basic (String, Integer,
  * etc) or composite types.
+ * <p/>
+ * todo : we should link the Returns back to their "source"
+ * 		aka the entity/collection/etc that defines the qualifier used to qualify this Return's columns
  *
  * @author Steve Ebersole
  */
@@ -46,24 +45,5 @@ public class ScalarReturn extends AbstractPlanNode implements Return {
 
 	public Type getType() {
 		return type;
-	}
-
-	@Override
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) {
-		// nothing to do
-	}
-
-	@Override
-	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) {
-		// nothing to do
-	}
-
-	@Override
-	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		return type.nullSafeGet(
-				resultSet,
-				context.getLoadQueryAliasResolutionContext().resolveScalarReturnAliases( this ),
-				context.getSession(),
-				null );
 	}
 }

@@ -23,19 +23,13 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
-
-import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierResolutionContext;
+import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 
 /**
  * Represents an entity return value in the query results.  Not the same
@@ -46,16 +40,13 @@ import static org.hibernate.loader.spi.ResultSetProcessingContext.IdentifierReso
  * @author Steve Ebersole
  */
 public class EntityReturn extends AbstractFetchOwner implements Return, EntityReference, CopyableReturn {
-
 	private final EntityPersister persister;
+	private final EntityPersisterBasedSqlSelectFragmentResolver sqlSelectFragmentResolver;
+	private IdentifierDescription identifierDescription;
 
-	private final PropertyPath propertyPath = new PropertyPath(); // it's a root
+	private final PropertyPath propertyPath;
 
 	private final LockMode lockMode;
-
-	private final FetchOwnerDelegate fetchOwnerDelegate;
-
-	private IdentifierDescription identifierDescription;
 
 	/**
 	 * Construct an {@link EntityReturn}.
@@ -70,15 +61,19 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 			String entityName) {
 		super( sessionFactory );
 		this.persister = sessionFactory.getEntityPersister( entityName );
+		this.propertyPath = new PropertyPath( entityName );
+		this.sqlSelectFragmentResolver = new EntityPersisterBasedSqlSelectFragmentResolver( (Queryable) persister );
+
 		this.lockMode = lockMode;
-		this.fetchOwnerDelegate = new EntityFetchOwnerDelegate( persister );
 	}
 
 	protected EntityReturn(EntityReturn original, CopyContext copyContext) {
 		super( original, copyContext );
 		this.persister = original.persister;
+		this.propertyPath = original.propertyPath;
+		this.sqlSelectFragmentResolver = original.sqlSelectFragmentResolver;
+
 		this.lockMode = original.lockMode;
-		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
 	}
 
 	@Override
@@ -102,7 +97,7 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	}
 
 	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy) {
+	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
 	}
 
 	@Override
@@ -113,67 +108,6 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	@Override
 	public PropertyPath getPropertyPath() {
 		return propertyPath;
-	}
-
-	@Override
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		EntityKey entityKey = getEntityKeyFromContext( context );
-		if ( entityKey != null ) {
-			context.getIdentifierResolutionContext( this ).registerEntityKey( entityKey );
-			return;
-		}
-
-		identifierDescription.hydrate( resultSet, context );
-
-		for ( Fetch fetch : getFetches() ) {
-			fetch.hydrate( resultSet, context );
-		}
-	}
-
-	private EntityKey getEntityKeyFromContext(ResultSetProcessingContext context) {
-		if ( context.getDictatedRootEntityKey() != null ) {
-			return context.getDictatedRootEntityKey();
-		}
-		else if ( context.getQueryParameters().getOptionalId() != null ) {
-			return context.getSession().generateEntityKey( 
-					context.getQueryParameters().getOptionalId(),
-					getEntityPersister() 
-			);
-		}
-		return null;
-	}
-	
-	@Override
-	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		final IdentifierResolutionContext identifierResolutionContext = context.getIdentifierResolutionContext( this );
-		EntityKey entityKey = identifierResolutionContext.getEntityKey();
-		if ( entityKey != null ) {
-			return;
-		}
-
-		entityKey = identifierDescription.resolve( resultSet, context );
-		identifierResolutionContext.registerEntityKey( entityKey );
-
-		for ( Fetch fetch : getFetches() ) {
-			fetch.resolve( resultSet, context );
-		}
-	}
-
-	@Override
-	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		Object objectForThisEntityReturn = null;
-		for ( IdentifierResolutionContext identifierResolutionContext : context.getIdentifierResolutionContexts() ) {
-			final EntityReference entityReference = identifierResolutionContext.getEntityReference();
-			final EntityKey entityKey = identifierResolutionContext.getEntityKey();
-			if ( entityKey == null ) {
-				throw new AssertionFailure( "Could not locate resolved EntityKey");
-			}
-			final Object object =  context.resolveEntityKey( entityKey, entityReference );
-			if ( this == entityReference ) {
-				objectForThisEntityReturn = object;
-			}
-		}
-		return objectForThisEntityReturn;
 	}
 
 	@Override
@@ -192,7 +126,7 @@ public class EntityReturn extends AbstractFetchOwner implements Return, EntityRe
 	}
 
 	@Override
-	protected FetchOwnerDelegate getFetchOwnerDelegate() {
-		return fetchOwnerDelegate;
+	public SqlSelectFragmentResolver toSqlSelectFragmentResolver() {
+		return sqlSelectFragmentResolver;
 	}
 }

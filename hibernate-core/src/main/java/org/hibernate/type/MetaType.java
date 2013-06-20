@@ -45,23 +45,25 @@ import org.hibernate.metamodel.relational.Size;
 public class MetaType extends AbstractType {
 	public static final String[] REGISTRATION_KEYS = new String[0];
 
-	private final Map values;
-	private final Map keys;
 	private final Type baseType;
+	private final Map<Object,String> discriminatorValuesToEntityNameMap;
+	private final Map<String,Object> entityNameToDiscriminatorValueMap;
 
-	public MetaType(Map values, Type baseType) {
+	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
 		this.baseType = baseType;
-		this.values = values;
-		keys = new HashMap();
-		Iterator iter = values.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
-			keys.put( me.getValue(), me.getKey() );
+		this.discriminatorValuesToEntityNameMap = discriminatorValuesToEntityNameMap;
+		this.entityNameToDiscriminatorValueMap = new HashMap<String,Object>();
+		for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
+			entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
 		}
 	}
 
 	public String[] getRegistrationKeys() {
 		return REGISTRATION_KEYS;
+	}
+
+	public Map<Object, String> getDiscriminatorValuesToEntityNameMap() {
+		return discriminatorValuesToEntityNameMap;
 	}
 
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
@@ -93,7 +95,7 @@ public class MetaType extends AbstractType {
 		Object owner)
 	throws HibernateException, SQLException {
 		Object key = baseType.nullSafeGet(rs, names, session, owner);
-		return key==null ? null : values.get(key);
+		return key==null ? null : discriminatorValuesToEntityNameMap.get(key);
 	}
 
 	public Object nullSafeGet(
@@ -103,12 +105,12 @@ public class MetaType extends AbstractType {
 		Object owner)
 	throws HibernateException, SQLException {
 		Object key = baseType.nullSafeGet(rs, name, session, owner);
-		return key==null ? null : values.get(key);
+		return key==null ? null : discriminatorValuesToEntityNameMap.get(key);
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session)
 	throws HibernateException, SQLException {
-		baseType.nullSafeSet(st, value==null ? null : keys.get(value), index, session);
+		baseType.nullSafeSet(st, value==null ? null : entityNameToDiscriminatorValueMap.get(value), index, session);
 	}
 	
 	public void nullSafeSet(

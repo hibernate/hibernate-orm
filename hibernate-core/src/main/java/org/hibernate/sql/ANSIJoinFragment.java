@@ -50,14 +50,22 @@ public class ANSIJoinFragment extends JoinFragment {
 	/**
 	 * Adds a join, represented by the given information, to the fragment.
 	 *
-	 * @param tableName The name of the table being joined.
-	 * @param alias The alias applied to the table being joined.
-	 * @param fkColumns The columns (from the table being joined) used to define the join-restriction (the ON)
-	 * @param pkColumns The columns (from the table being joined to) used to define the join-restriction (the ON)
+	 * @param rhsTableName The name of the table being joined (the RHS table).
+	 * @param rhsAlias The alias applied to the table being joined (the alias for the RHS table).
+	 * @param lhsColumns The columns (from the table being joined) used to define the join-restriction (the ON).  These
+	 * are the LHS columns, and are expected to be qualified.
+	 * @param rhsColumns The columns (from the table being joined to) used to define the join-restriction (the ON).  These
+	 * are the RHS columns and are expected to *not* be qualified.
 	 * @param joinType The type of join to produce (INNER, etc).
 	 * @param on Any extra join restrictions
 	 */
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
+	public void addJoin(
+			String rhsTableName,
+			String rhsAlias,
+			String[] lhsColumns,
+			String[] rhsColumns,
+			JoinType joinType,
+			String on) {
 		final String joinString;
 		switch (joinType) {
 			case INNER_JOIN:
@@ -77,19 +85,19 @@ public class ANSIJoinFragment extends JoinFragment {
 		}
 
 		this.buffer.append(joinString)
-			.append(tableName)
+			.append(rhsTableName)
 			.append(' ')
-			.append(alias)
+			.append(rhsAlias)
 			.append(" on ");
 
 
-		for ( int j=0; j<fkColumns.length; j++) {
-			this.buffer.append( fkColumns[j] )
+		for ( int j=0; j<lhsColumns.length; j++) {
+			this.buffer.append( lhsColumns[j] )
 				.append('=')
-				.append(alias)
+				.append(rhsAlias)
 				.append('.')
-				.append( pkColumns[j] );
-			if ( j < fkColumns.length-1 ) {
+				.append( rhsColumns[j] );
+			if ( j < lhsColumns.length-1 ) {
 				this.buffer.append( " and " );
 			}
 		}

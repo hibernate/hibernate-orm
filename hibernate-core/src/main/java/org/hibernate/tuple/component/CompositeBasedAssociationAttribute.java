@@ -36,11 +36,15 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
+import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.tuple.BaselineAttributeInformation;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 
@@ -85,8 +89,39 @@ public class CompositeBasedAssociationAttribute
 	}
 
 	@Override
-	public boolean isCollection() {
-		return getJoinable().isCollection();
+	public AssociationNature getAssociationNature() {
+		if ( getType().isAnyType() ) {
+			return AssociationNature.ANY;
+		}
+		else {
+			if ( getJoinable().isCollection() ) {
+				return AssociationNature.COLLECTION;
+			}
+			else {
+				return AssociationNature.ENTITY;
+			}
+		}
+	}
+
+	private boolean isAnyType() {
+		return getAssociationNature() == AssociationNature.ANY;
+	}
+
+	private boolean isEntityType() {
+		return getAssociationNature() == AssociationNature.ENTITY;
+	}
+
+	private boolean isCollection() {
+		return getAssociationNature() == AssociationNature.COLLECTION;
+	}
+
+	@Override
+	public AnyMappingDefinition toAnyDefinition() {
+		if ( !isAnyType() ) {
+			throw new WalkingException( "Cannot build AnyMappingDefinition from non-any-typed attribute" );
+		}
+		// todo : not sure how lazy is propogated into the component for a subattribute of type any
+		return new StandardAnyTypeDefinition( (AnyType) getType(), false );
 	}
 
 	@Override
@@ -94,13 +129,19 @@ public class CompositeBasedAssociationAttribute
 		if ( isCollection() ) {
 			throw new IllegalStateException( "Cannot treat collection attribute as entity type" );
 		}
+		if ( isAnyType() ) {
+			throw new IllegalStateException( "Cannot treat any-type attribute as entity type" );
+		}
 		return (EntityPersister) getJoinable();
 	}
 
 	@Override
 	public CollectionDefinition toCollectionDefinition() {
-		if ( isCollection() ) {
+		if ( isEntityType() ) {
 			throw new IllegalStateException( "Cannot treat entity attribute as collection type" );
+		}
+		if ( isAnyType() ) {
+			throw new IllegalStateException( "Cannot treat any-type attribute as collection type" );
 		}
 		return (CollectionPersister) getJoinable();
 	}

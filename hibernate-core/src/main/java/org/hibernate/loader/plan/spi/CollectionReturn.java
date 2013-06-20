@@ -23,13 +23,9 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
 
 /**
  * @author Steve Ebersole
@@ -47,7 +43,10 @@ public class CollectionReturn extends AbstractCollectionReference implements Ret
 				sessionFactory,
 				lockMode,
 				sessionFactory.getCollectionPersister( ownerEntityName + '.' + ownerProperty ),
-				new PropertyPath() // its a root
+				// its a root
+				new PropertyPath(),
+				// no owner
+				null
 		);
 		this.ownerEntityName = ownerEntityName;
 		this.ownerProperty = ownerProperty;
@@ -75,21 +74,6 @@ public class CollectionReturn extends AbstractCollectionReference implements Ret
 	 */
 	public String getOwnerProperty() {
 		return ownerProperty;
-	}
-
-	@Override
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		// todo : anything to do here?
-	}
-
-	@Override
-	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		// todo : anything to do here?
-	}
-
-	@Override
-	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override

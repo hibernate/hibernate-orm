@@ -23,17 +23,6 @@
  */
 package org.hibernate.loader;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -44,27 +33,42 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-import org.junit.Test;
-
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.loader.internal.EntityLoadQueryBuilderImpl;
-import org.hibernate.loader.internal.LoadQueryAliasResolutionContextImpl;
-import org.hibernate.loader.internal.ResultSetProcessorImpl;
+import org.hibernate.loader.entity.EntityJoinWalker;
+import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl;
+import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
-import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
-import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.test.component.cascading.toone.PersonalInfo;
-import org.hibernate.testing.FailureExpected;
+import org.hibernate.persister.entity.OuterJoinLoadable;
+
+import org.junit.Test;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
@@ -133,6 +137,67 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 	}
 
 	@Test
+	public void testNestedCompositeElementCollectionQueryBuilding() {
+		doCompare(
+				sessionFactory(),
+				(OuterJoinLoadable) sessionFactory().getClassMetadata( Customer.class )
+		);
+	}
+
+	private void doCompare(SessionFactoryImplementor sf, OuterJoinLoadable persister) {
+		final LoadQueryInfluencers influencers = LoadQueryInfluencers.NONE;
+		final LockMode lockMode = LockMode.NONE;
+		final int batchSize = 1;
+
+		final EntityJoinWalker walker = new EntityJoinWalker(
+				persister,
+				persister.getKeyColumnNames(),
+				batchSize,
+				lockMode,
+				sf,
+				influencers
+		);
+
+
+		SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy( sf, influencers );
+		LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
+		LoadQueryDetails details = LoadQueryDetails.makeForBatching(
+				persister.getKeyColumnNames(),
+				plan,
+				sf,
+				new QueryBuildingParameters() {
+					@Override
+					public LoadQueryInfluencers getQueryInfluencers() {
+						return influencers;
+					}
+
+					@Override
+					public int getBatchSize() {
+						return batchSize;
+					}
+
+					@Override
+					public LockMode getLockMode() {
+						return null;
+					}
+
+					@Override
+					public LockOptions getLockOptions() {
+						return null;
+					}
+				}
+		);
+
+		compare( walker, details );
+	}
+
+	private void compare(JoinWalker walker, LoadQueryDetails details) {
+		System.out.println( "WALKER    : " + walker.getSQLString() );
+		System.out.println( "LOAD-PLAN : " + details.getSqlStatement() );
+		System.out.println();
+	}
+
+	@Test
 	public void testNestedCompositeElementCollectionProcessing() throws Exception {
 		// create some test data
 		Session session = openSession();
@@ -188,63 +253,60 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 	}
 
 	private List<?> getResults(EntityPersister entityPersister ) {
-			final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
-					sessionFactory(),
-					LoadQueryInfluencers.NONE
-			);
-			final LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-			final LoadQueryAliasResolutionContext aliasResolutionContext =
-					new LoadQueryAliasResolutionContextImpl(
-							sessionFactory(),
-							0,
-							Collections.singletonMap( plan.getReturns().get( 0 ), new String[] { "abc" } )
-					);
-			final EntityLoadQueryBuilderImpl queryBuilder = new EntityLoadQueryBuilderImpl(
-					LoadQueryInfluencers.NONE,
-					plan
-			);
-			final String sql = queryBuilder.generateSql( 1, sessionFactory(), aliasResolutionContext );
+		final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
 
-			final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan );
-			final List results = new ArrayList();
+		// ultimately, using a LoadPlan requires that it be interpreted into 2 pieces of information:
+		//		1) The query to execute
+		//		2) The ResultSetProcessor to use.
+		//
+		// Those 2 pieces of information share some common context:
+		//		1) alias resolution context
+		//
 
-			final Session workSession = openSession();
-			workSession.beginTransaction();
-			workSession.doWork(
-					new Work() {
-						@Override
-						public void execute(Connection connection) throws SQLException {
-							PreparedStatement ps = connection.prepareStatement( sql );
-							ps.setInt( 1, 1 );
-							ResultSet resultSet = ps.executeQuery();
-							results.addAll(
-									resultSetProcessor.extractResults(
-											NoOpLoadPlanAdvisor.INSTANCE,
-											resultSet,
-											(SessionImplementor) workSession,
-											new QueryParameters(),
-											new NamedParameterContext() {
-												@Override
-												public int[] getNamedParameterLocations(String name) {
-													return new int[0];
-												}
-											},
-											aliasResolutionContext,
-											true,
-											false,
-											null,
-											null
-									)
-							);
-							resultSet.close();
-							ps.close();
-						}
+		final AliasResolutionContext aliasResolutionContext = new AliasResolutionContextImpl( sessionFactory() );
+
+		final String sql = Helper.INSTANCE.generateSql( sessionFactory(), plan, aliasResolutionContext );
+
+		final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan, true );
+		final List results = new ArrayList();
+
+		final Session workSession = openSession();
+		workSession.beginTransaction();
+		workSession.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						PreparedStatement ps = connection.prepareStatement( sql );
+						ps.setInt( 1, 1 );
+						ResultSet resultSet = ps.executeQuery();
+						results.addAll(
+								resultSetProcessor.extractResults(
+										NoOpLoadPlanAdvisor.INSTANCE,
+										resultSet,
+										(SessionImplementor) workSession,
+										new QueryParameters(),
+										new NamedParameterContext() {
+											@Override
+											public int[] getNamedParameterLocations(String name) {
+												return new int[0];
+											}
+										},
+										aliasResolutionContext,
+										true,
+										false,
+										null,
+										null
+								)
+						);
+						resultSet.close();
+						ps.close();
 					}
-			);
-			workSession.getTransaction().commit();
-			workSession.close();
-			return results;
-		}
+				}
+		);
+		workSession.getTransaction().commit();
+		workSession.close();
+		return results;
+	}
 
 	@Entity( name = "Person" )
 	public static class Person implements Serializable {
@@ -283,7 +345,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		}
 
 		@ElementCollection(fetch = FetchType.EAGER)
-		@CollectionTable( name = "Investments" )
+		@CollectionTable( name = "investments", joinColumns = @JoinColumn( name = "customer_id" ) )
 		public List<Investment> getInvestments() {
 			return investments;
 		}

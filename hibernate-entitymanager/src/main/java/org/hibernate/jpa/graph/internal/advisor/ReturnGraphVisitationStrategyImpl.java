@@ -25,6 +25,7 @@ package org.hibernate.jpa.graph.internal.advisor;
 
 import java.util.ArrayDeque;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CompositeFetch;
@@ -58,11 +59,12 @@ public class ReturnGraphVisitationStrategyImpl extends ReturnGraphVisitationStra
 
 	@Override
 	public void startingEntityFetch(EntityFetch entityFetch) {
-		final AdviceNodeDescriptor currentNode = nodeStack.peekFirst();
-		final String attributeName = entityFetch.getOwnerPropertyName();
-		final JpaGraphReference fetchedGraphReference = currentNode.attributeProcessed( attributeName );
-
-		nodeStack.addFirst( new AdviceNodeDescriptorEntityReference( entityFetch, fetchedGraphReference ) );
+		throw new NotYetImplementedException();
+//		final AdviceNodeDescriptor currentNode = nodeStack.peekFirst();
+//		final String attributeName = entityFetch.getOwnerPropertyName();
+//		final JpaGraphReference fetchedGraphReference = currentNode.attributeProcessed( attributeName );
+//
+//		nodeStack.addFirst( new AdviceNodeDescriptorEntityReference( entityFetch, fetchedGraphReference ) );
 	}
 
 	@Override
@@ -72,11 +74,12 @@ public class ReturnGraphVisitationStrategyImpl extends ReturnGraphVisitationStra
 
 	@Override
 	public void startingCollectionFetch(CollectionFetch collectionFetch) {
-		final AdviceNodeDescriptor currentNode = nodeStack.peekFirst();
-		final String attributeName = collectionFetch.getOwnerPropertyName();
-		final JpaGraphReference fetchedGraphReference = currentNode.attributeProcessed( attributeName );
-
-		nodeStack.addFirst( new AdviceNodeDescriptorCollectionReference( collectionFetch, fetchedGraphReference ) );
+		throw new NotYetImplementedException();
+//		final AdviceNodeDescriptor currentNode = nodeStack.peekFirst();
+//		final String attributeName = collectionFetch.getOwnerPropertyName();
+//		final JpaGraphReference fetchedGraphReference = currentNode.attributeProcessed( attributeName );
+//
+//		nodeStack.addFirst( new AdviceNodeDescriptorCollectionReference( collectionFetch, fetchedGraphReference ) );
 	}
 
 	@Override
@@ -86,11 +89,12 @@ public class ReturnGraphVisitationStrategyImpl extends ReturnGraphVisitationStra
 
 	@Override
 	public void startingCompositeFetch(CompositeFetch fetch) {
-		final AdviceNodeDescriptor currentNode = nodeStack.peekFirst();
-		final String attributeName = fetch.getOwnerPropertyName();
-		final JpaGraphReference fetchedGraphReference = currentNode.attributeProcessed( attributeName );
-
-		nodeStack.addFirst( new AdviceNodeDescriptorCompositeReference( fetch, fetchedGraphReference ) );
+		throw new NotYetImplementedException();
+//		final AdviceNodeDescriptor currentNode = nodeStack.peekFirst();
+//		final String attributeName = fetch.getOwnerPropertyName();
+//		final JpaGraphReference fetchedGraphReference = currentNode.attributeProcessed( attributeName );
+//
+//		nodeStack.addFirst( new AdviceNodeDescriptorCompositeReference( fetch, fetchedGraphReference ) );
 	}
 
 	@Override

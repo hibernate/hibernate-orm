@@ -31,9 +31,12 @@ package org.hibernate.type;
  * @author Steve Ebersole
  */
 public class ObjectType extends AnyType implements BasicType {
+	/**
+	 * Singleton access
+	 */
 	public static final ObjectType INSTANCE = new ObjectType();
 
-	public ObjectType() {
+	private ObjectType() {
 		super( StringType.INSTANCE, SerializableType.INSTANCE );
 	}
 

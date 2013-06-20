@@ -103,7 +103,8 @@ public class LazyOneToOneTest extends BaseCoreFunctionalTestCase {
 	public static class DomainClassesInstrumentedMatcher implements Skip.Matcher {
 		@Override
 		public boolean isMatch() {
-			return FieldInterceptionHelper.isInstrumented( Person.class );
+			// we match (to skip) when the classes are *not* instrumented...
+			return ! FieldInterceptionHelper.isInstrumented( Person.class );
 		}
 	}
 }

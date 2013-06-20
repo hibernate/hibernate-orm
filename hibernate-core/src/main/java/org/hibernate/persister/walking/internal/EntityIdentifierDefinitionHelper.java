@@ -120,6 +120,11 @@ public class EntityIdentifierDefinitionHelper {
 		}
 
 		@Override
+		public boolean isNullable() {
+			return false;
+		}
+
+		@Override
 		public AttributeSource getSource() {
 			return entityPersister;
 		}
@@ -135,7 +140,6 @@ public class EntityIdentifierDefinitionHelper {
 	}
 
 	private static class CompositionDefinitionAdapter extends AttributeDefinitionAdapter implements CompositionDefinition {
-
 		CompositionDefinitionAdapter(AbstractEntityPersister entityPersister) {
 			super( entityPersister );
 		}

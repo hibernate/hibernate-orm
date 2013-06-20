@@ -53,6 +53,4 @@ public interface CollectionReference {
 	public FetchOwner getElementGraph();
 
 	public PropertyPath getPropertyPath();
-
-	public boolean hasEntityElements();
 }

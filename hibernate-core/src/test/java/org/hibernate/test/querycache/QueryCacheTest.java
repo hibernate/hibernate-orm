@@ -280,6 +280,7 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 		sessionFactory().evictQueries();
 		sessionFactory().getStatistics().clear();
 
+		// persist our 2 items.  This saves them to the db, but also into the second level entity cache region
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 		Item i = new Item();
@@ -299,18 +300,24 @@ public class QueryCacheTest extends BaseCoreFunctionalTestCase {
 
 		Thread.sleep(200);
 
+		// perform the cacheable query.  this will execute the query (no query cache hit), but the Items will be
+		// found in second level entity cache region
 		s = openSession();
 		t = s.beginTransaction();
-		List result = s.createQuery( queryString ).setCacheable(true).list();
+		List result = s.createQuery( queryString ).setCacheable( true ).list();
 		assertEquals( result.size(), 2 );
 		t.commit();
 		s.close();
-
 		assertEquals( qs.getCacheHitCount(), 0 );
 		assertEquals( s.getSessionFactory().getStatistics().getEntityFetchCount(), 0 );
 
+
+		// evict the Items from the second level entity cache region
 		sessionFactory().evict(Item.class);
 
+		// now, perform the cacheable query again.  this time we should not execute the query (query cache hit).
+		// However, the Items will not be found in second level entity cache region this time (we evicted them above)
+		// nor are they in associated with the session.
 		s = openSession();
 		t = s.beginTransaction();
 		result = s.createQuery( queryString ).setCacheable(true).list();

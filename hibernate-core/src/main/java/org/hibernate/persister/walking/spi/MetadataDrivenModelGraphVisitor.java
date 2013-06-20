@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -104,6 +105,10 @@ public class MetadataDrivenModelGraphVisitor {
 	}
 
 	private void visitAttributes(AttributeSource attributeSource) {
+		final Iterable<AttributeDefinition> attributeDefinitions = attributeSource.getAttributes();
+		if ( attributeDefinitions == null ) {
+			return;
+		}
 		for ( AttributeDefinition attributeDefinition : attributeSource.getAttributes() ) {
 			visitAttributeDefinition( attributeDefinition );
 		}
@@ -126,10 +131,11 @@ public class MetadataDrivenModelGraphVisitor {
 			final PropertyPath old = currentPropertyPath;
 			currentPropertyPath = subPath;
 			try {
-				if ( attributeDefinition.getType().isAssociationType() ) {
+				final Type attributeType = attributeDefinition.getType();
+				if ( attributeType.isAssociationType() ) {
 					visitAssociation( (AssociationAttributeDefinition) attributeDefinition );
 				}
-				else if ( attributeDefinition.getType().isComponentType() ) {
+				else if ( attributeType.isComponentType() ) {
 					visitCompositeDefinition( (CompositionDefinition) attributeDefinition );
 				}
 			}
@@ -145,12 +151,20 @@ public class MetadataDrivenModelGraphVisitor {
 
 		addAssociationKey( attribute.getAssociationKey() );
 
-		if ( attribute.isCollection() ) {
+		final AssociationAttributeDefinition.AssociationNature nature = attribute.getAssociationNature();
+		if ( nature == AssociationAttributeDefinition.AssociationNature.ANY ) {
+			visitAnyDefinition( attribute, attribute.toAnyDefinition() );
+		}
+		else if ( nature == AssociationAttributeDefinition.AssociationNature.COLLECTION ) {
 			visitCollectionDefinition( attribute.toCollectionDefinition() );
 		}
 		else {
 			visitEntityDefinition( attribute.toEntityDefinition() );
 		}
+	}
+
+	private void visitAnyDefinition(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
+		strategy.foundAny( attributeDefinition, anyDefinition );
 	}
 
 	private void visitCompositeDefinition(CompositionDefinition compositionDefinition) {

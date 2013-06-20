@@ -378,6 +378,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 		final FromElement fromElement;
 		if ( dot.getDataType() != null && dot.getDataType().isComponentType() ) {
+			if ( dot.getDataType().isAnyType() ) {
+				throw new SemanticException( "An AnyType attribute cannot be join fetched" );
+				// ^^ because the discriminator (aka, the "meta columns") must be known to the SQL in
+				// 		a non-parameterized way.
+			}
 			FromElementFactory factory = new FromElementFactory(
 					getCurrentFromClause(),
 					dot.getLhs().getFromElement(),

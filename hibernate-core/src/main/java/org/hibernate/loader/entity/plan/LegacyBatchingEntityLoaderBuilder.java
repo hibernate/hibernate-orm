@@ -32,16 +32,15 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.loader.Loader;
-import org.hibernate.loader.entity.BatchingEntityLoader;
-import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
+ * LoadPlan-based implementation of the the legacy batch loading strategy
+ *
  * @author Steve Ebersole
  */
-public class LegacyBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuilder {
+public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoaderBuilder {
 	public static final LegacyBatchingEntityLoaderBuilder INSTANCE = new LegacyBatchingEntityLoaderBuilder();
 
 	@Override
@@ -77,8 +76,11 @@ public class LegacyBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuild
 			super( persister );
 			this.batchSizes = ArrayHelper.getBatchSizes( maxBatchSize );
 			this.loaders = new EntityLoader[ batchSizes.length ];
+			final EntityLoader.Builder entityLoaderBuilder = EntityLoader.forEntity( persister )
+					.withInfluencers( loadQueryInfluencers )
+					.withLockMode( lockMode );
 			for ( int i = 0; i < batchSizes.length; i++ ) {
-				this.loaders[i] = new EntityLoader( persister, batchSizes[i], lockMode, factory, loadQueryInfluencers);
+				this.loaders[i] = entityLoaderBuilder.withBatchSize( batchSizes[i] ).byPrimaryKey();
 			}
 		}
 
@@ -91,8 +93,11 @@ public class LegacyBatchingEntityLoaderBuilder extends BatchingEntityLoaderBuild
 			super( persister );
 			this.batchSizes = ArrayHelper.getBatchSizes( maxBatchSize );
 			this.loaders = new EntityLoader[ batchSizes.length ];
+			final EntityLoader.Builder entityLoaderBuilder = EntityLoader.forEntity( persister )
+					.withInfluencers( loadQueryInfluencers )
+					.withLockOptions( lockOptions );
 			for ( int i = 0; i < batchSizes.length; i++ ) {
-				this.loaders[i] = new EntityLoader( persister, batchSizes[i], lockOptions, factory, loadQueryInfluencers);
+				this.loaders[i] = entityLoaderBuilder.withBatchSize( batchSizes[i] ).byPrimaryKey();
 			}
 		}
 

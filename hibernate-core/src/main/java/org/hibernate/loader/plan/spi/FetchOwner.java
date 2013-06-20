@@ -25,9 +25,13 @@ package org.hibernate.loader.plan.spi;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan.spi.build.AbstractLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.Type;
 
@@ -89,9 +93,10 @@ public interface FetchOwner {
 	/**
 	 * Is the asserted plan valid from this owner to a fetch?
 	 *
-	 * @param fetchStrategy The pla to validate
+	 * @param fetchStrategy The type of fetch to validate
+	 * @param attributeDefinition The attribute to be fetched
 	 */
-	public void validateFetchPlan(FetchStrategy fetchStrategy);
+	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition);
 
 	/**
 	 * Retrieve the EntityPersister that is the base for any property references in the fetches it owns.
@@ -121,5 +126,11 @@ public interface FetchOwner {
 			CompositionDefinition attributeDefinition,
 			LoadPlanBuildingContext loadPlanBuildingContext);
 
+	public AnyFetch buildAnyFetch(
+			AttributeDefinition attribute,
+			AnyMappingDefinition anyDefinition,
+			FetchStrategy fetchStrategy,
+			LoadPlanBuildingContext loadPlanBuildingContext);
 
+	public SqlSelectFragmentResolver toSqlSelectFragmentResolver();
 }

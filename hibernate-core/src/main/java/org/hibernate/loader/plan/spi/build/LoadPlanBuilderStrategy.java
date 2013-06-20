@@ -27,7 +27,8 @@ import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 
 /**
- * Specialized {@link org.hibernate.persister.walking.spi.AssociationVisitationStrategy} implementation for building {@link org.hibernate.loader.plan.spi.LoadPlan} instances.
+ * Specialized {@link org.hibernate.persister.walking.spi.AssociationVisitationStrategy} implementation for
+ * building {@link org.hibernate.loader.plan.spi.LoadPlan} instances.
  *
  * @author Steve Ebersole
  */

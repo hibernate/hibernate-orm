@@ -81,6 +81,8 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
+import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -89,6 +91,7 @@ import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
+import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.SelectFragment;
@@ -100,6 +103,7 @@ import org.hibernate.sql.ordering.antlr.FormulaReference;
 import org.hibernate.sql.ordering.antlr.OrderByAliasResolver;
 import org.hibernate.sql.ordering.antlr.OrderByTranslation;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
+import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -2018,9 +2022,18 @@ public abstract class AbstractCollectionPersister
 			}
 
 			@Override
+			public AnyMappingDefinition toAnyMappingDefinition() {
+				final Type type = getType();
+				if ( ! type.isAnyType() ) {
+					throw new WalkingException( "Cannot treat collection element type as ManyToAny" );
+				}
+				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
+			}
+
+			@Override
 			public EntityDefinition toEntityDefinition() {
 				if ( getType().isComponentType() ) {
-					throw new IllegalStateException( "Cannot treat composite collection element type as entity" );
+					throw new WalkingException( "Cannot treat composite collection element type as entity" );
 				}
 				return getElementPersister();
 			}
@@ -2029,7 +2042,7 @@ public abstract class AbstractCollectionPersister
 			public CompositeCollectionElementDefinition toCompositeElementDefinition() {
 
 				if ( ! getType().isComponentType() ) {
-					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
+					throw new WalkingException( "Cannot treat entity collection element type as composite" );
 				}
 
 				return new CompositeCollectionElementDefinition() {
@@ -2041,6 +2054,11 @@ public abstract class AbstractCollectionPersister
 					@Override
 					public Type getType() {
 						return getElementType();
+					}
+
+					@Override
+					public boolean isNullable() {
+						return false;
 					}
 
 					@Override

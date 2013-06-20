@@ -25,12 +25,16 @@ package org.hibernate.loader.plan.internal;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.plan.spi.AbstractFetchOwner;
+import org.hibernate.loader.plan.spi.AnyFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
 import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
+import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
@@ -47,7 +51,7 @@ public class LoadPlanBuildingHelper {
 				LockMode.NONE, // todo : for now
 				fetchOwner,
 				fetchStrategy,
-				attributeDefinition.getName()
+				attributeDefinition
 		);
 	}
 
@@ -56,12 +60,11 @@ public class LoadPlanBuildingHelper {
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
-
 		return new EntityFetch(
 				loadPlanBuildingContext.getSessionFactory(),
 				LockMode.NONE, // todo : for now
 				fetchOwner,
-				attributeDefinition.getName(),
+				attributeDefinition,
 				fetchStrategy
 		);
 	}
@@ -73,7 +76,21 @@ public class LoadPlanBuildingHelper {
 		return new CompositeFetch(
 				loadPlanBuildingContext.getSessionFactory(),
 				fetchOwner,
-				attributeDefinition.getName()
+				attributeDefinition
+		);
+	}
+
+	public static AnyFetch buildAnyFetch(
+			FetchOwner fetchOwner,
+			AttributeDefinition attribute,
+			AnyMappingDefinition anyDefinition,
+			FetchStrategy fetchStrategy, LoadPlanBuildingContext loadPlanBuildingContext) {
+		return new AnyFetch(
+				loadPlanBuildingContext.getSessionFactory(),
+				fetchOwner,
+				attribute,
+				anyDefinition,
+				fetchStrategy
 		);
 	}
 }

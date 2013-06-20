@@ -46,6 +46,26 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public interface LoadPlan {
+	public List<? extends Return> getReturns();
+
+	public Disposition getDisposition();
+
+	/**
+	 * Does this load plan indicate that lazy attributes are to be force fetched?
+	 * <p/>
+	 * Here we are talking about laziness in regards to the legacy bytecode enhancement which adds support for
+	 * partial selects of an entity's state (e.g., skip loading a lob initially, wait until/if it is needed)
+	 * <p/>
+	 * This one would effect the SQL that needs to get generated as well as how the result set would be read.
+	 * Therefore we make this part of the LoadPlan contract.
+	 * <p/>
+	 * NOTE that currently this is only relevant for HQL loaders when the HQL has specified the {@code FETCH ALL PROPERTIES}
+	 * key-phrase.  In all other cases, this returns false.
+
+	 * @return Whether or not to
+	 */
+	public boolean areLazyAttributesForceFetched();
+
 	/**
 	 * Convenient form of checking {@link #getReturns()} for scalar root returns.
 	 *
@@ -53,7 +73,26 @@ public interface LoadPlan {
 	 */
 	public boolean hasAnyScalarReturns();
 
-	public List<Return> getReturns();
+	/**
+	 * Enumerated possibilities for describing the disposition of this LoadPlan.
+	 */
+	public static enum Disposition {
+		/**
+		 * This is an "entity loader" load plan, which describes a plan for loading one or more entity instances of
+		 * the same entity type.  There is a single return, which will be of type {@link EntityReturn}
+		 */
+		ENTITY_LOADER,
+		/**
+		 * This is a "collection initializer" load plan, which describes a plan for loading one or more entity instances of
+		 * the same collection type.  There is a single return, which will be of type {@link CollectionReturn}
+		 */
+		COLLECTION_INITIALIZER,
+		/**
+		 * We have a mixed load plan, which will have one or more returns of {@link EntityReturn} and {@link ScalarReturn}
+		 * (NOT {@link CollectionReturn}).
+		 */
+		MIXED
+	}
 
 	// todo : would also like to see "call back" style access for handling "subsequent actions" such as:
 	// 		1) follow-on locking

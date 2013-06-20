@@ -58,7 +58,7 @@ public class EntityJoinableAssociationImpl extends AbstractJoinableAssociationIm
 				hasRestriction,
 				enabledFilters
 		);
-		this.joinableType = entityFetch.getEntityType();
+		this.joinableType = entityFetch.getFetchedType();
 		this.joinable = (Joinable) entityFetch.getEntityPersister();
 	}
 

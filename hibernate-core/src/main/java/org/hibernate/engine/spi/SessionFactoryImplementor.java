@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -290,4 +291,6 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * @return
 	 */
 	public NamedQueryRepository getNamedQueryRepository();
+
+	Iterable<EntityNameResolver> iterateEntityNameResolvers();
 }

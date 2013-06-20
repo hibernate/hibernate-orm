@@ -29,7 +29,8 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface AttributeDefinition {
+	public AttributeSource getSource();
 	public String getName();
 	public Type getType();
-	public AttributeSource getSource();
+	public boolean isNullable();
 }

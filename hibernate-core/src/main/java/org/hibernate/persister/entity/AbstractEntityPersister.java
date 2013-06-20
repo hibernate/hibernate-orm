@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2495,6 +2496,15 @@ public abstract class AbstractEntityPersister
 				.buildLoader( this, batchSize, lockOptions, getFactory(), loadQueryInfluencers );
 	}
 
+	/**
+	 * Used internally to create static loaders.  These are the default set of loaders used to handle get()/load()
+	 * processing.  lock() handling is done by the LockingStrategy instances (see {@link #getLocker})
+	 *
+	 * @param lockMode The lock mode to apply to the thing being loaded.
+	 * @return
+	 *
+	 * @throws MappingException
+	 */
 	protected UniqueEntityLoader createEntityLoader(LockMode lockMode) throws MappingException {
 		return createEntityLoader( lockMode, LoadQueryInfluencers.NONE );
 	}
@@ -3765,8 +3775,24 @@ public abstract class AbstractEntityPersister
 		return StringHelper.generateAlias( getEntityName() );
 	}
 
+	/**
+	 * Post-construct is a callback for AbstractEntityPersister subclasses to call after they are all done with their
+	 * constructor processing.  It allows AbstractEntityPersister to extend its construction after all subclass-specific
+	 * details have been handled.
+	 *
+	 * @param mapping The mapping
+	 *
+	 * @throws MappingException Indicates a problem accessing the Mapping
+	 */
 	protected void postConstruct(Mapping mapping) throws MappingException {
-		initPropertyPaths(mapping);
+		initPropertyPaths( mapping );
+
+		//doLateInit();
+		prepareEntityIdentifierDefinition();
+	}
+
+	private void doLateInit() {
+		generateEntityDefinition();
 
 		//insert/update/delete SQL
 		final int joinSpan = getTableSpan();
@@ -3824,11 +3850,11 @@ public abstract class AbstractEntityPersister
 		}
 
 		logStaticSQL();
-
 	}
 
-	public void postInstantiate() throws MappingException {
-		generateEntityDefinition();
+	public final void postInstantiate() throws MappingException {
+		doLateInit();
+//		generateEntityDefinition();
 
 		createLoaders();
 		createUniqueKeyLoaders();
@@ -5112,6 +5138,9 @@ public abstract class AbstractEntityPersister
 
 
 	private void prepareEntityIdentifierDefinition() {
+		if ( entityIdentifierDefinition != null ) {
+			return;
+		}
 		final Type idType = getIdentifierType();
 
 		if ( !idType.isComponentType() ) {
@@ -5131,35 +5160,119 @@ public abstract class AbstractEntityPersister
 				EntityIdentifierDefinitionHelper.buildNonEncapsulatedCompositeIdentifierDefinition( this );
 	}
 
-	private void collectAttributeDefinitions() {
-		// todo : leverage the attribute definitions housed on EntityMetamodel
-		// 		for that to work, we'd have to be able to walk our super entity persister(s)
-		attributeDefinitions = new Iterable<AttributeDefinition>() {
-			@Override
-			public Iterator<AttributeDefinition> iterator() {
-				return new Iterator<AttributeDefinition>() {
-//					private final int numberOfAttributes = countSubclassProperties();
-					private final int numberOfAttributes = entityMetamodel.getPropertySpan();
-					private int currentAttributeNumber = 0;
+	private void collectAttributeDefinitions(List<AttributeDefinition> definitions, EntityMetamodel metamodel) {
+		for ( int i = 0; i < metamodel.getPropertySpan(); i++ ) {
+			definitions.add( metamodel.getProperties()[i] );
+		}
 
-					@Override
-					public boolean hasNext() {
-						return currentAttributeNumber < numberOfAttributes;
-					}
+		// see if there are any subclass persisters...
+		final Set<String> subClassEntityNames = metamodel.getSubclassEntityNames();
+		if ( subClassEntityNames == null ) {
+			return;
+		}
 
-					@Override
-					public AttributeDefinition next() {
-						final int attributeNumber = currentAttributeNumber;
-						currentAttributeNumber++;
-						return entityMetamodel.getProperties()[ attributeNumber ];
-					}
-
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException( "Remove operation not supported here" );
-					}
-				};
+		// see if we can find the persisters...
+		for ( String subClassEntityName : subClassEntityNames ) {
+			if ( metamodel.getName().equals( subClassEntityName ) ) {
+				// skip it
+				continue;
 			}
-		};
+			try {
+				final EntityPersister subClassEntityPersister = factory.getEntityPersister( subClassEntityName );
+				collectAttributeDefinitions( definitions, subClassEntityPersister.getEntityMetamodel() );
+			}
+			catch (MappingException e) {
+				throw new IllegalStateException(
+						String.format(
+								"Could not locate subclass EntityPersister [%s] while processing EntityPersister [%s]",
+								subClassEntityName,
+								metamodel.getName()
+						),
+						e
+				);
+			}
+		}
 	}
+
+	private void collectAttributeDefinitions() {
+		// todo : I think this works purely based on luck atm
+		// 		specifically in terms of the sub/super class entity persister(s) being available.  Bit of chicken-egg
+		// 		problem there:
+		//			* If I do this during postConstruct (as it is now), it works as long as the
+		//			super entity persister is already registered, but I don't think that is necessarily true.
+		//			* If I do this during postInstantiate then lots of stuff in postConstruct breaks if we want
+		//			to try and drive SQL generation on these (which we do ultimately).  A possible solution there
+		//			would be to delay all SQL generation until postInstantiate
+
+		List<AttributeDefinition> attributeDefinitions = new ArrayList<AttributeDefinition>();
+		collectAttributeDefinitions( attributeDefinitions, getEntityMetamodel() );
+
+
+//		EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
+//		while ( currentEntityMetamodel != null ) {
+//			for ( int i = 0; i < currentEntityMetamodel.getPropertySpan(); i++ ) {
+//				attributeDefinitions.add( currentEntityMetamodel.getProperties()[i] );
+//			}
+//			// see if there is a super class EntityMetamodel
+//			final String superEntityName = currentEntityMetamodel.getSuperclass();
+//			if ( superEntityName != null ) {
+//				currentEntityMetamodel = factory.getEntityPersister( superEntityName ).getEntityMetamodel();
+//			}
+//			else {
+//				currentEntityMetamodel = null;
+//			}
+//		}
+
+		this.attributeDefinitions = Collections.unmodifiableList( attributeDefinitions );
+//		// todo : leverage the attribute definitions housed on EntityMetamodel
+//		// 		for that to work, we'd have to be able to walk our super entity persister(s)
+//		this.attributeDefinitions = new Iterable<AttributeDefinition>() {
+//			@Override
+//			public Iterator<AttributeDefinition> iterator() {
+//				return new Iterator<AttributeDefinition>() {
+////					private final int numberOfAttributes = countSubclassProperties();
+////					private final int numberOfAttributes = entityMetamodel.getPropertySpan();
+//
+//					EntityMetamodel currentEntityMetamodel = entityMetamodel;
+//					int numberOfAttributesInCurrentEntityMetamodel = currentEntityMetamodel.getPropertySpan();
+//
+//					private int currentAttributeNumber;
+//
+//					@Override
+//					public boolean hasNext() {
+//						return currentEntityMetamodel != null
+//								&& currentAttributeNumber < numberOfAttributesInCurrentEntityMetamodel;
+//					}
+//
+//					@Override
+//					public AttributeDefinition next() {
+//						final int attributeNumber = currentAttributeNumber;
+//						currentAttributeNumber++;
+//						final AttributeDefinition next = currentEntityMetamodel.getProperties()[ attributeNumber ];
+//
+//						if ( currentAttributeNumber >= numberOfAttributesInCurrentEntityMetamodel ) {
+//							// see if there is a super class EntityMetamodel
+//							final String superEntityName = currentEntityMetamodel.getSuperclass();
+//							if ( superEntityName != null ) {
+//								currentEntityMetamodel = factory.getEntityPersister( superEntityName ).getEntityMetamodel();
+//								if ( currentEntityMetamodel != null ) {
+//									numberOfAttributesInCurrentEntityMetamodel = currentEntityMetamodel.getPropertySpan();
+//									currentAttributeNumber = 0;
+//								}
+//							}
+//						}
+//
+//						return next;
+//					}
+//
+//					@Override
+//					public void remove() {
+//						throw new UnsupportedOperationException( "Remove operation not supported here" );
+//					}
+//				};
+//			}
+//		};
+	}
+
+
 }

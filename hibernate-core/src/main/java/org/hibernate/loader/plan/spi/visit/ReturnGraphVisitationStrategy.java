@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan.spi.visit;
 
+import org.hibernate.loader.plan.spi.AnyFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.CompositeFetch;
@@ -136,4 +137,18 @@ public interface ReturnGraphVisitationStrategy {
 	 * @param fetch The composite fetch
 	 */
 	public void finishingCompositeFetch(CompositeFetch fetch);
+
+	/**
+	 * Notification we are starting the processing of a ANY fetch
+	 *
+	 * @param fetch The ANY fetch
+	 */
+	public void startingAnyFetch(AnyFetch fetch);
+
+	/**
+	 * Notification that we are finishing up the processing of a ANY fetch
+	 *
+	 * @param fetch The ANY fetch
+	 */
+	public void finishingAnyFetch(AnyFetch fetch);
 }

@@ -71,9 +71,13 @@ public class PropertyAccessException extends HibernateException {
 		return propertyName;
 	}
 
+	protected String originalMessage() {
+		return super.getMessage();
+	}
+
 	@Override
 	public String getMessage() {
-		return super.getMessage()
+		return originalMessage()
 				+ ( wasSetter ? " setter of " : " getter of " )
 				+ StringHelper.qualify( persistentClass.getName(), propertyName );
 	}

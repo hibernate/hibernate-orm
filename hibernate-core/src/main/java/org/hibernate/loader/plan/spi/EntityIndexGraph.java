@@ -29,6 +29,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Queryable;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.AssociationType;
 
 /**
@@ -42,7 +44,7 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 	private final AssociationType indexType;
 	private final EntityPersister indexPersister;
 	private final PropertyPath propertyPath;
-	private final FetchOwnerDelegate fetchOwnerDelegate;
+	private final EntityPersisterBasedSqlSelectFragmentResolver sqlSelectFragmentResolver;
 
 	private IdentifierDescription identifierDescription;
 
@@ -63,7 +65,7 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 		this.indexType = (AssociationType) collectionPersister.getIndexType();
 		this.indexPersister = (EntityPersister) this.indexType.getAssociatedJoinable( sessionFactory() );
 		this.propertyPath = collectionPath.append( "<index>" ); // todo : do we want the <index> part?
-		this.fetchOwnerDelegate = new EntityFetchOwnerDelegate( indexPersister );
+		this.sqlSelectFragmentResolver = new EntityPersisterBasedSqlSelectFragmentResolver( (Queryable) indexPersister );
 	}
 
 	public EntityIndexGraph(EntityIndexGraph original, CopyContext copyContext) {
@@ -73,7 +75,7 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 		this.indexType = original.indexType;
 		this.indexPersister = original.indexPersister;
 		this.propertyPath = original.propertyPath;
-		this.fetchOwnerDelegate = original.fetchOwnerDelegate;
+		this.sqlSelectFragmentResolver = original.sqlSelectFragmentResolver;
 	}
 
 	/**
@@ -100,7 +102,7 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 	}
 
 	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy) {
+	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
 	}
 
 	@Override
@@ -129,7 +131,7 @@ public class EntityIndexGraph extends AbstractFetchOwner implements FetchableCol
 	}
 
 	@Override
-	protected FetchOwnerDelegate getFetchOwnerDelegate() {
-		return fetchOwnerDelegate;
+	public SqlSelectFragmentResolver toSqlSelectFragmentResolver() {
+		return sqlSelectFragmentResolver;
 	}
 }

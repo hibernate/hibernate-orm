@@ -28,7 +28,8 @@ import java.sql.SQLException;
 
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
+import org.hibernate.type.Type;
 
 /**
  * Contract for associations that are being fetched.
@@ -46,25 +47,13 @@ public interface Fetch extends CopyableFetch {
 	public FetchOwner getOwner();
 
 	/**
-	 * Obtain the name of the property, relative to the owner, being fetched.
+	 * Get the property path to this fetch
 	 *
-	 * @return The fetched property name.
+	 * @return The property path
 	 */
-	public String getOwnerPropertyName();
+	public PropertyPath getPropertyPath();
 
-	/**
-	 * Is this fetch nullable?
-	 *
-	 * @return true, if this fetch is nullable; false, otherwise.
-	 */
-	public boolean isNullable();
-
-	/**
-	 * Generates the SQL select fragments for this fetch.  A select fragment is the column and formula references.
-	 *
-	 * @return the select fragments
-	 */
-	public String[] toSqlSelectFragments(String alias);
+	public Type getFetchedType();
 
 	/**
 	 * Gets the fetch strategy for this fetch.
@@ -74,15 +63,26 @@ public interface Fetch extends CopyableFetch {
 	public FetchStrategy getFetchStrategy();
 
 	/**
-	 * Get the property path to this fetch
+	 * Is this fetch nullable?
 	 *
-	 * @return The property path
+	 * @return true, if this fetch is nullable; false, otherwise.
 	 */
-	public PropertyPath getPropertyPath();
+	public boolean isNullable();
+
+	public String getAdditionalJoinConditions();
+
+	/**
+	 * Generates the SQL select fragments for this fetch.  A select fragment is the column and formula references.
+	 *
+	 * @return the select fragments
+	 */
+	public String[] toSqlSelectFragments(String alias);
 
 	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
 
 	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
+
+	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException;
 
 	@Override
 	public Fetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy);

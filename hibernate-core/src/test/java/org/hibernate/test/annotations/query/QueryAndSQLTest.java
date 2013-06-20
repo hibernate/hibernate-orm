@@ -463,7 +463,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				"delete Attrvalue aval where aval.id in ( "
 						+ "select val2.id from Employee e, Employeegroup eg, Attrset aset, Attrvalue val2 "
 						+ "where eg.id = e.employeegroup.id " + "and aset.id = e.attrset.id "
-						+ "and val2.id member of aset.attrvalues)" ).executeUpdate();
+						+ "and val2 member of aset.attrvalues)" ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
 	}

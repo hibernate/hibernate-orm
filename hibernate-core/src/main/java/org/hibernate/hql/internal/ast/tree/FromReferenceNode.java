@@ -27,6 +27,7 @@ import antlr.SemanticException;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
 
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -128,6 +129,17 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 	 */
 	public FromElement getImpliedJoin() {
 		return null;
+	}
+
+	@SuppressWarnings("SimplifiableIfStatement")
+	protected boolean isFromElementUpdateOrDeleteRoot(FromElement element) {
+		if ( element.getFromClause().getParentFromClause() != null ) {
+			// its not even a root...
+			return false;
+		}
+
+		return getWalker().getStatementType() == HqlSqlTokenTypes.DELETE
+				|| getWalker().getStatementType() == HqlSqlTokenTypes.UPDATE;
 	}
 
 }

@@ -23,9 +23,24 @@ package org.hibernate.osgi.test.result;
 import java.util.List;
 
 /**
+ * Defines an OSGi service to provide test results to the main test class, without mucking up the classpath
+ * and causing ClassLoader issues.
+ * 
  * @author Brett Meyer
  */
 public interface OsgiTestResult {
+	
+	/**
+	 * Add a test failure to the result.
+	 * 
+	 * @param failure
+	 */
 	public void addFailure( String failure );
+	
+	/**
+	 * List all failures.
+	 * 
+	 * @return List<String>
+	 */
 	public List<String> getFailures();
 }

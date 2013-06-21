@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2009, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -75,17 +75,22 @@ import org.osgi.framework.ServiceReference;
 @RunWith(Arquillian.class)
 public class OsgiTestCase {
 
-    @ArquillianResource
-    BundleContext context;
+	@ArquillianResource
+	BundleContext context;
 
-    @Deployment
-    public static JavaArchive deployment() {
-    	final JavaArchive archive = ShrinkWrap.create( JavaArchive.class, "hibernate-osgi-test" );
-				
+	/**
+	 * Sets up the Arquillian "deployment", creating a bundle with this test class and the framework.
+	 * 
+	 * @return JavaArchive
+	 */
+	@Deployment
+	public static JavaArchive deployment() {
+		final JavaArchive archive = ShrinkWrap.create( JavaArchive.class, "hibernate-osgi-test" );
+
 		archive.setManifest( new Asset() {
 			@Override
 			public InputStream openStream() {
-				OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
+				final OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
 				builder.addBundleSymbolicName( archive.getName() );
 				builder.addBundleManifestVersion( 2 );
 				builder.addImportPackages( OsgiTestResult.class );
@@ -94,42 +99,47 @@ public class OsgiTestCase {
 		} );
 
 		return archive;
-    }
- 
-    @Test
-    public void testClientBundle() throws Exception {
-    	assertNotNull("BundleContext injected", context);
-        assertEquals("System Bundle ID", 0, context.getBundle().getBundleId());
+	}
 
-        testHibernateBundle( "org.hibernate.core" );
-        testHibernateBundle( "org.hibernate.entitymanager" );
-        
-        Bundle testClientBundle = findHibernateBundle( "testClientBundle" );
-        assertNotNull( "The test client bundle was not found!", testClientBundle );
-        testClientBundle.start();
-        assertEquals( "The test client bundle was not activated!", Bundle.ACTIVE, testClientBundle.getState());
-        
-        ServiceReference serviceReference = context.getServiceReference( OsgiTestResult.class.getName() );
-		OsgiTestResult testResult = (OsgiTestResult) context.getService( serviceReference );
-        
-        if (testResult.getFailures().size() > 0) {
-        	fail(testResult.getFailures().get( 0 ));
-        }
-    }
-    
-    private Bundle findHibernateBundle(String symbolicName) {
-    	for ( Bundle bundle : context.getBundles() ) {
-        	if ( bundle.getSymbolicName().equals( symbolicName ) ) {
-        		return bundle;
-        	}
-        }
-        return null;
-    }
-    
-    private void testHibernateBundle(String symbolicName) {
-    	Bundle bundle = findHibernateBundle( symbolicName );
-        
-        assertNotNull( "Bundle " + symbolicName + " was not found!", bundle );
-        assertEquals("Bundle " + symbolicName + " was not activated!", Bundle.ACTIVE, bundle.getState());
-    }
+	/**
+	 * Test the persistence unit bundle.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testClientBundle() throws Exception {
+		assertNotNull( "BundleContext injected", context );
+		assertEquals( "System Bundle ID", 0, context.getBundle().getBundleId() );
+
+		testHibernateBundle( "org.hibernate.core" );
+		testHibernateBundle( "org.hibernate.entitymanager" );
+
+		final Bundle testClientBundle = findHibernateBundle( "testClientBundle" );
+		assertNotNull( "The test client bundle was not found!", testClientBundle );
+		testClientBundle.start();
+		assertEquals( "The test client bundle was not activated!", Bundle.ACTIVE, testClientBundle.getState() );
+
+		final ServiceReference serviceReference = context.getServiceReference( OsgiTestResult.class.getName() );
+		final OsgiTestResult testResult = (OsgiTestResult) context.getService( serviceReference );
+
+		if ( testResult.getFailures().size() > 0 ) {
+			fail( testResult.getFailures().get( 0 ) );
+		}
+	}
+
+	private Bundle findHibernateBundle(String symbolicName) {
+		for ( Bundle bundle : context.getBundles() ) {
+			if ( bundle.getSymbolicName().equals( symbolicName ) ) {
+				return bundle;
+			}
+		}
+		return null;
+	}
+
+	private void testHibernateBundle(String symbolicName) {
+		final Bundle bundle = findHibernateBundle( symbolicName );
+
+		assertNotNull( "Bundle " + symbolicName + " was not found!", bundle );
+		assertEquals( "Bundle " + symbolicName + " was not activated!", Bundle.ACTIVE, bundle.getState() );
+	}
 }

@@ -141,7 +141,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
 
 		final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
-		TypeContributorList typeContributorList = new TypeContributorList() {
+		final TypeContributorList typeContributorList = new TypeContributorList() {
 			@Override
 			public List<TypeContributor> getTypeContributors() {
 				return typeContributors;

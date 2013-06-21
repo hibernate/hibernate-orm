@@ -24,17 +24,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Implementation of the OsgiTestResult OSGi service.
+ * 
  * @author Brett Meyer
  */
 public class OsgiTestResultImpl implements OsgiTestResult {
-	
+
 	private List<String> failures = new ArrayList<String>();
 
 	@Override
 	public void addFailure(String failure) {
-		failures.add(failure);
+		failures.add( failure );
 	}
-	
+
 	@Override
 	public List<String> getFailures() {
 		return failures;

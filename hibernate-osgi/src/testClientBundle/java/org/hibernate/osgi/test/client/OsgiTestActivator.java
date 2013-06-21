@@ -36,17 +36,20 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 /**
+ * This is a BundleActivate for the testClientBundle, but realistically it's the actual unit test.  See the note on
+ * OsgiTestCase.
+ * 
  * @author Brett Meyer
  */
 public class OsgiTestActivator implements BundleActivator {
-	
+
 	private OsgiTestResult testResult = new OsgiTestResultImpl();
 
 	@Override
 	public void start(BundleContext context) throws Exception {
-        
+
 		context.registerService( OsgiTestResult.class, testResult, new Hashtable() );
-		
+
 		testUnmanagedJpa( context );
 		testUnmanagedNative( context );
 		testLazyLoading( context );
@@ -54,132 +57,132 @@ public class OsgiTestActivator implements BundleActivator {
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
-		
+
 	}
-	
+
 	private void testUnmanagedJpa(BundleContext context) {
 		try {
-			ServiceReference serviceReference = context.getServiceReference( PersistenceProvider.class.getName() );
-		    PersistenceProvider persistenceProvider = (PersistenceProvider) context.getService( serviceReference );
-		    EntityManagerFactory emf = persistenceProvider.createEntityManagerFactory( "hibernate-osgi-test", null );
-		    EntityManager em = emf.createEntityManager();
-		    
-		    DataPoint dp = new DataPoint();
-	        dp.setName( "Brett" );
-	        em.getTransaction().begin();
-	        em.persist( dp );
-	        em.getTransaction().commit();
-	        em.clear();
-	        
-	        em.getTransaction().begin();
-	        List<DataPoint> results = em.createQuery( "from DataPoint" ).getResultList();
-	        if ( results.size() == 0 || !results.get(0).getName().equals( "Brett" ) ) {
-	        	testResult.addFailure( "Unmanaged JPA: Unexpected data returned!" );
-	        }
-	        dp = results.get(0);
-	        dp.setName( "Brett2" );
-	        em.merge( dp );
-	        em.getTransaction().commit();
-	        em.clear();
-	
-	        em.getTransaction().begin();
-	        results = em.createQuery( "from DataPoint" ).getResultList();
-	        if ( results.size() == 0 || !results.get(0).getName().equals( "Brett2" ) ) {
-	        	testResult.addFailure( "Unmanaged JPA: The update/merge failed!" );
-	        }
-	        em.getTransaction().commit();
-	        em.clear();
-	
-	        em.getTransaction().begin();
-	        em.createQuery( "delete from DataPoint" ).executeUpdate();
-	        em.getTransaction().commit();
-	        em.clear();
-	
-	        em.getTransaction().begin();
-	        results = em.createQuery( "from DataPoint" ).getResultList();
-	        if ( results.size() > 0 ) {
-	        	testResult.addFailure( "Unmanaged JPA: The delete failed!" );
-	        }
-	        em.getTransaction().commit();
-	        em.close();
+			final ServiceReference serviceReference = context.getServiceReference( PersistenceProvider.class.getName() );
+			final PersistenceProvider persistenceProvider = (PersistenceProvider) context.getService( serviceReference );
+			final EntityManagerFactory emf = persistenceProvider.createEntityManagerFactory( "hibernate-osgi-test", null );
+			final EntityManager em = emf.createEntityManager();
+
+			DataPoint dp = new DataPoint();
+			dp.setName( "Brett" );
+			em.getTransaction().begin();
+			em.persist( dp );
+			em.getTransaction().commit();
+			em.clear();
+
+			em.getTransaction().begin();
+			List<DataPoint> results = em.createQuery( "from DataPoint" ).getResultList();
+			if ( results.size() == 0 || !results.get( 0 ).getName().equals( "Brett" ) ) {
+				testResult.addFailure( "Unmanaged JPA: Unexpected data returned!" );
+			}
+			dp = results.get( 0 );
+			dp.setName( "Brett2" );
+			em.merge( dp );
+			em.getTransaction().commit();
+			em.clear();
+
+			em.getTransaction().begin();
+			results = em.createQuery( "from DataPoint" ).getResultList();
+			if ( results.size() == 0 || !results.get( 0 ).getName().equals( "Brett2" ) ) {
+				testResult.addFailure( "Unmanaged JPA: The update/merge failed!" );
+			}
+			em.getTransaction().commit();
+			em.clear();
+
+			em.getTransaction().begin();
+			em.createQuery( "delete from DataPoint" ).executeUpdate();
+			em.getTransaction().commit();
+			em.clear();
+
+			em.getTransaction().begin();
+			results = em.createQuery( "from DataPoint" ).getResultList();
+			if ( results.size() > 0 ) {
+				testResult.addFailure( "Unmanaged JPA: The delete failed!" );
+			}
+			em.getTransaction().commit();
+			em.close();
 		}
 		catch ( Exception e ) {
 			testResult.addFailure( "Exception: " + e.getMessage() );
 		}
 	}
-	
+
 	private void testUnmanagedNative(BundleContext context) {
 		try {
-			ServiceReference sr = context.getServiceReference( SessionFactory.class.getName() );
-			SessionFactory sf = (SessionFactory) context.getService( sr );
-		    Session s = sf.openSession();
-		    
-		    DataPoint dp = new DataPoint();
-	        dp.setName( "Brett" );
-	        s.getTransaction().begin();
-	        s.persist( dp );
-	        s.getTransaction().commit();
-	        s.clear();
-	        
-	        s.getTransaction().begin();
-	        List<DataPoint> results = s.createQuery( "from DataPoint" ).list();
-	        if ( results.size() == 0 || !results.get(0).getName().equals( "Brett" ) ) {
-	        	testResult.addFailure( "Native Hibernate: Unexpected data returned!" );
-	        }
-	        dp = results.get(0);
-	        dp.setName( "Brett2" );
-	        s.update( dp );
-	        s.getTransaction().commit();
-	        s.clear();
-	
-	        s.getTransaction().begin();
-	        results = s.createQuery( "from DataPoint" ).list();
-	        if ( results.size() == 0 || !results.get(0).getName().equals( "Brett2" ) ) {
-	        	testResult.addFailure( "Native Hibernate: The update/merge failed!" );
-	        }
-	        s.getTransaction().commit();
-	        s.clear();
-	
-	        s.getTransaction().begin();
-	        s.createQuery( "delete from DataPoint" ).executeUpdate();
-	        s.getTransaction().commit();
-	        s.clear();
-	
-	        s.getTransaction().begin();
-	        results = s.createQuery( "from DataPoint" ).list();
-	        if ( results.size() > 0 ) {
-	        	testResult.addFailure( "Native Hibernate: The delete failed!" );
-	        }
-	        s.getTransaction().commit();
-	        s.close();
+			final ServiceReference sr = context.getServiceReference( SessionFactory.class.getName() );
+			final SessionFactory sf = (SessionFactory) context.getService( sr );
+			final Session s = sf.openSession();
+
+			DataPoint dp = new DataPoint();
+			dp.setName( "Brett" );
+			s.getTransaction().begin();
+			s.persist( dp );
+			s.getTransaction().commit();
+			s.clear();
+
+			s.getTransaction().begin();
+			List<DataPoint> results = s.createQuery( "from DataPoint" ).list();
+			if ( results.size() == 0 || !results.get( 0 ).getName().equals( "Brett" ) ) {
+				testResult.addFailure( "Native Hibernate: Unexpected data returned!" );
+			}
+			dp = results.get( 0 );
+			dp.setName( "Brett2" );
+			s.update( dp );
+			s.getTransaction().commit();
+			s.clear();
+
+			s.getTransaction().begin();
+			results = s.createQuery( "from DataPoint" ).list();
+			if ( results.size() == 0 || !results.get( 0 ).getName().equals( "Brett2" ) ) {
+				testResult.addFailure( "Native Hibernate: The update/merge failed!" );
+			}
+			s.getTransaction().commit();
+			s.clear();
+
+			s.getTransaction().begin();
+			s.createQuery( "delete from DataPoint" ).executeUpdate();
+			s.getTransaction().commit();
+			s.clear();
+
+			s.getTransaction().begin();
+			results = s.createQuery( "from DataPoint" ).list();
+			if ( results.size() > 0 ) {
+				testResult.addFailure( "Native Hibernate: The delete failed!" );
+			}
+			s.getTransaction().commit();
+			s.close();
 		}
 		catch ( Exception e ) {
 			testResult.addFailure( "Exception: " + e.getMessage() );
 		}
 	}
-	
+
 	private void testLazyLoading(BundleContext context) {
 		try {
-			ServiceReference sr = context.getServiceReference( SessionFactory.class.getName() );
-			SessionFactory sf = (SessionFactory) context.getService( sr );
-		    Session s = sf.openSession();
-		    
-		    DataPoint dp = new DataPoint();
-	        dp.setName( "Brett" );
-	        s.getTransaction().begin();
-	        s.persist( dp );
-	        s.getTransaction().commit();
-	        s.clear();
-	        
-	        s.getTransaction().begin();
-	        // ensure the proxy comes through ok
-	        dp = (DataPoint) s.load( DataPoint.class, new Long(dp.getId()) );
-	    	// initialize and test
-	        if ( dp == null || !dp.getName().equals( "Brett" ) ) {
-	        	testResult.addFailure( "Native Hibernate: Lazy loading/proxy failed!" );
-	        }
-	        s.getTransaction().commit();
-	        s.close();
+			final ServiceReference sr = context.getServiceReference( SessionFactory.class.getName() );
+			final SessionFactory sf = (SessionFactory) context.getService( sr );
+			final Session s = sf.openSession();
+
+			DataPoint dp = new DataPoint();
+			dp.setName( "Brett" );
+			s.getTransaction().begin();
+			s.persist( dp );
+			s.getTransaction().commit();
+			s.clear();
+
+			s.getTransaction().begin();
+			// ensure the proxy comes through ok
+			dp = (DataPoint) s.load( DataPoint.class, new Long( dp.getId() ) );
+			// initialize and test
+			if ( dp == null || !dp.getName().equals( "Brett" ) ) {
+				testResult.addFailure( "Native Hibernate: Lazy loading/proxy failed!" );
+			}
+			s.getTransaction().commit();
+			s.close();
 		}
 		catch ( Exception e ) {
 			testResult.addFailure( "Exception: " + e.getMessage() );

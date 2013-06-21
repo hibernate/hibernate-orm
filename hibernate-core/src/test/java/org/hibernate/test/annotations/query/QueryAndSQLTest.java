@@ -452,21 +452,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
-	
-	@Test
-	@TestForIssue( jiraKey = "HHH-8318" )
-	@FailureExpected( jiraKey = "HHH-8318" )
-	public void testDeleteMemberOf() {
-		Session s = openSession();
-		s.getTransaction().begin();
-		s.createQuery(
-				"delete Attrvalue aval where aval.id in ( "
-						+ "select val2.id from Employee e, Employeegroup eg, Attrset aset, Attrvalue val2 "
-						+ "where eg.id = e.employeegroup.id " + "and aset.id = e.attrset.id "
-						+ "and val2 member of aset.attrvalues)" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
-	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

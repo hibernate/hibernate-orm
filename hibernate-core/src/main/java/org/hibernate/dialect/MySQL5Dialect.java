@@ -53,19 +53,19 @@ public class MySQL5Dialect extends MySQLDialect {
 		return EXTRACTER;
 	}
 
-	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+	private static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
 
 		public String extractConstraintName(SQLException sqle) {
 			try {
-				int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) ).intValue();
+				final int sqlState = Integer.valueOf( JdbcExceptionHelper.extractSqlState( sqle ) ).intValue();
 				switch ( sqlState ) {
-					case 23000:
-						return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
-					default:
-						return null;
+				case 23000:
+					return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
+				default:
+					return null;
 				}
 			}
-			catch (NumberFormatException nfe) {
+			catch ( NumberFormatException nfe ) {
 				return null;
 			}
 		}

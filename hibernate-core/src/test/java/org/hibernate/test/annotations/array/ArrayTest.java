@@ -23,16 +23,27 @@
  */
 package org.hibernate.test.annotations.array;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.test.annotations.array.Contest.Month;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Properties;
+
+import javax.persistence.ElementCollection;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
+import org.hibernate.AnnotationException;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.test.annotations.array.Contest.Month;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -67,9 +78,38 @@ public class ArrayTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 	}
+	
+	@Test
+	public void testNoIndexAnnotationFailure() {
+		Properties properties = constructProperties();
+		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
+		StandardServiceRegistry serviceRegistry = buildServiceRegistry( bootRegistry, properties );
+		MetadataSources sources = new MetadataSources( bootRegistry );
+		sources.addAnnotatedClass( NoIndexArrayEntity.class );
+		MetadataBuilder metadataBuilder = sources.getMetadataBuilder(serviceRegistry);
+		boolean caught = false;
+		try {
+			metadataBuilder.build();
+		}
+		catch ( AnnotationException e ) {
+			caught = true;
+			assertTrue( e.getMessage().contains( "must be annotated with @OrderColumn or @IndexColumn" ) );
+		}
+		assertTrue( caught );
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] { Competitor.class, Contest.class, Contest.Month.class };
+	}
+	
+	@Entity
+	public static class NoIndexArrayEntity {
+		@Id
+		@GeneratedValue
+		public long id;
+		
+		@ElementCollection
+		public NoIndexArrayEntity[] subElements;
 	}
 }

@@ -27,11 +27,13 @@ import java.util.EnumSet;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -41,6 +43,7 @@ import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
@@ -66,7 +69,14 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 					attribute.getContext().getOrigin()
 			);
 		}
-		// TODO: add checks for inconsistent annotations
+		
+		if ( attribute.getPluralAttributeNature().equals(PluralAttributeSource.Nature.ARRAY )
+				&& !attribute.annotations().containsKey( JPADotNames.ORDER_COLUMN ) 
+				&& !attribute.annotations().containsKey( HibernateDotNames.INDEX_COLUMN ) ) {
+			throw new AnnotationException( "The array attribute '" + attribute.getName()
+					+ "' must be annotated with @OrderColumn or @IndexColumn!" );
+		}
+		
 		if ( attribute.isSequentiallyIndexed() ) {
 			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
 				@Override

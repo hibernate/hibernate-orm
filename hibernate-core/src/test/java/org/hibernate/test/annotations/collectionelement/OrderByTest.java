@@ -127,7 +127,9 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {
 			Products.class,
 			Widgets.class,
-			BugSystem.class
+			BugSystem.class,
+			Bug.class,
+			Person.class
 		};
 	}
 

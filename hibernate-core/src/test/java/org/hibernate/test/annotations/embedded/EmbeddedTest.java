@@ -540,7 +540,11 @@ public class EmbeddedTest extends BaseCoreFunctionalTestCase {
 				InternetFavorites.class,
 				FixedLeg.class,
 				FloatLeg.class,
-				Swap.class
+				Swap.class,
+				RegionalArticlePk.class,
+				LegalStructure.class,
+				Summary.class,
+				URLFavorite.class
 		};
 	}
 }

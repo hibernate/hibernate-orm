@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 public class EmbeddableWithMany2OneTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Country.class };
+		return new Class[] { Person.class, Country.class, Address.class };
 	}
 
 	@Test

@@ -713,4 +713,13 @@ public interface AvailableSettings {
 	 * 			do not attempt to create unique constraints on a schema update
 	 */
 	public static final String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
+
+	/**
+	 * If enabled, an entity's member field types and method return types will automatically be indexed.  This allows,
+	 * for example, auto-discovery of @Embeddables without explicitly listing them in the annotated classes.  This
+	 * setting will also check classes identified by certain annotations (such as @Target).  JPA requires these classes
+	 * to be identified in the annotated classes, however legacy Hibernate behavior was to allow it.  Due to the
+	 * performance hit, disabled by default.
+	 */
+	public static final String ENABLE_AUTO_INDEX_MEMBER_TYPES = "hibernate.enable_auto_index_member_types";
 }

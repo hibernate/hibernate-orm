@@ -45,11 +45,14 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.CacheRegionDefinition;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.ResultSetMappingDefinition;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.NamedQueryDefinition;
@@ -175,9 +178,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		};
 
 		// todo : cache the built index if no inputs have changed (look at gradle-style hashing for up-to-date checking)
+		boolean autoIndexMemberTypes = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				AvailableSettings.ENABLE_AUTO_INDEX_MEMBER_TYPES, StandardConverters.BOOLEAN, false );
 		final IndexView jandexView = options.getJandexView() != null
 				? metadataSources.wrapJandexView( options.getJandexView() )
-				: metadataSources.buildJandexView();
+				: metadataSources.buildJandexView( autoIndexMemberTypes );
 		Collection<AnnotationInstance> tables = jandexView.getAnnotations( JPADotNames.TABLE );
 		final MetadataSourceProcessor[] metadataSourceProcessors;
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {

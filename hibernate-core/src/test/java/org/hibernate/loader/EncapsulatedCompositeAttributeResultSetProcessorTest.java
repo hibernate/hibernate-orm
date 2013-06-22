@@ -23,6 +23,10 @@
  */
 package org.hibernate.loader;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -33,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
@@ -43,8 +48,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
-
-import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -61,15 +64,10 @@ import org.hibernate.loader.spi.LoadQueryAliasResolutionContext;
 import org.hibernate.loader.spi.NamedParameterContext;
 import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.test.component.cascading.toone.PersonalInfo;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -78,7 +76,8 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Customer.class };
+		return new Class[] { Person.class, Customer.class, Address.class, AddressType.class, Customer.class,
+				Investment.class, MonetaryAmount.class };
 	}
 
 	@Test

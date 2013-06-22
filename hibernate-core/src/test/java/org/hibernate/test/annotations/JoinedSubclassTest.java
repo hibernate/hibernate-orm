@@ -127,6 +127,7 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 				AmericaCupClass.class,
 				Country.class,
 				Vegetable.class,
+				VegetablePk.class,
 				Carrot.class,
 				Tomato.class
 		};

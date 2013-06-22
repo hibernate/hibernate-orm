@@ -562,15 +562,19 @@ public class MetadataSources {
 
 		return new EntityMappingsMocker( collectedOrmXmlMappings, jandexView, serviceRegistry ).mockNewIndex();
 	}
-
+	
 	public IndexView buildJandexView() {
+		return buildJandexView( false );
+	}
+
+	public IndexView buildJandexView(boolean autoIndexMemberTypes) {
 		// create a jandex index from the annotated classes
 
 		Indexer indexer = new Indexer();
 		
 		Set<Class<?>> processedClasses = new HashSet<Class<?>>();
 		for ( Class<?> clazz : getAnnotatedClasses() ) {
-			indexClass( clazz, indexer, processedClasses );
+			indexClass( clazz, indexer, processedClasses, autoIndexMemberTypes );
 		}
 
 		for ( String className : getAnnotatedClassNames() ) {
@@ -585,7 +589,7 @@ public class MetadataSources {
 		return wrapJandexView( indexer.complete() );
 	}
 
-	private void indexClass(Class clazz, Indexer indexer, Set<Class<?>> processedClasses) {
+	private void indexClass(Class clazz, Indexer indexer, Set<Class<?>> processedClasses, boolean autoIndexMemberTypes) {
 		if ( clazz == null || clazz == Object.class
 				|| processedClasses.contains( clazz ) ) {
 			return;
@@ -600,35 +604,42 @@ public class MetadataSources {
 		// necessary to add all annotated classes. Entities would be enough. Mapped superclasses would be
 		// discovered while processing the annotations. To keep this behavior we index all classes in the
 		// hierarchy (see also HHH-7484)
-		indexClass( clazz.getSuperclass(), indexer, processedClasses );
+		indexClass( clazz.getSuperclass(), indexer, processedClasses, autoIndexMemberTypes );
 		
-		// For backward compatibility, don't require @Embeddable
-		// classes to be explicitly identified.
-		// Automatically find them by checking the fields' types.
-		for ( Class<?> fieldType : ReflectHelper.getMemberTypes( clazz ) ) {		
-			if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
-				try {
-					IndexView fieldIndex = JandexHelper.indexForClass(
-							serviceRegistry.getService( ClassLoaderService.class ),
-							fieldType );
-					if ( !fieldIndex.getAnnotations(
-							JPADotNames.EMBEDDABLE ).isEmpty() ) {
-						indexClass( fieldType, indexer, processedClasses );
-					}
-				} catch ( Exception e ) {
-					// do nothing
-				}
-			}
+		// Similarly, index any inner class.
+		for ( Class innerClass : clazz.getDeclaredClasses() ) {
+			indexClass( innerClass, indexer, processedClasses, autoIndexMemberTypes );
 		}
 		
-		// Also check for classes within a @Target annotation.
-		for ( AnnotationInstance targetAnnotation : JandexHelper.getAnnotations(
-				classInfo, HibernateDotNames.TARGET ) ) {
-			String targetClassName = targetAnnotation.value().asClass().name()
-					.toString();
-			Class<?> targetClass = serviceRegistry.getService(
-					ClassLoaderService.class ).classForName( targetClassName );
-			indexClass(targetClass, indexer, processedClasses );
+		if ( autoIndexMemberTypes ) {
+			// If autoIndexMemberTypes, don't require @Embeddable
+			// classes to be explicitly identified.
+			// Automatically find them by checking the fields' types.
+			for ( Class<?> fieldType : ReflectHelper.getMemberTypes( clazz ) ) {		
+				if ( !fieldType.isPrimitive() && fieldType != Object.class ) {
+					try {
+						IndexView fieldIndex = JandexHelper.indexForClass(
+								serviceRegistry.getService( ClassLoaderService.class ),
+								fieldType );
+						if ( !fieldIndex.getAnnotations(
+								JPADotNames.EMBEDDABLE ).isEmpty() ) {
+							indexClass( fieldType, indexer, processedClasses, autoIndexMemberTypes );
+						}
+					} catch ( Exception e ) {
+						// do nothing
+					}
+				}
+			}
+			
+			// Also check for classes within a @Target annotation.
+			for ( AnnotationInstance targetAnnotation : JandexHelper.getAnnotations(
+					classInfo, HibernateDotNames.TARGET ) ) {
+				String targetClassName = targetAnnotation.value().asClass().name()
+						.toString();
+				Class<?> targetClass = serviceRegistry.getService(
+						ClassLoaderService.class ).classForName( targetClassName );
+				indexClass(targetClass, indexer, processedClasses, autoIndexMemberTypes );
+			}
 		}
 	}
 

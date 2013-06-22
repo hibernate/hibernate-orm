@@ -470,7 +470,8 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				Captain.class,
 				Chaos.class,
 				CasimirParticle.class,
-				AllTables.class
+				AllTables.class,
+				Dimensions.class
 		};
 	}
 

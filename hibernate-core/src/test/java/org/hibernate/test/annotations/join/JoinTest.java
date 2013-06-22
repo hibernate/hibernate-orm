@@ -266,6 +266,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 				Death.class,
 				Cat.class,
 				Dog.class,
+				DogPk.class,
 				A.class,
 				B.class,
 				C.class,

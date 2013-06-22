@@ -28,7 +28,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -276,7 +275,11 @@ public class CollectionElementTest extends BaseCoreFunctionalTestCase {
 				Boy.class,
 				Country.class,
 				TestCourse.class,
-				Matrix.class
+				Matrix.class,
+				LocalizedString.class,
+				Toy.class,
+				CountryAttitude.class,
+				Brand.class
 		};
 	}
 }

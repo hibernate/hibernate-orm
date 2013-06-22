@@ -73,7 +73,7 @@ public class EncapsulatedCompositeIdResultSetProcessorTest extends BaseCoreFunct
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Parent.class, CardField.class, Card.class };
+		return new Class[] { Parent.class, CardField.class, Card.class, ParentPK.class, CardFieldPK.class };
 	}
 
 	@Test

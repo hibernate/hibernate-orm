@@ -331,7 +331,9 @@ public class ManyToManyComplexTest
 				Employee.class,
 				Contractor.class,
 				PhoneNumber.class,
-				ProgramManager.class
+				ProgramManager.class,
+				ContactInfo.class,
+				JobInfo.class
 		};
 	}
 

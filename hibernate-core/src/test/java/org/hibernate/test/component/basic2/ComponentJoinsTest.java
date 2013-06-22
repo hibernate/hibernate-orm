@@ -40,7 +40,7 @@ public class ComponentJoinsTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {
 				Person.class,
 				Component.class,
-				Component.Emb.Stuff.class };
+				Name.class};
 	}
 
 	@Test

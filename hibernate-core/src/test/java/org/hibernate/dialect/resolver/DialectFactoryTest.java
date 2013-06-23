@@ -23,14 +23,15 @@
  */
 package org.hibernate.dialect.resolver;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
-import org.junit.Before;
-import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
@@ -54,6 +55,7 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -64,10 +66,8 @@ import org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseInfoDialectRes
 import org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -147,6 +147,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "MySQL", MySQLDialect.class, resolver );
 		testDetermination( "PostgreSQL", PostgreSQL81Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 8, 2, PostgreSQL82Dialect.class, resolver );
+		testDetermination( "PostgreSQL", 9, 0, PostgreSQL9Dialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 5, DerbyTenFiveDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 6, DerbyTenSixDialect.class, resolver );

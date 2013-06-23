@@ -23,8 +23,6 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2400Dialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -45,6 +43,7 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -52,6 +51,7 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 import org.hibernate.internal.CoreMessageLogger;
+import org.jboss.logging.Logger;
 
 /**
  * The standard DatabaseInfoDialectResolver implementation
@@ -93,10 +93,11 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
 			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
 
-			if ( majorVersion > 8 || ( majorVersion == 8 && minorVersion >= 2 ) ) {
-				return new PostgreSQL82Dialect();
+			if ( majorVersion == 8 ) {
+				return minorVersion >= 2 ? new PostgreSQL82Dialect() : new PostgreSQL81Dialect();
 			}
-			return new PostgreSQL81Dialect();
+			
+			return new PostgreSQL9Dialect();
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {

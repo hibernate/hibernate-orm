@@ -155,12 +155,17 @@ public class ForeignKey extends AbstractConstraint {
 
 	@Override
 	public String[] sqlDropStrings(Dialect dialect) {
-		return new String[] {
-				"alter table " +
-						getTable().getQualifiedName( dialect ) +
-						dialect.getDropForeignKeyString() +
-						getName()
-		};
+		final StringBuilder buf = new StringBuilder( "alter table " );
+		buf.append( getTable().getQualifiedName( dialect ) );
+		buf.append( dialect.getDropForeignKeyString() );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( getName() );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			buf.append( " if exists" );
+		}
+		return new String[] { buf.toString() };
 	}
 
 	public String sqlConstraintStringInAlterTable(Dialect dialect) {

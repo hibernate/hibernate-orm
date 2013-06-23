@@ -149,10 +149,17 @@ public class DefaultUniqueDelegate implements UniqueDelegate {
 	public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey) {
 		// Do this here, rather than allowing UniqueKey/Constraint to do it.
 		// We need full, simplified control over whether or not it happens.
-		final String tableName = uniqueKey.getTable().getQualifiedName( dialect );
-		final String constraintName = dialect.quote( uniqueKey.getName() );
-
-		return "alter table " + tableName + " drop constraint " + constraintName;
+		final StringBuilder buf = new StringBuilder( "alter table " );
+		buf.append( uniqueKey.getTable().getQualifiedName( dialect ) );
+		buf.append(" drop constraint " );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( dialect.quote( uniqueKey.getName() ) );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
 	}
 
 

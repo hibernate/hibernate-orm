@@ -2142,6 +2142,28 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied before the constraint name?
+	 * <p/>
+	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsAfterConstraintName} should return true
+	 *
+	 * @return {@code true} if the "if exists" can be applied before the constraint name
+	 */
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return false;
+	}
+
+	/**
+	 * For dropping a constraint with an "alter table", can the phrase "if exists" be applied after the constraint name?
+	 * <p/>
+	 * NOTE : Only one or the other (or neither) of this and {@link #supportsIfExistsBeforeConstraintName} should return true
+	 *
+	 * @return {@code true} if the "if exists" can be applied after the constraint name
+	 */
+	public boolean supportsIfExistsAfterConstraintName() {
+		return false;
+	}
+
+	/**
 	 * Generate a DROP TABLE statement
 	 *
 	 * @param tableName The name of the table to drop

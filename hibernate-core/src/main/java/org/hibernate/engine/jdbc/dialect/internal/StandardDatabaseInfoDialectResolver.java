@@ -93,11 +93,15 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
 			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
 
-			if ( majorVersion == 8 ) {
-				return minorVersion >= 2 ? new PostgreSQL82Dialect() : new PostgreSQL81Dialect();
+			if ( majorVersion == 9 ) {
+				return new PostgreSQL9Dialect();
 			}
 			
-			return new PostgreSQL9Dialect();
+			if ( majorVersion == 8 && minorVersion >= 2 ) {
+				return new PostgreSQL82Dialect();
+			}
+			
+			return new PostgreSQL81Dialect();
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {

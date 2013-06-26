@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
-import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.dialect.CUBRIDDialect;
@@ -61,6 +61,7 @@ import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PointbaseDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.ProgressDialect;
 import org.hibernate.dialect.SAPDBDialect;
@@ -219,6 +220,7 @@ public class StrategySelectorBuilder {
 		addDialect( strategySelector, PostgresPlusDialect.class );
 		addDialect( strategySelector, PostgreSQL81Dialect.class );
 		addDialect( strategySelector, PostgreSQL82Dialect.class );
+		addDialect( strategySelector, PostgreSQL9Dialect.class );
 		addDialect( strategySelector, ProgressDialect.class );
 		addDialect( strategySelector, SAPDBDialect.class );
 		addDialect( strategySelector, SQLServerDialect.class );

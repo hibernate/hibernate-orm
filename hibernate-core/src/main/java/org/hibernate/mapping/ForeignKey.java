@@ -127,10 +127,17 @@ public class ForeignKey extends Constraint {
 	}
 
 	public String sqlDropString(Dialect dialect, String defaultCatalog, String defaultSchema) {
-		return "alter table " + 
-			getTable().getQualifiedName(dialect, defaultCatalog, defaultSchema) + 
-			dialect.getDropForeignKeyString() + 
-			getName();
+		final StringBuilder buf = new StringBuilder( "alter table " );
+		buf.append( getTable().getQualifiedName(dialect, defaultCatalog, defaultSchema) );
+		buf.append( dialect.getDropForeignKeyString() );
+		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
+			buf.append( "if exists " );
+		}
+		buf.append( getName() );
+		if ( dialect.supportsIfExistsAfterConstraintName() ) {
+			buf.append( " if exists" );
+		}
+		return buf.toString();
 	}
 
 	public boolean isCascadeDeleteEnabled() {

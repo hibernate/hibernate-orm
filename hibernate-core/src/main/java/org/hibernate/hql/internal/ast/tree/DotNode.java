@@ -38,6 +38,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
@@ -282,19 +283,36 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		String propName = getPath();
 		FromClause currentFromClause = getWalker().getCurrentFromClause();
 
-		if ( getWalker().getStatementType() != SqlTokenTypes.SELECT && indexed && classAlias == null ) {
-			// should indicate that we are processing an INSERT/UPDATE/DELETE
-			// query with a subquery implied via a collection property
-			// function. Here, we need to use the table name itself as the
-			// qualification alias.
-			// TODO : verify this works for all databases...
-			// TODO : is this also the case in non-"indexed" scenarios?
-			String alias = getLhs().getFromElement().getQueryable().getTableName();
-			columns = getFromElement().toColumns( alias, propertyPath, false, true );
+		// determine whether we should use the table name or table alias to qualify the column names...
+		// we need to use the table-name when:
+		//		1) the top-level statement is not a SELECT
+		//		2) the LHS FromElement is *the* FromElement from the top-level statement
+		//
+		// there is a caveat here.. if the update/delete statement are "multi-table" we should continue to use
+		// the alias also, even if the FromElement is the root one...
+		//
+		// in all other cases, we should use the table alias
+		final FromElement lhsFromElement = getLhs().getFromElement();
+		if ( getWalker().getStatementType() != SqlTokenTypes.SELECT ) {
+			if ( isFromElementUpdateOrDeleteRoot( lhsFromElement ) ) {
+				// at this point we know we have the 2 conditions above,
+				// lets see if we have the mentioned "multi-table" caveat...
+				boolean useAlias = false;
+				if ( getWalker().getStatementType() != SqlTokenTypes.INSERT ) {
+					final Queryable persister = lhsFromElement.getQueryable();
+					if ( persister.isMultiTable() ) {
+						useAlias = true;
+					}
+				}
+				if ( ! useAlias ) {
+					final String lhsTableName = lhsFromElement.getQueryable().getTableName();
+					columns = getFromElement().toColumns( lhsTableName, propertyPath, false, true );
+				}
+			}
 		}
 
-		//We do not look for an existing join on the same path, because
-		//it makes sense to join twice on the same collection role
+		// We do not look for an existing join on the same path, because
+		// it makes sense to join twice on the same collection role
 		FromElementFactory factory = new FromElementFactory(
 		        currentFromClause,
 		        getLhs().getFromElement(),

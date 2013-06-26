@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -102,17 +103,17 @@ public class StandardDatabaseMetaDataDialectResolverTest extends BaseUnitTestCas
 
 	@Test
 	public void testResolveDialectInternalForPostgres9() throws SQLException {
-		runPostgresDialectTest( 9, 0, PostgreSQL82Dialect.class );
+		runPostgresDialectTest( 9, 0, PostgreSQL9Dialect.class );
 	}
 
 	@Test
 	public void testResolveDialectInternalForPostgres91() throws SQLException {
-		runPostgresDialectTest( 9, 1, PostgreSQL82Dialect.class );
+		runPostgresDialectTest( 9, 1, PostgreSQL9Dialect.class );
 	}
 
 	@Test
 	public void testResolveDialectInternalForPostgres92() throws SQLException {
-		runPostgresDialectTest( 9, 2, PostgreSQL82Dialect.class );
+		runPostgresDialectTest( 9, 2, PostgreSQL9Dialect.class );
 	}
 
 	private static void runSQLServerDialectTest(

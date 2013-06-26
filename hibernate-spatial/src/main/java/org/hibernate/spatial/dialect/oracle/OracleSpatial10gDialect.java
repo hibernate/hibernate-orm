@@ -148,7 +148,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 	public final static String SHORT_NAME = "oraclespatial";
 
-	private final static String CONNECTION_FINDER_PROPERTY = "CONNECTION-FINDER";
+	final static String CONNECTION_FINDER_PROPERTY = "CONNECTION-FINDER";
 
 	private final static Log LOG = LogFactory.make();
 
@@ -157,12 +157,20 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	private Map<String, Boolean> features = new HashMap<String, Boolean>();
 
 	public OracleSpatial10gDialect() {
+		this(null);
+	}
+		
+	public OracleSpatial10gDialect(Properties props) {
 		super();
 
 
-		// read configuration information from
-		// classpath
-		configure();
+		if (props != null) {
+			configure(props);
+		} else {
+			// read configuration information from 
+			// classpath
+			configure(readPropsFromDefaultLocation());
+		}
 
 		// register geometry type
 		registerColumnType(java.sql.Types.STRUCT, "MDSYS.SDO_GEOMETRY");
@@ -525,54 +533,60 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	}
 
 
-	private void configure() {
-		ClassLoader loader = Thread.currentThread().getContextClassLoader();
-		String propfileLoc = getClass().getCanonicalName() + ".properties";
-		URL propfile = loader.getResource(propfileLoc);
-		if (propfile != null) {
-			InputStream is = null;
-			LOG.info("properties file found: " + propfile);
-			try {
-				loader.getResource(getClass().getCanonicalName());
-				is = propfile.openStream();
-				PropertyFileReader reader = new PropertyFileReader(is);
-				Properties props = reader.getProperties();
-
-				// checking for connectionfinder
-				String ccn = props.getProperty(CONNECTION_FINDER_PROPERTY);
-				if (ccn != null) {
-					try {
-						Class clazz = Thread.currentThread()
-								.getContextClassLoader().loadClass(ccn);
-						ConnectionFinder cf = (ConnectionFinder) clazz
-								.newInstance();
-						OracleJDBCTypeFactory.setConnectionFinder(cf);
-						LOG.info("Setting ConnectionFinder to " + ccn);
-					} catch (ClassNotFoundException e) {
-						LOG.warn("Tried to set ConnectionFinder to " + ccn
-								+ ", but class not found.");
-					} catch (InstantiationException e) {
-						LOG.warn("Tried to set ConnectionFinder to " + ccn
-								+ ", but couldn't instantiate.");
-					} catch (IllegalAccessException e) {
-						LOG
-								.warn("Tried to set ConnectionFinder to "
-										+ ccn
-										+ ", but got IllegalAcessException on instantiation.");
-					}
-				}
-
-			} catch (IOException e) {
-				LOG.warn("Problem reading properties file " + e);
-			} finally {
+	void configure(Properties props) {
+		if (props != null) {
+			// checking for connectionfinder
+			String ccn = props.getProperty(CONNECTION_FINDER_PROPERTY);
+			if (ccn != null) {
 				try {
-					is.close();
-				} catch (Exception e) {
+					Class<?> clazz = Thread.currentThread()
+							.getContextClassLoader().loadClass(ccn);
+					ConnectionFinder cf = (ConnectionFinder) clazz
+							.newInstance();
+					OracleJDBCTypeFactory.setConnectionFinder(cf);
+					LOG.info("Setting ConnectionFinder to " + ccn);
+				} catch (ClassNotFoundException e) {
+					LOG.warn("Tried to set ConnectionFinder to " + ccn
+							+ ", but class not found.");
+				} catch (InstantiationException e) {
+					LOG.warn("Tried to set ConnectionFinder to " + ccn
+							+ ", but couldn't instantiate.");
+				} catch (IllegalAccessException e) {
+					LOG.warn("Tried to set ConnectionFinder to "
+							+ ccn
+							+ ", but got IllegalAcessException on instantiation.");
 				}
 			}
 		}
 	}
 
+	private Properties readPropsFromDefaultLocation() {
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
+		String propfileLoc = getClass().getCanonicalName() + ".properties";
+		URL propfile = loader.getResource(propfileLoc);
+		
+		if (propfile == null) {
+			return null;
+		}
+		
+		InputStream is = null;
+		LOG.info("properties file found: " + propfile);
+		
+		try {
+			loader.getResource(getClass().getCanonicalName());
+			is = propfile.openStream();
+			PropertyFileReader reader = new PropertyFileReader(is);
+			return reader.getProperties();
+		} catch (IOException e) {
+			LOG.warn("Problem reading properties file " + e);
+			return null;
+		} finally {
+			try {
+				is.close();
+			} catch (Exception e) {
+			}
+		}
+	}
 
 	public boolean isTwoPhaseFiltering() {
 		return false;

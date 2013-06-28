@@ -381,7 +381,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			}
 		}
 		if ( statement != null ) {
-			if ( LOG.isEnabled( Level.WARN ) && !xref.containsKey( statement ) ) {
+			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
+			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
+			if ( LOG.isEnabled( Level.DEBUG ) && !xref.containsKey( statement ) ) {
 				LOG.unregisteredStatement();
 			}
 			Set<ResultSet> resultSets = xref.get( statement );
@@ -407,7 +409,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 			throw exceptionHelper.convert( e, "unable to access statement from resultset" );
 		}
 		if ( statement != null ) {
-			if ( LOG.isEnabled( Level.WARN ) && !xref.containsKey( statement ) ) {
+			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
+			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
+			if ( LOG.isEnabled( Level.DEBUG ) && !xref.containsKey( statement ) ) {
 				LOG.unregisteredStatement();
 			}
 			Set<ResultSet> resultSets = xref.get( statement );

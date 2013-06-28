@@ -29,8 +29,8 @@ import javax.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.osgi.test.result.OsgiTestResult;
-import org.hibernate.osgi.test.result.OsgiTestResultImpl;
+import org.hibernate.osgi.test.result.OsgiTestResults;
+import org.hibernate.osgi.test.result.OsgiTestResultsImpl;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -43,12 +43,12 @@ import org.osgi.framework.ServiceReference;
  */
 public class OsgiTestActivator implements BundleActivator {
 
-	private OsgiTestResult testResult = new OsgiTestResultImpl();
+	private OsgiTestResults testResult = new OsgiTestResultsImpl();
 
 	@Override
 	public void start(BundleContext context) throws Exception {
 
-		context.registerService( OsgiTestResult.class, testResult, new Hashtable() );
+		context.registerService( OsgiTestResults.class, testResult, new Hashtable() );
 
 		testUnmanagedJpa( context );
 		testUnmanagedNative( context );
@@ -107,7 +107,7 @@ public class OsgiTestActivator implements BundleActivator {
 			em.close();
 		}
 		catch ( Exception e ) {
-			testResult.addFailure( "Exception: " + e.getMessage() );
+			testResult.addFailure( "Exception: " + e.getMessage(), e );
 		}
 	}
 
@@ -157,7 +157,7 @@ public class OsgiTestActivator implements BundleActivator {
 			s.close();
 		}
 		catch ( Exception e ) {
-			testResult.addFailure( "Exception: " + e.getMessage() );
+			testResult.addFailure( "Exception: " + e.getMessage(), e );
 		}
 	}
 
@@ -185,7 +185,7 @@ public class OsgiTestActivator implements BundleActivator {
 			s.close();
 		}
 		catch ( Exception e ) {
-			testResult.addFailure( "Exception: " + e.getMessage() );
+			testResult.addFailure( "Exception: " + e.getMessage(), e );
 		}
 	}
 

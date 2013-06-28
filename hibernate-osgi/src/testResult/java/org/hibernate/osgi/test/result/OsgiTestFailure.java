@@ -20,25 +20,37 @@
  */
 package org.hibernate.osgi.test.result;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Implementation of the OsgiTestResult OSGi service.
- * 
  * @author Brett Meyer
  */
-public class OsgiTestResultImpl implements OsgiTestResult {
-
-	private List<String> failures = new ArrayList<String>();
-
-	@Override
-	public void addFailure(String failure) {
-		failures.add( failure );
+public class OsgiTestFailure {
+	
+	private String failure;
+	
+	private Throwable cause;
+	
+	public OsgiTestFailure( String failure ) {
+		this.failure = failure;
+	}
+	
+	public OsgiTestFailure( String failure, Throwable cause ) {
+		this( failure );
+		this.cause = cause;
 	}
 
-	@Override
-	public List<String> getFailures() {
-		return failures;
+	public String getFailure() {
+		return failure;
+	}
+
+	public void setFailure(String failure) {
+		this.failure = failure;
+	}
+
+	public Throwable getCause() {
+		return cause;
+	}
+
+	public void setCause(Throwable cause) {
+		this.cause = cause;
 	}
 }

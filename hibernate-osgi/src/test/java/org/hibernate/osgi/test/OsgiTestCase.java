@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 
-import org.hibernate.osgi.test.result.OsgiTestResult;
+import org.hibernate.osgi.test.result.OsgiTestResults;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
@@ -93,7 +93,7 @@ public class OsgiTestCase {
 				final OSGiManifestBuilder builder = OSGiManifestBuilder.newInstance();
 				builder.addBundleSymbolicName( archive.getName() );
 				builder.addBundleManifestVersion( 2 );
-				builder.addImportPackages( OsgiTestResult.class );
+				builder.addImportPackages( OsgiTestResults.class );
 				return builder.openStream();
 			}
 		} );
@@ -119,11 +119,11 @@ public class OsgiTestCase {
 		testClientBundle.start();
 		assertEquals( "The test client bundle was not activated!", Bundle.ACTIVE, testClientBundle.getState() );
 
-		final ServiceReference serviceReference = context.getServiceReference( OsgiTestResult.class.getName() );
-		final OsgiTestResult testResult = (OsgiTestResult) context.getService( serviceReference );
+		final ServiceReference serviceReference = context.getServiceReference( OsgiTestResults.class.getName() );
+		final OsgiTestResults testResults = (OsgiTestResults) context.getService( serviceReference );
 
-		if ( testResult.getFailures().size() > 0 ) {
-			fail( testResult.getFailures().get( 0 ) );
+		if ( testResults.getFailures().size() > 0 ) {
+			fail( testResults.getFailures().get( 0 ).getFailure() );
 		}
 	}
 

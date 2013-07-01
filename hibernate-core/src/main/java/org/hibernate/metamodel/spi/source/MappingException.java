@@ -24,7 +24,6 @@
 
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.HibernateException;
 import org.hibernate.jaxb.spi.Origin;
 
 /**
@@ -32,7 +31,7 @@ import org.hibernate.jaxb.spi.Origin;
  *
  * @author Steve Ebersole
  */
-public class MappingException extends HibernateException {
+public class MappingException extends org.hibernate.MappingException {
 	private final Origin origin;
 
 	public MappingException(String message, Origin origin) {

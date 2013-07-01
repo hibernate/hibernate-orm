@@ -40,10 +40,10 @@ public class Column {
 	private String name = "";
 	private String table = null;
 
-	private boolean unique = false;
-	private boolean nullable = true;
-	private boolean insertable = true;
-	private boolean updatable = true;
+	private Boolean unique;
+	private Boolean nullable;
+	private Boolean insertable;
+	private Boolean updatable;
 
 	private int length = 255;
 	private int precision = 0;
@@ -140,19 +140,19 @@ public class Column {
 		return name;
 	}
 
-	public final boolean isUnique() {
+	public final Boolean isUnique() {
 		return unique;
 	}
 
-	public final boolean isNullable() {
+	public final Boolean isNullable() {
 		return nullable;
 	}
 
-	public final boolean isInsertable() {
+	public final Boolean isInsertable() {
 		return insertable;
 	}
 
-	public final boolean isUpdatable() {
+	public final Boolean isUpdatable() {
 		return updatable;
 	}
 
@@ -180,19 +180,19 @@ public class Column {
 		this.name = name;
 	}
 
-	public void setUnique(boolean unique) {
+	public void setUnique(Boolean unique) {
 		this.unique = unique;
 	}
 
-	public void setNullable(boolean nullable) {
+	public void setNullable(Boolean nullable) {
 		this.nullable = nullable;
 	}
 
-	public void setInsertable(boolean insertable) {
+	public void setInsertable(Boolean insertable) {
 		this.insertable = insertable;
 	}
 
-	public void setUpdatable(boolean updatable) {
+	public void setUpdatable(Boolean updatable) {
 		this.updatable = updatable;
 	}
 

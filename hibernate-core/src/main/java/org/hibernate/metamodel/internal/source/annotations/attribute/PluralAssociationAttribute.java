@@ -86,6 +86,7 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 	private final String explicitForeignKeyName;
 
 	private final PluralAttributeSource.Nature pluralAttributeNature;
+
 	private static final EnumSet<PluralAttributeSource.Nature> SHOULD_NOT_HAS_COLLECTION_ID = EnumSet.of( PluralAttributeSource.Nature.SET,
 			PluralAttributeSource.Nature.MAP, PluralAttributeSource.Nature.LIST, PluralAttributeSource.Nature.ARRAY );
 

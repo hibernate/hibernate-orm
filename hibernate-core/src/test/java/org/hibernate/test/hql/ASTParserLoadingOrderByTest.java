@@ -48,7 +48,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Gail Badner
  */
-//@FailureExpectedWithNewMetamodel
 public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	StateProvince stateProvince;
 	private Zoo zoo1;

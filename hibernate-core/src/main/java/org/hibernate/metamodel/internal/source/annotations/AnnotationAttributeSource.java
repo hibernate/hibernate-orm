@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,29 +23,16 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
-import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.SubclassEntitySource;
+import java.util.Map;
+
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 
 /**
- * @author Hardy Ferentschik
- * @author Strong Liu
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public class SubclassEntitySourceImpl extends EntitySourceImpl implements SubclassEntitySource {
+public interface AnnotationAttributeSource {
+	void applyAttributeOverride(Map<String, AttributeOverride> attributeOverrideMap);
 
-	private final EntitySource container;
-
-	public SubclassEntitySourceImpl(
-			final EntityClass entityClass,
-			final EntitySource container) {
-		super( entityClass );
-		this.container = container;
-	}
-
-	@Override
-	public EntitySource superclassEntitySource() {
-		return container;
-	}
+	void applyAssociationOverride(Map<String, AssociationOverride> associationOverrideMap);
 }
-
-

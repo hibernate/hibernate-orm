@@ -25,7 +25,9 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -40,6 +42,8 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -174,11 +178,8 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	private void ensureJoinedSubEntity() {
-		if ( getParent() != null && inheritanceType == InheritanceType.JOINED ) {
-			//this is a joined sub entity
-		}
-		else {
-			getLocalBindingContext().makeMappingException( explicitEntityName + "is not a joined sub entity" );
+		if ( !( getParent() != null && inheritanceType == InheritanceType.JOINED ) ) {
+			throw getLocalBindingContext().makeMappingException( explicitEntityName + "is not a joined sub entity" );
 		}
 	}
 
@@ -279,7 +280,7 @@ public class EntityClass extends ConfiguredClass {
 	}
 
 	public List<JpaCallbackSource> getJpaCallbacks() {
-		if(jpaCallbacks == null){
+		if ( jpaCallbacks == null ) {
 			jpaCallbacks = new JPAListenerHelper( this ).bindJPAListeners();
 		}
 		return jpaCallbacks;
@@ -292,7 +293,7 @@ public class EntityClass extends ConfiguredClass {
 		return explicitForeignKeyName;
 	}
 	public List<MappedSuperclass> getMappedSuperclasses() {
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	public OnDeleteAction getOnDeleteAction() {

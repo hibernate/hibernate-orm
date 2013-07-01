@@ -29,6 +29,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
@@ -39,9 +40,9 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
  */
 public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	private final BasicAttribute attribute;
-	private final AttributeOverride attributeOverride;
-
-	public SimpleIdentifierSourceImpl(BasicAttribute attribute, AttributeOverride attributeOverride) {
+	private final RootEntityClass rootEntityClass;
+	private final SingularAttributeSourceImpl source ;
+	public SimpleIdentifierSourceImpl(RootEntityClass rootEntityClass, BasicAttribute attribute) {
 		if ( !attribute.isId() ) {
 			throw new AssertionFailure(
 					String.format(
@@ -50,8 +51,10 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 					)
 			);
 		}
+		this.rootEntityClass = rootEntityClass;
 		this.attribute = attribute;
-		this.attributeOverride = attributeOverride;
+		this.source= new SingularAttributeSourceImpl( attribute );
+		source.applyAttributeOverride( rootEntityClass.getAttributeOverrideMap() );
 	}
 
 	@Override
@@ -61,7 +64,8 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 
 	@Override
 	public SingularAttributeSource getIdentifierAttributeSource() {
-		return new SingularAttributeSourceImpl( attribute, attributeOverride );
+
+		return source;
 	}
 
 	@Override

@@ -32,7 +32,7 @@ public interface SizeSource {
 	 *
 	 * @return true, if length is defined; false, otherwise.
 	 */
-	public boolean isLengthDefined();
+	boolean isLengthDefined();
 
 	/**
 	 * If length is defined (as determined by {@link #isLengthDefined()}), then
@@ -41,14 +41,14 @@ public interface SizeSource {
 	 * @return the length, if defined.
 	 * @throws UnsupportedOperationException if length is not defined.
 	 */
-	public int getLength();
+	int getLength();
 
 	/**
 	 * Is precision defined?
 	 *
 	 * @return true, if precision is defined; false, otherwise.
 	 */
-	public boolean isPrecisionDefined();
+	boolean isPrecisionDefined();
 
 	/**
 	 * If precision is defined (as determined by {@link #isPrecisionDefined()}), then
@@ -59,14 +59,14 @@ public interface SizeSource {
 	 *
 	 * @see {@link #isPrecisionDefined()}
 	 */
-	public int getPrecision();
+	int getPrecision();
 
 	/**
 	 * Is scale defined?
 	 *
 	 * @return true, if scale is defined; false, otherwise.
 	 */
-	public boolean isScaleDefined();
+	boolean isScaleDefined();
 
 
 	/**
@@ -78,5 +78,39 @@ public interface SizeSource {
 	 *
 	 * @see {@link #isScaleDefined()}
 	 */
-	public int getScale();
+	int getScale();
+
+	SizeSource NULL = new SizeSource() {
+		@Override
+		public boolean isLengthDefined() {
+			return false;
+		}
+
+		@Override
+		public int getLength() {
+			return 0;
+		}
+
+		@Override
+		public boolean isPrecisionDefined() {
+			return false;
+		}
+
+		@Override
+		public int getPrecision() {
+			return 0;
+		}
+
+		@Override
+		public boolean isScaleDefined() {
+			return false;
+		}
+
+		@Override
+		public int getScale() {
+			return 0;
+		}
+	};
+
+
 }

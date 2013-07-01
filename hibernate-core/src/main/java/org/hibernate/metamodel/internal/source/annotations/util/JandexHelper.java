@@ -257,20 +257,21 @@ public class JandexHelper {
 	 */
 	public static AnnotationInstance getSingleAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
 			throws AssertionFailure {
-		List<AnnotationInstance> annotationList = annotations.get( annotationName );
-		if ( annotationList == null ) {
-			return null;
-		}
-		else if ( annotationList.size() == 1 ) {
-			return annotationList.get( 0 );
-		}
-		else {
-			throw new AssertionFailure(
-					"Found more than one instance of the annotation "
-							+ annotationList.get( 0 ).name().toString()
-							+ ". Expected was one."
-			);
-		}
+		return getSingleAnnotation( annotations, annotationName, null );
+//		List<AnnotationInstance> annotationList = annotations.get( annotationName );
+//		if ( annotationList == null ) {
+//			return null;
+//		}
+//		else if ( annotationList.size() == 1 ) {
+//			return annotationList.get( 0 );
+//		}
+//		else {
+//			throw new AssertionFailure(
+//					"Found more than one instance of the annotation "
+//							+ annotationList.get( 0 ).name().toString()
+//							+ ". Expected was one."
+//			);
+//		}
 	}
 
 	/**
@@ -292,14 +293,18 @@ public class JandexHelper {
 		if ( annotationList == null ) {
 			return null;
 		}
-
-		List<AnnotationInstance> targetedAnnotationList = new ArrayList<AnnotationInstance>();
-		for ( AnnotationInstance annotation : annotationList ) {
-			if ( getTargetName( annotation.target() ).equals( getTargetName( target ) ) ) {
-				targetedAnnotationList.add( annotation );
+		final List<AnnotationInstance> targetedAnnotationList;
+		if ( target != null ) {
+			targetedAnnotationList = new ArrayList<AnnotationInstance>();
+			for ( AnnotationInstance annotation : annotationList ) {
+				if ( getTargetName( annotation.target() ).equals( getTargetName( target ) ) ) {
+					targetedAnnotationList.add( annotation );
+				}
 			}
 		}
-
+		else {
+			targetedAnnotationList = annotationList;
+		}
 		if ( targetedAnnotationList.size() == 0 ) {
 			return null;
 		}

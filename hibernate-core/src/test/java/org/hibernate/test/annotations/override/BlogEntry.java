@@ -29,9 +29,8 @@ public class BlogEntry extends Entry {
 
 		BlogEntry blogEntry = (BlogEntry) o;
 
-		if ( text != null ? !text.equals( blogEntry.text ) : blogEntry.text != null ) return false;
+		return !( text != null ? !text.equals( blogEntry.text ) : blogEntry.text != null );
 
-		return true;
 	}
 
 	@Override

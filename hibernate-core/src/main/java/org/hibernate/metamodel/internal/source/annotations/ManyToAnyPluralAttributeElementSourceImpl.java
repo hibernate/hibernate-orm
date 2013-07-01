@@ -8,10 +8,11 @@ import org.hibernate.metamodel.spi.source.ManyToAnyPluralAttributeElementSource;
 /**
  * @author Hardy Ferentschik
  */
-public class ManyToAnyPluralAttributeElementSourceImpl implements ManyToAnyPluralAttributeElementSource {
+public class ManyToAnyPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements ManyToAnyPluralAttributeElementSource {
 	private final PluralAssociationAttribute attribute;
 
-	public ManyToAnyPluralAttributeElementSourceImpl(PluralAssociationAttribute attribute) {
+	public ManyToAnyPluralAttributeElementSourceImpl(PluralAssociationAttribute attribute, String relativePath) {
+		super(attribute, relativePath);
 		this.attribute = attribute;
 	}
 

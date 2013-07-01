@@ -75,6 +75,7 @@ public class AssociationAttribute extends MappedAttribute {
 	private final String referencedEntityType;
 	private final Class<?> referencedAttributeType;
 	private final String mappedBy;
+	private final boolean isJpaInverse;
 	private final Set<CascadeType> cascadeTypes;
 	private final Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes;
 	private final boolean isOptional;
@@ -148,6 +149,7 @@ public class AssociationAttribute extends MappedAttribute {
 		this.referencedEntityType = determineReferencedEntityType( associationAnnotation, referencedAttributeType );
 		this.referencedAttributeType = referencedAttributeType;
 		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
+		this.isJpaInverse  = mappedBy != null;
 		this.isOptional = determineOptionality( associationAnnotation );
 		this.isLazy = determineIsLazy( associationAnnotation );
 		this.isUnWrapProxy = determinIsUnwrapProxy();
@@ -497,8 +499,7 @@ public class AssociationAttribute extends MappedAttribute {
 			Map<DotName, List<AnnotationInstance>> annotations,
 			Class<?> referencedAttributeType ) {
 		
-		boolean isJpaInverse = mappedBy != null;
-		
+
 		// If JPA and 'mappedBy' (inverse side), override the annotations
 		// with the owning side.
 		if ( isJpaInverse ) {

@@ -66,7 +66,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 	public RootEntitySourceImpl(RootEntityClass entityClass) {
 		super( entityClass );
-		rootEntityClass = entityClass;
+		this.rootEntityClass = entityClass;
 	}
 
 	@Override
@@ -74,11 +74,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		IdType idType = rootEntityClass.getIdType();
 		switch ( idType ) {
 			case SIMPLE: {
-				MappedAttribute attribute = getEntityClass().getIdAttributes().iterator().next();
-				return new SimpleIdentifierSourceImpl(
-						(BasicAttribute) attribute,
-						getEntityClass().getAttributeOverrideMap().get(attribute.getName())
-				);
+				MappedAttribute attribute = getEntityClass().getIdAttributes().values().iterator().next();
+				return new SimpleIdentifierSourceImpl(rootEntityClass, (BasicAttribute) attribute);
 			}
 			case COMPOSED: {
 				return new NonAggregatedCompositeIdentifierSourceImpl( this );
@@ -164,15 +161,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 
 		public AggregatedCompositeIdentifierSourceImpl(RootEntitySourceImpl rootEntitySource) {
 			// the entity class reference should contain one single id attribute...
-			Iterator<MappedAttribute> idAttributes = rootEntitySource.getEntityClass().getIdAttributes().iterator();
-			if ( !idAttributes.hasNext() ) {
-				throw rootEntitySource.getLocalBindingContext().makeMappingException(
-						String.format(
-								"Could not locate identifier attributes on entity %s",
-								rootEntitySource.getEntityName()
-						)
-				);
-			}
+			Iterator<MappedAttribute> idAttributes = rootEntitySource.getEntityClass().getIdAttributes().values().iterator();
+			noIdentifierCheck( rootEntitySource, idAttributes );
 			final MappedAttribute idAttribute = idAttributes.next();
 			if ( idAttributes.hasNext() ) {
 				throw rootEntitySource.getLocalBindingContext().makeMappingException(
@@ -192,9 +182,18 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 				);
 			}
 
-			// todo : no idea how to obtain overrides here...
-			Map<String, AttributeOverride> overrides = getEntityClass().getAttributeOverrideMap();
-			componentAttributeSource = new ComponentAttributeSourceImpl( embeddableClass, "", overrides, embeddableClass.getClassAccessType() );
+			componentAttributeSource = new ComponentAttributeSourceImpl( embeddableClass, "", embeddableClass.getClassAccessType() );
+		}
+
+		private void noIdentifierCheck(RootEntitySourceImpl rootEntitySource, Iterator<MappedAttribute> idAttributes) {
+			if ( !idAttributes.hasNext() ) {
+				throw rootEntitySource.getLocalBindingContext().makeMappingException(
+						String.format(
+								"Could not locate identifier attributes on entity %s",
+								rootEntitySource.getEntityName()
+						)
+				);
+			}
 		}
 
 		@Override
@@ -263,7 +262,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		@Override
 		public List<SingularAttributeSource> getAttributeSourcesMakingUpIdentifier() {
 			List<SingularAttributeSource> attributeSources = new ArrayList<SingularAttributeSource>();
-			for ( MappedAttribute attr : rootEntitySource.getEntityClass().getIdAttributes() ) {
+			for ( MappedAttribute attr : rootEntitySource.getEntityClass().getIdAttributes().values() ) {
 				switch ( attr.getNature() ) {
 					case BASIC:
 						attributeSources.add( new SingularAttributeSourceImpl( attr ) );
@@ -271,7 +270,7 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 					case MANY_TO_ONE:
 					case ONE_TO_ONE:
 						//others??
-						attributeSources.add( new ToOneAttributeSourceImpl( (SingularAssociationAttribute) attr ) );
+						attributeSources.add( new ToOneAttributeSourceImpl( (SingularAssociationAttribute) attr,"" ) );
 				}
 			}
 			return attributeSources;

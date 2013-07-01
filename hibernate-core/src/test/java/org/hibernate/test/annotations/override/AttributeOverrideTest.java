@@ -36,6 +36,7 @@ import static org.junit.Assert.assertTrue;
  */
 @FailureExpectedWithNewMetamodel
 public class AttributeOverrideTest extends BaseCoreFunctionalTestCase {
+
 	@Test
 	public void testMapKeyValue() throws Exception {
 		assertTrue( isColumnPresent( "PropertyRecord_parcels", "ASSESSMENT") );

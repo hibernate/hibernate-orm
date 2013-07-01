@@ -91,7 +91,12 @@ public class Insert {
 	public Insert addColumn(String columnName, String valueExpression) {
 		String old = columns.put( columnName, valueExpression );
 		if ( old != null ) {
-			LOG.warn( "Duplicated column name " + columnName + " is being added into Insert, this is more likely a hibernate internal issue" );
+			LOG.warnf(
+					"Duplicated column[%s] with value [old: %s, new:%s] is being added into Insert, this is more likely a hibernate internal issue",
+					columnName,
+					old,
+					valueExpression
+			);
 		}
 		return this;
 	}

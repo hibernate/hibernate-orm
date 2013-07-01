@@ -26,9 +26,14 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import javax.persistence.AccessType;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.MethodInfo;
 
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
@@ -53,11 +58,26 @@ public class EmbeddableClass extends ConfiguredClass {
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			String customTuplizerClass,
 			AnnotationBindingContext context) {
-		super( classInfo, defaultAccessType, parent, context );
+		super( classInfo, defaultAccessType, parent, embeddedAttributeName, context );
 		this.embeddedAttributeName = embeddedAttributeName;
 		this.naturalIdMutability = naturalIdMutability;
 		this.parentReferencingAttributeName = checkParentAnnotation();
 		this.customTuplizerClass = customTuplizerClass;
+
+		overrideNaturalIdMutability(naturalIdMutability);
+	}
+
+	private void overrideNaturalIdMutability(SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
+		for ( BasicAttribute attribute : getSimpleAttributes().values() ) {
+			attribute.setNaturalIdMutability( naturalIdMutability );
+		}
+		for ( EmbeddableClass embeddable : getEmbeddedClasses().values() ) {
+			embeddable.setNaturalIdMutability( naturalIdMutability );
+			embeddable.overrideNaturalIdMutability( naturalIdMutability );
+		}
+		for ( AssociationAttribute associationAttribute : getAssociationAttributes().values() ) {
+			associationAttribute.setNaturalIdMutability( naturalIdMutability );
+		}
 	}
 
 	private String checkParentAnnotation() {
@@ -87,6 +107,8 @@ public class EmbeddableClass extends ConfiguredClass {
 	public String getCustomTuplizerClass() {
 		return customTuplizerClass;
 	}
+
+
 }
 
 

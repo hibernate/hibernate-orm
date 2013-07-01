@@ -38,11 +38,13 @@ import org.jboss.jandex.ClassInfo;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -68,6 +70,7 @@ public class EntitySourceImpl implements EntitySource {
 	private final Set<SubclassEntitySource> subclassEntitySources;
 	private final String jpaEntityName;
 	private final FilterSource[] filterSources;
+	private final TableSpecificationSource primaryTable;
 
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
@@ -82,6 +85,24 @@ public class EntitySourceImpl implements EntitySource {
 
 		addImports();
 		this.filterSources = buildFilterSources();
+		this.primaryTable = resolvePrimaryTable();
+	}
+
+	private TableSpecificationSource resolvePrimaryTable() {
+		if ( !entityClass.definesItsOwnTable() ) {
+			return null;
+		}
+
+		if ( entityClass.hostsAnnotation( HibernateDotNames.SUB_SELECT ) ) {
+			return new InLineViewSourceImpl( entityClass );
+		}
+		else {
+			AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
+					entityClass.getClassInfo(),
+					JPADotNames.TABLE
+			);
+			return new TableSourceImpl( tableAnnotation );
+		}
 	}
 
 	private FilterSource[] buildFilterSources() {
@@ -147,20 +168,7 @@ public class EntitySourceImpl implements EntitySource {
 
 	@Override
 	public TableSpecificationSource getPrimaryTable() {
-		if ( !entityClass.definesItsOwnTable() ) {
-			return null;
-		}
-
-		if ( entityClass.hostsAnnotation( HibernateDotNames.SUB_SELECT ) ) {
-			return new InLineViewSourceImpl( entityClass );
-		}
-		else {
-			AnnotationInstance tableAnnotation = JandexHelper.getSingleAnnotation(
-					entityClass.getClassInfo(),
-					JPADotNames.TABLE
-			);
-			return new TableSourceImpl( tableAnnotation );
-		}
+		return primaryTable;
 	}
 
 	@Override
@@ -244,30 +252,39 @@ public class EntitySourceImpl implements EntitySource {
 		return entityClass.getName();
 	}
 
+//	private final ValueHolder<List<AttributeSource>> attributeSource = new ValueHolder<List<AttributeSource>>(
+//			new ValueHolder.DeferredInitializer<List<AttributeSource>>() {
+//				@Override
+//				public List<AttributeSource> initialize() {
+//					List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
+//					for ( BasicAttribute attribute : getEntityClass().getSimpleAttributes().values() ) {
+//						AttributeSource source = new SingularAttributeSourceImpl( attribute );
+//						attributeList.add( source );
+//					}
+//
+//					for ( Map.Entry<String, EmbeddableClass> entry : getEntityClass().getEmbeddedClasses().entrySet() ) {
+//						final String attributeName = entry.getKey();
+//						if ( !getEntityClass().isIdAttribute( attributeName ) ) {
+//							final EmbeddableClass component = entry.getValue();
+//							attributeList.add(
+//									new ComponentAttributeSourceImpl(
+//											component,
+//											"",
+//											getEntityClass().getClassAccessType()
+//									)
+//							);
+//						}
+//					}
+//					SourceHelper.resolveAssociationAttributes( getEntityClass(), attributeList );
+//					return attributeList;
+//				}
+//			}
+//	);
+
 	@Override
 	public List<AttributeSource> attributeSources() {
-		List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
-		for ( BasicAttribute attribute : entityClass.getSimpleAttributes() ) {
-			AttributeOverride override = getEntityClass().getAttributeOverrideMap().get( attribute.getName() );
-			attributeList.add( new SingularAttributeSourceImpl( attribute , override ));
-		}
-
-		for ( Map.Entry<String,EmbeddableClass> entry : entityClass.getEmbeddedClasses().entrySet() ) {
-			final String attributeName = entry.getKey();
-			if ( !entityClass.isIdAttribute( attributeName ) ) {
-				final EmbeddableClass component = entry.getValue();
-				attributeList.add(
-						new ComponentAttributeSourceImpl(
-								component,
-								"",
-								entityClass.getAttributeOverrideMap(),
-								entityClass.getClassAccessType()
-						)
-				);
-			}
-		}
-		SourceHelper.resolveAssociationAttributes( entityClass, attributeList );
-		return attributeList;
+//		return attributeSource.getValue();
+		return SourceHelper.resolveAttributes( getEntityClass(), "" ).getValue();
 	}
 
 	@Override

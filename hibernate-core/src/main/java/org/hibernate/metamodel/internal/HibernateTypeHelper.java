@@ -811,6 +811,7 @@ class HibernateTypeHelper {
 			java.lang.reflect.Type collectionAttributeType = null;
 			if ( beanInfo.getPropertyDescriptors() == null || beanInfo.getPropertyDescriptors().length == 0 ) {
 				// we need to look for the field and look at it...
+				//TODO this only works when the field is public accessable or NoSuchElementException will be thrown
 				collectionAttributeType = ownerClass.getField( attributeName ).getGenericType();
 			}
 			else {

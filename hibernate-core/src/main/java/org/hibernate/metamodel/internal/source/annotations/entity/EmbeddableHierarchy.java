@@ -65,25 +65,8 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 			final AnnotationBindingContext context) {
 
 		final ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
-		if ( embeddableClassInfo == null ) {
-			throw new AssertionFailure(
-					String.format(
-							"The specified class %s cannot be found in the annotation index",
-							embeddableClass.getName()
-					)
-			);
-		}
-
-		if ( JandexHelper.getSingleAnnotation( embeddableClassInfo, JPADotNames.EMBEDDABLE ) == null ) {
-			throw new AssertionFailure(
-					String.format(
-							"The specified class %s is not annotated with @Embeddable even though it is as embeddable",
-							embeddableClass.getName()
-					)
-			);
-		}
-
-
+		checkIndexed( embeddableClass, embeddableClassInfo );
+		checkEmbeddableAnnotation( embeddableClass, embeddableClassInfo );
 
 		List<ClassInfo> classInfoList = new ArrayList<ClassInfo>();
 		Class<?> clazz = embeddableClass;
@@ -104,6 +87,28 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 				context,
 				accessType
 		);
+	}
+
+	private static void checkEmbeddableAnnotation(Class<?> embeddableClass, ClassInfo embeddableClassInfo) {
+		if ( JandexHelper.getSingleAnnotation( embeddableClassInfo, JPADotNames.EMBEDDABLE ) == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"The specified class %s is not annotated with @Embeddable even though it is as embeddable",
+							embeddableClass.getName()
+					)
+			);
+		}
+	}
+
+	private static void checkIndexed(Class<?> embeddableClass, ClassInfo embeddableClassInfo) {
+		if ( embeddableClassInfo == null ) {
+			throw new AssertionFailure(
+					String.format(
+							"The specified class %s cannot be found in the annotation index",
+							embeddableClass.getName()
+					)
+			);
+		}
 	}
 
 	@SuppressWarnings("unchecked")

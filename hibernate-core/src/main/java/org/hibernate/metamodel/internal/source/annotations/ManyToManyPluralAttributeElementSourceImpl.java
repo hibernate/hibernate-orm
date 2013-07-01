@@ -53,7 +53,7 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
-public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPluralAttributeElementSource {
+public class ManyToManyPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements ManyToManyPluralAttributeElementSource {
 
 	private final AttributeSource ownerAttributeSource;
 	private final PluralAssociationAttribute associationAttribute;
@@ -67,14 +67,15 @@ public class ManyToManyPluralAttributeElementSourceImpl implements ManyToManyPlu
 	public ManyToManyPluralAttributeElementSourceImpl(
 			AttributeSource ownerAttributeSource,
 			PluralAssociationAttribute associationAttribute,
-			boolean isUnique) {
+			boolean isUnique,
+			String relativePath) {
+		super(associationAttribute, relativePath);
 		this.ownerAttributeSource = ownerAttributeSource;
 		this.associationAttribute = associationAttribute;
 		this.isUnique = isUnique;
 
 		for ( Column column : associationAttribute.getInverseJoinColumnValues() ) {
-			relationalValueSources.add( new ColumnSourceImpl( 
-					associationAttribute, null, column ) );
+			relationalValueSources.add( new ColumnSourceImpl( column ) );
 			if ( column.getReferencedColumnName() != null ) {
 				referencedColumnNames.add( column.getReferencedColumnName() );
 			}

@@ -61,8 +61,9 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 
 	public IndexedPluralAttributeSourceImpl(
 			final PluralAssociationAttribute attribute,
-			ConfiguredClass entityClass ) {
-		super( attribute, entityClass );
+			final ConfiguredClass entityClass,
+			final String relativePath) {
+		super( attribute, entityClass, relativePath );
 		if ( !VALID_NATURES.contains( attribute.getNature() ) ) {
 			throw new MappingException(
 					"Indexed column could be only mapped on the MANY side",
@@ -70,10 +71,10 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 			);
 		}
 		
-		if ( attribute.getPluralAttributeNature().equals(PluralAttributeSource.Nature.ARRAY )
+		if ( attribute.getPluralAttributeNature() == PluralAttributeSource.Nature.ARRAY
 				&& !attribute.annotations().containsKey( JPADotNames.ORDER_COLUMN ) 
 				&& !attribute.annotations().containsKey( HibernateDotNames.INDEX_COLUMN ) ) {
-			throw new AnnotationException( "The array attribute '" + attribute.getName()
+			throw new AnnotationException( "The array attribute '" + attribute.getRole()
 					+ "' must be annotated with @OrderColumn or @IndexColumn!" );
 		}
 		

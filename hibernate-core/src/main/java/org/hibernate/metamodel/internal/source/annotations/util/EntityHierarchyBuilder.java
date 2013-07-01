@@ -41,19 +41,24 @@ import org.jboss.jandex.MethodInfo;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.MappingException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.EntityHierarchyImpl;
 import org.hibernate.metamodel.internal.source.annotations.JoinedSubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.RootEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.SubclassEntitySourceImpl;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 
 /**
@@ -77,18 +82,18 @@ public class EntityHierarchyBuilder {
 	 */
 	public static Set<EntityHierarchy> createEntityHierarchies(AnnotationBindingContext bindingContext) {
 		Set<EntityHierarchy> hierarchies = new HashSet<EntityHierarchy>();
-
-		List<DotName> processedEntities = new ArrayList<DotName>();
+		Map<DotName,DotName> processedEntities = new HashMap<DotName, DotName>(  );
 		Map<DotName, List<ClassInfo>> classToDirectSubClassMap = new HashMap<DotName, List<ClassInfo>>();
 		IndexView index = bindingContext.getIndex();
 		for ( ClassInfo classInfo : index.getKnownClasses() ) {
+			if ( processedEntities.containsKey( classInfo.name() ) ) {
+				continue;
+			}
 			if ( !isEntityClass( classInfo ) ) {
 				continue;
 			}
 
-			if ( processedEntities.contains( classInfo.name() ) ) {
-				continue;
-			}
+
 			ClassInfo rootClassInfo = findRootEntityClassInfo( index, classInfo, bindingContext );
 			List<ClassInfo> rootClassWithAllSubclasses = new ArrayList<ClassInfo>();
 
@@ -134,18 +139,18 @@ public class EntityHierarchyBuilder {
 					rootSource
 			);
 
-
 			hierarchies.add( new EntityHierarchyImpl( rootSource, hierarchyInheritanceType ) );
 		}
 		return hierarchies;
 	}
 
-	private static void addSubclassEntitySources(AnnotationBindingContext bindingContext,
-												 Map<DotName, List<ClassInfo>> classToDirectSubClassMap,
-												 AccessType defaultAccessType,
-												 InheritanceType hierarchyInheritanceType,
-												 EntityClass entityClass,
-												 EntitySource entitySource) {
+	private static void addSubclassEntitySources(
+			AnnotationBindingContext bindingContext,
+			Map<DotName, List<ClassInfo>> classToDirectSubClassMap,
+			AccessType defaultAccessType,
+			InheritanceType hierarchyInheritanceType,
+			EntityClass entityClass,
+			EntitySource entitySource) {
 		List<ClassInfo> subClassInfoList = classToDirectSubClassMap.get( DotName.createSimple( entitySource.getClassName() ) );
 		if ( subClassInfoList == null ) {
 			return;
@@ -215,10 +220,9 @@ public class EntityHierarchyBuilder {
 	private static List<ClassInfo> findMappedSuperclasses(IndexView index, ClassInfo info) {
 		List<ClassInfo> mappedSuperclasses = new ArrayList<ClassInfo>(  );
 		DotName superName = info.superName();
-		ClassInfo tmpInfo;
 		// walk up the hierarchy until java.lang.Object
 		while ( !JandexHelper.OBJECT.equals( superName ) ) {
-			tmpInfo = index.getClassByName( superName );
+			ClassInfo tmpInfo = index.getClassByName( superName );
 			if ( isMappedSuperclass( tmpInfo ) ) {
 				mappedSuperclasses.add( tmpInfo );
 			}
@@ -244,9 +248,9 @@ public class EntityHierarchyBuilder {
 	private static void processHierarchy(AnnotationBindingContext bindingContext,
 										 ClassInfo classInfo,
 										 List<ClassInfo> rootClassWithAllSubclasses,
-										 List<DotName> processedEntities,
+										 Map<DotName,DotName> processedEntities,
 										 Map<DotName, List<ClassInfo>> classToDirectSubclassMap) {
-		processedEntities.add( classInfo.name() );
+		processedEntities.put( classInfo.name(), classInfo.name() );
 		rootClassWithAllSubclasses.add( classInfo );
 		Collection<ClassInfo> subClasses = bindingContext.getIndex().getKnownDirectSubclasses( classInfo.name() );
 
@@ -258,12 +262,7 @@ public class EntityHierarchyBuilder {
 
 		for ( ClassInfo subClassInfo : subClasses ) {
 			if ( !isEntityClass( subClassInfo ) ) {
-				if ( JandexHelper.containsSingleAnnotation( subClassInfo, JPADotNames.EMBEDDABLE ) ) {
-					throw new AnnotationException( "An embeddable cannot extend an entity: " + subClassInfo );
-				}
-				if ( JandexHelper.containsSingleAnnotation( subClassInfo, JPADotNames.MAPPED_SUPERCLASS ) ) {
-					throw new AnnotationException( "A mapped superclass cannot extend an entity: " + subClassInfo );
-				}
+				MappingAssertion.assertSubEntityIsNotEmbeddableNorMappedSuperclass( subClassInfo );
 				continue;
 			}
 			addSubClassToSubclassMap( classInfo.name(), subClassInfo, classToDirectSubclassMap );
@@ -311,12 +310,19 @@ public class EntityHierarchyBuilder {
 				info, JPADotNames.MAPPED_SUPERCLASS
 		);
 		String className = info.toString();
-		assertNotEntityAndMappedSuperClass( jpaEntityAnnotation, mappedSuperClassAnnotation, className );
+		MappingAssertion.assertNotEntityAndMappedSuperClass(
+				jpaEntityAnnotation,
+				mappedSuperClassAnnotation,
+				className
+		);
 
 		AnnotationInstance embeddableAnnotation = JandexHelper.getSingleAnnotation(
 				info, JPADotNames.EMBEDDABLE
 		);
-		assertNotEntityAndEmbeddable( jpaEntityAnnotation, embeddableAnnotation, className );
+		MappingAssertion.assertNotEntityAndEmbeddable(
+				jpaEntityAnnotation,
+				embeddableAnnotation,
+				className );
 
 		return true;
 	}
@@ -339,22 +345,6 @@ public class EntityHierarchyBuilder {
 				JPADotNames.MAPPED_SUPERCLASS
 		);
 		return mappedSuperclassAnnotation != null;
-	}
-
-	private static void assertNotEntityAndMappedSuperClass(AnnotationInstance jpaEntityAnnotation, AnnotationInstance mappedSuperClassAnnotation, String className) {
-		if ( jpaEntityAnnotation != null && mappedSuperClassAnnotation != null ) {
-			throw new AnnotationException(
-					"An entity cannot be annotated with both @Entity and @MappedSuperclass. " + className + " has both annotations."
-			);
-		}
-	}
-
-	private static void assertNotEntityAndEmbeddable(AnnotationInstance jpaEntityAnnotation, AnnotationInstance embeddableAnnotation, String className) {
-		if ( jpaEntityAnnotation != null && embeddableAnnotation != null ) {
-			throw new AnnotationException(
-					"An entity cannot be annotated with both @Entity and @Embeddable. " + className + " has both annotations."
-			);
-		}
 	}
 
 	/**

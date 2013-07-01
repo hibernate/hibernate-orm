@@ -25,7 +25,9 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.AccessType;
 import javax.persistence.DiscriminatorType;
 
@@ -35,12 +37,14 @@ import org.jboss.jandex.DotName;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
@@ -64,7 +68,7 @@ public class RootEntityClass extends EntityClass {
 	);
 
 	private final IdType idType;
-	private final List<MappedSuperclass> mappedSuperclasses;
+	private final List<MappedSuperclass> mappedSuperclasses= new ArrayList<MappedSuperclass>();
 
 	// discriminator related fields
 	private Column discriminatorColumnValues;
@@ -94,7 +98,20 @@ public class RootEntityClass extends EntityClass {
 			boolean hasSubclasses,
 			AnnotationBindingContext context) {
 		super( classInfo, null, hierarchyAccessType, inheritanceType, context );
-		this.mappedSuperclasses = new ArrayList<MappedSuperclass>();
+		resolveMappedSuperClass( mappedSuperclasses, hierarchyAccessType, context );
+
+		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
+			processDiscriminator();
+			this.needsDiscriminatorColumn = hasSubclasses || isDiscriminatorForced;
+		}
+
+		this.idType = determineIdType();
+	}
+
+	private void resolveMappedSuperClass(
+			final List<ClassInfo> mappedSuperclasses,
+			final AccessType hierarchyAccessType,
+			final AnnotationBindingContext context) {
 		for ( ClassInfo mappedSuperclassInfo : mappedSuperclasses ) {
 			MappedSuperclass configuredClass = new MappedSuperclass(
 					mappedSuperclassInfo,
@@ -104,13 +121,6 @@ public class RootEntityClass extends EntityClass {
 			);
 			this.mappedSuperclasses.add( configuredClass );
 		}
-
-		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			processDiscriminator();
-			this.needsDiscriminatorColumn = hasSubclasses || isDiscriminatorForced;
-		}
-
-		this.idType = determineIdType();
 	}
 
 	public boolean needsDiscriminatorColumn() {
@@ -153,46 +163,110 @@ public class RootEntityClass extends EntityClass {
 		return null;
 	}
 
+	private final ValueHolder<Map<String, BasicAttribute>> simpleAttributes = new ValueHolder<Map<String, BasicAttribute>>(
+			new ValueHolder.DeferredInitializer<Map<String, BasicAttribute>>() {
+				@Override
+				public Map<String, BasicAttribute> initialize() {
+					final Map<String, BasicAttribute> map = new HashMap<String, BasicAttribute>();
+					for ( MappedSuperclass mappedSuperclass : getMappedSuperclasses() ) {
+						map.putAll( mappedSuperclass.getSimpleAttributes() );
+					}
+					map.putAll( RootEntityClass.super.getSimpleAttributes() );
+					return map;
+				}
+			}
+	);
+
 	@Override
-	public Collection<BasicAttribute> getSimpleAttributes() {
-		List<BasicAttribute> attributes = new ArrayList<BasicAttribute>();
+	public Map<String,BasicAttribute> getSimpleAttributes() {
+		return simpleAttributes.getValue();
+	}
 
-		// add the attributes defined on this entity directly
-		attributes.addAll( super.getSimpleAttributes() );
+	private final ValueHolder<Map<String, AssociationAttribute>> associationAttributes = new ValueHolder<Map<String, AssociationAttribute>>(
+			new ValueHolder.DeferredInitializer<Map<String, AssociationAttribute>>() {
+				@Override
+				public Map<String, AssociationAttribute> initialize() {
+					Map<String, AssociationAttribute> map = new HashMap<String, AssociationAttribute>();
+					for ( MappedSuperclass mappedSuperclass : getMappedSuperclasses() ) {
+						map.putAll( mappedSuperclass.getAssociationAttributes() );
+					}
+					map.putAll( RootEntityClass.super.getAssociationAttributes() );
+					return map;
+				}
+			}
+	);
 
-		// now the attributes of the mapped superclasses
-		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
-			attributes.addAll( mappedSuperclass.getSimpleAttributes() );
-		}
+	@Override
+	public Map<String, AssociationAttribute> getAssociationAttributes() {
+		return associationAttributes.getValue();
+	}
 
-		return attributes;
+	private final ValueHolder<Map<String, AttributeOverride>> attributeOverrideMap = new ValueHolder<Map<String, AttributeOverride>>(
+			new ValueHolder.DeferredInitializer<Map<String, AttributeOverride>>() {
+				@Override
+				public Map<String, AttributeOverride> initialize() {
+					if ( CollectionHelper.isEmpty( getMappedSuperclasses() ) ) {
+						return RootEntityClass.super.getAttributeOverrideMap();
+					}
+					Map<String, AttributeOverride> map = new HashMap<String, AttributeOverride>();
+					for ( MappedSuperclass mappedSuperclass : getMappedSuperclasses() ) {
+						map.putAll( mappedSuperclass.getAttributeOverrideMap() );
+					}
+					map.putAll( RootEntityClass.super.getAttributeOverrideMap() );
+					return map;
+				}
+			}
+	);
+
+	private final ValueHolder<Map<String, AssociationOverride>> associationOverrideMap = new ValueHolder<Map<String, AssociationOverride>>(
+			new ValueHolder.DeferredInitializer<Map<String, AssociationOverride>>() {
+				@Override
+				public Map<String, AssociationOverride> initialize() {
+					if ( CollectionHelper.isEmpty( getMappedSuperclasses() ) ) {
+						return RootEntityClass.super.getAssociationOverrideMap();
+					}
+					Map<String, AssociationOverride> map = new HashMap<String, AssociationOverride>();
+					for ( MappedSuperclass mappedSuperclass : getMappedSuperclasses() ) {
+						map.putAll( mappedSuperclass.getAssociationOverrideMap() );
+					}
+					map.putAll( RootEntityClass.super.getAssociationOverrideMap() );
+					return map;
+				}
+			}
+	);
+
+
+	@Override
+	public Map<String, AssociationOverride> getAssociationOverrideMap() {
+		return associationOverrideMap.getValue();
 	}
 
 	@Override
-	public Iterable<AssociationAttribute> getAssociationAttributes() {
-		List<Iterable<AssociationAttribute>> list = new ArrayList<Iterable<AssociationAttribute>>(  );
-		list.add( super.getAssociationAttributes() );
-
-		// now the attributes of the mapped superclasses
-		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
-			list.add( mappedSuperclass.getAssociationAttributes() );
-		}
-
-		return new JoinedIterable<AssociationAttribute>( list );
+	public Map<String, AttributeOverride> getAttributeOverrideMap() {
+		return attributeOverrideMap.getValue();
 	}
 
-	public Collection<MappedAttribute> getIdAttributes() {
-		List<MappedAttribute> attributes = new ArrayList<MappedAttribute>();
+	private final ValueHolder<Map<String,MappedAttribute>> idAttributes = new ValueHolder<Map<String,MappedAttribute>>(
+			new ValueHolder.DeferredInitializer<Map<String,MappedAttribute>>() {
+				@Override
+				public Map<String,MappedAttribute> initialize() {
+					Map<String,MappedAttribute> attributes = new HashMap<String, MappedAttribute>();
 
-		// get all id attributes defined on this entity
-		attributes.addAll( super.getIdAttributes() );
+					// get all id attributes defined on this entity
+					attributes.putAll( RootEntityClass.super.getIdAttributes() );
 
-		// now mapped super classes
-		for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
-			attributes.addAll( mappedSuperclass.getIdAttributes() );
-		}
+					// now mapped super classes
+					for ( MappedSuperclass mappedSuperclass : mappedSuperclasses ) {
+						attributes.putAll( mappedSuperclass.getIdAttributes() );
+					}
 
-		return attributes;
+					return attributes;
+				}
+			}
+	);
+
+	public Map<String,MappedAttribute> getIdAttributes() {
+		return idAttributes.getValue();
 	}
 	
 	public AnnotationInstance getIdClassAnnotation() {
@@ -205,7 +279,7 @@ public class RootEntityClass extends EntityClass {
 	}
 
 	private IdType determineIdType() {
-		Collection<MappedAttribute> idAttributes = getIdAttributes();
+		Collection<MappedAttribute> idAttributes = getIdAttributes().values();
 		int size = idAttributes.size();
 		switch ( size ){
 			case 0:

@@ -3112,7 +3112,7 @@ public class Binder {
 				new ColumnNamingStrategyHelper( defaultName, isDefaultAttributeName )
 		);
 		final Column column = table.locateOrCreateColumn( resolvedColumnName );
-		resolveColumnNullable( columnSource, forceNotNull, isNullableByDefault, column );
+		resolveColumnNullable( table, columnSource, forceNotNull, isNullableByDefault, column );
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );
 		if ( columnSource.getSizeSource() != null ) {
@@ -3144,6 +3144,7 @@ public class Binder {
 	}
 
 	private void resolveColumnNullable(
+			final TableSpecification table,
 			final ColumnSource columnSource,
 			final boolean forceNotNull,
 			final boolean isNullableByDefault,
@@ -3151,11 +3152,10 @@ public class Binder {
 		if ( forceNotNull ) {
 			column.setNullable( false );
 			if ( columnSource.isNullable() == TruthValue.TRUE ) {
-				log.warn(
-						String.format(
-								"Natural Id column[%s] has explicit set to allow nullable, we have to make it force not null ",
-								columnSource.getName()
-						)
+				log.warnf(
+						"Natural Id column[%s] from table[%s] has explicit set to allow nullable, we have to make it force not null ",
+						columnSource.getName(),
+						table.getLogicalName().getText()
 				);
 			}
 		}

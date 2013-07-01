@@ -52,7 +52,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 		if ( CollectionHelper.isNotEmpty( entityClass.getJoinedSubclassPrimaryKeyJoinColumnSources() ) ) {
 			for ( PrimaryKeyJoinColumn primaryKeyJoinColumnSource : entityClass.getJoinedSubclassPrimaryKeyJoinColumnSources() ) {
 				columnSources.add(
-						new ColumnValuesSourceImpl( primaryKeyJoinColumnSource )
+						new ColumnSourceImpl( primaryKeyJoinColumnSource )
 				);
 				targetColumnNames.add( primaryKeyJoinColumnSource.getReferencedColumnName() );
 				if ( primaryKeyJoinColumnSource.getReferencedColumnName() != null ) {

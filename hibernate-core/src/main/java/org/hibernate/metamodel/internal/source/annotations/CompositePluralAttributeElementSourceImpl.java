@@ -22,15 +22,16 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
-import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.binding.CascadeType;
@@ -38,31 +39,56 @@ import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.CompositePluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
 /**
  * @author Brett Meyer
  */
-public class CompositePluralAttributeElementSourceImpl implements CompositePluralAttributeElementSource {
-
-	private static final String PATH_SEPARATOR = ".";
-	
+public class CompositePluralAttributeElementSourceImpl implements CompositePluralAttributeElementSource,AnnotationAttributeSource {
 	private final AssociationAttribute associationAttribute;
 	private final ConfiguredClass entityClass;
 	
-	private List<AttributeSource> attributeSources
-			= new ArrayList<AttributeSource>();
-	
-	private String parentReferenceAttributeName;
+//	private final List<AttributeSource> attributeSources
+//			= new ArrayList<AttributeSource>();
+//
+	private final String parentReferenceAttributeName;
+	private final EmbeddableClass embeddableClass;
+
+	private final String overridePath;
+
+	private Map<String, AttributeOverride> attributeOverrideMap;
+	private Map<String, AssociationOverride> associationOverrideMap;
 	
 	public CompositePluralAttributeElementSourceImpl(
-			AssociationAttribute associationAttribute,
-			ConfiguredClass rootEntityClass ) {
+			final PluralAssociationAttribute associationAttribute,
+			final ConfiguredClass rootEntityClass,
+			final String parentPath) {
 		this.associationAttribute = associationAttribute;
 		this.entityClass = rootEntityClass;
-		
-		buildAttributeSources();
+		this.embeddableClass = entityClass
+				.getCollectionEmbeddedClasses()
+				.get( associationAttribute.getName() );
+
+		this.parentReferenceAttributeName = embeddableClass.getParentReferencingAttributeName();
+		if ( associationAttribute.getPluralAttributeNature() == PluralAttributeSource.Nature.MAP ) {
+			this.overridePath = parentPath + ".value";
+		}
+		else {
+			this.overridePath = parentPath + ".element";
+
+		}
 	}
-	
+
+	@Override
+	public void applyAssociationOverride(Map<String, AssociationOverride> associationOverrideMap) {
+		this.associationOverrideMap = associationOverrideMap;
+	}
+
+	@Override
+	public void applyAttributeOverride(Map<String, AttributeOverride> attributeOverrideMap) {
+		this.attributeOverrideMap  = attributeOverrideMap;
+	}
+
 	@Override
 	public Nature getNature() {
 		return Nature.AGGREGATE;
@@ -76,7 +102,7 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 
 	@Override
 	public List<AttributeSource> attributeSources() {
-		return attributeSources;
+		return SourceHelper.resolveAttributes( embeddableClass, overridePath, attributeOverrideMap, associationOverrideMap ).getValue();
 	}
 
 	@Override
@@ -122,56 +148,25 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 		return null;
 	}
 	
-	private void buildAttributeSources() {
-		EmbeddableClass embeddableClass = entityClass
-				.getCollectionEmbeddedClasses()
-				.get( associationAttribute.getName() );
-		
-		parentReferenceAttributeName = embeddableClass.getParentReferencingAttributeName();
-		
-		// TODO: Duplicates code in ComponentAttributeSourceImpl.
-		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
-			AttributeOverride attributeOverride = null;
-			String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
-			if ( entityClass.getAttributeOverrideMap().containsKey( tmp ) ) {
-				attributeOverride = entityClass.getAttributeOverrideMap().get( tmp );
-			}
-			attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-			attributeSources.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
-		}
-		for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
-			embeddable.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-			attributeSources.add(
-					new ComponentAttributeSourceImpl(
-							embeddable,
-							getPath(),
-							createAggregatedOverrideMap( embeddableClass, entityClass.getAttributeOverrideMap() ),
-							embeddableClass.getClassAccessType()
-					)
-			);
-		}
-		for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
-			associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-		}
-		SourceHelper.resolveAssociationAttributes( embeddableClass, attributeSources );
-	}
-
-	private Map<String, AttributeOverride> createAggregatedOverrideMap(
-			EmbeddableClass embeddableClass,
-			Map<String, AttributeOverride> attributeOverrides) {
-		// add all overrides passed down to this instance - they override overrides ;-) which are defined further down
-		// the embeddable chain
-		Map<String, AttributeOverride> aggregatedOverrideMap = new HashMap<String, AttributeOverride>(
-				attributeOverrides
-		);
-
-		for ( Map.Entry<String, AttributeOverride> entry : embeddableClass.getAttributeOverrideMap().entrySet() ) {
-			String fullPath = getPath() + PATH_SEPARATOR + entry.getKey();
-			if ( !aggregatedOverrideMap.containsKey( fullPath ) ) {
-				aggregatedOverrideMap.put( fullPath, entry.getValue() );
-			}
-		}
-		return aggregatedOverrideMap;
-	}
-
+//	private void buildAttributeSources() {
+//		// TODO: Duplicates code in ComponentAttributeSourceImpl.
+//		for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes().values() ) {
+//			attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
+//			attributeSources.add( new SingularAttributeSourceImpl( attribute ) );
+//		}
+//		for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
+//			embeddable.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
+//			attributeSources.add(
+//					new ComponentAttributeSourceImpl(
+//							embeddable,
+//							getPath(),
+//							embeddableClass.getClassAccessType()
+//					)
+//			);
+//		}
+//		for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes().values() ) {
+//			associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
+//		}
+//		SourceHelper.resolveAssociationAttributes( embeddableClass, attributeSources );
+//	}
 }

@@ -54,7 +54,7 @@ public class MutliTenancySourceImpl implements MultiTenancySource  {
 			column.setPrecision( JandexHelper.getValue( columnAnnotation, "precision", int.class ) );
 			column.setScale( JandexHelper.getValue( columnAnnotation, "scale", int.class ) );
 			// todo : type
-			relationalValueSource = new ColumnValuesSourceImpl( column );
+			relationalValueSource = new ColumnSourceImpl( column );
 		}
 		else {
 			final AnnotationInstance formulaAnnotation = JandexHelper.getSingleAnnotation(

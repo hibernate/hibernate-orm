@@ -33,20 +33,24 @@ import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 
 import org.hibernate.cfg.NamingStrategy;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainer;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdGenerator;
 import org.hibernate.metamodel.spi.domain.Type;
+import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
@@ -69,39 +73,34 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 		this.origin = new Origin( SourceType.ANNOTATION, source.getName() );
 		this.localIdentifierGeneratorDefinitionMap = processLocalIdentifierGeneratorDefinitions( source.getClassInfo() );
 	}
-
 	private Map<String,IdGenerator> processLocalIdentifierGeneratorDefinitions(final ClassInfo classInfo) {
 		Iterable<IdentifierGeneratorSource> identifierGeneratorSources = extractIdentifierGeneratorSources(
 				new IdentifierGeneratorSourceContainer() {
-					@Override
-					public List<AnnotationInstance> getSequenceGeneratorSources() {
-						List<AnnotationInstance> generatorSources = classInfo.annotations().get( JPADotNames.SEQUENCE_GENERATOR );
+
+					private List<AnnotationInstance> resolveOrEmpty(DotName name){
+						List<AnnotationInstance> generatorSources = classInfo.annotations().get( name );
 						return generatorSources == null ? Collections.<AnnotationInstance>emptyList() : generatorSources;
 					}
 
 					@Override
+					public List<AnnotationInstance> getSequenceGeneratorSources() {
+						return resolveOrEmpty( JPADotNames.SEQUENCE_GENERATOR );
+					}
+
+					@Override
 					public List<AnnotationInstance> getTableGeneratorSources() {
-						List<AnnotationInstance> generatorSources = classInfo.annotations().get( JPADotNames.TABLE_GENERATOR );
-						return generatorSources == null ? Collections.<AnnotationInstance>emptyList() : generatorSources;
+						return resolveOrEmpty( JPADotNames.TABLE_GENERATOR );
 					}
 
 					@Override
 					public List<AnnotationInstance> getGenericGeneratorSources() {
 						List<AnnotationInstance> annotations = new ArrayList<AnnotationInstance>();
-
-						List<AnnotationInstance> generatorAnnotations = classInfo.annotations().get( HibernateDotNames.GENERIC_GENERATOR );
-						if ( generatorAnnotations != null ) {
-							annotations.addAll( generatorAnnotations );
-						}
-
-						List<AnnotationInstance> generatorsAnnotations = classInfo.annotations().get( HibernateDotNames.GENERIC_GENERATORS );
-						if ( generatorsAnnotations != null ) {
-							for ( AnnotationInstance generatorsAnnotation : generatorsAnnotations ) {
-								Collections.addAll(
-										annotations,
-										JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )
-								);
-							}
+						annotations.addAll( resolveOrEmpty( HibernateDotNames.GENERIC_GENERATOR ) );
+						for ( AnnotationInstance generatorsAnnotation : resolveOrEmpty( HibernateDotNames.GENERIC_GENERATORS ) ) {
+							Collections.addAll(
+									annotations,
+									JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )
+							);
 						}
 						return annotations;
 					}

@@ -93,8 +93,8 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 			return Collections.emptyList();
 		}
 		List<RelationalValueSource> result = new ArrayList<RelationalValueSource>( joinClumnValues.size() );
-		for ( Column joinColumn : attribute.getJoinColumnValues() ) {
-			result.add( new ColumnSourceImpl( attribute, null, joinColumn ) );
+		for ( Column joinColumn : joinClumnValues ) {
+			result.add( new ColumnSourceImpl( joinColumn ) );
 		}
 		return result;
 	}

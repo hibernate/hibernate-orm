@@ -2,22 +2,38 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttributeElementSource {
+public class BasicPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements BasicPluralAttributeElementSource {
 	private final PluralAssociationAttribute associationAttribute;
+	private final ConfiguredClass entityClass;
+	private final Nature nature;
 
-	public BasicPluralAttributeElementSourceImpl(PluralAssociationAttribute associationAttribute) {
+
+
+	public BasicPluralAttributeElementSourceImpl(
+			final PluralAssociationAttribute associationAttribute,
+			final ConfiguredClass entityClass,
+			final String relativePath) {
+		super(associationAttribute, relativePath);
 		this.associationAttribute = associationAttribute;
+		this.entityClass = entityClass;
+		this.nature = resolveNature( associationAttribute );
 	}
 
 	@Override
@@ -27,25 +43,32 @@ public class BasicPluralAttributeElementSourceImpl implements BasicPluralAttribu
 
 	@Override
 	public Nature getNature() {
-		if ( MappedAttribute.Nature.ELEMENT_COLLECTION_BASIC.equals( associationAttribute.getNature() ) ) {
-			return Nature.BASIC;
-		}
-		else if ( MappedAttribute.Nature.ELEMENT_COLLECTION_EMBEDDABLE.equals( associationAttribute.getNature() ) ) {
-			return Nature.AGGREGATE;
-		}
-		else {
-			throw new AssertionError(
-					"Wrong attribute nature for a element collection attribute: " + associationAttribute.getNature()
-			);
+		return nature;
+	}
+
+	private static Nature resolveNature(PluralAssociationAttribute attribute){
+		switch ( attribute.getNature() ){
+			case ELEMENT_COLLECTION_BASIC:
+				return Nature.BASIC;
+			case ELEMENT_COLLECTION_EMBEDDABLE:
+				return Nature.AGGREGATE;
+			default:
+				throw new AssertionError(
+						"Wrong attribute nature for a element collection attribute: " + attribute.getNature()
+				);
+
 		}
 	}
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
 		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>();
+		if(attributeOverride!=null){
+			attributeOverride.apply( associationAttribute );
+		}
 		if ( !associationAttribute.getColumnValues().isEmpty() ) {
 			for ( Column columnValues : associationAttribute.getColumnValues() ) {
-				valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
+				valueSources.add( new ColumnSourceImpl( columnValues ) );
 			}
 		}
 		return valueSources;

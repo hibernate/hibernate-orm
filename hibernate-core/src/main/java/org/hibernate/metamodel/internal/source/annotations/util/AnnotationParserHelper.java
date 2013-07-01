@@ -23,14 +23,26 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.util;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+
+import com.fasterxml.classmate.members.ResolvedMember;
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
@@ -79,6 +91,26 @@ public class AnnotationParserHelper {
 		return new CustomSQL( sql, isCallable, checkStyle );
 	}
 
+	public static String determineCustomTuplizer(Map<DotName, List<AnnotationInstance>> annotations, AnnotationTarget target){
+		//tuplizer on field
+		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
+				annotations, HibernateDotNames.TUPLIZERS, target
+		);
+		final AnnotationInstance tuplizerAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.TUPLIZER,
+				target
+		);
+		return determineCustomTuplizer(
+				tuplizersAnnotation,
+				tuplizerAnnotation
+		);
+	}
+
+	public static String determineCustomTuplizer(Map<DotName, List<AnnotationInstance>> annotations){
+		return determineCustomTuplizer( annotations, null );
+	}
+
 	public static String determineCustomTuplizer(
 			final AnnotationInstance tuplizersAnnotation,
 			final AnnotationInstance tuplizerAnnotation) {
@@ -116,6 +148,87 @@ public class AnnotationParserHelper {
 			mode = EntityMode.POJO;
 		}
 		return mode == EntityMode.POJO ? tuplizerAnnotation.value( "impl" ).asString() : null;
+	}
+
+	public static Class<?> resolveCollectionElementType(
+			ResolvedMember resolvedMember, Map<DotName,
+			List<AnnotationInstance>> annotations,
+			EntityBindingContext context) {
+		final AnnotationInstance annotation;
+		final String targetElementName;
+		if ( JandexHelper.containsSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY ) ) {
+			annotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ONE_TO_MANY );
+			targetElementName = "targetEntity";
+		}
+		else if ( JandexHelper.containsSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY ) ) {
+			annotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.MANY_TO_MANY );
+			targetElementName = "targetEntity";
+		}
+		else if ( JandexHelper.containsSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION ) ) {
+			annotation = JandexHelper.getSingleAnnotation( annotations, JPADotNames.ELEMENT_COLLECTION );
+			targetElementName = "targetClass";
+		}
+		else {
+			annotation = null;
+			targetElementName = null;
+		}
+		if ( annotation != null && annotation.value( targetElementName ) != null ) {
+			return context.locateClassByName(
+					JandexHelper.getValue( annotation, targetElementName, String.class )
+			);
+		}
+		if ( resolvedMember.getType().isArray() ) {
+			return resolvedMember.getType().getArrayElementType().getErasedType();
+		}
+		if ( resolvedMember.getType().getTypeParameters().isEmpty() ) {
+			return null; // no generic at all
+		}
+		Class<?> type = resolvedMember.getType().getErasedType();
+		if ( Collection.class.isAssignableFrom( type ) ) {
+			return resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();
+		}
+		else if ( Map.class.isAssignableFrom( type ) ) {
+			return resolvedMember.getType().getTypeParameters().get( 1 ).getErasedType();
+		}
+		else {
+			return null;
+		}
+	}
+
+	public static SingularAttributeBinding.NaturalIdMutability checkNaturalId(Map<DotName, List<AnnotationInstance>> annotations) {
+		final AnnotationInstance naturalIdAnnotation = JandexHelper.getSingleAnnotation(
+				annotations,
+				HibernateDotNames.NATURAL_ID
+		);
+		if ( naturalIdAnnotation == null ) {
+			return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
+		}
+		final boolean mutable = naturalIdAnnotation.value( "mutable" ) != null && naturalIdAnnotation.value( "mutable" )
+				.asBoolean();
+		return mutable ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
+	}
+
+	public static boolean isPersistentMember(Set<String> transientNames, Set<String> explicitlyConfiguredMemberNames, Member member) {
+		if ( !ReflectHelper.isProperty( member ) ) {
+			return false;
+		}
+
+		if ( member instanceof Field && Modifier.isStatic( member.getModifiers() ) ) {
+			// static fields are no instance variables! Catches also the case of serialVersionUID
+			return false;
+		}
+
+		if ( member instanceof Method && Method.class.cast( member ).getReturnType().equals( void.class ) ){
+			// not a getter
+			return false;
+		}
+
+		if ( transientNames.contains( member.getName() ) ) {
+			return false;
+		}
+
+		return !explicitlyConfiguredMemberNames.contains( ReflectHelper.getPropertyName( member ) );
+
 	}
 }
 

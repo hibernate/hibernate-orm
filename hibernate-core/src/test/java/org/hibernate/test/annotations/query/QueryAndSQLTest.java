@@ -59,6 +59,7 @@ import org.junit.Test;
  *
  * @author Emmanuel Bernard
  */
+@FailureExpectedWithNewMetamodel(message = "due to derived ids are not supported")
 public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {

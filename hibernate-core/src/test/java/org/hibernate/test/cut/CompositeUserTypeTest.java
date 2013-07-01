@@ -34,7 +34,6 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -44,7 +43,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Gavin King
  */
-//@FailureExpectedWithNewMetamodel
 public class CompositeUserTypeTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

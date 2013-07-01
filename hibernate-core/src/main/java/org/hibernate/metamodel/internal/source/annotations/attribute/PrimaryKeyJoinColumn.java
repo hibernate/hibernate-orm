@@ -37,7 +37,7 @@ public class PrimaryKeyJoinColumn extends Column {
 	}
 
 	@Override
-	protected void applyColumnValues(AnnotationInstance columnAnnotation) {
+	public void applyColumnValues(AnnotationInstance columnAnnotation) {
 		super.applyColumnValues( columnAnnotation );
 		if ( columnAnnotation != null ) {
 			AnnotationValue nameValue = columnAnnotation.value( "referencedColumnName" );

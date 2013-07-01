@@ -34,6 +34,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
@@ -52,23 +53,31 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  * @author Hardy Ferentschik
  * @author Brett Meyer
  */
-public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
-	private static final String PATH_SEPARATOR = ".";
+public class ComponentAttributeSourceImpl implements ComponentAttributeSource, AnnotationAttributeSource {
 	private final EmbeddableClass embeddableClass;
 	private final ValueHolder<Class<?>> classReference;
-	private final Map<String, AttributeOverride> attributeOverrides;
 	private final String path;
 	private final AccessType classAccessType;
-
-	public ComponentAttributeSourceImpl(EmbeddableClass embeddableClass,
-			String parentPath,
-			Map<String, AttributeOverride> attributeOverrides,
-			AccessType classAccessType) {
+	private Map<String, AttributeOverride> attributeOverrideMap;
+	private Map<String, AssociationOverride> associationOverrideMap;
+	public ComponentAttributeSourceImpl(
+			final EmbeddableClass embeddableClass,
+			final String parentPath,
+			final AccessType classAccessType) {
 		this.embeddableClass = embeddableClass;
 		this.classReference = new ValueHolder<Class<?>>( embeddableClass.getConfiguredClass() );
-		this.attributeOverrides = attributeOverrides;
 		this.path = StringHelper.isEmpty( parentPath ) ? embeddableClass.getEmbeddedAttributeName() : parentPath + "." + embeddableClass.getEmbeddedAttributeName();
 		this.classAccessType = classAccessType;
+	}
+
+	@Override
+	public void applyAssociationOverride(Map<String, AssociationOverride> associationOverrideMap) {
+		this.associationOverrideMap = associationOverrideMap;
+	}
+
+	@Override
+	public void applyAttributeOverride(Map<String, AttributeOverride> attributeOverrideMap) {
+		this.attributeOverrideMap = attributeOverrideMap;
 	}
 
 	@Override
@@ -117,43 +126,38 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		return embeddableClass.getLocalBindingContext();
 	}
 
-	private final ValueHolder<List<AttributeSource>> attributeSourcesValue = new ValueHolder<List<AttributeSource>>(
-			new ValueHolder.DeferredInitializer<List<AttributeSource>>() {
-				@Override
-				public List<AttributeSource> initialize() {
-					List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
-					for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes() ) {
-						AttributeOverride attributeOverride = null;
-						String tmp = getPath() + PATH_SEPARATOR + attribute.getName();
-						if ( attributeOverrides.containsKey( tmp ) ) {
-							attributeOverride = attributeOverrides.get( tmp );
-						}
-						attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-						attributeList.add( new SingularAttributeSourceImpl( attribute, attributeOverride ) );
-					}
-					for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
-						embeddable.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-						attributeList.add(
-								new ComponentAttributeSourceImpl(
-										embeddable,
-										getPath(),
-										createAggregatedOverrideMap(),
-										classAccessType
-								)
-						);
-					}
-					for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes() ) {
-						associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
-					}
-					SourceHelper.resolveAssociationAttributes( embeddableClass, attributeList );
-					return Collections.unmodifiableList( attributeList );
-				}
-			}
-	);
+//	private final ValueHolder<List<AttributeSource>> attributeSourcesValue = new ValueHolder<List<AttributeSource>>(
+//			new ValueHolder.DeferredInitializer<List<AttributeSource>>() {
+//				@Override
+//				public List<AttributeSource> initialize() {
+//					List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
+//					for ( BasicAttribute attribute : embeddableClass.getSimpleAttributes().values() ) {
+//						attribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
+//						attributeList.add( new SingularAttributeSourceImpl( attribute ) );
+//					}
+//					for ( EmbeddableClass embeddable : embeddableClass.getEmbeddedClasses().values() ) {
+//						embeddable.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
+//						attributeList.add(
+//								new ComponentAttributeSourceImpl(
+//										embeddable,
+//										getPath(),
+//										classAccessType
+//								)
+//						);
+//					}
+//					for ( AssociationAttribute associationAttribute : embeddableClass.getAssociationAttributes().values() ) {
+//						associationAttribute.setNaturalIdMutability( embeddableClass.getNaturalIdMutability() );
+//					}
+//					SourceHelper.resolveAssociationAttributes( embeddableClass, attributeList );
+//					return Collections.unmodifiableList( attributeList );
+//				}
+//			}
+//	);
 
 	@Override
 	public List<AttributeSource> attributeSources() {
-		return attributeSourcesValue.getValue();
+//		return attributeSourcesValue.getValue();
+		return SourceHelper.resolveAttributes( embeddableClass, getPath(), attributeOverrideMap, associationOverrideMap ).getValue();
 	}
 
 	@Override
@@ -174,7 +178,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 
 	@Override
 	public String getContainingTableName() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		return null;
 	}
 
 	@Override
@@ -233,19 +237,4 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource {
 		return sb.toString();
 	}
 
-	private Map<String, AttributeOverride> createAggregatedOverrideMap() {
-		// add all overrides passed down to this instance - they override overrides ;-) which are defined further down
-		// the embeddable chain
-		Map<String, AttributeOverride> aggregatedOverrideMap = new HashMap<String, AttributeOverride>(
-				attributeOverrides
-		);
-
-		for ( Map.Entry<String, AttributeOverride> entry : embeddableClass.getAttributeOverrideMap().entrySet() ) {
-			String fullPath = getPath() + PATH_SEPARATOR + entry.getKey();
-			if ( !aggregatedOverrideMap.containsKey( fullPath ) ) {
-				aggregatedOverrideMap.put( fullPath, entry.getValue() );
-			}
-		}
-		return aggregatedOverrideMap;
-	}
 }

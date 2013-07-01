@@ -23,37 +23,118 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import org.hibernate.TruthValue;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
+import org.hibernate.metamodel.spi.relational.JdbcDataType;
+import org.hibernate.metamodel.spi.source.ColumnSource;
+import org.hibernate.metamodel.spi.source.SizeSource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class ColumnSourceImpl extends ColumnValuesSourceImpl {
+public class ColumnSourceImpl implements ColumnSource {
+	private final Column columnValues;
 	private final String readFragement;
 	private final String writeFragement;
 	private final String checkCondition;
 
-	ColumnSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride, Column columnValues) {
-		super( columnValues );
-		if ( attributeOverride != null ) {
-			setOverrideColumnValues( attributeOverride.getColumnValues() );
-		}
-		if ( BasicAttribute.class.isInstance( attribute ) ) {
-			BasicAttribute basicAttribute = BasicAttribute.class.cast( attribute );
-			this.readFragement = basicAttribute.getCustomReadFragment();
-			this.writeFragement = basicAttribute.getCustomWriteFragment();
-			this.checkCondition = basicAttribute.getCheckCondition();
-		}
-		else {
-			this.readFragement = null;
-			this.writeFragement = null;
-			this.checkCondition = null;
-		}
-
+	public ColumnSourceImpl(Column columnValues) {
+		this( null, columnValues );
 	}
+
+	public ColumnSourceImpl(MappedAttribute attribute, Column columnValues) {
+		boolean isBasicAttribute = attribute != null && attribute.getNature() == MappedAttribute.Nature.BASIC;
+		this.readFragement = attribute != null && isBasicAttribute ? ( (BasicAttribute) attribute ).getCustomReadFragment() : null;
+		this.writeFragement = attribute != null && isBasicAttribute ? ( (BasicAttribute) attribute ).getCustomWriteFragment() : null;
+		this.checkCondition = attribute != null ? attribute.getCheckCondition() : null;
+		this.columnValues = columnValues;
+	}
+
+	@Override
+	public Nature getNature() {
+		return Nature.COLUMN;
+	}
+
+	@Override
+	public String getName() {
+		return columnValues == null ? null : columnValues.getName();
+	}
+
+	@Override
+	public TruthValue isNullable() {
+		if ( columnValues == null || columnValues.isNullable() == null ) {
+			return null;
+		}
+		return columnValues.isNullable() ? TruthValue.TRUE : TruthValue.FALSE;
+	}
+
+	@Override
+	public String getDefaultValue() {
+		return null;
+	}
+
+	@Override
+	public String getSqlType() {
+		if ( columnValues == null ) {
+			return null;
+		}
+		return columnValues.getColumnDefinition();
+	}
+
+	@Override
+	public JdbcDataType getDatatype() {
+		return null;
+	}
+
+	@Override
+	public SizeSource getSizeSource() {
+		if ( columnValues == null ) {
+			return null;
+		}
+		return new SizeSourceImpl(
+				columnValues.getPrecision(), columnValues.getScale(), columnValues.getLength()
+		);
+	}
+
+	@Override
+	public boolean isUnique() {
+		return columnValues != null && columnValues.isUnique() != null && columnValues.isUnique();
+	}
+
+	@Override
+	public String getComment() {
+		return null;
+	}
+
+	@Override
+	public TruthValue isIncludedInInsert() {
+		if ( columnValues == null || columnValues.isInsertable() == null) {
+			return null;
+		}
+		return columnValues.isInsertable() ? TruthValue.TRUE : TruthValue.FALSE;
+	}
+
+	@Override
+	public TruthValue isIncludedInUpdate() {
+		if ( columnValues == null || columnValues.isUpdatable() == null) {
+			return null;
+		}
+		return columnValues.isUpdatable() ? TruthValue.TRUE : TruthValue.FALSE;
+	}
+
+	@Override
+	public String getContainingTableName() {
+		if ( columnValues == null ) {
+			return null;
+		}
+		return columnValues.getTable();
+	}
+
+
+	// these come from attribute ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public String getReadFragment() {

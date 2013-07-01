@@ -23,14 +23,22 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
+import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
@@ -38,18 +46,72 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
  * @author Strong Liu <stliu@hibernate.org>
  */
 public class SourceHelper {
+
+	public static ValueHolder<List<AttributeSource>> resolveAttributes(
+			final ConfiguredClass configuredClass,
+			final String relativePath,
+			final Map<String, AttributeOverride> attributeOverrideMap,
+			final Map<String, AssociationOverride> associationAttributeMap){
+		return new ValueHolder<List<AttributeSource>>(
+				new ValueHolder.DeferredInitializer<List<AttributeSource>>() {
+					@Override
+					public List<AttributeSource> initialize() {
+						List<AttributeSource> attributeList = new ArrayList<AttributeSource>();
+						for ( BasicAttribute attribute : configuredClass.getSimpleAttributes().values() ) {
+							SingularAttributeSourceImpl source = new SingularAttributeSourceImpl( attribute, relativePath );
+							attributeList.add( source );
+						}
+
+						for ( Map.Entry<String, EmbeddableClass> entry : configuredClass.getEmbeddedClasses()
+								.entrySet() ) {
+							final String attributeName = entry.getKey();
+							if ( !configuredClass.isIdAttribute( attributeName ) ) {
+								final EmbeddableClass component = entry.getValue();
+								ComponentAttributeSourceImpl source = new ComponentAttributeSourceImpl(
+										component,
+										relativePath,
+										configuredClass.getClassAccessType()
+								);
+								attributeList.add( source );
+							}
+						}
+						resolveAssociationAttributes( configuredClass, attributeList, relativePath );
+						for ( AttributeSource attributeSource : attributeList ) {
+							if ( attributeSource instanceof AnnotationAttributeSource ) {
+								AnnotationAttributeSource source = (AnnotationAttributeSource) attributeSource;
+								source.applyAssociationOverride(
+										associationAttributeMap != null ? associationAttributeMap : Collections
+												.<String, AssociationOverride>emptyMap()
+								);
+								source.applyAttributeOverride(
+										attributeOverrideMap != null ? attributeOverrideMap : Collections.<String, AttributeOverride>emptyMap()
+								);
+							}
+						}
+						return attributeList;
+					}
+				}
+		);
+	}
+
+	public static ValueHolder<List<AttributeSource>> resolveAttributes(final ConfiguredClass configuredClass, final String relativePath){
+		return resolveAttributes( configuredClass, relativePath, configuredClass.getAttributeOverrideMap(), configuredClass.getAssociationOverrideMap() );
+
+	}
+
 	/**
 	 * Bind association attributes within {@param configuredClass} to the proper source impl based on its nature.
 	 *
 	 * @param configuredClass The holder of association attributes.
 	 * @param attributeList Attribute source container, can't be <code>null</code>.
 	 */
-	public static void resolveAssociationAttributes(ConfiguredClass configuredClass, List<AttributeSource> attributeList) {
-		for ( AssociationAttribute associationAttribute : configuredClass.getAssociationAttributes() ) {
+	private static void resolveAssociationAttributes(ConfiguredClass configuredClass, List<AttributeSource> attributeList, final String relativePath) {
+		for ( AssociationAttribute associationAttribute : configuredClass.getAssociationAttributes().values() ) {
 			switch ( associationAttribute.getNature() ) {
 				case ONE_TO_ONE:
 				case MANY_TO_ONE: {
-					attributeList.add( new ToOneAttributeSourceImpl( (SingularAssociationAttribute) associationAttribute ) );
+					ToOneAttributeSourceImpl source = new ToOneAttributeSourceImpl( (SingularAssociationAttribute) associationAttribute, relativePath );
+					attributeList.add( source );
 					break;
 				}
 				case MANY_TO_MANY:
@@ -59,7 +121,8 @@ public class SourceHelper {
 					attributeList.add(
 							createPluralAttributeSource(
 									configuredClass,
-									(PluralAssociationAttribute) associationAttribute
+									(PluralAssociationAttribute) associationAttribute,
+									relativePath
 							)
 					);
 					break;
@@ -73,16 +136,17 @@ public class SourceHelper {
 
 	private static PluralAttributeSource createPluralAttributeSource(
 			ConfiguredClass configuredClass,
-			PluralAssociationAttribute pluralAssociationAttribute) {
+			PluralAssociationAttribute pluralAssociationAttribute,
+			String relativePath) {
 		switch ( pluralAssociationAttribute.getPluralAttributeNature() ) {
 			case BAG: // fall through intentionally
 			case SET: {
-				return new PluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass );
+				return new PluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass, relativePath );
 			}
 			case ARRAY:  // fall through intentionally
 			case MAP:  // fall through intentionally
 			case LIST: {
-				return new IndexedPluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass );
+				return new IndexedPluralAttributeSourceImpl( pluralAssociationAttribute, configuredClass, relativePath );
 			}
 			case ID_BAG: {
 				throw new NotYetImplementedException(

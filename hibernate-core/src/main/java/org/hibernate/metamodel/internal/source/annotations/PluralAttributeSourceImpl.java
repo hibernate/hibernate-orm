@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -34,6 +35,8 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -56,7 +59,7 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 /**
  * @author Hardy Ferentschik
  */
-public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderable, Sortable {
+public class PluralAttributeSourceImpl implements AnnotationAttributeSource, PluralAttributeSource, Orderable, Sortable {
 
 	private final PluralAssociationAttribute associationAttribute;
 	private final ConfiguredClass entityClass;
@@ -64,23 +67,26 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	private final ExplicitHibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final FilterSource[] filterSources;
+	private final String attributePath;
 
 	// If it is not the owner side (i.e., mappedBy != null), then the AttributeSource
 	// for the owner is required to determine elementSource.
 	private PluralAttributeElementSource elementSource;
 	private AttributeSource ownerAttributeSource;
-
 	public PluralAttributeSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
-			final ConfiguredClass entityClass ) {
+			final ConfiguredClass entityClass,
+			final String relativePath) {
 		this.associationAttribute = associationAttribute;
 		this.entityClass = entityClass;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
 		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
+		this.attributePath = StringHelper.isEmpty( relativePath ) ? associationAttribute.getName() : relativePath + "." + associationAttribute.getName();
+
 		if ( associationAttribute.getMappedBy() == null ) {
 			this.ownerAttributeSource = this;
-			this.elementSource = determineElementSource( this, associationAttribute, entityClass );
+			this.elementSource = determineElementSource( this, associationAttribute, entityClass, attributePath );
 		}
 		this.filterSources = determineFilterSources(associationAttribute);
 	}
@@ -129,6 +135,22 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	}
 
 	@Override
+	public void applyAssociationOverride(Map<String, AssociationOverride> associationOverrideMap) {
+		if(elementSource != null && elementSource instanceof AnnotationAttributeSource){
+			((AnnotationAttributeSource)elementSource).applyAssociationOverride( associationOverrideMap );
+		}else{
+			//TODO what to do here, store this and apply later ( to the owner side )?
+		}
+	}
+
+	@Override
+	public void applyAttributeOverride(Map<String, AttributeOverride> attributeOverrideMap) {
+		if(elementSource != null && elementSource instanceof AnnotationAttributeSource){
+			((AnnotationAttributeSource)elementSource).applyAttributeOverride( attributeOverrideMap );
+		}
+	}
+
+	@Override
 	public FilterSource[] getFilterSources() {
 		return filterSources;
 	}
@@ -144,6 +166,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 				( (PluralAttributeSource) ownerAttributeSource ).usesJoinTable();
 	}
 
+	@Override
 	public boolean usesJoinTable() {
 		if ( associationAttribute.getMappedBy() != null ) {
 			throw new IllegalStateException( "Cannot determine if a join table is used because plural attribute is not the owner." );
@@ -170,22 +193,23 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 	private static PluralAttributeElementSource determineElementSource(
 			AttributeSource ownerAttributeSource,
 			PluralAssociationAttribute associationAttribute,
-			ConfiguredClass entityClass) {
+			ConfiguredClass entityClass,
+			String relativePath) {
 		switch ( associationAttribute.getNature() ) {
 			case MANY_TO_MANY:
-				return new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, false );
+				return new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, false, relativePath );
 			case MANY_TO_ANY:
-				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute );
+				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute, relativePath );
 			case ONE_TO_MANY:
 				return usesJoinTable( ownerAttributeSource ) ?
-						new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, true ) :
-						new OneToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute );
+						new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, true, relativePath ) :
+						new OneToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, relativePath );
 			case ELEMENT_COLLECTION_BASIC:
-				return new BasicPluralAttributeElementSourceImpl( associationAttribute );
+				return new BasicPluralAttributeElementSourceImpl( associationAttribute, entityClass, relativePath );
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
 				// TODO: cascadeStyles?
 				return new CompositePluralAttributeElementSourceImpl(
-						associationAttribute, entityClass
+						associationAttribute, entityClass, relativePath
 				);
 			}
 		}
@@ -363,7 +387,7 @@ public class PluralAttributeSourceImpl implements PluralAttributeSource, Orderab
 					associationAttribute.getMappedBy()
 			);
 			// Initialize resolved entitySource.
-			elementSource = determineElementSource( ownerAttributeSource, associationAttribute, entityClass );
+			elementSource = determineElementSource( ownerAttributeSource, associationAttribute, entityClass, "" ); //TODO not sure what relativePath should be here
 		}
 		return elementSource;
 	}

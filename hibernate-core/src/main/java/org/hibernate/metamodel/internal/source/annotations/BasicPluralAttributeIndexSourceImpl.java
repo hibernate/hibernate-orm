@@ -68,20 +68,20 @@ public class BasicPluralAttributeIndexSourceImpl extends AbstractPluralAttribute
 				attribute.annotations(),
 				HibernateDotNames.INDEX_COLUMN
 		);
-		if(columnAnnotation == null){
-			columnAnnotation   = JandexHelper.getSingleAnnotation(
+		if ( columnAnnotation == null ) {
+			columnAnnotation = JandexHelper.getSingleAnnotation(
 					attribute.annotations(),
 					JPADotNames.ORDER_COLUMN
 			);
 		}
-		if ( columnAnnotation == null) {
+		if ( columnAnnotation == null ) {
 			columnAnnotation = JandexHelper.getSingleAnnotation(
 					attribute.annotations(),
 					JPADotNames.MAP_KEY_COLUMN
 			);
 		}
 		Column indexColumn = new Column( columnAnnotation );
-		return Collections.singletonList( (RelationalValueSource) new ColumnValuesSourceImpl( indexColumn ) );
+		return Collections.singletonList( (RelationalValueSource) new ColumnSourceImpl( indexColumn ) );
 	}
 	@Override
 	public PluralAttributeIndexBinding.Nature getNature() {

@@ -33,13 +33,15 @@ import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 /**
  * @author Hardy Ferentschik
  */
-public class OneToManyPluralAttributeElementSourceImpl implements OneToManyPluralAttributeElementSource {
+public class OneToManyPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements OneToManyPluralAttributeElementSource {
 	private final AttributeSource ownerAttributeSource;
 	private final PluralAssociationAttribute associationAttribute;
 
 	public OneToManyPluralAttributeElementSourceImpl(
 			AttributeSource ownerAttributeSource,
-			PluralAssociationAttribute associationAttribute) {
+			PluralAssociationAttribute associationAttribute,
+			String relativePath) {
+		super(associationAttribute, relativePath);
 		this.ownerAttributeSource = ownerAttributeSource;
 		this.associationAttribute = associationAttribute;
 	}

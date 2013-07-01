@@ -35,6 +35,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
@@ -57,14 +58,14 @@ import org.hibernate.type.ForeignKeyDirection;
 /**
  * @author Hardy Ferentschik
  */
-public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implements ToOneAttributeSource {
+public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implements  ToOneAttributeSource {
 	private final AssociationAttribute associationAttribute;
 	private final Set<CascadeStyle> cascadeStyles;
 	private SingularAttributeSource.Nature nature;
 
-	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute) {
+	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute, String relativePath) {
 
-		super( associationAttribute );
+		super( associationAttribute, relativePath );
 		this.associationAttribute = associationAttribute;
 		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
 				associationAttribute.getCascadeTypes(),
@@ -107,7 +108,7 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 					associationAttribute.getNature(), associationAttribute.getRole() ));
 		}
 	}
-
+	@Override
 	public Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolver.ToOneAttributeSourceNatureResolutionContext context) {
 		if ( nature != null ) { return nature; }
 		final List<org.hibernate.metamodel.spi.relational.Column> idColumns = context.getIdentifierColumns();
@@ -184,19 +185,26 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 		}
 	}
 
+	private final ValueHolder<List<RelationalValueSource>> relationalValues = new ValueHolder<List<RelationalValueSource>>( new ValueHolder.DeferredInitializer<List<RelationalValueSource>>() {
+		@Override
+		public List<RelationalValueSource> initialize() {
+			if ( associationAttribute.getJoinColumnValues().isEmpty() ) {
+				return Collections.emptyList();
+			}
+			List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>(
+					associationAttribute.getJoinColumnValues()
+							.size()
+			);
+			for ( Column column : associationAttribute.getJoinColumnValues() ) {
+				valueSources.add( new ColumnSourceImpl( column ) );
+			}
+			return valueSources;
+		}
+	} );
+
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		if ( associationAttribute.getJoinColumnValues().isEmpty() ) {
-			return Collections.emptyList();
-		}
-		List<RelationalValueSource> valueSources = new ArrayList<RelationalValueSource>(
-				associationAttribute.getJoinColumnValues()
-						.size()
-		);
-		for ( Column columnValues : associationAttribute.getJoinColumnValues() ) {
-			valueSources.add( new ColumnSourceImpl( associationAttribute, null, columnValues ) );
-		}
-		return valueSources;
+		return relationalValues.getValue();
 	}
 
 	@Override

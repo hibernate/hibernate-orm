@@ -39,10 +39,6 @@ public class VersionAttributeSourceImpl
 		super( attribute );
 	}
 
-	public VersionAttributeSourceImpl(MappedAttribute attribute, AttributeOverride attributeOverride) {
-		super( attribute, attributeOverride );
-	}
-
 	@Override
 	public String getUnsavedValue() {
 		return null;

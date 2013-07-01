@@ -134,6 +134,7 @@ public interface HibernateDotNames {
 	DotName FETCH = DotName.createSimple( Fetch.class.getName() );
 	DotName FETCH_PROFILE = DotName.createSimple( FetchProfile.class.getName() );
 	DotName FETCH_PROFILES = DotName.createSimple( FetchProfiles.class.getName() );
+	DotName FETCH_OVERRIDE = DotName.createSimple( FetchProfile.FetchOverride.class.getName() );
 	DotName FILTER = DotName.createSimple( Filter.class.getName() );
 	DotName FILTERS = DotName.createSimple( Filters.class.getName() );
 	DotName FILTER_DEF = DotName.createSimple( FilterDef.class.getName() );

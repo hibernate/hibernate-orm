@@ -54,7 +54,7 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 		boolean hadNamedTargetColumnReferences = false;
 		for ( PrimaryKeyJoinColumn primaryKeyJoinColumnSource : joinColumns ) {
 			columnSources.add(
-					new ColumnValuesSourceImpl(
+					new ColumnSourceImpl(
 							primaryKeyJoinColumnSource
 					)
 			);

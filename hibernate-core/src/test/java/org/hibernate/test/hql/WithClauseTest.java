@@ -42,7 +42,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-//@FailureExpectedWithNewMetamodel
 public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {

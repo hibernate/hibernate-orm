@@ -36,6 +36,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
@@ -77,7 +78,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 * Defines the column values (relational values) for this property. A mapped property can refer to multiple
 	 * column values in case of components or join columns etc
 	 */
-	private List<Column> columnValues = new ArrayList<Column>();
+	private final List<Column> columnValues = new ArrayList<Column>();
 
 	/**
 	 * Is this a formula property ( annotated w/ {@code Formula}).
@@ -117,9 +118,13 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 	 */
 	private final EntityBindingContext context;
 
-	MappedAttribute(String name, Class<?> attributeType, Nature attributeNature,
-					String accessType, Map<DotName, List<AnnotationInstance>> annotations,
-					EntityBindingContext context) {
+	MappedAttribute(String name,
+					Class<?> attributeType,
+					Nature attributeNature,
+					String accessType,
+					Map<DotName, List<AnnotationInstance>> annotations,
+					EntityBindingContext context
+	) {
 		this.context = context;
 		this.annotations = annotations;
 		this.name = name;
@@ -137,7 +142,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 
 		this.isOptimisticLockable = checkOptimisticLockAnnotation();
 		this.checkCondition = checkCheckAnnotation();
-		this.naturalIdMutability = checkNaturalId();
+		this.naturalIdMutability = AnnotationParserHelper.checkNaturalId( annotations );
 		this.role = context.getOrigin().getName() + "#" + name;
 		checkColumnAnnotations( annotations );
 		this.formulaValue = checkFormulaValueAnnotation();
@@ -239,19 +244,6 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		return triggersVersionIncrement;
 	}
 
-	private SingularAttributeBinding.NaturalIdMutability checkNaturalId() {
-		final AnnotationInstance naturalIdAnnotation = JandexHelper.getSingleAnnotation(
-				annotations,
-				HibernateDotNames.NATURAL_ID
-		);
-		if ( naturalIdAnnotation == null ) {
-			return SingularAttributeBinding.NaturalIdMutability.NOT_NATURAL_ID;
-		}
-		final boolean mutable = naturalIdAnnotation.value( "mutable" ) != null && naturalIdAnnotation.value( "mutable" )
-				.asBoolean();
-		return mutable ? SingularAttributeBinding.NaturalIdMutability.MUTABLE : SingularAttributeBinding.NaturalIdMutability.IMMUTABLE;
-	}
-
 	private FormulaValue checkFormulaValueAnnotation() {
 		AnnotationInstance formulaAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
@@ -281,11 +273,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				JPADotNames.COLUMN
 		);
 		if ( columnAnnotation != null ) {
-			if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
-				throw getContext().makeMappingException(
-						"@Column(s) not allowed on a " + getNature() + " property: " + getRole()
-				);
-			}
+			checkWrongColumnAnnotationLocation();
 			columnValues.add( new Column( columnAnnotation ) );
 		}
 
@@ -295,11 +283,7 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 				HibernateDotNames.COLUMNS
 		);
 		if ( columnsAnnotation != null ) {
-			if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
-				throw getContext().makeMappingException(
-						"@Column(s) not allowed on a " + getNature() + " property: " + getRole()
-				);
-			}
+			checkWrongColumnAnnotationLocation();
 			List<AnnotationInstance> columnsList = Arrays.asList(
 					JandexHelper.getValue( columnsAnnotation, "columns", AnnotationInstance[].class )
 			);
@@ -309,13 +293,17 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		}
 	}
 
-	private String checkCheckAnnotation() {
-		String checkCondition = null;
-		AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.CHECK );
-		if ( checkAnnotation != null ) {
-			checkCondition = checkAnnotation.value( "constraints" ).toString();
+	private void checkWrongColumnAnnotationLocation() {
+		if ( getNature() == Nature.MANY_TO_ONE || getNature() == Nature.ONE_TO_ONE ) {
+			throw getContext().makeMappingException(
+					"@Column(s) not allowed on a " + getNature() + " property: " + getRole()
+			);
 		}
-		return checkCondition;
+	}
+
+	private String checkCheckAnnotation() {
+		final AnnotationInstance checkAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.CHECK );
+		return checkAnnotation != null ? checkAnnotation.value( "constraints" ).toString() : null;
 	}
 
 	/**

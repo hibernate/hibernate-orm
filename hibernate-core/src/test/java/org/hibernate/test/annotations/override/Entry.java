@@ -38,9 +38,8 @@ public abstract class Entry implements Serializable {
 		Entry entry = (Entry) o;
 
 		if ( id != null ? !id.equals( entry.id ) : entry.id != null ) return false;
-		if ( tags != null ? !tags.equals( entry.tags ) : entry.tags != null ) return false;
+		return !( tags != null ? !tags.equals( entry.tags ) : entry.tags != null );
 
-		return true;
 	}
 
 	@Override

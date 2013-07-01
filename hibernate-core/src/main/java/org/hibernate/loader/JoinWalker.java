@@ -847,7 +847,7 @@ public class JoinWalker {
 	}
 	
 	protected String orderBy(final List associations, final String orderBy) {
-		return mergeOrderings( orderBy, orderBy( associations ) );
+		return mergeOrderings( orderBy( associations ), orderBy );
 	}
 
 	protected static String mergeOrderings(String ordering1, String ordering2) {

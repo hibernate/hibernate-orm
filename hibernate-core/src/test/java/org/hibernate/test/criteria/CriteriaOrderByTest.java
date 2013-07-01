@@ -1,3 +1,23 @@
+/* 
+ * Hibernate, Relational Persistence for Idiomatic Java
+ * 
+ * JBoss, Home of Professional Open Source
+ * Copyright 2013 Red Hat Inc. and/or its affiliates and other contributors
+ * as indicated by the @authors tag. All rights reserved.
+ * See the copyright.txt in the distribution for a
+ * full listing of individual contributors.
+ *
+ * This copyrighted material is made available to anyone wishing to use,
+ * modify, copy, or redistribute it subject to the terms and conditions
+ * of the GNU Lesser General Public License, v. 2.1.
+ * This program is distributed in the hope that it will be useful, but WITHOUT A
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License,
+ * v.2.1 along with this distribution; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA  02110-1301, USA.
+ */
 package org.hibernate.test.criteria;
 
 import org.hibernate.Criteria;
@@ -15,94 +35,96 @@ import java.util.List;
 
 /**
  * @author tknowlton at iamhisfriend dot org
- * @since 5/20/12 10:50 PM
  */
 public class CriteriaOrderByTest extends BaseCoreFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[]{
-                Bid.class, Item.class
-        };
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Bid.class, Item.class };
+	}
 
-    @Test
-    @TestForIssue(jiraKey = "HHH-7116")
-    public void testCriteriaOrderBy() {
-        Session s = openSession();
-        Transaction tx = s.beginTransaction();
+	@Test
+	@TestForIssue(jiraKey = "HHH-7116")
+	public void testCriteriaOrderBy() {
+		final Session s = openSession();
+		final Transaction tx = s.beginTransaction();
 
-        Item item;
-        Bid bid;
+		Item item;
+		Bid bid;
 
-        item = new Item();
-        item.name = "ZZZZ";
-        s.persist(item);
+		item = new Item();
+		item.name = "ZZZZ";
+		s.persist( item );
 
-        bid = new Bid();
-        bid.amount = 444.44f;
-        bid.item = item;
-        s.persist(bid);
+		bid = new Bid();
+		bid.amount = 444.44f;
+		bid.item = item;
+		s.persist( bid );
 
-        item = new Item();
-        item.name = "AAAA";
-        s.persist(item);
+		item = new Item();
+		item.name = "AAAA";
+		s.persist( item );
 
-        bid = new Bid();
-        bid.amount = 222.22f;
-        bid.item = item;
-        s.persist(bid);
+		bid = new Bid();
+		bid.amount = 222.22f;
+		bid.item = item;
+		s.persist( bid );
 
-        item = new Item();
-        item.name = "MMMM";
-        s.persist(item);
+		item = new Item();
+		item.name = "MMMM";
+		s.persist( item );
 
-        bid = new Bid();
-        bid.amount = 999.99f;
-        bid.item = item;
-        s.persist(bid);
+		bid = new Bid();
+		bid.amount = 999.99f;
+		bid.item = item;
+		s.persist( bid );
 
-        s.flush();
+		s.flush();
 
-        // For each item, ordered by name, show all bids made by bidders on this item.
-        //  The joined collections item.bids and bidder.bids have orderings specified on the mappings.
-        //  For some reason, the association mappings' ordering specifications are not honored if default (INNER) join type is used.
-        Criteria criteria = s.createCriteria(Item.class)
-                .addOrder(org.hibernate.criterion.Order.asc("this.name"))
-                .createAlias("this.bids", "i_bid", JoinType.LEFT_OUTER_JOIN)
-                .setProjection(Projections.projectionList()
-                        .add(Projections.property("this.name"), "item_name")
-                        .add(Projections.property("i_bid.amount"), "bid_amount"))
-                .setResultTransformer(new ResultTransformer() {
-                    boolean first = true;
-                    Object[] previous;
+		// For each item, ordered by name, show all bids made by bidders on this item.
+		// The joined collections item.bids and bidder.bids have orderings specified on the mappings.
+		// For some reason, the association mappings' ordering specifications are not honored if default (INNER) join
+		// type is used.
+		final Criteria criteria = s
+				.createCriteria( Item.class )
+				.addOrder( org.hibernate.criterion.Order.asc( "this.name" ) )
+				.createAlias( "this.bids", "i_bid", JoinType.LEFT_OUTER_JOIN )
+				.setProjection(
+						Projections.projectionList().add( Projections.property( "this.name" ), "item_name" )
+								.add( Projections.property( "i_bid.amount" ), "bid_amount" ) )
+				.setResultTransformer( new ResultTransformer() {
+					boolean first = true;
+					Object[] previous;
 
-                    @Override
-                    public Object transformTuple(Object[] tuple, String[] aliases) {
-                        if (first) {
-                            first = false;
-                            previous = tuple;
-                        } else {
-                            String previousName = (String) previous[0];
-                            String name = (String) tuple[0];
+					@Override
+					public Object transformTuple(Object[] tuple, String[] aliases) {
+						if ( first ) {
+							first = false;
+							previous = tuple;
+						}
+						else {
+							final String previousName = (String) previous[0];
+							final String name = (String) tuple[0];
 
-                            Assert.assertTrue("The resultset tuples should be ordered by item name, as specified on the Criteria", previousName.compareTo(name) < 1);
+							Assert.assertTrue(
+									"The resultset tuples should be ordered by item name, as specified on the Criteria",
+									previousName.compareTo( name ) < 1 );
 
-                            previous = tuple;
-                        }
+							previous = tuple;
+						}
 
-                        return tuple;
-                    }
+						return tuple;
+					}
 
-                    @Override
-                    public List transformList(List collection) {
-                        return collection;
-                    }
-                });
+					@Override
+					public List transformList(List collection) {
+						return collection;
+					}
+				} );
 
-        List<Object> results = criteria.list();
+		criteria.list();
 
-        tx.rollback();
-        s.close();
-    }
+		tx.rollback();
+		s.close();
+	}
 }

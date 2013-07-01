@@ -7,14 +7,13 @@ import java.util.Set;
 
 /**
  * @author tknowlton at iamhisfriend dot org
- * @since 5/21/12 12:38 AM
  */
 @Entity
 public class Item implements Serializable {
-    @Id
-    String name;
+	@Id
+	String name;
 
-    @OneToMany(mappedBy = "item", fetch = FetchType.EAGER)
-    @OrderBy("amount desc")
-    Set<Bid> bids = new HashSet<Bid>();
+	@OneToMany(mappedBy = "item", fetch = FetchType.EAGER)
+	@OrderBy("amount desc")
+	Set<Bid> bids = new HashSet<Bid>();
 }

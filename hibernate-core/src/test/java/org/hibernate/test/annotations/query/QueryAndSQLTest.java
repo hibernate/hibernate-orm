@@ -51,6 +51,7 @@ import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -472,7 +473,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				Chaos.class,
 				CasimirParticle.class,
 				AllTables.class,
-				Dimensions.class
+				Dimensions.class,
+				Attrset.class,
+				Attrvalue.class,
+				Employee.class,
+				Employeegroup.class
 		};
 	}
 

@@ -1342,7 +1342,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "ResultSet had no statement associated with it, but was not yet registered", id = 386)
 	void unregisteredResultSetWithoutStatement();
 
-	@LogMessage(level = WARN)
+	// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
+	// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
+	@LogMessage(level = DEBUG)
 	@Message(value = "ResultSet's statement was not registered", id = 387)
 	void unregisteredStatement();
 

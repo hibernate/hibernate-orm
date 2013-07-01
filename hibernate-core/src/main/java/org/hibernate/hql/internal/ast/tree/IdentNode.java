@@ -150,42 +150,54 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 
 	private boolean resolveAsAlias() {
 		// This is not actually a constant, but a reference to FROM element.
-		FromElement element = getWalker().getCurrentFromClause().getFromElement( getText() );
-		if ( element != null ) {
-			setType( SqlTokenTypes.ALIAS_REF );
-			setFromElement( element );
-			String[] columnExpressions = element.getIdentityColumns();
-			final boolean isInNonDistinctCount = getWalker().isInCount() && ! getWalker().isInCountDistinct();
-			final boolean isCompositeValue = columnExpressions.length > 1;
-			if ( isCompositeValue ) {
-				if ( isInNonDistinctCount && ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
-					setText( columnExpressions[0] );
-				}
-				else {
-					String joinedFragment = StringHelper.join( ", ", columnExpressions );
-					// avoid wrapping in parenthesis (explicit tuple treatment) if possible due to varied support for
-					// tuple syntax across databases..
-					final boolean shouldSkipWrappingInParenthesis =
-							getWalker().isInCount()
-							|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
-							|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
-					if ( ! shouldSkipWrappingInParenthesis ) {
-						joinedFragment = "(" + joinedFragment + ")";
-					}
-					setText( joinedFragment );
-				}
-				return true;
-			}
-			else if ( columnExpressions.length > 0 ) {
-				setText( columnExpressions[0] );
-				return true;
+		final FromElement element = getWalker().getCurrentFromClause().getFromElement( getText() );
+		if ( element == null ) {
+			return false;
+		}
+
+		setType( SqlTokenTypes.ALIAS_REF );
+		setFromElement( element );
+
+		String[] columnExpressions = element.getIdentityColumns();
+
+		// determine whether to apply qualification (table alias) to the column(s)...
+		if ( ! isFromElementUpdateOrDeleteRoot( element ) ) {
+			if ( StringHelper.isNotEmpty( element.getTableAlias() ) ) {
+				// apparently we also need to check that they are not already qualified.  Ugh!
+				columnExpressions = StringHelper.qualifyIfNot( element.getTableAlias(), columnExpressions );
 			}
 		}
+
+		final boolean isInNonDistinctCount = getWalker().isInCount() && ! getWalker().isInCountDistinct();
+		final boolean isCompositeValue = columnExpressions.length > 1;
+		if ( isCompositeValue ) {
+			if ( isInNonDistinctCount && ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
+				setText( columnExpressions[0] );
+			}
+			else {
+				String joinedFragment = StringHelper.join( ", ", columnExpressions );
+				// avoid wrapping in parenthesis (explicit tuple treatment) if possible due to varied support for
+				// tuple syntax across databases..
+				final boolean shouldSkipWrappingInParenthesis =
+						getWalker().isInCount()
+						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
+						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
+				if ( ! shouldSkipWrappingInParenthesis ) {
+					joinedFragment = "(" + joinedFragment + ")";
+				}
+				setText( joinedFragment );
+			}
+			return true;
+		}
+		else if ( columnExpressions.length > 0 ) {
+			setText( columnExpressions[0] );
+			return true;
+		}
+
 		return false;
 	}
 
-	private Type getNakedPropertyType(FromElement fromElement)
-	{
+	private Type getNakedPropertyType(FromElement fromElement) {
 		if (fromElement == null) {
 			return null;
 		}

@@ -23,20 +23,18 @@
  */
 package org.hibernate.test.annotations.xml.ejb3;
 
+import static org.junit.Assert.assertEquals;
+
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.byteman.BytemanHelper;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.jboss.byteman.contrib.bmunit.BMRule;
 import org.jboss.byteman.contrib.bmunit.BMRules;
 import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.byteman.BytemanHelper;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
 
 @TestForIssue(jiraKey = "HHH-6271")
 @RunWith(BMUnitRunner.class)
@@ -55,12 +53,7 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 					action = "countInvocation()",
 					name = "testOrm1Support")
 	})
-	@FailureExpectedWithNewMetamodel // This doesn't actually work since this test class requires BMUnitRunner instead of
-	// CustomRunner.  Thus, the if block below skips the test if the new metamodel is being used.
 	public void testOrm1Support() {
-		if ( isMetadataUsed ) {
-			return;
-		}
 		// need to call buildSessionFactory, because this test is not using org.hibernate.testing.junit4.CustomRunner
 		buildSessionFactory();
 

@@ -30,7 +30,6 @@ import java.io.InputStream;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.internal.util.xml.UnsupportedOrmXsdVersionException;
 import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -39,7 +38,6 @@ import org.junit.Test;
 public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNonExistentOrmVersion() {
 		try {
 			MetadataSources sources = new MetadataSources( buildBootstrapServiceRegistry() );

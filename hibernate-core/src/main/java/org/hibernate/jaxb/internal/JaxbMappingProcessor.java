@@ -82,19 +82,9 @@ public class JaxbMappingProcessor extends AbstractJaxbProcessor{
 		final String elementName = event.asStartElement().getName().getLocalPart();
 		final Schema validationSchema;
 		if ( "entity-mappings".equals( elementName ) ) {
-//			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
-//			final String explicitVersion = attribute == null ? null : attribute.getValue();
-//			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
-
-			/**
-			 * here we always use JPA 2.1 schema to do the validation, since the {@link LegacyJPAEventReader} already
-			 * transform the legacy orm.xml to JPA 2.1 namespace and version.
-			 *
-			 * This may causing some problems, like a jpa 1.0 orm.xml has some element which only available in the later
-			 * version, which is "invalid" but due to the fact of we're using the latest schema to do the validation, then
-			 * it is "valid". don't know if this will cause any problem, but let's do it for now.
-			 */
-			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema() : null;
+			final Attribute attribute = event.asStartElement().getAttributeByName( ORM_VERSION_ATTRIBUTE_QNAME );
+			final String explicitVersion = attribute == null ? null : attribute.getValue();
+			validationSchema = validateXml ? resolveSupportedOrmXsd( explicitVersion, origin ) : null;
 		}
 		else {
 			validationSchema = validateXml ? MappingReader.SupportedOrmXsdVersion.HBM_4_0.getSchema() : null;
@@ -166,9 +156,24 @@ public class JaxbMappingProcessor extends AbstractJaxbProcessor{
 	}
 
 	private Schema resolveSupportedOrmXsd(String explicitVersion, Origin origin) {
+
 		if ( StringHelper.isEmpty( explicitVersion ) ) {
 			return MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema();
 		}
-		return MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin ).getSchema();
+		
+		// Here we always use JPA 2.1 schema to do the validation, since the {@link LegacyJPAEventReader} already
+		// transforms the legacy orm.xml to JPA 2.1 namespace and version.
+		//
+		// This may cause some problems, like a jpa 1.0 orm.xml having some element which is only available in the later
+		// version. It is "invalid" but due to the fact we're using the latest schema to do the validation, then
+		// it is "valid". Don't know if this will cause any problems, but let's do it for now.
+		//
+		// However, still check for the validity of the version by calling #parse.  If someone explicitly uses a value
+		// that doesn't exist, we still need to throw the exception.
+		@SuppressWarnings("unused")
+		MappingReader.SupportedOrmXsdVersion version = MappingReader.SupportedOrmXsdVersion.parse( explicitVersion, origin );
+		// return version.getSchema();
+		return MappingReader.SupportedOrmXsdVersion.ORM_2_1.getSchema();
+		
 	}
 }

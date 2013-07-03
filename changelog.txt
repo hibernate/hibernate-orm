@@ -5,6 +5,36 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.3.Final (2013.07.03)
+------------------------------------------------------------------------------------------------------------------------
+
+** Sub-task
+    * [HHH-8112] - Document OSGi capabilities
+
+** Bug
+    * [HHH-8106] - Broken org.hibernate.tool.enhance.EnhancementTask
+    * [HHH-8210] - JdbcCoordinatorImpl logs excessive HHH000387 warnings when used with some connection pools
+    * [HHH-8255] - Clean up compile and optional dependencies from OSGi manifests
+    * [HHH-8269] - DenormalizedTable FK constraint names can be too long
+    * [HHH-8273] - Incorrect "unique-key" naming comment in docs
+    * [HHH-8275] - union-subclass generates bad alter table for unique constraint
+    * [HHH-8283] - JdbcSQLException with CompositeCustomType and java.util.Date
+    * [HHH-8301] - SQLServer2005LimitHandler skips column alias generation
+    * [HHH-8312] - named parameters binding are not correct when used within subquery
+    * [HHH-8318] - "delete" with "member of" query fails
+    * [HHH-8335] - Hibernate OSGi not included in build's /lib
+
+** Improvement
+    * [HHH-8117] - Add package export versions in OSGi manifests
+    * [HHH-8319] - ConstraintViolationException not showing constraint name for MySQL
+
+** New Feature
+    * [HHH-7527] - OSGi hibernate-orm
+
+** Task
+    * [HHH-8265] - Investigate proxy package imports in OSGi client bundles
+    * [HHH-8336] - Upgrade c3p0 dependency
+
 Changes in version 4.2.2.Final (2013.05.22)
 ------------------------------------------------------------------------------------------------------------------------
 

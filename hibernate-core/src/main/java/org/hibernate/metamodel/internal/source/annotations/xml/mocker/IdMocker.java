@@ -53,12 +53,12 @@ class IdMocker extends PropertyMocker {
 	@Override
 	protected void processExtra() {
 		create( ID );
-		parserColumn( id.getColumn(), getTarget() );
-		parserGeneratedValue( id.getGeneratedValue(), getTarget() );
-		parserTemporalType( id.getTemporal(), getTarget() );
+		parseColumn( id.getColumn(), getTarget() );
+		parseGeneratedValue( id.getGeneratedValue(), getTarget() );
+		parseTemporalType( id.getTemporal(), getTarget() );
 	}
 
-	private AnnotationInstance parserGeneratedValue(JaxbGeneratedValue generatedValue, AnnotationTarget target) {
+	private AnnotationInstance parseGeneratedValue(JaxbGeneratedValue generatedValue, AnnotationTarget target) {
 		if ( generatedValue == null ) {
 			return null;
 		}

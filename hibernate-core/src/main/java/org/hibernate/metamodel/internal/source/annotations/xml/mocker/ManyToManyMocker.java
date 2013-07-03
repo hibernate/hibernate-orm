@@ -56,14 +56,14 @@ class ManyToManyMocker extends PropertyMocker {
 		MockHelper.stringValue( "mappedBy", manyToMany.getMappedBy(), annotationValueList );
 		MockHelper.cascadeValue( "cascade", manyToMany.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( MANY_TO_MANY, annotationValueList );
-		parserMapKeyClass( manyToMany.getMapKeyClass(), getTarget() );
-		parserMapKeyTemporal( manyToMany.getMapKeyTemporal(), getTarget() );
-		parserMapKeyEnumerated( manyToMany.getMapKeyEnumerated(), getTarget() );
-		parserMapKey( manyToMany.getMapKey(), getTarget() );
-		parserAttributeOverrides( manyToMany.getMapKeyAttributeOverride(), getTarget() );
-		parserMapKeyJoinColumnList( manyToMany.getMapKeyJoinColumn(), getTarget() );
-		parserOrderColumn( manyToMany.getOrderColumn(), getTarget() );
-		parserJoinTable( manyToMany.getJoinTable(), getTarget() );
+		parseMapKeyClass( manyToMany.getMapKeyClass(), getTarget() );
+		parseMapKeyTemporal( manyToMany.getMapKeyTemporal(), getTarget() );
+		parseMapKeyEnumerated( manyToMany.getMapKeyEnumerated(), getTarget() );
+		parseMapKey( manyToMany.getMapKey(), getTarget() );
+		parseAttributeOverrides( manyToMany.getMapKeyAttributeOverride(), getTarget() );
+		parseMapKeyJoinColumnList( manyToMany.getMapKeyJoinColumn(), getTarget() );
+		parseOrderColumn( manyToMany.getOrderColumn(), getTarget() );
+		parseJoinTable( manyToMany.getJoinTable(), getTarget() );
 		if ( manyToMany.getOrderBy() != null ) {
 			create( ORDER_BY, MockHelper.stringValueArray( "value", manyToMany.getOrderBy() ) );
 		}

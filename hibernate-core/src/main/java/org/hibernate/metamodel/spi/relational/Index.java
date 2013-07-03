@@ -49,6 +49,9 @@ public class Index extends AbstractConstraint {
 				buf.append( ", " );
 			}
 			buf.append( column.getColumnName().getText( dialect ) );
+			if ( hasOrdering( column ) ) {
+				buf.append( " " ).append( getOrdering( column ) );
+			}
 		}
 		return buf.append( ')' ).toString();
 	}
@@ -57,6 +60,7 @@ public class Index extends AbstractConstraint {
 	public String getExportIdentifier() {
 		StringBuilder sb = new StringBuilder( getTable().getLoggableValueQualifier() );
 		sb.append( ".IDX" );
+		sb.append( '_' ).append( getName() );
 		for ( Column column : getColumns() ) {
 			sb.append( '_' ).append( column.getColumnName().getText() );
 		}

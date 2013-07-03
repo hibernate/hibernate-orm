@@ -88,18 +88,18 @@ class EntityMocker extends AbstractEntityObjectMocker {
 			);
 		}
 		//@Table
-		parserTable( entity.getTable() );
-		parserInheritance( entity.getInheritance() );
-		parserDiscriminatorColumn( entity.getDiscriminatorColumn() );
-		parserAttributeOverrides( entity.getAttributeOverride(), getTarget() );
-		parserAssociationOverrides( entity.getAssociationOverride(), getTarget() );
-		parserPrimaryKeyJoinColumnList( entity.getPrimaryKeyJoinColumn(), getTarget() );
-		parserSecondaryTableList( entity.getSecondaryTable(), getTarget() );
+		parseTable( entity.getTable() );
+		parseInheritance( entity.getInheritance() );
+		parseDiscriminatorColumn( entity.getDiscriminatorColumn() );
+		parseAttributeOverrides( entity.getAttributeOverride(), getTarget() );
+		parseAssociationOverrides( entity.getAssociationOverride(), getTarget() );
+		parsePrimaryKeyJoinColumnList( entity.getPrimaryKeyJoinColumn(), getTarget() );
+		parseSecondaryTableList( entity.getSecondaryTable(), getTarget() );
 
 	}
 
 	//@Table  (entity only)
-	private AnnotationInstance parserTable(JaxbTable table) {
+	private AnnotationInstance parseTable(JaxbTable table) {
 		if ( table == null ) {
 			return null;
 		}
@@ -109,6 +109,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		MockHelper.stringValue( "catalog", table.getCatalog(), annotationValueList );
 		MockHelper.stringValue( "schema", table.getSchema(), annotationValueList );
 		nestedUniqueConstraintList( "uniqueConstraints", table.getUniqueConstraint(), annotationValueList );
+		nestedIndexConstraintList( "indexes", table.getIndex(), annotationValueList );
 		return create( TABLE, annotationValueList );
 	}
 
@@ -204,7 +205,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	}
 
 	//@Inheritance
-	protected AnnotationInstance parserInheritance(JaxbInheritance inheritance) {
+	protected AnnotationInstance parseInheritance(JaxbInheritance inheritance) {
 		if ( inheritance == null ) {
 			return null;
 		}
@@ -217,7 +218,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	}
 
 	//@DiscriminatorColumn
-	protected AnnotationInstance parserDiscriminatorColumn(JaxbDiscriminatorColumn discriminatorColumn) {
+	protected AnnotationInstance parseDiscriminatorColumn(JaxbDiscriminatorColumn discriminatorColumn) {
 		if ( discriminatorColumn == null ) {
 			return null;
 		}
@@ -235,7 +236,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 	}
 
 	//@SecondaryTable
-	protected AnnotationInstance parserSecondaryTable(JaxbSecondaryTable secondaryTable, AnnotationTarget target) {
+	protected AnnotationInstance parseSecondaryTable(JaxbSecondaryTable secondaryTable, AnnotationTarget target) {
 		if ( secondaryTable == null ) {
 			return null;
 		}
@@ -244,23 +245,17 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		MockHelper.stringValue( "name", secondaryTable.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", secondaryTable.getCatalog(), annotationValueList );
 		MockHelper.stringValue( "schema", secondaryTable.getSchema(), annotationValueList );
-		nestedPrimaryKeyJoinColumnList(
-				"pkJoinColumns", secondaryTable.getPrimaryKeyJoinColumn(), annotationValueList
-		);
-		nestedUniqueConstraintList(
-				"uniqueConstraints", secondaryTable.getUniqueConstraint(), annotationValueList
-		);
-		return
-				create(
-						SECONDARY_TABLE, target, annotationValueList
-				);
+		nestedPrimaryKeyJoinColumnList("pkJoinColumns", secondaryTable.getPrimaryKeyJoinColumn(), annotationValueList);
+		nestedUniqueConstraintList("uniqueConstraints", secondaryTable.getUniqueConstraint(), annotationValueList);
+		nestedIndexConstraintList( "indexes", secondaryTable.getIndex(), annotationValueList );
+		return create( SECONDARY_TABLE, target, annotationValueList );
 	}
 
 
-	protected AnnotationInstance parserSecondaryTableList(List<JaxbSecondaryTable> primaryKeyJoinColumnList, AnnotationTarget target) {
+	protected AnnotationInstance parseSecondaryTableList(List<JaxbSecondaryTable> primaryKeyJoinColumnList, AnnotationTarget target) {
 		if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
 			if ( primaryKeyJoinColumnList.size() == 1 ) {
-				return parserSecondaryTable( primaryKeyJoinColumnList.get( 0 ), target );
+				return parseSecondaryTable( primaryKeyJoinColumnList.get( 0 ), target );
 			}
 			else {
 				return create(
@@ -278,7 +273,7 @@ class EntityMocker extends AbstractEntityObjectMocker {
 		if ( CollectionHelper.isNotEmpty( secondaryTableList ) ) {
 			AnnotationValue[] values = new AnnotationValue[secondaryTableList.size()];
 			for ( int i = 0; i < secondaryTableList.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserSecondaryTable( secondaryTableList.get( i ), null );
+				AnnotationInstance annotationInstance = parseSecondaryTable( secondaryTableList.get( i ), null );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);

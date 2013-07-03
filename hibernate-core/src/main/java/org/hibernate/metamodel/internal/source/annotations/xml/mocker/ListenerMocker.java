@@ -50,7 +50,7 @@ class ListenerMocker extends AbstractMocker {
 		this.classInfo = classInfo;
 	}
 
-	AnnotationInstance parser(JaxbEntityListeners entityListeners) {
+	AnnotationInstance parse(JaxbEntityListeners entityListeners) {
 		if ( entityListeners.getEntityListener().isEmpty() ) {
 			throw new MappingException( "No child element of <entity-listener> found under <entity-listeners>." );
 		}
@@ -58,13 +58,13 @@ class ListenerMocker extends AbstractMocker {
 		List<String> clazzNameList = new ArrayList<String>( entityListeners.getEntityListener().size() );
 		for ( JaxbEntityListener listener : entityListeners.getEntityListener() ) {
 			MockHelper.addToCollectionIfNotNull( clazzNameList, listener.getClazz() );
-			parserEntityListener( listener, clazzNameList );
+			parseEntityListener( listener, clazzNameList );
 		}
 		MockHelper.classArrayValue( "value", clazzNameList, annotationValueList, indexBuilder.getServiceRegistry() );
 		return create( ENTITY_LISTENERS, classInfo, annotationValueList );
 	}
 
-	private void parserEntityListener(JaxbEntityListener listener, List<String> clazzNameList) {
+	private void parseEntityListener(JaxbEntityListener listener, List<String> clazzNameList) {
 		String clazz = listener.getClazz();
 		String defaultPackageName = classInfo!=null ?  StringHelper.qualifier(classInfo.name().toString()) : null;
 		ClassInfo tempClassInfo = indexBuilder.createClassInfo( clazz,defaultPackageName );
@@ -73,20 +73,20 @@ class ListenerMocker extends AbstractMocker {
 			clazzNameList.add( tempClassInfo.name().toString() );
 		}
 		ListenerMocker mocker = createListenerMocker( indexBuilder, tempClassInfo );
-		mocker.parser( listener.getPostLoad(), POST_LOAD );
-		mocker.parser( listener.getPostPersist(), POST_PERSIST );
-		mocker.parser( listener.getPostRemove(), POST_REMOVE );
-		mocker.parser( listener.getPostUpdate(), POST_UPDATE );
-		mocker.parser( listener.getPrePersist(), PRE_PERSIST );
-		mocker.parser( listener.getPreRemove(), PRE_REMOVE );
-		mocker.parser( listener.getPreUpdate(), PRE_UPDATE );
+		mocker.parse( listener.getPostLoad(), POST_LOAD );
+		mocker.parse( listener.getPostPersist(), POST_PERSIST );
+		mocker.parse( listener.getPostRemove(), POST_REMOVE );
+		mocker.parse( listener.getPostUpdate(), POST_UPDATE );
+		mocker.parse( listener.getPrePersist(), PRE_PERSIST );
+		mocker.parse( listener.getPreRemove(), PRE_REMOVE );
+		mocker.parse( listener.getPreUpdate(), PRE_UPDATE );
 		indexBuilder.finishEntityObject( tempClassInfo.name(), null );
 	}
 
 	protected ListenerMocker createListenerMocker(IndexBuilder indexBuilder, ClassInfo classInfo) {
 		return new ListenerMocker( indexBuilder, classInfo );
 	}
-	AnnotationInstance parser(Listener callback, DotName target) {
+	AnnotationInstance parse(Listener callback, DotName target) {
 		if ( callback == null ) {
 			return null;
 		}

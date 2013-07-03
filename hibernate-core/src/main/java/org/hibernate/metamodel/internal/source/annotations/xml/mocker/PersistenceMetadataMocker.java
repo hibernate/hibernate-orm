@@ -49,12 +49,12 @@ class PersistenceMetadataMocker extends AbstractMocker {
 	 * NOTE: These mocked annotations do not have {@link AnnotationTarget target}.
 	 */
 	final void process() {
-		parserAccessType( persistenceUnitDefaults.getAccess(), null );
+		parseAccessType( persistenceUnitDefaults.getAccess(), null );
 		if ( persistenceUnitDefaults.getDelimitedIdentifiers() != null ) {
 			create( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS, null );
 		}
 		if ( persistenceUnitDefaults.getEntityListeners() != null ) {
-			new DefaultListenerMocker( indexBuilder, null ).parser( persistenceUnitDefaults.getEntityListeners() );
+			new DefaultListenerMocker( indexBuilder, null ).parse( persistenceUnitDefaults.getEntityListeners() );
 		}
 		indexBuilder.finishGlobalConfigurationMocking( globalAnnotations );
 	}

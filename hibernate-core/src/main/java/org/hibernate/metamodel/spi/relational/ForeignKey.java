@@ -33,6 +33,7 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.internal.HashedNameUtil;
 import org.jboss.logging.Logger;
 
 /**
@@ -281,7 +282,7 @@ public class ForeignKey extends AbstractConstraint {
 		appendColumns( sourceColumns, sb );
 		appendColumns( targetColumns, sb );
 
-		return "FK_" + hashedName( sb.toString() );
+		return "FK_" + HashedNameUtil.hashedName( sb.toString() );
 	}
 
 	private static void appendColumns(List<Column> columns, StringBuilder sb) {

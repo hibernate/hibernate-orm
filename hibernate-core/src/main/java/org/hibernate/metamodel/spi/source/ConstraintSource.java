@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.source;
 
 import java.util.List;
 
+
 /**
  * Contract describing source of table constraints
  *
@@ -42,9 +43,8 @@ public interface ConstraintSource {
 	 * @return The logical table name. Can be {@code null} in the case of the "primary table".
 	 */
 	public String getTableName();
-
-	/**
-	 * @return returns the names of the column which are part of this constraint
-	 */
+	
 	public List<String> columnNames();
+	
+	public List<String> orderings();
 }

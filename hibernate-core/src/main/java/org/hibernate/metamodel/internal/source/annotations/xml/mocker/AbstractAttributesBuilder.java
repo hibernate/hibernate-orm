@@ -40,7 +40,7 @@ import org.hibernate.jaxb.spi.orm.JaxbTransient;
 import org.hibernate.jaxb.spi.orm.JaxbVersion;
 
 /**
- * Abstract Parser to handle {@link org.hibernate.jaxb.spi.orm.JaxbAttributes JaxbAttributes}
+ * Abstract parse to handle {@link org.hibernate.jaxb.spi.orm.JaxbAttributes JaxbAttributes}
  * and {@link org.hibernate.jaxb.spi.orm.JaxbEmbeddableAttributes JaxbEmbeddableAttributes}.
  *
  * It would be really helpful if these two classes can implement an interface with those abstract methods in this class.
@@ -59,7 +59,7 @@ abstract class AbstractAttributesBuilder {
 		this.defaults = defaults;
 	}
 
-	final void parser() {
+	final void parse() {
 		for ( JaxbId id : getId() ) {
 			new IdMocker( indexBuilder, classInfo, defaults, id ).process();
 		}

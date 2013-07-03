@@ -57,8 +57,8 @@ class ManyToOneMocker extends PropertyMocker {
 		MockHelper.booleanValue( "optional", manyToOne.isOptional(), annotationValueList );
 		MockHelper.cascadeValue( "cascade", manyToOne.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( MANY_TO_ONE, annotationValueList );
-		parserJoinColumnList( manyToOne.getJoinColumn(), getTarget() );
-		parserJoinTable( manyToOne.getJoinTable(), getTarget() );
+		parseJoinColumnList( manyToOne.getJoinColumn(), getTarget() );
+		parseJoinTable( manyToOne.getJoinTable(), getTarget() );
 		if ( manyToOne.getMapsId() != null ) {
 			create( MAPS_ID, MockHelper.stringValueArray( "value", manyToOne.getMapsId() ) );
 		}

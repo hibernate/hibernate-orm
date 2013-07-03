@@ -45,7 +45,7 @@ import org.hibernate.jaxb.spi.orm.JaxbPreUpdate;
  * @author Strong Liu
  */
 abstract class AbstractEntityObjectMocker extends AnnotationMocker {
-	private ListenerMocker listenerParser;
+	private ListenerMocker listenerparse;
 	protected AbstractAttributesBuilder attributesBuilder;
 	protected ClassInfo classInfo;
 
@@ -65,7 +65,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		if ( getEntityElement().isMetadataComplete() != null &&  getEntityElement().isMetadataComplete() ) {
 			indexBuilder.metadataComplete( classDotName );
 		}
-		parserAccessType( getEntityElement().getAccess(), getTarget() );
+		parseAccessType( getEntityElement().getAccess(), getTarget() );
 		isPreProcessCalled = true;
 	}
 
@@ -78,7 +78,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 			if ( accessType == null ) {
 				accessType = getDefaults().getAccess();
 			}
-			parserAccessType( accessType, getTarget() );
+			parseAccessType( accessType, getTarget() );
 		}
 		processExtra();
 		if ( isExcludeDefaultListeners() ) {
@@ -87,22 +87,22 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		if ( isExcludeSuperclassListeners() ) {
 			create( EXCLUDE_SUPERCLASS_LISTENERS );
 		}
-		parserIdClass( getIdClass() );
+		parseIdClass( getIdClass() );
 
 		if ( getAttributes() != null ) {
-			getAttributesBuilder().parser();
+			getAttributesBuilder().parse();
 
 		}
 		if ( getEntityListeners() != null ) {
-			getListenerParser().parser( getEntityListeners() );
+			getListenerparse().parse( getEntityListeners() );
 		}
-		getListenerParser().parser( getPrePersist(), PRE_PERSIST );
-		getListenerParser().parser( getPreRemove(), PRE_REMOVE );
-		getListenerParser().parser( getPreUpdate(), PRE_UPDATE );
-		getListenerParser().parser( getPostPersist(), POST_PERSIST );
-		getListenerParser().parser( getPostUpdate(), POST_UPDATE );
-		getListenerParser().parser( getPostRemove(), POST_REMOVE );
-		getListenerParser().parser( getPostLoad(), POST_LOAD );
+		getListenerparse().parse( getPrePersist(), PRE_PERSIST );
+		getListenerparse().parse( getPreRemove(), PRE_REMOVE );
+		getListenerparse().parse( getPreUpdate(), PRE_UPDATE );
+		getListenerparse().parse( getPostPersist(), POST_PERSIST );
+		getListenerparse().parse( getPostUpdate(), POST_UPDATE );
+		getListenerparse().parse( getPostRemove(), POST_REMOVE );
+		getListenerparse().parse( getPostLoad(), POST_LOAD );
 
 		indexBuilder.finishEntityObject( getTargetName(), getDefaults() );
 	}
@@ -132,11 +132,11 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 
 	abstract protected JaxbAttributes getAttributes();
 
-	protected ListenerMocker getListenerParser() {
-		if ( listenerParser == null ) {
-			listenerParser = new ListenerMocker( indexBuilder, classInfo );
+	protected ListenerMocker getListenerparse() {
+		if ( listenerparse == null ) {
+			listenerparse = new ListenerMocker( indexBuilder, classInfo );
 		}
-		return listenerParser;
+		return listenerparse;
 	}
 
 	protected AbstractAttributesBuilder getAttributesBuilder() {
@@ -148,7 +148,7 @@ abstract class AbstractEntityObjectMocker extends AnnotationMocker {
 		return attributesBuilder;
 	}
 
-	protected AnnotationInstance parserIdClass(JaxbIdClass idClass) {
+	protected AnnotationInstance parseIdClass(JaxbIdClass idClass) {
 		if ( idClass == null ) {
 			return null;
 		}

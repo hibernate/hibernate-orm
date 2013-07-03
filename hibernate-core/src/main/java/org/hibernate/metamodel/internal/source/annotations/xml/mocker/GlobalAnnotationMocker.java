@@ -57,43 +57,43 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	void process() {
 		if ( !globalAnnotations.getTableGeneratorMap().isEmpty() ) {
 			for ( JaxbTableGenerator generator : globalAnnotations.getTableGeneratorMap().values() ) {
-				parserTableGenerator( generator );
+				parseTableGenerator( generator );
 			}
 		}
 		if ( !globalAnnotations.getSequenceGeneratorMap().isEmpty() ) {
 			for ( JaxbSequenceGenerator generator : globalAnnotations.getSequenceGeneratorMap().values() ) {
-				parserSequenceGenerator( generator );
+				parseSequenceGenerator( generator );
 			}
 		}
 		if ( !globalAnnotations.getNamedQueryMap().isEmpty() ) {
 			Collection<JaxbNamedQuery> namedQueries = globalAnnotations.getNamedQueryMap().values();
 			if ( namedQueries.size() > 1 ) {
-				parserNamedQueries( namedQueries );
+				parseNamedQueries( namedQueries );
 			}
 			else {
-				parserNamedQuery( namedQueries.iterator().next() );
+				parseNamedQuery( namedQueries.iterator().next() );
 			}
 		}
 		if ( !globalAnnotations.getNamedNativeQueryMap().isEmpty() ) {
 			Collection<JaxbNamedNativeQuery> namedQueries = globalAnnotations.getNamedNativeQueryMap().values();
 			if ( namedQueries.size() > 1 ) {
-				parserNamedNativeQueries( namedQueries );
+				parseNamedNativeQueries( namedQueries );
 			}
 			else {
-				parserNamedNativeQuery( namedQueries.iterator().next() );
+				parseNamedNativeQuery( namedQueries.iterator().next() );
 			}
 		}
 		if ( !globalAnnotations.getSqlResultSetMappingMap().isEmpty() ) {
-			parserSqlResultSetMappings( globalAnnotations.getSqlResultSetMappingMap().values() );
+			parseSqlResultSetMappings( globalAnnotations.getSqlResultSetMappingMap().values() );
 		}
 		indexBuilder.finishGlobalConfigurationMocking( globalAnnotations );
 	}
 
-	private AnnotationInstance parserSqlResultSetMappings(Collection<JaxbSqlResultSetMapping> namedQueries) {
+	private AnnotationInstance parseSqlResultSetMappings(Collection<JaxbSqlResultSetMapping> namedQueries) {
 		AnnotationValue[] values = new AnnotationValue[namedQueries.size()];
 		int i = 0;
 		for ( Iterator<JaxbSqlResultSetMapping> iterator = namedQueries.iterator(); iterator.hasNext(); ) {
-			AnnotationInstance annotationInstance = parserSqlResultSetMapping( iterator.next() );
+			AnnotationInstance annotationInstance = parseSqlResultSetMapping( iterator.next() );
 			values[i++] = MockHelper.nestedAnnotationValue(
 					"", annotationInstance
 			);
@@ -107,7 +107,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 
 
 	//@SqlResultSetMapping
-	private AnnotationInstance parserSqlResultSetMapping(JaxbSqlResultSetMapping mapping) {
+	private AnnotationInstance parseSqlResultSetMapping(JaxbSqlResultSetMapping mapping) {
 
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", mapping.getName(), annotationValueList );
@@ -122,7 +122,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 
 
 	//@EntityResult
-	private AnnotationInstance parserEntityResult(JaxbEntityResult result) {
+	private AnnotationInstance parseEntityResult(JaxbEntityResult result) {
 
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue(
@@ -143,7 +143,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		if ( CollectionHelper.isNotEmpty( entityResults ) ) {
 			AnnotationValue[] values = new AnnotationValue[entityResults.size()];
 			for ( int i = 0; i < entityResults.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserEntityResult( entityResults.get( i ) );
+				AnnotationInstance annotationInstance = parseEntityResult( entityResults.get( i ) );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -155,7 +155,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	//@ColumnResult
-	private AnnotationInstance parserColumnResult(JaxbColumnResult result) {
+	private AnnotationInstance parseColumnResult(JaxbColumnResult result) {
 		return create( COLUMN_RESULT, null, MockHelper.stringValueArray( "name", result.getName() ) );
 	}
 
@@ -163,7 +163,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		if ( CollectionHelper.isNotEmpty( columnResults ) ) {
 			AnnotationValue[] values = new AnnotationValue[columnResults.size()];
 			for ( int i = 0; i < columnResults.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserColumnResult( columnResults.get( i ) );
+				AnnotationInstance annotationInstance = parseColumnResult( columnResults.get( i ) );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -175,7 +175,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	//@FieldResult
-	private AnnotationInstance parserFieldResult(JaxbFieldResult result) {
+	private AnnotationInstance parseFieldResult(JaxbFieldResult result) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", result.getName(), annotationValueList );
 		MockHelper.stringValue( "column", result.getColumn(), annotationValueList );
@@ -187,7 +187,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		if ( CollectionHelper.isNotEmpty( fieldResultList ) ) {
 			AnnotationValue[] values = new AnnotationValue[fieldResultList.size()];
 			for ( int i = 0; i < fieldResultList.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserFieldResult( fieldResultList.get( i ) );
+				AnnotationInstance annotationInstance = parseFieldResult( fieldResultList.get( i ) );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -198,11 +198,11 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		}
 	}
 
-	private AnnotationInstance parserNamedNativeQueries(Collection<JaxbNamedNativeQuery> namedQueries) {
+	private AnnotationInstance parseNamedNativeQueries(Collection<JaxbNamedNativeQuery> namedQueries) {
 		AnnotationValue[] values = new AnnotationValue[namedQueries.size()];
 		int i = 0;
 		for ( Iterator<JaxbNamedNativeQuery> iterator = namedQueries.iterator(); iterator.hasNext(); ) {
-			AnnotationInstance annotationInstance = parserNamedNativeQuery( iterator.next() );
+			AnnotationInstance annotationInstance = parseNamedNativeQuery( iterator.next() );
 			values[i++] = MockHelper.nestedAnnotationValue(
 					"", annotationInstance
 			);
@@ -215,7 +215,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	//@NamedNativeQuery
-	private AnnotationInstance parserNamedNativeQuery(JaxbNamedNativeQuery namedNativeQuery) {
+	private AnnotationInstance parseNamedNativeQuery(JaxbNamedNativeQuery namedNativeQuery) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", namedNativeQuery.getName(), annotationValueList );
 		MockHelper.stringValue( "query", namedNativeQuery.getQuery(), annotationValueList );
@@ -234,11 +234,11 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 
-	private AnnotationInstance parserNamedQueries(Collection<JaxbNamedQuery> namedQueries) {
+	private AnnotationInstance parseNamedQueries(Collection<JaxbNamedQuery> namedQueries) {
 		AnnotationValue[] values = new AnnotationValue[namedQueries.size()];
 		int i = 0;
 		for ( Iterator<JaxbNamedQuery> iterator = namedQueries.iterator(); iterator.hasNext(); ) {
-			AnnotationInstance annotationInstance = parserNamedQuery( iterator.next() );
+			AnnotationInstance annotationInstance = parseNamedQuery( iterator.next() );
 			values[i++] = MockHelper.nestedAnnotationValue(
 					"", annotationInstance
 			);
@@ -252,7 +252,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 
 
 	//@NamedQuery
-	private AnnotationInstance parserNamedQuery(JaxbNamedQuery namedQuery) {
+	private AnnotationInstance parseNamedQuery(JaxbNamedQuery namedQuery) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", namedQuery.getName(), annotationValueList );
 		MockHelper.stringValue( "query", namedQuery.getQuery(), annotationValueList );
@@ -262,7 +262,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	//@QueryHint
-	private AnnotationInstance parserQueryHint(JaxbQueryHint queryHint) {
+	private AnnotationInstance parseQueryHint(JaxbQueryHint queryHint) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", queryHint.getName(), annotationValueList );
 		MockHelper.stringValue( "value", queryHint.getValue(), annotationValueList );
@@ -274,7 +274,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		if ( CollectionHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserQueryHint( constraints.get( i ) );
+				AnnotationInstance annotationInstance = parseQueryHint( constraints.get( i ) );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -287,7 +287,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 
 
 	//@SequenceGenerator
-	private AnnotationInstance parserSequenceGenerator(JaxbSequenceGenerator generator) {
+	private AnnotationInstance parseSequenceGenerator(JaxbSequenceGenerator generator) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", generator.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", generator.getCatalog(), annotationValueList );
@@ -303,7 +303,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 	}
 
 	//@TableGenerator
-	private AnnotationInstance parserTableGenerator(JaxbTableGenerator generator) {
+	private AnnotationInstance parseTableGenerator(JaxbTableGenerator generator) {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", generator.getName(), annotationValueList );
 		MockHelper.stringValue( "catalog", generator.getCatalog(), annotationValueList );
@@ -315,6 +315,7 @@ class GlobalAnnotationMocker extends AbstractMocker {
 		MockHelper.integerValue( "initialValue", generator.getInitialValue(), annotationValueList );
 		MockHelper.integerValue( "allocationSize", generator.getAllocationSize(), annotationValueList );
 		nestedUniqueConstraintList( "uniqueConstraints", generator.getUniqueConstraint(), annotationValueList );
+		nestedIndexConstraintList( "indexes", generator.getIndex(), annotationValueList );
 		return
 				create(
 						TABLE_GENERATOR, null, annotationValueList

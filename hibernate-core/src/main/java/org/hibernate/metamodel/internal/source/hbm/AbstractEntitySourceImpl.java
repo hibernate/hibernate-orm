@@ -25,8 +25,10 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
@@ -39,6 +41,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbAnyElement;
 import org.hibernate.jaxb.spi.hbm.JaxbArrayElement;
 import org.hibernate.jaxb.spi.hbm.JaxbBagElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
+import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbComponentElement;
 import org.hibernate.jaxb.spi.hbm.JaxbDynamicComponentElement;
 import org.hibernate.jaxb.spi.hbm.JaxbFilterElement;
@@ -86,6 +89,9 @@ public abstract class AbstractEntitySourceImpl
 	private List<AttributeSource> attributeSources;
 	private Set<SecondaryTableSource> secondaryTableSources;
 	private final FilterSource[] filterSources;
+	
+	private Map<String, ConstraintSource> constraintMap = new HashMap<String, ConstraintSource>();
+	
 	protected AbstractEntitySourceImpl(MappingDocument sourceMappingDocument, EntityElement entityElement) {
 		super( sourceMappingDocument );
 		this.entityElement = entityElement;
@@ -205,7 +211,26 @@ public abstract class AbstractEntitySourceImpl
 							naturalIdMutability
 					)
 			);
+			
+			// TODO: Not sure this is the right place to do this.  Can index constraints be defined by anything other
+			// than just a property?  Split off into its own process method?
+			for ( JaxbColumnElement column : element.getColumn() ) {
+				// An index constraint can happen on the column element or the surrounding property element.
+				if ( !StringHelper.isEmpty( column.getIndex() ) ) {
+					addColumnToIndexConstraint( column.getIndex(), logicalTableName, column.getName() );
+				}
+				if ( !StringHelper.isEmpty( element.getIndex() ) ) {
+					addColumnToIndexConstraint( element.getIndex(), logicalTableName, column.getName() );
+				}
+			}
 		}
+	}
+	
+	private void addColumnToIndexConstraint(String constraintName, String logicalTableName, String columnName) {
+		if ( !constraintMap.containsKey( constraintName ) ) {
+			constraintMap.put( constraintName, new IndexConstraintSourceImpl( constraintName, logicalTableName ) );
+		}
+		( (AbstractConstraintSource) constraintMap.get( constraintName ) ).addColumnName( columnName );
 	}
 
 	protected void processComponentAttributes(List<AttributeSource> results,
@@ -552,7 +577,7 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public Iterable<ConstraintSource> getConstraints() {
-		return Collections.emptySet();
+		return constraintMap.values();
 	}
 
 	@Override

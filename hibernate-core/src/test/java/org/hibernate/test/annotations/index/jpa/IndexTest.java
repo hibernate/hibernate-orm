@@ -23,13 +23,9 @@
  */
 package org.hibernate.test.annotations.index.jpa;
 
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-@FailureExpectedWithNewMetamodel
 public class IndexTest extends AbstractJPAIndexTest {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

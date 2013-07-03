@@ -115,6 +115,7 @@ import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
@@ -142,6 +143,7 @@ import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColum
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource.JoinColumnResolutionDelegate;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
+import org.hibernate.metamodel.spi.source.IndexConstraintSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -293,9 +295,9 @@ public class Binder {
 		applyToAllEntityHierarchies( bindPluralAttributesExecutor( false ) );
 		applyToAllEntityHierarchies( bindPluralAttributesExecutor( true ) );
 
-		// Bind unique constraints after all attributes have been bound and the
+		// Bind constraints after all attributes have been bound and the
 		// columns used by attributes is already determined.
-		applyToAllEntityHierarchies( bindUniqueConstraintsExecutor() );
+		applyToAllEntityHierarchies( bindConstraintsExecutor() );
 
 		// TODO: check if any many-to-one attribute bindings with logicalOneToOne == false have all columns
 		//       (and no formulas) contained in a defined unique key that only contains these columns.
@@ -612,11 +614,11 @@ public class Binder {
 		}
 	}
 
-	private LocalBindingContextExecutor bindUniqueConstraintsExecutor() {
+	private LocalBindingContextExecutor bindConstraintsExecutor() {
 		return new LocalBindingContextExecutor() {
 			@Override
 			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
-				bindUniqueConstraints( bindingContextContext.getEntityBinding(), bindingContextContext.getEntitySource() );
+				bindConstraints( bindingContextContext.getEntityBinding(), bindingContextContext.getEntitySource() );
 			}
 		};
 	}
@@ -2236,7 +2238,7 @@ public class Binder {
 				}
 			}
 			uk.setTable( collectionTable );
-			uk.generateName();
+			HashedNameUtil.setName("UK_", uk);
 			collectionTable.addUniqueKey( uk );
 		}
 		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
@@ -2856,18 +2858,20 @@ public class Binder {
 				attributeBindingContainer.seekEntityBinding().locateTable( attributeSource.getContainingTableName() );
 	}
 
-	private void bindUniqueConstraints(
+	private void bindConstraints(
 			final EntityBinding entityBinding,
 			final EntitySource entitySource) {
 		for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
 			if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
+				UniqueConstraintSource uniqueConstraintSource = (UniqueConstraintSource) constraintSource;
+				
 				UniqueKey uk = new UniqueKey();
 				
-				TableSpecification table = findUniqueConstraintTable( entityBinding, constraintSource.getTableName() );
+				TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
 				
-				final List<String> columnNames = constraintSource.columnNames();
+				final List<String> columnNames = uniqueConstraintSource.columnNames();
 				final String constraintName = StringHelper.isEmpty( constraintSource.name() )
-						? UniqueKey.generateName( table, columnNames.toArray( new String[columnNames.size()] ) )
+						? HashedNameUtil.generateName( "UK_", table, columnNames.toArray( new String[columnNames.size()] ) )
 						: constraintSource.name();
 				for ( final String columnName : columnNames ) {
 					uk.addColumn( table.locateOrCreateColumn( quotedIdentifier( columnName ) ) );
@@ -2876,10 +2880,26 @@ public class Binder {
 				uk.setName( constraintName );
 				table.addUniqueKey( uk );
 			}
+			else if ( IndexConstraintSource.class.isInstance( constraintSource ) ) {			
+				IndexConstraintSource indexConstraintSource = (IndexConstraintSource) constraintSource;
+				
+				TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
+				
+				final List<String> columnNames = indexConstraintSource.columnNames();
+				final List<String> orderings = indexConstraintSource.orderings();
+				final String constraintName = StringHelper.isEmpty( constraintSource.name() )
+						? HashedNameUtil.generateName( "IDX_", table, columnNames.toArray( new String[columnNames.size()] ) )
+						: constraintSource.name();
+				final Index index = table.getOrCreateIndex( constraintName );
+				for ( int i = 0; i < columnNames.size(); i++ ) {
+					Column column = table.locateOrCreateColumn( quotedIdentifier( columnNames.get( i ) ) );
+					index.addColumn( column, orderings.get( i ) );
+				}
+			}
 		}
 	}
 	
-	private TableSpecification findUniqueConstraintTable(EntityBinding entityBinding, String tableName) {
+	private TableSpecification findConstraintTable(EntityBinding entityBinding, String tableName) {
 		try {
 			return entityBinding.locateTable( tableName );
 		}
@@ -3112,7 +3132,7 @@ public class Binder {
 			UniqueKey uk = new UniqueKey();
 			uk.addColumn( column );
 			uk.setTable( table );
-			uk.generateName();
+			HashedNameUtil.setName("UK_", uk);
 			table.addUniqueKey( uk );
 		}
 		return column;

@@ -23,22 +23,20 @@
  */
 package org.hibernate.test.legacy;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import org.junit.Test;
+import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 @SuppressWarnings( {"UnnecessaryBoxing"})
 public class ABCTest extends LegacyTestCase {
@@ -81,7 +79,6 @@ public class ABCTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testHigherLevelIndexDefinition() throws Throwable {
 		for ( Schema schema : metadata().getDatabase().getSchemas() ) {
 			for ( Table table : schema.getTables() ) {

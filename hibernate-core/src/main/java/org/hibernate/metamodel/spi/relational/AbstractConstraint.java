@@ -23,17 +23,15 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * Support for writing {@link Constraint} implementations
@@ -42,11 +40,13 @@ import org.hibernate.dialect.Dialect;
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public abstract class AbstractConstraint implements Constraint {
 	private TableSpecification table;
 	private String name;
 	private final Map<Identifier, Column> columnMap = new LinkedHashMap<Identifier, Column>();
+	private final Map<Column, String> columnOrderMap = new HashMap<Column, String>();
 
 	protected AbstractConstraint(TableSpecification table, String name) {
 		this.table = table;
@@ -96,33 +96,6 @@ public abstract class AbstractConstraint implements Constraint {
 		this.name = name;
 	}
 
-	/**
-	 * Hash a constraint name using MD5. Convert the MD5 digest to base 35
-	 * (full alphanumeric), guaranteeing
-	 * that the length of the name will always be smaller than the 30
-	 * character identifier restriction enforced by a few dialects.
-	 * 
-	 * @param s
-	 *            The name to be hashed.
-	 * @return String The hased name.
-	 */
-	public static String hashedName(String s) {
-		try {
-			MessageDigest md = MessageDigest.getInstance( "MD5" );
-			md.reset();
-			md.update( s.getBytes() );
-			byte[] digest = md.digest();
-			BigInteger bigInt = new BigInteger( 1, digest );
-			// By converting to base 35 (full alphanumeric), we guarantee
-			// that the length of the name will always be smaller than the 30
-			// character identifier restriction enforced by a few dialects.
-			return bigInt.toString( 35 );
-		}
-		catch ( NoSuchAlgorithmException e ) {
-			throw new HibernateException( "Unable to generate a hashed Constraint name!", e );
-		}
-	}
-
 	protected int generateConstraintColumnListId() {
 		return table.generateColumnListId( getColumns() );
 	}
@@ -165,6 +138,21 @@ public abstract class AbstractConstraint implements Constraint {
 //			);
 //		}
 		columnMap.put( column.getColumnName(), column );
+	}
+
+	public void addColumn(Column column, String order) {
+		addColumn( column );
+		if ( StringHelper.isNotEmpty( order ) ) {
+			columnOrderMap.put( column, order );
+		}
+	}
+	
+	public boolean hasOrdering(Column column) {
+		return columnOrderMap.containsKey( column );
+	}
+	
+	public String getOrdering(Column column) {
+		return columnOrderMap.get( column );
 	}
 
 	protected boolean isCreationVetoed(Dialect dialect) {

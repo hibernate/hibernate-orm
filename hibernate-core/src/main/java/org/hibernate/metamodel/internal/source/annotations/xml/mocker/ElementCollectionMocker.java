@@ -58,22 +58,22 @@ class ElementCollectionMocker extends PropertyMocker {
 		);
 		MockHelper.enumValue( "fetch", FETCH_TYPE, elementCollection.getFetch(), annotationValueList );
 		create( ELEMENT_COLLECTION, annotationValueList );
-		parserLob( elementCollection.getLob(), getTarget() );
-		parserEnumType( elementCollection.getEnumerated(), getTarget() );
-		parserColumn( elementCollection.getColumn(), getTarget() );
-		parserTemporalType( elementCollection.getTemporal(), getTarget() );
-		parserCollectionTable( elementCollection.getCollectionTable(), getTarget() );
-		parserAssociationOverrides( elementCollection.getAssociationOverride(), getTarget() );
-		parserAttributeOverrides( elementCollection.getAttributeOverride(), getTarget() );
+		parseLob( elementCollection.getLob(), getTarget() );
+		parseEnumType( elementCollection.getEnumerated(), getTarget() );
+		parseColumn( elementCollection.getColumn(), getTarget() );
+		parseTemporalType( elementCollection.getTemporal(), getTarget() );
+		parseCollectionTable( elementCollection.getCollectionTable(), getTarget() );
+		parseAssociationOverrides( elementCollection.getAssociationOverride(), getTarget() );
+		parseAttributeOverrides( elementCollection.getAttributeOverride(), getTarget() );
 		if ( elementCollection.getOrderBy() != null ) {
 			create( ORDER_BY, MockHelper.stringValueArray( "value", elementCollection.getOrderBy() ) );
 		}
-		parserAttributeOverrides( elementCollection.getMapKeyAttributeOverride(), getTarget() );
-		parserMapKeyJoinColumnList( elementCollection.getMapKeyJoinColumn(), getTarget() );
-		parserMapKey( elementCollection.getMapKey(), getTarget() );
-		parserMapKeyColumn( elementCollection.getMapKeyColumn(), getTarget() );
-		parserMapKeyClass( elementCollection.getMapKeyClass(), getTarget() );
-		parserMapKeyEnumerated( elementCollection.getMapKeyEnumerated(), getTarget() );
-		parserMapKeyTemporal( elementCollection.getMapKeyTemporal(), getTarget() );
+		parseAttributeOverrides( elementCollection.getMapKeyAttributeOverride(), getTarget() );
+		parseMapKeyJoinColumnList( elementCollection.getMapKeyJoinColumn(), getTarget() );
+		parseMapKey( elementCollection.getMapKey(), getTarget() );
+		parseMapKeyColumn( elementCollection.getMapKeyColumn(), getTarget() );
+		parseMapKeyClass( elementCollection.getMapKeyClass(), getTarget() );
+		parseMapKeyEnumerated( elementCollection.getMapKeyEnumerated(), getTarget() );
+		parseMapKeyTemporal( elementCollection.getMapKeyTemporal(), getTarget() );
 	}
 }

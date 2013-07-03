@@ -60,9 +60,9 @@ class OneToOneMocker extends PropertyMocker {
 		MockHelper.cascadeValue( "cascade", oneToOne.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( ONE_TO_ONE, annotationValueList );
 
-		parserPrimaryKeyJoinColumnList( oneToOne.getPrimaryKeyJoinColumn(), getTarget() );
-		parserJoinColumnList( oneToOne.getJoinColumn(), getTarget() );
-		parserJoinTable( oneToOne.getJoinTable(), getTarget() );
+		parsePrimaryKeyJoinColumnList( oneToOne.getPrimaryKeyJoinColumn(), getTarget() );
+		parseJoinColumnList( oneToOne.getJoinColumn(), getTarget() );
+		parseJoinTable( oneToOne.getJoinTable(), getTarget() );
 		if ( oneToOne.getMapsId() != null ) {
 			create( MAPS_ID, MockHelper.stringValueArray( "value", oneToOne.getMapsId() ) );
 		}

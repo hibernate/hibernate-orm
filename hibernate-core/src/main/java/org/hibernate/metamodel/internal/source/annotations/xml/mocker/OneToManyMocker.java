@@ -57,16 +57,16 @@ class OneToManyMocker extends PropertyMocker {
 		MockHelper.booleanValue( "orphanRemoval", oneToMany.isOrphanRemoval(), annotationValueList );
 		MockHelper.cascadeValue( "cascade", oneToMany.getCascade(), isDefaultCascadePersist(), annotationValueList );
 		create( ONE_TO_MANY, getTarget(), annotationValueList );
-		parserAttributeOverrides( oneToMany.getMapKeyAttributeOverride(), getTarget() );
-		parserMapKeyJoinColumnList( oneToMany.getMapKeyJoinColumn(), getTarget() );
-		parserMapKey( oneToMany.getMapKey(), getTarget() );
-		parserMapKeyColumn( oneToMany.getMapKeyColumn(), getTarget() );
-		parserMapKeyClass( oneToMany.getMapKeyClass(), getTarget() );
-		parserMapKeyTemporal( oneToMany.getMapKeyTemporal(), getTarget() );
-		parserMapKeyEnumerated( oneToMany.getMapKeyEnumerated(), getTarget() );
-		parserJoinColumnList( oneToMany.getJoinColumn(), getTarget() );
-		parserOrderColumn( oneToMany.getOrderColumn(), getTarget() );
-		parserJoinTable( oneToMany.getJoinTable(), getTarget() );
+		parseAttributeOverrides( oneToMany.getMapKeyAttributeOverride(), getTarget() );
+		parseMapKeyJoinColumnList( oneToMany.getMapKeyJoinColumn(), getTarget() );
+		parseMapKey( oneToMany.getMapKey(), getTarget() );
+		parseMapKeyColumn( oneToMany.getMapKeyColumn(), getTarget() );
+		parseMapKeyClass( oneToMany.getMapKeyClass(), getTarget() );
+		parseMapKeyTemporal( oneToMany.getMapKeyTemporal(), getTarget() );
+		parseMapKeyEnumerated( oneToMany.getMapKeyEnumerated(), getTarget() );
+		parseJoinColumnList( oneToMany.getJoinColumn(), getTarget() );
+		parseOrderColumn( oneToMany.getOrderColumn(), getTarget() );
+		parseJoinTable( oneToMany.getJoinTable(), getTarget() );
 		if ( oneToMany.getOrderBy() != null ) {
 			create( ORDER_BY, getTarget(), MockHelper.stringValueArray( "value", oneToMany.getOrderBy() ) );
 		}

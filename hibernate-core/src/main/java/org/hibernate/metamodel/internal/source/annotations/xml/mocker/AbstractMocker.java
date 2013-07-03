@@ -26,15 +26,15 @@ package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jaxb.spi.orm.JaxbAccessType;
+import org.hibernate.jaxb.spi.orm.JaxbIndex;
+import org.hibernate.jaxb.spi.orm.JaxbUniqueConstraint;
+import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.orm.JaxbAccessType;
-import org.hibernate.jaxb.spi.orm.JaxbUniqueConstraint;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
  * Base class for the mock jandex annotations created from orm.xml.
@@ -69,7 +69,7 @@ abstract class AbstractMocker implements JPADotNames {
 	}
 
 
-	protected AnnotationInstance parserAccessType(JaxbAccessType accessType, AnnotationTarget target) {
+	protected AnnotationInstance parseAccessType(JaxbAccessType accessType, AnnotationTarget target) {
 		if ( accessType == null ) {
 			return null;
 		}
@@ -80,28 +80,47 @@ abstract class AbstractMocker implements JPADotNames {
 		if ( CollectionHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserUniqueConstraint( constraints.get( i ), null );
-				values[i] = MockHelper.nestedAnnotationValue(
-						"", annotationInstance
-				);
+				AnnotationInstance annotationInstance = parseUniqueConstraint( constraints.get( i ), null );
+				values[i] = MockHelper.nestedAnnotationValue( "", annotationInstance );
 			}
-			MockHelper.addToCollectionIfNotNull(
-					annotationValueList, AnnotationValue.createArrayValue( name, values )
-			);
+			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
 		}
 
 	}
 
-	//@UniqueConstraint
-	protected AnnotationInstance parserUniqueConstraint(JaxbUniqueConstraint uniqueConstraint, AnnotationTarget target) {
+	// @UniqueConstraint
+	protected AnnotationInstance parseUniqueConstraint(JaxbUniqueConstraint uniqueConstraint, AnnotationTarget target) {
 		if ( uniqueConstraint == null ) {
 			return null;
 		}
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.stringValue( "name", uniqueConstraint.getName(), annotationValueList );
 		MockHelper.stringArrayValue( "columnNames", uniqueConstraint.getColumnName(), annotationValueList );
-		return create( UNIQUE_CONSTRAINT, target,
-						annotationValueList );
+		return create( UNIQUE_CONSTRAINT, target, annotationValueList );
+	}
+
+	protected void nestedIndexConstraintList(String name, List<JaxbIndex> constraints, List<AnnotationValue> annotationValueList) {
+		if ( CollectionHelper.isNotEmpty( constraints ) ) {
+			AnnotationValue[] values = new AnnotationValue[constraints.size()];
+			for ( int i = 0; i < constraints.size(); i++ ) {
+				AnnotationInstance annotationInstance = parseIndexConstraint( constraints.get( i ), null );
+				values[i] = MockHelper.nestedAnnotationValue( "", annotationInstance );
+			}
+			MockHelper.addToCollectionIfNotNull( annotationValueList, AnnotationValue.createArrayValue( name, values ) );
+		}
+
+	}
+
+	// @Index
+	protected AnnotationInstance parseIndexConstraint(JaxbIndex index, AnnotationTarget target) {
+		if ( index == null ) {
+			return null;
+		}
+		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
+		MockHelper.stringValue( "name", index.getName(), annotationValueList );
+		MockHelper.stringValue( "columnList", index.getColumnList(), annotationValueList );
+		MockHelper.booleanValue( "unique", index.isUnique(), annotationValueList );
+		return create( INDEX, target, annotationValueList );
 	}
 
 }

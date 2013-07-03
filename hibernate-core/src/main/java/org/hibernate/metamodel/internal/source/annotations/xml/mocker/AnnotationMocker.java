@@ -70,7 +70,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@JoinTable
-	protected AnnotationInstance parserJoinTable(JaxbJoinTable joinTable, AnnotationTarget target) {
+	protected AnnotationInstance parseJoinTable(JaxbJoinTable joinTable, AnnotationTarget target) {
 		if ( joinTable == null ) {
 			return null;
 		}
@@ -80,17 +80,14 @@ abstract class AnnotationMocker extends AbstractMocker {
 		MockHelper.stringValue( "catalog", joinTable.getCatalog(), annotationValueList );
 		MockHelper.stringValue( "schema", joinTable.getSchema(), annotationValueList );
 		nestedJoinColumnList( "joinColumns", joinTable.getJoinColumn(), annotationValueList );
-		nestedJoinColumnList(
-				"inverseJoinColumns", joinTable.getInverseJoinColumn(), annotationValueList
-		);
-		nestedUniqueConstraintList(
-				"uniqueConstraints", joinTable.getUniqueConstraint(), annotationValueList
-		);
+		nestedJoinColumnList( "inverseJoinColumns", joinTable.getInverseJoinColumn(), annotationValueList );
+		nestedUniqueConstraintList( "uniqueConstraints", joinTable.getUniqueConstraint(), annotationValueList );
+		nestedIndexConstraintList( "indexes", joinTable.getIndex(), annotationValueList );
 		return create( JOIN_TABLE, target, annotationValueList );
 	}
 
 	//@AssociationOverride
-	private AnnotationInstance parserAssociationOverride(JaxbAssociationOverride associationOverride, AnnotationTarget target) {
+	private AnnotationInstance parseAssociationOverride(JaxbAssociationOverride associationOverride, AnnotationTarget target) {
 		if ( associationOverride == null ) {
 			return null;
 		}
@@ -106,7 +103,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 					"joinColumns", associationOverride.getJoinColumn(), annotationValueList
 			);
 			MockHelper.nestedAnnotationValue(
-					"joinTable", parserJoinTable( associationOverride.getJoinTable(), null ), annotationValueList
+					"joinTable", parseJoinTable( associationOverride.getJoinTable(), null ), annotationValueList
 			);
 		}
 		return create( ASSOCIATION_OVERRIDE, target, annotationValueList );
@@ -116,7 +113,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		if ( CollectionHelper.isNotEmpty( columns ) ) {
 			AnnotationValue[] values = new AnnotationValue[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserJoinColumn( columns.get( i ), null );
+				AnnotationInstance annotationInstance = parseJoinColumn( columns.get( i ), null );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -131,7 +128,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//@Column
-	protected AnnotationInstance parserColumn(JaxbColumn column, AnnotationTarget target) {
+	protected AnnotationInstance parseColumn(JaxbColumn column, AnnotationTarget target) {
 		if ( column == null ) {
 			return null;
 		}
@@ -150,7 +147,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@AttributeOverride
-	private AnnotationInstance parserAttributeOverride(JaxbAttributeOverride attributeOverride, AnnotationTarget target) {
+	private AnnotationInstance parseAttributeOverride(JaxbAttributeOverride attributeOverride, AnnotationTarget target) {
 		if ( attributeOverride == null ) {
 			return null;
 		}
@@ -162,7 +159,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		}
 		else {
 			MockHelper.nestedAnnotationValue(
-					"column", parserColumn( attributeOverride.getColumn(), null ), annotationValueList
+					"column", parseColumn( attributeOverride.getColumn(), null ), annotationValueList
 			);
 		}
 		return
@@ -173,7 +170,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserOrderColumn(JaxbOrderColumn orderColumn, AnnotationTarget target) {
+	protected AnnotationInstance parseOrderColumn(JaxbOrderColumn orderColumn, AnnotationTarget target) {
 		if ( orderColumn == null ) {
 			return null;
 		}
@@ -187,7 +184,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 	//@JoinColumn
-	protected AnnotationInstance parserJoinColumn(JaxbJoinColumn column, AnnotationTarget target) {
+	protected AnnotationInstance parseJoinColumn(JaxbJoinColumn column, AnnotationTarget target) {
 		if ( column == null ) {
 			return null;
 		}
@@ -205,21 +202,21 @@ abstract class AnnotationMocker extends AbstractMocker {
 		return create( JOIN_COLUMN, target, annotationValueList );
 	}
 
-	protected AnnotationInstance parserLob(JaxbLob lob, AnnotationTarget target) {
+	protected AnnotationInstance parseLob(JaxbLob lob, AnnotationTarget target) {
 		if ( lob == null ) {
 			return null;
 		}
 		return create( LOB, target );
 	}
 
-	protected AnnotationInstance parserTemporalType(JaxbTemporalType temporalType, AnnotationTarget target) {
+	protected AnnotationInstance parseTemporalType(JaxbTemporalType temporalType, AnnotationTarget target) {
 		if ( temporalType == null ) {
 			return null;
 		}
 		return create( TEMPORAL, target, MockHelper.enumValueArray( "value", TEMPORAL_TYPE, temporalType ) );
 	}
 
-	protected AnnotationInstance parserEnumType(JaxbEnumType enumerated, AnnotationTarget target) {
+	protected AnnotationInstance parseEnumType(JaxbEnumType enumerated, AnnotationTarget target) {
 		if ( enumerated == null ) {
 			return null;
 		}
@@ -227,7 +224,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserPrimaryKeyJoinColumn(JaxbPrimaryKeyJoinColumn primaryKeyJoinColumn, AnnotationTarget target) {
+	protected AnnotationInstance parsePrimaryKeyJoinColumn(JaxbPrimaryKeyJoinColumn primaryKeyJoinColumn, AnnotationTarget target) {
 		if ( primaryKeyJoinColumn == null ) {
 			return null;
 		}
@@ -246,10 +243,10 @@ abstract class AnnotationMocker extends AbstractMocker {
 				);
 	}
 
-	protected AnnotationInstance parserPrimaryKeyJoinColumnList(List<JaxbPrimaryKeyJoinColumn> primaryKeyJoinColumnList, AnnotationTarget target) {
+	protected AnnotationInstance parsePrimaryKeyJoinColumnList(List<JaxbPrimaryKeyJoinColumn> primaryKeyJoinColumnList, AnnotationTarget target) {
 		if ( CollectionHelper.isNotEmpty( primaryKeyJoinColumnList ) ) {
 			if ( primaryKeyJoinColumnList.size() == 1 ) {
-				return parserPrimaryKeyJoinColumn( primaryKeyJoinColumnList.get( 0 ), target );
+				return parsePrimaryKeyJoinColumn( primaryKeyJoinColumnList.get( 0 ), target );
 			}
 			else {
 				return create(
@@ -268,7 +265,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		if ( CollectionHelper.isNotEmpty( constraints ) ) {
 			AnnotationValue[] values = new AnnotationValue[constraints.size()];
 			for ( int i = 0; i < constraints.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserPrimaryKeyJoinColumn( constraints.get( i ), null );
+				AnnotationInstance annotationInstance = parsePrimaryKeyJoinColumn( constraints.get( i ), null );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -301,7 +298,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 	}
 
 
-	protected AnnotationInstance parserAttributeOverrides(List<JaxbAttributeOverride> attributeOverrides, AnnotationTarget target) {
+	protected AnnotationInstance parseAttributeOverrides(List<JaxbAttributeOverride> attributeOverrides, AnnotationTarget target) {
 		if ( target == null ) {
 			throw new AssertionFailure( "target can not be null" );
 		}
@@ -320,13 +317,13 @@ abstract class AnnotationMocker extends AbstractMocker {
 				ATTRIBUTE_OVERRIDE, target, operation
 		);
 		if ( attributeOverrides.size() == 1 ) {
-			return parserAttributeOverride( attributeOverrides.get( 0 ), target );
+			return parseAttributeOverride( attributeOverrides.get( 0 ), target );
 		}
 		else {
 			AnnotationValue[] values = new AnnotationValue[attributeOverrides.size()];
 			for ( int i = 0; i < values.length; i++ ) {
 				values[i] = MockHelper.nestedAnnotationValue(
-						"", parserAttributeOverride( attributeOverrides.get( i ), null )
+						"", parseAttributeOverride( attributeOverrides.get( i ), null )
 				);
 			}
 			return create(
@@ -337,7 +334,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 		}
 	}
 
-	protected AnnotationInstance parserAssociationOverrides(List<JaxbAssociationOverride> associationOverrides, AnnotationTarget target) {
+	protected AnnotationInstance parseAssociationOverrides(List<JaxbAssociationOverride> associationOverrides, AnnotationTarget target) {
 		if ( target == null ) {
 			throw new AssertionFailure( "target can not be null" );
 		}
@@ -359,13 +356,13 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 
 		if ( associationOverrides.size() == 1 ) {
-			return parserAssociationOverride( associationOverrides.get( 0 ), target );
+			return parseAssociationOverride( associationOverrides.get( 0 ), target );
 		}
 		else {
 			AnnotationValue[] values = new AnnotationValue[associationOverrides.size()];
 			for ( int i = 0; i < values.length; i++ ) {
 				values[i] = MockHelper.nestedAnnotationValue(
-						"", parserAssociationOverride( associationOverrides.get( i ), null )
+						"", parseAssociationOverride( associationOverrides.get( i ), null )
 				);
 			}
 			return create(
@@ -377,7 +374,7 @@ abstract class AnnotationMocker extends AbstractMocker {
 
 	}
 
-	protected AnnotationInstance parserCollectionTable(JaxbCollectionTable collectionTable, AnnotationTarget target) {
+	protected AnnotationInstance parseCollectionTable(JaxbCollectionTable collectionTable, AnnotationTarget target) {
 		if ( collectionTable == null ) {
 			return null;
 		}
@@ -388,14 +385,15 @@ abstract class AnnotationMocker extends AbstractMocker {
 		MockHelper.stringValue( "schema", collectionTable.getSchema(), annotationValueList );
 		nestedJoinColumnList( "joinColumns", collectionTable.getJoinColumn(), annotationValueList );
 		nestedUniqueConstraintList( "uniqueConstraints", collectionTable.getUniqueConstraint(), annotationValueList );
+		nestedIndexConstraintList( "indexes", collectionTable.getIndex(), annotationValueList );
 		return create( COLLECTION_TABLE, target, annotationValueList );
 	}
 
 
-	protected AnnotationInstance parserJoinColumnList(List<JaxbJoinColumn> joinColumnList, AnnotationTarget target) {
+	protected AnnotationInstance parseJoinColumnList(List<JaxbJoinColumn> joinColumnList, AnnotationTarget target) {
 		if ( CollectionHelper.isNotEmpty( joinColumnList ) ) {
 			if ( joinColumnList.size() == 1 ) {
-				return parserJoinColumn( joinColumnList.get( 0 ), target );
+				return parseJoinColumn( joinColumnList.get( 0 ), target );
 			}
 			else {
 				AnnotationValue[] values = nestedJoinColumnList( "value", joinColumnList, null );

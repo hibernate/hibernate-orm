@@ -28,23 +28,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
+import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.Origin;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
-import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
-import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
-import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -61,6 +52,9 @@ import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SubclassEntitySource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Hardy Ferentschik
@@ -318,6 +312,7 @@ public class EntitySourceImpl implements EntitySource {
 					JPADotNames.TABLE
 			);
 			addUniqueConstraints( constraintSources, table, null );
+			addIndexConstraints( constraintSources, table, null );
 		}
 
 		// secondary table(s)
@@ -328,6 +323,7 @@ public class EntitySourceImpl implements EntitySource {
 			);
 			String tableName = JandexHelper.getValue( secondaryTable, "name", String.class );
 			addUniqueConstraints( constraintSources, secondaryTable, tableName );
+			addIndexConstraints( constraintSources, secondaryTable, tableName );
 
 		}
 
@@ -344,6 +340,7 @@ public class EntitySourceImpl implements EntitySource {
 				) ) {
 					String tableName = JandexHelper.getValue( secondaryTable, "name", String.class );
 					addUniqueConstraints( constraintSources, secondaryTable, tableName );
+					addIndexConstraints( constraintSources, secondaryTable, tableName );
 				}
 			}
 		}
@@ -354,6 +351,7 @@ public class EntitySourceImpl implements EntitySource {
 			for (AnnotationInstance collectionTable : collectionTables) {
 				String tableName = JandexHelper.getValue( collectionTable, "name", String.class );
 				addUniqueConstraints( constraintSources, collectionTable, tableName );
+				addIndexConstraints( constraintSources, collectionTable, tableName );
 			}
 
 		}
@@ -364,6 +362,7 @@ public class EntitySourceImpl implements EntitySource {
 			for (AnnotationInstance joinTable : joinTables) {
 				String tableName = JandexHelper.getValue( joinTable, "name", String.class );
 				addUniqueConstraints( constraintSources, joinTable, tableName );
+				addIndexConstraints( constraintSources, joinTable, tableName );
 			}
 
 		}
@@ -374,6 +373,7 @@ public class EntitySourceImpl implements EntitySource {
 			for (AnnotationInstance tableGenerator : tableGenerators) {
 				String tableName = JandexHelper.getValue( tableGenerator, "table", String.class );
 				addUniqueConstraints( constraintSources, tableGenerator, tableName );
+				addIndexConstraints( constraintSources, tableGenerator, tableName );
 			}
 
 		}
@@ -465,6 +465,53 @@ public class EntitySourceImpl implements EntitySource {
 							name, tableName, Arrays.asList( columnNames )
 					);
 			constraintSources.add( uniqueConstraintSource );
+		}
+	}
+
+	private void addIndexConstraints(Set<ConstraintSource> constraintSources, AnnotationInstance tableAnnotation, String tableName) {
+		final AnnotationValue value = tableAnnotation.value( "indexes" );
+		if ( value == null ) {
+			return;
+		}
+
+		final AnnotationInstance[] indexConstraints = value.asNestedArray();
+		for ( final AnnotationInstance index : indexConstraints ) {
+			final String name = index.value( "name" ) == null ? null : index.value( "name" ).asString();
+			final String columnList = index.value( "columnList" ).asString();
+			final boolean isUnique = index.value( "unique" ) == null ? false : index.value( "unique" ).asBoolean();
+			
+			// Taken from JPAIndexHolder.
+			// TODO: Move elsewhere?
+			final StringTokenizer tokenizer = new StringTokenizer( columnList, "," );
+			final List<String> tmp = new ArrayList<String>();
+			while ( tokenizer.hasMoreElements() ) {
+				tmp.add( tokenizer.nextToken().trim() );
+			}
+			final List<String> columnNames = new ArrayList<String>();
+			final List<String> orderings = new ArrayList<String>();
+			for ( String indexColumn : tmp ) {
+				indexColumn = indexColumn.toLowerCase();
+				if ( indexColumn.endsWith( " desc" ) ) {
+					columnNames.add( indexColumn.substring( 0, indexColumn.length() - 5 ) );
+					orderings.add( "desc" );
+				}
+				else if ( indexColumn.endsWith( " asc" ) ) {
+					columnNames.add( indexColumn.substring( 0, indexColumn.length() - 4 ) );
+					orderings.add( "asc" );
+				}
+				else {
+					columnNames.add( indexColumn );
+					orderings.add( null );
+				}
+			}
+			
+			ConstraintSource constraintSource = null;
+			if ( isUnique ) {
+				constraintSource = new UniqueConstraintSourceImpl( name, tableName, columnNames, orderings );
+			} else {
+				constraintSource = new IndexConstraintSourceImpl( name, tableName, columnNames, orderings );
+			}
+			constraintSources.add( constraintSource );
 		}
 	}
 

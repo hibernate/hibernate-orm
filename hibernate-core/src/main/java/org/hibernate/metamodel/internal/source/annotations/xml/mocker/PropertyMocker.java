@@ -125,7 +125,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		processExtra();
 	}
 
-	protected AnnotationInstance parserMapKeyColumn(JaxbMapKeyColumn mapKeyColumn, AnnotationTarget target) {
+	protected AnnotationInstance parseMapKeyColumn(JaxbMapKeyColumn mapKeyColumn, AnnotationTarget target) {
 		if ( mapKeyColumn == null ) {
 			return null;
 		}
@@ -143,7 +143,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		return create( MAP_KEY_COLUMN, target, annotationValueList );
 	}
 
-	protected AnnotationInstance parserMapKeyClass(JaxbMapKeyClass mapKeyClass, AnnotationTarget target) {
+	protected AnnotationInstance parseMapKeyClass(JaxbMapKeyClass mapKeyClass, AnnotationTarget target) {
 		if ( mapKeyClass == null ) {
 			return null;
 		}
@@ -154,7 +154,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		);
 	}
 
-	protected AnnotationInstance parserMapKeyTemporal(JaxbTemporalType temporalType, AnnotationTarget target) {
+	protected AnnotationInstance parseMapKeyTemporal(JaxbTemporalType temporalType, AnnotationTarget target) {
 		if ( temporalType == null ) {
 			return null;
 		}
@@ -164,7 +164,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		);
 	}
 
-	protected AnnotationInstance parserMapKeyEnumerated(JaxbEnumType enumType, AnnotationTarget target) {
+	protected AnnotationInstance parseMapKeyEnumerated(JaxbEnumType enumType, AnnotationTarget target) {
 		if ( enumType == null ) {
 			return null;
 		}
@@ -174,7 +174,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		);
 	}
 
-	protected AnnotationInstance parserMapKey(JaxbMapKey mapKey, AnnotationTarget target) {
+	protected AnnotationInstance parseMapKey(JaxbMapKey mapKey, AnnotationTarget target) {
 		if ( mapKey == null ) {
 			return null;
 		}
@@ -185,7 +185,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 		if ( CollectionHelper.isNotEmpty( columns ) ) {
 			AnnotationValue[] values = new AnnotationValue[columns.size()];
 			for ( int i = 0; i < columns.size(); i++ ) {
-				AnnotationInstance annotationInstance = parserMapKeyJoinColumn( columns.get( i ), null );
+				AnnotationInstance annotationInstance = parseMapKeyJoinColumn( columns.get( i ), null );
 				values[i] = MockHelper.nestedAnnotationValue(
 						"", annotationInstance
 				);
@@ -198,10 +198,10 @@ abstract class PropertyMocker extends AnnotationMocker {
 		return MockHelper.EMPTY_ANNOTATION_VALUE_ARRAY;
 	}
 
-	protected AnnotationInstance parserMapKeyJoinColumnList(List<JaxbMapKeyJoinColumn> joinColumnList, AnnotationTarget target) {
+	protected AnnotationInstance parseMapKeyJoinColumnList(List<JaxbMapKeyJoinColumn> joinColumnList, AnnotationTarget target) {
 		if ( CollectionHelper.isNotEmpty( joinColumnList ) ) {
 			if ( joinColumnList.size() == 1 ) {
-				return parserMapKeyJoinColumn( joinColumnList.get( 0 ), target );
+				return parseMapKeyJoinColumn( joinColumnList.get( 0 ), target );
 			}
 			else {
 				AnnotationValue[] values = nestedMapKeyJoinColumnList( "value", joinColumnList, null );
@@ -217,7 +217,7 @@ abstract class PropertyMocker extends AnnotationMocker {
 	}
 
 	//@MapKeyJoinColumn
-	private AnnotationInstance parserMapKeyJoinColumn(JaxbMapKeyJoinColumn column, AnnotationTarget target) {
+	private AnnotationInstance parseMapKeyJoinColumn(JaxbMapKeyJoinColumn column, AnnotationTarget target) {
 		if ( column == null ) {
 			return null;
 		}

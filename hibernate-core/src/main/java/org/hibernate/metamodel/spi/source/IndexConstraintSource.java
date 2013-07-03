@@ -23,11 +23,13 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
 
 /**
- * Defining a unique constraint source
+ * Defining a index constraint source
  *
- * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
-public interface UniqueConstraintSource extends ConstraintSource {
+public interface IndexConstraintSource extends ConstraintSource {
 }

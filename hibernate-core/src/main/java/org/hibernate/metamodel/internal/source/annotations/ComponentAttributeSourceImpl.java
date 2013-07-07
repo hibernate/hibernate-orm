@@ -23,9 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.AccessType;
@@ -33,15 +31,13 @@ import javax.persistence.AccessType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
-import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -188,7 +184,7 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource, A
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		// probably need to check for @Target in EmbeddableClass (HF)
 		return null;
 	}

@@ -49,7 +49,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
 /**
  * Binds {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and
@@ -127,7 +127,7 @@ public class IdGeneratorProcessor {
 			);
 		}
 		metadata.addIdGenerator(
-				new IdGenerator(
+				new IdentifierGeneratorDefinition(
 						name,
 						JandexHelper.getValue( generator, "strategy", String.class ),
 						parameterMap
@@ -166,7 +166,7 @@ public class IdGeneratorProcessor {
 					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) - 1 )
 			);
 		}
-		metadata.addIdGenerator( new IdGenerator( name, strategy, parameterMap ) );
+		metadata.addIdGenerator( new IdentifierGeneratorDefinition( name, strategy, parameterMap ) );
 		LOG.tracef( "Add sequence generator with name: %s", name );
 	}
 
@@ -208,7 +208,7 @@ public class IdGeneratorProcessor {
 		if ( JandexHelper.getValue( generator, "uniqueConstraints", AnnotationInstance[].class ).length > 0 ) {
 			LOG.ignoringTableGeneratorConstraints( name );
 		}
-		metadata.addIdGenerator( new IdGenerator( name, strategy, parameterMap ) );
+		metadata.addIdGenerator( new IdentifierGeneratorDefinition( name, strategy, parameterMap ) );
 		LOG.tracef( "Add table generator with name: %s", name );
 	}
 }

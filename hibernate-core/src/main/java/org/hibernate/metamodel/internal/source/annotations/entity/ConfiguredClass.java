@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.persistence.AccessType;
 
+import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import com.fasterxml.classmate.members.HierarchicType;
 import com.fasterxml.classmate.members.ResolvedMember;
@@ -105,6 +106,11 @@ public class ConfiguredClass {
 	private final AccessType classAccessType;
 
 	/**
+	 * The generically resolved type
+	 */
+	private final ResolvedTypeWithMembers genericResolvedType;
+
+	/**
 	 * The id attributes
 	 */
 	private final Map<String, MappedAttribute> idAttributeMap;
@@ -155,15 +161,17 @@ public class ConfiguredClass {
 
 	public ConfiguredClass(
 			final ClassInfo classInfo,
+			final ResolvedTypeWithMembers fullyResolvedType,
 			final AccessType defaultAccessType,
 			final ConfiguredClass parent,
 			final AnnotationBindingContext context) {
-		this(classInfo, defaultAccessType, parent, "",context );
+		this(classInfo, fullyResolvedType, defaultAccessType, parent, "",context );
 	}
 
 
 	public ConfiguredClass(
 			final ClassInfo classInfo,
+			final ResolvedTypeWithMembers fullyResolvedType,
 			final AccessType defaultAccessType,
 			final ConfiguredClass parent,
 			final String contextPath,
@@ -172,6 +180,7 @@ public class ConfiguredClass {
 		this.classInfo = classInfo;
 		this.contextPath = contextPath;
 		this.clazz = context.locateClassByName( classInfo.toString() );
+		this.genericResolvedType = fullyResolvedType;
 		this.localBindingContext = new EntityBindingContext( context, this );
 		this.isAbstract = ReflectHelper.isAbstractClass( this.clazz );
 		this.classAccessType = determineClassAccessType( defaultAccessType );
@@ -328,22 +337,8 @@ public class ConfiguredClass {
 		// find transient field and method names
 		findTransientFieldAndMethodNames();
 
-		// use the class mate library to generic types
-		ResolvedTypeWithMembers resolvedType = localBindingContext.resolveMemberTypes(
-				localBindingContext.getResolvedType( clazz )
-		);
-		for ( HierarchicType hierarchicType : resolvedType.allTypesAndOverrides() ) {
-			if ( hierarchicType.getType().getErasedType().equals( clazz ) ) {
-				resolvedType = localBindingContext.resolveMemberTypes( hierarchicType.getType() );
-				break;
-			}
-		}
 
-		if ( resolvedType == null ) {
-			throw new AssertionFailure( "Unable to resolve types for " + clazz.getName() );
-		}
-
-		Set<String> explicitlyConfiguredMemberNames = createExplicitlyConfiguredAccessProperties( resolvedType );
+		final Set<String> explicitlyConfiguredMemberNames = createExplicitlyConfiguredAccessProperties( );
 
 		if ( AccessType.FIELD.equals( classAccessType ) ) {
 			Field fields[] = clazz.getDeclaredFields();
@@ -354,7 +349,7 @@ public class ConfiguredClass {
 						explicitlyConfiguredMemberNames,
 						field
 				) ) {
-					createMappedAttribute( field, resolvedType, AccessType.FIELD );
+					createMappedAttribute( field, AccessType.FIELD );
 				}
 			}
 		}
@@ -367,7 +362,7 @@ public class ConfiguredClass {
 						explicitlyConfiguredMemberNames,
 						method
 				) ) {
-					createMappedAttribute( method, resolvedType, AccessType.PROPERTY );
+					createMappedAttribute( method, AccessType.PROPERTY );
 				}
 			}
 		}
@@ -376,11 +371,10 @@ public class ConfiguredClass {
 	/**
 	 * Creates {@code MappedProperty} instances for the explicitly configured persistent properties
 	 *
-	 * @param resolvedMembers the resolved type parameters for this class
 	 *
 	 * @return the property names of the explicitly configured attribute names in a set
 	 */
-	private Set<String> createExplicitlyConfiguredAccessProperties(ResolvedTypeWithMembers resolvedMembers) {
+	private Set<String> createExplicitlyConfiguredAccessProperties() {
 		Set<String> explicitAccessPropertyNames = new HashSet<String>();
 
 		List<AnnotationInstance> accessAnnotations = classInfo.annotations().get( JPADotNames.ACCESS );
@@ -411,10 +405,6 @@ public class ConfiguredClass {
 				accessType = AccessType.valueOf( accessAnnotation.value().asString().toUpperCase() );
 			}
 
-			switch ( accessType ){
-				case FIELD:
-			}
-
 			// the placement is correct, get the member
 			Member member;
 			if ( annotationTarget instanceof MethodInfo ) {
@@ -442,7 +432,7 @@ public class ConfiguredClass {
 				}
 			}
 			if ( ReflectHelper.isProperty( member ) ) {
-				createMappedAttribute( member, resolvedMembers, accessType );
+				createMappedAttribute( member, accessType );
 				explicitAccessPropertyNames.add( ReflectHelper.getPropertyName( member ) );
 			}
 		}
@@ -483,9 +473,9 @@ public class ConfiguredClass {
 		}
 	}
 
-	private void createMappedAttribute(Member member, ResolvedTypeWithMembers resolvedType, AccessType accessType) {
+	private void createMappedAttribute(Member member, AccessType accessType) {
 		final String attributeName = ReflectHelper.getPropertyName( member );
-		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? resolvedType.getMemberFields() : resolvedType
+		final ResolvedMember[] resolvedMembers = Field.class.isInstance( member ) ? genericResolvedType.getMemberFields() : genericResolvedType
 				.getMemberMethods();
 		ResolvedMember resolvedMember = findResolvedMember( member.getName(), resolvedMembers );
 		final Map<DotName, List<AnnotationInstance>> annotations = JandexHelper.getMemberAnnotations(
@@ -553,7 +543,7 @@ public class ConfiguredClass {
 					);
 				}
 				embeddedClasses.put( attributeName, resolveEmbeddable(
-						attributeName, attributeType, annotations ) );
+						attributeName, attributeType, resolvedMember.getType(), annotations ) );
 				break;
 			}
 			case ONE_TO_ONE:
@@ -575,7 +565,7 @@ public class ConfiguredClass {
 			}
 			case ELEMENT_COLLECTION_EMBEDDABLE:
 				collectionEmbeddedClasses.put( attributeName, resolveEmbeddable(
-						attributeName+".element", collectionElementType, annotations ) );
+						attributeName+".element", collectionElementType,resolvedMember.getType().getTypeBindings().getBoundType( 0 ), annotations ) );
 				// fall through
 			case ELEMENT_COLLECTION_BASIC:
 			case ONE_TO_MANY:
@@ -600,8 +590,9 @@ public class ConfiguredClass {
 
 	private EmbeddableClass resolveEmbeddable(
 			String attributeName,
-			Class<?> type, Map<DotName,
-			List<AnnotationInstance>> annotations) {
+			Class<?> type,
+			ResolvedType resolvedType,
+			Map<DotName,List<AnnotationInstance>> annotations) {
 		final ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
 		if ( embeddableClassInfo == null ) {
 			final String msg = String.format(
@@ -614,7 +605,6 @@ public class ConfiguredClass {
 			throw new AnnotationException( msg );
 		}
 
-		localBindingContext.resolveAllTypes( type.getName() );
 		final NaturalIdMutability naturalIdMutability =  AnnotationParserHelper.checkNaturalId( annotations );
 		//tuplizer on field
 		final String customTuplizerClass = AnnotationParserHelper.determineCustomTuplizer( annotations );
@@ -622,6 +612,7 @@ public class ConfiguredClass {
 		final EmbeddableHierarchy hierarchy = EmbeddableHierarchy.createEmbeddableHierarchy(
 				localBindingContext.<Object>locateClassByName( embeddableClassInfo.toString() ),
 				attributeName,
+				resolvedType,
 				classAccessType,
 				naturalIdMutability,
 				customTuplizerClass,

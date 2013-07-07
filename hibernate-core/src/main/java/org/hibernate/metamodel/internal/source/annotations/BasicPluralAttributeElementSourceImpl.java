@@ -2,18 +2,12 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
-import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClass;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
-import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -37,8 +31,8 @@ public class BasicPluralAttributeElementSourceImpl extends AbstractPluralAttribu
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getExplicitHibernateTypeSource() {
-		return new ExplicitHibernateTypeSourceImpl( associationAttribute );
+	public HibernateTypeSource getExplicitHibernateTypeSource() {
+		return new HibernateTypeSourceImpl( associationAttribute );
 	}
 
 	@Override

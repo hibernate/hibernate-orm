@@ -31,9 +31,8 @@ import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeIndexSource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
 
@@ -43,7 +42,7 @@ import org.hibernate.metamodel.spi.source.SizeSource;
 public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPluralAttributeIndexSource {
 	private final PluralAttributeIndexBinding.Nature nature;
 	private final List<RelationalValueSource> valueSources;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 
 	public MapKeySourceImpl(MappingDocument sourceMappingDocument, final JaxbMapKeyElement mapKey) {
 		super( sourceMappingDocument );
@@ -92,7 +91,7 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 					}
 				}
 		);
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new HibernateTypeSource() {
 			@Override
 			public String getName() {
 				if ( mapKey.getTypeAttribute() != null ) {
@@ -109,6 +108,10 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 				return mapKey.getType() != null
 						? Helper.extractParameters( mapKey.getType().getParam() )
 						: java.util.Collections.<String, String>emptyMap();
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 		this.nature = PluralAttributeIndexBinding.Nature.BASIC;
@@ -151,7 +154,7 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 					}
 				}
 		);
-		typeSource = new ExplicitHibernateTypeSource() {
+		typeSource = new HibernateTypeSource() {
 			@Override
 			public String getName() {
 				return indexElement.getType();
@@ -160,6 +163,11 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 			@Override
 			public Map<String, String> getParameters() {
 				return java.util.Collections.emptyMap();
+			}
+
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 
@@ -192,7 +200,7 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

@@ -24,60 +24,67 @@
 package org.hibernate.metamodel.spi.binding;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
-/**
- * Describes custom type definitions supplied by the user as part of the metadata.
- *
- * @author John Verhaeg
- */
-public class TypeDefinition implements Serializable {
-	private final String name;
-    private final Class typeImplementorClass;
-	private final String[] registrationKeys;
-    private final Map<String, String> parameters;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
-	public TypeDefinition(
-			String name,
-			Class typeImplementorClass,
-			String[] registrationKeys,
-			Map<String, String> parameters) {
+/**
+ * Identifier generator definition, should be immutable.
+ *
+ * @author Emmanuel Bernard
+ * @author Strong Liu
+ */
+public class IdentifierGeneratorDefinition implements Serializable {
+	private final String name;
+	private final String strategy;
+	private final Map<String, String> parameters;
+
+	public IdentifierGeneratorDefinition(
+			final String name,
+			final String strategy,
+			final Map<String, String> parameters) {
 		this.name = name;
-		this.typeImplementorClass = typeImplementorClass;
-		this.registrationKeys= registrationKeys;
-		this.parameters = parameters == null ? Collections.<String, String>emptyMap() : Collections.unmodifiableMap(
-				parameters
-		);
+		this.strategy = strategy;
+		if ( CollectionHelper.isEmpty( parameters ) ) {
+			this.parameters = Collections.emptyMap();
+		}
+		else {
+			this.parameters = Collections.unmodifiableMap( parameters );
+		}
 	}
 
+	/**
+	 * @return identifier generator strategy
+	 */
+	public String getStrategy() {
+		return strategy;
+	}
+
+	/**
+	 * @return generator name
+	 */
 	public String getName() {
 		return name;
 	}
 
-	public Class getTypeImplementorClass() {
-		return typeImplementorClass;
-	}
-
-	public String[] getRegistrationKeys() {
-		return registrationKeys;
-	}
-
+	/**
+	 * @return generator configuration parameters
+	 */
 	public Map<String, String> getParameters() {
-        return parameters;
-    }
+		return parameters;
+	}
 
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !( o instanceof TypeDefinition ) ) {
+		if ( !( o instanceof IdentifierGeneratorDefinition ) ) {
 			return false;
 		}
 
-		TypeDefinition that = (TypeDefinition) o;
+		IdentifierGeneratorDefinition that = (IdentifierGeneratorDefinition) o;
 
 		if ( name != null ? !name.equals( that.name ) : that.name != null ) {
 			return false;
@@ -85,10 +92,7 @@ public class TypeDefinition implements Serializable {
 		if ( parameters != null ? !parameters.equals( that.parameters ) : that.parameters != null ) {
 			return false;
 		}
-		if ( !Arrays.equals( registrationKeys, that.registrationKeys ) ) {
-			return false;
-		}
-		if ( typeImplementorClass != null ? !typeImplementorClass.equals( that.typeImplementorClass ) : that.typeImplementorClass != null ) {
+		if ( strategy != null ? !strategy.equals( that.strategy ) : that.strategy != null ) {
 			return false;
 		}
 
@@ -98,18 +102,16 @@ public class TypeDefinition implements Serializable {
 	@Override
 	public int hashCode() {
 		int result = name != null ? name.hashCode() : 0;
-		result = 31 * result + ( typeImplementorClass != null ? typeImplementorClass.hashCode() : 0 );
-		result = 31 * result + ( registrationKeys != null ? Arrays.hashCode( registrationKeys ) : 0 );
+		result = 31 * result + ( strategy != null ? strategy.hashCode() : 0 );
 		result = 31 * result + ( parameters != null ? parameters.hashCode() : 0 );
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "TypeDefinition{" +
+		return "IdentifierGeneratorDefinition{" +
 				"name='" + name + '\'' +
-				", typeImplementorClass=" + typeImplementorClass +
-				", registrationKeys=" + Arrays.toString( registrationKeys ) +
+				", strategy='" + strategy + '\'' +
 				", parameters=" + parameters +
 				'}';
 	}

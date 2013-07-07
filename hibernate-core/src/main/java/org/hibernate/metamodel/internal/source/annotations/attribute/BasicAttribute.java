@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,7 @@ import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainer;
+import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainerImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
@@ -53,7 +54,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHe
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 
@@ -68,7 +69,7 @@ public class BasicAttribute extends MappedAttribute {
 	 * The id generator in case this basic attribute represents an simple id. Will be {@code null} in case there
 	 * is no explicit id generator or the containing entity does not have a simple id
 	 */
-	private final IdGenerator idGenerator;
+	private final IdentifierGeneratorDefinition identifierGeneratorDefinition;
 
 	/**
 	 * Is this a versioned property (annotated w/ {@code @Version}).
@@ -97,6 +98,7 @@ public class BasicAttribute extends MappedAttribute {
 
 	private final String customWriteFragment;
 	private final String customReadFragment;
+	private final Map<String,IdentifierGeneratorDefinition> localIdentifierGeneratorDefinitionMap;
 	private AttributeTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(
@@ -133,16 +135,17 @@ public class BasicAttribute extends MappedAttribute {
 		}
 
 		if ( isId() ) {
-
+			localIdentifierGeneratorDefinitionMap = buildAttributeLocalIdentifierGeneratorDefinitions();
 			// an id must be unique and cannot be nullable
 			for ( Column columnValue : getColumnValues() ) {
 				columnValue.setUnique( true );
 				columnValue.setNullable( false );
 			}
-			idGenerator = checkGeneratedValueAnnotation();
+			identifierGeneratorDefinition = checkGeneratedValueAnnotation();
 		}
 		else {
-			idGenerator = null;
+			localIdentifierGeneratorDefinitionMap = Collections.EMPTY_MAP;
+			identifierGeneratorDefinition = null;
 		}
 
 		checkBasicAnnotation();
@@ -186,8 +189,8 @@ public class BasicAttribute extends MappedAttribute {
 		return customReadFragment;
 	}
 
-	public IdGenerator getIdGenerator() {
-		return idGenerator;
+	public IdentifierGeneratorDefinition getIdentifierGeneratorDefinition() {
+		return identifierGeneratorDefinition;
 	}
 
 	public SourceType getVersionSourceType() {
@@ -319,7 +322,7 @@ public class BasicAttribute extends MappedAttribute {
 		return forColumn.equals( getName() );
 	}
 
-	private IdGenerator checkGeneratedValueAnnotation() {
+	private IdentifierGeneratorDefinition checkGeneratedValueAnnotation() {
 		AnnotationInstance generatedValueAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				JPADotNames.GENERATED_VALUE
@@ -328,7 +331,7 @@ public class BasicAttribute extends MappedAttribute {
 			return null;
 		}
 
-		IdGenerator generator = null;
+		IdentifierGeneratorDefinition generator = null;
 		String name = JandexHelper.getValue( generatedValueAnnotation, "generator", String.class );
 		if ( StringHelper.isNotEmpty( name ) ) {
 			generator = locateIdentifierGeneratorDefinition( name );
@@ -342,15 +345,14 @@ public class BasicAttribute extends MappedAttribute {
 					genType,
 					getContext().getMetadataImplementor().getOptions().useNewIdentifierGenerators()
 			);
-			generator = new IdGenerator( null, strategy, null );
+			generator = new IdentifierGeneratorDefinition( null, strategy, null );
 		}
 		return generator;
 	}
 
-	protected IdGenerator locateIdentifierGeneratorDefinition(String name) {
+	protected IdentifierGeneratorDefinition locateIdentifierGeneratorDefinition(String name) {
 		// look locally first
-		Map<String,IdGenerator> attributeLocalGeneratorMap = buildAttributeLocalIdentifierGeneratorDefinitions();
-		IdGenerator generator = attributeLocalGeneratorMap.get( name );
+		IdentifierGeneratorDefinition generator = localIdentifierGeneratorDefinitionMap.get( name );
 
 		if ( generator == null ) {
 			// if not found locally, look "upward"
@@ -360,49 +362,21 @@ public class BasicAttribute extends MappedAttribute {
 		return generator;
 	}
 
-	protected Map<String,IdGenerator> buildAttributeLocalIdentifierGeneratorDefinitions() {
+	protected Map<String,IdentifierGeneratorDefinition> buildAttributeLocalIdentifierGeneratorDefinitions() {
 		Iterable<IdentifierGeneratorSource> identifierGeneratorSources =  getContext().extractIdentifierGeneratorSources(
-				new IdentifierGeneratorSourceContainer() {
+				new IdentifierGeneratorSourceContainerImpl() {
 					@Override
-					public List<AnnotationInstance> getSequenceGeneratorSources() {
-						List<AnnotationInstance> generatorSources = annotations().get( JPADotNames.SEQUENCE_GENERATOR );
-						return generatorSources == null ? Collections.<AnnotationInstance>emptyList() : generatorSources;
-					}
-
-					@Override
-					public List<AnnotationInstance> getTableGeneratorSources() {
-						List<AnnotationInstance> generatorSources = annotations().get( JPADotNames.TABLE_GENERATOR );
-						return generatorSources == null ? Collections.<AnnotationInstance>emptyList() : generatorSources;
-					}
-
-					@Override
-					public List<AnnotationInstance> getGenericGeneratorSources() {
-						List<AnnotationInstance> annotations = new ArrayList<AnnotationInstance>();
-
-						List<AnnotationInstance> generatorAnnotations = annotations().get( HibernateDotNames.GENERIC_GENERATOR );
-						if ( generatorAnnotations != null ) {
-							annotations.addAll( generatorAnnotations );
-						}
-
-						List<AnnotationInstance> generatorsAnnotations = annotations().get( HibernateDotNames.GENERIC_GENERATORS );
-						if ( generatorsAnnotations != null ) {
-							for ( AnnotationInstance generatorsAnnotation : generatorsAnnotations ) {
-								Collections.addAll(
-										annotations,
-										JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )
-								);
-							}
-						}
-						return annotations;
+					protected Collection<AnnotationInstance> getAnnotations(DotName name) {
+						return annotations().get( name );
 					}
 				}
 		);
 
-		Map<String,IdGenerator> map = new HashMap<String, IdGenerator>();
+		Map<String,IdentifierGeneratorDefinition> map = new HashMap<String, IdentifierGeneratorDefinition>();
 		for ( IdentifierGeneratorSource source : identifierGeneratorSources ) {
 			map.put(
 					source.getGeneratorName(),
-					new IdGenerator(
+					new IdentifierGeneratorDefinition(
 							source.getGeneratorName(),
 							source.getGeneratorImplementationName(),
 							source.getParameters()

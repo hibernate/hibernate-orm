@@ -26,13 +26,17 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.AccessType;
 
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.ClassmateHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 
@@ -59,6 +63,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	public static EmbeddableHierarchy createEmbeddableHierarchy(
 			final Class<?> embeddableClass,
 			final String propertyName,
+			final ResolvedType resolvedType,
 			final AccessType accessType,
 			final NaturalIdMutability naturalIdMutability,
 			final String customTuplizerClass,
@@ -67,7 +72,11 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		final ClassInfo embeddableClassInfo = context.getClassInfo( embeddableClass.getName() );
 		checkIndexed( embeddableClass, embeddableClassInfo );
 		checkEmbeddableAnnotation( embeddableClass, embeddableClassInfo );
-
+		Map<String, ResolvedTypeWithMembers> resolvedTypeWithMembers = ClassmateHelper.resolveClassHierarchyTypesFromAttributeType(
+				embeddableClass,
+				resolvedType,
+				context
+		);
 		List<ClassInfo> classInfoList = new ArrayList<ClassInfo>();
 		Class<?> clazz = embeddableClass;
 		while ( clazz != null && !clazz.equals( Object.class ) ) {
@@ -81,6 +90,7 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 
 		return new EmbeddableHierarchy(
 				classInfoList,
+				resolvedTypeWithMembers,
 				propertyName,
 				naturalIdMutability,
 				customTuplizerClass,
@@ -114,20 +124,30 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 	@SuppressWarnings("unchecked")
 	private EmbeddableHierarchy(
 			final List<ClassInfo> classInfoList,
+			final Map<String, ResolvedTypeWithMembers> resolvedTypeWithMembers,
 			final String propertyName,
 			final NaturalIdMutability naturalIdMutability,
 			final String customTuplizerClass,
 			final AnnotationBindingContext context,
 			final AccessType defaultAccessType) {
 		this.defaultAccessType = defaultAccessType;
-		// the resolved type for the top level class in the hierarchy
-		context.resolveAllTypes( classInfoList.get( classInfoList.size() - 1 ).name().toString() );
 
 		this.embeddables = new ArrayList<EmbeddableClass>();
 		ConfiguredClass parent = null;
 		for ( ClassInfo info : classInfoList ) {
+			ResolvedTypeWithMembers fullyResolvedType = resolvedTypeWithMembers.get( info.toString() );
+			if ( fullyResolvedType == null ) {
+				throw new AssertionFailure( "Unable to find resolved type information for " + info.toString() );
+			}
 			EmbeddableClass embeddable = new EmbeddableClass(
-					info, propertyName, parent, defaultAccessType,naturalIdMutability,customTuplizerClass, context
+					info,
+					fullyResolvedType,
+					propertyName,
+					parent,
+					defaultAccessType,
+					naturalIdMutability,
+					customTuplizerClass,
+					context
 			);
 			embeddables.add( embeddable );
 			parent = embeddable;
@@ -163,4 +183,6 @@ public class EmbeddableHierarchy implements Iterable<EmbeddableClass> {
 		sb.append( '}' );
 		return sb.toString();
 	}
+
+
 }

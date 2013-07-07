@@ -24,7 +24,7 @@
 package org.hibernate.metamodel.spi.source;
 
 import org.hibernate.id.EntityIdentifierNature;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
 /**
  * Contract describing source of identifier information for the entity.
@@ -42,7 +42,7 @@ public interface IdentifierSource extends MetaSource{
      *
      * @return The generator source.
      */
-    IdGenerator getIdentifierGeneratorDescriptor();
+    IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor();
 
 	/**
 	 * Obtain the nature of this identifier source.

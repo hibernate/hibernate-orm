@@ -29,7 +29,7 @@ import java.util.Map;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbElementElement;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
 
@@ -40,7 +40,7 @@ public class BasicPluralAttributeElementSourceImpl
 		extends AbstractHbmSourceNode
 		implements BasicPluralAttributeElementSource {
 	private final List<RelationalValueSource> valueSources;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 
 	public BasicPluralAttributeElementSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -95,7 +95,7 @@ public class BasicPluralAttributeElementSourceImpl
 				}
 		);
 
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new HibernateTypeSource() {
 			@Override
 			public String getName() {
 				if ( elementElement.getTypeAttribute() != null ) {
@@ -114,6 +114,10 @@ public class BasicPluralAttributeElementSourceImpl
 				return elementElement.getType() != null
 						? Helper.extractParameters( elementElement.getType().getParam() )
 						: java.util.Collections.<String, String>emptyMap();
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 	}
@@ -144,7 +148,7 @@ public class BasicPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getExplicitHibernateTypeSource() {
+	public HibernateTypeSource getExplicitHibernateTypeSource() {
 		return typeSource;
 	}
 }

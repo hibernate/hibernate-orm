@@ -45,7 +45,7 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.Orderable;
@@ -64,7 +64,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 	private final PluralAssociationAttribute associationAttribute;
 	private final ConfiguredClass entityClass;
 	private final Nature nature;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
 	private final FilterSource[] filterSources;
 	private final String attributePath;
@@ -80,7 +80,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		this.associationAttribute = associationAttribute;
 		this.entityClass = entityClass;
 		this.keySource = new PluralAttributeKeySourceImpl( associationAttribute );
-		this.typeSource = new ExplicitHibernateTypeSourceImpl( associationAttribute );
+		this.typeSource = new HibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
 		this.attributePath = StringHelper.isEmpty( relativePath ) ? associationAttribute.getName() : relativePath + "." + associationAttribute.getName();
 
@@ -310,7 +310,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

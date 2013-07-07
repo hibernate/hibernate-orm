@@ -48,7 +48,7 @@ public interface AttributeSource extends MetaSource{
 	 *
 	 * @return The Hibernate type information
 	 */
-	public ExplicitHibernateTypeSource getTypeInformation();
+	public HibernateTypeSource getTypeInformation();
 
 	/**
 	 * Obtain the name of the property accessor style used to access this attribute.

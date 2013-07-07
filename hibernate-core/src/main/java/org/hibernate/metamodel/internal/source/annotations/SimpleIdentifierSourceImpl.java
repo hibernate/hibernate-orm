@@ -27,10 +27,9 @@ import java.util.Collections;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.id.EntityIdentifierNature;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -69,8 +68,8 @@ public class SimpleIdentifierSourceImpl implements SimpleIdentifierSource {
 	}
 
 	@Override
-	public IdGenerator getIdentifierGeneratorDescriptor() {
-		return attribute.getIdGenerator();
+	public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
+		return attribute.getIdentifierGeneratorDefinition();
 	}
 
 	@Override

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
@@ -35,7 +34,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
@@ -45,7 +43,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.IdType;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.DiscriminatorSource;
@@ -202,13 +200,13 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		}
 
 		@Override
-		public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName) {
+		public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName) {
 			// for now, return null.  this is that stupid specj bs
 			return null;
 		}
 
 		@Override
-		public IdGenerator getIdentifierGeneratorDescriptor() {
+		public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
 			// annotations do not currently allow generators to be attached to composite identifiers as a whole
 			return null;
 		}
@@ -277,13 +275,13 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 		}
 
 		@Override
-		public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName) {
+		public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName) {
 			// for now, return null.  this is that stupid specj bs
 			return null;
 		}
 
 		@Override
-		public IdGenerator getIdentifierGeneratorDescriptor() {
+		public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
 			// annotations do not currently allow generators to be attached to composite identifiers as a whole
 			return null;
 		}

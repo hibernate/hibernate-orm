@@ -33,7 +33,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssoc
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 
 /**
@@ -43,6 +43,23 @@ public class SequentialPluralAttributeIndexSourceImpl
 		extends BasicPluralAttributeIndexSourceImpl
 		implements SequentialPluralAttributeIndexSource {
 	private final int base;
+
+	private final static HibernateTypeSource INTERGER_TYPE = new HibernateTypeSource() {
+		@Override
+		public String getName() {
+			return "integer";
+		}
+
+		@Override
+		public Map<String, String> getParameters() {
+			return Collections.emptyMap();
+		}
+		@Override
+		public Class getJavaType() {
+			return null;
+		}
+	};
+
 	public SequentialPluralAttributeIndexSourceImpl(
 			IndexedPluralAttributeSourceImpl indexedPluralAttributeSource,
 			PluralAssociationAttribute attribute,
@@ -52,8 +69,8 @@ public class SequentialPluralAttributeIndexSourceImpl
 				attribute.annotations(),
 				HibernateDotNames.INDEX_COLUMN
 		);
-		if(columnAnnotation == null){
-			columnAnnotation   = JandexHelper.getSingleAnnotation(
+		if ( columnAnnotation == null ) {
+			columnAnnotation = JandexHelper.getSingleAnnotation(
 					attribute.annotations(),
 					JPADotNames.ORDER_COLUMN
 			);
@@ -67,17 +84,7 @@ public class SequentialPluralAttributeIndexSourceImpl
 		return base;
 	}
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
-		return new ExplicitHibernateTypeSource() {
-			@Override
-			public String getName() {
-				return "integer";
-			}
-
-			@Override
-			public Map<String, String> getParameters() {
-				return Collections.emptyMap();
-			}
-		};
+	public HibernateTypeSource getTypeInformation() {
+		return INTERGER_TYPE;
 	}
 }

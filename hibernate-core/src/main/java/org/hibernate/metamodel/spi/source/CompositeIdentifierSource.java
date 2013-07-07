@@ -23,7 +23,7 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 
 /**
  * @author Steve Ebersole
@@ -39,5 +39,5 @@ public interface CompositeIdentifierSource extends IdentifierSource {
 	 *
 	 * @return The generator for the named attribute (within the composite).
 	 */
-	public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName);
+	public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName);
 }

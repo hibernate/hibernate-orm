@@ -26,7 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.Map;
 
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 
 /**
@@ -40,8 +40,8 @@ public abstract class AbstractPluralAttributeIndexSourceImpl implements PluralAt
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
-		return new ExplicitHibernateTypeSource() {
+	public HibernateTypeSource getTypeInformation() {
+		return new HibernateTypeSource() {
 			@Override
 			public String getName() {
 				return attribute.getIndexTypeResolver().getExplicitHibernateTypeName();
@@ -50,6 +50,10 @@ public abstract class AbstractPluralAttributeIndexSourceImpl implements PluralAt
 			@Override
 			public Map<String, String> getParameters() {
 				return attribute.getIndexTypeResolver().getExplicitHibernateTypeParameters();
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 	}

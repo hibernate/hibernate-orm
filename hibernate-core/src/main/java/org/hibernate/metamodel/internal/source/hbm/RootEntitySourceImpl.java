@@ -43,7 +43,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbNaturalIdElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPolymorphismAttribute;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.Caching;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -349,20 +349,20 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public IdGenerator getIdentifierGeneratorDescriptor() {
+		public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
 			if ( entityElement().getId().getGenerator() != null ) {
 				final String generatorName = entityElement().getId().getGenerator().getClazz();
-				IdGenerator idGenerator = sourceMappingDocument().getMappingLocalBindingContext()
+				IdentifierGeneratorDefinition identifierGeneratorDefinition = sourceMappingDocument().getMappingLocalBindingContext()
 						.getMetadataImplementor()
 						.getIdGenerator( generatorName );
-				if ( idGenerator == null ) {
-					idGenerator = new IdGenerator(
+				if ( identifierGeneratorDefinition == null ) {
+					identifierGeneratorDefinition = new IdentifierGeneratorDefinition(
 							getEntityName() + generatorName,
 							generatorName,
 							Helper.extractParameters( entityElement().getId().getGenerator().getParam() )
 					);
 				}
-				return idGenerator;
+				return identifierGeneratorDefinition;
 			}
 			return null;
 		}
@@ -393,26 +393,26 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName) {
+		public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName) {
 			// for now, return null.  this is that stupid specj bs
 			return null;
 		}
 
 		@Override
-		public IdGenerator getIdentifierGeneratorDescriptor() {
+		public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
 			if ( entityElement().getCompositeId().getGenerator() != null ) {
 				final String generatorName = entityElement().getCompositeId().getGenerator().getClazz();
-				IdGenerator idGenerator = sourceMappingDocument().getMappingLocalBindingContext()
+				IdentifierGeneratorDefinition identifierGeneratorDefinition = sourceMappingDocument().getMappingLocalBindingContext()
 						.getMetadataImplementor()
 						.getIdGenerator( generatorName );
-				if ( idGenerator == null ) {
-					idGenerator = new IdGenerator(
+				if ( identifierGeneratorDefinition == null ) {
+					identifierGeneratorDefinition = new IdentifierGeneratorDefinition(
 							getEntityName() + generatorName,
 							generatorName,
 							Helper.extractParameters( entityElement().getCompositeId().getGenerator().getParam() )
 					);
 				}
-				return idGenerator;
+				return identifierGeneratorDefinition;
 			}
 			return null;
 		}
@@ -551,26 +551,26 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 		}
 
 		@Override
-		public IdGenerator getIndividualAttributeIdGenerator(String identifierAttributeName) {
+		public IdentifierGeneratorDefinition getIndividualAttributeIdGenerator(String identifierAttributeName) {
 			// for now, return null.  this is that stupid specj bs
 			return null;
 		}
 
 		@Override
-		public IdGenerator getIdentifierGeneratorDescriptor() {
+		public IdentifierGeneratorDefinition getIdentifierGeneratorDescriptor() {
 			if ( entityElement().getCompositeId().getGenerator() != null ) {
 				final String generatorName = entityElement().getCompositeId().getGenerator().getClazz();
-				IdGenerator idGenerator = sourceMappingDocument().getMappingLocalBindingContext()
+				IdentifierGeneratorDefinition identifierGeneratorDefinition = sourceMappingDocument().getMappingLocalBindingContext()
 						.getMetadataImplementor()
 						.getIdGenerator( generatorName );
-				if ( idGenerator == null ) {
-					idGenerator = new IdGenerator(
+				if ( identifierGeneratorDefinition == null ) {
+					identifierGeneratorDefinition = new IdentifierGeneratorDefinition(
 							getEntityName() + generatorName,
 							generatorName,
 							Helper.extractParameters( entityElement().getCompositeId().getGenerator().getParam() )
 					);
 				}
-				return idGenerator;
+				return identifierGeneratorDefinition;
 			}
 			return null;
 		}

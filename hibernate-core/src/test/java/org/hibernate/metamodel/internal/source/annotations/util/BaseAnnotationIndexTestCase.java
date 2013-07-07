@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.util;
 import java.util.Set;
 import javax.persistence.AccessType;
 
+import com.fasterxml.classmate.ResolvedType;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.junit.After;
@@ -73,7 +74,8 @@ public abstract class BaseAnnotationIndexTestCase extends BaseUnitTestCase {
 				configuredClasses
 		);
 		AnnotationBindingContext context = new AnnotationBindingContextImpl( meta, index );
-		return EmbeddableHierarchy.createEmbeddableHierarchy( configuredClasses[0], "", accessType,
+		ResolvedType resolvedType = context.getTypeResolver().resolve( configuredClasses[0] );
+		return EmbeddableHierarchy.createEmbeddableHierarchy( configuredClasses[0], "",resolvedType, accessType,
 				naturalIdMutability,null, context );
 	}
 }

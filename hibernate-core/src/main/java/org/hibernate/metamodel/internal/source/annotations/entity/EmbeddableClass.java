@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import javax.persistence.AccessType;
 
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
@@ -52,13 +53,14 @@ public class EmbeddableClass extends ConfiguredClass {
 
 	public EmbeddableClass(
 			ClassInfo classInfo,
+			ResolvedTypeWithMembers fullyResolvedType,
 			String embeddedAttributeName,
 			ConfiguredClass parent,
 			AccessType defaultAccessType,
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			String customTuplizerClass,
 			AnnotationBindingContext context) {
-		super( classInfo, defaultAccessType, parent, embeddedAttributeName, context );
+		super( classInfo, fullyResolvedType, defaultAccessType, parent, embeddedAttributeName, context );
 		this.embeddedAttributeName = embeddedAttributeName;
 		this.naturalIdMutability = naturalIdMutability;
 		this.parentReferencingAttributeName = checkParentAnnotation();

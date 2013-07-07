@@ -64,7 +64,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -77,7 +77,7 @@ import org.hibernate.type.TypeFactory;
 /**
  * Delegate for handling:<ol>
  * <li>
- * binding of Hibernate type information ({@link ExplicitHibernateTypeSource} ->
+ * binding of Hibernate type information ({@link org.hibernate.metamodel.spi.source.HibernateTypeSource} ->
  * {@link HibernateTypeDescriptor}
  * </li>
  * <li>
@@ -240,14 +240,14 @@ class HibernateTypeHelper {
 
 	void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
-			final ExplicitHibernateTypeSource explicitTypeSource,
+			final HibernateTypeSource explicitTypeSource,
 			final String defaultJavaTypeName){
 		bindHibernateTypeDescriptor( hibernateTypeDescriptor, explicitTypeSource, defaultJavaTypeName, null);
 	}
 
 	void bindHibernateTypeDescriptor(
 			final HibernateTypeDescriptor hibernateTypeDescriptor,
-			final ExplicitHibernateTypeSource explicitTypeSource,
+			final HibernateTypeSource explicitTypeSource,
 			final String defaultJavaTypeName,
 			final Type resolvedType) {
 		final String explicitTypeName = explicitTypeSource != null ? explicitTypeSource.getName() : null;
@@ -407,7 +407,7 @@ class HibernateTypeHelper {
 			final SingularAttributeBinding attributeBinding) {
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding
 				.getHibernateTypeDescriptor();
-		final Class<?> attributeJavaType =  determineJavaType( attributeBinding);
+		final Class<?> attributeJavaType =  determineJavaType( attributeSource, attributeBinding);
 		//try to resolve this attribute's java type first
 		final String defaultJavaTypeName;
 		if ( attributeJavaType != null ) {
@@ -712,7 +712,12 @@ class HibernateTypeHelper {
 	}
 
 
-	private static Class<?> determineJavaType(final SingularAttributeBinding attributeBinding) {
+	private static Class<?> determineJavaType(final SingularAttributeSource attributeSource,
+											  final SingularAttributeBinding attributeBinding) {
+		Class clazz = attributeSource.getTypeInformation().getJavaType();
+		if ( clazz != null ) {
+			return clazz;
+		}
 		final SingularAttribute attribute = attributeBinding.getAttribute();
 		try {
 			final EntityMode entityMode = attributeBinding.getContainer()

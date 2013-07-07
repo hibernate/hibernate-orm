@@ -31,7 +31,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbVersionElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
@@ -78,7 +78,7 @@ class VersionAttributeSourceImpl
 		);
 	}
 
-	private final ExplicitHibernateTypeSource typeSource = new ExplicitHibernateTypeSource() {
+	private final HibernateTypeSource typeSource = new HibernateTypeSource() {
 		@Override
 		public String getName() {
 			return versionElement.getType() == null ? "integer" : versionElement.getType();
@@ -86,6 +86,10 @@ class VersionAttributeSourceImpl
 
 		@Override
 		public Map<String, String> getParameters() {
+			return null;
+		}
+		@Override
+		public Class getJavaType() {
 			return null;
 		}
 	};
@@ -101,7 +105,7 @@ class VersionAttributeSourceImpl
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

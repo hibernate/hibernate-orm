@@ -96,7 +96,7 @@ public class SimpleValueBindingTests extends BaseUnitTestCase {
 
 		entityBinding.getHierarchyDetails().getEntityIdentifier().prepareAsSimpleIdentifier(
 				attributeBinding,
-				new IdGenerator( "assigned", "assigned", Collections.<String,String>emptyMap() ),
+				new IdentifierGeneratorDefinition( "assigned", "assigned", Collections.<String,String>emptyMap() ),
 				"null"
 		);
 	}

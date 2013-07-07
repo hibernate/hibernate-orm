@@ -42,7 +42,7 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -104,7 +104,7 @@ public interface Metadata {
 	 * @return the "root entity binding; simply returns entityBinding if it is the root entity binding
 	 */
 	EntityBinding getRootEntityBinding(String entityName);
-	IdGenerator getIdGenerator(String name);
+	IdentifierGeneratorDefinition getIdGenerator(String name);
 	boolean hasTypeDefinition(String name);
 	TypeDefinition getTypeDefinition(String name);
 

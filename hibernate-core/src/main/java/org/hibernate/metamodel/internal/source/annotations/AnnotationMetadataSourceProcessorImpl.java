@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 
 import org.hibernate.AssertionFailure;
@@ -59,17 +60,12 @@ import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
  * @author Steve Ebersole
  */
 public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-	private final MetadataImplementor metadata;
-	private final IndexView jandexView;
 
-	private AnnotationBindingContext bindingContext;
+	private final AnnotationBindingContext bindingContext;
 
 	public AnnotationMetadataSourceProcessorImpl(
 			MetadataImpl metadata,
-			MetadataSources metadataSources,
 			IndexView jandexView) {
-		this.metadata = metadata;
-		this.jandexView = jandexView;
 
 		if ( !jandexView.getAnnotations( PseudoJpaDotNames.DEFAULT_DELIMITED_IDENTIFIERS ).isEmpty() ) {
 			// todo : this needs to move to AnnotationBindingContext
@@ -139,7 +135,12 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		assertBindingContextExists();
 
 		return bindingContext.extractIdentifierGeneratorSources(
-				new GlobalIdentifierGeneratorSourceContainer( bindingContext )
+				new IdentifierGeneratorSourceContainerImpl() {
+					@Override
+					protected Collection<AnnotationInstance> getAnnotations(DotName name) {
+						return bindingContext.getIndex().getAnnotations( name );
+					}
+				}
 		);
 	}
 
@@ -157,40 +158,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		SqlResultSetProcessor.bind( bindingContext );
 		QueryProcessor.bind( bindingContext );
 
-	}
-
-	private class GlobalIdentifierGeneratorSourceContainer implements IdentifierGeneratorSourceContainer {
-		private final AnnotationBindingContext bindingContext;
-
-		public GlobalIdentifierGeneratorSourceContainer(AnnotationBindingContext bindingContext) {
-			this.bindingContext = bindingContext;
-		}
-
-		@Override
-		public Collection<AnnotationInstance> getSequenceGeneratorSources() {
-			return bindingContext.getIndex().getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
-		}
-
-		@Override
-		public Collection<AnnotationInstance> getTableGeneratorSources() {
-			return bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
-		}
-
-		@Override
-		public Collection<AnnotationInstance> getGenericGeneratorSources() {
-			List<AnnotationInstance> annotations = new ArrayList<AnnotationInstance>();
-
-			annotations.addAll( bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATOR ) );
-
-			for ( AnnotationInstance generatorsAnnotation : bindingContext.getIndex()
-					.getAnnotations( HibernateDotNames.GENERIC_GENERATORS ) ) {
-				Collections.addAll(
-						annotations,
-						JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )
-				);
-			}
-			return annotations;
-		}
 	}
 }
 

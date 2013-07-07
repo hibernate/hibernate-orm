@@ -77,32 +77,33 @@ public class EntityIdentifier {
 
 	public void prepareAsSimpleIdentifier(
 			SingularNonAssociationAttributeBinding attributeBinding,
-			IdGenerator idGenerator,
+			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue) {
 		ensureNotBound();
 		this.entityIdentifierBinding =
-				new SimpleAttributeIdentifierBindingImpl( attributeBinding, idGenerator, unsavedValue );
+				new SimpleAttributeIdentifierBindingImpl( attributeBinding, identifierGeneratorDefinition, unsavedValue );
 	}
 
 	public void prepareAsAggregatedCompositeIdentifier(
 			CompositeAttributeBinding attributeBinding,
-			IdGenerator idGenerator,
+			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue) {
 		ensureNotBound();
 		this.entityIdentifierBinding =
-				new AggregatedComponentIdentifierBindingImpl( attributeBinding, idGenerator, unsavedValue );
+				new AggregatedComponentIdentifierBindingImpl( attributeBinding,
+						identifierGeneratorDefinition, unsavedValue );
 	}
 
 	public void prepareAsNonAggregatedCompositeIdentifier(
 			CompositeAttributeBinding compositeAttributeBinding,
-			IdGenerator idGenerator,
+			IdentifierGeneratorDefinition identifierGeneratorDefinition,
 			String unsavedValue,
 			Class<?> externalAggregatingClass,
 			String externalAggregatingPropertyAccessorName) {
 		ensureNotBound();
 		this.entityIdentifierBinding = new NonAggregatedCompositeIdentifierBindingImpl(
 				compositeAttributeBinding,
-				idGenerator,
+				identifierGeneratorDefinition,
 				unsavedValue,
 				externalAggregatingClass,
 				externalAggregatingPropertyAccessorName
@@ -211,7 +212,7 @@ public class EntityIdentifier {
 	private abstract class EntityIdentifierBinding {
 		private final EntityIdentifierNature nature;
 		private final SingularNonAssociationAttributeBinding identifierAttributeBinding;
-		private final IdGenerator idGenerator;
+		private final IdentifierGeneratorDefinition identifierGeneratorDefinition;
 		private final String unsavedValue;
 		private final int columnCount;
 
@@ -219,11 +220,11 @@ public class EntityIdentifier {
 		protected EntityIdentifierBinding(
 				EntityIdentifierNature nature,
 				SingularNonAssociationAttributeBinding identifierAttributeBinding,
-				IdGenerator idGenerator,
+				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
 			this.nature = nature;
 			this.identifierAttributeBinding = identifierAttributeBinding;
-			this.idGenerator = idGenerator;
+			this.identifierGeneratorDefinition = identifierGeneratorDefinition;
 			this.unsavedValue = unsavedValue;
 
 			// Configure primary key in relational model
@@ -246,8 +247,8 @@ public class EntityIdentifier {
 			return unsavedValue;
 		}
 
-		protected IdGenerator getIdGenerator() {
-			return idGenerator;
+		protected IdentifierGeneratorDefinition getIdentifierGeneratorDefinition() {
+			return identifierGeneratorDefinition;
 		}
 
 		public int getColumnCount() {
@@ -282,7 +283,7 @@ public class EntityIdentifier {
 
 			// use the schema/catalog specified by getValue().getTable() - but note that
 			// if the schema/catalog were specified as params, they will already be initialized and
-			//will override the values set here (they are in idGenerator.getParameters().)
+			//will override the values set here (they are in identifierGeneratorDefinition.getParameters().)
 			Schema schema = table.getSchema();
 			if ( schema != null ) {
 				if ( schema.getName().getSchema() != null ) {
@@ -316,9 +317,9 @@ public class EntityIdentifier {
 						resolveTableNames( identifierGeneratorFactory.getDialect(), entityBinding )
 				);
 			}
-			params.putAll( getIdGenerator().getParameters() );
+			params.putAll( getIdentifierGeneratorDefinition().getParameters() );
 			return identifierGeneratorFactory.createIdentifierGenerator(
-					getIdGenerator().getStrategy(),
+					getIdentifierGeneratorDefinition().getStrategy(),
 					getAttributeBinding().getHibernateTypeDescriptor().getResolvedTypeMapping(),
 					params
 			);
@@ -328,9 +329,9 @@ public class EntityIdentifier {
 	private class SimpleAttributeIdentifierBindingImpl extends EntityIdentifierBinding {
 		SimpleAttributeIdentifierBindingImpl(
 				SingularNonAssociationAttributeBinding identifierAttributeBinding,
-				IdGenerator idGenerator,
+				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
-			super( SIMPLE, identifierAttributeBinding, idGenerator, unsavedValue );
+			super( SIMPLE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
 		}
 
 	}
@@ -366,9 +367,9 @@ public class EntityIdentifier {
 	private class AggregatedComponentIdentifierBindingImpl extends EntityIdentifierBinding {
 		AggregatedComponentIdentifierBindingImpl(
 				CompositeAttributeBinding identifierAttributeBinding,
-				IdGenerator idGenerator,
+				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue) {
-			super( AGGREGATED_COMPOSITE, identifierAttributeBinding, idGenerator, unsavedValue );
+			super( AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
 			if ( ! identifierAttributeBinding.isAggregated() ) {
 				throw new IllegalArgumentException(
 						String.format(
@@ -387,7 +388,7 @@ public class EntityIdentifier {
 			}
 			final EntityIdentifier entityIdentifier = entityBinding.getHierarchyDetails().getEntityIdentifier();
 
-			final boolean hasCustomGenerator = ! "assigned".equals( getIdGenerator().getStrategy() );
+			final boolean hasCustomGenerator = ! "assigned".equals( getIdentifierGeneratorDefinition().getStrategy() );
 			if ( hasCustomGenerator ) {
 				return super.createIdentifierGenerator(
 						factory, properties
@@ -445,11 +446,11 @@ public class EntityIdentifier {
 
 		NonAggregatedCompositeIdentifierBindingImpl(
 				CompositeAttributeBinding identifierAttributeBinding,
-				IdGenerator idGenerator,
+				IdentifierGeneratorDefinition identifierGeneratorDefinition,
 				String unsavedValue,
 				Class<?> externalAggregatingClass,
 				String externalAggregatingPropertyAccessorName) {
-			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, idGenerator, unsavedValue );
+			super( NON_AGGREGATED_COMPOSITE, identifierAttributeBinding, identifierGeneratorDefinition, unsavedValue );
 			if ( identifierAttributeBinding.isAggregated() ) {
 				throw new IllegalArgumentException(
 						String.format(

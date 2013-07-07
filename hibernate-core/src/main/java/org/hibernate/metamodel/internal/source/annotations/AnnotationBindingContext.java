@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.TypeResolver;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.IndexView;
 
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.source.BindingContext;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 
@@ -37,19 +37,40 @@ import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
  *
  * @author Steve Ebersole
  * @author Hardy Ferentschik
+ * @author Strong Liu
  */
 public interface AnnotationBindingContext extends BindingContext {
+	/**
+	 * The annotation repository that this context know about.
+	 *
+	 * @return The {@link IndexView} that this context know about.
+	 */
 	IndexView getIndex();
 
-	ClassInfo getClassInfo(String name);
+	/**
+	 * Gets the class (or interface, or annotation) that was scanned during the
+	 * indexing phase.
+	 *
+	 * @param className the name of the class
+	 * @return information about the class or null if it is not known
+	 */
+	ClassInfo getClassInfo(String className);
 
-	void resolveAllTypes(String className);
+	/**
+	 * Gets the {@literal ClassMate} {@link TypeResolver} used in this context.
+	 *
+	 * @return The {@link TypeResolver} associated within this context.
+	 */
+	TypeResolver getTypeResolver();
 
-	ResolvedType getResolvedType(Class<?> clazz);
+	/**
+	 * Gets the {@literal ClassMate} {@link MemberResolver} used in this context.
+	 *
+	 * @return The {@link MemberResolver} associated within this context.
+	 */
+	MemberResolver getMemberResolver();
 
-	ResolvedTypeWithMembers resolveMemberTypes(ResolvedType type);
+	Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container);
 
-	public Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container);
-
-	public IdGenerator findIdGenerator(String name);
+	IdentifierGeneratorDefinition findIdGenerator(String name);
 }

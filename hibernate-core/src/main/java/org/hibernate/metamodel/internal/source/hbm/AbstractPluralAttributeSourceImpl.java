@@ -38,7 +38,7 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AttributeSourceContainer;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
@@ -57,7 +57,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 	private final PluralAttributeElement pluralAttributeElement;
 	private final AttributeSourceContainer container;
 
-	private final ExplicitHibernateTypeSource typeInformation;
+	private final HibernateTypeSource typeInformation;
 
 	private final PluralAttributeKeySource keySource;
 	private final PluralAttributeElementSource elementSource;
@@ -85,7 +85,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 				StringHelper.qualify( container().getPath(), getName() )
 		);
 
-		this.typeInformation = new ExplicitHibernateTypeSource() {
+		this.typeInformation = new HibernateTypeSource() {
 			@Override
 			public String getName() {
 				return pluralAttributeElement.getCollectionType();
@@ -94,6 +94,10 @@ public abstract class AbstractPluralAttributeSourceImpl
 			@Override
 			public Map<String, String> getParameters() {
 				return Collections.emptyMap();
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 		this.filterSources = buildFilterSources();
@@ -279,7 +283,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeInformation;
 	}
 

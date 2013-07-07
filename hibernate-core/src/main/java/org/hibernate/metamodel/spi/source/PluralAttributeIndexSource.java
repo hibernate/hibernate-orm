@@ -40,7 +40,7 @@ public interface PluralAttributeIndexSource extends RelationalValueSourceContain
 	 *
 	 * @return The Hibernate type information
 	 */
-	public ExplicitHibernateTypeSource getTypeInformation();
+	public HibernateTypeSource getTypeInformation();
 
 	/**
 	 * Is this plural attribute index source for an attribute of the referenced entity

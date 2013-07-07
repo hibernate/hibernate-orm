@@ -27,17 +27,18 @@ import java.util.Map;
 
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 
 /**
  * @author Hardy Ferentschik
  * @author Strong Liu
  */
-public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSource {
+public class HibernateTypeSourceImpl implements HibernateTypeSource {
 	private final ValueHolder<String> nameHolder;
 	private final ValueHolder<Map<String, String>> parameterHolder;
+	private final Class javaType;
 
-	public ExplicitHibernateTypeSourceImpl(final MappedAttribute attribute) {
+	public HibernateTypeSourceImpl(final MappedAttribute attribute) {
 		this.nameHolder = new ValueHolder<String>(
 				new ValueHolder.DeferredInitializer<String>() {
 					@Override
@@ -54,6 +55,7 @@ public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSou
 					}
 				}
 		);
+		this.javaType = attribute.getAttributeType();
 	}
 
 	@Override
@@ -64,6 +66,11 @@ public class ExplicitHibernateTypeSourceImpl implements ExplicitHibernateTypeSou
 	@Override
 	public Map<String, String> getParameters() {
 		return parameterHolder.getValue();
+	}
+
+	@Override
+	public Class getJavaType() {
+		return javaType;
 	}
 }
 

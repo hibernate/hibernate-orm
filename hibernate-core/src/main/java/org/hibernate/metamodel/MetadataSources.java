@@ -78,7 +78,7 @@ import org.w3c.dom.Document;
  * @author Brett Meyer
  */
 public class MetadataSources {
-	public static final String UNKOWN_FILE_PATH = "<unknown>";
+	public static final String UNKNOWN_FILE_PATH = "<unknown>";
 	
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class, MetadataSources.class.getName());
@@ -423,7 +423,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addInputStream(InputStream xmlInputStream) {
-		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, UNKOWN_FILE_PATH ), false );
+		add( xmlInputStream, new Origin( SourceType.INPUT_STREAM, UNKNOWN_FILE_PATH ), false );
 		return this;
 	}
 
@@ -456,7 +456,7 @@ public class MetadataSources {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addDocument(Document document) {
-		final Origin origin = new Origin( SourceType.DOM, UNKOWN_FILE_PATH );
+		final Origin origin = new Origin( SourceType.DOM, UNKNOWN_FILE_PATH );
 		JaxbRoot jaxbRoot = jaxbProcessor.unmarshal( document, origin );
 		addJaxbRoot( jaxbRoot );
 		return this;

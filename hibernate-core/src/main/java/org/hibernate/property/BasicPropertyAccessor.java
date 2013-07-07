@@ -295,8 +295,8 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 			final String methodName = method.getName();
 
 			if ( method.getParameterTypes().length == 1 && methodName.startsWith( "set" ) ) {
-				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
 				String testOldMethod = methodName.substring( 3 );
+				String testStdMethod = Introspector.decapitalize( testOldMethod );
 				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
 					potentialSetter = method;
 					if ( returnType == null || method.getParameterTypes()[0].equals( returnType ) ) {
@@ -363,27 +363,27 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 				continue;
 			}
 
-			final String methodName = method.getName();
-
-			// try "get"
-			if ( methodName.startsWith( "get" ) ) {
-				String testStdMethod = Introspector.decapitalize( methodName.substring( 3 ) );
-				String testOldMethod = methodName.substring( 3 );
-				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
-					return method;
-				}
+			if ( match( "get", propertyName, method ) ) {
+				return method;
 			}
-
-			// if not "get", then try "is"
-			if ( methodName.startsWith( "is" ) ) {
-				String testStdMethod = Introspector.decapitalize( methodName.substring( 2 ) );
-				String testOldMethod = methodName.substring( 2 );
-				if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
-					return method;
-				}
+			if ( match( "is", propertyName, method ) ) {
+				return method;
 			}
 		}
 
 		return null;
+	}
+
+	private static boolean match(final String perfix, final String propertyName, final Method method) {
+		final String methodName = method.getName();
+		final int perfixLength = perfix.length();
+		if ( methodName.startsWith( perfix ) ) {
+			final String testOldMethod = methodName.substring( perfixLength );
+			final String testStdMethod = Introspector.decapitalize( testOldMethod );
+			if ( testStdMethod.equals( propertyName ) || testOldMethod.equals( propertyName ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

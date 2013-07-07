@@ -73,6 +73,8 @@ public final class ReflectHelper {
 	private static final Method OBJECT_HASHCODE;
 	
 	private static final TypeResolver TYPE_RESOLVER = new TypeResolver();
+	private static final MemberResolver MEMBER_RESOLVER = new MemberResolver( TYPE_RESOLVER );
+
 
 	static {
 		Method eq;
@@ -255,6 +257,9 @@ public final class ReflectHelper {
 
 	/**
 	 * Attempt to resolve the specified property type through reflection.
+	 *
+	 * TODO: Note, if the property is generified, then this method can do nothing but return the erased type, which is {@link java.lang.Object}
+	 * so, in some word, this method is not correct.
 	 *
 	 * @param clazz The class owning the property.
 	 * @param name The name of the property.
@@ -459,8 +464,7 @@ public final class ReflectHelper {
 		Set<Class<?>> fieldTypes = new HashSet<Class<?>>();
 		
 		ResolvedType resolvedType = TYPE_RESOLVER.resolve( clazz );
-		MemberResolver memberResolver = new MemberResolver( TYPE_RESOLVER );
-		ResolvedTypeWithMembers resolvedTypes = memberResolver.resolve( resolvedType, null, null );
+		ResolvedTypeWithMembers resolvedTypes = MEMBER_RESOLVER.resolve( resolvedType, null, null );
 		ResolvedField[] resolvedFields = resolvedTypes.getMemberFields();
 		
 		for ( ResolvedField resolvedField : resolvedFields ) {

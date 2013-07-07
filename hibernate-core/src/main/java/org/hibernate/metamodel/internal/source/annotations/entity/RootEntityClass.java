@@ -31,6 +31,7 @@ import java.util.Map;
 import javax.persistence.AccessType;
 import javax.persistence.DiscriminatorType;
 
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
@@ -40,7 +41,6 @@ import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.JoinedIterable;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
@@ -92,35 +92,29 @@ public class RootEntityClass extends EntityClass {
 	 */
 	public RootEntityClass(
 			ClassInfo classInfo,
+			Map<String, ResolvedTypeWithMembers> resolvedTypeWithMembers,
 			List<ClassInfo> mappedSuperclasses,
 			AccessType hierarchyAccessType,
 			InheritanceType inheritanceType,
 			boolean hasSubclasses,
 			AnnotationBindingContext context) {
-		super( classInfo, null, hierarchyAccessType, inheritanceType, context );
-		resolveMappedSuperClass( mappedSuperclasses, hierarchyAccessType, context );
-
-		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
-			processDiscriminator();
-			this.needsDiscriminatorColumn = hasSubclasses || isDiscriminatorForced;
-		}
-
-		this.idType = determineIdType();
-	}
-
-	private void resolveMappedSuperClass(
-			final List<ClassInfo> mappedSuperclasses,
-			final AccessType hierarchyAccessType,
-			final AnnotationBindingContext context) {
+		super( classInfo, resolvedTypeWithMembers.get( classInfo.toString() ), null, hierarchyAccessType, inheritanceType, context );
 		for ( ClassInfo mappedSuperclassInfo : mappedSuperclasses ) {
 			MappedSuperclass configuredClass = new MappedSuperclass(
 					mappedSuperclassInfo,
+					resolvedTypeWithMembers.get( mappedSuperclassInfo.toString() ),
 					null,
 					hierarchyAccessType,
 					context
 			);
 			this.mappedSuperclasses.add( configuredClass );
 		}
+		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceType ) ) {
+			processDiscriminator();
+			this.needsDiscriminatorColumn = hasSubclasses || isDiscriminatorForced;
+		}
+
+		this.idType = determineIdType();
 	}
 
 	public boolean needsDiscriminatorColumn() {
@@ -155,8 +149,8 @@ public class RootEntityClass extends EntityClass {
 		return isDiscriminatorIncludedInSql;
 	}
 
-	protected List<PrimaryKeyJoinColumn> determinPrimaryKeyJoinColumns() {
-		List<PrimaryKeyJoinColumn> results = super.determinPrimaryKeyJoinColumns();
+	protected List<PrimaryKeyJoinColumn> determinePrimaryKeyJoinColumns() {
+		List<PrimaryKeyJoinColumn> results = super.determinePrimaryKeyJoinColumns();
 		if ( CollectionHelper.isNotEmpty( results ) ) {
 			LOG.invalidPrimaryKeyJoinColumnAnnotation();
 		}

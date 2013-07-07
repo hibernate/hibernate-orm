@@ -30,7 +30,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyPropertyElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -46,7 +46,7 @@ class KeyAttributeSourceImpl
 		implements SingularAttributeSource {
 	private final JaxbKeyPropertyElement keyPropertyElement;
 	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 
 	public KeyAttributeSourceImpl(
@@ -56,7 +56,7 @@ class KeyAttributeSourceImpl
 		super( mappingDocument );
 		this.keyPropertyElement = keyPropertyElement;
 		this.naturalIdMutability = naturalIdMutability;
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new HibernateTypeSource() {
 			private final String name = keyPropertyElement.getTypeAttribute() != null
 					? keyPropertyElement.getTypeAttribute()
 					: keyPropertyElement.getType() != null
@@ -74,6 +74,10 @@ class KeyAttributeSourceImpl
 			@Override
 			public Map<String, String> getParameters() {
 				return parameters;
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 		this.valueSources = Helper.buildValueSources(
@@ -118,7 +122,7 @@ class KeyAttributeSourceImpl
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

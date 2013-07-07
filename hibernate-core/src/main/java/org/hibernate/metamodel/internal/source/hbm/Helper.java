@@ -58,7 +58,7 @@ import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.MetaAttribute;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
@@ -74,7 +74,7 @@ import org.hibernate.metamodel.spi.source.TableSpecificationSource;
  */
 public class Helper {
 	private static final String NATURAL_ID_CACHE_SUFFIX = "##NaturalId";
-	public static final ExplicitHibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new ExplicitHibernateTypeSource() {
+	public static final HibernateTypeSource TO_ONE_ATTRIBUTE_TYPE_SOURCE = new HibernateTypeSource() {
 		@Override
 		public String getName() {
 			return null;
@@ -82,6 +82,10 @@ public class Helper {
 
 		@Override
 		public Map<String, String> getParameters() {
+			return null;
+		}
+		@Override
+		public Class getJavaType() {
 			return null;
 		}
 	};

@@ -30,7 +30,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbPropertyElement;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -43,7 +43,7 @@ import org.hibernate.metamodel.spi.source.SizeSource;
  */
 class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements SingularAttributeSource {
 	private final JaxbPropertyElement propertyElement;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 	private final List<RelationalValueSource> valueSources;
 	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 	private final String containingTableName;
@@ -55,7 +55,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability) {
 		super( sourceMappingDocument );
 		this.propertyElement = propertyElement;
-		this.typeSource = new ExplicitHibernateTypeSource() {
+		this.typeSource = new HibernateTypeSource() {
 			private final String name = propertyElement.getTypeAttribute() != null
 					? propertyElement.getTypeAttribute()
 					: propertyElement.getType() != null
@@ -73,6 +73,10 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 			@Override
 			public Map<String, String> getParameters() {
 				return parameters;
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 		this.containingTableName = logicalTableName;
@@ -135,7 +139,7 @@ class PropertyAttributeSourceImpl extends AbstractHbmSourceNode implements Singu
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

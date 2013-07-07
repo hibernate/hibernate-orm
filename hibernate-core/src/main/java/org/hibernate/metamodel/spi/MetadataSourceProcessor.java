@@ -39,32 +39,32 @@ public interface MetadataSourceProcessor {
 	 *
 	 * @return The type descriptor sources.
 	 */
-	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources();
+	Iterable<TypeDescriptorSource> extractTypeDefinitionSources();
 
 	/**
 	 * Retrieve the sources pertaining to filter defs.
 	 *
 	 * @return The filter def sources.
 	 */
-	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources();
+	Iterable<FilterDefinitionSource> extractFilterDefinitionSources();
 
 	/**
 	 * Retrieve the sources of "global" identifier generator specifications.
 	 *
 	 * @return The identifier generator sources.
 	 */
-	public Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources();
+	Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources();
 
 	/**
 	 * Retrieve the entity hierarchies.
 	 *
 	 * @return The entity hierarchies
 	 */
-	public Iterable<EntityHierarchy> extractEntityHierarchies();
+	Iterable<EntityHierarchy> extractEntityHierarchies();
 
 	/**
 	 * Process the parts of the metadata that depend on mapping (entities, et al) information having been
 	 * processed and available.
 	 */
-	public void processMappingDependentMetadata();
+	void processMappingDependentMetadata();
 }

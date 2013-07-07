@@ -88,7 +88,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		}
 		catch ( InvalidMappingException e ) {
 			assertEquals( e.getOrigin().getType(), SourceType.INPUT_STREAM );
-			assertEquals( e.getOrigin().getName(), MetadataSources.UNKOWN_FILE_PATH );
+			assertEquals( e.getOrigin().getName(), MetadataSources.UNKNOWN_FILE_PATH );
 		}
 
 		try {
@@ -212,7 +212,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		}
 		catch ( InvalidMappingException inv ) {
 			assertEquals( inv.getOrigin().getType(), SourceType.INPUT_STREAM );
-			assertEquals( inv.getOrigin().getName(), MetadataSources.UNKOWN_FILE_PATH );
+			assertEquals( inv.getOrigin().getName(), MetadataSources.UNKNOWN_FILE_PATH );
 			assertTrue( !( inv.getCause() instanceof MappingNotFoundException ) );
 		}
 

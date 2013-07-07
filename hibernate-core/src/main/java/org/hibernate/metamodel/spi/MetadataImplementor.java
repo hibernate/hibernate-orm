@@ -33,7 +33,7 @@ import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.metamodel.Metadata;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
 import org.hibernate.metamodel.spi.binding.TypeDefinition;
@@ -47,39 +47,39 @@ import org.hibernate.type.TypeResolver;
  */
 public interface MetadataImplementor extends Metadata, BindingContext, Mapping {
 
-	public Database getDatabase();
+	Database getDatabase();
 
-	public TypeResolver getTypeResolver();
+	TypeResolver getTypeResolver();
 
-	public ObjectNameNormalizer getObjectNameNormalizer();
+	ObjectNameNormalizer getObjectNameNormalizer();
 
-	public void addImport(String entityName, String entityName1);
+	void addImport(String entityName, String entityName1);
 
-	public void addEntity(EntityBinding entityBinding);
+	void addEntity(EntityBinding entityBinding);
 
-	public void addSecondaryTable(SecondaryTable secondaryTable);
+	void addSecondaryTable(SecondaryTable secondaryTable);
 
-	public void addCollection(PluralAttributeBinding collectionBinding);
+	void addCollection(PluralAttributeBinding collectionBinding);
 
-	public void addFetchProfile(FetchProfile profile);
+	void addFetchProfile(FetchProfile profile);
 
-	public void addTypeDefinition(TypeDefinition typeDefinition);
+	void addTypeDefinition(TypeDefinition typeDefinition);
 
-	public void addFilterDefinition(FilterDefinition filterDefinition);
+	void addFilterDefinition(FilterDefinition filterDefinition);
 
-	public void addIdGenerator(IdGenerator generator);
+	void addIdGenerator(IdentifierGeneratorDefinition generator);
 
-	public void registerIdentifierGenerator(String name, String clazz);
+	void registerIdentifierGenerator(String name, String clazz);
 
-	public void addNamedNativeQuery(NamedSQLQueryDefinition def);
+	void addNamedNativeQuery(NamedSQLQueryDefinition def);
 
-	public void addNamedEntityGraph(NamedEntityGraphDefinition def);
+	void addNamedEntityGraph(NamedEntityGraphDefinition def);
 
-	public void addNamedQuery(NamedQueryDefinition def);
+	void addNamedQuery(NamedQueryDefinition def);
 
-	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
+	void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition);
 
-	public void setGloballyQuotedIdentifiers(boolean b);
+	void setGloballyQuotedIdentifiers(boolean b);
 
-	public MetaAttributeContext getGlobalMetaAttributeContext();
+	MetaAttributeContext getGlobalMetaAttributeContext();
 }

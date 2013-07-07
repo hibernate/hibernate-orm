@@ -37,7 +37,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttrib
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -47,7 +47,7 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
  */
 public class SingularAttributeSourceImpl implements SingularAttributeSource, AnnotationAttributeSource {
 	private final MappedAttribute attribute;
-	private final ExplicitHibernateTypeSource type;
+	private final HibernateTypeSource type;
 	private final String attributePath;
 
 	protected AttributeOverride attributeOverride;
@@ -58,7 +58,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource, Ann
 
 	public SingularAttributeSourceImpl(MappedAttribute attribute, String parentPath) {
 		this.attribute = attribute;
-		this.type = new ExplicitHibernateTypeSourceImpl( attribute );
+		this.type = new HibernateTypeSourceImpl( attribute );
 		this.attributePath = StringHelper.isEmpty( parentPath ) ? attribute.getName() : parentPath + "." + attribute.getName();
 	}
 
@@ -73,7 +73,7 @@ public class SingularAttributeSourceImpl implements SingularAttributeSource, Ann
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return type;
 	}
 

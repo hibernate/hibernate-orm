@@ -54,7 +54,7 @@ public interface TypeDescriptorSource {
 	 * that registry.
 	 * <p/>
 	 * Note that if the type def contains registration keys, it should be considered illegal for its
-	 * corresponding {@link ExplicitHibernateTypeSource} to define parameters.
+	 * corresponding {@link HibernateTypeSource} to define parameters.
 	 *
 	 * @return The registration keys for the type built from this type def.
 	 */

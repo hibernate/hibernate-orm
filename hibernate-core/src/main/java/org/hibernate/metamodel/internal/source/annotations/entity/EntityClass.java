@@ -25,11 +25,10 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.AccessType;
 
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
@@ -42,8 +41,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.util.AnnotationParserHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -111,11 +108,12 @@ public class EntityClass extends ConfiguredClass {
 	 */
 	public EntityClass(
 			ClassInfo classInfo,
+			ResolvedTypeWithMembers fullyResolvedType,
 			EntityClass parent,
 			AccessType hierarchyAccessType,
 			InheritanceType inheritanceType,
 			AnnotationBindingContext context) {
-		super( classInfo, hierarchyAccessType, parent, context );
+		super( classInfo, fullyResolvedType, hierarchyAccessType, parent, context );
 		this.inheritanceType = inheritanceType;
 
 		this.explicitEntityName = determineExplicitEntityName();
@@ -149,7 +147,7 @@ public class EntityClass extends ConfiguredClass {
 				HibernateDotNames.FOREIGN_KEY,
 				ClassInfo.class
 		);
-		this.joinedSubclassPrimaryKeyJoinColumnSources = determinPrimaryKeyJoinColumns();
+		this.joinedSubclassPrimaryKeyJoinColumnSources = determinePrimaryKeyJoinColumns();
 		if ( foreignKey != null ) {
 			ensureJoinedSubEntity();
 			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class );
@@ -311,7 +309,7 @@ public class EntityClass extends ConfiguredClass {
 		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
 	}
 
-	protected List<PrimaryKeyJoinColumn> determinPrimaryKeyJoinColumns() {
+	protected List<PrimaryKeyJoinColumn> determinePrimaryKeyJoinColumns() {
 		final AnnotationInstance primaryKeyJoinColumns = JandexHelper.getSingleAnnotation(
 				getClassInfo(),
 				JPADotNames.PRIMARY_KEY_JOIN_COLUMNS,

@@ -85,7 +85,7 @@ import org.hibernate.metamodel.spi.binding.EntityDiscriminator;
 import org.hibernate.metamodel.spi.binding.EntityIdentifier;
 import org.hibernate.metamodel.spi.binding.EntityVersion;
 import org.hibernate.metamodel.spi.binding.HibernateTypeDescriptor;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.binding.ManyToManyPluralAttributeElementBinding;
@@ -1062,11 +1062,11 @@ public class Binder {
 		);
 
 		// Configure ID generator
-		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		IdentifierGeneratorDefinition generator = identifierSource.getIdentifierGeneratorDescriptor();
 		if ( generator == null ) {
 			final Map<String, String> params = new HashMap<String, String>();
 			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
-			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+			generator = new IdentifierGeneratorDefinition( "default_assign_identity_generator", "assigned", params );
 		}
 
 		// determine the unsaved value mapping
@@ -1089,11 +1089,11 @@ public class Binder {
 				);
 
 		// Configure ID generator
-		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		IdentifierGeneratorDefinition generator = identifierSource.getIdentifierGeneratorDescriptor();
 		if ( generator == null ) {
 			final Map<String, String> params = new HashMap<String, String>();
 			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
-			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+			generator = new IdentifierGeneratorDefinition( "default_assign_identity_generator", "assigned", params );
 		}
 
 		// determine the unsaved value mapping
@@ -1125,11 +1125,11 @@ public class Binder {
 						propertyAccessorName( identifierSource.getIdClassPropertyAccessorName() );
 
 		// Configure ID generator
-		IdGenerator generator = identifierSource.getIdentifierGeneratorDescriptor();
+		IdentifierGeneratorDefinition generator = identifierSource.getIdentifierGeneratorDescriptor();
 		if ( generator == null ) {
 			final Map<String, String> params = new HashMap<String, String>();
 			params.put( IdentifierGenerator.ENTITY_NAME, rootEntityBinding.getEntity().getName() );
-			generator = new IdGenerator( "default_assign_identity_generator", "assigned", params );
+			generator = new IdentifierGeneratorDefinition( "default_assign_identity_generator", "assigned", params );
 		}
 		// Create the synthetic attribute
 		final SingularAttribute syntheticAttribute =
@@ -3491,7 +3491,7 @@ public class Binder {
 
 	private static String interpretIdentifierUnsavedValue(
 			final IdentifierSource identifierSource,
-			final IdGenerator generator) {
+			final IdentifierGeneratorDefinition generator) {
 		if ( identifierSource == null ) {
 			throw new IllegalArgumentException( "identifierSource must be non-null." );
 		}

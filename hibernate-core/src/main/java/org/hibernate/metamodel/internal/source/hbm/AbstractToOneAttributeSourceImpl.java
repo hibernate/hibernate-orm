@@ -35,7 +35,7 @@ import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
@@ -56,7 +56,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 
 	}
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return Helper.TO_ONE_ATTRIBUTE_TYPE_SOURCE;
 	}
 

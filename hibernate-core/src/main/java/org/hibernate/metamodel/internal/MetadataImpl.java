@@ -24,8 +24,6 @@
 package org.hibernate.metamodel.internal;
 
 import java.io.Serializable;
-import java.sql.Blob;
-import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -82,7 +80,7 @@ import org.hibernate.metamodel.spi.binding.BackRefAttributeBinding;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
-import org.hibernate.metamodel.spi.binding.IdGenerator;
+import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.binding.IndexedPluralAttributeBinding;
 import org.hibernate.metamodel.spi.binding.ManyToOneAttributeBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -147,7 +145,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	private final Map<String, PluralAttributeBinding> collectionBindingMap = new HashMap<String, PluralAttributeBinding>();
 	private final Map<String, FetchProfile> fetchProfiles = new HashMap<String, FetchProfile>();
 	private final Map<String, String> imports = new HashMap<String, String>();
-	private final Map<String, IdGenerator> idGenerators = new HashMap<String, IdGenerator>();
+	private final Map<String, IdentifierGeneratorDefinition> idGenerators = new HashMap<String, IdentifierGeneratorDefinition>();
 	private final Map<String, NamedQueryDefinition> namedQueryDefs = new HashMap<String, NamedQueryDefinition>();
 	private final Map<String, NamedSQLQueryDefinition> namedNativeQueryDefs = new HashMap<String, NamedSQLQueryDefinition>();
 	private final Map<String, ResultSetMappingDefinition> resultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
@@ -188,12 +186,12 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( options.getMetadataSourceProcessingOrder() == MetadataSourceProcessingOrder.HBM_FIRST ) {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {
 					new HbmMetadataSourceProcessorImpl( this, metadataSources ),
-					new AnnotationMetadataSourceProcessorImpl( this, metadataSources, jandexView )
+					new AnnotationMetadataSourceProcessorImpl( this, jandexView )
 			};
 		}
 		else {
 			metadataSourceProcessors = new MetadataSourceProcessor[] {
-					new AnnotationMetadataSourceProcessorImpl( this, metadataSources, jandexView ),
+					new AnnotationMetadataSourceProcessorImpl( this, jandexView ),
 					new HbmMetadataSourceProcessorImpl( this, metadataSources )
 			};
 		}
@@ -448,7 +446,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		for ( MetadataSourceProcessor processor : metadataSourceProcessors ) {
 			for ( IdentifierGeneratorSource identifierGeneratorSource : processor.extractGlobalIdentifierGeneratorSources() ) {
 				addIdGenerator(
-						new IdGenerator(
+						new IdentifierGeneratorDefinition(
 								identifierGeneratorSource.getGeneratorName(),
 								identifierGeneratorSource.getGeneratorImplementationName(),
 								identifierGeneratorSource.getParameters()
@@ -459,7 +457,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public void addIdGenerator(IdGenerator generator) {
+	public void addIdGenerator(IdentifierGeneratorDefinition generator) {
 		if ( generator == null || generator.getName() == null ) {
 			throw new IllegalArgumentException( "ID generator object or name is null." );
 		}
@@ -467,7 +465,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	@Override
-	public IdGenerator getIdGenerator(String name) {
+	public IdentifierGeneratorDefinition getIdGenerator(String name) {
 		if ( name == null ) {
 			throw new IllegalArgumentException( "null is not a valid generator name" );
 		}

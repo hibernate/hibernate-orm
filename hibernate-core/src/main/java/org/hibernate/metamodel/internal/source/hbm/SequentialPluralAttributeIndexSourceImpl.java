@@ -33,7 +33,7 @@ import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbListIndexElement;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.spi.binding.PluralAttributeIndexBinding;
-import org.hibernate.metamodel.spi.source.ExplicitHibernateTypeSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
@@ -43,7 +43,7 @@ import org.hibernate.metamodel.spi.source.SizeSource;
  */
 public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceNode implements SequentialPluralAttributeIndexSource {
 	private final List< RelationalValueSource > valueSources;
-	private final ExplicitHibernateTypeSource typeSource;
+	private final HibernateTypeSource typeSource;
 	private final int base;
 
 	public SequentialPluralAttributeIndexSourceImpl(MappingDocument sourceMappingDocument, final JaxbListIndexElement indexElement) {
@@ -72,7 +72,7 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 				return areValuesIncludedInUpdateByDefault();
 			}
 		} );
-		typeSource = new ExplicitHibernateTypeSource() {
+		typeSource = new HibernateTypeSource() {
 
 			@Override
 			public String getName() {
@@ -82,6 +82,10 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 			@Override
 			public Map< String, String > getParameters() {
 				return java.util.Collections.< String, String >emptyMap();
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 		base = Integer.parseInt( indexElement.getBase() );
@@ -119,7 +123,7 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 				return areValuesIncludedInUpdateByDefault();
 			}
 		} );
-		typeSource = new ExplicitHibernateTypeSource() {
+		typeSource = new HibernateTypeSource() {
 
 			@Override
 			public String getName() {
@@ -129,6 +133,10 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 			@Override
 			public Map< String, String > getParameters() {
 				return java.util.Collections.< String, String >emptyMap();
+			}
+			@Override
+			public Class getJavaType() {
+				return null;
 			}
 		};
 		base = 0;
@@ -164,7 +172,7 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 	}
 
 	@Override
-	public ExplicitHibernateTypeSource getTypeInformation() {
+	public HibernateTypeSource getTypeInformation() {
 		return typeSource;
 	}
 

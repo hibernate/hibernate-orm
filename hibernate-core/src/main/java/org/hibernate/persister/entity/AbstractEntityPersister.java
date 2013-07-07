@@ -4243,7 +4243,7 @@ public abstract class AbstractEntityPersister
 			naturalIdSnapshot = naturalIdHelper.extractNaturalIdValues( entitySnapshot, this );
 		}
 
-		naturalIdHelper.removeSharedNaturalIdCrossReference( this, id, naturalIdSnapshot );
+		naturalIdHelper.removeSharedNaturalIdCrossReference( this, id, naturalIdSnapshot, true );
 		naturalIdHelper.manageLocalNaturalIdCrossReference(
 				this,
 				id,

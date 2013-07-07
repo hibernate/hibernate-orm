@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
+import org.hibernate.metamodel.internal.source.annotations.global.IdGeneratorProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.QueryProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.SqlResultSetProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
@@ -73,80 +75,44 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 			metadata.setGloballyQuotedIdentifiers( true );
 		}
 
-		bindingContext = new AnnotationBindingContextImpl( metadata, jandexView );
+		this.bindingContext = new AnnotationBindingContextImpl( metadata, jandexView );
 	}
 
 	@Override
 	public Iterable<TypeDescriptorSource> extractTypeDefinitionSources() {
-		assertBindingContextExists();
-
 		List<TypeDescriptorSource> typeDescriptorSources = new ArrayList<TypeDescriptorSource>();
-		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEF );
+		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
+				bindingContext.getIndex(),
+				HibernateDotNames.TYPE_DEF,
+				HibernateDotNames.TYPE_DEFS
+		);
 		for ( AnnotationInstance typeDef : annotations ) {
 			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef ) );
-		}
-
-		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TYPE_DEFS );
-		for ( AnnotationInstance typeDefs : annotations ) {
-			AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
-					typeDefs,
-					"value",
-					AnnotationInstance[].class
-			);
-			for ( AnnotationInstance typeDef : typeDefAnnotations ) {
-				typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef ) );
-			}
 		}
 		return typeDescriptorSources;
 	}
 
-	private void assertBindingContextExists() {
-		if ( bindingContext == null ) {
-			throw new AssertionFailure( "The binding context should exist. Has prepare been called!?" );
-		}
-	}
-
 	@Override
 	public Iterable<FilterDefinitionSource> extractFilterDefinitionSources() {
-		assertBindingContextExists();
-
 		List<FilterDefinitionSource> filterDefinitionSources = new ArrayList<FilterDefinitionSource>();
-		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEF );
+		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
+				bindingContext.getIndex(),
+				HibernateDotNames.FILTER_DEF,
+				HibernateDotNames.FILTER_DEFS
+		);
 		for ( AnnotationInstance filterDef : annotations ) {
 			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef ) );
-		}
-
-		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FILTER_DEFS );
-		for ( AnnotationInstance filterDefs : annotations ) {
-			AnnotationInstance[] filterDefAnnotations = JandexHelper.getValue(
-					filterDefs,
-					"value",
-					AnnotationInstance[].class
-			);
-			for ( AnnotationInstance filterDef : filterDefAnnotations ) {
-				filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef ) );
-			}
 		}
 		return filterDefinitionSources;
 	}
 
 	@Override
 	public Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources() {
-		assertBindingContextExists();
-
-		return bindingContext.extractIdentifierGeneratorSources(
-				new IdentifierGeneratorSourceContainerImpl() {
-					@Override
-					protected Collection<AnnotationInstance> getAnnotations(DotName name) {
-						return bindingContext.getIndex().getAnnotations( name );
-					}
-				}
-		);
+		return IdGeneratorProcessor.extractGlobalIdentifierGeneratorSources( bindingContext );
 	}
 
 	@Override
 	public Iterable<EntityHierarchy> extractEntityHierarchies() {
-		assertBindingContextExists();
 		// need to order our annotated entities into an order we can process
 		return EntityHierarchyBuilder.createEntityHierarchies( bindingContext );
 	}

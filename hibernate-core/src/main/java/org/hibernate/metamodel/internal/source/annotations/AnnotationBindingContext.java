@@ -70,7 +70,6 @@ public interface AnnotationBindingContext extends BindingContext {
 	 */
 	MemberResolver getMemberResolver();
 
-	Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container);
 
 	IdentifierGeneratorDefinition findIdGenerator(String name);
 }

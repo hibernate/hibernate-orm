@@ -321,7 +321,7 @@ public class EntityClass extends ConfiguredClass {
 				ClassInfo.class
 		);
 
-		if(primaryKeyJoinColumn!=null || primaryKeyJoinColumns!=null){
+		if ( primaryKeyJoinColumn != null || primaryKeyJoinColumns != null ) {
 			ensureJoinedSubEntity();
 		}
 

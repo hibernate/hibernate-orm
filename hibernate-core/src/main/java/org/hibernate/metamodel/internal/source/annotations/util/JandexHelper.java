@@ -30,6 +30,8 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -199,6 +201,68 @@ public class JandexHelper {
 		}
 	}
 
+
+
+	public static Collection<AnnotationInstance> getAnnotations(
+			final IndexView indexView,
+			final DotName singularDotName,
+			final DotName pluralDotName
+	) {
+		List<AnnotationInstance> annotationInstances = new ArrayList<AnnotationInstance>();
+		annotationInstances.addAll( indexView.getAnnotations( singularDotName ) );
+
+		Collection<AnnotationInstance> pluralAnnotations = indexView.getAnnotations( pluralDotName );
+		for ( AnnotationInstance ann : pluralAnnotations ) {
+			AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
+					ann,
+					"value",
+					AnnotationInstance[].class
+			);
+			annotationInstances.addAll( Arrays.asList( typeDefAnnotations ) );
+		}
+		return annotationInstances;
+	}
+
+	public static Collection<AnnotationInstance> getAnnotations(
+			final Map<DotName, List<AnnotationInstance>> annotations,
+			final DotName singularDotName,
+			final DotName pluralDotName) {
+		return getAnnotations( annotations, singularDotName, pluralDotName, false );
+	}
+
+	public static Collection<AnnotationInstance> getAnnotations(
+			final Map<DotName, List<AnnotationInstance>> annotations,
+			final DotName singularDotName,
+			final DotName pluralDotName,
+			final boolean checkSingle) {
+		List<AnnotationInstance> annotationInstances = new ArrayList<AnnotationInstance>();
+
+		List<AnnotationInstance> list = annotations.get( singularDotName );
+		if ( list != null ) {
+			if ( checkSingle ) {
+				assertSingularAnnotationInstances( list );
+			}
+			annotationInstances.addAll( list );
+		}
+		Collection<AnnotationInstance> pluralAnnotations = annotations.get( pluralDotName );
+		if ( pluralAnnotations != null ) {
+			if ( checkSingle ) {
+				assertSingularAnnotationInstances( pluralAnnotations );
+			}
+			for ( AnnotationInstance ann : pluralAnnotations ) {
+				AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
+						ann,
+						"value",
+						AnnotationInstance[].class
+				);
+				annotationInstances.addAll( Arrays.asList( typeDefAnnotations ) );
+			}
+		}
+
+
+		return annotationInstances;
+	}
+
 	/**
 	 * @param classInfo the class info from which to retrieve the annotation instance
 	 * @param annotationName the annotation to retrieve from the class info
@@ -241,10 +305,18 @@ public class JandexHelper {
 		if ( annotationList.size() == 1 ) {
 			return annotationList.get( 0 );
 		}
-		throw new AssertionFailure(
-				"Found more than one instance of the annotation "
-						+ annotationList.get( 0 ).name().toString()
-						+ ". Expected was one." );
+		assertSingularAnnotationInstances( annotationList );
+		return null;//only here to make compiler happy
+	}
+
+	private static void assertSingularAnnotationInstances(Collection<AnnotationInstance> annotationInstances) {
+		if ( annotationInstances.size() > 1 ) {
+			throw new AssertionFailure(
+					"Found more than one instance of the annotation "
+							+ annotationInstances.iterator().next().name().toString()
+							+ ". Expected was one."
+			);
+		}
 	}
 
 	/**
@@ -258,20 +330,6 @@ public class JandexHelper {
 	public static AnnotationInstance getSingleAnnotation(Map<DotName, List<AnnotationInstance>> annotations, DotName annotationName)
 			throws AssertionFailure {
 		return getSingleAnnotation( annotations, annotationName, null );
-//		List<AnnotationInstance> annotationList = annotations.get( annotationName );
-//		if ( annotationList == null ) {
-//			return null;
-//		}
-//		else if ( annotationList.size() == 1 ) {
-//			return annotationList.get( 0 );
-//		}
-//		else {
-//			throw new AssertionFailure(
-//					"Found more than one instance of the annotation "
-//							+ annotationList.get( 0 ).name().toString()
-//							+ ". Expected was one."
-//			);
-//		}
 	}
 
 	/**

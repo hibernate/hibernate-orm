@@ -55,8 +55,6 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	private final ValueHolder<ClassLoaderService> classLoaderService;
 	private final IndexView index;
 
-	private final IdentifierGeneratorExtractionDelegate identifierGeneratorSourceCreationDelegate;
-
 	/**
 	 * Constructor
 	 *
@@ -76,9 +74,6 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 				}
 		);
 		this.index = index;
-		this.identifierGeneratorSourceCreationDelegate = new IdentifierGeneratorExtractionDelegate(
-				metadata.getOptions().useNewIdentifierGenerators()
-		);
 	}
 
 	@Override
@@ -100,11 +95,6 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	@Override
 	public TypeResolver getTypeResolver() {
 		return TYPE_RESOLVER;
-	}
-
-	@Override
-	public Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container) {
-		return identifierGeneratorSourceCreationDelegate.extractIdentifierGeneratorSources( container );
 	}
 
 	@Override

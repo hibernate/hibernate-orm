@@ -23,15 +23,9 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.classmate.MemberResolver;
 import com.fasterxml.classmate.TypeResolver;
-import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
 import org.jboss.jandex.IndexView;
 
 import org.hibernate.cfg.NamingStrategy;
@@ -40,7 +34,6 @@ import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainer;
-import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainerImpl;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.domain.Type;
@@ -59,35 +52,9 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	private final AnnotationBindingContext contextDelegate;
 	private final Origin origin;
 
-	private final Map<String,IdentifierGeneratorDefinition> localIdentifierGeneratorDefinitionMap;
-
 	public EntityBindingContext(AnnotationBindingContext contextDelegate, ConfiguredClass source) {
 		this.contextDelegate = contextDelegate;
 		this.origin = new Origin( SourceType.ANNOTATION, source.getName() );
-		this.localIdentifierGeneratorDefinitionMap = processLocalIdentifierGeneratorDefinitions( source.getClassInfo() );
-	}
-	private Map<String,IdentifierGeneratorDefinition> processLocalIdentifierGeneratorDefinitions(final ClassInfo classInfo) {
-		Iterable<IdentifierGeneratorSource> identifierGeneratorSources = extractIdentifierGeneratorSources(
-				new IdentifierGeneratorSourceContainerImpl() {
-					@Override
-					protected Collection<AnnotationInstance> getAnnotations(DotName name) {
-						return classInfo.annotations().get( name );
-					}
-				}
-		);
-
-		Map<String,IdentifierGeneratorDefinition> map = new HashMap<String, IdentifierGeneratorDefinition>();
-		for ( IdentifierGeneratorSource source : identifierGeneratorSources ) {
-			map.put(
-					source.getGeneratorName(),
-					new IdentifierGeneratorDefinition(
-							source.getGeneratorName(),
-							source.getGeneratorImplementationName(),
-							source.getParameters()
-					)
-			);
-		}
-		return map;
 	}
 
 	@Override
@@ -177,10 +144,6 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 
 	@Override
 	public IdentifierGeneratorDefinition findIdGenerator(String name) {
-		IdentifierGeneratorDefinition definition = localIdentifierGeneratorDefinitionMap.get( name );
-		if ( definition == null ) {
-			definition= contextDelegate.findIdGenerator( name );
-		}
-		return definition;
+		return contextDelegate.findIdGenerator( name );
 	}
 }

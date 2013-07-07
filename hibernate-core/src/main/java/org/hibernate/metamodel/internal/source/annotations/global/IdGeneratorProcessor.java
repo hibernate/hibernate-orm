@@ -23,8 +23,10 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.global;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
@@ -50,6 +52,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
+import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 
 /**
  * Binds {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and
@@ -73,49 +76,47 @@ public class IdGeneratorProcessor {
 	 *
 	 * @param bindingContext the context for annotation binding
 	 */
-	public static void bind(AnnotationBindingContext bindingContext) {
+	public static Iterable<IdentifierGeneratorSource> extractGlobalIdentifierGeneratorSources(AnnotationBindingContext bindingContext) {
+		List<IdentifierGeneratorSource> identifierGeneratorSources = new ArrayList<IdentifierGeneratorSource>();
 		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
 				.getAnnotations( JPADotNames.SEQUENCE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
-			bindSequenceGenerator( bindingContext.getMetadataImplementor(), generator );
+			bindSequenceGenerator( bindingContext.getMetadataImplementor(), generator, identifierGeneratorSources );
 		}
 
 		annotations = bindingContext.getIndex().getAnnotations( JPADotNames.TABLE_GENERATOR );
 		for ( AnnotationInstance generator : annotations ) {
-			bindTableGenerator( bindingContext.getMetadataImplementor(), generator );
+			bindTableGenerator( bindingContext.getMetadataImplementor(), generator, identifierGeneratorSources );
 		}
 
-		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATOR );
+		annotations = JandexHelper.getAnnotations(
+				bindingContext.getIndex(),
+				HibernateDotNames.GENERIC_GENERATOR,
+				HibernateDotNames.GENERIC_GENERATORS
+		);
 		for ( AnnotationInstance generator : annotations ) {
-			bindGenericGenerator( bindingContext.getMetadataImplementor(), generator );
+			bindGenericGenerator( generator, identifierGeneratorSources );
 		}
-
-		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.GENERIC_GENERATORS );
-		for ( AnnotationInstance generators : annotations ) {
-			for ( AnnotationInstance generator : JandexHelper.getValue(
-					generators,
-					"value",
-					AnnotationInstance[].class
-			) ) {
-				bindGenericGenerator( bindingContext.getMetadataImplementor(), generator );
-			}
-		}
+		return identifierGeneratorSources;
 	}
 
-	private static void addStringParameter(AnnotationInstance annotation,
-										   String element,
-										   Map<String, String> parameters,
-										   String parameter) {
+	private static void addStringParameter(
+			final AnnotationInstance annotation,
+			final String element,
+			final Map<String, String> parameters,
+			final String parameter) {
 		String string = JandexHelper.getValue( annotation, element, String.class );
 		if ( StringHelper.isNotEmpty( string ) ) {
 			parameters.put( parameter, string );
 		}
 	}
 
-	private static void bindGenericGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
-		String name = JandexHelper.getValue( generator, "name", String.class );
-		Map<String, String> parameterMap = new HashMap<String, String>();
-		AnnotationInstance[] parameterAnnotations = JandexHelper.getValue(
+	private static void bindGenericGenerator(
+			final AnnotationInstance generator,
+			final List<IdentifierGeneratorSource> identifierGeneratorSources) {
+		final String name = JandexHelper.getValue( generator, "name", String.class );
+		final Map<String, String> parameterMap = new HashMap<String, String>();
+		final AnnotationInstance[] parameterAnnotations = JandexHelper.getValue(
 				generator,
 				"parameters",
 				AnnotationInstance[].class
@@ -126,8 +127,8 @@ public class IdGeneratorProcessor {
 					JandexHelper.getValue( parameterAnnotation, "value", String.class )
 			);
 		}
-		metadata.addIdGenerator(
-				new IdentifierGeneratorDefinition(
+		identifierGeneratorSources.add(
+				new IdentifierGeneratorSourceImpl(
 						name,
 						JandexHelper.getValue( generator, "strategy", String.class ),
 						parameterMap
@@ -136,15 +137,21 @@ public class IdGeneratorProcessor {
 		LOG.tracef( "Add generic generator with name: %s", name );
 	}
 
-	private static void bindSequenceGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
-		String name = JandexHelper.getValue( generator, "name", String.class );
-		Map<String, String> parameterMap = new HashMap<String, String>();
-		addStringParameter( generator, "sequenceName", parameterMap, SequenceStyleGenerator.SEQUENCE_PARAM );
-		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
-		String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
+	private static void bindSequenceGenerator(
+			final MetadataImplementor metadata,
+			final AnnotationInstance generator,
+			final List<IdentifierGeneratorSource> identifierGeneratorSources) {
+		final String name = JandexHelper.getValue( generator, "name", String.class );
+
+		final boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
+		final String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 				GenerationType.SEQUENCE,
 				useNewIdentifierGenerators
 		);
+
+		final Map<String, String> parameterMap = new HashMap<String, String>();
+		addStringParameter( generator, "sequenceName", parameterMap, SequenceStyleGenerator.SEQUENCE_PARAM );
+
 		if ( useNewIdentifierGenerators ) {
 			addStringParameter( generator, "catalog", parameterMap, PersistentIdentifierGenerator.CATALOG );
 			addStringParameter( generator, "schema", parameterMap, PersistentIdentifierGenerator.SCHEMA );
@@ -166,20 +173,26 @@ public class IdGeneratorProcessor {
 					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) - 1 )
 			);
 		}
-		metadata.addIdGenerator( new IdentifierGeneratorDefinition( name, strategy, parameterMap ) );
+		identifierGeneratorSources.add( new IdentifierGeneratorSourceImpl( name, strategy, parameterMap ) );
 		LOG.tracef( "Add sequence generator with name: %s", name );
 	}
 
-	private static void bindTableGenerator(MetadataImplementor metadata, AnnotationInstance generator) {
-		String name = JandexHelper.getValue( generator, "name", String.class );
-		Map<String, String> parameterMap = new HashMap<String, String>();
-		addStringParameter( generator, "catalog", parameterMap, PersistentIdentifierGenerator.CATALOG );
-		addStringParameter( generator, "schema", parameterMap, PersistentIdentifierGenerator.SCHEMA );
-		boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
-		String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
+	private static void bindTableGenerator(
+			final MetadataImplementor metadata,
+			final AnnotationInstance generator,
+			final List<IdentifierGeneratorSource> identifierGeneratorSources) {
+		final String name = JandexHelper.getValue( generator, "name", String.class );
+
+		final boolean useNewIdentifierGenerators = metadata.getOptions().useNewIdentifierGenerators();
+		final String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 				GenerationType.TABLE,
 				useNewIdentifierGenerators
 		);
+
+		final Map<String, String> parameterMap = new HashMap<String, String>();
+		addStringParameter( generator, "catalog", parameterMap, PersistentIdentifierGenerator.CATALOG );
+		addStringParameter( generator, "schema", parameterMap, PersistentIdentifierGenerator.SCHEMA );
+
 		if ( useNewIdentifierGenerators ) {
 			parameterMap.put( TableGenerator.CONFIG_PREFER_SEGMENT_PER_ENTITY, "true" );
 			addStringParameter( generator, "table", parameterMap, TableGenerator.TABLE_PARAM );
@@ -188,18 +201,23 @@ public class IdGeneratorProcessor {
 			addStringParameter( generator, "valueColumnName", parameterMap, TableGenerator.VALUE_COLUMN_PARAM );
 			parameterMap.put(
 					TableGenerator.INCREMENT_PARAM,
-					String.valueOf( JandexHelper.getValue( generator, "allocationSize", String.class ) )
+					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) )
 			);
 			parameterMap.put(
 					TableGenerator.INITIAL_PARAM,
-					String.valueOf( JandexHelper.getValue( generator, "initialValue", String.class ) + 1 )
+					String.valueOf( JandexHelper.getValue( generator, "initialValue", Integer.class ) + 1 )
 			);
 		}
 		else {
 			addStringParameter( generator, "table", parameterMap, MultipleHiLoPerTableGenerator.ID_TABLE );
 			addStringParameter( generator, "pkColumnName", parameterMap, MultipleHiLoPerTableGenerator.PK_COLUMN_NAME );
 			addStringParameter( generator, "pkColumnValue", parameterMap, MultipleHiLoPerTableGenerator.PK_VALUE_NAME );
-			addStringParameter( generator, "valueColumnName", parameterMap, MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME );
+			addStringParameter(
+					generator,
+					"valueColumnName",
+					parameterMap,
+					MultipleHiLoPerTableGenerator.VALUE_COLUMN_NAME
+			);
 			parameterMap.put(
 					TableHiLoGenerator.MAX_LO,
 					String.valueOf( JandexHelper.getValue( generator, "allocationSize", Integer.class ) - 1 )
@@ -208,7 +226,37 @@ public class IdGeneratorProcessor {
 		if ( JandexHelper.getValue( generator, "uniqueConstraints", AnnotationInstance[].class ).length > 0 ) {
 			LOG.ignoringTableGeneratorConstraints( name );
 		}
-		metadata.addIdGenerator( new IdentifierGeneratorDefinition( name, strategy, parameterMap ) );
+		identifierGeneratorSources.add( new IdentifierGeneratorSourceImpl( name, strategy, parameterMap ) );
 		LOG.tracef( "Add table generator with name: %s", name );
+	}
+
+	private static class IdentifierGeneratorSourceImpl implements IdentifierGeneratorSource {
+		private final String generatorName;
+		private final String generatorImplementationName;
+		private final Map<String, String> parameterMap;
+
+		public IdentifierGeneratorSourceImpl(
+				String generatorName,
+				String generatorImplementationName,
+				Map<String, String> parameterMap) {
+			this.generatorName = generatorName;
+			this.generatorImplementationName = generatorImplementationName;
+			this.parameterMap = parameterMap;
+		}
+
+		@Override
+		public String getGeneratorName() {
+			return generatorName;
+		}
+
+		@Override
+		public String getGeneratorImplementationName() {
+			return generatorImplementationName;
+		}
+
+		@Override
+		public Map<String, String> getParameters() {
+			return parameterMap;
+		}
 	}
 }

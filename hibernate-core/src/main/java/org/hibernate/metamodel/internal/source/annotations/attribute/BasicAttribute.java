@@ -98,7 +98,6 @@ public class BasicAttribute extends MappedAttribute {
 
 	private final String customWriteFragment;
 	private final String customReadFragment;
-	private final Map<String,IdentifierGeneratorDefinition> localIdentifierGeneratorDefinitionMap;
 	private AttributeTypeResolver resolver;
 
 	public static BasicAttribute createSimpleAttribute(
@@ -135,7 +134,6 @@ public class BasicAttribute extends MappedAttribute {
 		}
 
 		if ( isId() ) {
-			localIdentifierGeneratorDefinitionMap = buildAttributeLocalIdentifierGeneratorDefinitions();
 			// an id must be unique and cannot be nullable
 			for ( Column columnValue : getColumnValues() ) {
 				columnValue.setUnique( true );
@@ -144,7 +142,6 @@ public class BasicAttribute extends MappedAttribute {
 			identifierGeneratorDefinition = checkGeneratedValueAnnotation();
 		}
 		else {
-			localIdentifierGeneratorDefinitionMap = Collections.EMPTY_MAP;
 			identifierGeneratorDefinition = null;
 		}
 
@@ -334,7 +331,7 @@ public class BasicAttribute extends MappedAttribute {
 		IdentifierGeneratorDefinition generator = null;
 		String name = JandexHelper.getValue( generatedValueAnnotation, "generator", String.class );
 		if ( StringHelper.isNotEmpty( name ) ) {
-			generator = locateIdentifierGeneratorDefinition( name );
+			generator = getContext().findIdGenerator( name );
 			if ( generator == null ) {
 				throw new MappingException( String.format( "Unable to find named generator %s", getRole() ), getContext().getOrigin() );
 			}
@@ -348,42 +345,6 @@ public class BasicAttribute extends MappedAttribute {
 			generator = new IdentifierGeneratorDefinition( null, strategy, null );
 		}
 		return generator;
-	}
-
-	protected IdentifierGeneratorDefinition locateIdentifierGeneratorDefinition(String name) {
-		// look locally first
-		IdentifierGeneratorDefinition generator = localIdentifierGeneratorDefinitionMap.get( name );
-
-		if ( generator == null ) {
-			// if not found locally, look "upward"
-			generator = getContext().findIdGenerator( name );
-		}
-
-		return generator;
-	}
-
-	protected Map<String,IdentifierGeneratorDefinition> buildAttributeLocalIdentifierGeneratorDefinitions() {
-		Iterable<IdentifierGeneratorSource> identifierGeneratorSources =  getContext().extractIdentifierGeneratorSources(
-				new IdentifierGeneratorSourceContainerImpl() {
-					@Override
-					protected Collection<AnnotationInstance> getAnnotations(DotName name) {
-						return annotations().get( name );
-					}
-				}
-		);
-
-		Map<String,IdentifierGeneratorDefinition> map = new HashMap<String, IdentifierGeneratorDefinition>();
-		for ( IdentifierGeneratorSource source : identifierGeneratorSources ) {
-			map.put(
-					source.getGeneratorName(),
-					new IdentifierGeneratorDefinition(
-							source.getGeneratorName(),
-							source.getGeneratorImplementationName(),
-							source.getParameters()
-					)
-			);
-		}
-		return map;
 	}
 
 	@Override

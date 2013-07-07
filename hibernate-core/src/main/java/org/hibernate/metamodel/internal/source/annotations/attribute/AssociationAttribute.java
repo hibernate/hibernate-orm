@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -457,35 +458,23 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	private void determineJoinColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
-		// single @JoinColumn
-		AnnotationInstance joinColumnAnnotation = JandexHelper.getSingleAnnotation(
+		Collection<AnnotationInstance> joinColumnAnnotations = JandexHelper.getAnnotations(
 				annotations,
-				JPADotNames.JOIN_COLUMN
+				JPADotNames.JOIN_COLUMN,
+				JPADotNames.JOIN_COLUMNS,
+				true
 		);
-		if ( joinColumnAnnotation != null ) {
+		for ( AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
 			joinColumnValues.add( new Column( joinColumnAnnotation ) );
 		}
 
-		// @JoinColumns
-		AnnotationInstance joinColumnsAnnotation = JandexHelper.getSingleAnnotation(
-				annotations,
-				JPADotNames.JOIN_COLUMNS
-		);
-		if ( joinColumnsAnnotation != null ) {
-			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( joinColumnsAnnotation, "value", AnnotationInstance[].class )
-			);
-			for ( AnnotationInstance annotation : columnsList ) {
-				joinColumnValues.add( new Column( annotation ) );
-			}
-		}
 
 		// @JoinColumn as part of @CollectionTable
 		AnnotationInstance collectionTableAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
 				JPADotNames.COLLECTION_TABLE
 		);
-		if(collectionTableAnnotation != null) {
+		if ( collectionTableAnnotation != null ) {
 			List<AnnotationInstance> columnsList = Arrays.asList(
 					JandexHelper.getValue( collectionTableAnnotation, "joinColumns", AnnotationInstance[].class )
 			);

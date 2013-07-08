@@ -23,23 +23,26 @@
  */
 package org.hibernate.test.schemaupdate;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * @author Max Rydahl Andersen
+ * @author Brett Meyer
  */
 public class MigrationTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
@@ -82,6 +85,49 @@ public class MigrationTest extends BaseUnitTestCase {
 		
 		new SchemaExport( serviceRegistry, v2cfg ).drop( false, true );
 
+	}
+	
+	/**
+	 * 3_Version.hbm.xml contains a named unique constraint and an un-named
+	 * unique constraint (will receive a randomly-generated name).  Create
+	 * the original schema with 2_Version.hbm.xml.  Then, run SchemaUpdate
+	 * TWICE using 3_Version.hbm.xml.  Neither RECREATE_QUIETLY nor SKIP should
+	 * generate any exceptions.
+	 */
+	@Test
+	@TestForIssue( jiraKey = "HHH-8162" )
+	public void testConstraintUpdate() {
+		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY);
+		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.RECREATE_QUIETLY);
+		doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy.SKIP);
+	}
+	
+	private void doConstraintUpdate(UniqueConstraintSchemaUpdateStrategy strategy) {
+		// original
+		String resource1 = "org/hibernate/test/schemaupdate/2_Version.hbm.xml";
+		// adds unique constraint
+		String resource2 = "org/hibernate/test/schemaupdate/3_Version.hbm.xml";
+		
+		Configuration v1cfg = new Configuration();
+		v1cfg.addResource( resource1 );
+		new SchemaExport( v1cfg ).execute( false, true, true, false );
+
+		// adds unique constraint
+		Configuration v2cfg = new Configuration();
+		v2cfg.getProperties().put( AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, strategy );
+		v2cfg.addResource( resource2 );
+		SchemaUpdate v2schemaUpdate = new SchemaUpdate( serviceRegistry, v2cfg );
+		v2schemaUpdate.execute( true, true );
+		assertEquals( 0, v2schemaUpdate.getExceptions().size() );
+
+		Configuration v3cfg = new Configuration();
+		v3cfg.getProperties().put( AvailableSettings.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY, strategy );
+		v3cfg.addResource( resource2 );
+		SchemaUpdate v3schemaUpdate = new SchemaUpdate( serviceRegistry, v3cfg );
+		v3schemaUpdate.execute( true, true );
+		assertEquals( 0, v3schemaUpdate.getExceptions().size() );
+		
+		new SchemaExport( serviceRegistry, v3cfg ).drop( false, true );
 	}
 
 }

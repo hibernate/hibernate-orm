@@ -135,7 +135,9 @@ import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.tool.hbm2ddl.DatabaseMetadata;
 import org.hibernate.tool.hbm2ddl.IndexMetadata;
+import org.hibernate.tool.hbm2ddl.SchemaUpdateScript;
 import org.hibernate.tool.hbm2ddl.TableMetadata;
+import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
@@ -1110,57 +1112,64 @@ public class Configuration implements Serializable {
 	 *
 	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
 	 *
-	 * @see org.hibernate.tool.hbm2ddl.SchemaExport
+	 * @see org.hibernate.tool.hbm2ddl.SchemaUpdate
+	 * 
+	 * @deprecated Use {@link #generateSchemaUpdateScriptList(Dialect, DatabaseMetadata)} instead
 	 */
 	@SuppressWarnings({ "unchecked" })
+	@Deprecated
 	public String[] generateSchemaUpdateScript(Dialect dialect, DatabaseMetadata databaseMetadata)
+			throws HibernateException {
+		List<SchemaUpdateScript> scripts = generateSchemaUpdateScriptList( dialect, databaseMetadata );
+		return SchemaUpdateScript.toStringArray( scripts );
+	}
+	
+	/**
+	 * @param dialect The dialect for which to generate the creation script
+	 * @param databaseMetadata The database catalog information for the database to be updated; needed to work out what
+	 * should be created/altered
+	 *
+	 * @return The sequence of DDL commands to apply the schema objects
+	 *
+	 * @throws HibernateException Generally indicates a problem calling {@link #buildMappings()}
+	 *
+	 * @see org.hibernate.tool.hbm2ddl.SchemaUpdate
+	 */
+	public List<SchemaUpdateScript> generateSchemaUpdateScriptList(Dialect dialect, DatabaseMetadata databaseMetadata)
 			throws HibernateException {
 		secondPassCompile();
 
 		String defaultCatalog = properties.getProperty( Environment.DEFAULT_CATALOG );
 		String defaultSchema = properties.getProperty( Environment.DEFAULT_SCHEMA );
+		UniqueConstraintSchemaUpdateStrategy constraintMethod = UniqueConstraintSchemaUpdateStrategy.interpret( properties
+				.get( Environment.UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY ) );
 
-		ArrayList<String> script = new ArrayList<String>( 50 );
+		List<SchemaUpdateScript> scripts = new ArrayList<SchemaUpdateScript>();
 
 		Iterator iter = getTableMappings();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
-			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema() ;
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema();
 			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
 			if ( table.isPhysicalTable() ) {
 
-				TableMetadata tableInfo = databaseMetadata.getTableMetadata(
-						table.getName(),
-						tableSchema,
-						tableCatalog,
-						table.isQuoted()
-				);
+				TableMetadata tableInfo = databaseMetadata.getTableMetadata( table.getName(), tableSchema,
+						tableCatalog, table.isQuoted() );
 				if ( tableInfo == null ) {
-					script.add(
-							table.sqlCreateString(
-									dialect,
-									mapping,
-									tableCatalog,
-									tableSchema
-								)
-						);
+					scripts.add( new SchemaUpdateScript( table.sqlCreateString( dialect, mapping, tableCatalog,
+							tableSchema ), false ) );
 				}
 				else {
-					Iterator<String> subiter = table.sqlAlterStrings(
-							dialect,
-							mapping,
-							tableInfo,
-							tableCatalog,
-							tableSchema
-						);
+					Iterator<String> subiter = table.sqlAlterStrings( dialect, mapping, tableInfo, tableCatalog,
+							tableSchema );
 					while ( subiter.hasNext() ) {
-						script.add( subiter.next() );
+						scripts.add( new SchemaUpdateScript( subiter.next(), false ) );
 					}
 				}
 
 				Iterator<String> comments = table.sqlCommentStrings( dialect, defaultCatalog, defaultSchema );
 				while ( comments.hasNext() ) {
-					script.add( comments.next() );
+					scripts.add( new SchemaUpdateScript( comments.next(), false ) );
 				}
 
 			}
@@ -1169,32 +1178,34 @@ public class Configuration implements Serializable {
 		iter = getTableMappings();
 		while ( iter.hasNext() ) {
 			Table table = (Table) iter.next();
-			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema() ;
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema();
 			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
 			if ( table.isPhysicalTable() ) {
 
-				TableMetadata tableInfo = databaseMetadata.getTableMetadata(
-						table.getName(),
-						tableSchema,
-						tableCatalog,
-						table.isQuoted()
-					);
+				TableMetadata tableInfo = databaseMetadata.getTableMetadata( table.getName(), tableSchema,
+						tableCatalog, table.isQuoted() );
 
-				Iterator uniqueIter = table.getUniqueKeyIterator();
-				while ( uniqueIter.hasNext() ) {
-					final UniqueKey uniqueKey = (UniqueKey) uniqueIter.next();
-					// Skip if index already exists.  Most of the time, this
-					// won't work since most Dialects use Constraints.  However,
-					// keep it for the few that do use Indexes.
-					if ( tableInfo != null && StringHelper.isNotEmpty( uniqueKey.getName() ) ) {
-						final IndexMetadata meta = tableInfo.getIndexMetadata( uniqueKey.getName() );
-						if ( meta != null ) {
-							continue;
+				if (! constraintMethod.equals( UniqueConstraintSchemaUpdateStrategy.SKIP )) {
+					Iterator uniqueIter = table.getUniqueKeyIterator();
+					while ( uniqueIter.hasNext() ) {
+						final UniqueKey uniqueKey = (UniqueKey) uniqueIter.next();
+						// Skip if index already exists. Most of the time, this
+						// won't work since most Dialects use Constraints. However,
+						// keep it for the few that do use Indexes.
+						if ( tableInfo != null && StringHelper.isNotEmpty( uniqueKey.getName() ) ) {
+							final IndexMetadata meta = tableInfo.getIndexMetadata( uniqueKey.getName() );
+							if ( meta != null ) {
+								continue;
+							}
 						}
+						String constraintString = uniqueKey.sqlCreateString( dialect, mapping, tableCatalog, tableSchema );
+						if ( constraintString != null && !constraintString.isEmpty() )
+							if ( constraintMethod.equals( UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) ) {
+								String constraintDropString = uniqueKey.sqlDropString( dialect, tableCatalog, tableCatalog );
+								scripts.add( new SchemaUpdateScript( constraintDropString, true) );
+							}
+							scripts.add( new SchemaUpdateScript( constraintString, true) );
 					}
-					String constraintString = uniqueKey.sqlCreateString( dialect,
-							mapping, tableCatalog, tableSchema );
-					if (constraintString != null) script.add( constraintString );
 				}
 
 				if ( dialect.hasAlterTable() ) {
@@ -1202,22 +1213,12 @@ public class Configuration implements Serializable {
 					while ( subIter.hasNext() ) {
 						ForeignKey fk = (ForeignKey) subIter.next();
 						if ( fk.isPhysicalConstraint() ) {
-							boolean create = tableInfo == null || (
-									tableInfo.getForeignKeyMetadata( fk ) == null && (
-											//Icky workaround for MySQL bug:
-											!( dialect instanceof MySQLDialect ) ||
-													tableInfo.getIndexMetadata( fk.getName() ) == null
-										)
-								);
+							boolean create = tableInfo == null || ( tableInfo.getForeignKeyMetadata( fk ) == null && (
+							// Icky workaround for MySQL bug:
+									!( dialect instanceof MySQLDialect ) || tableInfo.getIndexMetadata( fk.getName() ) == null ) );
 							if ( create ) {
-								script.add(
-										fk.sqlCreateString(
-												dialect,
-												mapping,
-												tableCatalog,
-												tableSchema
-											)
-									);
+								scripts.add( new SchemaUpdateScript( fk.sqlCreateString( dialect, mapping,
+										tableCatalog, tableSchema ), false ) );
 							}
 						}
 					}
@@ -1233,14 +1234,8 @@ public class Configuration implements Serializable {
 							continue;
 						}
 					}
-					script.add(
-							index.sqlCreateString(
-									dialect,
-									mapping,
-									tableCatalog,
-									tableSchema
-							)
-					);
+					scripts.add( new SchemaUpdateScript( index.sqlCreateString( dialect, mapping, tableCatalog,
+							tableSchema ), false ) );
 				}
 			}
 		}
@@ -1251,11 +1246,11 @@ public class Configuration implements Serializable {
 			Object key = generator.generatorKey();
 			if ( !databaseMetadata.isSequence( key ) && !databaseMetadata.isTable( key ) ) {
 				String[] lines = generator.sqlCreateStrings( dialect );
-				script.addAll( Arrays.asList( lines ) );
+				scripts.addAll( SchemaUpdateScript.fromStringArray( lines, false ) );
 			}
 		}
 
-		return ArrayHelper.toStringArray( script );
+		return scripts;
 	}
 
 	public void validateSchema(Dialect dialect, DatabaseMetadata databaseMetadata)throws HibernateException {

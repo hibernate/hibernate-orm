@@ -29,14 +29,11 @@ import java.util.List;
  * @author Strong Liu <stliu@hibernate.org>
  */
 public interface JoinedSubclassEntitySource extends SubclassEntitySource, ForeignKeyContributingSource {
-
-
 	/**
 	 * The {@code PrimaryKeyJoinColumns} mapping for the joined-subclass.
 	 *
 	 * @return The {@code PrimaryKeyJoinColumnSource} lists defined on the joined subclass or <code>null</code> otherwise.
 	 */
-//	List<PrimaryKeyJoinColumnSource> getPrimaryKeyJoinColumnSources();
 	public List<ColumnSource> getPrimaryKeyColumnSources();
 	boolean isCascadeDeleteEnabled();
 }

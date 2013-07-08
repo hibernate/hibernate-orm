@@ -25,7 +25,8 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
-import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.FetchMode;
+
 
 /**
  * Common information pertaining to the binding of the various plural attribute natures (one-to-many, basic, etc).
@@ -38,7 +39,7 @@ public interface PluralAttributeElementBinding {
 	 *
 	 * @return The plural attribute binding descriptor.
 	 */
-	public PluralAttributeBinding getPluralAttributeBinding();
+	PluralAttributeBinding getPluralAttributeBinding();
 
 	/**
 	 * Retrieve the relational aspect of the element binding. Essentially describes the column(s) to which the
@@ -46,27 +47,29 @@ public interface PluralAttributeElementBinding {
 	 *
 	 * @return The relation information.
 	 */
-	public List<RelationalValueBinding> getRelationalValueBindings();
+	List<RelationalValueBinding> getRelationalValueBindings();
 
-	public boolean isNullable();
+	boolean isNullable();
 
-	public boolean hasDerivedValue();
+	boolean hasDerivedValue();
 
-	public boolean hasNonNullableValue();
+	boolean hasNonNullableValue();
+
+	FetchMode getFetchMode();
 
 	/**
 	 * Retrieves an enumeration describing the mapping nature of the collection's elements.
 	 * 
 	 * @return The nature enum.
 	 */
-	public Nature getNature();
+	Nature getNature();
 
 	/**
 	 * Retrieve the Hibernate type descriptor describing the mapping-typing of the elements.
 	 *
 	 * @return The element type descriptor.
 	 */
-	public HibernateTypeDescriptor getHibernateTypeDescriptor();
+	HibernateTypeDescriptor getHibernateTypeDescriptor();
 
 	/**
 	 * Describes the nature of plural attribute elements in terms of relational implications.
@@ -74,7 +77,7 @@ public interface PluralAttributeElementBinding {
 	 * @author Steve Ebersole
 	 * @author Gail Badner
 	 */
-	enum Nature {
+	public static enum Nature {
 		/**
 		 * The collection elements are basic, simple values.
 		 */

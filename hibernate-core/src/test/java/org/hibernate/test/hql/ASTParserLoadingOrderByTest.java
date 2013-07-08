@@ -37,7 +37,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.hql.internal.ast.ASTQueryTranslatorFactory;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -212,7 +211,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrderByNoSelectAliasRef() {
 		createData();
 
@@ -354,7 +352,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrderBySelectAliasRef() {
 		createData();
 
@@ -532,7 +529,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrderByEntityWithFetchJoinedCollection() {
 		createData();
 
@@ -554,7 +550,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrderBySelectNewArgAliasRef() {
 		createData();
 
@@ -599,7 +594,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test(timeout = 5 * 60 * 1000)
-	@FailureExpectedWithNewMetamodel
 	public void testOrderBySelectNewMapArgAliasRef() {
 		createData();
 
@@ -650,7 +644,6 @@ public class ASTParserLoadingOrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testOrderByAggregatedArgAliasRef() {
 		createData();
 

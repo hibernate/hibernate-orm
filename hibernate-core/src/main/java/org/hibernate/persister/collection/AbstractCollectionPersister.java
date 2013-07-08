@@ -709,15 +709,7 @@ public abstract class AbstractCollectionPersister
 		isMutable = collection.isMutable();
 
 		TableSpecification table = collection.getPluralAttributeKeyBinding().getCollectionTable();
-		if ( collection.getPluralAttributeElementBinding().getNature() == PluralAttributeElementBinding.Nature.MANY_TO_MANY ) {
-			fetchMode = ( (ManyToManyPluralAttributeElementBinding) collection.getPluralAttributeElementBinding() ).fetchImmediately() ?
-					FetchMode.JOIN :
-					FetchMode.SELECT;
-		}
-		else {
-			// TODO: is this correct???
-			fetchMode = collection.getFetchMode();
-		}
+		fetchMode = collection.getPluralAttributeElementBinding().getFetchMode();
 		elementType = collection.getPluralAttributeElementBinding().getHibernateTypeDescriptor().getResolvedTypeMapping();
 		// isSet = collection.isSet();
 		// isSorted = collection.isSorted();
@@ -811,7 +803,7 @@ public abstract class AbstractCollectionPersister
 		if ( elementSpan > 0 ) {
 			for ( RelationalValueBinding relationalValueBinding : collection.getPluralAttributeElementBinding().getRelationalValueBindings() ) {
 				final Value value = relationalValueBinding.getValue();
-				elementColumnAliases[j] = value.getAlias( dialect, null );
+				elementColumnAliases[j] = value.getAlias( dialect, table );
 				if ( DerivedValue.class.isInstance( value ) ) {
 					DerivedValue form = (DerivedValue) value;
 					elementFormulaTemplates[j] = getTemplateFromString( form.getExpression(), factory);
@@ -1063,6 +1055,7 @@ public abstract class AbstractCollectionPersister
 
 		initCollectionPropertyMap();
 	}
+
 
 	protected static String getTemplateFromString(String string, SessionFactoryImplementor factory) {
 		return string == null ?

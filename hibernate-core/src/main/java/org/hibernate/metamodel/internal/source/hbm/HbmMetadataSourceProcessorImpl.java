@@ -26,6 +26,9 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.hbm.JaxbHibernateMapping;
@@ -45,7 +48,8 @@ import static java.util.Collections.emptyList;
  * @author Steve Ebersole
  */
 public class HbmMetadataSourceProcessorImpl implements MetadataSourceProcessor {
-
+	private static final CoreMessageLogger LOG = Logger
+			.getMessageLogger( CoreMessageLogger.class, HbmMetadataSourceProcessorImpl.class.getName() );
 	private final List<HibernateMappingProcessor> processors = new ArrayList<HibernateMappingProcessor>();
 	private final List<EntityHierarchyImpl> entityHierarchies;
 

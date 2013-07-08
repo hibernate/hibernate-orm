@@ -23,6 +23,8 @@
  *
  */
 package org.hibernate.persister.collection;
+import java.util.Arrays;
+
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
@@ -43,6 +45,7 @@ public class ElementPropertyMapping implements PropertyMapping {
 		this.type = type;
 	}
 
+	@Override
 	public Type toType(String propertyName) throws QueryException {
 		if ( propertyName==null || "id".equals(propertyName) ) {
 			return type;
@@ -52,6 +55,7 @@ public class ElementPropertyMapping implements PropertyMapping {
 		}
 	}
 
+	@Override
 	public String[] toColumns(String alias, String propertyName) throws QueryException {
 		if (propertyName==null || "id".equals(propertyName) ) {
 			return StringHelper.qualify( alias, elementColumns );
@@ -64,12 +68,21 @@ public class ElementPropertyMapping implements PropertyMapping {
 	/**
 	 * Given a property path, return the corresponding column name(s).
 	 */
+	@Override
 	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 		throw new UnsupportedOperationException( "References to collections must be define a SQL alias" );
 	}
 
+	@Override
 	public Type getType() {
 		return type;
 	}
 
+	@Override
+	public String toString() {
+		return "ElementPropertyMapping{" +
+				"elementColumns=" + Arrays.toString( elementColumns ) +
+				", type=" + type +
+				'}';
+	}
 }

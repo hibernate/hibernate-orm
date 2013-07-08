@@ -57,4 +57,40 @@ public class Origin implements Serializable {
 	public String getName() {
 		return name;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
+			return true;
+		}
+		if ( !( o instanceof Origin ) ) {
+			return false;
+		}
+
+		Origin origin = (Origin) o;
+
+		if ( name != null ? !name.equals( origin.name ) : origin.name != null ) {
+			return false;
+		}
+		if ( type != origin.type ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = type != null ? type.hashCode() : 0;
+		result = 31 * result + ( name != null ? name.hashCode() : 0 );
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "Origin{" +
+				"name='" + name + '\'' +
+				", type=" + type +
+				'}';
+	}
 }

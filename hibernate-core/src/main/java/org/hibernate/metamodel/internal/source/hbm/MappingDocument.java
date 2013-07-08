@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.JaxbRoot;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
@@ -89,7 +90,7 @@ public class MappingDocument {
 					hbmJaxbRoot.getRoot().getDefaultAccess(),
 					hbmJaxbRoot.getRoot().isDefaultLazy()
 			);
-			if ( hbmJaxbRoot.getRoot().getMeta() == null || hbmJaxbRoot.getRoot().getMeta().isEmpty() ) {
+			if ( CollectionHelper.isEmpty( hbmJaxbRoot.getRoot().getMeta() ) ) {
 				this.metaAttributeContext = new MetaAttributeContext( metadata.getGlobalMetaAttributeContext() );
 			}
 			else {

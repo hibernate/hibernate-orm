@@ -60,7 +60,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testFetchOneToMany() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -105,7 +104,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testSubclassCollection() throws Exception {
 		//if ( getDialect() instanceof HSQLDialect ) return; //TODO: figure out why!?
 		Session s = openSession();
@@ -595,7 +593,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCollection() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

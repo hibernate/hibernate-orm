@@ -808,6 +808,19 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 				( superEntityBinding != null && superEntityBinding.isClassOrSuperclassSecondaryTable( secondaryTable ) );
 	}
 
+	private List<RelationalValueBinding> keyRelationalValueBindings;
+
+	public List<RelationalValueBinding> getKeyRelationalValueBindings() {
+		if(keyRelationalValueBindings == null){
+			keyRelationalValueBindings = getHierarchyDetails().getEntityIdentifier().getAttributeBinding().getRelationalValueBindings();
+		}
+		return keyRelationalValueBindings;
+	}
+
+	public void setKeyRelationalValueBindings(List<RelationalValueBinding> keyRelationalValueBindings) {
+		this.keyRelationalValueBindings = keyRelationalValueBindings;
+	}
+
 	public int getSecondaryTableNumber(SingularAttributeBinding attributeBinding) {
 		if ( attributeBinding.getRelationalValueBindings().isEmpty() ) {
 			return 0;

@@ -23,6 +23,10 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import java.util.List;
+
+import org.hibernate.FetchMode;
+
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#ONE_TO_MANY} elements
  *
@@ -30,7 +34,6 @@ package org.hibernate.metamodel.spi.binding;
  * @author Gail Badner
  */
 public class OneToManyPluralAttributeElementBinding extends AbstractPluralAttributeAssociationElementBinding {
-	private EntityIdentifier elementEntityIdentifier;
 	private RelationalValueBindingContainer relationalValueBindingContainer;
 
 	OneToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
@@ -47,9 +50,12 @@ public class OneToManyPluralAttributeElementBinding extends AbstractPluralAttrib
 		return Nature.ONE_TO_MANY;
 	}
 
-	public void setElementEntityIdentifier(EntityIdentifier elementEntityIdentifier) {
-		this.relationalValueBindingContainer = new RelationalValueBindingContainer(
-				elementEntityIdentifier.getAttributeBinding().getRelationalValueBindings()
-		);
+	public void setElementEntityIdentifier(List<RelationalValueBinding> relationalValueBindingList) {
+		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindingList );
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		return FetchMode.JOIN;
 	}
 }

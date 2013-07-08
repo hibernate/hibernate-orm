@@ -386,10 +386,10 @@ public class EntityMetamodel implements Serializable {
 
 		versioned = entityBinding.isVersioned();
 
-		boolean hasPojoRepresentation = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
+		boolean isPOJO = entityBinding.getHierarchyDetails().getEntityMode() == EntityMode.POJO;
 		Class<?> proxyInterfaceClass = null;
 		Class<?> mappedClass = null;
-		if ( hasPojoRepresentation ) {
+		if ( isPOJO ) {
 			mappedClass = entityBinding.getEntity().getClassReference();
 			proxyInterfaceClass = entityBinding.getProxyInterfaceType() == null ? null : entityBinding.getProxyInterfaceType().getValue();
 			instrumentationMetadata = Environment.getBytecodeProvider().getEntityInstrumentationMetadata( mappedClass );
@@ -542,18 +542,18 @@ public class EntityMetamodel implements Serializable {
 
 		lazy = entityBinding.isLazy() && (
 				// TODO: this disables laziness even in non-pojo entity modes:
-				! hasPojoRepresentation ||
+				! isPOJO ||
 				! ReflectHelper.isFinalClass( proxyInterfaceClass )
 		);
 		mutable = entityBinding.isMutable();
 		if ( entityBinding.isAbstract() == null ) {
 			// legacy behavior (with no abstract attribute specified)
-			isAbstract = hasPojoRepresentation &&
+			isAbstract = isPOJO &&
 			             ReflectHelper.isAbstractClass( mappedClass );
 		}
 		else {
 			isAbstract = entityBinding.isAbstract();
-			if ( !isAbstract && hasPojoRepresentation &&
+			if ( !isAbstract && isPOJO &&
 					ReflectHelper.isAbstractClass( mappedClass ) ) {
 				LOG.entityMappedAsNonAbstract(name);
 			}
@@ -598,7 +598,7 @@ public class EntityMetamodel implements Serializable {
 			entityNameByInheritenceClassMap.put( mappedClass, name );
 		}
 
-		entityMode = hasPojoRepresentation ? EntityMode.POJO : EntityMode.MAP;
+		entityMode = isPOJO ? EntityMode.POJO : EntityMode.MAP;
 		final EntityTuplizerFactory entityTuplizerFactory = sessionFactory.getSettings().getEntityTuplizerFactory();
 		Class<? extends EntityTuplizer> tuplizerClass = entityBinding.getCustomTuplizerClass();
 

@@ -520,6 +520,8 @@ public abstract class AbstractEntityPersister
 		return propertySelectable;
 	}
 
+
+
 	public AbstractEntityPersister(
 			final PersistentClass persistentClass,
 			final EntityRegionAccessStrategy cacheAccessStrategy,
@@ -859,7 +861,7 @@ public abstract class AbstractEntityPersister
 		this.cacheAccessStrategy = cacheAccessStrategy;
 		this.naturalIdRegionAccessStrategy = naturalIdRegionAccessStrategy;
 		this.isLazyPropertiesCacheable = ( entityBinding.getHierarchyDetails()
-				.getCaching() != null ) && entityBinding.getHierarchyDetails()
+				.getCaching() == null ) || entityBinding.getHierarchyDetails()
 				.getCaching()
 				.isCacheLazyProperties();
 		this.entityMetamodel = new EntityMetamodel( entityBinding, this, factory );
@@ -1416,7 +1418,6 @@ public abstract class AbstractEntityPersister
 			snapshot[ lazyPropertyNumbers[j] ] = lazyPropertyTypes[j].deepCopy( propValue, factory );
 		}
 		return fieldName.equals( lazyPropertyNames[j] );
-//>>>>>>> master
 	}
 
 	public boolean isBatchable() {
@@ -4106,6 +4107,7 @@ public abstract class AbstractEntityPersister
 				&& filterHelper.isAffectedBy( session.getLoadQueryInfluencers().getEnabledFilterNames() );
 	}
 
+	@Override
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) +
 				'(' + entityMetamodel.getName() + ')';

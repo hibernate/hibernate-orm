@@ -58,6 +58,11 @@ public class TemporaryTableExporter extends StandardTableExporter {
 				clone.setSize( column.getSize() );
 				clone.setSqlType( column.getSqlType() );
 				clone.setJdbcDataType( column.getJdbcDataType() );
+				clone.setNullable( column.isNullable() );
+				clone.setComment( column.getComment() );
+				clone.setDefaultValue( column.getDefaultValue() );
+				clone.setReadFragment( column.getReadFragment() );
+				clone.setWriteFragment( column.getWriteFragment() );
 			}
 			return super.getSqlCreateStrings( table, jdbcEnvironment );
 		}

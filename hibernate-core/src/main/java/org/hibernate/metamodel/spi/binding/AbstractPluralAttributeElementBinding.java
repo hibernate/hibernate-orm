@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
+import org.hibernate.FetchMode;
 import org.hibernate.metamodel.spi.relational.Column;
 
 /**
@@ -70,5 +71,10 @@ public abstract class AbstractPluralAttributeElementBinding implements PluralAtt
 	@Override
 	public boolean hasNonNullableValue() {
 		return getRelationalValueContainer().hasNonNullableRelationalValueBinding();
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		return getPluralAttributeBinding().getFetchMode();
 	}
 }

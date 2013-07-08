@@ -23,6 +23,7 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.FetchMode;
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
@@ -46,5 +47,10 @@ public abstract class AbstractPluralAttributeAssociationElementBinding
 	@Override
 	public void setCascadeStyle(CascadeStyle cascadeStyle) {
 		this.cascadeStyle = cascadeStyle;
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		return getPluralAttributeBinding().getFetchMode();
 	}
 }

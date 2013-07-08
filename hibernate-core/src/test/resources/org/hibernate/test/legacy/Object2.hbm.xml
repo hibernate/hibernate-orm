@@ -38,13 +38,5 @@
             outer-join="auto"
             constrained="true"
         />
-
-        <!--
-            To add non XDoclet property mappings, create a file named
-                hibernate-properties-Object2.xml
-            containing the additional properties and place it in your merge dir.
-        -->
-
     </class>
-
 </hibernate-mapping>

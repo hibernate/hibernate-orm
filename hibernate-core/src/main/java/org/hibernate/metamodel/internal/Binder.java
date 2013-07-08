@@ -39,6 +39,7 @@ import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.FetchMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -910,59 +911,10 @@ public class Binder {
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
 			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), new TableNamingStrategyHelper( entityBinding ) );
 			table.addComment( secondaryTableSource.getComment() );
-			final List<RelationalValueBinding> joinRelationalValueBindings;
-			// TODO: deal with property-refs???
-			if ( secondaryTableSource.getPrimaryKeyColumnSources().isEmpty() ) {
-				final List<Column> joinedColumns = entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
-				joinRelationalValueBindings = new ArrayList<RelationalValueBinding>( joinedColumns.size() );
-				for ( Column joinedColumn : joinedColumns ) {
-					Column joinColumn = table.locateOrCreateColumn(
-							bindingContext().getNamingStrategy().joinKeyColumnName(
-									joinedColumn.getColumnName().getText(),
-									entityBinding.getPrimaryTable().getLogicalName().getText()
-							)
-					);
-					joinColumn.setNullable( false );
-					table.getPrimaryKey().addColumn( joinColumn );
-					joinRelationalValueBindings.add( new RelationalValueBinding( entityBinding.getPrimaryTable(), joinColumn, true, false ) );
-				}
-			}
-			else {
-				joinRelationalValueBindings = new ArrayList<RelationalValueBinding>(
-						secondaryTableSource.getPrimaryKeyColumnSources()
-								.size()
-				);
-				final List<Column> primaryKeyColumns = entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
-				if ( primaryKeyColumns.size() != secondaryTableSource.getPrimaryKeyColumnSources().size() ) {
-					throw bindingContext().makeMappingException(
-							String.format(
-									"The number of primary key column sources provided for a secondary table is not equal to the number of columns in the primary key for [%s].",
-									entityBinding.getEntityName()
-							)
-					);
-				}
-				for ( int i = 0; i < primaryKeyColumns.size(); i++ ) {
-					// todo : apply naming strategy to infer missing column name
-					final ColumnSource joinColumnSource = secondaryTableSource.getPrimaryKeyColumnSources().get( i );
-					Column column = table.locateColumn( joinColumnSource.getName() );
-					if ( column == null ) {
-						column = table.createColumn( joinColumnSource.getName() );
-						if ( joinColumnSource.getSqlType() != null ) {
-							column.setSqlType( joinColumnSource.getSqlType() );
-						}
-						column.setNullable( false );
-						table.getPrimaryKey().addColumn( column );
-					}
-					joinRelationalValueBindings.add( new RelationalValueBinding( table, column, true, false ) );
-				}
-			}
-			typeHelper.bindJdbcDataType(
-					entityBinding.getHierarchyDetails()
-							.getEntityIdentifier()
-							.getAttributeBinding()
-							.getHibernateTypeDescriptor()
-							.getResolvedTypeMapping(),
-					joinRelationalValueBindings
+			final List<RelationalValueBinding> joinRelationalValueBindings = getJoinedPrimaryKeyRelationalValueBindings(
+					entityBinding,
+					secondaryTableSource.getPrimaryKeyColumnSources(),
+					table
 			);
 
 			// TODO: make the foreign key column the primary key???
@@ -989,6 +941,67 @@ public class Binder {
 			entityBinding.addSecondaryTable( secondaryTable );
 			metadata.addSecondaryTable( secondaryTable );
 		}
+	}
+
+	private List<RelationalValueBinding> getJoinedPrimaryKeyRelationalValueBindings(
+			EntityBinding entityBinding,
+			List<ColumnSource> joinedPrimaryKeyColumnSources,
+			TableSpecification table) {
+		final List<Column> primaryKeyColumns = entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
+
+		final List<RelationalValueBinding> joinRelationalValueBindings;
+		// TODO: deal with property-refs???
+		if ( joinedPrimaryKeyColumnSources.isEmpty() ) {
+			joinRelationalValueBindings = new ArrayList<RelationalValueBinding>( primaryKeyColumns.size() );
+			for ( Column joinedColumn : primaryKeyColumns ) {
+				Column joinColumn = table.locateOrCreateColumn(
+						bindingContext().getNamingStrategy().joinKeyColumnName(
+								joinedColumn.getColumnName().getText(),
+								entityBinding.getPrimaryTable().getLogicalName().getText()
+						)
+				);
+				joinColumn.setNullable( false );
+				table.getPrimaryKey().addColumn( joinColumn );
+				joinRelationalValueBindings.add( new RelationalValueBinding( entityBinding.getPrimaryTable(), joinColumn, true, false ) );
+			}
+		}
+		else {
+			joinRelationalValueBindings = new ArrayList<RelationalValueBinding>(
+					joinedPrimaryKeyColumnSources
+							.size()
+			);
+			if ( primaryKeyColumns.size() != joinedPrimaryKeyColumnSources.size() ) {
+				throw bindingContext().makeMappingException(
+						String.format(
+								"The number of primary key column sources provided for a secondary table is not equal to the number of columns in the primary key for [%s].",
+								entityBinding.getEntityName()
+						)
+				);
+			}
+			for ( int i = 0; i < primaryKeyColumns.size(); i++ ) {
+				// todo : apply naming strategy to infer missing column name
+				final ColumnSource joinColumnSource = joinedPrimaryKeyColumnSources.get( i );
+				Column column = table.locateColumn( joinColumnSource.getName() );
+				if ( column == null ) {
+					column = table.createColumn( joinColumnSource.getName() );
+					if ( joinColumnSource.getSqlType() != null ) {
+						column.setSqlType( joinColumnSource.getSqlType() );
+					}
+					column.setNullable( false );
+					table.getPrimaryKey().addColumn( column );
+				}
+				joinRelationalValueBindings.add( new RelationalValueBinding( table, column, true, false ) );
+			}
+		}
+		typeHelper.bindJdbcDataType(
+				entityBinding.getHierarchyDetails()
+						.getEntityIdentifier()
+						.getAttributeBinding()
+						.getHibernateTypeDescriptor()
+						.getResolvedTypeMapping(),
+				joinRelationalValueBindings
+		);
+		return joinRelationalValueBindings;
 	}
 
 	public ForeignKey locateOrCreateForeignKey(
@@ -2153,7 +2166,7 @@ public class Binder {
 			final String defaultElementJavaTypeName) {
 		throwExceptionIfNotFoundIgnored( elementSource.isNotFoundAnException() );
 		elementBinding.setElementEntityIdentifier(
-				referencedEntityBinding.getHierarchyDetails().getEntityIdentifier()
+				referencedEntityBinding.getKeyRelationalValueBindings()
 		);
 
 		Type resolvedElementType = metadata.getTypeResolver().getTypeFactory().manyToOne(
@@ -2247,7 +2260,7 @@ public class Binder {
 		elementBinding.setCascadeStyle( determineCascadeStyle( elementSource.getCascadeStyles() ) );
 		elementBinding.setManyToManyWhere( elementSource.getWhere() );
 		elementBinding.setManyToManyOrderBy( elementSource.getOrder() );
-		elementBinding.setFetchImmediately( elementSource.getFetchTiming() == FetchTiming.IMMEDIATE );
+		elementBinding.setFetchMode( elementSource.getFetchTiming() == FetchTiming.IMMEDIATE ? FetchMode.JOIN : FetchMode.SELECT );
 		//TODO: initialize filters from elementSource
 	}
 
@@ -2805,70 +2818,32 @@ public class Binder {
 		if ( superEntityBinding == null ) {
 			throw new AssertionFailure( "super entitybinding is null " );
 		}
-		if ( inheritanceType == InheritanceType.TABLE_PER_CLASS ) {
-
-		}
 		if ( inheritanceType == InheritanceType.JOINED ) {
 			JoinedSubclassEntitySource subclassEntitySource = (JoinedSubclassEntitySource) entitySource;
-
-
-
 			final List<ColumnSource> columnSources = subclassEntitySource.getPrimaryKeyColumnSources();
-			final boolean hasPrimaryKeyJoinColumns = CollectionHelper.isNotEmpty( columnSources );
-			final List<Column> superEntityBindingPrimaryKeyColumns = superEntityBinding.getPrimaryTable()
-					.getPrimaryKey()
-					.getColumns();
-			final List<Column> sourceColumns = new ArrayList<Column>( superEntityBindingPrimaryKeyColumns.size() );
-			for ( int i = 0, size = superEntityBindingPrimaryKeyColumns.size(); i < size; i++ ) {
-				final Column superEntityBindingPrimaryKeyColumn = superEntityBindingPrimaryKeyColumns.get( i );
-				ColumnSource primaryKeyJoinColumnSource = hasPrimaryKeyJoinColumns && i < columnSources
-						.size() ? columnSources.get( i ) : null;
-				final String columnName;
-				if ( primaryKeyJoinColumnSource != null && StringHelper.isNotEmpty( primaryKeyJoinColumnSource.getName() ) ) {
-					columnName = bindingContext().getNamingStrategy()
-							.columnName( primaryKeyJoinColumnSource.getName() );
-				}
-				else {
-					columnName = superEntityBindingPrimaryKeyColumn.getColumnName().getText();
-				}
-				Column column = entityBinding.getPrimaryTable().locateOrCreateColumn( columnName );
-				column.setCheckCondition( superEntityBindingPrimaryKeyColumn.getCheckCondition() );
-				column.setComment( superEntityBindingPrimaryKeyColumn.getComment() );
-				column.setDefaultValue( superEntityBindingPrimaryKeyColumn.getDefaultValue() );
-				column.setIdentity( superEntityBindingPrimaryKeyColumn.isIdentity() );
-				column.setNullable( superEntityBindingPrimaryKeyColumn.isNullable() );
-				column.setReadFragment( superEntityBindingPrimaryKeyColumn.getReadFragment() );
-				column.setWriteFragment( superEntityBindingPrimaryKeyColumn.getWriteFragment() );
-				final String sqlType = primaryKeyJoinColumnSource != null && primaryKeyJoinColumnSource.getSqlType() != null ? primaryKeyJoinColumnSource
-						.getSqlType() : superEntityBindingPrimaryKeyColumn.getSqlType();
-				column.setSqlType( sqlType );
-				column.setSize( superEntityBindingPrimaryKeyColumn.getSize() );
-				column.setJdbcDataType( superEntityBindingPrimaryKeyColumn.getJdbcDataType() );
-				entityBinding.getPrimaryTable().getPrimaryKey().addColumn( column );
-				sourceColumns.add( column );
-				
-				// TODO: Does a UniqueKey need created here?
-			}
+			final TableSpecification table = entityBinding.getPrimaryTable();
+			final List<RelationalValueBinding> joinRelationalValueBindings =
+					getJoinedPrimaryKeyRelationalValueBindings( superEntityBinding, columnSources, table );
+
+			entityBinding.setKeyRelationalValueBindings( joinRelationalValueBindings );
 			List<Column> targetColumns =
 					determineForeignKeyTargetColumns(
 							superEntityBinding,
 							subclassEntitySource
 					);
 
-			ForeignKey foreignKey = foreignKeyHelper.locateOrCreateForeignKey(
+			ForeignKey foreignKey = locateOrCreateForeignKey(
 					quotedIdentifier( subclassEntitySource.getExplicitForeignKeyName() ),
-					entityBinding.getPrimaryTable(),
-					sourceColumns,
+					table,
+					joinRelationalValueBindings,
 					determineForeignKeyTargetTable( superEntityBinding, subclassEntitySource ),
 					targetColumns
 			);
-
 
 			if ( subclassEntitySource.isCascadeDeleteEnabled() ) {
 				foreignKey.setDeleteRule( ForeignKey.ReferentialAction.CASCADE );
 				entityBinding.setCascadeDeleteEnabled( true );
 			}
-
 		}
 	}
 

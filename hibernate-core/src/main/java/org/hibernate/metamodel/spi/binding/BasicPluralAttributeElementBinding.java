@@ -25,6 +25,8 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
+import org.hibernate.FetchMode;
+
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#BASIC} elements
  *
@@ -47,6 +49,11 @@ public class BasicPluralAttributeElementBinding extends AbstractPluralAttributeE
 	@Override
 	public Nature getNature() {
 		return Nature.BASIC;
+	}
+
+	@Override
+	public FetchMode getFetchMode() {
+		return FetchMode.SELECT;
 	}
 
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {

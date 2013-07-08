@@ -29,7 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.MappingException;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
@@ -49,6 +52,8 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
  * @author Steve Ebersole
  */
 public class HierarchyBuilder {
+	private static final CoreMessageLogger LOG = Logger
+			.getMessageLogger( CoreMessageLogger.class, HierarchyBuilder.class.getName() );
 	private final MetadataImplementor metadata;
 	
 	private final List<EntityHierarchyImpl> entityHierarchies = new ArrayList<EntityHierarchyImpl>();
@@ -67,6 +72,7 @@ public class HierarchyBuilder {
 	public void processMappingDocument(MappingDocument mappingDocument) {
 		this.currentMappingDocument = mappingDocument;
 		try {
+			LOG.tracef( "Processing mapping document: %s ", mappingDocument.getOrigin() );
 			processCurrentMappingDocument();
 		}
 		finally {

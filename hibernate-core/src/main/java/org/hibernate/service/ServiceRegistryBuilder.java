@@ -87,6 +87,15 @@ public class ServiceRegistryBuilder {
 	}
 
 	/**
+	 * Provides access to the {@link BootstrapServiceRegistry}
+	 *
+	 * @return the {@link BootstrapServiceRegistry}
+	 */
+	public BootstrapServiceRegistry getBootstrapServiceRegistry() {
+		return bootstrapServiceRegistry;
+	}
+
+	/**
 	 * Used from the {@link #initiators} variable initializer
 	 *
 	 * @return List of standard initiators

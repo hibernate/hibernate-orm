@@ -1766,15 +1766,18 @@ public class Configuration implements Serializable {
 		ConfigurationHelper.resolvePlaceHolders( copy );
 		Settings settings = buildSettings( copy, serviceRegistry );
 
-		return new SessionFactoryImpl(
-				this,
-				mapping,
-				serviceRegistry,
-				settings,
-				sessionFactoryObserver
-			);
+		return constructSessionFactory( mapping, serviceRegistry, settings, sessionFactoryObserver );
 	}
-	
+
+	protected SessionFactoryImpl constructSessionFactory(
+			Mapping mapping,
+			ServiceRegistry serviceRegistry,
+			Settings settings,
+			SessionFactoryObserver sessionFactoryObserver ) {
+
+		return new SessionFactoryImpl( this, mapping, serviceRegistry, settings, sessionFactoryObserver );
+	}
+
 	private void buildTypeRegistrations(ServiceRegistry serviceRegistry) {
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override

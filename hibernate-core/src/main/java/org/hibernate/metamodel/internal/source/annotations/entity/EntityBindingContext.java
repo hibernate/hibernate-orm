@@ -138,11 +138,6 @@ public class EntityBindingContext implements LocalBindingContext, AnnotationBind
 	}
 
 	@Override
-	public Iterable<IdentifierGeneratorSource> extractIdentifierGeneratorSources(IdentifierGeneratorSourceContainer container) {
-		return contextDelegate.extractIdentifierGeneratorSources( container );
-	}
-
-	@Override
 	public IdentifierGeneratorDefinition findIdGenerator(String name) {
 		return contextDelegate.findIdGenerator( name );
 	}

@@ -35,7 +35,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -74,7 +73,6 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testJoinFetch() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -213,7 +211,6 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testCollectionFilter() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -246,7 +243,6 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testJoinFetchManyToMany() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

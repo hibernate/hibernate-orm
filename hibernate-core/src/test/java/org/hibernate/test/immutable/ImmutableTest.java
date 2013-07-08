@@ -941,7 +941,12 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		c = ( Contract ) s.merge( c );
 		assertTrue( s.isReadOnly( c ) );
-		assertTrue( Hibernate.isInitialized( c.getVariations() ) );
+		// Contract has 2 collections (subcontracts and variations);
+		// only 1 will be eagerly loaded with the merge;
+		// the 1 that is eagerly loaded will be the one that gets bound
+		// first; since this is indeterminate, we cannot test if the
+		// collection is initialized.
+		assertEquals( 2, c.getVariations().size() );
 		Iterator it = c.getVariations().iterator();
 		cv1 = (ContractVariation) it.next();
 		cv2 = (ContractVariation) it.next();
@@ -996,7 +1001,12 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		c.setCustomerName("foo bar");
 		c = ( Contract ) s.merge( c );
 		assertTrue( s.isReadOnly( c ) );
-		assertTrue( Hibernate.isInitialized( c.getVariations() ) );
+		// Contract has 2 collections (subcontracts and variations);
+		// only 1 will be eagerly loaded with the merge;
+		// the 1 that is eagerly loaded will be the one that gets bound
+		// first; since this is indeterminate, we cannot test if the
+		// collection is initialized.
+		assertEquals( 2, c.getVariations().size() );
 		Iterator it = c.getVariations().iterator();
 		cv1 = (ContractVariation) it.next();
 		cv2 = (ContractVariation) it.next();
@@ -1052,7 +1062,12 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 		cv1.setText("blah blah");
 		c = ( Contract ) s.merge( c );
 		assertTrue( s.isReadOnly( c ) );
-		assertTrue( Hibernate.isInitialized( c.getVariations() ) );
+		// Contract has 2 collections (subcontracts and variations);
+		// only 1 will be eagerly loaded with the merge;
+		// the 1 that is eagerly loaded will be the one that gets bound
+		// first; since this is indeterminate, we cannot test if the
+		// collection is initialized.
+		assertEquals( 2, c.getVariations().size() );
 		Iterator it = c.getVariations().iterator();
 		cv1 = (ContractVariation) it.next();
 		cv2 = (ContractVariation) it.next();

@@ -88,13 +88,4 @@ public class VersionedEntityWithInverseOneToManyFailureExpectedTest extends Abst
 	public void testRemoveOneToManyElementUsingMerge() {
 		super.testRemoveOneToManyElementUsingMerge();
 	}
-
-	@Test
-	@Override
-	@FailureExpected(
-			jiraKey = "HHH-4992",
-			message = "known to fail with versioned entity with inverse collection"
-	)	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
-		super.testOneToManyCollectionOptimisticLockingWithUpdate();
-	}
 }

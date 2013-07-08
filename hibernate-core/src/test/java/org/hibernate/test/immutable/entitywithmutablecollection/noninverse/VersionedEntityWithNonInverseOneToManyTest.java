@@ -26,7 +26,6 @@ package org.hibernate.test.immutable.entitywithmutablecollection.noninverse;
 import org.junit.Test;
 
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Gail Badner
@@ -35,12 +34,5 @@ public class VersionedEntityWithNonInverseOneToManyTest extends AbstractEntityWi
 	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/noninverse/ContractVariationVersioned.hbm.xml" };
-	}
-
-	@Test
-	@Override
-	@FailureExpectedWithNewMetamodel
-	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
-		super.testOneToManyCollectionOptimisticLockingWithUpdate();
 	}
 }

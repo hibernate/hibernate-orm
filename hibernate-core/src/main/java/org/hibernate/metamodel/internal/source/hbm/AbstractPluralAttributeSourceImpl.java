@@ -352,7 +352,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 				: null;
 
 		if ( lazySelection == null ) {
-			if ( "join".equals( fetchSelection ) || "true".equals( outerJoinSelection ) ) {
+			if ( "join".equals( fetchSelection ) && "true".equals( outerJoinSelection ) ) {
 				return FetchTiming.IMMEDIATE;
 			}
 			else if ( "false".equals( outerJoinSelection ) ) {

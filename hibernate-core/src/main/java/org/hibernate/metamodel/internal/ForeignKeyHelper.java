@@ -31,6 +31,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -43,10 +45,10 @@ public class ForeignKeyHelper {
 			ForeignKeyHelper.class.getName()
 	);
 
-	private final Binder binder;
+	private final LocalBindingContext bindingContext;
 
-	public ForeignKeyHelper(Binder binder) {
-		this.binder = binder;
+	public ForeignKeyHelper(LocalBindingContext bindingContext) {
+		this.bindingContext = bindingContext;
 	}
 
 	public ForeignKey locateOrCreateForeignKey(
@@ -116,7 +118,7 @@ public class ForeignKeyHelper {
 			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
 		if ( sourceColumns.size() != targetColumns.size() ) {
-			throw binder.bindingContext().makeMappingException(
+			throw bindingContext.makeMappingException(
 					String.format(
 							"Non-matching number columns in foreign key source columns [%s : %s] and target columns [%s : %s]",
 							sourceTable.getLogicalName().getText(),
@@ -143,7 +145,7 @@ public class ForeignKeyHelper {
 		ForeignKey foreignKey = sourceTable.locateForeignKey( foreignKeyName );
 		if ( foreignKey != null ) {
 			if ( !targetTable.equals( foreignKey.getTargetTable() ) ) {
-				throw binder.bindingContext().makeMappingException(
+				throw bindingContext.makeMappingException(
 						String.format(
 								"Unexpected target table defined for foreign key \"%s\"; expected \"%s\"; found \"%s\"",
 								foreignKeyName,
@@ -162,7 +164,7 @@ public class ForeignKeyHelper {
 				// Make sure they are the same columns.
 				if ( !foreignKey.getSourceColumns().equals( sourceColumns ) ||
 						!foreignKey.getTargetColumns().equals( targetColumns ) ) {
-					throw binder.bindingContext().makeMappingException(
+					throw bindingContext.makeMappingException(
 							String.format(
 									"Attempt to bind exisitng foreign key \"%s\" with different columns.",
 									foreignKeyName

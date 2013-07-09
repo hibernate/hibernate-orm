@@ -65,6 +65,7 @@ import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.BasicPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.ComponentAttributeSource;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
+import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -262,14 +263,11 @@ class HibernateTypeHelper {
 	}
 	//--------------------------------------------------------------------------------
 
-	private final Binder binder;
-	private final MetadataImplementor metadata;
+ 	private final LocalBindingContext bindingContext;
 
 	//package scope methods
-	HibernateTypeHelper(Binder binder,
-						MetadataImplementor metadata) {
-		this.binder = binder;
-		this.metadata = metadata;
+	HibernateTypeHelper(LocalBindingContext bindingContext) {
+		this.bindingContext = bindingContext;
 	}
 
 	/**
@@ -284,12 +282,12 @@ class HibernateTypeHelper {
 		if ( value != null && value.getJdbcDataType() == null && resolvedHibernateType != null  ) {
 			final Type resolvedRelationalType =
 					resolvedHibernateType.isEntityType()
-							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata )
+							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
 							: resolvedHibernateType;
 			if ( AbstractValue.class.isInstance( value ) ) {
 				( (AbstractValue) value ).setJdbcDataType(
 						new JdbcDataType(
-								resolvedRelationalType.sqlTypes( metadata )[0],
+								resolvedRelationalType.sqlTypes( metadata() )[0],
 								resolvedRelationalType.getName(),
 								resolvedRelationalType.getReturnedClass()
 						)
@@ -307,10 +305,10 @@ class HibernateTypeHelper {
 		}
 		final Type resolvedRelationalType =
 				resolvedHibernateType.isEntityType()
-						? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata )
+						? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
 						: resolvedHibernateType;
 		if ( !CompositeType.class.isInstance( resolvedRelationalType ) ) {
-			throw binder.bindingContext()
+			throw bindingContext
 					.makeMappingException( "Column number mismatch" ); // todo refine the exception message
 		}
 		Type[] subTypes = CompositeType.class.cast( resolvedRelationalType ).getSubtypes();
@@ -493,7 +491,7 @@ class HibernateTypeHelper {
 	}
 
 	private TypeFactory typeFactory(){
-		return metadata.getTypeResolver().getTypeFactory();
+		return metadata().getTypeResolver().getTypeFactory();
 	}
 
 	private Type determineHibernateTypeFromAttributeJavaType(
@@ -539,7 +537,7 @@ class HibernateTypeHelper {
 			final Properties typeParameters) {
 		if ( typeName != null ) {
 			try {
-				return metadata.getTypeResolver().heuristicType( typeName, typeParameters );
+				return metadata().getTypeResolver().heuristicType( typeName, typeParameters );
 			}
 			catch ( Exception ignore ) {
 			}
@@ -586,7 +584,7 @@ class HibernateTypeHelper {
 			final String defaultJavaTypeName) {
 		if ( explicitTypeName == null ) {
 			if ( defaultJavaTypeName != null && hibernateTypeDescriptor.getJavaTypeName() != null ) {
-				throw binder.bindingContext().makeMappingException(
+				throw bindingContext.makeMappingException(
 						String.format(
 								"Attempt to re-initialize (non-explicit) Java type name; current=%s new=%s",
 								hibernateTypeDescriptor.getJavaTypeName(),
@@ -598,9 +596,9 @@ class HibernateTypeHelper {
 		}
 		else {
 			// Check if user-specified name is of a User-Defined Type (UDT)
-			final TypeDefinition typeDef = metadata.getTypeDefinition( explicitTypeName );
+			final TypeDefinition typeDef = metadata().getTypeDefinition( explicitTypeName );
 			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
-				throw binder.bindingContext().makeMappingException(
+				throw bindingContext.makeMappingException(
 						String.format(
 								"Attempt to re-initialize explicity-mapped Java type name; current=%s new=%s",
 								hibernateTypeDescriptor.getExplicitTypeName(),
@@ -627,7 +625,7 @@ class HibernateTypeHelper {
 			final SingularAttributeBinding attributeBinding,
 			final Type resolvedHibernateType) {
 		if ( resolvedHibernateType == null ) {
-			throw binder.bindingContext().makeMappingException( "Resolved hibernate type can't be null" );
+			throw bindingContext.makeMappingException( "Resolved hibernate type can't be null" );
 		}
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() == null ) {
@@ -696,9 +694,12 @@ class HibernateTypeHelper {
 		}
 	}
 
+	private MetadataImplementor metadata() {
+		return bindingContext.getMetadataImplementor();
+	}
 
 	private org.hibernate.metamodel.spi.domain.Type makeJavaType(String name) {
-		return binder.bindingContext().makeJavaType( name );
+		return bindingContext.makeJavaType( name );
 	}
 
 

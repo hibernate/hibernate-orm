@@ -44,9 +44,9 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.TruthValue;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.ObjectNameNormalizer;
-import org.hibernate.cfg.ObjectNameNormalizer.NamingStrategyHelper;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -65,7 +65,7 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.metamodel.internal.EntityHierarchyHelper.LocalBindingContextExecutionContext;
 import org.hibernate.metamodel.internal.EntityHierarchyHelper.LocalBindingContextExecutor;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
@@ -149,6 +149,7 @@ import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
+import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
@@ -166,15 +167,13 @@ import org.hibernate.metamodel.spi.source.SecondaryTableSource;
 import org.hibernate.metamodel.spi.source.SequentialPluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
-import org.hibernate.metamodel.spi.source.TableSource;
-import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 import org.hibernate.metamodel.spi.source.UniqueConstraintSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -212,9 +211,13 @@ public class Binder {
 
 	// todo : apply org.hibernate.metamodel.MetadataSources.getExternalCacheRegionDefinitions()
 
+	private final LocalBindingContext bindingContext;
+
 	// helpers
 	private final EntityHierarchyHelper entityHierarchyHelper;
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
+	private final RelationalIdentifierHelper relationalIdentifierHelper;
+	private final TableHelper tableHelper;
 	private final ForeignKeyHelper foreignKeyHelper;
 	private final UniqueKeyHelper uniqueKeyHelper;
 
@@ -223,8 +226,11 @@ public class Binder {
 		this.metadata = metadata;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
 		this.entityHierarchyHelper = new EntityHierarchyHelper( metadata );
-		this.typeHelper = new HibernateTypeHelper( this, metadata );
-		this.foreignKeyHelper = new ForeignKeyHelper( this );
+		this.bindingContext = new BinderLocalBindingContextImpl( entityHierarchyHelper );
+		this.typeHelper = new HibernateTypeHelper( bindingContext );
+		this.relationalIdentifierHelper = new RelationalIdentifierHelper( bindingContext );
+		this.tableHelper = new TableHelper( bindingContext );
+		this.foreignKeyHelper = new ForeignKeyHelper( bindingContext );
 		this.uniqueKeyHelper = new UniqueKeyHelper();
 		this.nameNormalizer = metadata.getObjectNameNormalizer();
 	}
@@ -325,9 +331,8 @@ public class Binder {
 		return entityHierarchyHelper.entityMode();
 	}
 
-	// TODO: make this private
-	LocalBindingContext bindingContext() {
-		return entityHierarchyHelper.bindingContext();
+	private LocalBindingContext bindingContext() {
+		return bindingContext;
 	}
 
 	private void applyToAllEntityHierarchies(LocalBindingContextExecutor executor) {
@@ -898,8 +903,8 @@ public class Binder {
 					&& Table.class.isInstance( superEntityBinding.getPrimaryTable() ) ) {
 				includedTable = Table.class.cast( superEntityBinding.getPrimaryTable() );
 			}
-			table = createTable(
-					entitySource.getPrimaryTable(), new TableNamingStrategyHelper( entityBinding ),includedTable
+			table = tableHelper.createTable(
+					entitySource.getPrimaryTable(), new TableNamingStrategyHelper( entityBinding ), includedTable
 			);
 			tableName = table.getLogicalName().getText();
 		}
@@ -911,7 +916,10 @@ public class Binder {
 			final EntityBinding entityBinding,
 			final EntitySource entitySource) {
 		for ( final SecondaryTableSource secondaryTableSource : entitySource.getSecondaryTables() ) {
-			final TableSpecification table = createTable( secondaryTableSource.getTableSource(), new TableNamingStrategyHelper( entityBinding ) );
+			final TableSpecification table = tableHelper.createTable(
+					secondaryTableSource.getTableSource(),
+					new TableNamingStrategyHelper( entityBinding )
+			);
 			table.addComment( secondaryTableSource.getComment() );
 			final List<RelationalValueBinding> joinRelationalValueBindings = getJoinedPrimaryKeyRelationalValueBindings(
 					entityBinding,
@@ -922,7 +930,7 @@ public class Binder {
 			// TODO: make the foreign key column the primary key???
 			final List<Column> targetColumns = determineForeignKeyTargetColumns( entityBinding, secondaryTableSource );
 			final ForeignKey foreignKey = locateOrCreateForeignKey(
-					quotedIdentifier( secondaryTableSource.getExplicitForeignKeyName() ),
+					relationalIdentifierHelper.quotedIdentifier( secondaryTableSource.getExplicitForeignKeyName() ),
 					table,
 					joinRelationalValueBindings,
 					determineForeignKeyTargetTable( entityBinding, secondaryTableSource ),
@@ -1509,7 +1517,7 @@ public class Binder {
 		);
 		if ( !attributeBinding.hasDerivedValue() ) {
 			locateOrCreateForeignKey(
-					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
+					relationalIdentifierHelper.quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
 					attributeBinding.getRelationalValueBindings().get( 0 ).getTable(),
 					attributeBinding.getRelationalValueBindings(),
 					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), attributeSource ),
@@ -1638,7 +1646,7 @@ public class Binder {
 					attributeSource
 			);
 			foreignKeyHelper.locateOrCreateForeignKey(
-					quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
+					relationalIdentifierHelper.quotedIdentifier( attributeSource.getExplicitForeignKeyName() ),
 					attributeBinding.getContainer().getPrimaryTable(),// foreignKeyRelationalValueBindings.get( 0 ).getTable(),
 					foreignKeyColumns, // foreignKeyRelationalValueBindings,
 					determineForeignKeyTargetTable( attributeBinding.getReferencedEntityBinding(), attributeSource ),
@@ -1948,7 +1956,7 @@ public class Binder {
 			);
 		}
 		attributeBinding.getPluralAttributeKeyBinding().setInverse( false );
-		TableSpecification collectionTable = createTable(
+		TableSpecification collectionTable = tableHelper.createTable(
 				attributeSource.getCollectionTableSpecificationSource(),
 				new CollectionTableNamingStrategyHelper( attributeBinding )
 		);
@@ -2244,7 +2252,7 @@ public class Binder {
 		if ( !elementBinding.getPluralAttributeBinding().getPluralAttributeKeyBinding().isInverse() &&
 				!elementBinding.hasDerivedValue() ) {
 			locateOrCreateForeignKey(
-					quotedIdentifier( elementSource.getExplicitForeignKeyName() ),
+					relationalIdentifierHelper.quotedIdentifier( elementSource.getExplicitForeignKeyName() ),
 					collectionTable,
 					elementBinding.getRelationalValueBindings(),
 					determineForeignKeyTargetTable( referencedEntityBinding, elementSource ),
@@ -2333,7 +2341,7 @@ public class Binder {
 		}
 		final boolean isInverse = attributeSource.isInverse();
 		final TableSpecification collectionTable =
-				createTable(
+				tableHelper.createTable(
 						attributeSource.getCollectionTableSpecificationSource(),
 						new ManyToManyCollectionTableNamingStrategyHelper(
 								attributeBinding,
@@ -2733,7 +2741,7 @@ public class Binder {
 				);
 		keyBinding.setRelationalValueBindings( sourceRelationalBindings );
 		ForeignKey foreignKey = locateOrCreateForeignKey(
-				quotedIdentifier( keySource.getExplicitForeignKeyName() ),
+				relationalIdentifierHelper.quotedIdentifier( keySource.getExplicitForeignKeyName() ),
 				collectionTable,
 				sourceRelationalBindings,
 				determineForeignKeyTargetTable( attributeBinding.getContainer().seekEntityBinding(), keySource ),
@@ -2835,7 +2843,7 @@ public class Binder {
 					);
 
 			ForeignKey foreignKey = locateOrCreateForeignKey(
-					quotedIdentifier( subclassEntitySource.getExplicitForeignKeyName() ),
+					relationalIdentifierHelper.quotedIdentifier( subclassEntitySource.getExplicitForeignKeyName() ),
 					table,
 					joinRelationalValueBindings,
 					determineForeignKeyTargetTable( superEntityBinding, subclassEntitySource ),
@@ -2874,7 +2882,7 @@ public class Binder {
 						? HashedNameUtil.generateName( "UK_", table, columnNames.toArray( new String[columnNames.size()] ) )
 						: constraintSource.name();
 				for ( final String columnName : columnNames ) {
-					uk.addColumn( table.locateOrCreateColumn( quotedIdentifier( columnName ) ) );
+					uk.addColumn( table.locateOrCreateColumn( relationalIdentifierHelper.quotedIdentifier( columnName ) ) );
 				}
 				uk.setTable( table );
 				uk.setName( constraintName );
@@ -2892,7 +2900,7 @@ public class Binder {
 						: constraintSource.name();
 				final Index index = table.getOrCreateIndex( constraintName );
 				for ( int i = 0; i < columnNames.size(); i++ ) {
-					Column column = table.locateOrCreateColumn( quotedIdentifier( columnNames.get( i ) ) );
+					Column column = table.locateOrCreateColumn( relationalIdentifierHelper.quotedIdentifier( columnNames.get( i ) ) );
 					index.addColumn( column, orderings.get( i ) );
 				}
 			}
@@ -2989,7 +2997,7 @@ public class Binder {
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( DefaultNamingStrategy defaultNamingStrategy : defaultNamingStrategyList ) {
 				final String columnName =
-						quotedIdentifier( defaultNamingStrategy.defaultName() );
+						relationalIdentifierHelper.quotedIdentifier( defaultNamingStrategy.defaultName() );
 				final Column column = defaultTable.locateOrCreateColumn( columnName );
 
 
@@ -3031,7 +3039,7 @@ public class Binder {
 				}
 				if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
 					final ColumnSource columnSource = (ColumnSource) valueSource;
-					Column column = createColumn(
+					Column column = tableHelper.createColumn(
 							table,
 							columnSource,
 							name,
@@ -3076,7 +3084,7 @@ public class Binder {
 			final RelationalValueSource valueSource,
 			final TableSpecification table) {
 		if ( valueSource.getNature() == RelationalValueSource.Nature.COLUMN ) {
-			return createColumn(
+			return tableHelper.createColumn(
 					table,
 					(ColumnSource) valueSource,
 					bindingContext().getMappingDefaults().getDiscriminatorColumnName(),
@@ -3089,146 +3097,6 @@ public class Binder {
 			return table.locateOrCreateDerivedValue( ( (DerivedValueSource) valueSource ).getExpression() );
 		}
 	}
-
-	private Column createColumn(
-			final TableSpecification table,
-			final ColumnSource columnSource,
-			final String defaultName,
-			final boolean forceNotNull,
-			final boolean isNullableByDefault,
-			final boolean isDefaultAttributeName) {
-		if ( columnSource.getName() == null && defaultName == null ) {
-			throw bindingContext().makeMappingException(
-					"Cannot resolve name for column because no name was specified and default name is null."
-			);
-		}
-		final String resolvedColumnName = nameNormalizer.normalizeDatabaseIdentifier(
-				columnSource.getName(),
-				new ColumnNamingStrategyHelper( defaultName, isDefaultAttributeName )
-		);
-		final Column column = table.locateOrCreateColumn( resolvedColumnName );
-		resolveColumnNullable( table, columnSource, forceNotNull, isNullableByDefault, column );
-		column.setDefaultValue( columnSource.getDefaultValue() );
-		column.setSqlType( columnSource.getSqlType() );
-		if ( columnSource.getSizeSource() != null ) {
-			final SizeSource sizeSource = columnSource.getSizeSource();
-			if ( sizeSource.isLengthDefined() ) {
-				column.getSize().setLength( sizeSource.getLength() );
-			}
-			if ( sizeSource.isPrecisionDefined() ) {
-				column.getSize().setPrecision( sizeSource.getPrecision() );
-			}
-			if ( sizeSource.isScaleDefined() ) {
-				column.getSize().setScale( sizeSource.getScale() );
-			}
-		}
-		column.setJdbcDataType( columnSource.getDatatype() );
-		column.setReadFragment( columnSource.getReadFragment() );
-		column.setWriteFragment( columnSource.getWriteFragment() );
-		column.setCheckCondition( columnSource.getCheckCondition() );
-		column.setComment( columnSource.getComment() );
-		
-		if (columnSource.isUnique()) {
-			UniqueKey uk = new UniqueKey();
-			uk.addColumn( column );
-			uk.setTable( table );
-			HashedNameUtil.setName("UK_", uk);
-			table.addUniqueKey( uk );
-		}
-		return column;
-	}
-
-	private void resolveColumnNullable(
-			final TableSpecification table,
-			final ColumnSource columnSource,
-			final boolean forceNotNull,
-			final boolean isNullableByDefault,
-			final Column column) {
-		if ( forceNotNull ) {
-			column.setNullable( false );
-			if ( columnSource.isNullable() == TruthValue.TRUE ) {
-				log.warnf(
-						"Natural Id column[%s] from table[%s] has explicit set to allow nullable, we have to make it force not null ",
-						columnSource.getName(),
-						table.getLogicalName().getText()
-				);
-			}
-		}
-		else {
-			// if the column is already non-nullable, leave it alone
-			if ( column.isNullable() ) {
-				column.setNullable( TruthValue.toBoolean( columnSource.isNullable(), isNullableByDefault ) );
-			}
-		}
-	}
-
-	private TableSpecification createTable(
-			final TableSpecificationSource tableSpecSource,
-			final NamingStrategyHelper namingStrategyHelper) {
-		return createTable( tableSpecSource, namingStrategyHelper, null );
-	}
-
-	private TableSpecification createTable(
-			final TableSpecificationSource tableSpecSource,
-			final NamingStrategyHelper namingStrategyHelper,
-			final Table includedTable) {
-		if ( tableSpecSource == null && namingStrategyHelper == null ) {
-			throw bindingContext().makeMappingException( "An explicit name must be specified for the table" );
-		}
-		final boolean isTableSourceNull = tableSpecSource == null;
-		final Schema schema = resolveSchema( tableSpecSource );
-
-		TableSpecification tableSpec;
-		if ( isTableSourceNull || tableSpecSource instanceof TableSource  ) {
-			String explicitName = isTableSourceNull ? null : TableSource.class.cast( tableSpecSource ).getExplicitTableName();
-			String tableName = nameNormalizer.normalizeDatabaseIdentifier( explicitName, namingStrategyHelper );
-			String logicTableName = TableNamingStrategyHelper.class.cast( namingStrategyHelper ).getLogicalName( bindingContext().getNamingStrategy());
-			tableSpec = createTableSpecification( schema, tableName, logicTableName, includedTable );
-		}
-		else {
-			final InLineViewSource inLineViewSource = (InLineViewSource) tableSpecSource;
-			tableSpec = schema.createInLineView(
-					createIdentifier( inLineViewSource.getLogicalName() ),
-					inLineViewSource.getSelectStatement()
-			);
-		}
-		return tableSpec;
-	}
-
-	private Schema resolveSchema(final TableSpecificationSource tableSpecSource) {
-		final boolean tableSourceNull = tableSpecSource == null;
-		final MappingDefaults mappingDefaults = bindingContext().getMappingDefaults();
-		final String explicitCatalogName = tableSourceNull ? null : tableSpecSource.getExplicitCatalogName();
-		final String explicitSchemaName = tableSourceNull ? null : tableSpecSource.getExplicitSchemaName();
-		final Schema.Name schemaName =
-				new Schema.Name(
-						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
-						createIdentifier( explicitSchemaName, mappingDefaults.getSchemaName() )
-				);
-		return metadata.getDatabase().locateSchema( schemaName );
-	}
-
-	private TableSpecification createTableSpecification(
-			final Schema schema,
-			final String tableName,
-			final String logicTableName,
-			final Table includedTable) {
-		final Identifier logicalTableId = createIdentifier( logicTableName );
-		final Identifier physicalTableId = createIdentifier( tableName );
-		final Table table = schema.locateTable( logicalTableId );
-		if ( table != null ) {
-			return table;
-		}
-		TableSpecification tableSpec;
-		if ( includedTable == null ) {
-			tableSpec = schema.createTable( logicalTableId, physicalTableId );
-		}
-		else {
-			tableSpec = schema.createDenormalizedTable( logicalTableId, physicalTableId, includedTable );
-		}
-		return tableSpec;
-	}
-
 
 	private List<Column> determineForeignKeyTargetColumns(
 			final EntityBinding entityBinding,
@@ -3283,20 +3151,6 @@ public class Binder {
 		return propertyAccessorName == null
 				? bindingContext().getMappingDefaults().getPropertyAccessorName()
 				: propertyAccessorName;
-	}
-
-	private String quotedIdentifier(final String name) {
-		return nameNormalizer.normalizeIdentifierQuoting( name );
-	}
-
-	private Identifier createIdentifier(final String name){
-		return createIdentifier( name, null );
-	}
-
-	private Identifier createIdentifier(final String name, final String defaultName) {
-		String identifier = StringHelper.isEmpty( name ) ? defaultName : name;
-		identifier = quotedIdentifier( identifier );
-		return Identifier.toIdentifier( identifier );
 	}
 
 	//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ static methods
@@ -3556,6 +3410,78 @@ public class Binder {
 		);
 	}
 
+	private static class BinderLocalBindingContextImpl implements LocalBindingContext {
+		private final EntityHierarchyHelper entityHierarchyHelper;
+
+		BinderLocalBindingContextImpl(EntityHierarchyHelper entityHierarchyHelper) {
+			this.entityHierarchyHelper = entityHierarchyHelper;
+		}
+
+		@Override
+		public Origin getOrigin() {
+			return bindingContext().getOrigin();
+		}
+
+		@Override
+		public MappingException makeMappingException(String message) {
+			return bindingContext().makeMappingException( message );
+		}
+
+		@Override
+		public MappingException makeMappingException(String message, Exception cause) {
+			return bindingContext().makeMappingException( message, cause );
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return bindingContext().getServiceRegistry();
+		}
+
+		@Override
+		public NamingStrategy getNamingStrategy() {
+			return bindingContext().getNamingStrategy();
+		}
+
+		@Override
+		public MappingDefaults getMappingDefaults() {
+			return bindingContext().getMappingDefaults();
+		}
+
+		@Override
+		public MetadataImplementor getMetadataImplementor() {
+			return bindingContext().getMetadataImplementor();
+		}
+
+		@Override
+		public <T> Class<T> locateClassByName(String name) {
+			return bindingContext().locateClassByName( name );
+		}
+
+		@Override
+		public org.hibernate.metamodel.spi.domain.Type makeJavaType(String className) {
+			return bindingContext().makeJavaType( className );
+		}
+
+		@Override
+		public boolean isGloballyQuotedIdentifiers() {
+			return bindingContext().isGloballyQuotedIdentifiers();
+		}
+
+		@Override
+		public ValueHolder<Class<?>> makeClassReference(String className) {
+			return bindingContext().makeClassReference( className );
+		}
+
+		@Override
+		public String qualifyClassName(String name) {
+			return bindingContext().qualifyClassName( name );
+		}
+
+		private LocalBindingContext bindingContext() {
+			return entityHierarchyHelper.bindingContext();
+		}
+	}
+
 	public class JoinColumnResolutionContextImpl implements JoinColumnResolutionContext {
 		private final EntityBinding referencedEntityBinding;
 
@@ -3580,7 +3506,7 @@ public class Binder {
 
 		@Override
 		public TableSpecification resolveTable(String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
-			Identifier tableIdentifier = createIdentifier( logicalTableName );
+			Identifier tableIdentifier = relationalIdentifierHelper.createIdentifier( logicalTableName );
 			if ( tableIdentifier == null ) {
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}

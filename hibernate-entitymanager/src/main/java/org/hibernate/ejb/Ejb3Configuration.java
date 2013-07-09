@@ -145,7 +145,6 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 			EntityManagerMessageLogger.class,
 			Ejb3Configuration.class.getName()
 	);
-	private static final String IMPLEMENTATION_NAME = HibernatePersistence.class.getName();
 	private static final String META_INF_ORM_XML = "META-INF/orm.xml";
 	private static final String PARSED_MAPPING_DOMS = "hibernate.internal.mapping_doms";
 
@@ -172,8 +171,26 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 
 	public Ejb3Configuration() {
 		overridenClassLoader = ClassLoaderHelper.overridenClassLoader;
-		cfg = new Configuration();
+		cfg = createConfiguration();
 		cfg.setEntityNotFoundDelegate( ejb3EntityNotFoundDelegate );
+	}
+
+	/**
+	 * Allows redefining {@link Configuration} on superclasses
+	 *
+	 * @return the newly created {@link Configuration} instance
+	 */
+	protected Configuration createConfiguration() {
+		return new Configuration();
+	}
+
+	/**
+	 * Allows overriding the name of the JPA implementation
+	 *
+	 * @return the name of the JPA implementation, in this case the classname of {@link HibernatePersistence}
+	 */
+	protected String getImplementationName() {
+		return HibernatePersistence.class.getName();
 	}
 
 	/**
@@ -331,7 +348,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 				for ( PersistenceMetadata metadata : metadataFiles ) {
                     LOG.trace(metadata);
 
-					if ( metadata.getProvider() == null || IMPLEMENTATION_NAME.equalsIgnoreCase(
+					if ( metadata.getProvider() == null || getImplementationName().equalsIgnoreCase(
 							metadata.getProvider()
 					) ) {
 						//correct provider
@@ -536,7 +553,7 @@ public class Ejb3Configuration implements Serializable, Referenceable {
 		if ( provider == null ) {
 			provider = info.getPersistenceProviderClassName();
 		}
-		if ( provider != null && ! provider.trim().startsWith( IMPLEMENTATION_NAME ) ) {
+		if ( provider != null && ! provider.trim().startsWith( getImplementationName() ) ) {
             LOG.requiredDifferentProvider(provider);
 			return null;
 		}

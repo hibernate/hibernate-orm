@@ -174,7 +174,7 @@ import org.hibernate.type.TypeResolver;
  * @see org.hibernate.persister.collection.CollectionPersister
  * @author Gavin King
  */
-public final class SessionFactoryImpl
+public class SessionFactoryImpl
 		implements SessionFactoryImplementor {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionFactoryImpl.class.getName());

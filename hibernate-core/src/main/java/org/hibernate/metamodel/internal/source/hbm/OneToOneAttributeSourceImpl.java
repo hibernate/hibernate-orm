@@ -116,21 +116,17 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 
 	@Override
 	protected String getFetchSelectionString() {
-		return getValueIfNotNull( oneToOneElement.getFetch() );
+		return oneToOneElement.getFetch()!=null? oneToOneElement.getFetch().value() : null;
 	}
 
 	@Override
 	protected String getLazySelectionString() {
-		return getValueIfNotNull( oneToOneElement.getLazy() );
+		return oneToOneElement.getLazy()!=null? oneToOneElement.getLazy().value() : null;
 	}
 
 	@Override
 	protected String getOuterJoinSelectionString() {
-		return getValueIfNotNull( oneToOneElement.getOuterJoin() );
-	}
-
-	private String getValueIfNotNull(Enum e){
-		return e!=null ? e.toString() : null;
+		return oneToOneElement.getOuterJoin()!=null? oneToOneElement.getOuterJoin().value() : null;
 	}
 
 	@Override

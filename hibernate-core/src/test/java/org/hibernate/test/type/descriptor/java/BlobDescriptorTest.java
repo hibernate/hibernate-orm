@@ -22,19 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.type.descriptor.java;
-import java.sql.Blob;
-import java.sql.SQLException;
 
-import org.junit.Test;
-
-import org.hibernate.engine.jdbc.BlobProxy;
-import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.java.DataHelper;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.io.IOException;
+import java.sql.Blob;
+import java.sql.SQLException;
+
+import org.hibernate.engine.jdbc.BlobImplementer;
+import org.hibernate.engine.jdbc.BlobProxy;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.java.DataHelper;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -83,5 +87,15 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 		catch ( SQLException e ) {
 			fail( "SQLException accessing blob : " + e.getMessage() );
 		}
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8193" )
+	public void testStreamResetOnAccess() throws IOException {
+		byte[] bytes = new byte[] { 1, 2, 3, 4 };
+		BlobImplementer blob = (BlobImplementer) BlobProxy.generateProxy( bytes );
+		int value = blob.getUnderlyingStream().getInputStream().read();
+		// Call to BlobImplementer#getUnderlyingStream() should mark input stream for reset.
+		assertEquals( bytes.length, blob.getUnderlyingStream().getInputStream().available() );
 	}
 }

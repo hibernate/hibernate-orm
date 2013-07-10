@@ -75,24 +75,36 @@ public class BlobProxy implements InvocationHandler {
 	}
 
 	private InputStream getStream() throws SQLException {
-		final InputStream stream = binaryStream.getInputStream();
+		return getUnderlyingStream().getInputStream();
+	}
+
+	private BinaryStream getUnderlyingStream() throws SQLException {
+		resetIfNeeded();
+		return binaryStream;
+	}
+
+	private void resetIfNeeded() throws SQLException {
 		try {
 			if ( needsReset ) {
-				stream.reset();
+				binaryStream.getInputStream().reset();
 			}
 		}
 		catch ( IOException ioe) {
 			throw new SQLException("could not reset reader");
 		}
 		needsReset = true;
-		return stream;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @throws UnsupportedOperationException if any methods other than
+<<<<<<< HEAD
 	 * {@link Blob#length}, {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
+=======
+	 * {@link Blob#length}, {@link BlobImplementer#getUnderlyingStream},
+	 * {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
+>>>>>>> d7dae6c... HHH-8193 - Reset input stream before binding
 	 * or toString/equals/hashCode are invoked.
 	 */
 	@Override
@@ -105,7 +117,7 @@ public class BlobProxy implements InvocationHandler {
 			return Long.valueOf( getLength() );
 		}
 		if ( "getUnderlyingStream".equals( methodName ) ) {
-			return binaryStream;
+			return getUnderlyingStream(); // Reset stream if needed.
 		}
 		if ( "getBinaryStream".equals( methodName ) ) {
 			if ( argCount == 0 ) {

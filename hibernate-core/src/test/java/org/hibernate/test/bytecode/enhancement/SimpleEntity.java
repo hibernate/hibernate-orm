@@ -23,8 +23,12 @@
  */
 package org.hibernate.test.bytecode.enhancement;
 
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -35,6 +39,13 @@ public class SimpleEntity {
 	private String name;
 	private boolean active;
 	private long someNumber;
+    private List<String> someStrings;
+
+    @OneToMany
+    private Set<Integer> someInts;
+
+    @Embedded
+    private Address address;
 
 	@Id
 	public Long getId() {
@@ -68,4 +79,28 @@ public class SimpleEntity {
 	public void setSomeNumber(long someNumber) {
 		this.someNumber = someNumber;
 	}
+
+    public List<String> getSomeStrings() {
+        return someStrings;
+    }
+
+    public void setSomeStrings(List<String> someStrings) {
+        this.someStrings = someStrings;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public Set<Integer> getSomeInts() {
+        return someInts;
+    }
+
+    public void setSomeInts(Set<Integer> someInts) {
+        this.someInts = someInts;
+    }
 }

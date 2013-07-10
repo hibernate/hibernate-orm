@@ -1,0 +1,49 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
+ *
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
+ */
+package org.hibernate.engine.spi;
+
+import java.util.Set;
+
+/**
+ * Specify if an entity class is instrumented to track field changes
+ *
+ * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
+ */
+public interface SelfDirtinessTracker {
+
+    /**
+     * Return true if any fields has been changed
+     */
+    boolean $$_hibernate_hasDirtyAttributes();
+
+    /**
+     * Get the field names of all the fields thats been changed
+     */
+    Set<String> $$_hibernate_getDirtyAttributes();
+
+    /**
+     * Clear the stored dirty attributes
+     */
+    void $$_hibernate_clearDirtyAttributes();
+}

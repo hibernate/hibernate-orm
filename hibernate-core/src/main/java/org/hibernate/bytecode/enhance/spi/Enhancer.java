@@ -23,14 +23,21 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import javax.persistence.ElementCollection;
+import javax.persistence.Embedded;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -49,10 +56,12 @@ import javassist.bytecode.ConstPool;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.Opcode;
+import javassist.bytecode.SignatureAttribute;
 import javassist.bytecode.StackMapTable;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.stackmap.MapMaker;
 
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
@@ -82,8 +91,9 @@ public class Enhancer  {
 	private final CtClass attributeInterceptableCtClass;
 	private final CtClass entityEntryCtClass;
 	private final CtClass objectCtClass;
+    private boolean isComposite;
 
-	/**
+    /**
 	 * Constructs the Enhancer, using the given context.
 	 *
 	 * @param enhancementContext Describes the context in which enhancement will occur so as to give access
@@ -163,12 +173,31 @@ public class Enhancer  {
 			managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
 		}
 		catch (IOException e) {
-			log.unableToBuildEnhancementMetamodel( className );
+			log.unableToBuildEnhancementMetamodel(className);
 			return originalBytes;
 		}
 
-		enhance( managedCtClass );
+		enhance(managedCtClass, false);
 
+        return getByteCode(managedCtClass);
+	}
+
+    public byte[] enhanceComposite(String className, byte[] originalBytes) throws EnhancementException {
+		final CtClass managedCtClass;
+		try {
+			managedCtClass = classPool.makeClassIfNew( new ByteArrayInputStream( originalBytes ) );
+		}
+		catch (IOException e) {
+			log.unableToBuildEnhancementMetamodel(className);
+			return originalBytes;
+		}
+
+		enhance(managedCtClass, true);
+
+        return getByteCode(managedCtClass);
+    }
+
+    private byte[] getByteCode(CtClass managedCtClass) {
 		final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		final DataOutputStream out;
 		try {
@@ -190,9 +219,10 @@ public class Enhancer  {
 			log.unableToTransformClass( e.getMessage() );
 			throw new HibernateException( "Unable to transform class: " + e.getMessage() );
 		}
-	}
+    }
 
-	private void enhance(CtClass managedCtClass) {
+	private void enhance(CtClass managedCtClass, boolean isComposite) {
+        this.isComposite = isComposite;
 		final String className = managedCtClass.getName();
 		log.debugf( "Enhancing %s", className );
 
@@ -212,10 +242,10 @@ public class Enhancer  {
 			}
 		}
 
-		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
+		if (!isComposite && enhancementContext.isEntityClass( managedCtClass ) ) {
 			enhanceAsEntity( managedCtClass );
 		}
-		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
+		else if (isComposite || enhancementContext.isCompositeClass( managedCtClass ) ) {
 			enhanceAsComposite( managedCtClass );
 		}
 		else {
@@ -303,7 +333,7 @@ public class Enhancer  {
 		return annotationsAttribute;
 	}
 
-	private void enhancePersistentAttributes(CtClass managedCtClass) {
+	private void enhancePersistentAttributes(CtClass managedCtClass ) {
 		addInterceptorHandling( managedCtClass );
 		if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
 			addInLineDirtyHandling( managedCtClass );
@@ -366,6 +396,34 @@ public class Enhancer  {
 		return enhancementContext.order( persistentFieldList.toArray( new CtField[persistentFieldList.size()]) );
 	}
 
+    private List<CtField> collectCollectionFields(CtClass managedCtClass) {
+
+        final List<CtField> collectionList = new ArrayList<CtField>();
+        try {
+            for ( CtField ctField : managedCtClass.getDeclaredFields() ) {
+                // skip static fields
+                if ( Modifier.isStatic( ctField.getModifiers() ) ) {
+                    continue;
+                }
+                // skip fields added by enhancement
+                if ( ctField.getName().startsWith( "$" ) ) {
+                    continue;
+                }
+                if ( enhancementContext.isPersistentField( ctField ) ) {
+                    for(CtClass ctClass : ctField.getType().getInterfaces()) {
+                        if(ctClass.getName().equals("java.util.Collection")) {
+                            collectionList.add(ctField);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (NotFoundException ignored) {  }
+
+        return collectionList;
+    }
+
 	private void addInterceptorHandling(CtClass managedCtClass) {
 		// interceptor handling is only needed if either:
 		//		a) in-line dirty checking has *not* been requested
@@ -390,9 +448,266 @@ public class Enhancer  {
 		);
 	}
 
-	private void addInLineDirtyHandling(CtClass managedCtClass) {
-		// todo : implement
-	}
+    private boolean isClassAlreadyTrackingDirtyStatus(CtClass managedCtClass) {
+        try {
+            for(CtClass ctInterface : managedCtClass.getInterfaces()) {
+                if(ctInterface.getName().equals(SelfDirtinessTracker.class.getName()))
+                    return true;
+            }
+        }
+        catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+	private void addInLineDirtyHandling(CtClass managedCtClass ) {
+        try {
+
+            //create composite methods
+            if(isComposite) {
+                managedCtClass.addInterface(classPool.get("org.hibernate.engine.spi.CompositeTracker"));
+                CtClass compositeCtType = classPool.get("org.hibernate.bytecode.enhance.spi.CompositeOwnerTracker");
+                addField(managedCtClass, compositeCtType, EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME, true);
+                createCompositeTrackerMethod(managedCtClass);
+            }
+            // "normal" entity
+            else {
+                managedCtClass.addInterface(classPool.get("org.hibernate.engine.spi.SelfDirtinessTracker"));
+                CtClass trackerCtType = classPool.get("java.util.Set");
+                addField(managedCtClass, trackerCtType, EnhancerConstants.TRACKER_FIELD_NAME, true);
+
+                CtClass collectionTrackerCtType = classPool.get("org.hibernate.bytecode.enhance.spi.CollectionTracker");
+                addField(managedCtClass, collectionTrackerCtType, EnhancerConstants.TRACKER_COLLECTION_NAME, true);
+
+                createDirtyTrackerMethods(managedCtClass);
+            }
+
+
+        }
+        catch (NotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Create all dirty tracker methods
+     */
+    private void createDirtyTrackerMethods(CtClass managedCtClass) {
+        try {
+            String trackerChangeMethod =
+                    "public void "+EnhancerConstants.TRACKER_CHANGER_NAME+"(String name) {" +
+                            "  if(" +EnhancerConstants.TRACKER_FIELD_NAME+ " == null) {" +
+                            "    "+EnhancerConstants.TRACKER_FIELD_NAME+ " = new java.util.HashSet();" +
+                            "  }" +
+                            "  if(!" +EnhancerConstants.TRACKER_FIELD_NAME+ ".contains(name)) {" +
+                            "    "+EnhancerConstants.TRACKER_FIELD_NAME+".add(name);" +
+                            "  }"+
+                            "}";
+            managedCtClass.addMethod(CtNewMethod.make(trackerChangeMethod, managedCtClass));
+
+            createCollectionDirtyCheckMethod(managedCtClass);
+            createCollectionDirtyCheckGetFieldsMethod(managedCtClass);
+            //createCompositeFieldsDirtyCheckMethod(managedCtClass);
+            //createGetCompositeDirtyFieldsMethod(managedCtClass);
+
+            createHasDirtyAttributesMethod(managedCtClass);
+
+            createClearDirtyCollectionMethod(managedCtClass);
+            createClearDirtyMethod(managedCtClass);
+
+           String trackerGetMethod =
+                    "public java.util.List "+EnhancerConstants.TRACKER_GET_NAME+"() { "+
+                            "if("+ EnhancerConstants.TRACKER_FIELD_NAME+" == null) "+
+                            EnhancerConstants.TRACKER_FIELD_NAME+" = new java.util.HashSet();"+
+                            EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME+"("+
+                            EnhancerConstants.TRACKER_FIELD_NAME+");"+
+                            "return "+EnhancerConstants.TRACKER_FIELD_NAME+"; }";
+            CtMethod getMethod =  CtNewMethod.make(trackerGetMethod, managedCtClass);
+
+            MethodInfo methodInfo = getMethod.getMethodInfo();
+            SignatureAttribute signatureAttribute =
+                    new SignatureAttribute(methodInfo.getConstPool(), "()Ljava/util/Set<Ljava/lang/String;>;");
+            methodInfo.addAttribute(signatureAttribute);
+            managedCtClass.addMethod(getMethod);
+
+        }
+        catch (CannotCompileException e) {
+            e.printStackTrace();
+        }
+        catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createTrackChangeCompositeMethod(CtClass managedCtClass) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("public void ")
+                .append(EnhancerConstants.TRACKER_CHANGER_NAME)
+                .append("(String name) {")
+                .append("if (")
+                .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                .append(" != null) ")
+                .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                .append(".callOwner(\".\"+name); }");
+
+        System.out.println("COMPOSITE METHOD: "+builder.toString());
+
+        try {
+            managedCtClass.addMethod(CtNewMethod.make(builder.toString(), managedCtClass));
+        }
+        catch (CannotCompileException e) {
+        }
+    }
+
+    private void createCompositeTrackerMethod(CtClass managedCtClass) {
+        try {
+            StringBuilder builder = new StringBuilder();
+            builder.append("public void ")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_SET_OWNER)
+                    .append("(String name, org.hibernate.engine.spi.CompositeOwner tracker) {")
+                    .append("if(")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                    .append(" == null) ")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                    .append(" = new org.hibernate.bytecode.enhance.spi.CompositeOwnerTracker();")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                    .append(".add(name, tracker); }");
+
+            managedCtClass.addMethod(CtNewMethod.make(builder.toString(), managedCtClass));
+
+            builder = new StringBuilder();
+            builder.append("public void ")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER)
+                    .append("(String name) {")
+                    .append(" if(")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                    .append(" != null)")
+                    .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                    .append(".removeOwner(name);}");
+
+            managedCtClass.addMethod(CtNewMethod.make(builder.toString(), managedCtClass));
+        }
+        catch (CannotCompileException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void createHasDirtyAttributesMethod(CtClass managedCtClass) throws CannotCompileException {
+        String trackerHasChangedMethod =
+                "public boolean "+EnhancerConstants.TRACKER_HAS_CHANGED_NAME+"() { return ("+
+                        EnhancerConstants.TRACKER_FIELD_NAME+" != null && !" +
+                        EnhancerConstants.TRACKER_FIELD_NAME+".isEmpty()) || "+
+                        EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME+"(); } ";
+
+        managedCtClass.addMethod(CtNewMethod.make(trackerHasChangedMethod, managedCtClass));
+    }
+
+    /**
+     * Creates _clearDirtyAttributes
+     */
+    private void createClearDirtyMethod(CtClass managedCtClass) throws CannotCompileException, ClassNotFoundException {
+        StringBuilder builder = new StringBuilder();
+        builder.append("public void ")
+                .append( EnhancerConstants.TRACKER_CLEAR_NAME)
+                .append("() {")
+                .append("if (")
+                .append(EnhancerConstants.TRACKER_FIELD_NAME)
+                .append(" != null) ")
+                .append(EnhancerConstants.TRACKER_FIELD_NAME)
+                .append(".clear(); ")
+                .append(EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME)
+                .append("(); }");
+
+        managedCtClass.addMethod(CtNewMethod.make(builder.toString(), managedCtClass));
+    }
+
+    private void createClearDirtyCollectionMethod(CtClass managedCtClass) throws CannotCompileException {
+        StringBuilder builder = new StringBuilder();
+        builder.append("private void ")
+                .append(EnhancerConstants.TRACKER_COLLECTION_CLEAR_NAME)
+                .append("() { if(")
+                .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                .append(" == null)")
+                .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                .append(" = new org.hibernate.bytecode.enhance.spi.CollectionTracker();");
+
+        for(CtField ctField : collectCollectionFields(managedCtClass)) {
+            if(!enhancementContext.isMappedCollection(ctField)) {
+                builder.append("if(")
+                        .append(ctField.getName())
+                        .append(" != null) ")
+                        .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                        .append(".add(\"")
+                        .append(ctField.getName())
+                        .append("\", ")
+                        .append(ctField.getName())
+                        .append(".size());");
+            }
+        }
+
+        builder.append("}");
+
+        managedCtClass.addMethod(CtNewMethod.make(builder.toString(), managedCtClass));
+    }
+
+    /**
+     * create _areCollectionFieldsDirty
+     */
+    private void createCollectionDirtyCheckMethod(CtClass managedCtClass) throws CannotCompileException {
+        StringBuilder builder = new StringBuilder("private boolean ")
+                .append(EnhancerConstants.TRACKER_COLLECTION_CHANGED_NAME)
+                .append("() { if ($$_hibernate_getInterceptor() == null || ")
+                .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                .append(" == null) return false; ");
+
+        for(CtField ctField : collectCollectionFields(managedCtClass)) {
+            if(!enhancementContext.isMappedCollection(ctField)) {
+                builder.append("if(")
+                        .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                        .append(".getSize(\"")
+                        .append(ctField.getName())
+                        .append("\") != ")
+                        .append(ctField.getName())
+                        .append(".size()) return true;");
+            }
+        }
+
+        builder.append("return false; }");
+
+        managedCtClass.addMethod(CtNewMethod.make(builder.toString(), managedCtClass));
+    }
+
+    /**
+     * create _getCollectionFieldDirtyNames
+     */
+    private void createCollectionDirtyCheckGetFieldsMethod(CtClass managedCtClass) throws CannotCompileException {
+              StringBuilder collectionFieldDirtyFieldMethod = new StringBuilder("private void ")
+                      .append(EnhancerConstants.TRACKER_COLLECTION_CHANGED_FIELD_NAME)
+                      .append("(java.util.Set trackerSet) { if(")
+                      .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                      .append(" == null) return; else {");
+
+        for(CtField ctField : collectCollectionFields(managedCtClass)) {
+            if(!ctField.getName().startsWith("$$_hibernate") &&
+                    !enhancementContext.isMappedCollection(ctField)) {
+                collectionFieldDirtyFieldMethod
+                        .append("if(")
+                        .append(EnhancerConstants.TRACKER_COLLECTION_NAME)
+                        .append(".getSize(\"")
+                        .append(ctField.getName())
+                        .append("\") != ")
+                        .append(ctField.getName())
+                        .append(".size()) trackerSet.add(\"")
+                        .append(ctField.getName())
+                        .append("\");");
+            }
+        }
+
+        collectionFieldDirtyFieldMethod.append("}}");
+
+        managedCtClass.addMethod(CtNewMethod.make(collectionFieldDirtyFieldMethod.toString(), managedCtClass));
+    }
 
 	private void addFieldWithGetterAndSetter(
 			CtClass targetClass,
@@ -557,9 +872,38 @@ public class Enhancer  {
 				);
 			}
 
-			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) ) {
-				writer.insertBefore( typeDescriptor.buildInLineDirtyCheckingBodyFragment( fieldName ) );
+			if ( enhancementContext.doDirtyCheckingInline( managedCtClass ) && !isComposite ) {
+                writer.insertBefore( typeDescriptor.buildInLineDirtyCheckingBodyFragment( persistentField  ));
 			}
+
+            if( isComposite) {
+                StringBuilder builder = new StringBuilder();
+                builder.append(" if(  ")
+                        .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                        .append(" != null) ")
+                        .append(EnhancerConstants.TRACKER_COMPOSITE_FIELD_NAME)
+                        .append(".callOwner(\".")
+                        .append(persistentField.getName())
+                        .append("\");");
+
+                writer.insertBefore( builder.toString() );
+            }
+
+            //composite types
+            if(persistentField.getAnnotation(Embedded.class) != null) {
+                //make sure to add the CompositeOwner interface
+                if(!doClassInheritCompositeOwner(managedCtClass)) {
+                    managedCtClass.addInterface(classPool.get("org.hibernate.engine.spi.CompositeOwner"));
+                }
+                //if a composite have a embedded field we need to implement the method as well
+                if(isComposite)
+                    createTrackChangeCompositeMethod(managedCtClass);
+
+
+                writer.insertBefore( cleanupPreviousOwner(persistentField));
+
+                writer.insertAfter( compositeMethodBody(persistentField));
+            }
 
 			managedCtClass.addMethod( writer );
 			return writer;
@@ -575,6 +919,47 @@ public class Enhancer  {
 			);
 		}
 	}
+
+    private boolean doClassInheritCompositeOwner(CtClass managedCtClass) {
+        try {
+            for(CtClass ctClass : managedCtClass.getInterfaces())
+                if(ctClass.getName().equals("org.hibernate.engine.spi.CompositeOwner"))
+                    return true;
+
+            return false;
+        }
+        catch (NotFoundException e) {
+            return false;
+        }
+    }
+
+    private String cleanupPreviousOwner(CtField currentValue) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("if (")
+                .append(currentValue.getName())
+                .append(" != null) ")
+                .append("((org.hibernate.engine.spi.CompositeTracker)")
+                .append(currentValue.getName())
+                .append(").")
+                .append(EnhancerConstants.TRACKER_COMPOSITE_CLEAR_OWNER)
+                .append("(\"")
+                .append(currentValue.getName())
+                .append("\");");
+
+        return  builder.toString();
+    }
+
+    private String compositeMethodBody(CtField currentValue) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("((org.hibernate.engine.spi.CompositeTracker) ")
+                .append(currentValue.getName())
+                .append(").$$_hibernate_setOwner(\"")
+                .append(currentValue.getName())
+                .append("\",(org.hibernate.engine.spi.CompositeOwner) this);")
+                .append(EnhancerConstants.TRACKER_CHANGER_NAME + "(\"" + currentValue.getName() + "\");");
+
+        return builder.toString();
+    }
 
 	private void transformFieldAccessesIntoReadsAndWrites(
 			CtClass managedCtClass,
@@ -699,7 +1084,7 @@ public class Enhancer  {
 	private static interface AttributeTypeDescriptor {
 		public String buildReadInterceptionBodyFragment(String fieldName);
 		public String buildWriteInterceptionBodyFragment(String fieldName);
-		public String buildInLineDirtyCheckingBodyFragment(String fieldName);
+		public String buildInLineDirtyCheckingBodyFragment(CtField currentField);
 	}
 
 	private AttributeTypeDescriptor resolveAttributeTypeDescriptor(CtField persistentField) throws NotFoundException {
@@ -735,14 +1120,74 @@ public class Enhancer  {
 
 	private abstract static class AbstractAttributeTypeDescriptor implements AttributeTypeDescriptor {
 		@Override
-		public String buildInLineDirtyCheckingBodyFragment(String fieldName) {
-			// for now...
-			// todo : hook-in in-lined dirty checking
-			return String.format(
-					"System.out.println( \"DIRTY CHECK (%1$s) : \" + this.%1$s + \" -> \" + $1 + \" (dirty=\" + (this.%1$s != $1) +\")\" );",
-					fieldName
-			);
+		public String buildInLineDirtyCheckingBodyFragment(CtField currentValue) {
+            StringBuilder builder = new StringBuilder();
+            try {
+                //should ignore primary keys
+                for(Object o : currentValue.getType().getAnnotations()) {
+                    if(o instanceof Id)
+                        return "";
+                }
+
+                builder.append(entityMethodBody(currentValue));
+
+
+            }
+            catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            catch (NotFoundException e) {
+                e.printStackTrace();
+            }
+            return builder.toString();
 		}
+
+        private String entityMethodBody(CtField currentValue) {
+            StringBuilder inlineBuilder = new StringBuilder();
+            try {
+                inlineBuilder.append("if ( $$_hibernate_getInterceptor() != null ");
+                //primitives || enums
+                if(currentValue.getType().isPrimitive() || currentValue.getType().isEnum()) {
+                    inlineBuilder.append("&& "+currentValue.getName()+" != $1)");
+                }
+                //simple data types
+                else if(currentValue.getType().getName().startsWith("java.lang") ||
+                        currentValue.getType().getName().startsWith("java.math.Big") ||
+                        currentValue.getType().getName().startsWith("java.sql.Time") ||
+                        currentValue.getType().getName().startsWith("java.sql.Date") ||
+                        currentValue.getType().getName().startsWith("java.util.Date") ||
+                        currentValue.getType().getName().startsWith("java.util.Calendar")
+                        ) {
+                    inlineBuilder.append("&& (("+currentValue.getName()+" == null) || (!" +currentValue.getName()+".equals( $1))))");
+                }
+                //all other objects
+                else {
+                    //if the field is a collection we return since we handle that in a separate method
+                    for(CtClass ctClass : currentValue.getType().getInterfaces()) {
+                        if(ctClass.getName().equals("java.util.Collection")) {
+
+                            //if the collection is not managed we should write it to the tracker
+                            //todo: should use EnhancementContext.isMappedCollection here instead
+                            if (currentValue.getAnnotation(OneToMany.class) != null ||
+                                    currentValue.getAnnotation(ManyToMany.class) != null ||
+                                    currentValue.getAnnotation(ElementCollection.class) != null) {
+                                return "";
+                            }
+                        }
+                    }
+
+                    //todo: for now just call equals, should probably do something else here
+                    inlineBuilder.append("&& (("+currentValue.getName()+" == null) || (!" +currentValue.getName()+".equals( $1))))");
+                }
+
+                inlineBuilder.append( EnhancerConstants.TRACKER_CHANGER_NAME+"(\""+currentValue.getName()+"\");");
+            } catch (NotFoundException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+            return inlineBuilder.toString();
+        }
 	}
 
 	private static class ObjectAttributeTypeDescriptor extends AbstractAttributeTypeDescriptor {

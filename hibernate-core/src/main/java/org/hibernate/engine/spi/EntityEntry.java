@@ -236,6 +236,9 @@ public final class EntityEntry implements Serializable {
 				interceptor.clearDirty();
 			}
 		}
+        if( entity instanceof SelfDirtinessTracker)
+            ((SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
+
 		persistenceContext.getSession()
 				.getFactory()
 				.getCustomEntityDirtinessStrategy()
@@ -299,6 +302,10 @@ public final class EntityEntry implements Serializable {
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
+
+        if(entity instanceof SelfDirtinessTracker)
+            return ((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes();
+
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
 		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {

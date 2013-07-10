@@ -33,6 +33,7 @@ import javax.persistence.ManyToOne;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -51,6 +52,12 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		return new Class<?>[] { Employee.class, Department.class };
 	}
 	
+	@Override
+	protected void configure(Configuration configuration) {
+		configuration.setProperty( AvailableSettings.DIALECT, QueryHintTestDialect.class.getName() );
+		configuration.setProperty( AvailableSettings.USE_SQL_COMMENTS, "true" );
+	}
+	
 	@Test
 	public void testBasicQueryHint() {
 		Department department = new Department();
@@ -60,19 +67,18 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		Employee employee2 = new Employee();
 		employee2.department = department;
 		
-		Configuration cfg = buildConfiguration();
-		cfg.setProperty( "hibernate.dialect", QueryHintTestDialect.class.getName() );
-		Session s = cfg.buildSessionFactory( buildServiceRegistry( buildBootstrapServiceRegistry(), cfg ) )
-				.openSession();
+		Session s = openSession();
 		s.getTransaction().begin();
 		s.persist( department );
 		s.persist( employee1 );
 		s.persist( employee2 );
 		s.getTransaction().commit();
 		s.clear();
-		
-		s.getTransaction().begin();
+
 		// Use a simple Oracle optimizer hint: "ALL_ROWS"
+		
+		// test Query
+		s.getTransaction().begin();
 		Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
 				.setQueryHint( "ALL_ROWS" )
 				.setParameter( "departmentName", "Sales" );
@@ -85,8 +91,23 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		
 		QueryHintTestDialect.resetProcessedSql();
 		
+		// ensure the insertion logic can handle a comment appended to the front
 		s.getTransaction().begin();
-		// Use a simple Oracle optimizer hint: "ALL_ROWS"
+		query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
+				.setComment( "this is a test" )
+				.setQueryHint( "ALL_ROWS" )
+				.setParameter( "departmentName", "Sales" );
+		results = query.list();
+		s.getTransaction().commit();
+		s.clear();
+		
+		assertEquals(results.size(), 2);
+		assertTrue(QueryHintTestDialect.getProcessedSql().contains( "select /*+ ALL_ROWS */"));
+		
+		QueryHintTestDialect.resetProcessedSql();
+		
+		// test Criteria
+		s.getTransaction().begin();
 		Criteria criteria = s.createCriteria( Employee.class )
 				.setQueryHint( "ALL_ROWS" )
 				.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );

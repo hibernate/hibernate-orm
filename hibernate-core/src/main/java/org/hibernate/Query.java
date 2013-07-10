@@ -213,9 +213,9 @@ public interface Query extends BasicQueryContract {
 	public Query setComment(String comment);
 	
 	/**
-	 * Add a DB hint to the SQL query.
+	 * Add a DB query hint to the SQL.
 	 * 
-	 * @param hint The database specific hint to add.
+	 * @param hint The database specific query hint to add.
 	 */
 	public Query setQueryHint(String hint);
 

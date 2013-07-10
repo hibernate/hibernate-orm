@@ -508,9 +508,9 @@ public interface Criteria extends CriteriaSpecification {
 	
 	  
 	/**
-	 * Add a DB hint to the generated SQL query.
+	 * Add a DB query hint to the generated SQL.
 	 * 
-	 * @param hint The database specific hint to add.
+	 * @param hint The database specific query hint to add.
 	 * @return this (for method chaining)
 	 */
 	public Criteria setQueryHint(String hint);

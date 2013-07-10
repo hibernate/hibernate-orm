@@ -99,12 +99,8 @@ public class BlobProxy implements InvocationHandler {
 	 * {@inheritDoc}
 	 *
 	 * @throws UnsupportedOperationException if any methods other than
-<<<<<<< HEAD
-	 * {@link Blob#length}, {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
-=======
 	 * {@link Blob#length}, {@link BlobImplementer#getUnderlyingStream},
 	 * {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
->>>>>>> d7dae6c... HHH-8193 - Reset input stream before binding
 	 * or toString/equals/hashCode are invoked.
 	 */
 	@Override

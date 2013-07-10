@@ -242,6 +242,11 @@ public abstract class Loader {
 			Dialect dialect,
 			List<AfterLoadAction> afterLoadActions) throws HibernateException {
 		sql = applyLocks( sql, parameters, dialect, afterLoadActions );
+		
+		if ( parameters.getQueryHint() != null ) {
+			sql = dialect.getQueryHintString( sql, parameters.getQueryHint() );
+		}
+		
 		return getFactory().getSettings().isCommentsEnabled()
 				? prependComment( sql, parameters )
 				: sql;
@@ -1844,7 +1849,7 @@ public abstract class Loader {
 	 * limit parameters.
 	 */
 	protected final PreparedStatement prepareQueryStatement(
-	        final String sql,
+	        String sql,
 	        final QueryParameters queryParameters,
 	        final LimitHandler limitHandler,
 	        final boolean scroll,
@@ -1856,7 +1861,7 @@ public abstract class Loader {
 		boolean useLimitOffset = hasFirstRow && useLimit && limitHandler.supportsLimitOffset();
 		boolean callable = queryParameters.isCallable();
 		final ScrollMode scrollMode = getScrollMode( scroll, hasFirstRow, useLimitOffset, queryParameters );
-
+		
 		PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareQueryStatement(
 				sql,
 				callable,

@@ -30,6 +30,7 @@ import java.sql.Types;
 
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
+import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
@@ -581,5 +582,25 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public String getNotExpression( String expression ) {
 		return "not (" + expression + ")";
+	}
+	
+	@Override
+	public String getQueryHintString(String sql, String hint) {
+		if ( StringHelper.isEmpty( hint ) ) {
+			return sql;
+		}
+
+		int pos = sql.indexOf( "select" );
+		if ( pos > -1 ) {
+			StringBuilder buffer = new StringBuilder( sql.length() + hint.length() + 8 );
+			if ( pos > 0 ) {
+				buffer.append( sql.substring( 0, pos ) );
+			}
+			buffer.append( "select /*+ " ).append( hint ).append( " */" )
+					.append( sql.substring( pos + "select".length() ) );
+			sql = buffer.toString();
+		}
+
+		return sql;
 	}
 }

@@ -60,6 +60,7 @@ public final class QueryParameters {
 	private boolean cacheable;
 	private String cacheRegion;
 	private String comment;
+	private String queryHint;
 	private ScrollMode scrollMode;
 	private Serializable[] collectionKeys;
 	private Object optionalObject;
@@ -101,7 +102,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues) {
-		this( positionalParameterTypes, positionalParameterValues, null, null, false, false, false, null, null, false, null );
+		this( positionalParameterTypes, positionalParameterValues, null, null, false, false, false, null, null, null, false, null );
 	}
 
 	public QueryParameters(
@@ -127,6 +128,7 @@ public final class QueryParameters {
 				false,
 				null,
 				null,
+				null,
 				collectionKeys,
 				null
 		);
@@ -143,6 +145,7 @@ public final class QueryParameters {
 			final String cacheRegion,
 			//final boolean forceCacheRefresh,
 			final String comment,
+			final String queryHint,
 			final boolean isLookupByNaturalKey,
 			final ResultTransformer transformer) {
 		this(
@@ -156,6 +159,7 @@ public final class QueryParameters {
 				cacheable,
 				cacheRegion,
 				comment,
+				queryHint,
 				null,
 				transformer
 		);
@@ -174,6 +178,7 @@ public final class QueryParameters {
 			final String cacheRegion,
 			//final boolean forceCacheRefresh,
 			final String comment,
+			final String queryHint,
 			final Serializable[] collectionKeys,
 			ResultTransformer transformer) {
 		this.positionalParameterTypes = positionalParameterTypes;
@@ -185,6 +190,7 @@ public final class QueryParameters {
 		this.cacheRegion = cacheRegion;
 		//this.forceCacheRefresh = forceCacheRefresh;
 		this.comment = comment;
+		this.queryHint = queryHint;
 		this.collectionKeys = collectionKeys;
 		this.isReadOnlyInitialized = isReadOnlyInitialized;
 		this.readOnly = readOnly;
@@ -203,6 +209,7 @@ public final class QueryParameters {
 			final String cacheRegion,
 			//final boolean forceCacheRefresh,
 			final String comment,
+			final String queryHint,
 			final Serializable[] collectionKeys,
 			final Object optionalObject,
 			final String optionalEntityName,
@@ -219,6 +226,7 @@ public final class QueryParameters {
 				cacheable,
 				cacheRegion,
 				comment,
+				queryHint,
 				collectionKeys,
 				transformer
 		);
@@ -321,6 +329,14 @@ public final class QueryParameters {
 
 	public void setComment(String comment) {
 		this.comment = comment;
+	}
+	  
+	public String getQueryHint() {
+		return queryHint;
+	}
+
+	public void setQueryHint(String queryHint) {
+		this.queryHint = queryHint;
 	}
 
 	public ScrollMode getScrollMode() {
@@ -561,6 +577,7 @@ public final class QueryParameters {
 				this.cacheable,
 				this.cacheRegion,
 				this.comment,
+				this.queryHint,
 				this.collectionKeys,
 				this.optionalObject,
 				this.optionalEntityName,

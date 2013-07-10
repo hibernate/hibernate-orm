@@ -505,6 +505,15 @@ public interface Criteria extends CriteriaSpecification {
 	 * @return this (for method chaining)
 	 */
 	public Criteria setComment(String comment);
+	
+	  
+	/**
+	 * Add a DB hint to the generated SQL query.
+	 * 
+	 * @param hint The database specific hint to add.
+	 * @return this (for method chaining)
+	 */
+	public Criteria setQueryHint(String hint);
 
 	/**
 	 * Override the flush mode for this particular query.

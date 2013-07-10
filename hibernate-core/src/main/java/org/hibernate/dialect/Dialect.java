@@ -2658,4 +2658,16 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsNotNullUnique() {
 		return true;
 	}
+	
+	/**
+	 * Apply a hint to the query.  The entire query is provided, allowing the Dialect full control over the placement
+	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
+	 * 
+	 * @param query The query to which to apply the hint.
+	 * @param hint The  hint to apply
+	 * @return The modified SQL
+	 */
+	public String getQueryHintString(String query, String hint) {
+		return query;
+	} 
 }

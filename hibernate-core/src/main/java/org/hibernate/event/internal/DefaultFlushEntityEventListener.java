@@ -26,6 +26,7 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
@@ -491,25 +492,32 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		);
 
 		if ( dirtyProperties == null ) {
-			// see if the custom dirtiness strategy can tell us...
-			class DirtyCheckContextImpl implements CustomEntityDirtinessStrategy.DirtyCheckContext {
-				int[] found = null;
-				@Override
-				public void doDirtyChecking(CustomEntityDirtinessStrategy.AttributeChecker attributeChecker) {
-					found = new DirtyCheckAttributeInfoImpl( event ).visitAttributes( attributeChecker );
-					if ( found != null && found.length == 0 ) {
-						found = null;
-					}
-				}
-			}
-			DirtyCheckContextImpl context = new DirtyCheckContextImpl();
-			session.getFactory().getCustomEntityDirtinessStrategy().findDirty(
-					entity,
-					persister,
-					(Session) session,
-					context
-			);
-			dirtyProperties = context.found;
+            if(entity instanceof SelfDirtinessTracker) {
+                if(((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes()) {
+                   dirtyProperties = persister.resolveAttributeIndexes(((SelfDirtinessTracker) entity).$$_hibernate_getDirtyAttributes());
+                }
+            }
+            else {
+                // see if the custom dirtiness strategy can tell us...
+                class DirtyCheckContextImpl implements CustomEntityDirtinessStrategy.DirtyCheckContext {
+                    int[] found = null;
+                    @Override
+                    public void doDirtyChecking(CustomEntityDirtinessStrategy.AttributeChecker attributeChecker) {
+                        found = new DirtyCheckAttributeInfoImpl( event ).visitAttributes( attributeChecker );
+                        if ( found != null && found.length == 0 ) {
+                            found = null;
+                        }
+                    }
+                }
+                DirtyCheckContextImpl context = new DirtyCheckContextImpl();
+                session.getFactory().getCustomEntityDirtinessStrategy().findDirty(
+                        entity,
+                        persister,
+                        (Session) session,
+                        context
+                );
+                dirtyProperties = context.found;
+            }
 		}
 
 		event.setDatabaseSnapshot(null);

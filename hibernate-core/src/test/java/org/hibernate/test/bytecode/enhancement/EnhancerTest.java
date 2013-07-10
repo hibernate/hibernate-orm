@@ -25,7 +25,12 @@ package org.hibernate.test.bytecode.enhancement;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -46,11 +51,17 @@ import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import javax.persistence.ElementCollection;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -87,7 +98,19 @@ public class EnhancerTest extends BaseUnitTestCase {
 			return true;
 		}
 
-		@Override
+        @Override
+        public boolean isMappedCollection(CtField field) {
+            try {
+                return (field.getAnnotation(OneToMany.class) != null ||
+                        field.getAnnotation(ManyToMany.class) != null ||
+                        field.getAnnotation(ElementCollection.class) != null);
+            }
+            catch (ClassNotFoundException e) {
+                return false;
+            }
+        }
+
+        @Override
 		public boolean isPersistentField(CtField ctField) {
 			return true;
 		}
@@ -108,13 +131,32 @@ public class EnhancerTest extends BaseUnitTestCase {
 		Enhancer enhancer = new Enhancer( enhancementContext );
 		CtClass entityCtClass = generateCtClassForAnEntity( entityClassToEnhance );
 		byte[] original = entityCtClass.toBytecode();
-		byte[] enhanced = enhancer.enhance( entityCtClass.getName(), original );
+		//byte[] enhanced = enhancer.enhance( entityCtClass.getName(), original );
+        byte[] enhanced = enhancer.enhance( entityCtClass.getName(), original );
 		assertFalse( "entity was not enhanced", Arrays.equals( original, enhanced ) );
 
 		ClassLoader cl = new ClassLoader() { };
 		ClassPool cp = new ClassPool( false );
 		cp.appendClassPath( new LoaderClassPath( cl ) );
 		CtClass enhancedCtClass = cp.makeClass( new ByteArrayInputStream( enhanced ) );
+        enhancedCtClass.debugWriteFile("/tmp");
+        //just for debugging
+        Class addressClass = null;
+        Class countryClass = null;
+        if(entityClassToEnhance.getName().endsWith("SimpleEntity")) {
+            CtClass addressCtClass = generateCtClassForAnEntity( Address.class );
+            byte[] enhancedAddress = enhancer.enhanceComposite(Address.class.getName(), addressCtClass.toBytecode());
+            CtClass enhancedCtClassAddress = cp.makeClass( new ByteArrayInputStream( enhancedAddress ) );
+            enhancedCtClassAddress.debugWriteFile("/tmp");
+            addressClass = enhancedCtClassAddress.toClass( cl, this.getClass().getProtectionDomain() );
+
+            CtClass countryCtClass = generateCtClassForAnEntity( Country.class );
+            byte[] enhancedCountry = enhancer.enhanceComposite(Country.class.getName(), countryCtClass.toBytecode());
+            CtClass enhancedCtClassCountry = cp.makeClass( new ByteArrayInputStream( enhancedCountry ) );
+            enhancedCtClassCountry.debugWriteFile("/tmp");
+            countryClass = enhancedCtClassCountry.toClass( cl, this.getClass().getProtectionDomain() );
+
+        }
 		Class entityClass = enhancedCtClass.toClass( cl, this.getClass().getProtectionDomain() );
 		Object entityInstance = entityClass.newInstance();
 
@@ -151,20 +193,96 @@ public class EnhancerTest extends BaseUnitTestCase {
 		entityClass.getMethod( "getId" ).invoke( entityInstance );
 
 		interceptorSetter.invoke( entityInstance, new LocalPersistentAttributeInterceptor() );
-		assertNotNull( interceptorGetter.invoke( entityInstance ) );
+		assertNotNull(interceptorGetter.invoke(entityInstance));
 
 		// dirty checking is unfortunately just printlns for now... just verify the test output
 		entityClass.getMethod( "getId" ).invoke( entityInstance );
 		entityClass.getMethod( "setId", Long.class ).invoke( entityInstance, entityClass.getMethod( "getId" ).invoke( entityInstance ) );
 		entityClass.getMethod( "setId", Long.class ).invoke( entityInstance, 1L );
+        assertTrue((Boolean) entityClass.getMethod("$$_hibernate_hasDirtyAttributes").invoke(entityInstance));
 
 		entityClass.getMethod( "isActive" ).invoke( entityInstance );
 		entityClass.getMethod( "setActive", boolean.class ).invoke( entityInstance, entityClass.getMethod( "isActive" ).invoke( entityInstance ) );
-		entityClass.getMethod( "setActive", boolean.class ).invoke( entityInstance, true );
+		entityClass.getMethod( "setActive", boolean.class ).invoke(entityInstance, true);
 
 		entityClass.getMethod( "getSomeNumber" ).invoke( entityInstance );
 		entityClass.getMethod( "setSomeNumber", long.class ).invoke( entityInstance, entityClass.getMethod( "getSomeNumber" ).invoke( entityInstance ) );
-		entityClass.getMethod( "setSomeNumber", long.class ).invoke( entityInstance, 1L );
+		entityClass.getMethod( "setSomeNumber", long.class ).invoke(entityInstance, 1L);
+        assertEquals(3, ((Set) entityClass.getMethod("$$_hibernate_getDirtyAttributes").invoke(entityInstance)).size());
+
+        entityClass.getMethod("$$_hibernate_clearDirtyAttributes").invoke(entityInstance);
+        //setting the same value should not make it dirty
+        entityClass.getMethod( "setSomeNumber", long.class ).invoke(entityInstance, 1L);
+        //assertEquals(0, ((Set) entityClass.getMethod("$$_hibernate_getDirtyAttributes").invoke(entityInstance)).size());
+        //assertFalse((Boolean) entityClass.getMethod("$$_hibernate_hasDirtyAttributes").invoke(entityInstance));
+
+        if(entityClass.getName().endsWith("SimpleEntity")) {
+
+            List<String> strings = new ArrayList<String>();
+            strings.add("FooBar");
+
+            entityClass.getMethod( "setSomeStrings", java.util.List.class ).invoke(entityInstance, strings);
+
+            assertTrue((Boolean) entityClass.getMethod("$$_hibernate_hasDirtyAttributes").invoke(entityInstance));
+
+            Set tracked = (Set) entityClass.getMethod(EnhancerConstants.TRACKER_GET_NAME).invoke(entityInstance);
+            assertEquals(1, tracked.size());
+            assertEquals("someStrings", tracked.iterator().next());
+
+            entityClass.getMethod("$$_hibernate_clearDirtyAttributes").invoke(entityInstance);
+
+            ((List) entityClass.getMethod( "getSomeStrings").invoke(entityInstance)).add("JADA!");
+            Boolean isDirty = (Boolean) entityClass.getMethod("$$_hibernate_hasDirtyAttributes").invoke(entityInstance);
+            assertTrue(isDirty);
+            assertEquals("someStrings",
+                    ((Set) entityClass.getMethod(EnhancerConstants.TRACKER_GET_NAME).invoke(entityInstance)).iterator().next());
+            entityClass.getMethod("$$_hibernate_clearDirtyAttributes").invoke(entityInstance);
+
+            //this should not set the entity to dirty
+            Set<Integer> ints = new HashSet<Integer>();
+            ints.add(42);
+            entityClass.getMethod( "setSomeInts", java.util.Set.class ).invoke(entityInstance, ints);
+            isDirty = (Boolean) entityClass.getMethod("$$_hibernate_hasDirtyAttributes").invoke(entityInstance);
+            assertFalse(isDirty);
+
+            //testing composite object
+            assert addressClass != null;
+            Object address =  addressClass.newInstance();
+
+            assert countryClass != null;
+            Object country =  countryClass.newInstance();
+
+            //Method adrInterceptorGetter = addressClass.getMethod( EnhancerConstants.INTERCEPTOR_GETTER_NAME );
+            //Method adrInterceptorSetter = addressClass.getMethod( EnhancerConstants.INTERCEPTOR_SETTER_NAME, PersistentAttributeInterceptor.class );
+            //adrInterceptorSetter.invoke( address, new LocalPersistentAttributeInterceptor() );
+
+            entityClass.getMethod("setAddress", addressClass).invoke(entityInstance, address);
+
+            addressClass.getMethod("setCity", String.class).invoke(address, "Arendal");
+
+            tracked = (Set) entityClass.getMethod(EnhancerConstants.TRACKER_GET_NAME).invoke(entityInstance);
+            assertEquals(2, tracked.size());
+            Iterator iter = tracked.iterator();
+            assertEquals("address", iter.next());
+            assertEquals("address.city", iter.next());
+
+            entityClass.getMethod("$$_hibernate_clearDirtyAttributes").invoke(entityInstance);
+
+            //make sure that new composite instances are cleared
+            Object address2 =  addressClass.newInstance();
+
+            entityClass.getMethod("setAddress", addressClass).invoke(entityInstance, address2);
+            addressClass.getMethod("setStreet1", String.class).invoke(address, "Heggedalveien");
+
+            tracked = (Set) entityClass.getMethod(EnhancerConstants.TRACKER_GET_NAME).invoke(entityInstance);
+            assertEquals(1, tracked.size());
+
+            addressClass.getMethod("setCountry", countryClass).invoke(address2, country);
+            countryClass.getMethod("setName", String.class).invoke(country, "Norway");
+
+            tracked = (Set) entityClass.getMethod(EnhancerConstants.TRACKER_GET_NAME).invoke(entityInstance);
+            assertEquals(3, tracked.size());
+        }
 	}
 
 	private CtClass generateCtClassForAnEntity(Class entityClassToEnhance) throws Exception {

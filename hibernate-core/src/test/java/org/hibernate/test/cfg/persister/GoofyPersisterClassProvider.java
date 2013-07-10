@@ -25,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -599,6 +600,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public Iterable<AttributeDefinition> getAttributes() {
 			throw new NotYetImplementedException();
 		}
+
+        @Override
+        public int[] resolveAttributeIndexes(Set<String> attributes) {
+            return null;
+        }
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {

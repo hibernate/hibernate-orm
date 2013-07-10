@@ -121,4 +121,11 @@ public interface EnhancementContext {
 	 * @return {@code true} if the field is lazy loadable; {@code false} otherwise.
 	 */
 	public boolean isLazyLoadable(CtField field);
+
+    /**
+     *
+     * @param field the field to check
+     * @return {@code true} if the field is mapped
+     */
+    public boolean isMappedCollection(CtField field);
 }

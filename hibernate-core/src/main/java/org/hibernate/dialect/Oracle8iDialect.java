@@ -27,6 +27,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.List;
 
 import org.hibernate.JDBCException;
 import org.hibernate.QueryTimeoutException;
@@ -585,14 +586,16 @@ public class Oracle8iDialect extends Dialect {
 	}
 	
 	@Override
-	public String getQueryHintString(String sql, String hint) {
+	public String getQueryHintString(String sql, List<String> hints) {
+		final String hint = StringHelper.join( ", ", hints.iterator() );
+		
 		if ( StringHelper.isEmpty( hint ) ) {
 			return sql;
 		}
 
-		int pos = sql.indexOf( "select" );
+		final int pos = sql.indexOf( "select" );
 		if ( pos > -1 ) {
-			StringBuilder buffer = new StringBuilder( sql.length() + hint.length() + 8 );
+			final StringBuilder buffer = new StringBuilder( sql.length() + hint.length() + 8 );
 			if ( pos > 0 ) {
 				buffer.append( sql.substring( 0, pos ) );
 			}

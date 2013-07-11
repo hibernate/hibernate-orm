@@ -213,11 +213,11 @@ public interface Query extends BasicQueryContract {
 	public Query setComment(String comment);
 	
 	/**
-	 * Add a DB query hint to the SQL.
+	 * Add a DB query hint to the SQL.  The Dialect will determine how the hints should be concatenated.
 	 * 
 	 * @param hint The database specific query hint to add.
 	 */
-	public Query setQueryHint(String hint);
+	public Query addQueryHint(String hint);
 
 	/**
 	 * Return the HQL select clause aliases, if any.

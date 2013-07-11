@@ -35,6 +35,7 @@ import java.sql.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -2664,10 +2665,10 @@ public abstract class Dialect implements ConversionContext {
 	 * and syntax of the hint.  By default, ignore the hint and simply return the query.
 	 * 
 	 * @param query The query to which to apply the hint.
-	 * @param hint The  hint to apply
+	 * @param hints The  hints to apply
 	 * @return The modified SQL
 	 */
-	public String getQueryHintString(String query, String hint) {
+	public String getQueryHintString(String query, List<String> hints) {
 		return query;
 	} 
 }

@@ -355,7 +355,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		        rootCriteria.getCacheable(),
 		        rootCriteria.getCacheRegion(),
 		        rootCriteria.getComment(),
-		        rootCriteria.getQueryHint(),
+		        rootCriteria.getQueryHints(),
 		        rootCriteria.isLookupByNaturalKey(),
 		        rootCriteria.getResultTransformer()
 		);

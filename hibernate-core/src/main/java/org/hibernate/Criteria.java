@@ -508,12 +508,12 @@ public interface Criteria extends CriteriaSpecification {
 	
 	  
 	/**
-	 * Add a DB query hint to the generated SQL.
+	 * Add a DB query hint to the generated SQL.  The Dialect will determine how the hints should be concatenated.
 	 * 
 	 * @param hint The database specific query hint to add.
 	 * @return this (for method chaining)
 	 */
-	public Criteria setQueryHint(String hint);
+	public Criteria addQueryHint(String hint);
 
 	/**
 	 * Override the flush mode for this particular query.

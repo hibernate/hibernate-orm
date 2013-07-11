@@ -59,7 +59,7 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-	public void testBasicQueryHint() {
+	public void testQueryHint() {
 		Department department = new Department();
 		department.name = "Sales";
 		Employee employee1 = new Employee();
@@ -69,18 +69,15 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		
 		Session s = openSession();
 		s.getTransaction().begin();
-		s.persist( department );
-		s.persist( employee1 );
+		s.persist( department );		s.persist( employee1 );
 		s.persist( employee2 );
 		s.getTransaction().commit();
 		s.clear();
 
-		// Use a simple Oracle optimizer hint: "ALL_ROWS"
-		
-		// test Query
+		// test Query w/ a simple Oracle optimizer hint
 		s.getTransaction().begin();
 		Query query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
-				.setQueryHint( "ALL_ROWS" )
+				.addQueryHint( "ALL_ROWS" )
 				.setParameter( "departmentName", "Sales" );
 		List results = query.list();
 		s.getTransaction().commit();
@@ -91,11 +88,26 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		
 		QueryHintTestDialect.resetProcessedSql();
 		
+		// test multiple hints
+		s.getTransaction().begin();
+		query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
+				.addQueryHint( "ALL_ROWS" )
+				.addQueryHint( "USE_CONCAT" )
+				.setParameter( "departmentName", "Sales" );
+		results = query.list();
+		s.getTransaction().commit();
+		s.clear();
+		
+		assertEquals(results.size(), 2);
+		assertTrue(QueryHintTestDialect.getProcessedSql().contains( "select /*+ ALL_ROWS, USE_CONCAT */"));
+		
+		QueryHintTestDialect.resetProcessedSql();
+		
 		// ensure the insertion logic can handle a comment appended to the front
 		s.getTransaction().begin();
 		query = s.createQuery( "FROM QueryHintTest$Employee e WHERE e.department.name = :departmentName" )
 				.setComment( "this is a test" )
-				.setQueryHint( "ALL_ROWS" )
+				.addQueryHint( "ALL_ROWS" )
 				.setParameter( "departmentName", "Sales" );
 		results = query.list();
 		s.getTransaction().commit();
@@ -109,7 +121,7 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		// test Criteria
 		s.getTransaction().begin();
 		Criteria criteria = s.createCriteria( Employee.class )
-				.setQueryHint( "ALL_ROWS" )
+				.addQueryHint( "ALL_ROWS" )
 				.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );
 		results = criteria.list();
 		s.getTransaction().commit();
@@ -130,8 +142,8 @@ public class QueryHintTest extends BaseCoreFunctionalTestCase {
 		private static String processedSql;
 		
 		@Override
-		public String getQueryHintString(String sql, String hint) {
-			processedSql = super.getQueryHintString( sql, hint );
+		public String getQueryHintString(String sql, List<String> hints) {
+			processedSql = super.getQueryHintString( sql, hints );
 			return processedSql;
 		}
 		

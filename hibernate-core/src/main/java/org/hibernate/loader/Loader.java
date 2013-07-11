@@ -243,8 +243,10 @@ public abstract class Loader {
 			List<AfterLoadAction> afterLoadActions) throws HibernateException {
 		sql = applyLocks( sql, parameters, dialect, afterLoadActions );
 		
-		if ( parameters.getQueryHint() != null ) {
-			sql = dialect.getQueryHintString( sql, parameters.getQueryHint() );
+		// Keep this here, rather than moving to Select.  Some Dialects may need the hint to be appended to the very
+		// end or beginning of the finalized SQL statement, so wait until everything is processed.
+		if ( parameters.getQueryHints() != null && parameters.getQueryHints().size() > 0 ) {
+			sql = dialect.getQueryHintString( sql, parameters.getQueryHints() );
 		}
 		
 		return getFactory().getSettings().isCommentsEnabled()

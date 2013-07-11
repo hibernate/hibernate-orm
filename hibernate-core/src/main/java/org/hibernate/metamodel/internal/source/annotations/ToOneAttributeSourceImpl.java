@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.jboss.jandex.AnnotationInstance;
 
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -171,8 +172,8 @@ public class ToOneAttributeSourceImpl extends SingularAttributeSourceImpl implem
 			result.add(
 					new Binder.DefaultNamingStrategy() {
 						@Override
-						public String defaultName() {
-							return associationAttribute.getContext().getNamingStrategy().foreignKeyColumnName(
+						public String defaultName(NamingStrategy namingStrategy) {
+							return namingStrategy.foreignKeyColumnName(
 									associationAttribute.getName(),
 									entityName,
 									tableName,

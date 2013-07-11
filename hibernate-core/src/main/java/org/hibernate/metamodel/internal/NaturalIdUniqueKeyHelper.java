@@ -30,7 +30,7 @@ import org.hibernate.metamodel.spi.relational.UniqueKey;
 /**
  * @author Brett Meyer
  */
-public class UniqueKeyHelper {
+public class NaturalIdUniqueKeyHelper {
 
 	private Map<TableSpecification, UniqueKey> naturalIdUniqueKeys
 			= new HashMap<TableSpecification, UniqueKey>();

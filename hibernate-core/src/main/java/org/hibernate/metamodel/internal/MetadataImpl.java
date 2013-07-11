@@ -838,6 +838,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	}
 
 	private static final String DEFAULT_IDENTIFIER_COLUMN_NAME = "id";
+	private static final String DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME = "tenant_id";
 	private static final String DEFAULT_DISCRIMINATOR_COLUMN_NAME = "class";
 	private static final String DEFAULT_CASCADE = "none";
 	private static final String DEFAULT_PROPERTY_ACCESS = "property";
@@ -901,6 +902,11 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		@Override
 		public String getIdColumnName() {
 			return DEFAULT_IDENTIFIER_COLUMN_NAME;
+		}
+
+		@Override
+		public String getTenantIdColumnName() {
+			return DEFAULT_TENANT_IDENTIFIER_COLUMN_NAME;
 		}
 
 		@Override

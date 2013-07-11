@@ -23,9 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
 import org.hibernate.jaxb.spi.hbm.JaxbMapKeyElement;
@@ -196,7 +198,14 @@ public class MapKeySourceImpl extends AbstractHbmSourceNode implements BasicPlur
 
 	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		final Binder.DefaultNamingStrategy defaultNamingStrategy =
+				new Binder.DefaultNamingStrategy() {
+					@Override
+					public String defaultName(NamingStrategy namingStrategy) {
+						return namingStrategy.columnName( "idx" );
+					}
+				};
+		return Collections.singletonList( defaultNamingStrategy );
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import org.jboss.jandex.AnnotationInstance;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
@@ -81,8 +82,8 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		if ( attribute.isSequentiallyIndexed() ) {
 			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
 				@Override
-				public String defaultName() {
-					return attribute.getName() + "_ORDER";
+				public String defaultName(NamingStrategy namingStrategy) {
+					return namingStrategy.propertyToColumnName( attribute.getName() ) + "_ORDER";
 				}
 			};
 			indexSource = new SequentialPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );
@@ -94,8 +95,8 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_COLUMN ) ) {
 			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
 				@Override
-				public String defaultName() {
-					return attribute.getName() + "_KEY";
+				public String defaultName(NamingStrategy namingStrategy) {
+					return namingStrategy.propertyToColumnName( attribute.getName() ) + "_KEY";
 				}
 			};
 			indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );
@@ -123,8 +124,8 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		else if ( String.class.equals( attribute.getIndexType() ) || attribute.getIndexType().isPrimitive() ) {
 			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
 				@Override
-				public String defaultName() {
-					return attribute.getName() + "_KEY";
+				public String defaultName(NamingStrategy namingStrategy) {
+					return namingStrategy.propertyToColumnName( attribute.getName() ) + "_KEY";
 				}
 			};
 			indexSource = new BasicPluralAttributeIndexSourceImpl( this, attribute, defaultNamingStrategy );

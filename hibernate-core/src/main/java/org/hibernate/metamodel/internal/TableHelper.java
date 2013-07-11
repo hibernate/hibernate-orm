@@ -128,23 +128,29 @@ public class TableHelper {
 		return tableSpec;
 	}
 
-	public Column createColumn(
+	public Column locateOrCreateColumn(
 			final TableSpecification table,
-			final ColumnSource columnSource,
-			final String defaultName,
-			final boolean forceNotNull,
-			final boolean isNullableByDefault,
-			final boolean isDefaultAttributeName) {
-		if ( columnSource.getName() == null && defaultName == null ) {
+			final String columnName,
+			final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper) {
+		if ( columnName == null && namingStrategyHelper == null ) {
 			throw bindingContext.makeMappingException(
-					"Cannot resolve name for column because no name was specified and default name is null."
+					"Cannot resolve name for column because no name was specified and namingStrategyHelper is null."
 			);
 		}
 		final String resolvedColumnName = normalizeDatabaseIdentifier(
-				columnSource.getName(),
-				new ColumnNamingStrategyHelper( defaultName, isDefaultAttributeName )
+				columnName,
+				namingStrategyHelper
 		);
-		final Column column = table.locateOrCreateColumn( resolvedColumnName );
+		return table.locateOrCreateColumn( resolvedColumnName );
+	}
+
+	public Column locateOrCreateColumn(
+			final TableSpecification table,
+			final ColumnSource columnSource,
+			final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
+			final boolean forceNotNull,
+			final boolean isNullableByDefault) {
+		final Column column = locateOrCreateColumn( table, columnSource.getName(), namingStrategyHelper );
 		resolveColumnNullable( table, columnSource, forceNotNull, isNullableByDefault, column );
 		column.setDefaultValue( columnSource.getDefaultValue() );
 		column.setSqlType( columnSource.getSqlType() );

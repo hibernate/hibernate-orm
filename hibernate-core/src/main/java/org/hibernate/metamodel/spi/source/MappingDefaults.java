@@ -63,6 +63,13 @@ public interface MappingDefaults {
 	public String getIdColumnName();
 
 	/**
+	 * Identifies the default column name to use for the tenant identifier column if non is specified in the mapping.
+	 *
+	 * @return The default tenant identifier column name
+	 */
+	public String getTenantIdColumnName();
+
+	/**
 	 * Identifies the default column name to use for the discriminator column if none specified in the mapping.
 	 *
 	 * @return The default discriminator column name

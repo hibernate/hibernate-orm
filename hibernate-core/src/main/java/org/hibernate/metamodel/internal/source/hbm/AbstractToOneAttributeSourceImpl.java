@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.mapping.PropertyGeneration;
@@ -190,8 +191,8 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 			result.add(
 					new Binder.DefaultNamingStrategy() {
 						@Override
-						public String defaultName() {
-							return bindingContext().getNamingStrategy().propertyToColumnName( getName() );
+						public String defaultName(NamingStrategy namingStrategy) {
+							return namingStrategy.propertyToColumnName( getName() );
 						}
 					}
 			);

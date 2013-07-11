@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbIndexElement;
@@ -168,7 +169,13 @@ public class SequentialPluralAttributeIndexSourceImpl extends AbstractHbmSourceN
 
 	@Override
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
+		final Binder.DefaultNamingStrategy defaultNamingStrategy = 	new Binder.DefaultNamingStrategy() {
+			@Override
+			public String defaultName(NamingStrategy namingStrategy) {
+				return namingStrategy.columnName( "idx" );
+			}
+		};
+		return Collections.singletonList( defaultNamingStrategy );
 	}
 
 	@Override

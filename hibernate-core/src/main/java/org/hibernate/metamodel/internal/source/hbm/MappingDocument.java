@@ -86,6 +86,7 @@ public class MappingDocument {
 					hbmJaxbRoot.getRoot().getCatalog(),
 					null,
 					null,
+					null,
 					hbmJaxbRoot.getRoot().getDefaultCascade(),
 					hbmJaxbRoot.getRoot().getDefaultAccess(),
 					hbmJaxbRoot.getRoot().isDefaultLazy()

@@ -447,6 +447,9 @@ public abstract class AbstractEntitySourceImpl
 
 	@Override
 	public boolean isLazy() {
+		if(entityElement.isLazy()==null){
+			return getLocalBindingContext().getMappingDefaults().areAssociationsLazy();
+		}
 		return entityElement().isLazy();
 	}
 

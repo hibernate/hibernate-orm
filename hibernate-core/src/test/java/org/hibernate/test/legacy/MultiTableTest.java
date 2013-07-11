@@ -23,7 +23,6 @@ import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -241,7 +240,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMultiTable() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -380,7 +378,6 @@ public class MultiTableTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testMultiTableGeneratedId() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

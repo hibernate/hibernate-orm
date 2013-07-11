@@ -1576,7 +1576,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
         <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <!-- default: none when toplevel, otherwise the nearest class definition -->
-        <xs:attribute name="lazy" default="true" type="xs:boolean"/>
+        <xs:attribute name="lazy" type="xs:boolean"/>
         <xs:attribute name="name" type="xs:string"/>
         <xs:attribute name="node" type="xs:string"/>
         <xs:attribute name="persister" type="xs:string"/>

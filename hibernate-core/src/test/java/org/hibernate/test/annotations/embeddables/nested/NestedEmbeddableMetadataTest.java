@@ -34,6 +34,14 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
+import org.hibernate.metamodel.spi.binding.CompositePluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
+import org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding;
+import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.CustomType;
 
@@ -43,21 +51,56 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class NestedEmbeddableMetadataTest extends BaseUnitTestCase {
+public class NestedEmbeddableMetadataTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Customer.class, Investment.class, MonetaryAmount.class };
+	}
+
 	@Test
 	public void testEnumTypeInterpretation() {
-		Configuration cfg = new Configuration().addAnnotatedClass( Customer.class );
-		cfg.buildMappings();
-		Mapping mapping = cfg.buildMapping();
-		PersistentClass classMetadata = cfg.getClassMapping( Customer.class.getName() );
+
+		CustomType currencyType = getCurrencyAttributeType();
+		int[] currencySqlTypes = currencyType.sqlTypes( sessionFactory() );
+		assertEquals( 1, currencySqlTypes.length );
+		assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
+
+	}
+
+	private CustomType getCurrencyAttributeType() {
+		if ( isMetadataUsed() ) {
+			return getCustomTypeFromMetamodel();
+		}
+		else {
+			return getCustomTypeFromConfiguration();
+		}
+	}
+
+	private CustomType getCustomTypeFromMetamodel() {
+		EntityBinding entityBinding = getEntityBinding( Customer.class );
+		PluralAttributeBinding attributeBinding = (PluralAttributeBinding) entityBinding.locateAttributeBinding(
+				"investments"
+		);
+		CompositePluralAttributeElementBinding pluralAttributeElementBinding = (CompositePluralAttributeElementBinding) attributeBinding
+				.getPluralAttributeElementBinding();
+
+		CompositeAttributeBinding compositeAttributeBinding = (CompositeAttributeBinding) pluralAttributeElementBinding
+				.getCompositeAttributeBindingContainer()
+				.locateAttributeBinding( "amount" );
+
+		SingularAttributeBinding currencyAttributeBinding = (SingularAttributeBinding) compositeAttributeBinding.locateAttributeBinding(
+				"currency"
+		);
+		return (CustomType) currencyAttributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
+	}
+
+	private CustomType getCustomTypeFromConfiguration() {
+		PersistentClass classMetadata = configuration().getClassMapping( Customer.class.getName() );
 		Property investmentsProperty = classMetadata.getProperty( "investments" );
 		Collection investmentsValue = (Collection) investmentsProperty.getValue();
 		Component investmentMetadata = (Component) investmentsValue.getElement();
 		Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 		SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
-		CustomType currencyType = (CustomType) currencyMetadata.getType();
-		int[] currencySqlTypes = currencyType.sqlTypes( mapping );
-		assertEquals( 1, currencySqlTypes.length );
-		assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
+		return (CustomType) currencyMetadata.getType();
 	}
 }

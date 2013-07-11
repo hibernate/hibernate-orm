@@ -26,6 +26,7 @@ package org.hibernate.test.annotations.embeddables.nested;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 
 /**
  * @author Thomas Vanstals
@@ -36,7 +37,7 @@ public class Investment {
 	private MonetaryAmount amount;
 	private String description;
 	private Date date;
-
+	@Embedded
 	public MonetaryAmount getAmount() {
 		return amount;
 	}

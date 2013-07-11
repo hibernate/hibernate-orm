@@ -33,7 +33,7 @@ public interface EntityElement extends MetaAttributeContainer {
 	public String getEntityName();
 
     public boolean isAbstract();
-    public boolean isLazy();
+    public Boolean isLazy();
     public String getProxy();
     public int getBatchSize();
     public boolean isDynamicInsert();

@@ -25,6 +25,8 @@
 package org.hibernate;
 import java.util.List;
 
+import javax.persistence.QueryHint;
+
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Order;
@@ -508,7 +510,10 @@ public interface Criteria extends CriteriaSpecification {
 	
 	  
 	/**
-	 * Add a DB query hint to the generated SQL.  The Dialect will determine how the hints should be concatenated.
+	 * Add a DB query hint to the SQL.  These differ from JPA's {@link QueryHint}, which is specific to the JPA
+	 * implementation and ignores DB vendor-specific hints.  Instead, these are intended solely for the vendor-specific
+	 * hints, such as Oracle's optimizers.  Multiple query hints are supported; the Dialect will determine
+	 * concatenation and placement.
 	 * 
 	 * @param hint The database specific query hint to add.
 	 * @return this (for method chaining)

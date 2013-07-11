@@ -135,7 +135,6 @@ import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.IdentifierSource;
-import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.IndexConstraintSource;
 import org.hibernate.metamodel.spi.source.IndexedPluralAttributeSource;
 import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
@@ -2827,7 +2826,11 @@ public class Binder {
 						: constraintSource.name();
 				final Index index = table.getOrCreateIndex( constraintName );
 				for ( int i = 0; i < columnNames.size(); i++ ) {
-					Column column = table.locateOrCreateColumn( relationalIdentifierHelper.quotedIdentifier( columnNames.get( i ) ) );
+					Column column = tableHelper.locateOrCreateColumn(
+							table,
+							columnNames.get( i ),
+							new DefaultColumnNamingStrategyHelper( null )
+					);
 					index.addColumn( column, orderings.get( i ) );
 				}
 			}

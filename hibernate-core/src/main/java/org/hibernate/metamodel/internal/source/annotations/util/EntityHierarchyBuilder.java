@@ -52,9 +52,6 @@ import org.hibernate.metamodel.internal.source.annotations.RootEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.SubclassEntitySourceImpl;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.entity.RootEntityClass;
-import org.hibernate.metamodel.internal.source.annotations.n.ClassNode;
-import org.hibernate.metamodel.internal.source.annotations.n.HierarchyBuilder;
-import org.hibernate.metamodel.internal.source.annotations.n.TreeWalker;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.EntitySource;
@@ -81,11 +78,6 @@ public class EntityHierarchyBuilder {
 	 * @return a set of {@code EntityHierarchy} instances.
 	 */
 	public static Set<EntityHierarchy> createEntityHierarchies(AnnotationBindingContext bindingContext) {
-
-		HierarchyBuilder builder = new HierarchyBuilder( bindingContext );
-		ClassNode root = builder.create();
-		new TreeWalker().visit( root );
-
 		Set<EntityHierarchy> hierarchies = new HashSet<EntityHierarchy>();
 		Map<DotName,DotName> processedEntities = new HashMap<DotName, DotName>(  );
 		Map<DotName, List<ClassInfo>> classToDirectSubClassMap = new HashMap<DotName, List<ClassInfo>>();

@@ -34,6 +34,7 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AssociationVisitationStrategy;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -212,6 +213,29 @@ public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 
 					@Override
 					public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
+					}
+
+					@Override
+					public void associationKeyRegistered(AssociationKey associationKey) {
+						System.out.println(
+								String.format(
+										"%s AssociationKey registered : %s",
+										StringHelper.repeat( ">>", depth + 1 ),
+										associationKey.toString()
+								)
+						);
+					}
+
+					@Override
+					public void foundCircularAssociationKey(AssociationKey associationKey, AttributeDefinition attributeDefinition) {
+						System.out.println(
+								String.format(
+										"%s Handling circular association attribute (%s) : %s",
+										StringHelper.repeat( ">>", depth + 1 ),
+										attributeDefinition.toString(),
+										associationKey.toString()
+								)
+						);
 					}
 				},
 				ep

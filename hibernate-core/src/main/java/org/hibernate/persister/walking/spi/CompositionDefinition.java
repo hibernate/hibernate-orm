@@ -23,8 +23,12 @@
  */
 package org.hibernate.persister.walking.spi;
 
+import org.hibernate.type.CompositeType;
+
 /**
  * @author Steve Ebersole
  */
 public interface CompositionDefinition extends AttributeDefinition, AttributeSource {
+	@Override
+	CompositeType getType();
 }

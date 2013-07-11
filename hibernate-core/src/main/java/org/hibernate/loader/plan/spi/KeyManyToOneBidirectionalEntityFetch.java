@@ -29,8 +29,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 
 /**
- * We can use the special type as a trigger in AliasResolutionContext, etc to lookup information based on
- * the wrapped reference.  E.g.
+ * Represents a key-many-to-one fetch that is bi-directionally join fetched.
+ * <p/>
+ * For example, consider an Order entity whose primary key is partially made up of the Customer entity to which
+ * it is associated.  When we join fetch Customer -> Order(s) and then Order -> Customer we have a bi-directional
+ * fetch.  This class would be used to represent the Order -> Customer part of that link.
  *
  * @author Steve Ebersole
  */

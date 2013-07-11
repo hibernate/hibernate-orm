@@ -2052,8 +2052,8 @@ public abstract class AbstractCollectionPersister
 					}
 
 					@Override
-					public Type getType() {
-						return getElementType();
+					public CompositeType getType() {
+						return (CompositeType) getElementType();
 					}
 
 					@Override

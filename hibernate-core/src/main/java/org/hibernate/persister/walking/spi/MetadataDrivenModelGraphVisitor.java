@@ -118,15 +118,17 @@ public class MetadataDrivenModelGraphVisitor {
 		final PropertyPath subPath = currentPropertyPath.append( attributeDefinition.getName() );
 		log.debug( "Visiting attribute path : " + subPath.getFullPath() );
 
-		final boolean continueWalk;
-		if ( attributeDefinition.getType().isAssociationType() &&
-				isDuplicateAssociationKey( ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey() ) ) {
-			log.debug( "Property path deemed to be circular : " + subPath.getFullPath() );
-			continueWalk = false;
+		if ( attributeDefinition.getType().isAssociationType() ) {
+			final AssociationKey associationKey = ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey();
+			if ( isDuplicateAssociationKey( associationKey ) ) {
+				log.debug( "Property path deemed to be circular : " + subPath.getFullPath() );
+				strategy.foundCircularAssociationKey( associationKey, attributeDefinition );
+				// EARLY EXIT!!!
+				return;
+			}
 		}
-		else {
-			continueWalk = strategy.startingAttribute( attributeDefinition );
-		}
+
+		final boolean continueWalk = strategy.startingAttribute( attributeDefinition );
 		if ( continueWalk ) {
 			final PropertyPath old = currentPropertyPath;
 			currentPropertyPath = subPath;
@@ -148,6 +150,8 @@ public class MetadataDrivenModelGraphVisitor {
 
 	private void visitAssociation(AssociationAttributeDefinition attribute) {
 		// todo : do "too deep" checks; but see note about adding depth to PropertyPath
+		//
+		// may also need to better account for "composite fetches" in terms of "depth".
 
 		addAssociationKey( attribute.getAssociationKey() );
 
@@ -247,6 +251,7 @@ public class MetadataDrivenModelGraphVisitor {
 					String.format( "Association has already been visited: %s", associationKey )
 			);
 		}
+		strategy.associationKeyRegistered( associationKey );
 	}
 
 	/**

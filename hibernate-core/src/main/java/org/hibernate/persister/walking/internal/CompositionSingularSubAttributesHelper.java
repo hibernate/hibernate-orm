@@ -225,8 +225,8 @@ public class CompositionSingularSubAttributesHelper {
 								}
 
 								@Override
-								public Type getType() {
-									return type;
+								public CompositeType getType() {
+									return (CompositeType) type;
 								}
 
 								@Override

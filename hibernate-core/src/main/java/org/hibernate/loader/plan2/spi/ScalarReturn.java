@@ -21,13 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.spi;
+package org.hibernate.loader.plan2.spi;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.spi.AbstractPlanNode;
+import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.type.Type;
 
 /**
- * Ugh
+ * Represent a simple scalar return within a query result.  Generally this would be values of basic (String, Integer,
+ * etc) or composite types.
  *
  * @author Steve Ebersole
  */
-public interface IdentifierDescriptionInjectable {
-	public void injectIdentifierDescription(IdentifierDescription identifierDescription);
+public class ScalarReturn extends AbstractPlanNode implements Return {
+	private final Type type;
+
+	public ScalarReturn(SessionFactoryImplementor factory, Type type) {
+		super( factory );
+		this.type = type;
+	}
+
+	public Type getType() {
+		return type;
+	}
 }

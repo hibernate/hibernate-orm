@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.plan.internal.CascadeLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
+import org.hibernate.loader.plan.spi.build.MetadataDrivenLoadPlanBuilder;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -64,7 +64,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 				sessionFactory(),
 				LoadQueryInfluencers.NONE
 		);
-		LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
+		LoadPlan plan = MetadataDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 		assertFalse( plan.hasAnyScalarReturns() );
 		assertEquals( 1, plan.getReturns().size() );
 		Return rtn = plan.getReturns().get( 0 );
@@ -85,7 +85,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 				sessionFactory(),
 				LoadQueryInfluencers.NONE
 		);
-		LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
+		LoadPlan plan = MetadataDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 		assertFalse( plan.hasAnyScalarReturns() );
 		assertEquals( 1, plan.getReturns().size() );
 		Return rtn = plan.getReturns().get( 0 );
@@ -105,7 +105,7 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 				sessionFactory(),
 				LoadQueryInfluencers.NONE
 		);
-		LoadPlan plan = LoadPlanBuilder.buildRootCollectionLoadPlan( strategy, cp );
+		LoadPlan plan = MetadataDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, cp );
 		assertFalse( plan.hasAnyScalarReturns() );
 		assertEquals( 1, plan.getReturns().size() );
 		Return rtn = plan.getReturns().get( 0 );

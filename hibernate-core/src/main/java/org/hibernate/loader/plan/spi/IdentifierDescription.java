@@ -23,22 +23,15 @@
  */
 package org.hibernate.loader.plan.spi;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
-import org.hibernate.persister.spi.HydratedCompoundValueHandler;
-
 /**
  * @author Steve Ebersole
  */
 public interface IdentifierDescription {
+	/**
+	 * Obtain fetches that are specific to the identifier.  These will only be either of type EntityFetch
+	 * (many-key-to-one) or CompositeFetch (composite ids, possibly with nested CompositeFetches and EntityFetches).
+	 *
+	 * @return This identifier's fetches.
+	 */
 	public Fetch[] getFetches();
-
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
-
-	public EntityKey resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
-
-	HydratedCompoundValueHandler getHydratedStateHandler(Fetch fetch);
 }

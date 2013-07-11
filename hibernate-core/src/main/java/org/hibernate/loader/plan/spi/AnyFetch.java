@@ -115,20 +115,20 @@ public class AnyFetch extends AbstractPlanNode implements Fetch {
 		return propertyPath;
 	}
 
-	@Override
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
-		throw new NotYetImplementedException();
-	}
+//	@Override
+//	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		throw new NotYetImplementedException();
+//	}
+//
+//	@Override
+//	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		throw new NotYetImplementedException();
+//	}
+//
+//	@Override
+//	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
+//		throw new NotYetImplementedException();
+//	}
 
 	@Override
 	public AnyFetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {

@@ -54,16 +54,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.entity.EntityJoinWalker;
-import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl;
-import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
+import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
-import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
+import org.hibernate.loader.plan.spi.build.MetadataDrivenLoadPlanBuilder;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
@@ -160,11 +158,9 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 
 
 		SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy( sf, influencers );
-		LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
-		LoadQueryDetails details = LoadQueryDetails.makeForBatching(
-				persister.getKeyColumnNames(),
-				plan,
-				sf,
+		LoadPlan plan = MetadataDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
+		EntityLoadQueryDetails details = EntityLoadQueryDetails.makeForBatching(
+				plan, persister.getKeyColumnNames(),
 				new QueryBuildingParameters() {
 					@Override
 					public LoadQueryInfluencers getQueryInfluencers() {
@@ -185,13 +181,13 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 					public LockOptions getLockOptions() {
 						return null;
 					}
-				}
+				}, sf
 		);
 
 		compare( walker, details );
 	}
 
-	private void compare(JoinWalker walker, LoadQueryDetails details) {
+	private void compare(JoinWalker walker, EntityLoadQueryDetails details) {
 		System.out.println( "WALKER    : " + walker.getSQLString() );
 		System.out.println( "LOAD-PLAN : " + details.getSqlStatement() );
 		System.out.println();
@@ -255,19 +251,10 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 	private List<?> getResults(EntityPersister entityPersister ) {
 		final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
 
-		// ultimately, using a LoadPlan requires that it be interpreted into 2 pieces of information:
-		//		1) The query to execute
-		//		2) The ResultSetProcessor to use.
-		//
-		// Those 2 pieces of information share some common context:
-		//		1) alias resolution context
-		//
+		final LoadQueryDetails queryDetails = Helper.INSTANCE.buildLoadQueryDetails( plan, sessionFactory() );
+		final String sql = queryDetails.getSqlStatement();
+		final ResultSetProcessor resultSetProcessor = queryDetails.getResultSetProcessor();
 
-		final AliasResolutionContext aliasResolutionContext = new AliasResolutionContextImpl( sessionFactory() );
-
-		final String sql = Helper.INSTANCE.generateSql( sessionFactory(), plan, aliasResolutionContext );
-
-		final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan, true );
 		final List results = new ArrayList();
 
 		final Session workSession = openSession();
@@ -281,7 +268,6 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 						ResultSet resultSet = ps.executeQuery();
 						results.addAll(
 								resultSetProcessor.extractResults(
-										NoOpLoadPlanAdvisor.INSTANCE,
 										resultSet,
 										(SessionImplementor) workSession,
 										new QueryParameters(),
@@ -291,7 +277,6 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 												return new int[0];
 											}
 										},
-										aliasResolutionContext,
 										true,
 										false,
 										null,

@@ -47,7 +47,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
@@ -61,20 +60,20 @@ public class EntityReferenceReader {
 	private static final Logger log = CoreLogging.logger( EntityReferenceReader.class );
 
 	private final EntityReference entityReference;
+	private final EntityReferenceAliases entityReferenceAliases;
 	private final EntityIdentifierReader identifierReader;
 
 	private final boolean isReturn;
 
-
-	protected EntityReferenceReader(EntityReference entityReference, EntityIdentifierReader identifierReader) {
+	public EntityReferenceReader(
+			EntityReference entityReference,
+			EntityReferenceAliases entityReferenceAliases,
+			EntityIdentifierReader identifierReader) {
 		this.entityReference = entityReference;
+		this.entityReferenceAliases = entityReferenceAliases;
 		this.identifierReader = identifierReader;
 
 		this.isReturn = EntityReturn.class.isInstance( entityReference );
-	}
-
-	public EntityReferenceReader(EntityReference entityReference) {
-		this( entityReference, new EntityIdentifierReaderImpl( entityReference ) );
 	}
 
 	public EntityReference getEntityReference() {
@@ -243,7 +242,6 @@ public class EntityReferenceReader {
 		final EntityPersister rootEntityPersister = context.getSession().getFactory().getEntityPersister(
 				concreteEntityPersister.getRootEntityName()
 		);
-		final EntityReferenceAliases aliases = context.getAliasResolutionContext().resolveAliases( entityReference );
 		final Object[] values;
 		try {
 			values = concreteEntityPersister.hydrate(
@@ -252,8 +250,8 @@ public class EntityReferenceReader {
 					entityInstance,
 					(Loadable) entityReference.getEntityPersister(),
 					concreteEntityPersister == rootEntityPersister
-							? aliases.getColumnAliases().getSuffixedPropertyAliases()
-							: aliases.getColumnAliases().getSuffixedPropertyAliases( concreteEntityPersister ),
+							? entityReferenceAliases.getColumnAliases().getSuffixedPropertyAliases()
+							: entityReferenceAliases.getColumnAliases().getSuffixedPropertyAliases( concreteEntityPersister ),
 					context.getLoadPlan().areLazyAttributesForceFetched(),
 					context.getSession()
 			);
@@ -269,7 +267,9 @@ public class EntityReferenceReader {
 
 		final Object rowId;
 		try {
-			rowId = concreteEntityPersister.hasRowId() ? resultSet.getObject( aliases.getColumnAliases().getRowIdAlias() ) : null;
+			rowId = concreteEntityPersister.hasRowId()
+					? resultSet.getObject( entityReferenceAliases.getColumnAliases().getRowIdAlias() )
+					: null;
 		}
 		catch (SQLException e) {
 			throw context.getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
@@ -332,7 +332,7 @@ public class EntityReferenceReader {
 		try {
 			discriminatorValue = loadable.getDiscriminatorType().nullSafeGet(
 					resultSet,
-					context.getAliasResolutionContext().resolveAliases( entityReference ).getColumnAliases().getSuffixedDiscriminatorAlias(),
+					entityReferenceAliases.getColumnAliases().getSuffixedDiscriminatorAlias(),
 					context.getSession(),
 					null
 			);
@@ -377,7 +377,7 @@ public class EntityReferenceReader {
 						context.getSession(),
 						resultSet,
 						entityReference.getEntityPersister(),
-						context.getAliasResolutionContext().resolveAliases( entityReference ).getColumnAliases(),
+						entityReferenceAliases.getColumnAliases(),
 						entityKey,
 						existing
 				);

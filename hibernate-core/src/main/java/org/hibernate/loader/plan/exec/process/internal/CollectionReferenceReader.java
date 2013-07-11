@@ -44,16 +44,14 @@ public class CollectionReferenceReader {
 	private static final Logger log = CoreLogging.logger( CollectionReferenceReader.class );
 
 	private final CollectionReference collectionReference;
+	private final CollectionReferenceAliases aliases;
 
-	public CollectionReferenceReader(CollectionReference collectionReference) {
+	public CollectionReferenceReader(CollectionReference collectionReference, CollectionReferenceAliases aliases) {
 		this.collectionReference = collectionReference;
+		this.aliases = aliases;
 	}
 
 	public void finishUpRow(ResultSet resultSet, ResultSetProcessingContextImpl context) {
-		final CollectionReferenceAliases aliases = context.getAliasResolutionContext().resolveAliases(
-				collectionReference
-		);
-
 		try {
 			// read the collection key for this reference for the current row.
 			final PersistenceContext persistenceContext = context.getSession().getPersistenceContext();

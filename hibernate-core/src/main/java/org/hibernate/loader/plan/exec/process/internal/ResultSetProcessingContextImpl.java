@@ -92,7 +92,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private final boolean shouldReturnProxies;
 	private final QueryParameters queryParameters;
 	private final NamedParameterContext namedParameterContext;
-	private final AliasResolutionContext aliasResolutionContext;
 	private final boolean hadSubselectFetches;
 
 	private List<HydratedEntityRegistration> currentRowHydratedEntityRegistrationList;
@@ -121,7 +120,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	 * @param shouldReturnProxies
 	 * @param queryParameters
 	 * @param namedParameterContext
-	 * @param aliasResolutionContext
 	 * @param hadSubselectFetches
 	 */
 	public ResultSetProcessingContextImpl(
@@ -134,7 +132,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 			boolean shouldReturnProxies,
 			QueryParameters queryParameters,
 			NamedParameterContext namedParameterContext,
-			AliasResolutionContext aliasResolutionContext,
 			boolean hadSubselectFetches) {
 		this.resultSet = resultSet;
 		this.session = session;
@@ -145,7 +142,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		this.shouldReturnProxies = shouldReturnProxies;
 		this.queryParameters = queryParameters;
 		this.namedParameterContext = namedParameterContext;
-		this.aliasResolutionContext = aliasResolutionContext;
 		this.hadSubselectFetches = hadSubselectFetches;
 
 		if ( shouldUseOptionalEntityInformation ) {
@@ -318,405 +314,400 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 		);
 	}
 
-	@Override
-	public AliasResolutionContext getAliasResolutionContext() {
-		return aliasResolutionContext;
-	}
-
-	@Override
-	public void checkVersion(
-			ResultSet resultSet,
-			EntityPersister persister,
-			EntityAliases entityAliases,
-			EntityKey entityKey,
-			Object entityInstance) {
-		final Object version = session.getPersistenceContext().getEntry( entityInstance ).getVersion();
-
-		if ( version != null ) {
-			//null version means the object is in the process of being loaded somewhere else in the ResultSet
-			VersionType versionType = persister.getVersionType();
-			final Object currentVersion;
-			try {
-				currentVersion = versionType.nullSafeGet(
-						resultSet,
-						entityAliases.getSuffixedVersionAliases(),
-						session,
-						null
-				);
-			}
-			catch (SQLException e) {
-				throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						"Could not read version value from result set"
-				);
-			}
-
-			if ( !versionType.isEqual( version, currentVersion ) ) {
-				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
-					session.getFactory().getStatisticsImplementor().optimisticFailure( persister.getEntityName() );
-				}
-				throw new StaleObjectStateException( persister.getEntityName(), entityKey.getIdentifier() );
-			}
-		}
-	}
-
-	@Override
-	public String getConcreteEntityTypeName(
-			final ResultSet rs,
-			final EntityPersister persister,
-			final EntityAliases entityAliases,
-			final EntityKey entityKey) {
-
-		final Loadable loadable = (Loadable) persister;
-		if ( ! loadable.hasSubclasses() ) {
-			return persister.getEntityName();
-		}
-
-		final Object discriminatorValue;
-		try {
-			discriminatorValue = loadable.getDiscriminatorType().nullSafeGet(
-					rs,
-					entityAliases.getSuffixedDiscriminatorAlias(),
-					session,
-					null
-			);
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Could not read discriminator value from ResultSet"
-			);
-		}
-
-		final String result = loadable.getSubclassForDiscriminatorValue( discriminatorValue );
-
-		if ( result == null ) {
-			// whoops! we got an instance of another class hierarchy branch
-			throw new WrongClassException(
-					"Discriminator: " + discriminatorValue,
-					entityKey.getIdentifier(),
-					persister.getEntityName()
-			);
-		}
-
-		return result;
-	}
-
-	@Override
-	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext) {
-		final Object existing = getSession().getEntityUsingInterceptor( entityKey );
-
-		if ( existing != null ) {
-			if ( !entityKeyContext.getEntityPersister().isInstance( existing ) ) {
-				throw new WrongClassException(
-						"loaded object was of wrong class " + existing.getClass(),
-						entityKey.getIdentifier(),
-						entityKeyContext.getEntityPersister().getEntityName()
-				);
-			}
-
-			final LockMode requestedLockMode = entityKeyContext.getLockMode() == null
-					? LockMode.NONE
-					: entityKeyContext.getLockMode();
-
-			if ( requestedLockMode != LockMode.NONE ) {
-				final LockMode currentLockMode = getSession().getPersistenceContext().getEntry( existing ).getLockMode();
-				final boolean isVersionCheckNeeded = entityKeyContext.getEntityPersister().isVersioned()
-						&& currentLockMode.lessThan( requestedLockMode );
-
-				// we don't need to worry about existing version being uninitialized because this block isn't called
-				// by a re-entrant load (re-entrant loads *always* have lock mode NONE)
-				if ( isVersionCheckNeeded ) {
-					//we only check the version when *upgrading* lock modes
-					checkVersion(
-							resultSet,
-							entityKeyContext.getEntityPersister(),
-							aliasResolutionContext.resolveAliases( entityKeyContext.getEntityReference() ).getColumnAliases(),
-							entityKey,
-							existing
-					);
-					//we need to upgrade the lock mode to the mode requested
-					getSession().getPersistenceContext().getEntry( existing ).setLockMode( requestedLockMode );
-				}
-			}
-
-			return existing;
-		}
-		else {
-			final String concreteEntityTypeName = getConcreteEntityTypeName(
-					resultSet,
-					entityKeyContext.getEntityPersister(),
-					aliasResolutionContext.resolveAliases( entityKeyContext.getEntityReference() ).getColumnAliases(),
-					entityKey
-			);
-
-			final Object entityInstance;
-//			if ( suppliedOptionalEntityKey != null && entityKey.equals( suppliedOptionalEntityKey ) ) {
-//				// its the given optional object
-//				entityInstance = queryParameters.getOptionalObject();
+//	@Override
+//	public void checkVersion(
+//			ResultSet resultSet,
+//			EntityPersister persister,
+//			EntityAliases entityAliases,
+//			EntityKey entityKey,
+//			Object entityInstance) {
+//		final Object version = session.getPersistenceContext().getEntry( entityInstance ).getVersion();
+//
+//		if ( version != null ) {
+//			//null version means the object is in the process of being loaded somewhere else in the ResultSet
+//			VersionType versionType = persister.getVersionType();
+//			final Object currentVersion;
+//			try {
+//				currentVersion = versionType.nullSafeGet(
+//						resultSet,
+//						entityAliases.getSuffixedVersionAliases(),
+//						session,
+//						null
+//				);
 //			}
-//			else {
-				// instantiate a new instance
-				entityInstance = session.instantiate( concreteEntityTypeName, entityKey.getIdentifier() );
+//			catch (SQLException e) {
+//				throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+//						e,
+//						"Could not read version value from result set"
+//				);
 //			}
-
-			FetchStrategy fetchStrategy = null;
-			final EntityReference entityReference = entityKeyContext.getEntityReference();
-			if ( EntityFetch.class.isInstance( entityReference ) ) {
-				final EntityFetch fetch = (EntityFetch) entityReference;
-				fetchStrategy = fetch.getFetchStrategy();
-			}
-
-			//need to hydrate it.
-
-			// grab its state from the ResultSet and keep it in the Session
-			// (but don't yet initialize the object itself)
-			// note that we acquire LockMode.READ even if it was not requested
-			final LockMode requestedLockMode = entityKeyContext.getLockMode() == null
-					? LockMode.NONE
-					: entityKeyContext.getLockMode();
-			final LockMode acquiredLockMode = requestedLockMode == LockMode.NONE
-					? LockMode.READ
-					: requestedLockMode;
-
-			loadFromResultSet(
-					resultSet,
-					entityInstance,
-					concreteEntityTypeName,
-					entityKey,
-					aliasResolutionContext.resolveAliases( entityKeyContext.getEntityReference() ).getColumnAliases(),
-					acquiredLockMode,
-					entityKeyContext.getEntityPersister(),
-					fetchStrategy,
-					true,
-					entityKeyContext.getEntityPersister().getEntityMetamodel().getEntityType()
-			);
-
-			// materialize associations (and initialize the object) later
-			registerHydratedEntity( entityKeyContext.getEntityReference(), entityKey, entityInstance );
-
-			return entityInstance;
-		}
-	}
-
-	@Override
-	public void loadFromResultSet(
-			ResultSet resultSet,
-			Object entityInstance,
-			String concreteEntityTypeName,
-			EntityKey entityKey,
-			EntityAliases entityAliases,
-			LockMode acquiredLockMode,
-			EntityPersister rootPersister,
-			FetchStrategy fetchStrategy,
-			boolean eagerFetch,
-			EntityType associationType) {
-
-		final Serializable id = entityKey.getIdentifier();
-
-		// Get the persister for the _subclass_
-		final Loadable persister = (Loadable) getSession().getFactory().getEntityPersister( concreteEntityTypeName );
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev(
-					"Initializing object from ResultSet: {0}",
-					MessageHelper.infoString(
-							persister,
-							id,
-							getSession().getFactory()
-					)
-			);
-		}
-
-		// add temp entry so that the next step is circular-reference
-		// safe - only needed because some types don't take proper
-		// advantage of two-phase-load (esp. components)
-		TwoPhaseLoad.addUninitializedEntity(
-				entityKey,
-				entityInstance,
-				persister,
-				acquiredLockMode,
-				!forceFetchLazyAttributes,
-				session
-		);
-
-		// This is not very nice (and quite slow):
-		final String[][] cols = persister == rootPersister ?
-				entityAliases.getSuffixedPropertyAliases() :
-				entityAliases.getSuffixedPropertyAliases(persister);
-
-		final Object[] values;
-		try {
-			values = persister.hydrate(
-					resultSet,
-					id,
-					entityInstance,
-					(Loadable) rootPersister,
-					cols,
-					loadPlan.areLazyAttributesForceFetched(),
-					session
-			);
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Could not read entity state from ResultSet : " + entityKey
-			);
-		}
-
-		final Object rowId;
-		try {
-			rowId = persister.hasRowId() ? resultSet.getObject( entityAliases.getRowIdAlias() ) : null;
-		}
-		catch (SQLException e) {
-			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"Could not read entity row-id from ResultSet : " + entityKey
-			);
-		}
-
-		if ( associationType != null ) {
-			String ukName = associationType.getRHSUniqueKeyPropertyName();
-			if ( ukName != null ) {
-				final int index = ( (UniqueKeyLoadable) persister ).getPropertyIndex( ukName );
-				final Type type = persister.getPropertyTypes()[index];
-
-				// polymorphism not really handled completely correctly,
-				// perhaps...well, actually its ok, assuming that the
-				// entity name used in the lookup is the same as the
-				// the one used here, which it will be
-
-				EntityUniqueKey euk = new EntityUniqueKey(
-						rootPersister.getEntityName(), //polymorphism comment above
-						ukName,
-						type.semiResolve( values[index], session, entityInstance ),
-						type,
-						persister.getEntityMode(),
-						session.getFactory()
-				);
-				session.getPersistenceContext().addEntity( euk, entityInstance );
-			}
-		}
-
-		TwoPhaseLoad.postHydrate(
-				persister,
-				id,
-				values,
-				rowId,
-				entityInstance,
-				acquiredLockMode,
-				!loadPlan.areLazyAttributesForceFetched(),
-				session
-		);
-
-	}
-
-	public void readCollectionElements(final Object[] row) {
-			LoadPlanVisitor.visit(
-					loadPlan,
-					new LoadPlanVisitationStrategyAdapter() {
-						@Override
-						public void handleCollectionReturn(CollectionReturn rootCollectionReturn) {
-							readCollectionElement(
-									null,
-									null,
-									rootCollectionReturn.getCollectionPersister(),
-									aliasResolutionContext.resolveAliases( rootCollectionReturn ).getCollectionColumnAliases(),
-									resultSet,
-									session
-							);
-						}
-
-						@Override
-						public void startingCollectionFetch(CollectionFetch collectionFetch) {
-							// TODO: determine which element is the owner.
-							final Object owner = row[ 0 ];
-							readCollectionElement(
-									owner,
-									collectionFetch.getCollectionPersister().getCollectionType().getKeyOfOwner( owner, session ),
-									collectionFetch.getCollectionPersister(),
-									aliasResolutionContext.resolveAliases( collectionFetch ).getCollectionColumnAliases(),
-									resultSet,
-									session
-							);
-						}
-
-						private void readCollectionElement(
-								final Object optionalOwner,
-								final Serializable optionalKey,
-								final CollectionPersister persister,
-								final CollectionAliases descriptor,
-								final ResultSet rs,
-								final SessionImplementor session) {
-
-							try {
-								final PersistenceContext persistenceContext = session.getPersistenceContext();
-
-								final Serializable collectionRowKey = (Serializable) persister.readKey(
-										rs,
-										descriptor.getSuffixedKeyAliases(),
-										session
-								);
-
-								if ( collectionRowKey != null ) {
-									// we found a collection element in the result set
-
-									if ( LOG.isDebugEnabled() ) {
-										LOG.debugf( "Found row of collection: %s",
-												MessageHelper.collectionInfoString( persister, collectionRowKey, session.getFactory() ) );
-									}
-
-									Object owner = optionalOwner;
-									if ( owner == null ) {
-										owner = persistenceContext.getCollectionOwner( collectionRowKey, persister );
-										if ( owner == null ) {
-											//TODO: This is assertion is disabled because there is a bug that means the
-											//	  original owner of a transient, uninitialized collection is not known
-											//	  if the collection is re-referenced by a different object associated
-											//	  with the current Session
-											//throw new AssertionFailure("bug loading unowned collection");
-										}
-									}
-
-									PersistentCollection rowCollection = persistenceContext.getLoadContexts()
-											.getCollectionLoadContext( rs )
-											.getLoadingCollection( persister, collectionRowKey );
-
-									if ( rowCollection != null ) {
-										rowCollection.readFrom( rs, persister, descriptor, owner );
-									}
-
-								}
-								else if ( optionalKey != null ) {
-									// we did not find a collection element in the result set, so we
-									// ensure that a collection is created with the owner's identifier,
-									// since what we have is an empty collection
-
-									if ( LOG.isDebugEnabled() ) {
-										LOG.debugf( "Result set contains (possibly empty) collection: %s",
-												MessageHelper.collectionInfoString( persister, optionalKey, session.getFactory() ) );
-									}
-
-									persistenceContext.getLoadContexts()
-											.getCollectionLoadContext( rs )
-											.getLoadingCollection( persister, optionalKey ); // handle empty collection
-
-								}
-
-								// else no collection element, but also no owner
-							}
-							catch ( SQLException sqle ) {
-								// TODO: would be nice to have the SQL string that failed...
-								throw session.getFactory().getSQLExceptionHelper().convert(
-										sqle,
-										"could not read next row of results"
-								);
-							}
-						}
-
-					}
-			);
-	}
+//
+//			if ( !versionType.isEqual( version, currentVersion ) ) {
+//				if ( session.getFactory().getStatistics().isStatisticsEnabled() ) {
+//					session.getFactory().getStatisticsImplementor().optimisticFailure( persister.getEntityName() );
+//				}
+//				throw new StaleObjectStateException( persister.getEntityName(), entityKey.getIdentifier() );
+//			}
+//		}
+//	}
+//
+//	@Override
+//	public String getConcreteEntityTypeName(
+//			final ResultSet rs,
+//			final EntityPersister persister,
+//			final EntityAliases entityAliases,
+//			final EntityKey entityKey) {
+//
+//		final Loadable loadable = (Loadable) persister;
+//		if ( ! loadable.hasSubclasses() ) {
+//			return persister.getEntityName();
+//		}
+//
+//		final Object discriminatorValue;
+//		try {
+//			discriminatorValue = loadable.getDiscriminatorType().nullSafeGet(
+//					rs,
+//					entityAliases.getSuffixedDiscriminatorAlias(),
+//					session,
+//					null
+//			);
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+//					e,
+//					"Could not read discriminator value from ResultSet"
+//			);
+//		}
+//
+//		final String result = loadable.getSubclassForDiscriminatorValue( discriminatorValue );
+//
+//		if ( result == null ) {
+//			// whoops! we got an instance of another class hierarchy branch
+//			throw new WrongClassException(
+//					"Discriminator: " + discriminatorValue,
+//					entityKey.getIdentifier(),
+//					persister.getEntityName()
+//			);
+//		}
+//
+//		return result;
+//	}
+//
+//	@Override
+//	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext) {
+//		final Object existing = getSession().getEntityUsingInterceptor( entityKey );
+//
+//		if ( existing != null ) {
+//			if ( !entityKeyContext.getEntityPersister().isInstance( existing ) ) {
+//				throw new WrongClassException(
+//						"loaded object was of wrong class " + existing.getClass(),
+//						entityKey.getIdentifier(),
+//						entityKeyContext.getEntityPersister().getEntityName()
+//				);
+//			}
+//
+//			final LockMode requestedLockMode = entityKeyContext.getLockMode() == null
+//					? LockMode.NONE
+//					: entityKeyContext.getLockMode();
+//
+//			if ( requestedLockMode != LockMode.NONE ) {
+//				final LockMode currentLockMode = getSession().getPersistenceContext().getEntry( existing ).getLockMode();
+//				final boolean isVersionCheckNeeded = entityKeyContext.getEntityPersister().isVersioned()
+//						&& currentLockMode.lessThan( requestedLockMode );
+//
+//				// we don't need to worry about existing version being uninitialized because this block isn't called
+//				// by a re-entrant load (re-entrant loads *always* have lock mode NONE)
+//				if ( isVersionCheckNeeded ) {
+//					//we only check the version when *upgrading* lock modes
+//					checkVersion(
+//							resultSet,
+//							entityKeyContext.getEntityPersister(),
+//							aliasResolutionContext.resolveAliases( entityKeyContext.getEntityReference() ).getColumnAliases(),
+//							entityKey,
+//							existing
+//					);
+//					//we need to upgrade the lock mode to the mode requested
+//					getSession().getPersistenceContext().getEntry( existing ).setLockMode( requestedLockMode );
+//				}
+//			}
+//
+//			return existing;
+//		}
+//		else {
+//			final String concreteEntityTypeName = getConcreteEntityTypeName(
+//					resultSet,
+//					entityKeyContext.getEntityPersister(),
+//					aliasResolutionContext.resolveAliases( entityKeyContext.getEntityReference() ).getColumnAliases(),
+//					entityKey
+//			);
+//
+//			final Object entityInstance;
+////			if ( suppliedOptionalEntityKey != null && entityKey.equals( suppliedOptionalEntityKey ) ) {
+////				// its the given optional object
+////				entityInstance = queryParameters.getOptionalObject();
+////			}
+////			else {
+//				// instantiate a new instance
+//				entityInstance = session.instantiate( concreteEntityTypeName, entityKey.getIdentifier() );
+////			}
+//
+//			FetchStrategy fetchStrategy = null;
+//			final EntityReference entityReference = entityKeyContext.getEntityReference();
+//			if ( EntityFetch.class.isInstance( entityReference ) ) {
+//				final EntityFetch fetch = (EntityFetch) entityReference;
+//				fetchStrategy = fetch.getFetchStrategy();
+//			}
+//
+//			//need to hydrate it.
+//
+//			// grab its state from the ResultSet and keep it in the Session
+//			// (but don't yet initialize the object itself)
+//			// note that we acquire LockMode.READ even if it was not requested
+//			final LockMode requestedLockMode = entityKeyContext.getLockMode() == null
+//					? LockMode.NONE
+//					: entityKeyContext.getLockMode();
+//			final LockMode acquiredLockMode = requestedLockMode == LockMode.NONE
+//					? LockMode.READ
+//					: requestedLockMode;
+//
+//			loadFromResultSet(
+//					resultSet,
+//					entityInstance,
+//					concreteEntityTypeName,
+//					entityKey,
+//					aliasResolutionContext.resolveAliases( entityKeyContext.getEntityReference() ).getColumnAliases(),
+//					acquiredLockMode,
+//					entityKeyContext.getEntityPersister(),
+//					fetchStrategy,
+//					true,
+//					entityKeyContext.getEntityPersister().getEntityMetamodel().getEntityType()
+//			);
+//
+//			// materialize associations (and initialize the object) later
+//			registerHydratedEntity( entityKeyContext.getEntityReference(), entityKey, entityInstance );
+//
+//			return entityInstance;
+//		}
+//	}
+//
+//	@Override
+//	public void loadFromResultSet(
+//			ResultSet resultSet,
+//			Object entityInstance,
+//			String concreteEntityTypeName,
+//			EntityKey entityKey,
+//			EntityAliases entityAliases,
+//			LockMode acquiredLockMode,
+//			EntityPersister rootPersister,
+//			FetchStrategy fetchStrategy,
+//			boolean eagerFetch,
+//			EntityType associationType) {
+//
+//		final Serializable id = entityKey.getIdentifier();
+//
+//		// Get the persister for the _subclass_
+//		final Loadable persister = (Loadable) getSession().getFactory().getEntityPersister( concreteEntityTypeName );
+//
+//		if ( LOG.isTraceEnabled() ) {
+//			LOG.tracev(
+//					"Initializing object from ResultSet: {0}",
+//					MessageHelper.infoString(
+//							persister,
+//							id,
+//							getSession().getFactory()
+//					)
+//			);
+//		}
+//
+//		// add temp entry so that the next step is circular-reference
+//		// safe - only needed because some types don't take proper
+//		// advantage of two-phase-load (esp. components)
+//		TwoPhaseLoad.addUninitializedEntity(
+//				entityKey,
+//				entityInstance,
+//				persister,
+//				acquiredLockMode,
+//				!forceFetchLazyAttributes,
+//				session
+//		);
+//
+//		// This is not very nice (and quite slow):
+//		final String[][] cols = persister == rootPersister ?
+//				entityAliases.getSuffixedPropertyAliases() :
+//				entityAliases.getSuffixedPropertyAliases(persister);
+//
+//		final Object[] values;
+//		try {
+//			values = persister.hydrate(
+//					resultSet,
+//					id,
+//					entityInstance,
+//					(Loadable) rootPersister,
+//					cols,
+//					loadPlan.areLazyAttributesForceFetched(),
+//					session
+//			);
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+//					e,
+//					"Could not read entity state from ResultSet : " + entityKey
+//			);
+//		}
+//
+//		final Object rowId;
+//		try {
+//			rowId = persister.hasRowId() ? resultSet.getObject( entityAliases.getRowIdAlias() ) : null;
+//		}
+//		catch (SQLException e) {
+//			throw getSession().getFactory().getJdbcServices().getSqlExceptionHelper().convert(
+//					e,
+//					"Could not read entity row-id from ResultSet : " + entityKey
+//			);
+//		}
+//
+//		if ( associationType != null ) {
+//			String ukName = associationType.getRHSUniqueKeyPropertyName();
+//			if ( ukName != null ) {
+//				final int index = ( (UniqueKeyLoadable) persister ).getPropertyIndex( ukName );
+//				final Type type = persister.getPropertyTypes()[index];
+//
+//				// polymorphism not really handled completely correctly,
+//				// perhaps...well, actually its ok, assuming that the
+//				// entity name used in the lookup is the same as the
+//				// the one used here, which it will be
+//
+//				EntityUniqueKey euk = new EntityUniqueKey(
+//						rootPersister.getEntityName(), //polymorphism comment above
+//						ukName,
+//						type.semiResolve( values[index], session, entityInstance ),
+//						type,
+//						persister.getEntityMode(),
+//						session.getFactory()
+//				);
+//				session.getPersistenceContext().addEntity( euk, entityInstance );
+//			}
+//		}
+//
+//		TwoPhaseLoad.postHydrate(
+//				persister,
+//				id,
+//				values,
+//				rowId,
+//				entityInstance,
+//				acquiredLockMode,
+//				!loadPlan.areLazyAttributesForceFetched(),
+//				session
+//		);
+//
+//	}
+//
+//	public void readCollectionElements(final Object[] row) {
+//			LoadPlanVisitor.visit(
+//					loadPlan,
+//					new LoadPlanVisitationStrategyAdapter() {
+//						@Override
+//						public void handleCollectionReturn(CollectionReturn rootCollectionReturn) {
+//							readCollectionElement(
+//									null,
+//									null,
+//									rootCollectionReturn.getCollectionPersister(),
+//									aliasResolutionContext.resolveAliases( rootCollectionReturn ).getCollectionColumnAliases(),
+//									resultSet,
+//									session
+//							);
+//						}
+//
+//						@Override
+//						public void startingCollectionFetch(CollectionFetch collectionFetch) {
+//							// TODO: determine which element is the owner.
+//							final Object owner = row[ 0 ];
+//							readCollectionElement(
+//									owner,
+//									collectionFetch.getCollectionPersister().getCollectionType().getKeyOfOwner( owner, session ),
+//									collectionFetch.getCollectionPersister(),
+//									aliasResolutionContext.resolveAliases( collectionFetch ).getCollectionColumnAliases(),
+//									resultSet,
+//									session
+//							);
+//						}
+//
+//						private void readCollectionElement(
+//								final Object optionalOwner,
+//								final Serializable optionalKey,
+//								final CollectionPersister persister,
+//								final CollectionAliases descriptor,
+//								final ResultSet rs,
+//								final SessionImplementor session) {
+//
+//							try {
+//								final PersistenceContext persistenceContext = session.getPersistenceContext();
+//
+//								final Serializable collectionRowKey = (Serializable) persister.readKey(
+//										rs,
+//										descriptor.getSuffixedKeyAliases(),
+//										session
+//								);
+//
+//								if ( collectionRowKey != null ) {
+//									// we found a collection element in the result set
+//
+//									if ( LOG.isDebugEnabled() ) {
+//										LOG.debugf( "Found row of collection: %s",
+//												MessageHelper.collectionInfoString( persister, collectionRowKey, session.getFactory() ) );
+//									}
+//
+//									Object owner = optionalOwner;
+//									if ( owner == null ) {
+//										owner = persistenceContext.getCollectionOwner( collectionRowKey, persister );
+//										if ( owner == null ) {
+//											//TODO: This is assertion is disabled because there is a bug that means the
+//											//	  original owner of a transient, uninitialized collection is not known
+//											//	  if the collection is re-referenced by a different object associated
+//											//	  with the current Session
+//											//throw new AssertionFailure("bug loading unowned collection");
+//										}
+//									}
+//
+//									PersistentCollection rowCollection = persistenceContext.getLoadContexts()
+//											.getCollectionLoadContext( rs )
+//											.getLoadingCollection( persister, collectionRowKey );
+//
+//									if ( rowCollection != null ) {
+//										rowCollection.readFrom( rs, persister, descriptor, owner );
+//									}
+//
+//								}
+//								else if ( optionalKey != null ) {
+//									// we did not find a collection element in the result set, so we
+//									// ensure that a collection is created with the owner's identifier,
+//									// since what we have is an empty collection
+//
+//									if ( LOG.isDebugEnabled() ) {
+//										LOG.debugf( "Result set contains (possibly empty) collection: %s",
+//												MessageHelper.collectionInfoString( persister, optionalKey, session.getFactory() ) );
+//									}
+//
+//									persistenceContext.getLoadContexts()
+//											.getCollectionLoadContext( rs )
+//											.getLoadingCollection( persister, optionalKey ); // handle empty collection
+//
+//								}
+//
+//								// else no collection element, but also no owner
+//							}
+//							catch ( SQLException sqle ) {
+//								// TODO: would be nice to have the SQL string that failed...
+//								throw session.getFactory().getSQLExceptionHelper().convert(
+//										sqle,
+//										"could not read next row of results"
+//								);
+//							}
+//						}
+//
+//					}
+//			);
+//	}
 
 	@Override
 	public void registerHydratedEntity(EntityReference entityReference, EntityKey entityKey, Object entityInstance) {

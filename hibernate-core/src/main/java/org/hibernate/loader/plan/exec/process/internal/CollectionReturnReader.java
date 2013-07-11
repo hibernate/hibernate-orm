@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan.exec.process.spi.ReturnReader;
+import org.hibernate.loader.plan.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 
 /**
@@ -38,8 +39,8 @@ import org.hibernate.loader.plan.spi.CollectionReturn;
 public class CollectionReturnReader extends CollectionReferenceReader implements ReturnReader {
 	private final CollectionReturn collectionReturn;
 
-	public CollectionReturnReader(CollectionReturn collectionReturn) {
-		super( collectionReturn );
+	public CollectionReturnReader(CollectionReturn collectionReturn, CollectionReferenceAliases aliases) {
+		super( collectionReturn, aliases );
 		this.collectionReturn = collectionReturn;
 	}
 

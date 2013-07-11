@@ -23,15 +23,18 @@
  */
 package org.hibernate.loader.plan.exec.query.internal;
 
-import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan.exec.internal.Helper;
+import org.hibernate.loader.plan.exec.internal.LoadQueryBuilderHelper;
+import org.hibernate.loader.plan.exec.process.internal.CollectionReferenceReader;
+import org.hibernate.loader.plan.exec.process.internal.EntityReferenceReader;
 import org.hibernate.loader.plan.exec.query.spi.EntityLoadQueryBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
+import org.hibernate.loader.plan.exec.spi.ReaderCollector;
+import org.hibernate.loader.plan.exec.spi.RowReader;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.ConditionFragment;
@@ -53,7 +56,7 @@ public class EntityLoadQueryBuilderImpl implements EntityLoadQueryBuilder {
 			SessionFactoryImplementor factory,
 			QueryBuildingParameters buildingParameters,
 			AliasResolutionContext aliasResolutionContext) {
-		final EntityReturn rootReturn = extractRootReturn( loadPlan );
+		final EntityReturn rootReturn = Helper.INSTANCE.extractRootReturn( loadPlan, EntityReturn.class );
 
 		return generateSql(
 				( (Queryable) rootReturn.getEntityPersister() ).getKeyColumnNames(),
@@ -64,28 +67,6 @@ public class EntityLoadQueryBuilderImpl implements EntityLoadQueryBuilder {
 		);
 	}
 
-	private static EntityReturn extractRootReturn(LoadPlan loadPlan) {
-		if ( loadPlan.getReturns().size() == 0 ) {
-			throw new IllegalStateException( "LoadPlan contained no root returns" );
-		}
-		else if ( loadPlan.getReturns().size() > 1 ) {
-			throw new IllegalStateException( "LoadPlan contained more than one root returns" );
-		}
-
-		final Return rootReturn = loadPlan.getReturns().get( 0 );
-		if ( !EntityReturn.class.isInstance( rootReturn ) ) {
-			throw new IllegalStateException(
-					String.format(
-							"Unexpected LoadPlan root return; expecting %s, but found %s",
-							EntityReturn.class.getName(),
-							rootReturn.getClass().getName()
-					)
-			);
-		}
-
-		return (EntityReturn) rootReturn;
-	}
-
 	@Override
 	public String generateSql(
 			String[] keyColumnNames,
@@ -93,10 +74,14 @@ public class EntityLoadQueryBuilderImpl implements EntityLoadQueryBuilder {
 			SessionFactoryImplementor factory,
 			QueryBuildingParameters buildingParameters,
 			AliasResolutionContext aliasResolutionContext) {
-		final EntityReturn rootReturn = extractRootReturn( loadPlan );
+		final EntityReturn rootReturn = Helper.INSTANCE.extractRootReturn( loadPlan, EntityReturn.class );
+
+		final String[] keyColumnNamesToUse = keyColumnNames != null
+				? keyColumnNames
+				: ( (Queryable) rootReturn.getEntityPersister() ).getIdentifierColumnNames();
 
 		return generateSql(
-				keyColumnNames,
+				keyColumnNamesToUse,
 				rootReturn,
 				factory,
 				buildingParameters,
@@ -113,14 +98,31 @@ public class EntityLoadQueryBuilderImpl implements EntityLoadQueryBuilder {
 		final SelectStatementBuilder select = new SelectStatementBuilder( factory.getDialect() );
 
 		// apply root entity return specifics
-		applyRootReturnSpecifics( select, keyColumnNames, rootReturn, factory, buildingParameters, aliasResolutionContext );
+		applyRootReturnSpecifics(
+				select,
+				keyColumnNames,
+				rootReturn,
+				factory,
+				buildingParameters,
+				aliasResolutionContext
+		);
 
 		LoadQueryBuilderHelper.applyJoinFetches(
 				select,
 				factory,
 				rootReturn,
 				buildingParameters,
-				aliasResolutionContext
+				aliasResolutionContext,
+				new ReaderCollector() {
+
+					@Override
+					public void addReader(CollectionReferenceReader collectionReferenceReader) {
+					}
+
+					@Override
+					public void addReader(EntityReferenceReader entityReferenceReader) {
+					}
+				}
 		);
 
 		return select.toStatementString();

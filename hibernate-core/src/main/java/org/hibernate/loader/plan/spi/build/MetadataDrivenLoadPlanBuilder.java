@@ -29,13 +29,14 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor;
 
 /**
- * Coordinates building of a {@link org.hibernate.loader.plan.spi.LoadPlan} between the
- * {@link org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor} and
- * {@link LoadPlanBuilderStrategy}
+ * A metadata-driven builder of LoadPlans.  Coordinates between the {@link MetadataDrivenModelGraphVisitor} and
+ * {@link LoadPlanBuilderStrategy}.
  *
  * @author Steve Ebersole
+ *
+ * @see MetadataDrivenModelGraphVisitor
  */
-public class LoadPlanBuilder {
+public class MetadataDrivenLoadPlanBuilder {
 	/**
 	 * Coordinates building a LoadPlan that defines just a single root entity return (may have fetches).
 	 * <p/>

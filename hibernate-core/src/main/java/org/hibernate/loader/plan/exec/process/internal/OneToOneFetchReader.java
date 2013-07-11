@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan.exec.process.internal;
 
+import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 
@@ -32,15 +33,12 @@ import org.hibernate.loader.plan.spi.EntityReference;
 public class OneToOneFetchReader extends EntityReferenceReader {
 	private final EntityReference ownerEntityReference;
 
-	public OneToOneFetchReader(EntityFetch entityFetch, EntityReference ownerEntityReference) {
-		super( entityFetch, new OneToOneFetchIdentifierReader( entityFetch, ownerEntityReference ) );
+	public OneToOneFetchReader(
+			EntityFetch entityFetch,
+			EntityReferenceAliases aliases,
+			EntityIdentifierReader identifierReader,
+			EntityReference ownerEntityReference) {
+		super( entityFetch, aliases, identifierReader );
 		this.ownerEntityReference = ownerEntityReference;
-	}
-
-	private static class OneToOneFetchIdentifierReader extends EntityIdentifierReaderImpl {
-		public OneToOneFetchIdentifierReader(EntityFetch oneToOne, EntityReference ownerEntityReference) {
-			super( oneToOne );
-		}
-
 	}
 }

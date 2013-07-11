@@ -92,29 +92,29 @@ public class CompositeFetch extends AbstractSingularAttributeFetch {
 		return getOwner().retrieveFetchSourcePersister();
 	}
 
-	@Override
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		// anything to do?
-	}
-
-	@Override
-	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		// anything to do?
-		return null;
-	}
-
-	@Override
-	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
-		final EntityReference ownerEntityReference = Helper.INSTANCE.findOwnerEntityReference( this );
-		final ResultSetProcessingContext.EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState(
-				ownerEntityReference
-		);
-		final EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
-		final Object entity = context.resolveEntityKey( entityKey, Helper.INSTANCE.findOwnerEntityReference( (FetchOwner) ownerEntityReference ) );
-		for ( Fetch fetch : getFetches() ) {
-			fetch.read( resultSet, context, entity );
-		}
-	}
+//	@Override
+//	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		// anything to do?
+//	}
+//
+//	@Override
+//	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		// anything to do?
+//		return null;
+//	}
+//
+//	@Override
+//	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
+//		final EntityReference ownerEntityReference = Helper.INSTANCE.findOwnerEntityReference( this );
+//		final ResultSetProcessingContext.EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState(
+//				ownerEntityReference
+//		);
+//		final EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
+//		final Object entity = context.resolveEntityKey( entityKey, Helper.INSTANCE.findOwnerEntityReference( (FetchOwner) ownerEntityReference ) );
+//		for ( Fetch fetch : getFetches() ) {
+//			fetch.read( resultSet, context, entity );
+//		}
+//	}
 
 	@Override
 	public CompositeFetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {

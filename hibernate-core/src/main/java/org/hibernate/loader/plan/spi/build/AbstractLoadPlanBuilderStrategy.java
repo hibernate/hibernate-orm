@@ -1,5 +1,5 @@
 /*
- * jDocBook, processing of DocBook sources
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
  * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -23,9 +23,6 @@
  */
 package org.hibernate.loader.plan.spi.build;
 
-import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,20 +32,21 @@ import org.jboss.logging.MDC;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.spi.AbstractFetchOwner;
 import org.hibernate.loader.plan.spi.AnyFetch;
+import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.CompositeElementGraph;
 import org.hibernate.loader.plan.spi.CompositeFetch;
+import org.hibernate.loader.plan.spi.CopyContext;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityPersisterBasedSqlSelectFragmentResolver;
 import org.hibernate.loader.plan.spi.EntityReference;
@@ -59,13 +57,12 @@ import org.hibernate.loader.plan.spi.IdentifierDescription;
 import org.hibernate.loader.plan.spi.KeyManyToOneBidirectionalEntityFetch;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.plan.spi.SqlSelectFragmentResolver;
-import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
-import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
@@ -419,6 +416,138 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		);
 	}
 
+	private Map<AssociationKey,FetchOwner> fetchedAssociationKeyOwnerMap = new HashMap<AssociationKey, FetchOwner>();
+
+	@Override
+	public void associationKeyRegistered(AssociationKey associationKey) {
+		// todo : use this information to maintain a map of AssociationKey->FetchOwner mappings (associationKey + current fetchOwner stack entry)
+		//		that mapping can then be used in #foundCircularAssociationKey to build the proper BiDirectionalEntityFetch
+		//		based on the mapped owner
+		fetchedAssociationKeyOwnerMap.put( associationKey, currentFetchOwner() );
+	}
+
+	@Override
+	public void foundCircularAssociationKey(AssociationKey associationKey, AttributeDefinition attributeDefinition) {
+		// todo : use this information to create the BiDirectionalEntityFetch instances
+		final FetchOwner fetchOwner = fetchedAssociationKeyOwnerMap.get( associationKey );
+		if ( fetchOwner == null ) {
+			throw new IllegalStateException(
+					String.format(
+							"Expecting AssociationKey->FetchOwner mapping for %s",
+							associationKey.toString()
+					)
+			);
+		}
+
+		currentFetchOwner().addFetch( new CircularFetch( currentFetchOwner(), fetchOwner, attributeDefinition ) );
+	}
+
+	public static class CircularFetch implements BidirectionalEntityFetch, EntityReference, Fetch {
+		private final FetchOwner circularFetchOwner;
+		private final FetchOwner associationOwner;
+		private final AttributeDefinition attributeDefinition;
+
+		private final EntityReference targetEntityReference;
+
+		private final FetchStrategy fetchStrategy = new FetchStrategy(
+				FetchTiming.IMMEDIATE,
+				FetchStyle.JOIN
+		);
+
+		public CircularFetch(FetchOwner circularFetchOwner, FetchOwner associationOwner, AttributeDefinition attributeDefinition) {
+			this.circularFetchOwner = circularFetchOwner;
+			this.associationOwner = associationOwner;
+			this.attributeDefinition = attributeDefinition;
+			this.targetEntityReference = resolveEntityReference( associationOwner );
+		}
+
+		@Override
+		public EntityReference getTargetEntityReference() {
+			return targetEntityReference;
+		}
+
+		protected static EntityReference resolveEntityReference(FetchOwner owner) {
+			if ( EntityReference.class.isInstance( owner ) ) {
+				return (EntityReference) owner;
+			}
+			if ( CompositeFetch.class.isInstance( owner ) ) {
+				return resolveEntityReference( ( (CompositeFetch) owner ).getOwner() );
+			}
+			// todo : what others?
+
+			throw new UnsupportedOperationException(
+					"Unexpected FetchOwner type [" + owner + "] encountered trying to build circular fetch"
+			);
+
+		}
+
+		@Override
+		public FetchOwner getOwner() {
+			return circularFetchOwner;
+		}
+
+		@Override
+		public PropertyPath getPropertyPath() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public Type getFetchedType() {
+			return attributeDefinition.getType();
+		}
+
+		@Override
+		public FetchStrategy getFetchStrategy() {
+			return fetchStrategy;
+		}
+
+		@Override
+		public boolean isNullable() {
+			return attributeDefinition.isNullable();
+		}
+
+		@Override
+		public String getAdditionalJoinConditions() {
+			return null;
+		}
+
+		@Override
+		public String[] toSqlSelectFragments(String alias) {
+			return new String[0];
+		}
+
+		@Override
+		public Fetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+			// todo : will need this implemented
+			return null;
+		}
+
+		@Override
+		public LockMode getLockMode() {
+			return targetEntityReference.getLockMode();
+		}
+
+		@Override
+		public EntityReference getEntityReference() {
+			return targetEntityReference;
+		}
+
+		@Override
+		public EntityPersister getEntityPersister() {
+			return targetEntityReference.getEntityPersister();
+		}
+
+		@Override
+		public IdentifierDescription getIdentifierDescription() {
+			return targetEntityReference.getIdentifierDescription();
+		}
+
+		@Override
+		public void injectIdentifierDescription(IdentifierDescription identifierDescription) {
+			throw new IllegalStateException( "IdentifierDescription should never be injected from circular fetch side" );
+		}
+	}
+
 	@Override
 	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
 		// for ANY mappings we need to build a Fetch:
@@ -545,7 +674,8 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		public void poppedFromStack();
 	}
 
-	protected static abstract class AbstractIdentifierAttributeCollector extends AbstractFetchOwner
+	protected static abstract class AbstractIdentifierAttributeCollector
+			extends AbstractFetchOwner
 			implements FetchOwner, EntityReference, FetchStackAware {
 		protected final EntityReference entityReference;
 		private final EntityPersisterBasedSqlSelectFragmentResolver sqlSelectFragmentResolver;
@@ -771,118 +901,8 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		public Fetch[] getFetches() {
 			return identifierFetches;
 		}
-
-		@Override
-		public HydratedCompoundValueHandler getHydratedStateHandler(Fetch fetch) {
-			return fetchToHydratedStateExtractorMap == null ? null : fetchToHydratedStateExtractorMap.get( fetch );
-		}
-
-		@Override
-		public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-			final ResultSetProcessingContext.EntityReferenceProcessingState ownerEntityReferenceProcessingState =
-					context.getProcessingState( entityReference );
-			final Object ownerIdentifierHydratedState = ownerEntityReferenceProcessingState.getIdentifierHydratedForm();
-
-			if ( ownerIdentifierHydratedState != null ) {
-				for ( Fetch fetch : identifierFetches ) {
-					if ( fetch instanceof EntityFetch ) {
-						final ResultSetProcessingContext.EntityReferenceProcessingState fetchEntityReferenceProcessingState =
-								context.getProcessingState( (EntityFetch) fetch );
-						// if the identifier was already hydrated, nothing to do
-						if ( fetchEntityReferenceProcessingState.getIdentifierHydratedForm() != null ) {
-							continue;
-						}
-						// try to extract the sub-hydrated value from the owners tuple array
-						if ( fetchToHydratedStateExtractorMap != null && ownerIdentifierHydratedState != null ) {
-							Serializable extracted = (Serializable) fetchToHydratedStateExtractorMap.get( fetch )
-									.extract( ownerIdentifierHydratedState );
-							fetchEntityReferenceProcessingState.registerIdentifierHydratedForm( extracted );
-							continue;
-						}
-
-						// if we can't, then read from result set
-						fetch.hydrate( resultSet, context );
-					}
-					else {
-						throw new NotYetImplementedException( "Cannot hydrate identifier Fetch that is not an EntityFetch" );
-					}
-				}
-				return;
-			}
-
-			final String[] columnNames;
-			if ( EntityFetch.class.isInstance( entityReference )
-					&& !FetchStrategyHelper.isJoinFetched( ((EntityFetch) entityReference).getFetchStrategy() ) ) {
-				final EntityFetch fetch = (EntityFetch) entityReference;
-				final FetchOwner fetchOwner = fetch.getOwner();
-				if ( EntityReference.class.isInstance( fetchOwner ) ) {
-					throw new NotYetImplementedException();
-//					final EntityReference ownerEntityReference = (EntityReference) fetchOwner;
-//					final EntityAliases ownerEntityAliases = context.getAliasResolutionContext()
-//							.resolveEntityColumnAliases( ownerEntityReference );
-//					final int propertyIndex = ownerEntityReference.getEntityPersister()
-//							.getEntityMetamodel()
-//							.getPropertyIndex( fetch.getOwnerPropertyName() );
-//					columnNames = ownerEntityAliases.getSuffixedPropertyAliases()[ propertyIndex ];
-				}
-				else {
-					// todo : better message here...
-					throw new WalkingException( "Cannot locate association column names" );
-				}
-			}
-			else {
-				columnNames = context.getAliasResolutionContext()
-						.resolveAliases( entityReference )
-						.getColumnAliases()
-						.getSuffixedKeyAliases();
-			}
-
-			final Object hydratedIdentifierState = entityReference.getEntityPersister().getIdentifierType().hydrate(
-					resultSet,
-					columnNames,
-					context.getSession(),
-					null
-			);
-			context.getProcessingState( entityReference ).registerIdentifierHydratedForm( hydratedIdentifierState );
-		}
-
-		@Override
-		public EntityKey resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-			for ( Fetch fetch : identifierFetches ) {
-				resolveIdentifierFetch( resultSet, context, fetch );
-			}
-
-			final ResultSetProcessingContext.EntityReferenceProcessingState ownerEntityReferenceProcessingState =
-					context.getProcessingState( entityReference );
-			Object hydratedState = ownerEntityReferenceProcessingState.getIdentifierHydratedForm();
-			Serializable resolvedId = (Serializable) entityReference.getEntityPersister()
-					.getIdentifierType()
-					.resolve( hydratedState, context.getSession(), null );
-			return context.getSession().generateEntityKey( resolvedId, entityReference.getEntityPersister() );
-		}
 	}
 
-	private static void resolveIdentifierFetch(
-			ResultSet resultSet,
-			ResultSetProcessingContext context,
-			Fetch fetch) throws SQLException {
-		if ( fetch instanceof EntityFetch ) {
-			EntityFetch entityFetch = (EntityFetch) fetch;
-			final ResultSetProcessingContext.EntityReferenceProcessingState entityReferenceProcessingState =
-					context.getProcessingState( entityFetch );
-			if ( entityReferenceProcessingState.getEntityKey() != null ) {
-				return;
-			}
-
-			EntityKey fetchKey = entityFetch.resolveInIdentifier( resultSet, context );
-			entityReferenceProcessingState.registerEntityKey( fetchKey );
-		}
-		else if ( fetch instanceof CompositeFetch ) {
-			for ( Fetch subFetch : ( (CompositeFetch) fetch ).getFetches() ) {
-				resolveIdentifierFetch( resultSet, context, subFetch );
-			}
-		}
-	}
 
 	public static class MDCStack {
 		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();

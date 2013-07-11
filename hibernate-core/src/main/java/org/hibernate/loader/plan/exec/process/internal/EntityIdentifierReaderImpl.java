@@ -26,30 +26,25 @@ package org.hibernate.loader.plan.exec.process.internal;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
-import org.hibernate.JDBCException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
-import org.hibernate.loader.plan.spi.CompositeFetch;
+import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.EntityReturn;
-import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
-import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.Type;
 
-import static org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext.*;
+import static org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext.EntityReferenceProcessingState;
 
 /**
  * Encapsulates the logic for reading a single entity identifier from a JDBC ResultSet, including support for fetches
@@ -57,12 +52,12 @@ import static org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingCont
  *
  * @author Steve Ebersole
  */
-class EntityIdentifierReaderImpl implements EntityIdentifierReader {
+public class EntityIdentifierReaderImpl implements EntityIdentifierReader {
 	private static final Logger log = CoreLogging.logger( EntityIdentifierReaderImpl.class );
 
 	private final EntityReference entityReference;
-
-	private List<EntityReferenceReader> identifierFetchReaders;
+	private final EntityReferenceAliases aliases;
+	private final List<EntityReferenceReader> identifierFetchReaders;
 
 	private final boolean isReturn;
 	private final Type identifierType;
@@ -72,49 +67,15 @@ class EntityIdentifierReaderImpl implements EntityIdentifierReader {
 	 *
 	 * @param entityReference The entity reference for which we will be reading the identifier.
 	 */
-	EntityIdentifierReaderImpl(EntityReference entityReference) {
+	public EntityIdentifierReaderImpl(
+			EntityReference entityReference,
+			EntityReferenceAliases aliases,
+			List<EntityReferenceReader> identifierFetchReaders) {
 		this.entityReference = entityReference;
+		this.aliases = aliases;
 		this.isReturn = EntityReturn.class.isInstance( entityReference );
 		this.identifierType = entityReference.getEntityPersister().getIdentifierType();
-
-		identifierFetchReaders = collectIdentifierFetchReaders();
-	}
-
-	private List<EntityReferenceReader> collectIdentifierFetchReaders() {
-		if ( ! identifierType.isComponentType() ) {
-			return Collections.emptyList();
-		}
-		final Fetch[] fetches = entityReference.getIdentifierDescription().getFetches();
-		if ( fetches == null || fetches.length == 0 ) {
-			return Collections.emptyList();
-		}
-
-		final List<EntityReferenceReader> readers = new ArrayList<EntityReferenceReader>();
-		for ( Fetch fetch : fetches ) {
-			collectIdentifierFetchReaders( readers, fetch );
-		}
-		return readers;
-	}
-
-	private void collectIdentifierFetchReaders(List<EntityReferenceReader> readers, Fetch fetch) {
-		if ( CompositeFetch.class.isInstance( fetch ) ) {
-			for ( Fetch subFetch : ( (CompositeFetch) fetch).getFetches() ) {
-				collectIdentifierFetchReaders( readers, subFetch );
-			}
-		}
-		else if ( ! EntityFetch.class.isInstance( fetch ) ) {
-			throw new IllegalStateException(
-					String.format(
-							"non-entity (and non-composite) fetch [%s] was found as part of entity identifier : %s",
-							fetch,
-							entityReference.getEntityPersister().getEntityName()
-					)
-			);
-		}
-		else {
-			final EntityReference fetchedEntityReference = (EntityReference) fetch;
-			readers.add( new EntityReferenceReader( fetchedEntityReference ) );
-		}
+		this.identifierFetchReaders = identifierFetchReaders;
 	}
 
 	@Override
@@ -196,10 +157,7 @@ class EntityIdentifierReaderImpl implements EntityIdentifierReader {
 			}
 		}
 		else {
-			columnNames = context.getAliasResolutionContext()
-					.resolveAliases( entityReference )
-					.getColumnAliases()
-					.getSuffixedKeyAliases();
+			columnNames = aliases.getColumnAliases().getSuffixedKeyAliases();
 		}
 
 		try {
@@ -282,13 +240,13 @@ class EntityIdentifierReaderImpl implements EntityIdentifierReader {
 
 
 	public void resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		// resolve fetched state from the identifier first
-		for ( EntityReferenceReader reader : identifierFetchReaders ) {
-			reader.resolveEntityKey( resultSet, context );
-		}
-		for ( EntityReferenceReader reader : identifierFetchReaders ) {
-			reader.hydrateEntityState( resultSet, context );
-		}
+//		// resolve fetched state from the identifier first
+//		for ( EntityReferenceReader reader : identifierFetchReaders ) {
+//			reader.resolveEntityKey( resultSet, context );
+//		}
+//		for ( EntityReferenceReader reader : identifierFetchReaders ) {
+//			reader.hydrateEntityState( resultSet, context );
+//		}
 
 		final EntityReferenceProcessingState processingState = context.getProcessingState( entityReference );
 

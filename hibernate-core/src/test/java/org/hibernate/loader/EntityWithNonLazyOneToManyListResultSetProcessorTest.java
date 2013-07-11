@@ -42,12 +42,10 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
-import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorImpl;
-import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.junit.Test;
@@ -109,12 +107,13 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 		session.close();
 
 		{
+
 			final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
-			final AliasResolutionContext aliasResolutionContext = new AliasResolutionContextImpl( sessionFactory(), 0 );
 
-			final String sql = Helper.INSTANCE.generateSql( sessionFactory(), plan, aliasResolutionContext );
+			final LoadQueryDetails queryDetails = Helper.INSTANCE.buildLoadQueryDetails( plan, sessionFactory() );
+			final String sql = queryDetails.getSqlStatement();
+			final ResultSetProcessor resultSetProcessor = queryDetails.getResultSetProcessor();
 
-			final ResultSetProcessorImpl resultSetProcessor = new ResultSetProcessorImpl( plan, true );
 			final List results = new ArrayList();
 
 			final Session workSession = openSession();
@@ -128,7 +127,6 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 							ResultSet resultSet = ps.executeQuery();
 							results.addAll(
 									resultSetProcessor.extractResults(
-											NoOpLoadPlanAdvisor.INSTANCE,
 											resultSet,
 											(SessionImplementor) workSession,
 											new QueryParameters(),
@@ -138,7 +136,6 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 													return new int[0];
 												}
 											},
-											aliasResolutionContext,
 											true,
 											false,
 											null,

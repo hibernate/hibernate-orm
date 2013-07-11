@@ -30,11 +30,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.entity.EntityJoinWalker;
-import org.hibernate.loader.entity.EntityLoader;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
+import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
+import org.hibernate.loader.plan.spi.build.MetadataDrivenLoadPlanBuilder;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 /**
@@ -78,12 +77,9 @@ public class LoadPlanStructureAssertionHelper {
 		);
 //		final EntityLoader loader = new EntityLoader( persister, lockMode, sf, influencers );
 
-		SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy( sf, influencers );
-		LoadPlan plan = LoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
-		LoadQueryDetails details = LoadQueryDetails.makeForBatching(
-				persister.getKeyColumnNames(),
-				plan,
-				sf,
+		LoadPlan plan = buildLoadPlan( sf, persister, influencers );
+		EntityLoadQueryDetails details = EntityLoadQueryDetails.makeForBatching(
+				plan, persister.getKeyColumnNames(),
 				new QueryBuildingParameters() {
 					@Override
 					public LoadQueryInfluencers getQueryInfluencers() {
@@ -104,13 +100,25 @@ public class LoadPlanStructureAssertionHelper {
 					public LockOptions getLockOptions() {
 						return null;
 					}
-				}
+				}, sf
 		);
 
 		compare( walker, details );
 	}
 
-	private void compare(JoinWalker walker, LoadQueryDetails details) {
+	public LoadPlan buildLoadPlan(
+			SessionFactoryImplementor sf,
+			OuterJoinLoadable persister,
+			LoadQueryInfluencers influencers) {
+		SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy( sf, influencers );
+		return MetadataDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
+	}
+
+	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, OuterJoinLoadable persister) {
+		return buildLoadPlan( sf, persister, LoadQueryInfluencers.NONE );
+	}
+
+	private void compare(JoinWalker walker, EntityLoadQueryDetails details) {
 		System.out.println( "------ SQL -----------------------------------------------------------------" );
 		System.out.println( "WALKER    : " + walker.getSQLString() );
 		System.out.println( "LOAD-PLAN : " + details.getSqlStatement() );

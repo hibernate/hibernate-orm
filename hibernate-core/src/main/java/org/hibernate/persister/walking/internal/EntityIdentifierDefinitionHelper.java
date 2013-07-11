@@ -31,6 +31,7 @@ import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinitio
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.NonEncapsulatedEntityIdentifierDefinition;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
@@ -40,9 +41,11 @@ public class EntityIdentifierDefinitionHelper {
 
 	public static EntityIdentifierDefinition buildSimpleEncapsulatedIdentifierDefinition(final AbstractEntityPersister entityPersister) {
 		return new EncapsulatedEntityIdentifierDefinition() {
+			private final AttributeDefinitionAdapter attr = new AttributeDefinitionAdapter( entityPersister);
+
 			@Override
 			public AttributeDefinition getAttributeDefinition() {
-				return new AttributeDefinitionAdapter( entityPersister);
+				return attr;
 			}
 
 			@Override
@@ -61,9 +64,11 @@ public class EntityIdentifierDefinitionHelper {
 			final AbstractEntityPersister entityPersister) {
 
 		return new EncapsulatedEntityIdentifierDefinition() {
+			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
+
 			@Override
 			public AttributeDefinition getAttributeDefinition() {
-				return new CompositionDefinitionAdapter( entityPersister );
+				return compositionDefinition;
 			}
 
 			@Override
@@ -147,6 +152,11 @@ public class EntityIdentifierDefinitionHelper {
 		@Override
 		public String toString() {
 			return "<identifier-property:" + getName() + ">";
+		}
+
+		@Override
+		public CompositeType getType() {
+			return (CompositeType) super.getType();
 		}
 
 		@Override

@@ -146,143 +146,143 @@ public class EntityFetch extends AbstractSingularAttributeFetch implements Entit
 		this.identifierDescription = identifierDescription;
 	}
 
-	@Override
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		identifierDescription.hydrate( resultSet, context );
+//	@Override
+//	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		identifierDescription.hydrate( resultSet, context );
+//
+//		for ( Fetch fetch : getFetches() ) {
+//			fetch.hydrate( resultSet, context );
+//		}
+//	}
+//
+//	@Override
+//	public EntityKey resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		final ResultSetProcessingContext.EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState(
+//				this
+//		);
+//		EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
+//		if ( entityKey == null ) {
+//			entityKey = identifierDescription.resolve( resultSet, context );
+//			if ( entityKey == null ) {
+//				// register the non-existence (though only for one-to-one associations)
+//				if ( getFetchedType().isOneToOne() ) {
+//					// first, find our owner's entity-key...
+//					final EntityKey ownersEntityKey = context.getProcessingState( (EntityReference) getOwner() ).getEntityKey();
+//					if ( ownersEntityKey != null ) {
+//						context.getSession().getPersistenceContext()
+//								.addNullProperty( ownersEntityKey, getFetchedType().getPropertyName() );
+//					}
+//				}
+//			}
+//
+//			entityReferenceProcessingState.registerEntityKey( entityKey );
+//
+//			for ( Fetch fetch : getFetches() ) {
+//				fetch.resolve( resultSet, context );
+//			}
+//		}
+//
+//		return entityKey;
+//	}
+//
+//	@Override
+//	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
+//		final EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState( this );
+//		final EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
+//		if ( entityKey == null ) {
+//			return;
+//		}
+//		final Object entity = context.resolveEntityKey( entityKey, this );
+//		for ( Fetch fetch : getFetches() ) {
+//			fetch.read( resultSet, context, entity );
+//		}
+//	}
 
-		for ( Fetch fetch : getFetches() ) {
-			fetch.hydrate( resultSet, context );
-		}
-	}
-
-	@Override
-	public EntityKey resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		final ResultSetProcessingContext.EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState(
-				this
-		);
-		EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
-		if ( entityKey == null ) {
-			entityKey = identifierDescription.resolve( resultSet, context );
-			if ( entityKey == null ) {
-				// register the non-existence (though only for one-to-one associations)
-				if ( getFetchedType().isOneToOne() ) {
-					// first, find our owner's entity-key...
-					final EntityKey ownersEntityKey = context.getProcessingState( (EntityReference) getOwner() ).getEntityKey();
-					if ( ownersEntityKey != null ) {
-						context.getSession().getPersistenceContext()
-								.addNullProperty( ownersEntityKey, getFetchedType().getPropertyName() );
-					}
-				}
-			}
-
-			entityReferenceProcessingState.registerEntityKey( entityKey );
-
-			for ( Fetch fetch : getFetches() ) {
-				fetch.resolve( resultSet, context );
-			}
-		}
-
-		return entityKey;
-	}
-
-	@Override
-	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException {
-		final EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState( this );
-		final EntityKey entityKey = entityReferenceProcessingState.getEntityKey();
-		if ( entityKey == null ) {
-			return;
-		}
-		final Object entity = context.resolveEntityKey( entityKey, this );
-		for ( Fetch fetch : getFetches() ) {
-			fetch.read( resultSet, context, entity );
-		}
-	}
-
-	/**
-	 * Resolve any fetches required to resolve the identifier as well
-	 * as the entity key for this fetch..
-	 *
-	 * @param resultSet - the result set.
-	 * @param context - the result set processing context.
-	 * @return the entity key for this fetch.
-	 *
-	 * @throws SQLException
-	 */
-	public EntityKey resolveInIdentifier(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
-		// todo : may not need to do this if entitykey is already part of the resolution context
-
-		final EntityKey entityKey = resolve( resultSet, context );
-
-		final Object existing = context.getSession().getEntityUsingInterceptor( entityKey );
-
-		if ( existing != null ) {
-			if ( !persister.isInstance( existing ) ) {
-				throw new WrongClassException(
-						"loaded object was of wrong class " + existing.getClass(),
-						entityKey.getIdentifier(),
-						persister.getEntityName()
-				);
-			}
-
-			if ( getLockMode() != null && getLockMode() != LockMode.NONE ) {
-				final boolean isVersionCheckNeeded = persister.isVersioned()
-						&& context.getSession().getPersistenceContext().getEntry( existing ).getLockMode().lessThan( getLockMode() );
-
-				// we don't need to worry about existing version being uninitialized because this block isn't called
-				// by a re-entrant load (re-entrant loads _always_ have lock mode NONE)
-				if ( isVersionCheckNeeded ) {
-					//we only check the version when _upgrading_ lock modes
-					context.checkVersion(
-							resultSet,
-							persister,
-							context.getAliasResolutionContext().resolveAliases( this ).getColumnAliases(),
-							entityKey,
-							existing
-					);
-					//we need to upgrade the lock mode to the mode requested
-					context.getSession().getPersistenceContext().getEntry( existing ).setLockMode( getLockMode() );
-				}
-			}
-		}
-		else {
-			final String concreteEntityTypeName = context.getConcreteEntityTypeName(
-					resultSet,
-					persister,
-					context.getAliasResolutionContext().resolveAliases( this ).getColumnAliases(),
-					entityKey
-			);
-
-			final Object entityInstance = context.getSession().instantiate(
-					concreteEntityTypeName,
-					entityKey.getIdentifier()
-			);
-
-			//need to hydrate it.
-
-			// grab its state from the ResultSet and keep it in the Session
-			// (but don't yet initialize the object itself)
-			// note that we acquire LockMode.READ even if it was not requested
-			LockMode acquiredLockMode = getLockMode() == LockMode.NONE ? LockMode.READ : getLockMode();
-
-			context.loadFromResultSet(
-					resultSet,
-					entityInstance,
-					concreteEntityTypeName,
-					entityKey,
-					context.getAliasResolutionContext().resolveAliases( this ).getColumnAliases(),
-					acquiredLockMode,
-					persister,
-					getFetchStrategy(),
-					true,
-					getFetchedType()
-			);
-
-			// materialize associations (and initialize the object) later
-			context.registerHydratedEntity( this, entityKey, entityInstance );
-		}
-
-		return entityKey;
-	}
+//	/**
+//	 * Resolve any fetches required to resolve the identifier as well
+//	 * as the entity key for this fetch..
+//	 *
+//	 * @param resultSet - the result set.
+//	 * @param context - the result set processing context.
+//	 * @return the entity key for this fetch.
+//	 *
+//	 * @throws SQLException
+//	 */
+//	public EntityKey resolveInIdentifier(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+//		// todo : may not need to do this if entitykey is already part of the resolution context
+//
+//		final EntityKey entityKey = resolve( resultSet, context );
+//
+//		final Object existing = context.getSession().getEntityUsingInterceptor( entityKey );
+//
+//		if ( existing != null ) {
+//			if ( !persister.isInstance( existing ) ) {
+//				throw new WrongClassException(
+//						"loaded object was of wrong class " + existing.getClass(),
+//						entityKey.getIdentifier(),
+//						persister.getEntityName()
+//				);
+//			}
+//
+//			if ( getLockMode() != null && getLockMode() != LockMode.NONE ) {
+//				final boolean isVersionCheckNeeded = persister.isVersioned()
+//						&& context.getSession().getPersistenceContext().getEntry( existing ).getLockMode().lessThan( getLockMode() );
+//
+//				// we don't need to worry about existing version being uninitialized because this block isn't called
+//				// by a re-entrant load (re-entrant loads _always_ have lock mode NONE)
+//				if ( isVersionCheckNeeded ) {
+//					//we only check the version when _upgrading_ lock modes
+//					context.checkVersion(
+//							resultSet,
+//							persister,
+//							context.getAliasResolutionContext().resolveAliases( this ).getColumnAliases(),
+//							entityKey,
+//							existing
+//					);
+//					//we need to upgrade the lock mode to the mode requested
+//					context.getSession().getPersistenceContext().getEntry( existing ).setLockMode( getLockMode() );
+//				}
+//			}
+//		}
+//		else {
+//			final String concreteEntityTypeName = context.getConcreteEntityTypeName(
+//					resultSet,
+//					persister,
+//					context.getAliasResolutionContext().resolveAliases( this ).getColumnAliases(),
+//					entityKey
+//			);
+//
+//			final Object entityInstance = context.getSession().instantiate(
+//					concreteEntityTypeName,
+//					entityKey.getIdentifier()
+//			);
+//
+//			//need to hydrate it.
+//
+//			// grab its state from the ResultSet and keep it in the Session
+//			// (but don't yet initialize the object itself)
+//			// note that we acquire LockMode.READ even if it was not requested
+//			LockMode acquiredLockMode = getLockMode() == LockMode.NONE ? LockMode.READ : getLockMode();
+//
+//			context.loadFromResultSet(
+//					resultSet,
+//					entityInstance,
+//					concreteEntityTypeName,
+//					entityKey,
+//					context.getAliasResolutionContext().resolveAliases( this ).getColumnAliases(),
+//					acquiredLockMode,
+//					persister,
+//					getFetchStrategy(),
+//					true,
+//					getFetchedType()
+//			);
+//
+//			// materialize associations (and initialize the object) later
+//			context.registerHydratedEntity( this, entityKey, entityInstance );
+//		}
+//
+//		return entityKey;
+//	}
 
 	@Override
 	public String toString() {

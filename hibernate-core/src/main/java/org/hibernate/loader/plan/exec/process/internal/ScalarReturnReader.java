@@ -35,16 +35,18 @@ import org.hibernate.loader.plan.spi.ScalarReturn;
  */
 public class ScalarReturnReader implements ReturnReader {
 	private final ScalarReturn scalarReturn;
+	private final String[] aliases;
 
-	public ScalarReturnReader(ScalarReturn scalarReturn) {
+	public ScalarReturnReader(ScalarReturn scalarReturn, String[] aliases) {
 		this.scalarReturn = scalarReturn;
+		this.aliases = aliases;
 	}
 
 	@Override
 	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
 		return scalarReturn.getType().nullSafeGet(
 				resultSet,
-				context.getAliasResolutionContext().resolveScalarColumnAliases( scalarReturn ),
+				aliases,
 				context.getSession(),
 				null
 		);

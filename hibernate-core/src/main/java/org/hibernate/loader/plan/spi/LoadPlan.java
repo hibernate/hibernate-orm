@@ -30,25 +30,57 @@ import java.util.List;
  *
  * Generally speaking there are 3 forms of load plans:<ul>
  *     <li>
- *         An entity load plan for handling get/load handling.  This form will typically have a single
- *         return (of type {@link EntityReturn}) defined by {@link #getReturns()}, possibly defining fetches.
+ *         {@link org.hibernate.loader.plan.spi.LoadPlan.Disposition#ENTITY_LOADER} - An entity load plan for
+ *         handling get/load handling.  This form will typically have a single return (of type {@link EntityReturn})
+ *         defined by {@link #getReturns()}, possibly defining fetches.
  *     </li>
  *     <li>
- *         A collection initializer, used to load the contents of a collection.  This form will typically have a
- *         single return (of type {@link CollectionReturn} defined by {@link #getReturns()}, possibly defining fetches
+ *         {@link org.hibernate.loader.plan.spi.LoadPlan.Disposition#COLLECTION_INITIALIZER} - A collection initializer,
+ *         used to load the contents of a collection.  This form will typically have a single return (of
+ *         type {@link CollectionReturn}) defined by {@link #getReturns()}, possibly defining fetches
  *     </li>
  *     <li>
- *         A query load plan which can contain multiple returns of mixed type (though implementing {@link Return}).
- *         Again, may possibly define fetches.
+ *         {@link org.hibernate.loader.plan.spi.LoadPlan.Disposition#MIXED} - A query load plan which can contain
+ *         multiple returns of mixed type (though all implementing {@link Return}).  Again, may possibly define fetches.
  *     </li>
+ * </ul>
+ * <p/>
+ * todo : would also like to see "call back" style access for handling "subsequent actions" such as...<ul>
+ *     <li>follow-on locking</li>
+ *     <li>join fetch conversions to subselect fetches</li>
  * </ul>
  *
  * @author Steve Ebersole
  */
 public interface LoadPlan {
-	public List<? extends Return> getReturns();
 
+	/**
+	 * What is the disposition of this LoadPlan, in terms of its returns.
+	 *
+	 * @return The LoadPlan's disposition
+	 */
 	public Disposition getDisposition();
+
+	/**
+	 * Get the returns indicated by this LoadPlan.<ul>
+	 *     <li>
+	 *         A {@link Disposition#ENTITY_LOADER} LoadPlan would have just a single Return of type {@link EntityReturn}.
+	 *     </li>
+	 *     <li>
+	 *         A {@link Disposition#COLLECTION_INITIALIZER} LoadPlan would have just a single Return of type
+	 *         {@link CollectionReturn}.
+	 *     </li>
+	 *     <li>
+	 *         A {@link Disposition#MIXED} LoadPlan would contain a mix of {@link EntityReturn} and
+	 *         {@link ScalarReturn} elements, but no {@link CollectionReturn}.
+	 *     </li>
+	 * </ul>
+	 *
+	 * @return The Returns for this LoadPlan.
+	 *
+	 * @see Disposition
+	 */
+	public List<? extends Return> getReturns();
 
 	/**
 	 * Does this load plan indicate that lazy attributes are to be force fetched?
@@ -93,8 +125,4 @@ public interface LoadPlan {
 		 */
 		MIXED
 	}
-
-	// todo : would also like to see "call back" style access for handling "subsequent actions" such as:
-	// 		1) follow-on locking
-	//		2) join fetch conversions to subselect fetches
 }

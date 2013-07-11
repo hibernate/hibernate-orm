@@ -21,17 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.exec.query.internal;
+package org.hibernate.loader.plan.exec.internal;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.EntityAliases;
+import org.hibernate.loader.plan.exec.process.internal.CollectionReferenceReader;
+import org.hibernate.loader.plan.exec.process.internal.EntityIdentifierReader;
+import org.hibernate.loader.plan.exec.process.internal.EntityIdentifierReaderImpl;
+import org.hibernate.loader.plan.exec.process.internal.EntityReferenceReader;
+import org.hibernate.loader.plan.exec.process.internal.OneToOneFetchReader;
+import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.exec.spi.CollectionReferenceAliases;
+import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
+import org.hibernate.loader.plan.exec.spi.ReaderCollector;
 import org.hibernate.loader.plan.spi.AnyFetch;
+import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CompositeElementGraph;
 import org.hibernate.loader.plan.spi.CompositeFetch;
@@ -41,17 +60,15 @@ import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
 import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchOwner;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
-import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.Type;
 
 /**
  * Helper for implementors of entity and collection based query building based on LoadPlans providing common
@@ -60,16 +77,74 @@ import org.hibernate.type.AssociationType;
  * @author Steve Ebersole
  */
 public class LoadQueryBuilderHelper {
+	private static final Logger log = CoreLogging.logger( LoadQueryBuilderHelper.class );
+
 	private LoadQueryBuilderHelper() {
 	}
 
-	public static void applyJoinFetches(
+	// used to collect information about fetches.  For now that is only whether there were subselect fetches
+	public static interface FetchStats {
+		public boolean hasSubselectFetches();
+	}
+
+	private static class FetchStatsImpl implements FetchStats {
+		private boolean hasSubselectFetch;
+
+		public void processingFetch(Fetch fetch) {
+			if ( ! hasSubselectFetch ) {
+				if ( fetch.getFetchStrategy().getStyle() == FetchStyle.SUBSELECT
+						&& fetch.getFetchStrategy().getTiming() != FetchTiming.IMMEDIATE ) {
+					hasSubselectFetch = true;
+				}
+			}
+		}
+
+		@Override
+		public boolean hasSubselectFetches() {
+			return hasSubselectFetch;
+		}
+	}
+
+	public static void applyIdentifierJoinFetches(
 			SelectStatementBuilder selectStatementBuilder,
 			SessionFactoryImplementor factory,
 			FetchOwner fetchOwner,
 			QueryBuildingParameters buildingParameters,
-			AliasResolutionContext aliasResolutionContext) {
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector) {
+
+	}
+
+	public static FetchStats applyJoinFetches(
+			SelectStatementBuilder selectStatementBuilder,
+			SessionFactoryImplementor factory,
+			FetchOwner fetchOwner,
+			QueryBuildingParameters buildingParameters,
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector) {
+
 		final JoinFragment joinFragment = factory.getDialect().createOuterJoinFragment();
+		final FetchStatsImpl stats = new FetchStatsImpl();
+
+		// if the fetch owner is an entityReference, we should also walk its identifier fetches here...
+		//
+		// what if fetchOwner is a composite fetch (as it would be in the case of a key-many-to-one)?
+		if ( EntityReference.class.isInstance( fetchOwner ) ) {
+			final EntityReference fetchOwnerAsEntityReference = (EntityReference) fetchOwner;
+			for ( Fetch fetch : fetchOwnerAsEntityReference.getIdentifierDescription().getFetches() ) {
+				processFetch(
+						selectStatementBuilder,
+						factory,
+						joinFragment,
+						fetchOwner,
+						fetch,
+						buildingParameters,
+						aliasResolutionContext,
+						readerCollector,
+						stats
+				);
+			}
+		}
 
 		processJoinFetches(
 				selectStatementBuilder,
@@ -77,14 +152,19 @@ public class LoadQueryBuilderHelper {
 				joinFragment,
 				fetchOwner,
 				buildingParameters,
-				aliasResolutionContext
+				aliasResolutionContext,
+				readerCollector,
+				stats
 		);
 
 		selectStatementBuilder.setOuterJoins(
 				joinFragment.toFromFragmentString(),
 				joinFragment.toWhereFragmentString()
 		);
+
+		return stats;
 	}
+
 
 	private static void processJoinFetches(
 			SelectStatementBuilder selectStatementBuilder,
@@ -92,7 +172,10 @@ public class LoadQueryBuilderHelper {
 			JoinFragment joinFragment,
 			FetchOwner fetchOwner,
 			QueryBuildingParameters buildingParameters,
-			AliasResolutionContext aliasResolutionContext) {
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector,
+			FetchStatsImpl stats) {
+
 		for ( Fetch fetch : fetchOwner.getFetches() ) {
 			processFetch(
 					selectStatementBuilder,
@@ -101,7 +184,9 @@ public class LoadQueryBuilderHelper {
 					fetchOwner,
 					fetch,
 					buildingParameters,
-					aliasResolutionContext
+					aliasResolutionContext,
+					readerCollector,
+					stats
 			);
 		}
 	}
@@ -113,41 +198,40 @@ public class LoadQueryBuilderHelper {
 			FetchOwner fetchOwner,
 			Fetch fetch,
 			QueryBuildingParameters buildingParameters,
-			AliasResolutionContext aliasResolutionContext) {
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector,
+			FetchStatsImpl stats) {
 		if ( ! FetchStrategyHelper.isJoinFetched( fetch.getFetchStrategy() ) ) {
 			return;
 		}
 
 		if ( EntityFetch.class.isInstance( fetch ) ) {
+			final EntityFetch entityFetch = (EntityFetch) fetch;
 			processEntityFetch(
 					selectStatementBuilder,
 					factory,
 					joinFragment,
 					fetchOwner,
-					(EntityFetch) fetch,
+					entityFetch,
 					buildingParameters,
-					aliasResolutionContext
-			);
-			processJoinFetches(
-					selectStatementBuilder,
-					factory,
-					joinFragment,
-					(EntityFetch) fetch,
-					buildingParameters,
-					aliasResolutionContext
+					aliasResolutionContext,
+					readerCollector,
+					stats
 			);
 		}
 		else if ( CollectionFetch.class.isInstance( fetch ) ) {
+			final CollectionFetch collectionFetch = (CollectionFetch) fetch;
 			processCollectionFetch(
 					selectStatementBuilder,
 					factory,
 					joinFragment,
 					fetchOwner,
-					(CollectionFetch) fetch,
+					collectionFetch,
 					buildingParameters,
-					aliasResolutionContext
+					aliasResolutionContext,
+					readerCollector,
+					stats
 			);
-			final CollectionFetch collectionFetch = (CollectionFetch) fetch;
 			if ( collectionFetch.getIndexGraph() != null ) {
 				processJoinFetches(
 						selectStatementBuilder,
@@ -155,7 +239,9 @@ public class LoadQueryBuilderHelper {
 						joinFragment,
 						collectionFetch.getIndexGraph(),
 						buildingParameters,
-						aliasResolutionContext
+						aliasResolutionContext,
+						readerCollector,
+						stats
 				);
 			}
 			if ( collectionFetch.getElementGraph() != null ) {
@@ -165,7 +251,9 @@ public class LoadQueryBuilderHelper {
 						joinFragment,
 						collectionFetch.getElementGraph(),
 						buildingParameters,
-						aliasResolutionContext
+						aliasResolutionContext,
+						readerCollector,
+						stats
 				);
 			}
 		}
@@ -179,7 +267,9 @@ public class LoadQueryBuilderHelper {
 						joinFragment,
 						(FetchOwner) fetch,
 						buildingParameters,
-						aliasResolutionContext
+						aliasResolutionContext,
+						readerCollector,
+						stats
 				);
 			}
 		}
@@ -192,8 +282,92 @@ public class LoadQueryBuilderHelper {
 			FetchOwner fetchOwner,
 			EntityFetch fetch,
 			QueryBuildingParameters buildingParameters,
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector,
+			FetchStatsImpl stats) {
+		if ( BidirectionalEntityFetch.class.isInstance( fetch ) ) {
+			log.tracef( "Skipping bi-directional entity fetch [%s]", fetch );
+			return;
+		}
+
+		stats.processingFetch( fetch );
+
+		// write the fragments for this fetch to the in-flight SQL builder
+		final EntityReferenceAliases aliases = renderSqlFragments(
+				selectStatementBuilder,
+				factory,
+				joinFragment,
+				fetchOwner,
+				fetch,
+				buildingParameters,
+				aliasResolutionContext
+		);
+
+		// now we build readers as follows:
+		//		1) readers for any fetches that are part of the identifier
+		final EntityIdentifierReader identifierReader = buildIdentifierReader(
+				selectStatementBuilder,
+				factory,
+				joinFragment,
+				fetch,
+				buildingParameters,
+				aliasResolutionContext,
+				readerCollector,
+				aliases,
+				stats
+		);
+
+		//		2) a reader for this fetch itself
+		// 			todo : not sure this distinction really matters aside form the whole "register nullable property" stuff,
+		// 			but not sure we need a distinct class for just that
+		if ( fetch.getFetchedType().isOneToOne() ) {
+			readerCollector.addReader(
+					new OneToOneFetchReader( fetch, aliases, identifierReader, (EntityReference) fetchOwner )
+			);
+		}
+		else {
+			readerCollector.addReader(
+					new EntityReferenceReader( fetch, aliases, identifierReader )
+			);
+		}
+
+		//		3) and then readers for all fetches not part of the identifier
+		processJoinFetches(
+				selectStatementBuilder,
+				factory,
+				joinFragment,
+				fetch,
+				buildingParameters,
+				aliasResolutionContext,
+				readerCollector,
+				stats
+		);
+	}
+
+	/**
+	 * Renders the pieces indicated by the incoming EntityFetch reference into the in-flight SQL statement builder.
+	 *
+	 * @param selectStatementBuilder The builder containing the in-flight SQL query definition.
+	 * @param factory The SessionFactory SPI
+	 * @param joinFragment The in-flight SQL JOIN definition.
+	 * @param fetchOwner The owner of {@code fetch}
+	 * @param fetch The fetch which indicates the information to be rendered.
+	 * @param buildingParameters The settings/options for SQL building
+	 * @param aliasResolutionContext The reference cache for entity/collection aliases
+	 *
+	 * @return The used aliases
+	 */
+	private static EntityReferenceAliases renderSqlFragments(
+			SelectStatementBuilder selectStatementBuilder,
+			SessionFactoryImplementor factory,
+			JoinFragment joinFragment,
+			FetchOwner fetchOwner,
+			EntityFetch fetch,
+			QueryBuildingParameters buildingParameters,
 			AliasResolutionContext aliasResolutionContext) {
-		final String rhsAlias = aliasResolutionContext.resolveAliases( fetch ).getTableAlias();
+		final EntityReferenceAliases aliases = aliasResolutionContext.resolveAliases( fetch );
+
+		final String rhsAlias = aliases.getTableAlias();
 		final String[] rhsColumnNames = JoinHelper.getRHSColumnNames( fetch.getFetchedType(), factory );
 
 		final String lhsTableAlias = resolveLhsTableAlias( fetchOwner, fetch, aliasResolutionContext );
@@ -227,11 +401,125 @@ public class LoadQueryBuilderHelper {
 						null,
 						null,
 						rhsAlias,
-						aliasResolutionContext.resolveAliases( fetch ).getColumnAliases().getSuffix(),
+						aliases.getColumnAliases().getSuffix(),
 						null,
 						true
 				)
 		);
+
+		return aliases;
+	}
+
+	private static EntityIdentifierReader buildIdentifierReader(
+			SelectStatementBuilder selectStatementBuilder,
+			SessionFactoryImplementor factory,
+			JoinFragment joinFragment,
+			EntityReference entityReference,
+			QueryBuildingParameters buildingParameters,
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector,
+			EntityReferenceAliases aliases,
+			FetchStatsImpl stats) {
+		final List<EntityReferenceReader> identifierFetchReaders = new ArrayList<EntityReferenceReader>();
+		final ReaderCollector identifierFetchReaderCollector = new ReaderCollector() {
+			@Override
+			public void addReader(CollectionReferenceReader collectionReferenceReader) {
+				throw new IllegalStateException( "Identifier cannot contain collection fetches" );
+			}
+
+			@Override
+			public void addReader(EntityReferenceReader entityReferenceReader) {
+				identifierFetchReaders.add( entityReferenceReader );
+			}
+		};
+		for ( Fetch fetch : entityReference.getIdentifierDescription().getFetches() ) {
+			processFetch(
+					selectStatementBuilder,
+					factory,
+					joinFragment,
+					(FetchOwner) entityReference,
+					fetch,
+					buildingParameters,
+					aliasResolutionContext,
+					identifierFetchReaderCollector,
+					stats
+			);
+		}
+		return new EntityIdentifierReaderImpl(
+				entityReference,
+				aliases,
+				identifierFetchReaders
+		);
+	}
+
+	private static List<EntityReferenceReader> collectIdentifierFetchReaders(
+			EntityReference entityReference,
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector) {
+		final Type identifierType = entityReference.getEntityPersister().getIdentifierType();
+		if ( ! identifierType.isComponentType() ) {
+			return Collections.emptyList();
+		}
+
+		final Fetch[] fetches = entityReference.getIdentifierDescription().getFetches();
+		if ( fetches == null || fetches.length == 0 ) {
+			return Collections.emptyList();
+		}
+
+		final List<EntityReferenceReader> readers = new ArrayList<EntityReferenceReader>();
+		for ( Fetch fetch : fetches ) {
+			collectIdentifierFetchReaders( aliasResolutionContext, readers, entityReference, fetch, readerCollector );
+		}
+		return readers;
+	}
+
+
+	private static void collectIdentifierFetchReaders(
+			AliasResolutionContext aliasResolutionContext,
+			List<EntityReferenceReader> readers,
+			EntityReference entityReference,
+			Fetch fetch,
+			ReaderCollector readerCollector) {
+		if ( CompositeFetch.class.isInstance( fetch ) ) {
+			for ( Fetch subFetch : ( (CompositeFetch) fetch).getFetches() ) {
+				collectIdentifierFetchReaders( aliasResolutionContext, readers, entityReference, subFetch, readerCollector );
+			}
+		}
+		else if ( ! EntityReference.class.isInstance( fetch ) ) {
+			throw new IllegalStateException(
+					String.format(
+							"Non-entity (and non-composite) fetch [%s] was found as part of entity identifier : %s",
+							fetch,
+							entityReference.getEntityPersister().getEntityName()
+					)
+			);
+		}
+		else {
+			// todo : add a mapping here from EntityReference -> EntityReferenceReader
+			//
+			// need to be careful here about bi-directionality, just not sure how to best check for bi-directionality here.
+			//
+			final EntityReference fetchedEntityReference = (EntityReference) fetch;
+			final EntityReferenceAliases fetchedAliases = aliasResolutionContext.resolveAliases( fetchedEntityReference );
+
+			if ( BidirectionalEntityFetch.class.isInstance( fetchedEntityReference ) ) {
+				return;
+			}
+
+
+			final EntityReferenceReader reader = new EntityReferenceReader(
+					fetchedEntityReference,
+					aliasResolutionContext.resolveAliases( fetchedEntityReference ),
+					new EntityIdentifierReaderImpl(
+							fetchedEntityReference,
+							fetchedAliases,
+							Collections.<EntityReferenceReader>emptyList()
+					)
+			);
+
+			readerCollector.addReader( reader );
+//			readers.add( reader );
+		}
 	}
 
 	private static String[] resolveAliasedLhsJoinColumns(
@@ -331,19 +619,25 @@ public class LoadQueryBuilderHelper {
 			FetchOwner fetchOwner,
 			CollectionFetch fetch,
 			QueryBuildingParameters buildingParameters,
-			AliasResolutionContext aliasResolutionContext) {
-		final QueryableCollection queryableCollection = (QueryableCollection) fetch.getCollectionPersister();
-		final Joinable joinableCollection = (Joinable) fetch.getCollectionPersister();
+			AliasResolutionContext aliasResolutionContext,
+			ReaderCollector readerCollector,
+			FetchStatsImpl stats) {
+		stats.processingFetch( fetch );
+
+		final CollectionReferenceAliases aliases = aliasResolutionContext.resolveAliases( fetch );
 
 		if ( fetch.getCollectionPersister().isManyToMany() ) {
+			final QueryableCollection queryableCollection = (QueryableCollection) fetch.getCollectionPersister();
+			final Joinable joinableCollection = (Joinable) fetch.getCollectionPersister();
+
 			// for many-to-many we have 3 table aliases.  By way of example, consider a normal m-n: User<->Role
 			// where User is the FetchOwner and Role (User.roles) is the Fetch.  We'd have:
 			//		1) the owner's table : user
 			final String ownerTableAlias = resolveLhsTableAlias( fetchOwner, fetch, aliasResolutionContext );
 			//		2) the m-n table : user_role
-			final String collectionTableAlias = aliasResolutionContext.resolveAliases( fetch ).getCollectionTableAlias();
+			final String collectionTableAlias = aliases.getCollectionTableAlias();
 			//		3) the element table : role
-			final String elementTableAlias = aliasResolutionContext.resolveAliases( fetch ).getElementTableAlias();
+			final String elementTableAlias = aliases.getElementTableAlias();
 
 			{
 				// add join fragments from the owner table -> collection table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -371,8 +665,8 @@ public class LoadQueryBuilderHelper {
 								(Joinable) queryableCollection.getElementPersister(),
 								ownerTableAlias,
 								collectionTableAlias,
-								aliasResolutionContext.resolveAliases( fetch ).getEntityElementColumnAliases().getSuffix(),
-								aliasResolutionContext.resolveAliases( fetch ).getCollectionColumnAliases().getSuffix(),
+								aliases.getEntityElementColumnAliases().getSuffix(),
+								aliases.getCollectionColumnAliases().getSuffix(),
 								true
 						)
 				);
@@ -419,7 +713,6 @@ public class LoadQueryBuilderHelper {
 				);
 
 				// add select fragments from the element entity table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-				final CollectionReferenceAliases aliases = aliasResolutionContext.resolveAliases( fetch );
 				selectStatementBuilder.appendSelectClauseFragment(
 						elementPersister.selectFragment(
 								aliases.getElementTableAlias(),
@@ -437,9 +730,44 @@ public class LoadQueryBuilderHelper {
 			if ( StringHelper.isNotEmpty( ordering ) ) {
 				selectStatementBuilder.appendOrderByFragment( ordering );
 			}
+
+
+			final EntityReferenceAliases entityReferenceAliases = new EntityReferenceAliases() {
+				@Override
+				public String getTableAlias() {
+					return aliases.getElementTableAlias();
+				}
+
+				@Override
+				public EntityAliases getColumnAliases() {
+					return aliases.getEntityElementColumnAliases();
+				}
+			};
+
+			final EntityReference elementEntityReference = (EntityReference) fetch.getElementGraph();
+			readerCollector.addReader(
+					new EntityReferenceReader(
+							elementEntityReference,
+							entityReferenceAliases,
+							buildIdentifierReader(
+									selectStatementBuilder,
+									factory,
+									joinFragment,
+									elementEntityReference,
+									buildingParameters,
+									aliasResolutionContext,
+									readerCollector,
+									entityReferenceAliases,
+									stats
+							)
+					)
+			);
 		}
 		else {
-			final String rhsTableAlias = aliasResolutionContext.resolveAliases( fetch ).getElementTableAlias();
+			final QueryableCollection queryableCollection = (QueryableCollection) fetch.getCollectionPersister();
+			final Joinable joinableCollection = (Joinable) fetch.getCollectionPersister();
+
+			final String rhsTableAlias = aliases.getElementTableAlias();
 			final String[] rhsColumnNames = JoinHelper.getRHSColumnNames( fetch.getFetchedType(), factory );
 
 			final String lhsTableAlias = resolveLhsTableAlias( fetchOwner, fetch, aliasResolutionContext );
@@ -469,18 +797,48 @@ public class LoadQueryBuilderHelper {
 			selectStatementBuilder.appendSelectClauseFragment(
 					queryableCollection.selectFragment(
 							rhsTableAlias,
-							aliasResolutionContext.resolveAliases( fetch ).getCollectionColumnAliases().getSuffix()
+							aliases.getCollectionColumnAliases().getSuffix()
 					)
 			);
 
 			if ( fetch.getCollectionPersister().isOneToMany() ) {
 				// if the collection elements are entities, select the entity columns as well
-				final CollectionReferenceAliases aliases = aliasResolutionContext.resolveAliases( fetch );
 				final OuterJoinLoadable elementPersister = (OuterJoinLoadable) queryableCollection.getElementPersister();
 				selectStatementBuilder.appendSelectClauseFragment(
 						elementPersister.selectFragment(
 								aliases.getElementTableAlias(),
 								aliases.getEntityElementColumnAliases().getSuffix()
+						)
+				);
+
+				final EntityReferenceAliases entityReferenceAliases = new EntityReferenceAliases() {
+					@Override
+					public String getTableAlias() {
+						return aliases.getElementTableAlias();
+					}
+
+					@Override
+					public EntityAliases getColumnAliases() {
+						return aliases.getEntityElementColumnAliases();
+					}
+				};
+
+				final EntityReference elementEntityReference = (EntityReference) fetch.getElementGraph();
+				readerCollector.addReader(
+						new EntityReferenceReader(
+								elementEntityReference,
+								entityReferenceAliases,
+								buildIdentifierReader(
+										selectStatementBuilder,
+										factory,
+										joinFragment,
+										elementEntityReference,
+										buildingParameters,
+										aliasResolutionContext,
+										readerCollector,
+										entityReferenceAliases,
+										stats
+								)
 						)
 				);
 			}
@@ -491,6 +849,7 @@ public class LoadQueryBuilderHelper {
 			}
 		}
 
+		readerCollector.addReader( new CollectionReferenceReader( fetch, aliases ) );
 	}
 
 	private static Joinable extractJoinable(FetchOwner fetchOwner) {

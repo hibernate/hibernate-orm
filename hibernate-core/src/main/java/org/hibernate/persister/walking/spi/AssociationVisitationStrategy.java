@@ -24,6 +24,14 @@
 package org.hibernate.persister.walking.spi;
 
 /**
+ * Strategy for walking associations as defined by the Hibernate metamodel.
+ * <p/>
+ * {@link #start()} and {@link #finish()} are called at the start and at the finish of the process.
+ * <p/>
+ * Walking might start with an entity or a collection depending on where the walker is asked to start.  When starting
+ * with an entity, {@link #startingEntity}/{@link #finishingEntity} ()} will be the outer set of calls.  When starting
+ * with a collection, {@link #startingCollection}/{@link #finishingCollection} will be the outer set of calls.
+ *
  * @author Steve Ebersole
  */
 public interface AssociationVisitationStrategy {
@@ -37,10 +45,32 @@ public interface AssociationVisitationStrategy {
 	 */
 	public void finish();
 
+	/**
+	 * Notification we are starting to walk an entity.
+	 *
+	 * @param entityDefinition The entity we are starting to walk
+	 */
 	public void startingEntity(EntityDefinition entityDefinition);
+
+	/**
+	 * Notification we are finishing walking an entity.
+	 *
+	 * @param entityDefinition The entity we are finishing walking.
+	 */
 	public void finishingEntity(EntityDefinition entityDefinition);
 
+	/**
+	 * Notification we are starting to walk the identifier of an entity.
+	 *
+	 * @param entityIdentifierDefinition The identifier we are starting to walk
+	 */
 	public void startingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition);
+
+	/**
+	 * Notification we are finishing walking an entity.
+	 *
+	 * @param entityIdentifierDefinition The identifier we are finishing walking.
+	 */
 	public void finishingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition);
 
 	public void startingCollection(CollectionDefinition collectionDefinition);
@@ -62,4 +92,7 @@ public interface AssociationVisitationStrategy {
 	public void finishingAttribute(AttributeDefinition attributeDefinition);
 
 	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition);
+
+	public void associationKeyRegistered(AssociationKey associationKey);
+	public void foundCircularAssociationKey(AssociationKey associationKey, AttributeDefinition attributeDefinition);
 }

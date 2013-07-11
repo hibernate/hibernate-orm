@@ -27,7 +27,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
- * Handles reading results from a JDBC ResultSet relating to a single Return object.
+ * Handles reading a single root Return object
  *
  * @author Steve Ebersole
  */

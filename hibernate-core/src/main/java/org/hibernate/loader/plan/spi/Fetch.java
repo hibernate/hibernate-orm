@@ -78,11 +78,11 @@ public interface Fetch extends CopyableFetch {
 	 */
 	public String[] toSqlSelectFragments(String alias);
 
-	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
-
-	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
-
-	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException;
+//	public void hydrate(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
+//
+//	public Object resolve(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException;
+//
+//	public void read(ResultSet resultSet, ResultSetProcessingContext context, Object owner) throws SQLException;
 
 	@Override
 	public Fetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy);

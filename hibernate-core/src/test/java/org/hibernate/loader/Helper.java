@@ -30,9 +30,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.exec.query.internal.EntityLoadQueryBuilderImpl;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
+import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
 import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuilder;
+import org.hibernate.loader.plan.spi.build.MetadataDrivenLoadPlanBuilder;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -52,7 +53,16 @@ public class Helper implements QueryBuildingParameters {
 				sf,
 				LoadQueryInfluencers.NONE
 		);
-		return LoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+		return MetadataDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+	}
+
+	public EntityLoadQueryDetails buildLoadQueryDetails(LoadPlan loadPlan, SessionFactoryImplementor sf) {
+		return EntityLoadQueryDetails.makeForBatching(
+				loadPlan,
+				null,
+				this,
+				sf
+		);
 	}
 
 	public String generateSql(SessionFactoryImplementor sf, LoadPlan plan, AliasResolutionContext aliasResolutionContext) {

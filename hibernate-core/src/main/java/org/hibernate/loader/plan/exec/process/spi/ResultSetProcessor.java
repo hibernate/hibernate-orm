@@ -30,7 +30,6 @@ import java.util.List;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.loader.spi.LoadPlanAdvisor;
 import org.hibernate.transform.ResultTransformer;
@@ -52,7 +51,6 @@ public interface ResultSetProcessor {
 	 *
 	 * Semi-copy of {@link org.hibernate.loader.Loader#doQuery}, with focus on just the ResultSet processing bit.
 	 *
-	 * @param loadPlanAdvisor A dynamic advisor on the load plan.
 	 * @param resultSet The result set being processed.
 	 * @param session The originating session
 	 * @param queryParameters The "parameters" used to build the query
@@ -65,12 +63,10 @@ public interface ResultSetProcessor {
 	 * @throws java.sql.SQLException Indicates a problem access the JDBC ResultSet
 	 */
 	public List extractResults(
-			LoadPlanAdvisor loadPlanAdvisor,
 			ResultSet resultSet,
 			SessionImplementor session,
 			QueryParameters queryParameters,
 			NamedParameterContext namedParameterContext,
-			AliasResolutionContext aliasResolutionContext,
 			boolean returnProxies,
 			boolean readOnly,
 			ResultTransformer forcedResultTransformer,

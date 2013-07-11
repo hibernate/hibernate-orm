@@ -129,8 +129,6 @@ public interface ResultSetProcessingContext extends LockModeResolver {
 	public EntityReferenceProcessingState getOwnerProcessingState(Fetch fetch);
 
 
-	public AliasResolutionContext getAliasResolutionContext();
-
 	public void registerHydratedEntity(EntityReference entityReference, EntityKey entityKey, Object entityInstance);
 
 	public static interface EntityKeyResolutionContext {
@@ -139,33 +137,33 @@ public interface ResultSetProcessingContext extends LockModeResolver {
 		public EntityReference getEntityReference();
 	}
 
-	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext);
+//	public Object resolveEntityKey(EntityKey entityKey, EntityKeyResolutionContext entityKeyContext);
 
 
 	// should be able to get rid of the methods below here from the interface ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public void checkVersion(
-			ResultSet resultSet,
-			EntityPersister persister,
-			EntityAliases entityAliases,
-			EntityKey entityKey,
-			Object entityInstance) throws SQLException;
-
-	public String getConcreteEntityTypeName(
-			ResultSet resultSet,
-			EntityPersister persister,
-			EntityAliases entityAliases,
-			EntityKey entityKey) throws SQLException;
-
-	public void loadFromResultSet(
-			ResultSet resultSet,
-			Object entityInstance,
-			String concreteEntityTypeName,
-			EntityKey entityKey,
-			EntityAliases entityAliases,
-			LockMode acquiredLockMode,
-			EntityPersister persister,
-			FetchStrategy fetchStrategy,
-			boolean eagerFetch,
-			EntityType associationType) throws SQLException;
+//	public void checkVersion(
+//			ResultSet resultSet,
+//			EntityPersister persister,
+//			EntityAliases entityAliases,
+//			EntityKey entityKey,
+//			Object entityInstance) throws SQLException;
+//
+//	public String getConcreteEntityTypeName(
+//			ResultSet resultSet,
+//			EntityPersister persister,
+//			EntityAliases entityAliases,
+//			EntityKey entityKey) throws SQLException;
+//
+//	public void loadFromResultSet(
+//			ResultSet resultSet,
+//			Object entityInstance,
+//			String concreteEntityTypeName,
+//			EntityKey entityKey,
+//			EntityAliases entityAliases,
+//			LockMode acquiredLockMode,
+//			EntityPersister persister,
+//			FetchStrategy fetchStrategy,
+//			boolean eagerFetch,
+//			EntityType associationType) throws SQLException;
 }

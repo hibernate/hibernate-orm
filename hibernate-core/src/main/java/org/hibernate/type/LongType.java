@@ -43,13 +43,12 @@ public class LongType
 
 	public static final LongType INSTANCE = new LongType();
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
-	private static final Long ZERO = Long.valueOf( 0 );
+	private static final Long ZERO = (long) 0;
 
 	public LongType() {
 		super( BigIntTypeDescriptor.INSTANCE, LongTypeDescriptor.INSTANCE );
 	}
-
+	@Override
 	public String getName() {
 		return "long";
 	}
@@ -58,32 +57,31 @@ public class LongType
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), long.class.getName(), Long.class.getName() };
 	}
-
+	@Override
 	public Serializable getDefaultValue() {
 		return ZERO;
 	}
-
+	@Override
 	public Class getPrimitiveClass() {
 		return long.class;
 	}
-
+	@Override
 	public Long stringToObject(String xml) throws Exception {
 		return Long.valueOf( xml );
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
+	@Override
 	public Long next(Long current, SessionImplementor session) {
 		return current + 1l;
 	}
-
+	@Override
 	public Long seed(SessionImplementor session) {
 		return ZERO;
 	}
-
+	@Override
 	public Comparator<Long> getComparator() {
 		return getJavaTypeDescriptor().getComparator();
 	}
-	
+	@Override
 	public String objectToSQLString(Long value, Dialect dialect) throws Exception {
 		return value.toString();
 	}

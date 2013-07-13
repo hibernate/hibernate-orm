@@ -50,10 +50,9 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public Object destructure(Object structured, SessionFactoryImplementor factory) {
 		final Map map = (Map) structured;
-		final boolean lazyPropertiesUnfetched = ( (Boolean) map.get( "_lazyPropertiesUnfetched" ) ).booleanValue();
+		final boolean lazyPropertiesUnfetched = (Boolean) map.get( "_lazyPropertiesUnfetched" );
 		final String subclass = (String) map.get( "_subclass" );
 		final Object version = map.get( "_version" );
 		final EntityPersister subclassPersister = factory.getEntityPersister( subclass );

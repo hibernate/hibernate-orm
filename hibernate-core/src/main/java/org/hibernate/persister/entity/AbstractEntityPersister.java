@@ -771,7 +771,7 @@ public abstract class AbstractEntityPersister
 		iter = definedBySubclass.iterator();
 		j = 0;
 		while ( iter.hasNext() ) {
-			propertyDefinedOnSubclass[j++] = ( ( Boolean ) iter.next() ).booleanValue();
+			propertyDefinedOnSubclass[j++] = (Boolean) iter.next();
 		}
 
 		// Handle any filters applied to the class level
@@ -4875,12 +4875,11 @@ public abstract class AbstractEntityPersister
 		return generateEntityIdByNaturalIdSql( valueNullness );
 	}
 
-	@SuppressWarnings("UnnecessaryUnboxing")
 	protected boolean isNaturalIdNonNullable() {
 		if ( naturalIdIsNonNullable == null ) {
 			naturalIdIsNonNullable = determineNaturalIdNullability();
 		}
-		return naturalIdIsNonNullable.booleanValue();
+		return naturalIdIsNonNullable;
 	}
 
 	private boolean determineNaturalIdNullability() {

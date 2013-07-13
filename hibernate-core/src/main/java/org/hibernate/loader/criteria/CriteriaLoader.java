@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.loader.criteria;
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -68,7 +69,7 @@ public class CriteriaLoader extends OuterJoinLoader {
 	//      multithreaded, or cacheable!!
 
 	private final CriteriaQueryTranslator translator;
-	private final Set querySpaces;
+	private final Set<Serializable> querySpaces;
 	private final Type[] resultTypes;
 	//the user visible aliases, which are unknown to the superclass,
 	//these are not the actual "physical" SQL aliases

@@ -146,19 +146,17 @@ public class PersistentMap extends AbstractPersistentCollection implements Map {
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public boolean containsKey(Object key) {
 		final Boolean exists = readIndexExistence( key );
-		return exists == null ? map.containsKey( key ) :  exists.booleanValue();
+		return exists == null ? map.containsKey( key ) : exists;
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public boolean containsValue(Object value) {
 		final Boolean exists = readElementExistence( value );
 		return exists == null
 				? map.containsValue( value )
-				: exists.booleanValue();
+				: exists;
 	}
 
 	@Override

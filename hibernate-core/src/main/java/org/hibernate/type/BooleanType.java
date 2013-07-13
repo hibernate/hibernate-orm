@@ -47,7 +47,7 @@ public class BooleanType
 	protected BooleanType(SqlTypeDescriptor sqlTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
 		super( sqlTypeDescriptor, javaTypeDescriptor );
 	}
-
+	@Override
 	public String getName() {
 		return "boolean";
 	}
@@ -56,22 +56,22 @@ public class BooleanType
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), boolean.class.getName(), Boolean.class.getName() };
 	}
-
+	@Override
 	public Class getPrimitiveClass() {
 		return boolean.class;
 	}
-
+	@Override
 	public Serializable getDefaultValue() {
 		return Boolean.FALSE;
 	}
-
+	@Override
 	public Boolean stringToObject(String string) {
 		return fromString( string );
 	}
 
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@Override
 	public String objectToSQLString(Boolean value, Dialect dialect) {
-		return dialect.toBooleanValueString( value.booleanValue() );
+		return dialect.toBooleanValueString( value );
 	}
 }
 

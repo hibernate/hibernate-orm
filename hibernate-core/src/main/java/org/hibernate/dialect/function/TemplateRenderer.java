@@ -50,7 +50,6 @@ public class TemplateRenderer {
 	 *
 	 * @param template The template
 	 */
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	public TemplateRenderer(String template) {
 		this.template = template;
 

@@ -782,7 +782,6 @@ public class ActionQueue {
 		/**
 		 * Sort the insert actions.
 		 */
-		@SuppressWarnings({ "unchecked", "UnnecessaryBoxing" })
 		public void sort() {
 			// the list of entity names that indicate the batch number
 			for ( EntityInsertAction action : (List<EntityInsertAction>) insertions ) {
@@ -831,7 +830,6 @@ public class ActionQueue {
 		 *
 		 * @return An appropriate batch number; todo document this process better
 		 */
-		@SuppressWarnings({ "UnnecessaryBoxing", "unchecked" })
 		private Integer findBatchNumber(
 				EntityInsertAction action,
 				String entityName) {

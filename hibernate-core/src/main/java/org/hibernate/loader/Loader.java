@@ -2325,7 +2325,7 @@ public abstract class Loader {
 	protected List list(
 	        final SessionImplementor session,
 	        final QueryParameters queryParameters,
-	        final Set querySpaces,
+	        final Set<Serializable> querySpaces,
 	        final Type[] resultTypes) throws HibernateException {
 
 		final boolean cacheable = factory.getSettings().isQueryCacheEnabled() &&
@@ -2346,7 +2346,7 @@ public abstract class Loader {
 	private List listUsingQueryCache(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
-			final Set querySpaces,
+			final Set<Serializable> querySpaces,
 			final Type[] resultTypes) {
 
 		QueryCache queryCache = factory.getQueryCache( queryParameters.getCacheRegion() );
@@ -2423,7 +2423,7 @@ public abstract class Loader {
 	private List getResultFromQueryCache(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
-			final Set querySpaces,
+			final Set<Serializable> querySpaces,
 			final Type[] resultTypes,
 			final QueryCache queryCache,
 			final QueryKey key) {

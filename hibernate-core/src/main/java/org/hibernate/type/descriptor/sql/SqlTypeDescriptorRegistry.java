@@ -50,12 +50,10 @@ public class SqlTypeDescriptorRegistry {
 
 	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<Integer, SqlTypeDescriptor>();
 
-	@SuppressWarnings("UnnecessaryBoxing")
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		descriptorMap.put( Integer.valueOf( sqlTypeDescriptor.getSqlType() ), sqlTypeDescriptor );
+		descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
 	}
 
-	@SuppressWarnings("UnnecessaryBoxing")
 	public SqlTypeDescriptor getDescriptor(int jdbcTypeCode) {
 		SqlTypeDescriptor descriptor = descriptorMap.get( Integer.valueOf( jdbcTypeCode ) );
 		if ( descriptor != null ) {

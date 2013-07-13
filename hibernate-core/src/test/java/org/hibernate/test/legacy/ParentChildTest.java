@@ -64,7 +64,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-@SuppressWarnings( {"UnnecessaryBoxing"})
 public class ParentChildTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

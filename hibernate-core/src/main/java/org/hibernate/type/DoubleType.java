@@ -37,13 +37,12 @@ import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
 public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> implements PrimitiveType<Double> {
 	public static final DoubleType INSTANCE = new DoubleType();
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
-	public static final Double ZERO = Double.valueOf( 0.0 );
+	public static final Double ZERO = 0.0;
 
 	public DoubleType() {
 		super( org.hibernate.type.descriptor.sql.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
 	}
-
+	@Override
 	public String getName() {
 		return "double";
 	}
@@ -52,15 +51,15 @@ public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> im
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), double.class.getName(), Double.class.getName() };
 	}
-
+	@Override
 	public Serializable getDefaultValue() {
 		return ZERO;
 	}
-
+	@Override
 	public Class getPrimitiveClass() {
 		return double.class;
 	}
-
+	@Override
 	public String objectToSQLString(Double value, Dialect dialect) throws Exception {
 		return toString( value );
 	}

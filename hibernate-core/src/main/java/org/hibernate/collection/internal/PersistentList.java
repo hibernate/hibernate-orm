@@ -136,12 +136,11 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public boolean contains(Object object) {
 		final Boolean exists = readElementExistence( object );
 		return exists == null
 				? list.contains( object )
-				: exists.booleanValue();
+				: exists;
 	}
 
 	@Override
@@ -176,7 +175,6 @@ public class PersistentList extends AbstractPersistentCollection implements List
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public boolean remove(Object value) {
 		final Boolean exists = isPutQueueEnabled() ? readElementExistence( value ) : null;
 		if ( exists == null ) {
@@ -189,7 +187,7 @@ public class PersistentList extends AbstractPersistentCollection implements List
 				return false;
 			}
 		}
-		else if ( exists.booleanValue() ) {
+		else if ( exists ) {
 			queueOperation( new SimpleRemove( value ) );
 			return true;
 		}

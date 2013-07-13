@@ -104,13 +104,12 @@ public class BlobProxy implements InvocationHandler {
 	 * or toString/equals/hashCode are invoked.
 	 */
 	@Override
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		final String methodName = method.getName();
 		final int argCount = method.getParameterTypes().length;
 
 		if ( "length".equals( methodName ) && argCount == 0 ) {
-			return Long.valueOf( getLength() );
+			return getLength();
 		}
 		if ( "getUnderlyingStream".equals( methodName ) ) {
 			return getUnderlyingStream(); // Reset stream if needed.
@@ -157,7 +156,7 @@ public class BlobProxy implements InvocationHandler {
 			return this.toString();
 		}
 		if ( "equals".equals( methodName ) && argCount == 1 ) {
-			return Boolean.valueOf( proxy == args[0] );
+			return proxy == args[0];
 		}
 		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
 			return this.hashCode();

@@ -132,7 +132,6 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 		mainSession.close();
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	private void testDeleteOptimisticLockFailure(String entityName) {
 		Session mainSession = openSession();
 		mainSession.beginTransaction();

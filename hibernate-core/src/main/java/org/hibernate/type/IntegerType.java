@@ -41,13 +41,12 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 
 	public static final IntegerType INSTANCE = new IntegerType();
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
-	public static final Integer ZERO = Integer.valueOf( 0 );
+	public static final Integer ZERO = 0;
 
 	public IntegerType() {
 		super( org.hibernate.type.descriptor.sql.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
 	}
-
+	@Override
 	public String getName() {
 		return "integer";
 	}
@@ -56,32 +55,31 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), int.class.getName(), Integer.class.getName() };
 	}
-
+	@Override
 	public Serializable getDefaultValue() {
 		return ZERO;
 	}
-
+	@Override
 	public Class getPrimitiveClass() {
 		return int.class;
 	}
-
+	@Override
 	public String objectToSQLString(Integer value, Dialect dialect) throws Exception {
 		return toString( value );
 	}
-
+	@Override
 	public Integer stringToObject(String xml) {
 		return fromString( xml );
 	}
-
+	@Override
 	public Integer seed(SessionImplementor session) {
 		return ZERO;
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
+	@Override
 	public Integer next(Integer current, SessionImplementor session) {
 		return current+1;
 	}
-
+	@Override
 	public Comparator<Integer> getComparator() {
 		return getJavaTypeDescriptor().getComparator();
 	}

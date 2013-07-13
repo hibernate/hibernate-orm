@@ -78,7 +78,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDialectSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -138,7 +137,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testSetProperties() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -173,7 +171,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testBroken() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -205,7 +202,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testNothinToUpdate() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -229,7 +225,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCachedQuery() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -290,7 +285,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCachedQueryRegion() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -344,7 +338,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testSQLFunctions() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -542,7 +535,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testSqlFunctionAsAlias() throws Exception {
 		String functionName = locateAppropriateDialectFunctionNameForAliasTest();
 		if (functionName == null) {
@@ -583,7 +575,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 		return null;
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCachedQueryOnInsert() throws Exception {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -638,7 +629,6 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-    @SuppressWarnings( {"UnnecessaryBoxing", "UnnecessaryUnboxing"})
 	public void testInterSystemsFunctions() throws Exception {
         Calendar cal = new GregorianCalendar();
         cal.set(1977,6,3,0,0,0);

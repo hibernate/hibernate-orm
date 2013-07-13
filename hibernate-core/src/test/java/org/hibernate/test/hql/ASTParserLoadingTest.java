@@ -1161,7 +1161,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@FailureExpected( jiraKey = "unknown" )
 	public void testParameterTypeMismatch() {
 		Session s = openSession();
@@ -1478,7 +1477,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testArithmetic() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1796,7 +1794,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testNumericExpressionReturnTypes() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1959,7 +1956,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testIndexParams() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1992,7 +1988,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
     @SkipForDialect( value = SybaseASE15Dialect.class, jiraKey = "HHH-6424")
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testAggregation() {
 		Session s = openSession();
 		s.beginTransaction();

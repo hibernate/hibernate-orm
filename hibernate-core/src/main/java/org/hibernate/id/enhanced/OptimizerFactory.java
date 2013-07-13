@@ -67,7 +67,6 @@ public class OptimizerFactory {
 	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
 	 */
 	@Deprecated
-	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize) {
 		final Class<? extends Optimizer> optimizerClass;
 
@@ -87,7 +86,7 @@ public class OptimizerFactory {
 
 		try {
 			final Constructor ctor = optimizerClass.getConstructor( CTOR_SIG );
-			return (Optimizer) ctor.newInstance( returnClass, Integer.valueOf( incrementSize ) );
+			return (Optimizer) ctor.newInstance( returnClass, incrementSize );
 		}
 		catch( Throwable ignore ) {
 			LOG.unableToInstantiateOptimizer( type );
@@ -110,7 +109,6 @@ public class OptimizerFactory {
 	 *
 	 * @return The built optimizer
 	 */
-	@SuppressWarnings({ "UnnecessaryBoxing", "deprecation" })
 	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize, long explicitInitialValue) {
 		final Optimizer optimizer = buildOptimizer( type, returnClass, incrementSize );
 		if ( InitialValueAwareOptimizer.class.isInstance( optimizer ) ) {

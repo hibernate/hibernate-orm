@@ -86,7 +86,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testUpdateProperty() {
 		clearCounts();
 
@@ -135,7 +134,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionOfNew() {
 		clearCounts();
 
@@ -171,7 +169,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionOfExisting() {
 		clearCounts();
 
@@ -227,7 +224,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testAddNewOneToManyElementToPersistentEntity() {
 		clearCounts();
 
@@ -274,7 +270,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testAddExistingOneToManyElementToPersistentEntity() {
 		clearCounts();
 
@@ -335,7 +330,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithEmptyOneToManyCollectionUpdateWithExistingElement() {
 		clearCounts();
 
@@ -393,7 +387,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionUpdateWithNewElement() {
 		clearCounts();
 
@@ -453,7 +446,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testCreateWithEmptyOneToManyCollectionMergeWithExistingElement() {
 		clearCounts();
 
@@ -511,7 +503,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testCreateWithNonEmptyOneToManyCollectionMergeWithNewElement() {
 		clearCounts();
 
@@ -568,7 +559,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMoveOneToManyElementToNewEntityCollection() {
 		clearCounts();
 
@@ -638,7 +628,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMoveOneToManyElementToExistingEntityCollection() {
 		clearCounts();
 
@@ -709,7 +698,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testRemoveOneToManyElementUsingUpdate() {
 		clearCounts();
 
@@ -774,7 +762,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testRemoveOneToManyElementUsingMerge() {
 		clearCounts();
 
@@ -839,7 +826,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteOneToManyElement() {
 		clearCounts();
 
@@ -886,7 +872,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testRemoveOneToManyElementByDelete() {
 		clearCounts();
 
@@ -936,7 +921,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testRemoveOneToManyOrphanUsingUpdate() {
 		clearCounts();
 
@@ -988,7 +972,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testRemoveOneToManyOrphanUsingMerge() {
 		Contract c = new Contract( null, "gail", "phone");
 		ContractVariation cv = new ContractVariation( 1, c );
@@ -1038,7 +1021,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteOneToManyOrphan() {
 		clearCounts();
 
@@ -1085,7 +1067,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 		assertDeleteCount( 1 );
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@Test
 	public void testOneToManyCollectionOptimisticLockingWithMerge() {
 		clearCounts();
@@ -1143,7 +1124,6 @@ public abstract class AbstractEntityWithOneToManyTest extends BaseCoreFunctional
 		assertDeleteCount( 3 );
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@Test
 	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
 		clearCounts();

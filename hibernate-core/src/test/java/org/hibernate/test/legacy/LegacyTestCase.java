@@ -50,7 +50,6 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 	private boolean useAntlrParser;
 
 	@Before
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void checkAntlrParserSetting() {
 		useAntlrParser = Boolean.valueOf( extractFromSystem( USE_ANTLR_PARSER_PROP ) );
 	}

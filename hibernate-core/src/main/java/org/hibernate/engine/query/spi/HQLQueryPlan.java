@@ -106,7 +106,7 @@ public class HQLQueryPlan implements Serializable {
 		this.translators = new QueryTranslator[length];
 
 		final List<String> sqlStringList = new ArrayList<String>();
-		final Set combinedQuerySpaces = new HashSet();
+		final Set<Serializable> combinedQuerySpaces = new HashSet<Serializable>();
 
 		final boolean hasCollectionRole = (collectionRole == null);
 		final Map querySubstitutions = factory.getSettings().getQuerySubstitutions();

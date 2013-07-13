@@ -43,7 +43,7 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 
 	public static class DateMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final DateMutabilityPlan INSTANCE = new DateMutabilityPlan();
-
+		@Override
 		public Date deepCopyNotNull(Date value) {
 			return new Date( value.getTime() );
 		}
@@ -52,11 +52,11 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public DateTypeDescriptor() {
 		super( Date.class, DateMutabilityPlan.INSTANCE );
 	}
-
+	@Override
 	public String toString(Date value) {
 		return new SimpleDateFormat( DATE_FORMAT ).format( value );
 	}
-
+	@Override
 	public Date fromString(String string) {
 		try {
 			return new SimpleDateFormat(DATE_FORMAT).parse( string );
@@ -71,11 +71,8 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		if ( one == another) {
 			return true;
 		}
-		if ( one == null || another == null ) {
-			return false;
-		}
+		return !( one == null || another == null ) && one.getTime() == another.getTime();
 
-		return one.getTime() == another.getTime();
 	}
 
 	@Override
@@ -86,6 +83,7 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -121,8 +119,7 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -132,7 +129,7 @@ public class DateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		if ( Long.class.isInstance( value ) ) {
-			return new Date( ( (Long) value ).longValue() );
+			return new Date( (Long) value );
 		}
 
 		if ( Calendar.class.isInstance( value ) ) {

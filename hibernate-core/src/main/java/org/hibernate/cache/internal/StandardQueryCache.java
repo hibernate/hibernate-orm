@@ -153,7 +153,7 @@ public class StandardQueryCache implements QueryCache {
 			final QueryKey key,
 			final Type[] returnTypes,
 			final boolean isNaturalKeyLookup,
-			final Set spaces,
+			final Set<Serializable> spaces,
 			final SessionImplementor session) throws HibernateException {
 		if ( DEBUGGING ) {
 			LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
@@ -223,7 +223,7 @@ public class StandardQueryCache implements QueryCache {
 		return result;
 	}
 
-	protected boolean isUpToDate(final Set spaces, final Long timestamp) {
+	protected boolean isUpToDate(final Set<Serializable> spaces, final Long timestamp) {
 		if ( DEBUGGING ) {
 			LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
 		}

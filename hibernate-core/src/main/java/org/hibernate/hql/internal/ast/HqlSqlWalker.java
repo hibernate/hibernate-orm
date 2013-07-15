@@ -139,7 +139,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	 **/
 	private Map<String, SelectExpression> selectExpressionsByResultVariable = new HashMap<String, SelectExpression>();
 
-	private Set querySpaces = new HashSet();
+	private Set<Serializable> querySpaces = new HashSet<Serializable>();
 
 	private int parameterCount;
 	private Map namedParameters = new HashMap();
@@ -315,7 +315,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	 *
 	 * @return A set of table names (Strings).
 	 */
-	public Set getQuerySpaces() {
+	public Set<Serializable> getQuerySpaces() {
 		return querySpaces;
 	}
 

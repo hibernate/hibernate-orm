@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,33 +20,17 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-package org.hibernate.proxy.dom4j;
-import java.io.Serializable;
-
-import org.dom4j.Element;
-
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.proxy.AbstractLazyInitializer;
+package org.hibernate.dialect;
 
 /**
- * Lazy initializer for "dom4j" entity representations.
- *
- * @author Steve Ebersole
+ * An SQL dialect for Postgres 9 and later.  Adds support for "if exists" when dropping constraints
+ * 
+ * @author edalquist
  */
-public class Dom4jLazyInitializer extends AbstractLazyInitializer implements Serializable {
-
-	Dom4jLazyInitializer(String entityName, Serializable id, SessionImplementor session) {
-		super(entityName, id, session);
+public class PostgreSQL9Dialect extends PostgreSQL81Dialect {
+	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		return true;
 	}
-
-	public Element getElement() {
-		return (Element) getImplementation();
-	}
-
-	public Class getPersistentClass() {
-		throw new UnsupportedOperationException("dom4j entity representation");
-	}
-
 }

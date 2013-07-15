@@ -39,16 +39,17 @@ public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
 	public FloatTypeDescriptor() {
 		super( Float.class );
 	}
-
+	@Override
 	public String toString(Float value) {
 		return value == null ? null : value.toString();
 	}
-
+	@Override
 	public Float fromString(String string) {
 		return Float.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Float value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -82,8 +83,7 @@ public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@Override
 	public <X> Float wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -92,7 +92,7 @@ public class FloatTypeDescriptor extends AbstractTypeDescriptor<Float> {
 			return (Float) value;
 		}
 		if ( Number.class.isInstance( value ) ) {
-			return Float.valueOf( ( (Number) value ).floatValue() );
+			return ( (Number) value ).floatValue();
 		}
 		else if ( String.class.isInstance( value ) ) {
 			return Float.valueOf( ( (String) value ) );

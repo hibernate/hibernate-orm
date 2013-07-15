@@ -39,7 +39,6 @@ public abstract class AbstractVersionedRecursiveBidirectionalOneToManyTest exten
 	}
 
 	@Override
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	void check(boolean simplePropertyUpdated) {
 		super.check( simplePropertyUpdated );
 		Session s = openSession();

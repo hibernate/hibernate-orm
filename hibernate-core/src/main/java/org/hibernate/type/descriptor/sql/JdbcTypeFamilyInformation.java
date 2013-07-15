@@ -45,12 +45,11 @@ public class JdbcTypeFamilyInformation {
 
 		private final int[] typeCodes;
 
-		@SuppressWarnings("UnnecessaryBoxing")
 		private Family(int... typeCodes) {
 			this.typeCodes = typeCodes;
 
-			for ( int typeCode : typeCodes ) {
-				JdbcTypeFamilyInformation.INSTANCE.typeCodeToFamilyMap.put( Integer.valueOf( typeCode ), this );
+			for ( final int typeCode : typeCodes ) {
+				JdbcTypeFamilyInformation.INSTANCE.typeCodeToFamilyMap.put( typeCode, this );
 			}
 		}
 
@@ -68,7 +67,6 @@ public class JdbcTypeFamilyInformation {
 	 *
 	 * @return The family of datatypes the type code belongs to, or {@code null} if it belongs to no known families.
 	 */
-	@SuppressWarnings("UnnecessaryBoxing")
 	public Family locateJdbcTypeFamilyByTypeCode(int typeCode) {
 		return typeCodeToFamilyMap.get( Integer.valueOf( typeCode ) );
 	}

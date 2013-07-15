@@ -86,7 +86,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnnecessaryBoxing"})
 public class TypeTest extends BaseUnitTestCase {
 	private SessionImplementor session;
 

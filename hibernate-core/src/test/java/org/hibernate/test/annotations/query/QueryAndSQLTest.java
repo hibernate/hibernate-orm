@@ -46,6 +46,7 @@ import org.hibernate.test.annotations.A320b;
 import org.hibernate.test.annotations.Plane;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -468,7 +469,11 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 				Captain.class,
 				Chaos.class,
 				CasimirParticle.class,
-				AllTables.class
+				AllTables.class,
+				Attrset.class,
+				Attrvalue.class,
+				Employee.class,
+				Employeegroup.class
 		};
 	}
 

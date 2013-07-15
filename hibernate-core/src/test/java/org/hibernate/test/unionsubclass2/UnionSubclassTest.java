@@ -44,7 +44,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-@SuppressWarnings( {"UnnecessaryBoxing"})
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	protected String[] getMappings() {
 		return new String[] { "unionsubclass2/Person.hbm.xml" };

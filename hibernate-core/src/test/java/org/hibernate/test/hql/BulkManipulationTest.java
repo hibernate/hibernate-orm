@@ -416,7 +416,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	@Test
 	public void testInsertWithGeneratedVersionAndId() {
 		// Make sure the env supports bulk inserts with generated ids...
@@ -466,7 +465,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	@RequiresDialectFeature(
 			value = DialectChecks.SupportsParametersInInsertSelectCheck.class,
 			comment = "dialect does not support parameter in INSERT ... SELECT"
@@ -701,7 +699,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testUpdateOnComponent() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -792,7 +789,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testUpdateOnDiscriminatorSubclass() {
 		TestData data = new TestData();
 		data.prepare();
@@ -1017,7 +1013,6 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	@RequiresDialectFeature(
 			value = DialectChecks.HasSelfReferentialForeignKeyBugCheck.class,
 			comment = "self referential FK bug"

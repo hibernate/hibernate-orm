@@ -256,6 +256,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsAfterConstraintName() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsSequences() {
 		return true;
 	}

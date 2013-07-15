@@ -603,7 +603,6 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@Test
 	public void testMergeManaged() {
 		Session s = openSession();
@@ -646,7 +645,6 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@Test
 	public void testMergeManagedUninitializedCollection() {
 		Session s = openSession();
@@ -691,7 +689,6 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@Test
 	public void testMergeManagedInitializedCollection() {
 		Session s = openSession();
@@ -759,7 +756,6 @@ public class MergeTest extends AbstractOperationTestCase {
 		cleanup();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	@Test
 	public void testDeleteAndMerge() throws Exception {
 		Session s = openSession();

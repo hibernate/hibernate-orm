@@ -284,10 +284,9 @@ public class PersistentBag extends AbstractPersistentCollection implements List 
 	}
 
 	@Override
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public boolean contains(Object object) {
 		final Boolean exists = readElementExistence( object );
-		return exists == null ? bag.contains( object ) : exists.booleanValue();
+		return exists == null ? bag.contains( object ) : exists;
 	}
 
 	@Override

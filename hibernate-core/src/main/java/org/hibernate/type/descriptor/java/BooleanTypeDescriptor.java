@@ -58,16 +58,17 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 		stringValueTrue = String.valueOf( characterValueTrue );
 		stringValueFalse = String.valueOf( characterValueFalse );
 	}
-
+	@Override
 	public String toString(Boolean value) {
 		return value == null ? null : value.toString();
 	}
-
+	@Override
 	public Boolean fromString(String string) {
 		return Boolean.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Boolean value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -95,8 +96,7 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@Override
 	public <X> Boolean wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -109,7 +109,7 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 			return intValue == 0 ? FALSE : TRUE;
 		}
 		if ( Character.class.isInstance( value ) ) {
-			return isTrue( ( (Character) value ).charValue() ) ? TRUE : FALSE;
+			return isTrue( (Character) value ) ? TRUE : FALSE;
 		}
 		if ( String.class.isInstance( value ) ) {
 			return isTrue( ( (String) value ).charAt( 0 ) ) ? TRUE : FALSE;
@@ -125,23 +125,19 @@ public class BooleanTypeDescriptor extends AbstractTypeDescriptor<Boolean> {
 		return value ? 1 : 0;
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Byte toByte(Boolean value) {
-		return Byte.valueOf( (byte) toInt( value ) );
+		return (byte) toInt( value );
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Short toShort(Boolean value) {
-		return Short.valueOf( (short ) toInt( value ) );
+		return (short) toInt( value );
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Integer toInteger(Boolean value) {
-		return Integer.valueOf( toInt( value ) );
+		return toInt( value );
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Long toLong(Boolean value) {
-		return Long.valueOf( toInt( value ) );
+		return (long) toInt( value );
 	}
 }

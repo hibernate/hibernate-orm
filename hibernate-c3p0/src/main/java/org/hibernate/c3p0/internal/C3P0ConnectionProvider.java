@@ -196,8 +196,8 @@ public class C3P0ConnectionProvider
 			// revert to traditional hibernate behavior of setting initialPoolSize to minPoolSize
 			// unless otherwise specified with a c3p0.*-style parameter.
 			final Integer initialPoolSize = ConfigurationHelper.getInteger( C3P0_STYLE_INITIAL_POOL_SIZE, props );
-			if ( initialPoolSize == null && minPoolSize != null ) {
-				c3props.put( C3P0_STYLE_INITIAL_POOL_SIZE, String.valueOf( minPoolSize ).trim() );
+			if ( initialPoolSize == null ) {
+				setOverwriteProperty( "", C3P0_STYLE_INITIAL_POOL_SIZE, props, c3props, minPoolSize );
 			}
 
 			final DataSource unpooled = DataSources.unpooledDataSource( jdbcUrl, connectionProps );

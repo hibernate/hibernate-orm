@@ -91,7 +91,7 @@ public abstract class AbstractQueryImpl implements Query {
 	private List values = new ArrayList(4);
 	private List types = new ArrayList(4);
 	private Map<String,TypedValue> namedParameters = new HashMap<String, TypedValue>(4);
-	private Map namedParameterLists = new HashMap(4);
+	private Map<String, TypedValue> namedParameterLists = new HashMap<String, TypedValue>(4);
 
 	private Object optionalObject;
 	private Serializable optionalId;
@@ -256,24 +256,20 @@ public abstract class AbstractQueryImpl implements Query {
 		return this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isReadOnly() {
 		return ( readOnly == null ?
 				getSession().getPersistenceContext().isDefaultReadOnly() :
-				readOnly.booleanValue() 
+				readOnly
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Query setReadOnly(boolean readOnly) {
-		this.readOnly = Boolean.valueOf( readOnly );
+		this.readOnly = readOnly;
 		return this;
 	}
-
+	@Override
 	public Query setResultTransformer(ResultTransformer transformer) {
 		this.resultTransformer = transformer;
 		return this;
@@ -294,7 +290,7 @@ public abstract class AbstractQueryImpl implements Query {
 	SessionImplementor getSession() {
 		return session;
 	}
-
+	@Override
 	public abstract LockOptions getLockOptions();
 
 
@@ -305,8 +301,8 @@ public abstract class AbstractQueryImpl implements Query {
 	 *
 	 * @return Shallow copy of the named parameter value map
 	 */
-	protected Map getNamedParams() {
-		return new HashMap( namedParameters );
+	protected Map<String, TypedValue> getNamedParams() {
+		return new HashMap<String, TypedValue>( namedParameters );
 	}
 
 	/**
@@ -323,6 +319,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 * @return Array of named parameter names.
 	 * @throws HibernateException
 	 */
+	@Override
 	public String[] getNamedParameters() throws HibernateException {
 		return ArrayHelper.toStringArray( parameterMetadata.getNamedParameterNames() );
 	}
@@ -343,7 +340,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 *
 	 * @return The parameter list value map.
 	 */
-	protected Map getNamedParameterLists() {
+	protected Map<String, TypedValue> getNamedParameterLists() {
 		return namedParameterLists;
 	}
 
@@ -387,7 +384,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 */
 	protected void verifyParameters(boolean reserveFirstParameter) throws HibernateException {
 		if ( parameterMetadata.getNamedParameterNames().size() != namedParameters.size() + namedParameterLists.size() ) {
-			Set missingParams = new HashSet( parameterMetadata.getNamedParameterNames() );
+			Set<String> missingParams = new HashSet<String>( parameterMetadata.getNamedParameterNames() );
 			missingParams.removeAll( namedParameterLists.keySet() );
 			missingParams.removeAll( namedParameters.keySet() );
 			throw new QueryException( "Not all named parameters have been set: " + missingParams, getQueryString() );
@@ -776,6 +773,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return this;
 	}
 
+	@Override
 	public Query setParameterList(String name, Collection vals, Type type) throws HibernateException {
 		if ( !parameterMetadata.getNamedParameterNames().contains( name ) ) {
 			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
@@ -790,9 +788,8 @@ public abstract class AbstractQueryImpl implements Query {
 	 */
 	protected String expandParameterLists(Map namedParamsCopy) {
 		String query = this.queryString;
-		Iterator iter = namedParameterLists.entrySet().iterator();
-		while ( iter.hasNext() ) {
-			Map.Entry me = (Map.Entry) iter.next();
+		for ( Map.Entry<String, TypedValue> stringTypedValueEntry : namedParameterLists.entrySet() ) {
+			Map.Entry me = (Map.Entry) stringTypedValueEntry;
 			query = expandParameterList( query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy );
 		}
 		return query;

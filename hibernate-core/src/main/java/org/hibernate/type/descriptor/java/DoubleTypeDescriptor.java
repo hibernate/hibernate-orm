@@ -39,16 +39,17 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
 	public DoubleTypeDescriptor() {
 		super( Double.class );
 	}
-
+	@Override
 	public String toString(Double value) {
 		return value == null ? null : value.toString();
 	}
-
+	@Override
 	public Double fromString(String string) {
 		return Double.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Double value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -82,8 +83,7 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@Override
 	public <X> Double wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -92,7 +92,7 @@ public class DoubleTypeDescriptor extends AbstractTypeDescriptor<Double> {
 			return (Double) value;
 		}
 		if ( Number.class.isInstance( value ) ) {
-			return Double.valueOf( ( (Number) value ).doubleValue() );
+			return ( (Number) value ).doubleValue();
 		}
 		else if ( String.class.isInstance( value ) ) {
 			return Double.valueOf( ( (String) value ) );

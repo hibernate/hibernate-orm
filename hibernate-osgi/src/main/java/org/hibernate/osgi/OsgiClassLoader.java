@@ -52,40 +52,45 @@ public class OsgiClassLoader extends ClassLoader {
 	private Map<String, URL> resourceCache = new HashMap<String, URL>();
 
 	/**
-	 * Load the class and break on first found match.
+	 * Load the class and break on first found match.  DO NOT use ClassLoader#parent, which is typically the
+	 * SystemClassLoader for most containers.  Instead, allow the ClassNotFoundException to be thrown.
+	 * ClassLoaderServiceImpl will check the SystemClassLoader later on.
+	 * 
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */
 	@Override
 	@SuppressWarnings("rawtypes")
-	protected Class<?> findClass(String name) throws ClassNotFoundException {
-		if ( classCache.containsKey( name ) ) {
-			return classCache.get( name );
-		}
-		
-		for ( Bundle bundle : bundles ) {
-			try {
-				final Class clazz = bundle.loadClass( name );
-				if ( clazz != null ) {
-					classCache.put( name, clazz );
-					return clazz;
+	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+		synchronized (getClassLoadingLock(name)) {
+			if ( classCache.containsKey( name ) ) {
+				return classCache.get( name );
+			}
+			
+			for ( Bundle bundle : bundles ) {
+				try {
+					final Class clazz = bundle.loadClass( name );
+					if ( clazz != null ) {
+						classCache.put( name, clazz );
+						return clazz;
+					}
+				}
+				catch ( Exception ignore ) {
 				}
 			}
-			catch ( Exception ignore ) {
-			}
-		}
-		
-		for ( ClassLoader classLoader : classLoaders ) {
-			try {
-				final Class clazz = classLoader.loadClass( name );
-				if ( clazz != null ) {
-					classCache.put( name, clazz );
-					return clazz;
+			
+			for ( ClassLoader classLoader : classLoaders ) {
+				try {
+					final Class clazz = classLoader.loadClass( name );
+					if ( clazz != null ) {
+						classCache.put( name, clazz );
+						return clazz;
+					}
+				}
+				catch ( Exception ignore ) {
 				}
 			}
-			catch ( Exception ignore ) {
-			}
-		}
+        }
 
 		throw new ClassNotFoundException( "Could not load requested class : " + name );
 	}

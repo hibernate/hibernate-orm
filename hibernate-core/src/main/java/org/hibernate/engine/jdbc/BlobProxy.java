@@ -75,37 +75,44 @@ public class BlobProxy implements InvocationHandler {
 	}
 
 	private InputStream getStream() throws SQLException {
-		final InputStream stream = binaryStream.getInputStream();
+		return getUnderlyingStream().getInputStream();
+	}
+
+	private BinaryStream getUnderlyingStream() throws SQLException {
+		resetIfNeeded();
+		return binaryStream;
+	}
+
+	private void resetIfNeeded() throws SQLException {
 		try {
 			if ( needsReset ) {
-				stream.reset();
+				binaryStream.getInputStream().reset();
 			}
 		}
 		catch ( IOException ioe) {
 			throw new SQLException("could not reset reader");
 		}
 		needsReset = true;
-		return stream;
 	}
 
 	/**
 	 * {@inheritDoc}
 	 *
 	 * @throws UnsupportedOperationException if any methods other than
-	 * {@link Blob#length}, {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
+	 * {@link Blob#length}, {@link BlobImplementer#getUnderlyingStream},
+	 * {@link Blob#getBinaryStream}, {@link Blob#getBytes}, {@link Blob#free},
 	 * or toString/equals/hashCode are invoked.
 	 */
 	@Override
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		final String methodName = method.getName();
 		final int argCount = method.getParameterTypes().length;
 
 		if ( "length".equals( methodName ) && argCount == 0 ) {
-			return Long.valueOf( getLength() );
+			return getLength();
 		}
 		if ( "getUnderlyingStream".equals( methodName ) ) {
-			return binaryStream;
+			return getUnderlyingStream(); // Reset stream if needed.
 		}
 		if ( "getBinaryStream".equals( methodName ) ) {
 			if ( argCount == 0 ) {
@@ -149,7 +156,7 @@ public class BlobProxy implements InvocationHandler {
 			return this.toString();
 		}
 		if ( "equals".equals( methodName ) && argCount == 1 ) {
-			return Boolean.valueOf( proxy == args[0] );
+			return proxy == args[0];
 		}
 		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
 			return this.hashCode();

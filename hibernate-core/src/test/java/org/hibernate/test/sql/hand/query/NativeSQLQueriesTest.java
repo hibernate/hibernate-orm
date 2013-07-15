@@ -57,7 +57,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
 public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "sql/hand/query/NativeSQLQueries.hbm.xml" };

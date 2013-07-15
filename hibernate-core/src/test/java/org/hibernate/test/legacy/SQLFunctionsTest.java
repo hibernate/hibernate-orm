@@ -57,7 +57,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 
-@SuppressWarnings( {"UnnecessaryUnboxing", "UnnecessaryBoxing"})
 public class SQLFunctionsTest extends LegacyTestCase {
 	private static final Logger log = Logger.getLogger( SQLFunctionsTest.class );
 

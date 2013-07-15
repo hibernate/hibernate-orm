@@ -271,7 +271,6 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateManaged() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();
@@ -318,7 +317,6 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateGot() throws Exception {
 		boolean instrumented = FieldInterceptionHelper.isInstrumented( new NumberedNode() );
 
@@ -387,7 +385,6 @@ public class SaveOrUpdateTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testSaveOrUpdateGotWithMutableProp() throws Exception {
 		clearCounts();
 

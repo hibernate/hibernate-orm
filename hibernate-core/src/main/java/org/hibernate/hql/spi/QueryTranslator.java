@@ -23,6 +23,7 @@
  */
 package org.hibernate.hql.spi;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public interface QueryTranslator {
 	 *
 	 * @return A set of query spaces (table names).
 	 */
-	Set getQuerySpaces();
+	Set<Serializable> getQuerySpaces();
 
 	/**
 	 * Retrieve the query identifier for this translator.  The query identifier is

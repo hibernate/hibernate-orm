@@ -201,6 +201,17 @@ distributions {
                 )
             }
 
+            into( 'lib/osgi' ) {
+                from(
+                        ( parent.project( 'hibernate-osgi' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                                + parent.project( 'hibernate-osgi' ).configurations.runtime )
+                                - parent.project( 'hibernate-core' ).configurations.runtime
+                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                                - parent.project( 'hibernate-entitymanager' ).configurations.runtime
+                                - parent.project( 'hibernate-entitymanager' ).configurations.archives.allArtifacts.files
+                )
+            }
+
             // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
             // due to http://issues.gradle.org/browse/GRADLE-1450
             [ 'hibernate-c3p0', 'hibernate-proxool', 'hibernate-ehcache', 'hibernate-infinispan' ].each { feature ->

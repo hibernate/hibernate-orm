@@ -43,25 +43,24 @@ public class NumericBooleanType
 	public NumericBooleanType() {
 		super( IntegerTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
 	}
-
+	@Override
 	public String getName() {
 		return "numeric_boolean";
 	}
-
+	@Override
 	public Class getPrimitiveClass() {
 		return boolean.class;
 	}
-
+	@Override
 	public Serializable getDefaultValue() {
 		return Boolean.FALSE;
 	}
-
+	@Override
 	public Boolean stringToObject(String string) {
 		return fromString( string );
 	}
-
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@Override
 	public String objectToSQLString(Boolean value, Dialect dialect) {
-		return value.booleanValue() ? "1" : "0";
+		return value ? "1" : "0";
 	}
 }

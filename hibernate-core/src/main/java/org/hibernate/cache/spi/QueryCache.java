@@ -23,6 +23,7 @@
  */
 package org.hibernate.cache.spi;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -75,7 +76,7 @@ public interface QueryCache {
 	 *
 	 * @throws HibernateException Indicates a problem delegating to the underlying cache.
 	 */
-	public List get(QueryKey key, Type[] returnTypes, boolean isNaturalKeyLookup, Set spaces, SessionImplementor session) throws HibernateException;
+	public List get(QueryKey key, Type[] returnTypes, boolean isNaturalKeyLookup, Set<Serializable> spaces, SessionImplementor session) throws HibernateException;
 
 	/**
 	 * Destroy the cache.

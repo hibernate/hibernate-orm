@@ -51,7 +51,7 @@ jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Core'
 
-        instruction 'Import-Package',
+        instructionFirst 'Import-Package',
             'javax.security.auth;resolution:=optional',
             'javax.security.jacc;resolution:=optional',
             'javax.validation;resolution:=optional',

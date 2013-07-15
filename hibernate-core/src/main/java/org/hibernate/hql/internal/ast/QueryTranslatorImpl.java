@@ -23,6 +23,7 @@
  */
 package org.hibernate.hql.internal.ast;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -342,7 +343,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		return getWalker().getSelectClause().getColumnNames();
 	}
 	@Override
-	public Set getQuerySpaces() {
+	public Set<Serializable> getQuerySpaces() {
 		return getWalker().getQuerySpaces();
 	}
 

@@ -58,7 +58,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings({ "UnnecessaryBoxing", "UnnecessaryUnboxing" })
 @FailureExpectedWithNewMetamodel
 public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	@Override

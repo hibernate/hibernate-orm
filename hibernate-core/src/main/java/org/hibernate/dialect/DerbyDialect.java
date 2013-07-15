@@ -77,7 +77,6 @@ public class DerbyDialect extends DB2Dialect {
 		}
 	}
 
-	@SuppressWarnings({"UnnecessaryUnboxing", "unchecked"})
 	private void determineDriverVersion() {
 		try {
 			// locate the derby sysinfo class and query its version info

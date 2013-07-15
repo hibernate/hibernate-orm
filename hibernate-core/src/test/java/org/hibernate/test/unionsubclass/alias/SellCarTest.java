@@ -77,7 +77,6 @@ public class SellCarTest extends BaseCoreFunctionalTestCase {
         return stliu;
     }
 
-    @SuppressWarnings( {"UnnecessaryBoxing"})
 	private PersonID createID( String name ) {
         PersonID id = new PersonID();
         id.setName( name );

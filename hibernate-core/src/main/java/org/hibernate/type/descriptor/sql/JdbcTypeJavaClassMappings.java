@@ -104,7 +104,6 @@ public class JdbcTypeJavaClassMappings {
 		javaClassToJdbcTypeCodeMap.put( javaType, typeCode );
 	}
 
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public int determineJdbcTypeCodeForJavaClass(Class cls) {
 		Integer typeCode = javaClassToJdbcTypeCodeMap.get( cls );
 		if ( typeCode != null ) {
@@ -118,7 +117,6 @@ public class JdbcTypeJavaClassMappings {
 		return specialCode;
 	}
 
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public Class determineJavaClassForJdbcTypeCode(int typeCode) {
 		Class cls = jdbcTypeCodeToJavaClassMap.get( Integer.valueOf( typeCode ) );
 		if ( cls != null ) {

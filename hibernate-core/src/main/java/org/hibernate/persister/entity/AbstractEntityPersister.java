@@ -5034,12 +5034,11 @@ public abstract class AbstractEntityPersister
 		return generateEntityIdByNaturalIdSql( valueNullness );
 	}
 
-	@SuppressWarnings("UnnecessaryUnboxing")
 	protected boolean isNaturalIdNonNullable() {
 		if ( naturalIdIsNonNullable == null ) {
 			naturalIdIsNonNullable = determineNaturalIdNullability();
 		}
-		return naturalIdIsNonNullable.booleanValue();
+		return naturalIdIsNonNullable;
 	}
 
 	private boolean determineNaturalIdNullability() {

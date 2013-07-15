@@ -38,7 +38,6 @@ import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.junit.Test;
 
-@SuppressWarnings( {"UnnecessaryBoxing"})
 public class ABCTest extends LegacyTestCase {
 	@Override
 	public String[] getMappings() {

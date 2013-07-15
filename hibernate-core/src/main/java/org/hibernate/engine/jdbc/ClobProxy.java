@@ -76,13 +76,16 @@ public class ClobProxy implements InvocationHandler {
 	}
 
 	protected InputStream getAsciiStream() throws SQLException {
-		resetIfNeeded();
-		return new ReaderInputStream( characterStream.asReader() );
+		return new ReaderInputStream( getCharacterStream() );
 	}
 
 	protected Reader getCharacterStream() throws SQLException {
+		return getUnderlyingStream().asReader();
+	}
+
+	protected CharacterStream getUnderlyingStream() throws SQLException {
 		resetIfNeeded();
-		return characterStream.asReader();
+		return characterStream;
 	}
 
 	protected String getSubString(long start, int length) {
@@ -95,20 +98,21 @@ public class ClobProxy implements InvocationHandler {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws UnsupportedOperationException if any methods other than {@link Clob#length()},
-	 * {@link Clob#getAsciiStream()}, or {@link Clob#getCharacterStream()} are invoked.
+	 * @throws UnsupportedOperationException if any methods other than {@link Clob#length},
+	 * {@link Clob#getAsciiStream}, {@link Clob#getCharacterStream},
+	 * {@link ClobImplementer#getUnderlyingStream}, {@link Clob#getSubString},
+	 * {@link Clob#free}, or toString/equals/hashCode are invoked.
 	 */
 	@Override
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		final String methodName = method.getName();
 		final int argCount = method.getParameterTypes().length;
 
 		if ( "length".equals( methodName ) && argCount == 0 ) {
-			return Long.valueOf( getLength() );
+			return getLength();
 		}
 		if ( "getUnderlyingStream".equals( methodName ) ) {
-			return characterStream;
+			return getUnderlyingStream(); // Reset stream if needed.
 		}
 		if ( "getAsciiStream".equals( methodName ) && argCount == 0 ) {
 			return getAsciiStream();
@@ -156,7 +160,7 @@ public class ClobProxy implements InvocationHandler {
 			return this.toString();
 		}
 		if ( "equals".equals( methodName ) && argCount == 1 ) {
-			return Boolean.valueOf( proxy == args[0] );
+			return proxy == args[0];
 		}
 		if ( "hashCode".equals( methodName ) && argCount == 0 ) {
 			return this.hashCode();

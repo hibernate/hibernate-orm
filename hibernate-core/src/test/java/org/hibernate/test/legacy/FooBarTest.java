@@ -2476,7 +2476,6 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

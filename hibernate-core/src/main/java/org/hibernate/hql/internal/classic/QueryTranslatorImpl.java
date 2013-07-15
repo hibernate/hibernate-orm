@@ -31,6 +31,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -108,7 +109,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private final Map joins = new LinkedHashMap();
 	private final List orderByTokens = new ArrayList();
 	private final List groupByTokens = new ArrayList();
-	private final Set querySpaces = new HashSet();
+	private final Set<Serializable> querySpaces = new HashSet<Serializable>();
 	private final Set entitiesToFetch = new HashSet();
 
 	private final Map pathAliases = new HashMap();
@@ -822,7 +823,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 
 	}
 
-	public final Set getQuerySpaces() {
+	public final Set<Serializable> getQuerySpaces() {
 		return querySpaces;
 	}
 
@@ -836,9 +837,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	}
 
 	void addQuerySpaces(Serializable[] spaces) {
-		for ( int i = 0; i < spaces.length; i++ ) {
-			querySpaces.add( spaces[i] );
-		}
+		Collections.addAll( querySpaces, spaces );
 		if ( superQuery != null ) superQuery.addQuerySpaces( spaces );
 	}
 
@@ -937,6 +936,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		pathJoins.put( path, joinSequence );
 	}
 
+	@Override
 	public List list(SessionImplementor session, QueryParameters queryParameters)
 			throws HibernateException {
 		return list( session, queryParameters, getQuerySpaces(), actualReturnTypes );
@@ -945,6 +945,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	/**
 	 * Return the query results as an iterator
 	 */
+	@Override
 	public Iterator iterate(QueryParameters queryParameters, EventSource session)
 			throws HibernateException {
 

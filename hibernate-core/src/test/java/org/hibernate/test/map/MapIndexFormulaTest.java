@@ -58,7 +58,6 @@ public class MapIndexFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked", "UnnecessaryBoxing"})
 	public void testIndexFormulaMap() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

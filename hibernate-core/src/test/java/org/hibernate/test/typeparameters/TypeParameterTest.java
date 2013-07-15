@@ -54,7 +54,6 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryUnboxing"})
 	public void testSave() throws Exception {
 		deleteData();
 

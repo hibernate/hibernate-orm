@@ -609,7 +609,6 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnusedAssignment", "UnnecessaryBoxing"})
 	public void testMergeManaged() throws Exception {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
@@ -663,7 +662,6 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMergeManagedUninitializedCollection() throws Exception {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
@@ -712,7 +710,6 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testMergeManagedInitializedCollection() throws Exception {
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
@@ -786,7 +783,6 @@ public class MergeTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing", "UnusedAssignment"})
 	public void testDeleteAndMerge() throws Exception {
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		Session s = openSession();

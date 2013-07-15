@@ -49,7 +49,6 @@ public class CascadeTestWithAssignedParentIdTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testSaveChildWithParent() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();

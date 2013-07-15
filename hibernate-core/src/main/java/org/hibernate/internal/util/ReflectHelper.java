@@ -58,6 +58,7 @@ import com.fasterxml.classmate.types.ResolvedArrayType;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
+@SuppressWarnings("unchecked")
 public final class ReflectHelper {
 
 	//TODO: this dependency is kinda Bad

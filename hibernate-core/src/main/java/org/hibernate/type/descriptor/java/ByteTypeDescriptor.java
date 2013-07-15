@@ -37,15 +37,17 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 		super( Byte.class );
 	}
 
+	@Override
 	public String toString(Byte value) {
 		return value == null ? null : value.toString();
 	}
-
+	@Override
 	public Byte fromString(String string) {
 		return Byte.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Byte value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -73,8 +75,7 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@Override
 	public <X> Byte wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -83,7 +84,7 @@ public class ByteTypeDescriptor extends AbstractTypeDescriptor<Byte> {
 			return (Byte) value;
 		}
 		if ( Number.class.isInstance( value ) ) {
-			return Byte.valueOf( ( (Number) value ).byteValue() );
+			return ( (Number) value ).byteValue();
 		}
 		if ( String.class.isInstance( value ) ) {
 			return Byte.valueOf( ( (String) value ) );

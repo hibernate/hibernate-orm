@@ -73,7 +73,7 @@ public class CollectionElementLoader extends OuterJoinLoader {
 				persister, 
 				ArrayHelper.join(
 						collectionPersister.getKeyColumnNames(),
-						collectionPersister.getIndexColumnNames()
+						collectionPersister.toColumns("index")
 				),
 				1, 
 				LockMode.NONE, 

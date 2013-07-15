@@ -82,7 +82,6 @@ public class GetHqlQueryPlanTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testHqlQueryPlanWithEnabledFilter() {
 		Session s = openSession();
 		QueryPlanCache cache = ( (SessionImplementor) s ).getFactory().getQueryPlanCache();

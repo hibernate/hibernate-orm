@@ -52,7 +52,6 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testFilteredJoinedSubclassHqlDeleteRoot() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -79,7 +78,6 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testFilteredJoinedSubclassHqlDeleteNonLeaf() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -106,7 +104,6 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testFilteredJoinedSubclassHqlDeleteLeaf() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -133,7 +130,6 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testFilteredJoinedSubclassHqlUpdateRoot() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -160,7 +156,6 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testFilteredJoinedSubclassHqlUpdateNonLeaf() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -190,7 +185,6 @@ public class JoinedFilteredBulkManipulationTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testFilteredJoinedSubclassHqlUpdateLeaf() {
 		Session s = openSession();
 		s.beginTransaction();

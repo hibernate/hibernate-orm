@@ -274,13 +274,12 @@ public class BasicFormatterImpl implements Formatter {
 			}
 		}
 
-		@SuppressWarnings( {"UnnecessaryBoxing"})
 		private void select() {
 			out();
 			indent++;
 			newline();
-			parenCounts.addLast( Integer.valueOf( parensSinceSelect ) );
-			afterByOrFromOrSelects.addLast( Boolean.valueOf( afterByOrSetOrFromOrSelect ) );
+			parenCounts.addLast( parensSinceSelect );
+			afterByOrFromOrSelects.addLast( afterByOrSetOrFromOrSelect );
 			parensSinceSelect = 0;
 			afterByOrSetOrFromOrSelect = true;
 		}
@@ -332,13 +331,12 @@ public class BasicFormatterImpl implements Formatter {
 			afterValues = true;
 		}
 
-		@SuppressWarnings( {"UnnecessaryUnboxing"})
 		private void closeParen() {
 			parensSinceSelect--;
 			if ( parensSinceSelect < 0 ) {
 				indent--;
 				parensSinceSelect = parenCounts.removeLast();
-				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast().booleanValue();
+				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast();
 			}
 			if ( inFunction > 0 ) {
 				inFunction--;

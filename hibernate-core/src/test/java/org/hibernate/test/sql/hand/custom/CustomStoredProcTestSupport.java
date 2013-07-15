@@ -47,7 +47,6 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings( {"UnusedDeclaration"})
 public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testScalarStoredProcedure() throws HibernateException, SQLException {
 		Session s = openSession();
 		Query namedQuery = s.getNamedQuery( "simpleScalar" );
@@ -60,7 +59,6 @@ public abstract class CustomStoredProcTestSupport extends CustomSQLTestSupport {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testParameterHandling() throws HibernateException, SQLException {
 		Session s = openSession();
 

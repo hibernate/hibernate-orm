@@ -45,12 +45,6 @@ public class VersionedEntityWithInverseOneToManyJoinTest extends AbstractEntityW
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationVersionedOneToManyJoin.hbm.xml" };
 	}
 
-	@Test
-	@Override
-	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
-		super.testOneToManyCollectionOptimisticLockingWithUpdate();
-	}
-
 	@Override
 	protected boolean checkUpdateCountsAfterAddingExistingElement() {
 		return false;

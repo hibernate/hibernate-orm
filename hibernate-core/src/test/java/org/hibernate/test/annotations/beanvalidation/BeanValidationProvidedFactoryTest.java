@@ -90,7 +90,7 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 		ValidatorFactory vf = configuration.buildValidatorFactory();
 		cfg.getProperties().put( "javax.persistence.validation.factory", vf );
 	}
-	
+
 	@Override
 	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		final MessageInterpolator messageInterpolator = new MessageInterpolator() {

@@ -140,7 +140,7 @@ public class EnhancementTask extends Task implements EnhancementContext {
 
 	private boolean shouldInclude(CtClass ctClass) {
 		// we currently only handle entity enhancement
-		return ! ctClass.hasAnnotation( Entity.class );
+		return ctClass.hasAnnotation( Entity.class );
 	}
 
 

@@ -174,12 +174,11 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 	 *
 	 * @return {@code true} if the metadata indicates that the driver defines REF_CURSOR support
 	 */
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public static boolean supportsRefCursors(DatabaseMetaData meta) {
 		// Standard JDBC REF_CURSOR support was not added until Java 8, so we need to use reflection to attempt to
 		// access these fields/methods...
 		try {
-			return ( (Boolean) meta.getClass().getMethod( "supportsRefCursors" ).invoke( null ) ).booleanValue();
+			return (Boolean) meta.getClass().getMethod( "supportsRefCursors" ).invoke( null );
 		}
 		catch (NoSuchMethodException e) {
 			log.trace( "JDBC DatabaseMetaData class does not define supportsRefCursors method..." );
@@ -193,7 +192,6 @@ public class StandardRefCursorSupport implements RefCursorSupport {
 
 	private static Integer refCursorTypeCode;
 
-	@SuppressWarnings("UnnecessaryUnboxing")
 	private int refCursorTypeCode() {
 		if ( refCursorTypeCode == null ) {
 			try {

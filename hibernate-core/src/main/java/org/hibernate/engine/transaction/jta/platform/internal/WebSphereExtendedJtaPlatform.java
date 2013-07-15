@@ -74,10 +74,9 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 	}
 
 	@Override
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public Object getTransactionIdentifier(Transaction transaction) {
 		// WebSphere, however, is not a sane JEE/JTA container...
-		return Integer.valueOf( transaction.hashCode() );
+		return transaction.hashCode();
 	}
 
 	public class TransactionManagerAdapter implements TransactionManager {

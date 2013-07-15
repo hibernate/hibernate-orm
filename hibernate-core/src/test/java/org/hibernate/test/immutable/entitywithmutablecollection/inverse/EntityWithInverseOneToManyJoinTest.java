@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.inverse;
 
-import org.junit.Test;
-
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 import org.hibernate.testing.SkipForDialect;
@@ -42,11 +40,5 @@ public class EntityWithInverseOneToManyJoinTest extends AbstractEntityWithOneToM
 	@Override
 	public String[] getMappings() {
 		return new String[] { "immutable/entitywithmutablecollection/inverse/ContractVariationOneToManyJoin.hbm.xml" };
-	}
-
-	@Test
-	@Override
-	public void testOneToManyCollectionOptimisticLockingWithUpdate() {
-		super.testOneToManyCollectionOptimisticLockingWithUpdate();
 	}
 }

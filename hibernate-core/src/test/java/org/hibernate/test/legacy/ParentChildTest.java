@@ -65,7 +65,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-@SuppressWarnings( {"UnnecessaryBoxing"})
 @FailureExpectedWithNewMetamodel
 public class ParentChildTest extends LegacyTestCase {
 	@Override

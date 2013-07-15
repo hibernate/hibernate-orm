@@ -167,12 +167,11 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
 	public boolean contains(Object object) {
 		final Boolean exists = readElementExistence( object );
 		return exists == null
 				? set.contains( object )
-				: exists.booleanValue();
+				: exists;
 	}
 
 	@Override
@@ -197,7 +196,6 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
 	public boolean add(Object value) {
 		final Boolean exists = isOperationQueueEnabled() ? readElementExistence( value ) : null;
 		if ( exists == null ) {
@@ -210,7 +208,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 				return false;
 			}
 		}
-		else if ( exists.booleanValue() ) {
+		else if ( exists ) {
 			return false;
 		}
 		else {
@@ -220,7 +218,6 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 	}
 
 	@Override
-	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
 	public boolean remove(Object value) {
 		final Boolean exists = isPutQueueEnabled() ? readElementExistence( value ) : null;
 		if ( exists == null ) {
@@ -233,7 +230,7 @@ public class PersistentSet extends AbstractPersistentCollection implements java.
 				return false;
 			}
 		}
-		else if ( exists.booleanValue() ) {
+		else if ( exists ) {
 			queueOperation( new SimpleRemove( value ) );
 			return true;
 		}

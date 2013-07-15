@@ -56,6 +56,7 @@ import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -148,6 +149,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "PostgreSQL", PostgreSQL81Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 8, 2, PostgreSQL82Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 9, 0, PostgreSQL9Dialect.class, resolver );
+		testDetermination( "EnterpriseDB", 9, 2, PostgresPlusDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 5, DerbyTenFiveDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 6, DerbyTenSixDialect.class, resolver );

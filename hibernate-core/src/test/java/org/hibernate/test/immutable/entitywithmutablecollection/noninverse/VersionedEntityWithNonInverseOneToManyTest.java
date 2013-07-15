@@ -23,8 +23,6 @@
  */
 package org.hibernate.test.immutable.entitywithmutablecollection.noninverse;
 
-import org.junit.Test;
-
 import org.hibernate.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 
 /**

@@ -186,7 +186,6 @@ public abstract class AbstractSessionImpl
 		return query;
 	}
 
-	@SuppressWarnings("UnnecessaryUnboxing")
 	private void initQuery(Query query, NamedQueryDefinition nqd) {
 		// todo : cacheable and readonly should be Boolean rather than boolean...
 		query.setCacheable( nqd.isCacheable() );

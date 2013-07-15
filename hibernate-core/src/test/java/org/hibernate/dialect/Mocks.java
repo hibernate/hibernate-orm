@@ -32,7 +32,6 @@ import java.sql.SQLException;
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings( {"UnnecessaryBoxing"})
 public class Mocks {
 
 	public static Connection createConnection(String databaseName, int majorVersion) {

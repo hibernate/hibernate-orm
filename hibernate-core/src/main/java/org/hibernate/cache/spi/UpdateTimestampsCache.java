@@ -46,7 +46,7 @@ import org.hibernate.internal.CoreMessageLogger;
  */
 public class UpdateTimestampsCache {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, UpdateTimestampsCache.class.getName() );
-
+	private static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 	/**
 	 * The region name of the update-timestamps cache.
 	 */
@@ -90,15 +90,13 @@ public class UpdateTimestampsCache {
 	 *
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	@SuppressWarnings({"UnnecessaryBoxing"})
 	public void preinvalidate(Serializable[] spaces) throws CacheException {
-		final boolean debug = LOG.isDebugEnabled();
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		final Long ts = region.nextTimestamp() + region.getTimeout();
 
 		for ( Serializable space : spaces ) {
-			if ( debug ) {
+			if ( DEBUG_ENABLED ) {
 				LOG.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
 			//put() has nowait semantics, is this really appropriate?
@@ -117,15 +115,13 @@ public class UpdateTimestampsCache {
 	 *
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	@SuppressWarnings({"UnnecessaryBoxing"})
 	public void invalidate(Serializable[] spaces) throws CacheException {
-		final boolean debug = LOG.isDebugEnabled();
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		final Long ts = region.nextTimestamp();
 
 		for (Serializable space : spaces) {
-			if ( debug ) {
+			if ( DEBUG_ENABLED ) {
 				LOG.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
 			//put() has nowait semantics, is this really appropriate?
@@ -147,12 +143,10 @@ public class UpdateTimestampsCache {
 	 *
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
-	public boolean isUpToDate(Set spaces, Long timestamp) throws CacheException {
-		final boolean debug = LOG.isDebugEnabled();
+	public boolean isUpToDate(Set<Serializable> spaces, Long timestamp) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
-		for ( Serializable space : (Set<Serializable>) spaces ) {
+		for ( Serializable space : spaces ) {
 			final Long lastUpdate = (Long) region.get( space );
 			if ( lastUpdate == null ) {
 				if ( stats ) {
@@ -164,7 +158,7 @@ public class UpdateTimestampsCache {
 				//result = false; // safer
 			}
 			else {
-				if ( debug ) {
+				if ( DEBUG_ENABLED ) {
 					LOG.debugf(
 							"[%s] last update timestamp: %s",
 							space,

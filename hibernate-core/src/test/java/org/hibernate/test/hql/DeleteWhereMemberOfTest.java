@@ -24,15 +24,15 @@
 package org.hibernate.test.hql;
 
 import org.hibernate.Session;
-
-import org.junit.Test;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.test.annotations.query.Attrset;
 import org.hibernate.test.annotations.query.Attrvalue;
 import org.hibernate.test.annotations.query.Employee;
 import org.hibernate.test.annotations.query.Employeegroup;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -51,7 +51,7 @@ public class DeleteWhereMemberOfTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-8318" )
-//	@FailureExpected( jiraKey = "HHH-8318" )
+	@SkipForDialect( value = MySQLDialect.class, comment = "Cannot use Attrvalue in the delete and from clauses simultaneously." )
 	public void testDeleteMemberOf() {
 		final String qry = "delete Attrvalue aval where aval.id in ( "
 				+ "select val2.id from Employee e, Employeegroup eg, Attrset aset, Attrvalue val2 "

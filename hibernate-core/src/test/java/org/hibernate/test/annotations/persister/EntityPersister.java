@@ -12,8 +12,8 @@ import org.hibernate.persister.entity.SingleTableEntityPersister;
 /**
  * @author Shawn Clowater
  */
+@SuppressWarnings({ "UnusedDeclaration" })
 public class EntityPersister extends SingleTableEntityPersister {
-	@SuppressWarnings({ "UnusedDeclaration" })
 	public EntityPersister(PersistentClass persistentClass, EntityRegionAccessStrategy cache,
 						   NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
 						   SessionFactoryImplementor factory, Mapping cfg) throws HibernateException {

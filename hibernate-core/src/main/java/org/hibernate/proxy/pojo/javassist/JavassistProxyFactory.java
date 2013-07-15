@@ -49,6 +49,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 	private CompositeType componentIdType;
 	private Class factory;
 	private boolean overridesEquals;
+
 	@Override
 	public void postInstantiate(
 			final String entityName,
@@ -66,6 +67,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 		this.factory = JavassistLazyInitializer.getProxyFactory( persistentClass, this.interfaces );
 		this.overridesEquals = ReflectHelper.overridesEquals(persistentClass);
 	}
+
 	@Override
 	public HibernateProxy getProxy(
 			Serializable id,

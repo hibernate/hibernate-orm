@@ -44,6 +44,7 @@ import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -102,6 +103,10 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 			}
 			
 			return new PostgreSQL81Dialect();
+		}
+		
+		if ( "EnterpriseDB".equals( databaseName ) ) {
+			return new PostgresPlusDialect();
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {

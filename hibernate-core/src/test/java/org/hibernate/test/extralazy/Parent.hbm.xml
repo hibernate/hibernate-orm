@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping package="org.hibernate.test.extralazy">
+     <class name="Parent" > 
+
+		<!--  properties inherited from Adapter -->
+		<id name="id" >
+			<column name="TSGID" length="32" />
+			<generator class="uuid.hex" />
+		</id>	
+				
+		<map name="children" lazy="extra" inverse="true" cascade="save-update">
+			<key column="PARENT_ID" />	
+			<map-key type="string" formula="firstName"/>
+			<one-to-many class="Child" />
+		</map>   	
+
+     </class>
+</hibernate-mapping>

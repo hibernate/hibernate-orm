@@ -23,6 +23,7 @@
  */
 package org.hibernate.test.hql;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -227,8 +228,8 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 
 	private void checkQuerySpaces(QueryTranslator oldQueryTranslator, QueryTranslator newQueryTranslator) {
 		// Check the query spaces for a regression.
-		Set oldQuerySpaces = oldQueryTranslator.getQuerySpaces();
-		Set querySpaces = newQueryTranslator.getQuerySpaces();
+		Set<Serializable> oldQuerySpaces = oldQueryTranslator.getQuerySpaces();
+		Set<Serializable> querySpaces = newQueryTranslator.getQuerySpaces();
 		assertEquals( "Query spaces is not the right size!", oldQuerySpaces.size(), querySpaces.size() );
 		for ( Object o : oldQuerySpaces ) {
 			assertTrue( "New query space does not contain " + o + "!", querySpaces.contains( o ) );
@@ -280,7 +281,6 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 	}
 
 	
-	@SuppressWarnings( {"UnnecessaryBoxing", "UnnecessaryUnboxing"})
 	private Map getTokens(String sql) {
 		Map<String,Integer> result = new TreeMap<String,Integer>();
 		if ( sql == null ) {

@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -35,10 +34,7 @@ import org.osgi.framework.ServiceReference;
  * @author Brett Meyer
  */
 public class OsgiServiceUtil {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			OsgiServiceUtil.class.getName()
-	);
+	private static final Logger LOG = Logger.getLogger( OsgiServiceUtil.class );
 
 	/**
 	 * Locate all implementors of the given service contract in the given OSGi buindle context
@@ -58,7 +54,7 @@ public class OsgiServiceUtil {
 			}
 		}
 		catch ( Exception e ) {
-			LOG.unableToDiscoverOsgiService( contract.getName(), e );
+			LOG.warnf( e, "Exception while discovering OSGi service implementations : %s", contract.getName() );
 		}
 		return serviceImpls;
 	}

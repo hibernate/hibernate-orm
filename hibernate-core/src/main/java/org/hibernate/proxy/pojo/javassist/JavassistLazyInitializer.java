@@ -168,6 +168,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		}
 	}
 
+	@Override
 	public Object invoke(
 			final Object proxy,
 			final Method thisMethod,

@@ -92,6 +92,11 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 			// need to wait until the ID or attribute source can be resolved.
 			indexSource = null;
 		}
+		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_CLASS ) ) {
+			// can be anything
+			throw new NotYetImplementedException( "@MapKeyClass is not supported yet." );
+		}
+		//TODO the map attribute may contains both {@code MAP_KEY_COLUMN} and {@code MAP_KEY_CLASS}
 		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_COLUMN ) ) {
 			final Binder.DefaultNamingStrategy defaultNamingStrategy = new Binder.DefaultNamingStrategy() {
 				@Override
@@ -108,10 +113,6 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_TEMPORAL ) ) {
 			// basic
 			throw new NotYetImplementedException( "@MapKeyTemporal is not supported yet." );
-		}
-		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_CLASS ) ) {
-			// can be anything
-			throw new NotYetImplementedException( "@MapKeyClass is not supported yet." );
 		}
 		else if ( attribute.annotations().containsKey( JPADotNames.MAP_KEY_JOIN_COLUMN ) ) {
 			// association

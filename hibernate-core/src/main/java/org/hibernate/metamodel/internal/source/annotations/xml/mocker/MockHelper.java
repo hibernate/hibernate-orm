@@ -272,7 +272,7 @@ public class MockHelper {
 	}
 
 	static String buildSafeClassName(String className, String defaultPackageName) {
-		if ( className.indexOf( '.' ) < 0 && StringHelper.isNotEmpty( defaultPackageName ) ) {
+		if ( className!= null && className.indexOf( '.' ) < 0 && StringHelper.isNotEmpty( defaultPackageName ) ) {
 			className = StringHelper.qualify( defaultPackageName, className );
 		}
 		return className;

@@ -488,7 +488,7 @@ public class ConfiguredClass {
 				getLocalBindingContext()
 		);
 		Class<?> collectionIndexType = null;
-		if ( Map.class.isAssignableFrom( attributeType ) ) {
+		if ( Map.class.isAssignableFrom( attributeType ) && !resolvedMember.getType().getTypeParameters().isEmpty()) {
 			collectionIndexType = resolvedMember.getType().getTypeParameters().get( 0 ).getErasedType();
 		}
 		MappedAttribute.Nature attributeNature = determineAttributeNature(

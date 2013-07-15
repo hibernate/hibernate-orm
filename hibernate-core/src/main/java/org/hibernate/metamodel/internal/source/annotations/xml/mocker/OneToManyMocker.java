@@ -50,7 +50,7 @@ class OneToManyMocker extends PropertyMocker {
 	protected void processExtra() {
 		List<AnnotationValue> annotationValueList = new ArrayList<AnnotationValue>();
 		MockHelper.classValue(
-				"targetEntity", oneToMany.getTargetEntity(), annotationValueList, indexBuilder.getServiceRegistry()
+				"targetEntity", MockHelper.buildSafeClassName( oneToMany.getTargetEntity(), getDefaults().getPackageName() ), annotationValueList, indexBuilder.getServiceRegistry()
 		);
 		MockHelper.enumValue( "fetch", FETCH_TYPE, oneToMany.getFetch(), annotationValueList );
 		MockHelper.stringValue( "mappedBy", oneToMany.getMappedBy(), annotationValueList );

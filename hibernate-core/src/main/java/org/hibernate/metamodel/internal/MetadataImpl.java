@@ -587,7 +587,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		if ( def.getName() == null ) {
 			throw new IllegalArgumentException( "Named native query definition name is null: " + def.getQueryString() );
 		}
-		namedNativeQueryDefs.put( def.getName(), def );
+		NamedSQLQueryDefinition old = namedNativeQueryDefs.put( def.getName(), def );
+		if ( old != null ) {
+			LOG.warn( "Duplicated named query with same name["+ old.getName() +"] found" );
+			//todo mapping exception??
+			// in the old metamodel, the NamedQueryDefinition.name actually not exactly is the one defined in the hbm
+			// there are two cases:
+			// if this <query> or <sql-query> is a sub-element of <hibernate-mapping> then, then name is as it is
+			// but if these two are defined in a <class> ( or sub class ), then the name actually is
+			// entityName.query_name, and the referenced sql resultset mapping's name should also in this form.
+			// same as result mapping definition
+		}
 	}
 
 	public NamedSQLQueryDefinition getNamedNativeQuery(String name) {
@@ -610,7 +620,17 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		else if ( def.getName() == null ) {
 			throw new IllegalArgumentException( "Named query definition name is null: " + def.getQueryString() );
 		}
-		namedQueryDefs.put( def.getName(), def );
+		NamedQueryDefinition old = namedQueryDefs.put( def.getName(), def );
+		if ( old != null ) {
+			LOG.warn( "Duplicated named query with same name["+ old.getName() +"] found" );
+			//todo mapping exception??
+			// in the old metamodel, the NamedQueryDefinition.name actually not exactly is the one defined in the hbm
+			// there are two cases:
+			// if this <query> or <sql-query> is a sub-element of <hibernate-mapping> then, then name is as it is
+			// but if these two are defined in a <class> ( or sub class ), then the name actually is
+			// entityName.query_name, and the referenced sql resultset mapping's name should also in this form.
+			// same as result mapping definition
+		}
 	}
 
 	public NamedQueryDefinition getNamedQuery(String name) {
@@ -635,7 +655,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 				resultSetMappingDefinition
 		);
 		if ( old != null ) {
-			LOG.warn( "Duplicated @SqlResultSetMappings with same name["+ resultSetMappingDefinition.getName() +"] found" );
+			LOG.warn( "Duplicated sql result set mapping with same name["+ resultSetMappingDefinition.getName() +"] found" );
 			//todo mapping exception??
 		}
 	}

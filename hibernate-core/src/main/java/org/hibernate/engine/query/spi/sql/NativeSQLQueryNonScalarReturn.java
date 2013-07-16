@@ -24,6 +24,7 @@
  */
 package org.hibernate.engine.query.spi.sql;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +59,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 		}
 		this.lockMode = lockMode;
 		this.propertyResults = CollectionHelper.isEmpty( propertyResults ) ? Collections.<String, String[]>emptyMap()
-				: Collections.unmodifiableMap(new HashMap<String, String[]>( propertyResults ));
+				: Collections.unmodifiableMap( propertyResults );
 		this.hashCode = determineHashCode();
 	}
 
@@ -94,10 +95,14 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 	}
 
 	private int determineHashCode() {
-		int result = alias != null ? alias.hashCode() : 0;
+		int result = alias.hashCode();
 		result = 31 * result + ( getClass().getName().hashCode() );
 		result = 31 * result + ( lockMode != null ? lockMode.hashCode() : 0 );
-		result = 31 * result + ( propertyResults != null ? propertyResults.hashCode() : 0 );
+		for(Map.Entry<String, String[]> entry : propertyResults.entrySet()){
+			result = 31 * result + entry.getKey().hashCode();
+			result = 31 * result + Arrays.hashCode( entry.getValue() );
+		}
+
 		return result;
 	}
 
@@ -111,16 +116,21 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 
 		NativeSQLQueryNonScalarReturn that = ( NativeSQLQueryNonScalarReturn ) o;
 
-		if ( alias != null ? !alias.equals( that.alias ) : that.alias != null ) {
+		if ( !alias.equals( that.alias ) ) {
 			return false;
 		}
 		if ( lockMode != null ? !lockMode.equals( that.lockMode ) : that.lockMode != null ) {
 			return false;
 		}
-		if ( propertyResults != null ? !propertyResults.equals( that.propertyResults ) : that.propertyResults != null ) {
+		if( propertyResults.size() != that.propertyResults.size()){
 			return false;
 		}
-
+		for ( Map.Entry<String, String[]> entry : propertyResults.entrySet() ) {
+			String key = entry.getKey();
+			if ( !Arrays.equals( entry.getValue(), that.propertyResults.get( key ) ) ) {
+				return false;
+			}
+		}
 		return true;
 	}
 }

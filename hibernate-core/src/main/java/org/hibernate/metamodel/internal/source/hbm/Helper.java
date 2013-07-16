@@ -40,7 +40,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbCacheElement;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
@@ -60,7 +59,6 @@ import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
@@ -90,7 +88,7 @@ public class Helper {
 		}
 	};
 
-	public static LockMode interpretLockMode(JaxbLockModeAttribute lockModeAttribute, Origin origin){
+	public static LockMode interpretLockMode(JaxbLockModeAttribute lockModeAttribute, LocalBindingContext context){
 		if ( lockModeAttribute == null ) {
 			return LockMode.READ;
 		}
@@ -118,7 +116,7 @@ public class Helper {
 			case PESSIMISTIC_FORCE_INCREMENT:
 				return LockMode.PESSIMISTIC_FORCE_INCREMENT;
 			default:
-				throw new MappingException( "unknown lock mode: "+lockModeAttribute, origin );
+				throw context.makeMappingException(  "unknown lock mode: "+lockModeAttribute );
 		}
 	}
 

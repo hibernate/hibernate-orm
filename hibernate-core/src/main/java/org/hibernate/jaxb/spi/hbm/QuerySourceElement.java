@@ -27,17 +27,19 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
+ * TODO javadoc
+ *
  * @author Strong Liu <stliu@hibernate.org>
  */
 public interface QuerySourceElement {
-	public List<Serializable> getContent();
-	public JaxbCacheModeAttribute getCacheMode();
-	public String getCacheRegion();
-	public boolean isCacheable();
-	public String getComment();
-	public Integer getFetchSize();
-	public JaxbFlushModeAttribute getFlushMode();
-	public String getName();
-	public boolean isReadOnly();
-	public Integer getTimeout();
+	List<Serializable> getContent();
+	JaxbCacheModeAttribute getCacheMode();
+	String getCacheRegion();
+	boolean isCacheable();
+	String getComment();
+	Integer getFetchSize();
+	JaxbFlushModeAttribute getFlushMode();
+	String getName();
+	boolean isReadOnly();
+	Integer getTimeout();
 }

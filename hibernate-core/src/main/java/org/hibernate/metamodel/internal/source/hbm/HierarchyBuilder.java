@@ -140,8 +140,9 @@ public class HierarchyBuilder {
 			}
 
 			if ( numberOfMappingsProcessed == 0 ) {
+
 				// todo : we could log the waiting dependencies...
-				throw new MappingException( "Unable to process extends dependencies in hbm files" );
+				throw currentMappingDocument.getMappingLocalBindingContext().makeMappingException( "Unable to process extends dependencies in hbm files" );
 			}
 		}
 
@@ -203,14 +204,15 @@ public class HierarchyBuilder {
 		queryNamePrefix = StringHelper.isNotEmpty( queryNamePrefix ) ? queryNamePrefix : currentMappingDocument.getMappingLocalBindingContext().qualifyClassName( entityElement.getName() );
 		for ( final JaxbQueryElement element : entityElement.getQuery() ) {
 			element.setName( queryNamePrefix + "." + element.getName() );
-			BindHelper.bindNamedQuery( element, metadata );
+			NamedQueryBindingHelper.bindNamedQuery( element, metadata );
 		}
 		for ( final JaxbSqlQueryElement element : entityElement.getSqlQuery() ) {
 			element.setName( queryNamePrefix + "." + element.getName() );
-			BindHelper.bindNamedSQLQuery( element,
-					currentMappingDocument.getOrigin(),
+			NamedQueryBindingHelper.bindNamedSQLQuery(
+					element,
 					currentMappingDocument.getMappingLocalBindingContext(),
-					metadata );
+					metadata
+			);
 		}
 	}
 

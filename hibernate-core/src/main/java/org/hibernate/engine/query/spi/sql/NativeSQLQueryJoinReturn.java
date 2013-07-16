@@ -50,7 +50,7 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 			String alias,
 			String ownerAlias,
 			String ownerProperty,
-			Map propertyResults,
+			Map<String, String[]> propertyResults,
 			LockMode lockMode) {
 		super( alias, propertyResults, lockMode );
 		this.ownerAlias = ownerAlias;
@@ -76,7 +76,7 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 	public String getOwnerProperty() {
 		return ownerProperty;
 	}
-
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -99,7 +99,7 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 
 		return true;
 	}
-
+	@Override
 	public int hashCode() {
 		return hashCode;
 	}

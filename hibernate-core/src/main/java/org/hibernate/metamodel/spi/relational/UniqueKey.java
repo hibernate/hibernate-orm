@@ -35,7 +35,7 @@ import org.hibernate.dialect.Dialect;
 public class UniqueKey extends AbstractConstraint {
 
 	public UniqueKey() {
-		super( null, null );
+		this( null, null );
 	}
 
 	protected UniqueKey(Table table, String name) {

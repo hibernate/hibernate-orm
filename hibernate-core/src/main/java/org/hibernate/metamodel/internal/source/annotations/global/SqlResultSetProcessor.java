@@ -120,18 +120,8 @@ public class SqlResultSetProcessor {
 	private static void bindEntityResult(final AnnotationBindingContext bindingContext,
 										 final AnnotationInstance entityResult,
 										 final ResultSetMappingDefinition definition) {
-//		final Class entityClass = JandexHelper.getValue( entityResult, "entityClass", Class.class );
 		final String className = JandexHelper.getValue( entityResult, "entityClass", String.class );
-		//todo look up the whole entitybindings to find the right one seems stupid, but there is no way to look entitybinding
-		//by class name, since with hbm, hibernate actually supports map one class to multi entities.
-		final Iterable<EntityBinding> entityBindings = bindingContext.getMetadataImplementor().getEntityBindings();
-		EntityBinding targetEntityBinding = null;
-		for ( final EntityBinding entityBinding : entityBindings ) {
-			if ( className.equals( entityBinding.getEntity().getClassName() ) ) {
-				targetEntityBinding = entityBinding;
-				break;
-			}
-		}
+		final EntityBinding targetEntityBinding = bindingContext.getMetadataImplementor().getEntityBinding( className );
 		if ( targetEntityBinding == null ) {
 			throw new MappingException(
 					String.format(
@@ -331,6 +321,7 @@ public class SqlResultSetProcessor {
 										 final ResultSetMappingDefinition definition) {
 		final String name = JandexHelper.getValue( columnResult, "name", String.class );
 		final String normalizedName = normalize( bindingContext, name );
+		//todo TYPE
 		definition.addQueryReturn( new NativeSQLQueryScalarReturn( normalizedName, null ) );
 	}
 

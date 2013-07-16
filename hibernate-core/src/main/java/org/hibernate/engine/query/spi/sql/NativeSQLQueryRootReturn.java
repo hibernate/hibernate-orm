@@ -71,7 +71,7 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 	public String getReturnEntityName() {
 		return returnEntityName;
 	}
-
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -91,7 +91,7 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 
 		return true;
 	}
-
+	@Override
 	public int hashCode() {
 		return hashCode;
 	}
@@ -105,5 +105,13 @@ public class NativeSQLQueryRootReturn extends NativeSQLQueryNonScalarReturn {
 	@Override
 	public Nature getNature() {
 		return Nature.ROOT;
+	}
+
+	@Override
+	public String toString() {
+		return "NativeSQLQueryRootReturn{" +
+				"hashCode=" + hashCode +
+				", returnEntityName='" + returnEntityName + '\'' +
+				'}';
 	}
 }

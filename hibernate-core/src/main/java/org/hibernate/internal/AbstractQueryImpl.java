@@ -243,11 +243,11 @@ public abstract class AbstractQueryImpl implements Query {
 		selection.setFetchSize( fetchSize);
 		return this;
 	}
-
+	@Override
 	public Type[] getReturnTypes() throws HibernateException {
 		return session.getFactory().getReturnTypes( queryString );
 	}
-
+	@Override
 	public String[] getReturnAliases() throws HibernateException {
 		return session.getFactory().getReturnAliases( queryString );
 	}
@@ -341,6 +341,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 *
 	 * @return The parameter list value map.
 	 */
+	@SuppressWarnings("UnusedDeclaration")
 	protected Map<String, TypedValue> getNamedParameterLists() {
 		return namedParameterLists;
 	}
@@ -426,7 +427,7 @@ public abstract class AbstractQueryImpl implements Query {
 			}
 		}
 	}
-
+	@Override
 	public Query setParameter(int position, Object val, Type type) {
 		if ( parameterMetadata.getOrdinalParameterCount() == 0 ) {
 			throw new IllegalArgumentException("No positional parameters in query: " + getQueryString() );
@@ -450,7 +451,7 @@ public abstract class AbstractQueryImpl implements Query {
 		}
 		return this;
 	}
-
+	@Override
 	public Query setParameter(String name, Object val, Type type) {
 		if ( !parameterMetadata.getNamedParameterNames().contains( name ) ) {
 			throw new IllegalArgumentException("Parameter " + name + " does not exist as a named parameter in [" + getQueryString() + "]");
@@ -460,7 +461,7 @@ public abstract class AbstractQueryImpl implements Query {
 			 return this;
 		}
 	}
-
+	@Override
 	public Query setParameter(int position, Object val) throws HibernateException {
 		if (val == null) {
 			setParameter( position, val, StandardBasicTypes.SERIALIZABLE );
@@ -470,7 +471,7 @@ public abstract class AbstractQueryImpl implements Query {
 		}
 		return this;
 	}
-
+	@Override
 	public Query setParameter(String name, Object val) throws HibernateException {
 		if (val == null) {
 			Type type = parameterMetadata.getNamedParameterExpectedType( name );
@@ -501,6 +502,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return type;
 	}
 
+	@SuppressWarnings("UnusedParameters")
 	protected Type determineType(String paramName, Object paramValue, Type defaultType) {
 		Type type = parameterMetadata.getNamedParameterExpectedType( paramName );
 		if ( type == null ) {
@@ -552,84 +554,84 @@ public abstract class AbstractQueryImpl implements Query {
 			return type;
 		}
 	}
-
+	@Override
 	public Query setString(int position, String val) {
 		setParameter(position, val, StandardBasicTypes.STRING);
 		return this;
 	}
-
+	@Override
 	public Query setCharacter(int position, char val) {
 		setParameter( position, Character.valueOf( val ), StandardBasicTypes.CHARACTER );
 		return this;
 	}
-
+	@Override
 	public Query setBoolean(int position, boolean val) {
 		Boolean valueToUse = val;
 		Type typeToUse = determineType( position, valueToUse, StandardBasicTypes.BOOLEAN );
 		setParameter( position, valueToUse, typeToUse );
 		return this;
 	}
-
+	@Override
 	public Query setByte(int position, byte val) {
 		setParameter(position, val, StandardBasicTypes.BYTE);
 		return this;
 	}
-
+	@Override
 	public Query setShort(int position, short val) {
 		setParameter(position, val, StandardBasicTypes.SHORT);
 		return this;
 	}
-
+	@Override
 	public Query setInteger(int position, int val) {
 		setParameter(position, val, StandardBasicTypes.INTEGER);
 		return this;
 	}
-
+	@Override
 	public Query setLong(int position, long val) {
 		setParameter(position, val, StandardBasicTypes.LONG);
 		return this;
 	}
-
+	@Override
 	public Query setFloat(int position, float val) {
 		setParameter(position, val, StandardBasicTypes.FLOAT);
 		return this;
 	}
-
+	@Override
 	public Query setDouble(int position, double val) {
 		setParameter(position, val, StandardBasicTypes.DOUBLE);
 		return this;
 	}
-
+	@Override
 	public Query setBinary(int position, byte[] val) {
 		setParameter(position, val, StandardBasicTypes.BINARY);
 		return this;
 	}
-
+	@Override
 	public Query setText(int position, String val) {
 		setParameter(position, val, StandardBasicTypes.TEXT);
 		return this;
 	}
-
+	@Override
 	public Query setSerializable(int position, Serializable val) {
 		setParameter(position, val, StandardBasicTypes.SERIALIZABLE);
 		return this;
 	}
-
+	@Override
 	public Query setDate(int position, Date date) {
 		setParameter(position, date, StandardBasicTypes.DATE);
 		return this;
 	}
-
+	@Override
 	public Query setTime(int position, Date date) {
 		setParameter(position, date, StandardBasicTypes.TIME);
 		return this;
 	}
-
+	@Override
 	public Query setTimestamp(int position, Date date) {
 		setParameter(position, date, StandardBasicTypes.TIMESTAMP);
 		return this;
 	}
-
+	@Override
 	public Query setEntity(int position, Object val) {
 		setParameter( position, val, ( (Session) session ).getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
@@ -641,134 +643,134 @@ public abstract class AbstractQueryImpl implements Query {
 		}
 		return session.bestGuessEntityName( val );
 	}
-
+	@Override
 	public Query setLocale(int position, Locale locale) {
 		setParameter(position, locale, StandardBasicTypes.LOCALE);
 		return this;
 	}
-
+	@Override
 	public Query setCalendar(int position, Calendar calendar) {
 		setParameter(position, calendar, StandardBasicTypes.CALENDAR);
 		return this;
 	}
-
+	@Override
 	public Query setCalendarDate(int position, Calendar calendar) {
 		setParameter(position, calendar, StandardBasicTypes.CALENDAR_DATE);
 		return this;
 	}
-
+	@Override
 	public Query setBinary(String name, byte[] val) {
 		setParameter(name, val, StandardBasicTypes.BINARY);
 		return this;
 	}
-
+	@Override
 	public Query setText(String name, String val) {
 		setParameter(name, val, StandardBasicTypes.TEXT);
 		return this;
 	}
-
+	@Override
 	public Query setBoolean(String name, boolean val) {
 		Boolean valueToUse = val;
 		Type typeToUse = determineType( name, valueToUse, StandardBasicTypes.BOOLEAN );
 		setParameter( name, valueToUse, typeToUse );
 		return this;
 	}
-
+	@Override
 	public Query setByte(String name, byte val) {
 		setParameter(name, val, StandardBasicTypes.BYTE);
 		return this;
 	}
-
+	@Override
 	public Query setCharacter(String name, char val) {
 		setParameter(name, val, StandardBasicTypes.CHARACTER);
 		return this;
 	}
-
+	@Override
 	public Query setDate(String name, Date date) {
 		setParameter(name, date, StandardBasicTypes.DATE);
 		return this;
 	}
-
+	@Override
 	public Query setDouble(String name, double val) {
 		setParameter(name, val, StandardBasicTypes.DOUBLE);
 		return this;
 	}
-
+	@Override
 	public Query setEntity(String name, Object val) {
 		setParameter( name, val, ( (Session) session ).getTypeHelper().entity( resolveEntityName( val ) ) );
 		return this;
 	}
-
+	@Override
 	public Query setFloat(String name, float val) {
 		setParameter(name, val, StandardBasicTypes.FLOAT);
 		return this;
 	}
-
+	@Override
 	public Query setInteger(String name, int val) {
 		setParameter(name, val, StandardBasicTypes.INTEGER);
 		return this;
 	}
-
+	@Override
 	public Query setLocale(String name, Locale locale) {
 		setParameter(name, locale, StandardBasicTypes.LOCALE);
 		return this;
 	}
-
+	@Override
 	public Query setCalendar(String name, Calendar calendar) {
 		setParameter(name, calendar, StandardBasicTypes.CALENDAR);
 		return this;
 	}
-
+	@Override
 	public Query setCalendarDate(String name, Calendar calendar) {
 		setParameter(name, calendar, StandardBasicTypes.CALENDAR_DATE);
 		return this;
 	}
-
+	@Override
 	public Query setLong(String name, long val) {
 		setParameter(name, val, StandardBasicTypes.LONG);
 		return this;
 	}
-
+	@Override
 	public Query setSerializable(String name, Serializable val) {
 		setParameter(name, val, StandardBasicTypes.SERIALIZABLE);
 		return this;
 	}
-
+	@Override
 	public Query setShort(String name, short val) {
 		setParameter(name, val, StandardBasicTypes.SHORT);
 		return this;
 	}
-
+	@Override
 	public Query setString(String name, String val) {
 		setParameter(name, val, StandardBasicTypes.STRING);
 		return this;
 	}
-
+	@Override
 	public Query setTime(String name, Date date) {
 		setParameter(name, date, StandardBasicTypes.TIME);
 		return this;
 	}
-
+	@Override
 	public Query setTimestamp(String name, Date date) {
 		setParameter(name, date, StandardBasicTypes.TIMESTAMP);
 		return this;
 	}
-
+	@Override
 	public Query setBigDecimal(int position, BigDecimal number) {
 		setParameter(position, number, StandardBasicTypes.BIG_DECIMAL);
 		return this;
 	}
-
+	@Override
 	public Query setBigDecimal(String name, BigDecimal number) {
 		setParameter(name, number, StandardBasicTypes.BIG_DECIMAL);
 		return this;
 	}
-
+	@Override
 	public Query setBigInteger(int position, BigInteger number) {
 		setParameter(position, number, StandardBasicTypes.BIG_INTEGER);
 		return this;
 	}
-
+	@Override
 	public Query setBigInteger(String name, BigInteger number) {
 		setParameter(name, number, StandardBasicTypes.BIG_INTEGER);
 		return this;
@@ -787,11 +789,10 @@ public abstract class AbstractQueryImpl implements Query {
 	 * Warning: adds new parameters to the argument by side-effect, as well as
 	 * mutating the query string!
 	 */
-	protected String expandParameterLists(Map namedParamsCopy) {
+	protected String expandParameterLists(Map<String, TypedValue> namedParamsCopy) {
 		String query = this.queryString;
 		for ( Map.Entry<String, TypedValue> stringTypedValueEntry : namedParameterLists.entrySet() ) {
-			Map.Entry me = (Map.Entry) stringTypedValueEntry;
-			query = expandParameterList( query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy );
+			query = expandParameterList( query, stringTypedValueEntry.getKey(), stringTypedValueEntry.getValue(), namedParamsCopy );
 		}
 		return query;
 	}
@@ -800,7 +801,7 @@ public abstract class AbstractQueryImpl implements Query {
 	 * Warning: adds new parameters to the argument by side-effect, as well as
 	 * mutating the query string!
 	 */
-	private String expandParameterList(String query, String name, TypedValue typedList, Map namedParamsCopy) {
+	private String expandParameterList(String query, String name, TypedValue typedList, Map<String, TypedValue> namedParamsCopy) {
 		Collection vals = (Collection) typedList.getValue();
 		
 		// HHH-1123
@@ -865,7 +866,7 @@ public abstract class AbstractQueryImpl implements Query {
 				true
 		);
 	}
-
+	@Override
 	public Query setParameterList(String name, Collection vals) throws HibernateException {
 		if ( vals == null ) {
 			throw new QueryException( "Collection must be not null!" );
@@ -880,65 +881,63 @@ public abstract class AbstractQueryImpl implements Query {
 
 		return this;
 	}
-
+	@Override
 	public Query setParameterList(String name, Object[] vals, Type type) throws HibernateException {
 		return setParameterList( name, Arrays.asList(vals), type );
 	}
-
+	@Override
 	public Query setParameterList(String name, Object[] values) throws HibernateException {
 		return setParameterList( name, Arrays.asList( values ) );
 	}
-
+	@Override
 	public Query setProperties(Map map) throws HibernateException {
 		String[] params = getNamedParameters();
-		for (int i = 0; i < params.length; i++) {
-			String namedParam = params[i];
-				final Object object = map.get(namedParam);
-				if(object==null) {
-					continue;
-				}
-				Class retType = object.getClass();
-				if ( Collection.class.isAssignableFrom( retType ) ) {
-					setParameterList( namedParam, ( Collection ) object );
-				}
-				else if ( retType.isArray() ) {
-					setParameterList( namedParam, ( Object[] ) object );
-				}
-				else {
-					setParameter( namedParam, object, determineType( namedParam, retType ) );
-				}
+		for ( String namedParam : params ) {
+			final Object object = map.get( namedParam );
+			if ( object == null ) {
+				continue;
+			}
+			Class retType = object.getClass();
+			if ( Collection.class.isAssignableFrom( retType ) ) {
+				setParameterList( namedParam, (Collection) object );
+			}
+			else if ( retType.isArray() ) {
+				setParameterList( namedParam, (Object[]) object );
+			}
+			else {
+				setParameter( namedParam, object, determineType( namedParam, retType ) );
+			}
 
-			
+
 		}
 		return this;				
 	}
-	
+	@Override
 	public Query setProperties(Object bean) throws HibernateException {
 		Class clazz = bean.getClass();
 		String[] params = getNamedParameters();
-		for (int i = 0; i < params.length; i++) {
-			String namedParam = params[i];
+		for ( String namedParam : params ) {
 			try {
 				Getter getter = ReflectHelper.getGetter( clazz, namedParam );
 				Class retType = getter.getReturnType();
 				final Object object = getter.get( bean );
 				if ( Collection.class.isAssignableFrom( retType ) ) {
-					setParameterList( namedParam, ( Collection ) object );
+					setParameterList( namedParam, (Collection) object );
 				}
 				else if ( retType.isArray() ) {
-				 	setParameterList( namedParam, ( Object[] ) object );
+					setParameterList( namedParam, (Object[]) object );
 				}
 				else {
 					setParameter( namedParam, object, determineType( namedParam, retType ) );
 				}
 			}
-			catch (PropertyNotFoundException pnfe) {
+			catch ( PropertyNotFoundException pnfe ) {
 				// ignore
 			}
 		}
 		return this;
 	}
-
+	@Override
 	public Query setParameters(Object[] values, Type[] types) {
 		this.values = Arrays.asList(values);
 		this.types = Arrays.asList(types);
@@ -947,7 +946,7 @@ public abstract class AbstractQueryImpl implements Query {
 
 
 	// Execution methods ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+	@Override
 	public Object uniqueResult() throws HibernateException {
 		return uniqueElement( list() );
 	}
@@ -976,7 +975,7 @@ public abstract class AbstractQueryImpl implements Query {
 		return getValues().toArray();
 	}
 
-	public QueryParameters getQueryParameters(Map namedParams) {
+	public QueryParameters getQueryParameters(Map<String, TypedValue> namedParams) {
 		return new QueryParameters(
 				typeArray(),
 				valueArray(),

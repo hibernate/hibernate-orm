@@ -56,7 +56,7 @@ public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarRetur
 			String alias,
 			String ownerEntityName,
 			String ownerProperty,
-			Map propertyResults,
+			Map<String, String[]> propertyResults,
 			LockMode lockMode) {
 		super( alias, propertyResults, lockMode );
 		this.ownerEntityName = ownerEntityName;
@@ -81,7 +81,7 @@ public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarRetur
 	public String getOwnerProperty() {
 		return ownerProperty;
 	}
-
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -104,7 +104,7 @@ public class NativeSQLQueryCollectionReturn extends NativeSQLQueryNonScalarRetur
 
 		return true;
 	}
-
+	@Override
 	public int hashCode() {
 		return hashCode;
 	}

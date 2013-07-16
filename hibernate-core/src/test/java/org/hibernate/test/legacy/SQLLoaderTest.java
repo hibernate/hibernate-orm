@@ -17,7 +17,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.TimesTenDialect;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
@@ -27,8 +27,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+//@SuppressWarnings({ "UnusedDeclaration", "unchecked" })
+@SuppressWarnings("InstanceofInterfaces")
 public class SQLLoaderTest extends LegacyTestCase {
-	static int nextInt = 1;
 	static long nextLong = 1;
 
 	@Override
@@ -48,7 +49,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	public void testTS() throws Exception {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();
-		Simple sim = new Simple( Long.valueOf(1) );
+		Simple sim = new Simple( 1l );
 		sim.setDate( new Date() );
 		session.save( sim );
 		Query q = session.createSQLQuery( "select {sim.*} from Simple {sim} where {sim}.date_ = ?" ).addEntity( "sim", Simple.class );
@@ -80,7 +81,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 		s.setName(String.valueOf(nextLong++));
 		session.save(s);
 
-		Simple simple = new Simple( Long.valueOf(nextLong++) );
+		Simple simple = new Simple( nextLong++ );
 		simple.init();
 		session.save( simple );
 
@@ -125,7 +126,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 
 		query = session.createSQLQuery( "select {category.*} from category {category} where {category}.name in (:names)" )
 				.addEntity( "category", Category.class );
-		String[] str = new String[] { "WannaBeFound", "NotThere" };
+		String[] str = { "WannaBeFound", "NotThere" };
 		query.setParameterList("names", str);
 		query.uniqueResult();
 
@@ -500,6 +501,7 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "unknown" )
 	public void testReturnPropertyComponentRename() throws HibernateException, SQLException {
 		// failure expected because this was a regression introduced previously which needs to get tracked down.
 		Componentizable componentizable = setupComponentData();
@@ -622,7 +624,6 @@ public class SQLLoaderTest extends LegacyTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testFindBySQLDiscriminatedSameSession() throws Exception {
 		Session session = openSession();
 		session.beginTransaction();

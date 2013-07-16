@@ -36,7 +36,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.EntityElement;
 import org.hibernate.jaxb.spi.hbm.JaxbClassElement;
 import org.hibernate.jaxb.spi.hbm.JaxbDatabaseObjectElement;
@@ -58,7 +57,6 @@ import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject;
 import org.hibernate.metamodel.spi.relational.BasicAuxiliaryDatabaseObjectImpl;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
 
 /**
@@ -76,7 +74,7 @@ public class HibernateMappingProcessor {
 	private final MetadataImplementor metadata;
 	private final MappingDocument mappingDocument;
 
-	private ValueHolder<ClassLoaderService> classLoaderService = new ValueHolder<ClassLoaderService>(
+	private final ValueHolder<ClassLoaderService> classLoaderService = new ValueHolder<ClassLoaderService>(
 			new ValueHolder.DeferredInitializer<ClassLoaderService>() {
 				@Override
 				public ClassLoaderService initialize() {
@@ -94,10 +92,6 @@ public class HibernateMappingProcessor {
 
 	private JaxbHibernateMapping mappingRoot() {
 		return mappingDocument.getMappingRoot();
-	}
-
-	private Origin origin() {
-		return mappingDocument.getOrigin();
 	}
 
 	private HbmBindingContext bindingContext() {
@@ -124,10 +118,7 @@ public class HibernateMappingProcessor {
 					throw e;
 				}
 				catch ( Exception e ) {
-					throw new MappingException(
-							"could not instantiate custom database object class [" + className + "]",
-							origin()
-					);
+					throw bindingContext().makeMappingException( "could not instantiate custom database object class [" + className + "]" );
 				}
 			}
 			else {
@@ -192,10 +183,7 @@ public class HibernateMappingProcessor {
 	private void processFetchProfiles() {
 		processFetchProfiles( mappingRoot().getFetchProfile(), null );
 		for ( JaxbClassElement classElement : mappingRoot().getClazz() ) {
-			processFetchProfiles(
-					classElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
-					.qualifyClassName( classElement.getName() )
-			);
+			processFetchProfile( classElement );
 
 			// processing fetch profiles defined in the <joined-subclass>
 			processFetchProfilesInJoinedSubclass( classElement.getJoinedSubclass() );
@@ -208,30 +196,28 @@ public class HibernateMappingProcessor {
 
 	private void processFetchProfilesInSubclass(List<JaxbSubclassElement> subclass) {
 		for ( JaxbSubclassElement subclassElement : subclass ) {
-			processFetchProfiles(
-					subclassElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
-					.qualifyClassName( subclassElement.getName() )
-			);
+			processFetchProfile( subclassElement );
 			processFetchProfilesInSubclass( subclassElement.getSubclass() );
 		}
 	}
 
+	private void processFetchProfile(final EntityElement entityElement){
+		processFetchProfiles(
+				entityElement.getFetchProfile(),
+				bindingContext().qualifyClassName( entityElement.getName() )
+		);
+	}
+
 	private void processFetchProfilesInUnionSubclass(List<JaxbUnionSubclassElement> unionSubclass) {
 		for ( JaxbUnionSubclassElement subclassElement : unionSubclass ) {
-			processFetchProfiles(
-					subclassElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
-					.qualifyClassName( subclassElement.getName() )
-			);
+			processFetchProfile( subclassElement );
 			processFetchProfilesInUnionSubclass( subclassElement.getUnionSubclass() );
 		}
 	}
 
 	private void processFetchProfilesInJoinedSubclass(List<JaxbJoinedSubclassElement> joinedSubclassElements) {
 		for ( JaxbJoinedSubclassElement subclassElement : joinedSubclassElements ) {
-			processFetchProfiles(
-					subclassElement.getFetchProfile(), mappingDocument.getMappingLocalBindingContext()
-					.qualifyClassName( subclassElement.getName() )
-			);
+			processFetchProfile( subclassElement );
 			processFetchProfilesInJoinedSubclass( subclassElement.getJoinedSubclass() );
 		}
 	}
@@ -243,11 +229,8 @@ public class HibernateMappingProcessor {
 			for ( JaxbFetchProfileElement.JaxbFetch fetch : fetchProfile.getFetch() ) {
 				String entityName = fetch.getEntity() == null ? containingEntityName : fetch.getEntity();
 				if ( entityName == null ) {
-					throw new MappingException(
-							"could not determine entity for fetch-profile fetch [" + profileName + "]:[" +
-									fetch.getAssociation() + "]",
-							origin()
-					);
+					throw bindingContext().makeMappingException( "could not determine entity for fetch-profile fetch [" + profileName + "]:[" +
+							fetch.getAssociation() + "]" );
 				}
 				fetches.add( new FetchProfile.Fetch( entityName, fetch.getAssociation(), fetch.getStyle().value() ) );
 			}
@@ -258,8 +241,7 @@ public class HibernateMappingProcessor {
 	private void processImports() {
 		JaxbHibernateMapping root = mappingRoot();
 		for ( JaxbImportElement importValue : root.getImport() ) {
-			String className = mappingDocument.getMappingLocalBindingContext()
-					.qualifyClassName( importValue.getClazz() );
+			String className = bindingContext().qualifyClassName( importValue.getClazz() );
 			String rename = importValue.getRename();
 			rename = ( rename == null ) ? StringHelper.unqualify( className ) : rename;
 			metadata.addImport( rename, className );
@@ -314,8 +296,11 @@ public class HibernateMappingProcessor {
 			return;
 		}
 		for ( final JaxbResultsetElement element : resultsetElements ) {
-			BindHelper.bindResultSetMappingDefinitions( element, origin(),
-					bindingContext(), metadata );
+			metadata.addResultSetMapping(
+					ResultSetMappingBinder.buildResultSetMappingDefinitions(
+							element, bindingContext(), metadata
+					)
+			);
 		}
 
 	}
@@ -334,11 +319,14 @@ public class HibernateMappingProcessor {
 
 	private void processNamedQueries() {
 		for ( final JaxbQueryElement element : mappingRoot().getQuery() ) {
-			BindHelper.bindNamedQuery( element, metadata );
+			NamedQueryBindingHelper.bindNamedQuery( element, metadata );
 		}
 		for ( final JaxbSqlQueryElement element : mappingRoot().getSqlQuery() ) {
-			BindHelper.bindNamedSQLQuery( element, origin(), bindingContext(),
-					metadata );
+			NamedQueryBindingHelper.bindNamedSQLQuery(
+					element,
+					bindingContext(),
+					metadata
+			);
 		}
 	}
 

@@ -58,7 +58,7 @@ public abstract class ResultSetMappingBinder {
 	 * Build a ResultSetMappingDefinition given a containing element for the "return-XXX" elements
 	 *
 	 * @param resultSetElem The element containing the return definitions.
-	 * @param path No clue...
+	 * @param path {@code null} if this is defined in the <hibernate-mapping/> or entity name
 	 * @param mappings The current processing state.
 	 * @return The description of the mappings...
 	 */

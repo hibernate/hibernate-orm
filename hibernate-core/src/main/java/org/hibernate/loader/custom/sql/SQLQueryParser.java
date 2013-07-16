@@ -294,24 +294,24 @@ public class SQLQueryParser {
 		StringBuilder result = new StringBuilder();
 		Map namedParameterBindPoints = new HashMap();
 		int parameterCount = 0;
-
+		@Override
 		public void outParameter(int position) {
 			result.append( '?' );
 		}
-
+		@Override
 		public void ordinalParameter(int position) {
 			result.append( '?' );
 		}
-
+		@Override
 		public void namedParameter(String name, int position) {
 			addNamedParameter( name );
 			result.append( '?' );
 		}
-
+		@Override
 		public void jpaPositionalParameter(String name, int position) {
 			namedParameter( name, position );
 		}
-
+		@Override
 		public void other(char character) {
 			result.append( character );
 		}

@@ -26,31 +26,29 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 
 import org.hibernate.engine.ResultSetMappingDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.NamedQueryDefinitionBuilder;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.hbm.JaxbLoadCollectionElement;
+import org.hibernate.jaxb.spi.hbm.JaxbResultsetElement;
 import org.hibernate.jaxb.spi.hbm.JaxbReturnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbReturnJoinElement;
 import org.hibernate.jaxb.spi.hbm.JaxbReturnScalarElement;
 import org.hibernate.jaxb.spi.hbm.JaxbSynchronizeElement;
-import org.hibernate.metamodel.internal.source.hbm.BindHelper;
+import org.hibernate.metamodel.internal.source.hbm.ResultSetMappingBinder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
-import org.hibernate.type.Type;
 
 /**
  * @author Brett Meyer
+ * @author String Liu
  */
 public class SQLQueryElementContentParser extends AbstractQueryElementContentsParser {
-	private List<String> synchronizedTables = new ArrayList<String>();
-	private List<JaxbLoadCollectionElement> loadCollectionElements = new ArrayList<JaxbLoadCollectionElement>();
-	private List<JaxbReturnScalarElement> returnScalarElements = new ArrayList<JaxbReturnScalarElement>();
-	private List<JaxbReturnElement> returnElements = new ArrayList<JaxbReturnElement>();
-	private List<JaxbReturnJoinElement> returnJoinElements = new ArrayList<JaxbReturnJoinElement>();
+	private final List<String> synchronizedTables = new ArrayList<String>();
+	private final List<JaxbLoadCollectionElement> loadCollectionElements = new ArrayList<JaxbLoadCollectionElement>();
+	private final List<JaxbReturnScalarElement> returnScalarElements = new ArrayList<JaxbReturnScalarElement>();
+	private final List<JaxbReturnElement> returnElements = new ArrayList<JaxbReturnElement>();
+	private final List<JaxbReturnJoinElement> returnJoinElements = new ArrayList<JaxbReturnJoinElement>();
 
 	@Override
 	protected void parseExtra( String queryName, Serializable obj,
@@ -58,23 +56,18 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 		if ( !JAXBElement.class.isInstance( obj ) ) {
 			return;
 		}
-		NamedSQLQueryDefinitionBuilder sqlBuilder
-				= NamedSQLQueryDefinitionBuilder.class.cast( builder );
 		JAXBElement jaxbElement = JAXBElement.class.cast( obj );
 		Class targetType = jaxbElement.getDeclaredType();
 		Object value = jaxbElement.getValue();
 		if ( JaxbSynchronizeElement.class == targetType ) {
-			JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast(
-					value );
+			JaxbSynchronizeElement element = JaxbSynchronizeElement.class.cast( value );
 			synchronizedTables.add( element.getTable() );
 		}
 		else if ( JaxbLoadCollectionElement.class == targetType ) {
-			loadCollectionElements.add( JaxbLoadCollectionElement.class.cast(
-					value ) );
+			loadCollectionElements.add( JaxbLoadCollectionElement.class.cast( value ) );
 		}
 		else if ( JaxbReturnScalarElement.class == targetType ) {
-			returnScalarElements.add( JaxbReturnScalarElement.class.cast(
-					value ) );
+			returnScalarElements.add( JaxbReturnScalarElement.class.cast( value ) );
 		}
 		else if ( JaxbReturnElement.class == targetType ) {
 			returnElements.add( JaxbReturnElement.class.cast( value ) );
@@ -84,41 +77,40 @@ public class SQLQueryElementContentParser extends AbstractQueryElementContentsPa
 		}
 	}
 
-	public NamedSQLQueryDefinition buildQueryReturns( String name,
-			NamedSQLQueryDefinitionBuilder builder, 
-			Origin origin, LocalBindingContext bindingContext,
-			MetadataImplementor metadata ) {
-		final ResultSetMappingDefinition definition
-				= new ResultSetMappingDefinition( name );
-		int cnt = 0;
-		for ( final JaxbReturnElement r : returnElements ) {
-			definition.addQueryReturn( BindHelper.bindReturn(
-					r, cnt++, origin, metadata, bindingContext ) );
+	public NamedSQLQueryDefinition buildQueryReturns(
+			final String queryName,
+			final NamedSQLQueryDefinitionBuilder builder,
+			final LocalBindingContext bindingContext,
+			final MetadataImplementor metadata ) {
 
-		}
-		for ( final JaxbLoadCollectionElement r : loadCollectionElements ) {
-			definition.addQueryReturn(
-					BindHelper.bindLoadCollection(
-							r, cnt++, origin, bindingContext ) );
+		final JaxbResultsetElement mockedResultSet = new JaxbResultsetElement(){
+			@Override
+			public String getName() {
+				return queryName;
+			}
+			@Override
+			public List<JaxbLoadCollectionElement> getLoadCollection() {
+				return loadCollectionElements;
+			}
 
-		}
-		for ( final JaxbReturnScalarElement r : returnScalarElements ) {
-			String column = r.getColumn();
-			String typeFromXML = r.getType();
-			Type type = StringHelper.isNotEmpty( typeFromXML )
-					? metadata.getTypeResolver().heuristicType( typeFromXML )
-							: null;
-			definition.addQueryReturn( new NativeSQLQueryScalarReturn(
-					column, type ) );
-		}
-		for ( final JaxbReturnJoinElement r : returnJoinElements ) {
-			definition.addQueryReturn( 
-					BindHelper.bindReturnJoin( r, cnt++, origin ) );
+			@Override
+			public List<JaxbReturnElement> getReturn() {
+				return returnElements;
+			}
 
-		}
+			@Override
+			public List<JaxbReturnJoinElement> getReturnJoin() {
+				return returnJoinElements;
+			}
+
+			@Override
+			public List<JaxbReturnScalarElement> getReturnScalar() {
+				return returnScalarElements;
+			}
+		};
 
 
-		
+		final ResultSetMappingDefinition definition = ResultSetMappingBinder.buildResultSetMappingDefinitions( mockedResultSet,bindingContext,metadata );
 		return builder.setQueryReturns( definition.getQueryReturns() )
 				.setQuerySpaces( synchronizedTables )
 				.createNamedQueryDefinition();

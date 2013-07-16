@@ -43,20 +43,20 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 public class NativeSQLQuerySpecification {
 	private final String queryString;
 	private final NativeSQLQueryReturn[] queryReturns;
-	private final Set querySpaces;
+	private final Set<String> querySpaces;
 	private final int hashCode;
 
 	public NativeSQLQuerySpecification(
 			String queryString,
 	        NativeSQLQueryReturn[] queryReturns,
-	        Collection querySpaces) {
+	        Collection<String> querySpaces) {
 		this.queryString = queryString;
 		this.queryReturns = queryReturns;
 		if ( querySpaces == null ) {
-			this.querySpaces = Collections.EMPTY_SET;
+			this.querySpaces = Collections.emptySet();
 		}
 		else {
-			Set tmp = new HashSet();
+			Set<String> tmp = new HashSet<String>();
 			tmp.addAll( querySpaces );
 			this.querySpaces = Collections.unmodifiableSet( tmp );
 		}
@@ -65,7 +65,7 @@ public class NativeSQLQuerySpecification {
 		int hashCode = queryString.hashCode();
 		hashCode = 29 * hashCode + this.querySpaces.hashCode();
 		if ( this.queryReturns != null ) {
-			hashCode = 29 * hashCode + ArrayHelper.toList( this.queryReturns ).hashCode();
+			hashCode = 29 * hashCode + Arrays.hashCode( queryReturns );
 		}
 		this.hashCode = hashCode;
 	}

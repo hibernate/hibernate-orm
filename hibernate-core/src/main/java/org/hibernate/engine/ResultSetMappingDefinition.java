@@ -60,18 +60,16 @@ public class ResultSetMappingDefinition implements Serializable {
 		queryReturns.add( queryReturn );
 	}
 
-// We could also keep these if needed for binary compatibility with annotations, provided
-// it only uses the addXXX() methods...
-//	public void addEntityQueryReturn(NativeSQLQueryNonScalarReturn entityQueryReturn) {
-//		entityQueryReturns.add(entityQueryReturn);
-//	}
-//
-//	public void addScalarQueryReturn(NativeSQLQueryScalarReturn scalarQueryReturn) {
-//		scalarQueryReturns.add(scalarQueryReturn);
-//	}
 
 	public NativeSQLQueryReturn[] getQueryReturns() {
 		return queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] );
 	}
 
+	@Override
+	public String toString() {
+		return "ResultSetMappingDefinition{" +
+				"name='" + name + '\'' +
+				", queryReturns=" + queryReturns +
+				'}';
+	}
 }

@@ -42,7 +42,7 @@ import org.hibernate.annotations.JoinFormula;
  *
  */
 @Entity
-@Table(name="product")
+@Table(name="product_server")
 public class ProductSqlServer implements Serializable
 {
 

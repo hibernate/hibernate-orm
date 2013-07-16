@@ -45,10 +45,6 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 public class NativeSQLQueryReturnEqualsAndHashCodeTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] {};
-	}
 
 	@Test
 	public void testNativeSQLQueryScalarReturn() {
@@ -139,9 +135,9 @@ public class NativeSQLQueryReturnEqualsAndHashCodeTest extends BaseCoreFunctiona
 		NativeSQLQueryJoinReturn r2 = new NativeSQLQueryJoinReturn( "a", "c", "b", null, null);
 		NativeSQLQueryJoinReturn r3NullMap = new NativeSQLQueryJoinReturn( "b", "c", "a", null, null);
 		NativeSQLQueryJoinReturn r3EmptyMap= new NativeSQLQueryJoinReturn( "b", "c", "a", new HashMap(), null);
-		NativeSQLQueryJoinReturn r4 = new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), null);
-		NativeSQLQueryJoinReturn r5 = new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "otherkey", "othervalue" ), null);
-		NativeSQLQueryJoinReturn r6 = new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), LockMode.NONE );
+		NativeSQLQueryJoinReturn r4 = new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), null);
+		NativeSQLQueryJoinReturn r5 = new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "otherkey", new String[]{"othervalue"} ), null);
+		NativeSQLQueryJoinReturn r6 = new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), LockMode.NONE );
 		NativeSQLQueryJoinReturn r7 = new NativeSQLQueryJoinReturn( "b", "c", "a", null, LockMode.NONE );
 
 		check( false, r1, r2 );
@@ -182,10 +178,20 @@ public class NativeSQLQueryReturnEqualsAndHashCodeTest extends BaseCoreFunctiona
 		check( true, r1, new NativeSQLQueryJoinReturn( "a", "b", "c", null, null) );
 		check( true, r2, new NativeSQLQueryJoinReturn( "a", "c", "b", null, null) );
 		check( true, r3NullMap, new NativeSQLQueryJoinReturn( "b", "c", "a", null, null) );
-		check( true, r3EmptyMap, new NativeSQLQueryJoinReturn( "b", "c", "a", new HashMap(), null) );
-		check( true, r4, new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), null) );
-		check( true, r5, new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "otherkey", "othervalue" ), null) );
-		check( true, r6, new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), LockMode.NONE ) );
+		check( true, r3EmptyMap, new NativeSQLQueryJoinReturn( "b", "c", "a", new HashMap<String, String[]>(), null) );
+		check(
+				true,
+				r4,
+				new NativeSQLQueryJoinReturn(
+						"b",
+						"c",
+						"a",
+						Collections.singletonMap( "key", new String[] { "value" } ),
+						null
+				)
+		);
+		check( true, r5, new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "otherkey", new String[]{"othervalue"} ), null) );
+		check( true, r6, new NativeSQLQueryJoinReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), LockMode.NONE ) );
 		check( true, r7, new NativeSQLQueryJoinReturn( "b", "c", "a", null, LockMode.NONE ) );
 	}
 
@@ -194,10 +200,10 @@ public class NativeSQLQueryReturnEqualsAndHashCodeTest extends BaseCoreFunctiona
 		NativeSQLQueryCollectionReturn r1 = new NativeSQLQueryCollectionReturn( "a", "b", "c", null, null);
 		NativeSQLQueryCollectionReturn r2 = new NativeSQLQueryCollectionReturn( "a", "c", "b", null, null);
 		NativeSQLQueryCollectionReturn r3NullMap = new NativeSQLQueryCollectionReturn( "b", "c", "a", null, null);
-		NativeSQLQueryCollectionReturn r3EmptyMap= new NativeSQLQueryCollectionReturn( "b", "c", "a", new HashMap(), null);
-		NativeSQLQueryCollectionReturn r4 = new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), null);
-		NativeSQLQueryCollectionReturn r5 = new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "otherkey", "othervalue" ), null);
-		NativeSQLQueryCollectionReturn r6 = new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), LockMode.NONE );
+		NativeSQLQueryCollectionReturn r3EmptyMap= new NativeSQLQueryCollectionReturn( "b", "c", "a", new HashMap<String, String[]>(), null);
+		NativeSQLQueryCollectionReturn r4 = new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), null);
+		NativeSQLQueryCollectionReturn r5 = new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "otherkey", new String[]{"othervalue"} ), null);
+		NativeSQLQueryCollectionReturn r6 = new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), LockMode.NONE );
 		NativeSQLQueryCollectionReturn r7 = new NativeSQLQueryCollectionReturn( "b", "c", "a", null, LockMode.NONE );
 
 		check( false, r1, r2 );
@@ -239,9 +245,9 @@ public class NativeSQLQueryReturnEqualsAndHashCodeTest extends BaseCoreFunctiona
 		check( true, r2, new NativeSQLQueryCollectionReturn( "a", "c", "b", null, null) );
 		check( true, r3NullMap, new NativeSQLQueryCollectionReturn( "b", "c", "a", null, null) );
 		check( true, r3EmptyMap, new NativeSQLQueryCollectionReturn( "b", "c", "a", new HashMap(), null) );
-		check( true, r4, new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), null) );
-		check( true, r5, new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "otherkey", "othervalue" ), null) );
-		check( true, r6, new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", "value" ), LockMode.NONE ) );
+		check( true, r4, new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), null) );
+		check( true, r5, new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "otherkey", new String[]{"othervalue"} ), null) );
+		check( true, r6, new NativeSQLQueryCollectionReturn( "b", "c", "a", Collections.singletonMap( "key", new String[]{"value"} ), LockMode.NONE ) );
 		check( true, r7, new NativeSQLQueryCollectionReturn( "b", "c", "a", null, LockMode.NONE ) );
 	}
 
@@ -249,8 +255,8 @@ public class NativeSQLQueryReturnEqualsAndHashCodeTest extends BaseCoreFunctiona
 	public void testNativeSQLQueryReturnTypes() {
 		NativeSQLQueryScalarReturn r1 = new NativeSQLQueryScalarReturn( "a",sessionFactory().getTypeResolver().basic( "int" ) );
 		NativeSQLQueryRootReturn r2 = new NativeSQLQueryRootReturn( "a", "b", LockMode.NONE );
-		NativeSQLQueryJoinReturn r3 = new NativeSQLQueryJoinReturn( "a", "b", "c", Collections.singletonMap( "key", "value" ), LockMode.NONE );
-		NativeSQLQueryCollectionReturn r4 = new NativeSQLQueryCollectionReturn( "a", "b", "c", Collections.singletonMap( "key", "value" ), LockMode.NONE);
+		NativeSQLQueryJoinReturn r3 = new NativeSQLQueryJoinReturn( "a", "b", "c", Collections.singletonMap( "key", new String[]{"value"}  ), LockMode.NONE );
+		NativeSQLQueryCollectionReturn r4 = new NativeSQLQueryCollectionReturn( "a", "b", "c", Collections.singletonMap( "key",new String[]{ "value"} ), LockMode.NONE);
 
 		check( false, r1, r2 );
 		check( false, r1, r3 );

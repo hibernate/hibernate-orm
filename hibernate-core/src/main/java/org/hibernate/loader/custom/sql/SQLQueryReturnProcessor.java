@@ -82,7 +82,7 @@ public class SQLQueryReturnProcessor {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                        SQLQueryReturnProcessor.class.getName());
 
-	private NativeSQLQueryReturn[] queryReturns;
+	private final NativeSQLQueryReturn[] queryReturns;
 	private final Map<String, NativeSQLQueryReturn> alias2Return = new HashMap<String, NativeSQLQueryReturn>();
 	private final Map<String, String> alias2OwnerAlias = new HashMap<String, String>();
 
@@ -181,7 +181,7 @@ public class SQLQueryReturnProcessor {
 		return new ResultAliasContext();
 	}
 
-	public List<Return> generateCustomReturns(boolean queryHadAliases) {
+	public List<Return> generateCustomReturns(final boolean queryHadAliases) {
 		List<Return> customReturns = new ArrayList<Return>();
 		Map<String,Return> customReturnsByAlias = new HashMap<String,Return>();
 		for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
@@ -389,7 +389,7 @@ public class SQLQueryReturnProcessor {
 		addPersister( rootReturn.getAlias(), rootReturn.getPropertyResultsMap(), persister );
 	}
 
-	private void addPersister(String alias, Map propertyResult, SQLLoadable persister) {
+	private void addPersister(String alias, Map<String, String[]> propertyResult, SQLLoadable persister) {
 		alias2Persister.put( alias, persister );
 		final String suffix = generateEntitySuffix();
 		LOG.tracev( "Mapping alias [{0}] to entity-suffix [{1}]", alias, suffix );

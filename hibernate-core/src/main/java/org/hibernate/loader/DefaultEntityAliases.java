@@ -70,7 +70,7 @@ public class DefaultEntityAliases implements EntityAliases {
 	}
 
 	public DefaultEntityAliases(Loadable persister, String suffix) {
-		this( Collections.EMPTY_MAP, persister, suffix );
+		this( Collections.<String, String[]>emptyMap(), persister, suffix );
 	}
 
 	private String[] determineKeyAlias(Loadable persister, String suffix) {
@@ -127,9 +127,7 @@ public class DefaultEntityAliases implements EntityAliases {
 		return CollectionHelper.isEmpty( columns ) ? defaultAlias : columns[0];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[][] getSuffixedPropertyAliases(Loadable persister) {
 		final int size = persister.getPropertyNames().length;
 		final String[][] suffixedPropertyAliases = new String[size][];
@@ -144,37 +142,27 @@ public class DefaultEntityAliases implements EntityAliases {
 		return suffixedPropertyAliases;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] getSuffixedVersionAliases() {
 		return suffixedVersionColumn;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[][] getSuffixedPropertyAliases() {
 		return suffixedPropertyColumns;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getSuffixedDiscriminatorAlias() {
 		return suffixedDiscriminatorColumn;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] getSuffixedKeyAliases() {
 		return suffixedKeyColumns;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getRowIdAlias() {
 		return rowIdAlias;
 	}

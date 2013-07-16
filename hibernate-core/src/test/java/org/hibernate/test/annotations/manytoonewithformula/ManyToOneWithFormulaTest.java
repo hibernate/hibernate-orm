@@ -46,7 +46,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Sharath Reddy
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneFromNonPk() throws Exception {
@@ -70,6 +69,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOneFromPk() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -94,6 +94,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = { HSQLDialect.class }, comment = "The used join conditions does not work in HSQLDB. See HHH-4497")
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOneToPkWithOnlyFormula() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -163,6 +164,7 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
 			@SkipForDialect( value = { SQLServer2005Dialect.class } ),
 			@SkipForDialect( value = { Oracle8iDialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ),
 			@SkipForDialect( value = { DB2Dialect.class }, comment = "Oracle/DB2 do not support 'substring' function" ) } )
+	@FailureExpectedWithNewMetamodel
 	public void testManyToOneFromNonPkToNonPk() throws Exception {
 		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
 		Session s = openSession();

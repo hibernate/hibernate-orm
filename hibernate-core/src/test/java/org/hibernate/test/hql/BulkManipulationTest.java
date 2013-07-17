@@ -58,7 +58,6 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -566,6 +565,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked"})
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testUpdateWithWhereExistsSubquery() {
 		// multi-table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		Session s = openSession();
@@ -1225,6 +1225,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue( jiraKey = "HHH-1917" )
+	@FailureExpectedWithNewMetamodel
 	public void testManyToManyBulkDelete() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

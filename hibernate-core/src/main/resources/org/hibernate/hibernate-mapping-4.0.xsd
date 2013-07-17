@@ -25,123 +25,161 @@
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:element name="meta" type="meta-element"/>
+            <xs:complexContent>
+                <xs:extension base="meta-container-element">
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
 
-                <xs:element name="identifier-generator"
-                            type="identifier-generator-element"/>
-                <xs:element name="typedef"  type="typedef-element"/>
-                <xs:element name="filter-def"  type="filter-def-element"/>
-                <xs:element name="import"  type="import-element"/>
+                        <xs:element name="identifier-generator"
+                                    type="identifier-generator-element"/>
+                        <xs:element name="typedef" type="typedef-element"/>
+                        <xs:element name="filter-def" type="filter-def-element"/>
+                        <xs:element name="import" type="import-element"/>
 
-                <xs:element name="class" type="class-element"/>
-                <xs:element name="subclass" type="subclass-element"/>
-                <xs:element name="joined-subclass" type="joined-subclass-element"/>
-                <xs:element name="union-subclass" type="union-subclass-element"/>
+                        <xs:element name="class" type="class-element"/>
+                        <xs:element name="subclass" type="subclass-element"/>
+                        <xs:element name="joined-subclass" type="joined-subclass-element"/>
+                        <xs:element name="union-subclass" type="union-subclass-element"/>
 
-                <xs:element name="resultset"  type="resultset-element"/>
-                <xs:group ref="query-or-sql-query"/>
-                <xs:element name="fetch-profile"  type="fetch-profile-element"/>
-                <xs:element name="database-object"  type="database-object-element"/>
-            </xs:choice>
+                        <xs:element name="resultset" type="resultset-element"/>
+                        <xs:group ref="query-or-sql-query"/>
+                        <xs:element name="fetch-profile" type="fetch-profile-element"/>
+                        <xs:element name="database-object" type="database-object-element"/>
+                    </xs:choice>
 
-            <xs:attribute name="auto-import" default="true" type="xs:boolean"/>
-            <xs:attribute name="catalog" type="xs:string"/>
-            <!-- default: none -->
-            <xs:attribute name="default-access" default="property" type="xs:string"/>
-            <xs:attribute name="default-cascade" default="none" type="xs:string"/>
-            <xs:attribute name="default-lazy" default="true" type="xs:boolean"/>
-            <xs:attribute name="package" type="xs:string"/>
-            <xs:attribute name="schema" type="xs:string"/>
+                    <xs:attribute name="auto-import" default="true" type="xs:boolean"/>
+                    <xs:attribute name="catalog" type="xs:string"/>
+                    <!-- default: none -->
+                    <xs:attribute name="default-access" default="property" type="xs:string"/>
+                    <xs:attribute name="default-cascade" default="none" type="xs:string"/>
+                    <xs:attribute name="default-lazy" default="true" type="xs:boolean"/>
+                    <xs:attribute name="package" type="class-name-type"/>
+                    <xs:attribute name="schema" type="xs:string"/>
+                </xs:extension>
+            </xs:complexContent>
+
         </xs:complexType>
     </xs:element>
-    <!-- Entity elements start -->
+
+    <xs:complexType name="meta-container-element" abstract="true">
+        <xs:choice>
+            <xs:element name="meta" type="meta-element" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="entity-element" abstract="true">
+        <xs:complexContent>
+            <xs:extension base="meta-container-element">
+                <xs:attribute name="name" type="class-name-type"/>
+                <xs:attribute name="entity-name" type="xs:string"/>
+                <xs:attribute name="abstract" default="false" type="xs:boolean"/>
+                <!-- default: none when toplevel, otherwise the nearest class definition -->
+                <xs:attribute name="lazy" type="xs:boolean"/>
+                <xs:attribute name="proxy" type="class-name-type"/>
+                <xs:attribute name="batch-size" default="-1" type="xs:int"/>
+                <!-- default: none -->
+                <xs:attribute name="dynamic-insert" default="false" type="xs:boolean"/>
+                <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
+                <!-- default: no proxy interface -->
+                <xs:attribute name="select-before-update" default="false" type="xs:boolean"/>
+                <xs:attribute name="node" type="xs:string"/>
+                <xs:attribute name="persister" type="class-name-type"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="abstract-sub-entity-element" abstract="true">
+        <xs:complexContent>
+            <xs:extension base="entity-element">
+                <xs:attribute name="extends" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
     <xs:complexType name="class-element">
         <xs:annotation>
             <xs:documentation>
-                Root entity mapping.  Poorly named as entities do not have to be represented by
-                classes at all.  Mapped entities may be represented via different methodologies
+                Root entity mapping. Poorly named as entities do not have to be represented by
+                classes at all. Mapped entities may be represented via different methodologies
                 (POJO, Map, Dom4j).
             </xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:element name="subselect" minOccurs="0" type="xs:string"/>
-            <xs:element name="cache" minOccurs="0" type="cache-element"/>
-            <xs:element name="natural-id-cache" minOccurs="0" type="natural-id-cache-element"/>
-            <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
-            <!-- The comment element allows definition of a database table or column comment. -->
-            <xs:element name="comment" minOccurs="0" type="xs:string"/>
-            <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
-            <xs:choice>
-                <xs:element name="id" type="id-element"/>
-                <xs:element name="composite-id" type="composite-id-element"/>
-            </xs:choice>
-            <xs:element name="discriminator" minOccurs="0" type="discriminator-element"/>
-            <xs:element name="natural-id" minOccurs="0" type="natural-id-element"/>
-            <xs:choice minOccurs="0">
-                <xs:element name="version" type="version-element"/>
-                <xs:element name="timestamp" type="timestamp-element"/>
-            </xs:choice>
-            <xs:choice minOccurs="0">
-                <xs:element name="multi-tenancy" type="multi-tenancy-element"/>
-            </xs:choice>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:element name="idbag" type="idbag-element"/>
-                <xs:group ref="singular-property-element-group"/>
-            </xs:choice>
-            <xs:choice>
+        <xs:complexContent>
+            <xs:extension base="entity-element">
                 <xs:sequence>
-                    <xs:element name="join" minOccurs="0" maxOccurs="unbounded" type="join-element"/>
-                    <xs:element name="subclass" minOccurs="0" maxOccurs="unbounded" type="subclass-element"/>
+                    <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
+                    <xs:element name="subselect" minOccurs="0" type="xs:string"/>
+                    <xs:element name="cache" minOccurs="0" type="cache-element"/>
+                    <xs:element name="natural-id-cache" minOccurs="0" type="natural-id-cache-element"/>
+                    <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
+                    <!-- The comment element allows definition of a database table or column comment. -->
+                    <xs:element name="comment" minOccurs="0" type="xs:string"/>
+
+                    <xs:choice>
+                        <xs:element name="id" type="id-element"/>
+                        <xs:element name="composite-id" type="composite-id-element"/>
+                    </xs:choice>
+                    <xs:element name="discriminator" minOccurs="0" type="discriminator-element"/>
+                    <xs:element name="natural-id" minOccurs="0" type="natural-id-element"/>
+                    <xs:choice minOccurs="0">
+                        <xs:element name="version" type="version-element"/>
+                        <xs:element name="timestamp" type="timestamp-element"/>
+                    </xs:choice>
+                    <xs:element name="multi-tenancy" minOccurs="0" type="multi-tenancy-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:element name="idbag" type="idbag-element"/>
+                        <xs:group ref="singular-property-element-group"/>
+                    </xs:choice>
+                    <xs:choice>
+                        <xs:sequence>
+                            <xs:element name="join" minOccurs="0" maxOccurs="unbounded" type="join-element"/>
+                            <xs:element name="subclass" minOccurs="0" maxOccurs="unbounded" type="subclass-element"/>
+                        </xs:sequence>
+                        <xs:element name="joined-subclass"
+                                    minOccurs="0"
+                                    maxOccurs="unbounded"
+                                    type="joined-subclass-element"/>
+                        <xs:element name="union-subclass"
+                                    minOccurs="0"
+                                    maxOccurs="unbounded"
+                                    type="union-subclass-element"/>
+                    </xs:choice>
+                    <xs:element name="loader" minOccurs="0" type="loader-element"/>
+                    <xs:group ref="sql-dml-element-group"/>
+                    <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
+                    <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
+                    <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:group ref="query-or-sql-query"/>
+                    </xs:choice>
                 </xs:sequence>
-                <xs:element name="joined-subclass" minOccurs="0" maxOccurs="unbounded" type="joined-subclass-element"/>
-                <xs:element name="union-subclass" minOccurs="0" maxOccurs="unbounded" type="union-subclass-element"/>
-            </xs:choice>
-            <xs:element name="loader" minOccurs="0" type="loader-element"/>
-            <xs:group ref="sql-dml-element-group"/>
-            <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
-            <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
-            <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:group ref="query-or-sql-query"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attributeGroup ref="extra-class-attribute-group"/>
-        <xs:attribute name="catalog" type="xs:string"/>
-        <!-- default: none -->
-        <xs:attribute name="check" type="xs:string"/>
-        <!-- default: none -->
-        <xs:attribute name="discriminator-value" type="xs:string"/>
-        <!-- default: unqualified class name | none -->
-        <xs:attribute name="mutable" default="true" type="xs:boolean"/>
-        <!-- this is the class name -->
-        <xs:attribute name="optimistic-lock" default="version" type="optimistic-lock-attribute"/>
-        <xs:attribute name="polymorphism" default="implicit" type="polymorphism-attribute"/>
-        <!-- default: no proxy interface -->
-        <xs:attribute name="rowid" type="xs:string"/>
-        <xs:attribute name="schema" type="xs:string"/>
-        <!-- default: none -->
-        <xs:attribute name="subselect" type="xs:string"/>
-        <xs:attribute name="table" type="xs:string"/>
-        <!-- default: unqualified classname -->
-        <xs:attribute name="where" type="xs:string"/>
-        <!-- default: none -->
+                <xs:attribute name="catalog" type="xs:string"/>
+                <xs:attribute name="check" type="xs:string"/>
+                <xs:attribute name="discriminator-value" type="xs:string"/>
+                <xs:attribute name="mutable" default="true" type="xs:boolean"/>
+                <xs:attribute name="optimistic-lock" default="version" type="optimistic-lock-attribute"/>
+                <xs:attribute name="polymorphism" default="implicit" type="polymorphism-attribute"/>
+                <xs:attribute name="rowid" type="xs:string"/>
+                <xs:attribute name="schema" type="xs:string"/>
+                <xs:attribute name="subselect" type="xs:string"/>
+                <xs:attribute name="table" type="xs:string"/>
+                <xs:attribute name="where" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
     <xs:complexType name="joined-subclass-element">
@@ -151,45 +189,47 @@
                 See the note on the class element regarding <pojo/> vs. @name usage...
             ]]></xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:element name="subselect" minOccurs="0" type="xs:string"/>
-            <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
-            <!-- The comment element allows definition of a database table or column comment. -->
-            <xs:element name="comment" minOccurs="0" type="xs:string"/>
-            <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
-            <xs:element name="key" type="key-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:group ref="singular-property-element-group"/>
-                <xs:element name="idbag" type="idbag-element"/>
-            </xs:choice>
-            <xs:element name="joined-subclass" minOccurs="0" maxOccurs="unbounded" type="joined-subclass-element"/>
-            <xs:element name="loader" minOccurs="0" type="loader-element"/>
-            <xs:group ref="sql-dml-element-group" minOccurs="0"/>
-            <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
-            <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:group ref="query-or-sql-query"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attributeGroup ref="table-information-group"/>
-        <xs:attribute name="check" type="xs:string"/>
-        <xs:attribute name="extends" type="xs:string"/>
-        <xs:attributeGroup ref="extra-class-attribute-group"/>
+        <xs:complexContent>
+            <xs:extension base="abstract-sub-entity-element">
+                <xs:sequence>
+                    <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
+                    <xs:element name="subselect" minOccurs="0" type="xs:string"/>
+                    <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
+                    <!-- The comment element allows definition of a database table or column comment. -->
+                    <xs:element name="comment" minOccurs="0" type="xs:string"/>
+                    <xs:element name="key" type="key-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:group ref="singular-property-element-group"/>
+                        <xs:element name="idbag" type="idbag-element"/>
+                    </xs:choice>
+                    <xs:element name="joined-subclass"
+                                minOccurs="0"
+                                maxOccurs="unbounded"
+                                type="joined-subclass-element"/>
+                    <xs:element name="loader" minOccurs="0" type="loader-element"/>
+                    <xs:group ref="sql-dml-element-group" minOccurs="0"/>
+                    <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
+                    <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:group ref="query-or-sql-query"/>
+                    </xs:choice>
+                </xs:sequence>
+                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="check" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
-    <!--
 
-          -->
     <xs:complexType name="union-subclass-element">
         <xs:annotation>
             <xs:documentation><![CDATA[
@@ -197,40 +237,44 @@
                 See the note on the class element regarding <pojo/> vs. @name usage...
             ]]></xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:element name="subselect" minOccurs="0" type="xs:string"/>
-            <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
-            <!-- The comment element allows definition of a database table or column comment. -->
-            <xs:element name="comment" minOccurs="0" type="xs:string"/>
-            <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:element name="idbag" type="idbag-element"/>
-                <xs:group ref="singular-property-element-group"/>
-            </xs:choice>
-            <xs:element name="union-subclass" minOccurs="0" maxOccurs="unbounded" type="union-subclass-element"/>
-            <xs:element name="loader" minOccurs="0" type="loader-element"/>
-            <xs:group ref="sql-dml-element-group" minOccurs="0"/>
-            <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
-            <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:group ref="query-or-sql-query"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attributeGroup ref="table-information-group"/>
-        <xs:attribute name="check" type="xs:string"/>
-        <xs:attribute name="extends" type="xs:string"/>
-        <xs:attributeGroup ref="extra-class-attribute-group"/>
+        <xs:complexContent>
+            <xs:extension base="abstract-sub-entity-element">
+                <xs:sequence>
+                    <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
+                    <xs:element name="subselect" minOccurs="0" type="xs:string"/>
+                    <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
+                    <!-- The comment element allows definition of a database table or column comment. -->
+                    <xs:element name="comment" minOccurs="0" type="xs:string"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:element name="idbag" type="idbag-element"/>
+                        <xs:group ref="singular-property-element-group"/>
+                    </xs:choice>
+                    <xs:element name="union-subclass"
+                                minOccurs="0"
+                                maxOccurs="unbounded"
+                                type="union-subclass-element"/>
+                    <xs:element name="loader" minOccurs="0" type="loader-element"/>
+                    <xs:group ref="sql-dml-element-group" minOccurs="0"/>
+                    <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
+                    <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:group ref="query-or-sql-query"/>
+                    </xs:choice>
+                </xs:sequence>
+                <xs:attributeGroup ref="table-information-group"/>
+                <xs:attribute name="check" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
     <xs:complexType name="subclass-element">
@@ -241,37 +285,38 @@
                 See the note on the class element regarding <pojo/> vs. @name usage...
             ]]></xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
-            <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:group ref="singular-property-element-group"/>
-                <xs:element name="idbag" type="idbag-element"/>
-            </xs:choice>
-            <xs:element name="join" minOccurs="0" maxOccurs="unbounded" type="join-element"/>
-            <xs:element name="subclass" minOccurs="0" maxOccurs="unbounded" type="subclass-element"/>
-            <xs:element name="loader" minOccurs="0" type="loader-element"/>
-            <xs:group ref="sql-dml-element-group" minOccurs="0"/>
-            <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
-            <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
-            <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:annotation>
-                    <xs:appinfo>
-                        <simplify:as-element-property/>
-                    </xs:appinfo>
-                </xs:annotation>
-                <xs:group ref="query-or-sql-query"/>
-            </xs:choice>
-        </xs:sequence>
-        <xs:attribute name="discriminator-value" type="xs:string"/>
-        <xs:attribute name="extends" type="xs:string"/>
-        <xs:attributeGroup ref="extra-class-attribute-group"/>
+        <xs:complexContent>
+            <xs:extension base="abstract-sub-entity-element">
+                <xs:sequence>
+                    <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
+                    <xs:element name="synchronize" minOccurs="0" maxOccurs="unbounded" type="synchronize-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:group ref="singular-property-element-group"/>
+                        <xs:element name="idbag" type="idbag-element"/>
+                    </xs:choice>
+                    <xs:element name="join" minOccurs="0" maxOccurs="unbounded" type="join-element"/>
+                    <xs:element name="subclass" minOccurs="0" maxOccurs="unbounded" type="subclass-element"/>
+                    <xs:element name="loader" minOccurs="0" type="loader-element"/>
+                    <xs:group ref="sql-dml-element-group" minOccurs="0"/>
+                    <xs:element name="fetch-profile" minOccurs="0" maxOccurs="unbounded" type="fetch-profile-element"/>
+                    <xs:element name="resultset" minOccurs="0" maxOccurs="unbounded" type="resultset-element"/>
+                    <xs:choice minOccurs="0" maxOccurs="unbounded">
+                        <xs:annotation>
+                            <xs:appinfo>
+                                <simplify:as-element-property/>
+                            </xs:appinfo>
+                        </xs:annotation>
+                        <xs:group ref="query-or-sql-query"/>
+                    </xs:choice>
+                </xs:sequence>
+                <xs:attribute name="discriminator-value" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
     <xs:complexType name="id-element">
@@ -283,20 +328,24 @@
                 via Session.getIdentifier()
             </xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
-            <xs:element name="type" minOccurs="0" type="type-element"/>
-            <xs:element name="generator" minOccurs="0" type="generator-element"/>
-        </xs:sequence>
-        <xs:attribute name="access" type="xs:string"/>
-        <xs:attribute name="column" type="xs:string"/>
-        <xs:attribute name="length" type="xs:int"/>
-        <xs:attribute name="name" type="xs:string"/>
-        <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="type" type="xs:string"/>
-        <xs:attribute name="unsaved-value" type="xs:string"/>
-        <!-- any|none|null|undefined|0|-1|... -->
+        <xs:complexContent>
+            <xs:extension base="meta-container-element">
+                <xs:sequence>
+                    <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
+                    <xs:element name="type" minOccurs="0" type="type-element"/>
+                    <xs:element name="generator" minOccurs="0" type="generator-element"/>
+                </xs:sequence>
+                <xs:attribute name="access" type="xs:string"/>
+                <xs:attribute name="column" type="xs:string"/>
+                <xs:attribute name="length" type="xs:int"/>
+                <xs:attribute name="name" type="xs:string"/>
+                <xs:attribute name="node" type="xs:string"/>
+                <xs:attribute name="type" type="xs:string"/>
+                <xs:attribute name="unsaved-value" type="xs:string"/>
+                <!-- any|none|null|undefined|0|-1|... -->
+            </xs:extension>
+        </xs:complexContent>
+
     </xs:complexType>
     <xs:complexType name="composite-id-element">
         <xs:annotation>
@@ -306,32 +355,46 @@
                 and hashCode().
             </xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:choice maxOccurs="unbounded">
-                <xs:element name="key-property" type="key-property-element"/>
-                <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
-            </xs:choice>
-            <xs:element name="generator" minOccurs="0" type="generator-element"/>
-        </xs:sequence>
-        <xs:attribute name="access" type="xs:string"/>
-        <xs:attribute name="class" type="xs:string"/>
-        <xs:attribute name="mapped" default="false" type="xs:boolean"/>
-        <xs:attribute name="name" type="xs:string"/>
-        <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="unsaved-value" default="undefined" type="composite-id-unsaved-value-attribute"/>
+        <xs:complexContent>
+            <xs:extension base="meta-container-element">
+                <xs:sequence>
+                    <xs:choice maxOccurs="unbounded">
+                        <xs:element name="key-property" type="key-property-element"/>
+                        <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
+                    </xs:choice>
+                    <xs:element name="generator" minOccurs="0" type="generator-element"/>
+                </xs:sequence>
+                <xs:attribute name="access" type="xs:string"/>
+                <xs:attribute name="class" type="class-name-type"/>
+                <xs:attribute name="mapped" default="false" type="xs:boolean"/>
+                <xs:attribute name="name" type="xs:string"/>
+                <xs:attribute name="node" type="xs:string"/>
+                <xs:attribute name="unsaved-value" default="undefined" type="composite-id-unsaved-value-attribute"/>
+            </xs:extension>
+        </xs:complexContent>
+
     </xs:complexType>
+
+    <xs:complexType name="abstract-version-element" abstract="true">
+        <xs:complexContent>
+            <xs:extension base="meta-container-element">
+                <xs:attribute name="access" type="xs:string"/>
+                <xs:attribute name="column" type="xs:string"/>
+                <xs:attribute name="generated" default="never" type="generated-attribute"/>
+                <xs:attribute name="name" use="required" type="xs:string"/>
+                <xs:attribute name="node" type="xs:string"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
     <xs:complexType name="timestamp-element">
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-        </xs:sequence>
-        <xs:attribute name="access" type="xs:string"/>
-        <xs:attribute name="column" type="xs:string"/>
-        <xs:attribute name="generated" default="never" type="generated-attribute"/>
-        <xs:attribute name="name" use="required" type="xs:string"/>
-        <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="source" default="vm" type="timestamp-source-attribute"/>
-        <xs:attribute name="unsaved-value" default="null" type="timestamp-unsaved-value-attribute"/>
+        <xs:complexContent>
+            <xs:extension base="abstract-version-element">
+                <xs:attribute name="source" default="vm" type="timestamp-source-attribute"/>
+                <xs:attribute name="unsaved-value" default="null" type="timestamp-unsaved-value-attribute"/>
+            </xs:extension>
+        </xs:complexContent>
+
     </xs:complexType>
     <xs:complexType name="version-element">
         <xs:annotation>
@@ -340,19 +403,18 @@
                 application through a property of the Java class.
             </xs:documentation>
         </xs:annotation>
-        <xs:sequence>
-            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
-        </xs:sequence>
-        <xs:attribute name="access" type="xs:string" default="property"/>
-        <xs:attribute name="column" type="xs:string"/>
-        <xs:attribute name="generated" default="never" type="generated-attribute"/>
-        <xs:attribute name="insert" type="xs:boolean"/>
-        <xs:attribute name="name" use="required" type="xs:string"/>
-        <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="type" default="integer" type="xs:string"/>
-        <xs:attribute name="unsaved-value" default="undefined" type="version-unsaved-value-attribute"/>
+        <xs:complexContent>
+            <xs:extension base="abstract-version-element">
+                <xs:sequence>
+                    <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
+                </xs:sequence>
+                <xs:attribute name="insert" type="xs:boolean"/>
+                <xs:attribute name="type" default="integer" type="xs:string"/>
+                <xs:attribute name="unsaved-value" default="undefined" type="version-unsaved-value-attribute"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
+
     <xs:complexType name="natural-id-element">
         <xs:annotation>
             <xs:documentation>
@@ -452,7 +514,7 @@
         <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/>
         <!-- only supported for properties of a class (not component) -->
         <xs:attribute name="outer-join" type="outer-join-attribute"/>
-        <xs:attribute name="persister" type="xs:string"/>
+        <xs:attribute name="persister" type="class-name-type"/>
         <xs:attribute name="where" type="xs:string"/>
         <!-- default: none -->
     </xs:complexType>
@@ -597,7 +659,7 @@
                 element type of a collection and specifies a one-to-many relational model
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="node" type="xs:string"/>
@@ -619,7 +681,7 @@
         </xs:sequence>
         <xs:attribute name="access" type="xs:string"/>
         <xs:attribute name="cascade" type="xs:string"/>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="constrained" default="false" type="xs:boolean"/>
         <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
@@ -653,7 +715,7 @@
         </xs:sequence>
         <xs:attribute name="access" type="xs:string"/>
         <xs:attribute name="cascade" type="xs:string"/>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
@@ -695,7 +757,7 @@
             </xs:choice>
             <xs:element name="filter" minOccurs="0" maxOccurs="unbounded" type="filter-element"/>
         </xs:sequence>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="embed-xml" default="true" type="xs:boolean"/>
         <xs:attribute name="entity-name" type="xs:string"/>
@@ -719,7 +781,7 @@
                 <identifier-generator.../> allows customized short-naming of IdentifierGenerator implementations.
             ]]></xs:documentation>
         </xs:annotation>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
     </xs:complexType>
     <xs:complexType name="import-element">
@@ -728,7 +790,7 @@
                 IMPORT element definition; an explicit query language "import"
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <xs:attribute name="rename" type="xs:string"/>
         <!-- default: unqualified class name -->
     </xs:complexType>
@@ -780,7 +842,7 @@
             <xs:choice>
                 <xs:element name="definition">
                     <xs:complexType>
-                        <xs:attribute name="class" use="required" type="xs:string"/>
+                        <xs:attribute name="class" use="required" type="class-name-type"/>
                     </xs:complexType>
                 </xs:element>
                 <xs:sequence>
@@ -814,7 +876,7 @@
         <xs:sequence>
             <xs:element name="param" minOccurs="0" maxOccurs="unbounded" type="param-element"/>
         </xs:sequence>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
     </xs:complexType>
     <xs:complexType mixed="true" name="filter-def-element">
@@ -935,7 +997,7 @@
             </xs:choice>
         </xs:sequence>
         <xs:attribute name="access" type="xs:string"/>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="insert" default="true" type="xs:boolean"/>
         <xs:attribute name="lazy" default="false" type="xs:boolean"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
@@ -955,9 +1017,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:sequence>
-                <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
-            </xs:sequence>
+            <xs:element name="meta" minOccurs="0" maxOccurs="unbounded" type="meta-element"/>
             <xs:element name="parent" minOccurs="0" type="parent-element"/>
             <xs:element name="tuplizer" minOccurs="0" maxOccurs="unbounded" type="tuplizer-element"/>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -972,7 +1032,7 @@
                 <xs:element name="nested-composite-element" type="nested-composite-element-element"/>
             </xs:choice>
         </xs:sequence>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <xs:attribute name="node" type="xs:string"/>
     </xs:complexType>
 
@@ -1091,7 +1151,7 @@
         <xs:sequence>
             <xs:element name="param" minOccurs="0" maxOccurs="unbounded" type="param-element"/>
         </xs:sequence>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
     </xs:complexType>
 
 
@@ -1167,7 +1227,7 @@
             <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
         </xs:sequence>
         <xs:attribute name="access" type="xs:string"/>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="foreign-key" type="xs:string"/>
@@ -1258,7 +1318,7 @@
                 <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
             </xs:choice>
         </xs:sequence>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
     </xs:complexType>
     <xs:complexType name="map-key-many-to-many">
         <xs:annotation>
@@ -1275,7 +1335,7 @@
             </xs:annotation>
             <xs:group ref="column-or-formula"/>
         </xs:sequence>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="foreign-key" type="xs:string"/>
@@ -1293,13 +1353,13 @@
                 <xs:element name="key-many-to-one" type="key-many-to-one-element"/>
             </xs:choice>
         </xs:sequence>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
     </xs:complexType>
     <xs:complexType name="index-many-to-many-element">
         <xs:sequence>
             <xs:element name="column" minOccurs="0" maxOccurs="unbounded" type="column-element"/>
         </xs:sequence>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <xs:attribute name="column" type="xs:string"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="foreign-key" type="xs:string"/>
@@ -1352,7 +1412,7 @@
             </xs:choice>
         </xs:sequence>
         <xs:attribute name="access" type="xs:string"/>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
         <xs:attribute name="node" type="xs:string"/>
     </xs:complexType>
@@ -1567,9 +1627,9 @@
     <xs:complexType name="return-element">
         <xs:annotation>
             <xs:documentation>
-                Defines a return component for a sql-query.  Alias refers to the alias
+                Defines a return component for a sql-query. Alias refers to the alias
                 used in the actual sql query; lock-mode specifies the locking to be applied
-                when the query is executed.  The class, collection, and role attributes are mutually exclusive;
+                when the query is executed. The class, collection, and role attributes are mutually exclusive;
                 class refers to the class name of a "root entity" in the object result; collection refers
                 to a collection of a given class and is used to define custom sql to load that owned collection
                 and takes the form "ClassName.propertyName"; role refers to the property path for an eager fetch
@@ -1586,7 +1646,7 @@
 
         </xs:sequence>
         <xs:attribute name="alias" type="xs:string"/>
-        <xs:attribute name="class" type="xs:string"/>
+        <xs:attribute name="class" type="class-name-type"/>
         <xs:attribute name="entity-name" type="xs:string"/>
         <xs:attribute name="lock-mode" default="read" type="lock-mode-attribute"/>
     </xs:complexType>
@@ -1647,7 +1707,7 @@
                 TUPLIZER element; defines tuplizer to use for a component/entity for a given entity-mode
             </xs:documentation>
         </xs:annotation>
-        <xs:attribute name="class" use="required" type="xs:string"/>
+        <xs:attribute name="class" use="required" type="class-name-type"/>
         <!-- the tuplizer class to use -->
         <xs:attribute name="entity-mode" type="entity-mode-attribute"/>
     </xs:complexType>
@@ -1727,23 +1787,6 @@
         </xs:choice>
     </xs:group>
 
-    <xs:attributeGroup name="extra-class-attribute-group">
-        <xs:attribute name="abstract" default="false" type="xs:boolean"/>
-        <xs:attribute name="batch-size" default="-1" type="xs:int"/>
-
-        <!-- default: none -->
-        <xs:attribute name="dynamic-insert" default="false" type="xs:boolean"/>
-        <xs:attribute name="dynamic-update" default="false" type="xs:boolean"/>
-        <xs:attribute name="entity-name" type="xs:string"/>
-        <!-- default: none when toplevel, otherwise the nearest class definition -->
-        <xs:attribute name="lazy" type="xs:boolean"/>
-        <xs:attribute name="name" type="xs:string"/>
-        <xs:attribute name="node" type="xs:string"/>
-        <xs:attribute name="persister" type="xs:string"/>
-        <xs:attribute name="proxy" type="xs:string"/>
-        <!-- default: no proxy interface -->
-        <xs:attribute name="select-before-update" default="false" type="xs:boolean"/>
-    </xs:attributeGroup>
     <xs:attributeGroup name="plural-basic-attribute-group">
         <xs:attribute name="name" use="required" type="xs:string"/>
         <xs:attribute name="access" type="xs:string"/>
@@ -1758,7 +1801,7 @@
         <xs:attribute name="optimistic-lock" default="true" type="xs:boolean"/>
         <!-- only supported for properties of a class (not component) -->
         <xs:attribute name="collection-type" type="xs:string"/>
-        <xs:attribute name="persister" type="xs:string"/>
+        <xs:attribute name="persister" type="class-name-type"/>
     </xs:attributeGroup>
     <xs:attributeGroup name="table-information-group">
         <xs:attribute name="schema" type="xs:string"/>
@@ -1807,7 +1850,6 @@
     </xs:simpleType>
     <xs:simpleType name="entity-mode-attribute">
         <xs:restriction base="xs:token">
-            <xs:enumeration value="dom4j"/>
             <xs:enumeration value="dynamic-map"/>
             <xs:enumeration value="pojo"/>
         </xs:restriction>
@@ -1931,6 +1973,18 @@
             <xs:enumeration value="negative"/>
             <xs:enumeration value="null"/>
             <xs:enumeration value="undefined"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="class-name-type">
+        <xs:annotation>
+            <xs:documentation>
+                Define a class name type which can be used in the attribute value which requires a class name,
+                either qualified or not, time to do the validation.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([a-zA-Z_$][a-zA-Z\d_$]*\.)*[a-zA-Z_$][a-zA-Z\d_$]*"/>
         </xs:restriction>
     </xs:simpleType>
 </xs:schema>

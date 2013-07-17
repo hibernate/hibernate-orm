@@ -34,7 +34,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;

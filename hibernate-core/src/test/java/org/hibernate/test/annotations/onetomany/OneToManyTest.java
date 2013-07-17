@@ -66,7 +66,7 @@ import static org.junit.Assert.fail;
  * @author Hardy Ferentschik
  */
 @SuppressWarnings("unchecked")
-@FailureExpectedWithNewMetamodel
+//@FailureExpectedWithNewMetamodel
 public class OneToManyTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testColumnDefinitionPropagation() throws Exception {

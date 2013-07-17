@@ -56,7 +56,7 @@ class TimestampAttributeSourceImpl
 				new Helper.ValueSourcesAdapter() {
 					@Override
 					public String getColumnAttribute() {
-						return timestampElement.getColumn();
+						return timestampElement.getColumnAttribute();
 					}
 					@Override
 					public boolean isIncludedInInsertByDefault() {

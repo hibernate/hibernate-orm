@@ -160,7 +160,7 @@
         <jaxb:bindings node="//xsd:complexType[@name='id-element']//xsd:attribute[@name='type']">
             <jaxb:property name="typeAttribute"/>
         </jaxb:bindings> 
-        <jaxb:bindings node="//xsd:complexType[@name='version-element']//xsd:attribute[@name='column']">
+        <jaxb:bindings node="//xsd:complexType[@name='abstract-version-element']//xsd:attribute[@name='column']">
             <jaxb:property name="columnAttribute"/>
         </jaxb:bindings> 
         <jaxb:bindings node="//xsd:complexType[@name='element-element']//xsd:attribute[@name='type']">

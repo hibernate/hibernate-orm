@@ -28,6 +28,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
@@ -38,9 +39,11 @@ import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
  * @author Gail Badner

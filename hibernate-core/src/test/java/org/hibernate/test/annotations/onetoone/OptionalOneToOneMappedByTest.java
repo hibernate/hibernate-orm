@@ -41,11 +41,11 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class OptionalOneToOneMappedByTest extends BaseCoreFunctionalTestCase {
 
 	// @OneToOne(mappedBy="address") with foreign generator
 	@Test
+	@FailureExpectedWithNewMetamodel ( message = "mappedBy @OneToOne with foreign generator" )
 	public void testBidirForeignIdGenerator() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

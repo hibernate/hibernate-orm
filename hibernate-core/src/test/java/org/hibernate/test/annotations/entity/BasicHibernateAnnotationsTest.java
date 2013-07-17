@@ -57,7 +57,6 @@ import org.junit.Test;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel( message = "@OneToOne with mappedBy specified is not supported yet" )
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -103,6 +102,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@RequiresDialectFeature( DialectChecks.SupportsExpectedLobUsagePattern.class )
+	@FailureExpectedWithNewMetamodel
 	public void testVersioning() throws Exception {
 		Forest forest = new Forest();
 		forest.setName( "Fontainebleau" );
@@ -329,6 +329,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCascadedDeleteOfChildEntitiesBug2() {
 		// Relationship is one SoccerTeam to many Players.
 		// Create a SoccerTeam (parent) and three Players (child).
@@ -379,6 +380,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testCascadedDeleteOfChildOneToOne() {
 		// create two single player teams (for one versus one match of soccer)
 		// and associate teams with players via the special OneVOne methods.
@@ -465,6 +467,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	 * defined on a parent MappedSuperclass(s)
 	 */
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testInheritFiltersFromMappedSuperclass() throws Exception {
 		Session s;
 		Transaction tx;
@@ -670,7 +673,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		}
 		catch( AnnotationException ex ) {
 			assertEquals(
-					"Either name or defaultForType (or both) attribute should be set in TypeDefinition having typeClass org.hibernate.test.annotations.entity.PhoneNumberType",
+					"Either name or defaultForType (or both) must be set on TypeDefinition [org.hibernate.test.annotations.entity.PhoneNumberType]",
 					ex.getMessage());
 		} finally {
 			if( sf != null){

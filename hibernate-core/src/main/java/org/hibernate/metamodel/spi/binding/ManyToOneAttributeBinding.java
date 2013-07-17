@@ -47,8 +47,7 @@ public class ManyToOneAttributeBinding
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
-			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> relationalValueBindings) {
+			SingularAttributeBinding referencedAttributeBinding) {
 		super(
 				container,
 				attribute,
@@ -58,7 +57,8 @@ public class ManyToOneAttributeBinding
 				isNotFoundAnException,
 				naturalIdMutability,
 				metaAttributeContext,
-				referencedEntityBinding, relationalValueBindings, referencedAttributeBinding
+				referencedEntityBinding,
+				referencedAttributeBinding
 		);
 	}
 }

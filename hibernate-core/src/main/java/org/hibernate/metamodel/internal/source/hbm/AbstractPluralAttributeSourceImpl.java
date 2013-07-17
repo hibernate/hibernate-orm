@@ -143,6 +143,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 					.getOneToMany().getClazz());
 			return new OneToManyPluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
+					this,
 					pluralAttributeElement.getOneToMany(),
 					pluralAttributeElement.getCascade()
 			);
@@ -152,6 +153,7 @@ public abstract class AbstractPluralAttributeSourceImpl
 					.getManyToMany().getClazz());
 			return new ManyToManyPluralAttributeElementSourceImpl(
 					sourceMappingDocument(),
+					this,
 					pluralAttributeElement.getManyToMany(),
 					pluralAttributeElement.getCascade()
 			);

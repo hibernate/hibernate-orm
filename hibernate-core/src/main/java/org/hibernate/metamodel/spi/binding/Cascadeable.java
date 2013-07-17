@@ -29,6 +29,11 @@ import org.hibernate.engine.spi.CascadeStyle;
  * @author Steve Ebersole
  */
 public interface Cascadeable {
+	/**
+	 * Obtain the cascade style to be applied to this association.
+	 *
+	 * @return The cascade style.
+	 */
 	public CascadeStyle getCascadeStyle();
 
 	public void setCascadeStyle(CascadeStyle cascadeStyle);

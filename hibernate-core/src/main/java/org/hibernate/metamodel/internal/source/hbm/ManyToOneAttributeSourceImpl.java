@@ -149,11 +149,6 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
-	public Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolutionContext context) {
-		return getNature();
-	}
-
-	@Override
 	public boolean areValuesIncludedInInsertByDefault() {
 		return manyToOneElement.isInsert();
 	}

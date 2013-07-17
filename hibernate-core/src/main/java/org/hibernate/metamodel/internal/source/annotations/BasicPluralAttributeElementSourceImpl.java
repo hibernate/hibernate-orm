@@ -13,7 +13,8 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
 /**
  * @author Hardy Ferentschik
  */
-public class BasicPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements BasicPluralAttributeElementSource {
+public class BasicPluralAttributeElementSourceImpl
+		extends AbstractPluralAttributeElementSourceImpl implements BasicPluralAttributeElementSource {
 	private final PluralAssociationAttribute associationAttribute;
 	private final ConfiguredClass entityClass;
 	private final Nature nature;

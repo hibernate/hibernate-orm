@@ -33,10 +33,14 @@ import org.hibernate.metamodel.spi.relational.Column;
  */
 public interface ToOneAttributeSourceNatureResolver {
 
-	SingularAttributeSource.Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolutionContext context);
-
-	public static interface ToOneAttributeSourceNatureResolutionContext {
-		boolean areIdentifierColumnsDefined();
-		List<org.hibernate.metamodel.spi.relational.Column> getIdentifierColumns();
-	}
+	/**
+	 * Perform any steps to completely resolve this attribute source.
+	 *
+	 * If this is a {@link MappedByAssociationSource}, resolution must
+	 * resolve the association owner, and this association must be added
+	 * to the owner's "owned" associations.
+	 *
+	 * @param context
+	 */
+	void resolveToOneAttributeSource(AttributeSourceResolutionContext context);
 }

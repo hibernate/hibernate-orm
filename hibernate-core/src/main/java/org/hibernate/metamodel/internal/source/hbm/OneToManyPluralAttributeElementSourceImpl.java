@@ -27,21 +27,23 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbOneToManyElement;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 
 /**
  * @author Steve Ebersole
  */
 public class OneToManyPluralAttributeElementSourceImpl
-		extends AbstractHbmSourceNode
+		extends AbstractPluralAssociationElementSourceImpl
 		implements OneToManyPluralAttributeElementSource {
 	private final JaxbOneToManyElement oneToManyElement;
 	private final Iterable<CascadeStyle> cascadeStyles;
 
 	public OneToManyPluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
+			final PluralAttributeSource pluralAttributeSource,
 			final JaxbOneToManyElement oneToManyElement,
 			String cascadeString) {
-		super( mappingDocument );
+		super( mappingDocument, pluralAttributeSource );
 		this.oneToManyElement = oneToManyElement;
 		this.cascadeStyles = Helper.interpretCascadeStyles( cascadeString, bindingContext() );
 	}

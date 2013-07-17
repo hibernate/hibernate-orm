@@ -35,16 +35,13 @@ import org.hibernate.type.ForeignKeyDirection;
  * @author Steve Ebersole
  */
 public interface ToOneAttributeSource
-		extends SingularAttributeSource, ToOneAttributeSourceNatureResolver, ForeignKeyContributingSource, FetchableAttributeSource, CascadeStyleSource {
+		extends SingularAttributeSource,
+			ToOneAttributeSourceNatureResolver,
+			ForeignKeyContributingSource,
+			FetchableAttributeSource,
+			AssociationSource {
 
-	/**
-	 * Obtain the name of the referenced entity.
-	 *
-	 * @return The name of the referenced entity
-	 */
-	public String getReferencedEntityName();
 	public boolean isUnique();
-	public boolean isNotFoundAnException();
 	public boolean isUnWrapProxy();
 	ForeignKeyDirection getForeignKeyDirection();
 	public List<Binder.DefaultNamingStrategy> getDefaultNamingStrategies(final String entityName, final String tableName, final AttributeBinding referencedAttributeBinding);

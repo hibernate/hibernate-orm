@@ -27,18 +27,20 @@ import java.util.List;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * Describes the binding information pertaining to the plural attribute foreign key.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class PluralAttributeKeyBinding {
 	private final AbstractPluralAttributeBinding pluralAttributeBinding;
 	private final SingularAttributeBinding referencedAttributeBinding;
-	private RelationalValueBindingContainer relationalValueBindingContainer;
-	private boolean isCascadeDeleteEnabled;
+	private JoinRelationalValueBindingContainer relationalValueBindingContainer;
 	private boolean inverse;
 
 	// this knowledge can be implicitly resolved based on the typing information on the referenced owner attribute
@@ -70,8 +72,7 @@ public class PluralAttributeKeyBinding {
 	}
 
 	public TableSpecification getCollectionTable() {
-		// TODO: get table directly from relationalValueBindingContainer
-		return relationalValueBindingContainer.relationalValueBindings().get( 0 ).getTable();
+		return relationalValueBindingContainer.getTable();
 	}
 
 	/**
@@ -101,14 +102,25 @@ public class PluralAttributeKeyBinding {
 		return relationalValueBindingContainer.relationalValueBindings();
 	}
 
-	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
+	public List<Value> getValues() {
+		return relationalValueBindingContainer.values();
+	}
+	public ForeignKey getForeignKey() {
+		return relationalValueBindingContainer.getForeignKey();
+	}
+	public void setJoinRelationalValueBindings(
+			List<RelationalValueBinding> relationalValueBindings,
+			ForeignKey foreignKey) {
 		if ( relationalValueBindings == null || relationalValueBindings.isEmpty() ) {
 			throw new AssertionFailure( "relationalValueBindings argument must be non-null and non-empty." );
 		}
 		if ( this.relationalValueBindingContainer != null ) {
 			throw new AssertionFailure( "Relational value bindings have already initialized" );
 		}
-		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
+		this.relationalValueBindingContainer = new JoinRelationalValueBindingContainer(
+				relationalValueBindings,
+				foreignKey
+		);
 		if ( this.relationalValueBindingContainer.hasDerivedValue() ) {
 				throw new NotYetImplementedException(
 						"Derived values are not supported when creating a foreign key that targets columns."
@@ -117,11 +129,7 @@ public class PluralAttributeKeyBinding {
 	}
 
 	public boolean isCascadeDeleteEnabled() {
-		return isCascadeDeleteEnabled;
-	}
-
-	public void setCascadeDeleteEnabled(boolean isCascadeDeleteEnabled) {
-		this.isCascadeDeleteEnabled = isCascadeDeleteEnabled;
+		return  relationalValueBindingContainer.getForeignKey().getDeleteRule() == ForeignKey.ReferentialAction.CASCADE;
 	}
 
 	public boolean isNullable() {

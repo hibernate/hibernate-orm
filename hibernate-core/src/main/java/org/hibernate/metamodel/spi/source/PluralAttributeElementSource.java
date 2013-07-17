@@ -25,6 +25,7 @@ package org.hibernate.metamodel.spi.source;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public interface PluralAttributeElementSource {
 	public Nature getNature();
@@ -35,10 +36,20 @@ public interface PluralAttributeElementSource {
 	 * @author Steve Ebersole
 	 */
 	enum Nature {
-		BASIC,
-		AGGREGATE,
-		ONE_TO_MANY,
-		MANY_TO_MANY,
-		MANY_TO_ANY
+		BASIC( false ),
+		AGGREGATE( false ),
+		ONE_TO_MANY( true ),
+		MANY_TO_MANY( true ),
+		MANY_TO_ANY( true );
+
+		private final boolean isAssociation;
+
+		private Nature(boolean isAssociation) {
+			this.isAssociation = isAssociation;
+		}
+
+		public boolean isAssociation() {
+			return isAssociation;
+		}
 	}
 }

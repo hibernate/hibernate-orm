@@ -23,71 +23,24 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import org.hibernate.AssertionFailure;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
-import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.OneToManyPluralAttributeElementSource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class OneToManyPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements OneToManyPluralAttributeElementSource {
-	private final AttributeSource ownerAttributeSource;
-	private final PluralAssociationAttribute associationAttribute;
+public class OneToManyPluralAttributeElementSourceImpl
+		extends AbstractPluralAssociationElementSourceImpl implements OneToManyPluralAttributeElementSource {
 
 	public OneToManyPluralAttributeElementSourceImpl(
-			AttributeSource ownerAttributeSource,
-			PluralAssociationAttribute associationAttribute,
+			PluralAttributeSourceImpl pluralAttributeSource,
 			String relativePath) {
-		super(associationAttribute, relativePath);
-		this.ownerAttributeSource = ownerAttributeSource;
-		this.associationAttribute = associationAttribute;
-	}
-
-	@Override
-	public String getReferencedEntityName() {
-		return associationAttribute.getReferencedEntityType();
-	}
-
-	@Override
-	public boolean isNotFoundAnException() {
-		return !associationAttribute.isIgnoreNotFound();
-	}
-
-	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-		return EnumConversionHelper.cascadeTypeToCascadeStyleSet(
-				associationAttribute.getCascadeTypes(),
-				associationAttribute.getHibernateCascadeTypes(),
-				associationAttribute.getContext() );
+		super( pluralAttributeSource, relativePath );
 	}
 
 	@Override
 	public Nature getNature() {
-		switch ( associationAttribute.getNature() ) {
-			case MANY_TO_MANY: {
-				return Nature.MANY_TO_MANY;
-			}
-			case MANY_TO_ANY: {
-				return Nature.MANY_TO_ANY;
-			}
-			case ONE_TO_MANY: {
-				return Nature.ONE_TO_MANY;
-			}
-			case ELEMENT_COLLECTION_BASIC: {
-				return Nature.BASIC;
-			}
-			case ELEMENT_COLLECTION_EMBEDDABLE: {
-				return Nature.AGGREGATE;
-			}
-			default: {
-				throw new AssertionFailure( "Unexpected attribute nature: " + associationAttribute.getNature() );
-			}
-		}
+		return Nature.ONE_TO_MANY;
 	}
-
 }
 
 

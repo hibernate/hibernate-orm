@@ -163,8 +163,7 @@ public abstract class AbstractCompositeAttributeBindingContainer
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained,
-			List<RelationalValueBinding> valueBindings) {
+			boolean isConstrained) {
 		if ( !isModifiable() ) {
 			throw new UnsupportedOperationException( "Attribute bindings are read-only and cannot be modified." );
 		}
@@ -177,8 +176,7 @@ public abstract class AbstractCompositeAttributeBindingContainer
 				metaAttributeContext,
 				referencedEntityBinding,
 				referencedAttributeBinding,
-				isConstrained,
-				valueBindings
+				isConstrained
 		);
 	}
 
@@ -192,8 +190,7 @@ public abstract class AbstractCompositeAttributeBindingContainer
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
-			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> valueBindings) {
+			SingularAttributeBinding referencedAttributeBinding) {
 		if ( !isModifiable() ) {
 			throw new UnsupportedOperationException( "Attribute bindings are read-only and cannot be modified." );
 		}
@@ -206,8 +203,7 @@ public abstract class AbstractCompositeAttributeBindingContainer
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding,
-				referencedAttributeBinding,
-				valueBindings
+				referencedAttributeBinding
 		);
 	}
 

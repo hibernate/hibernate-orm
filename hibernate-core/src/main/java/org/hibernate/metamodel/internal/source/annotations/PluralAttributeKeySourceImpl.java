@@ -77,7 +77,9 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 
 	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
-
+		if ( attribute.getMappedBy() != null ) {
+			throw new IllegalStateException( "Cannot determine foreign key information because association is not the owner." );
+		}
 		for ( Column joinColumn : attribute.getJoinColumnValues() ) {
 			if ( StringHelper.isNotEmpty( joinColumn.getReferencedColumnName() ) ) {
 				return new JoinColumnResolutionDelegateImpl( attribute );
@@ -107,7 +109,7 @@ public class PluralAttributeKeySourceImpl implements PluralAttributeKeySource {
 		}
 
 		@Override
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			List<Column> joinColumnValues = attribute.getJoinColumnValues();
 			if ( joinColumnValues.isEmpty() ) {
 				return null;

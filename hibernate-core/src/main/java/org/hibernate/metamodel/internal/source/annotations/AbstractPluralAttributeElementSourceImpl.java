@@ -33,12 +33,12 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public abstract class AbstractPluralAttributeElementSource implements AnnotationAttributeSource {
+public abstract class AbstractPluralAttributeElementSourceImpl implements AnnotationAttributeSource {
 	private final String path;
 	protected AttributeOverride attributeOverride;
 	protected AssociationOverride associationOverride;
 
-	public AbstractPluralAttributeElementSource(
+	public AbstractPluralAttributeElementSourceImpl(
 			final PluralAssociationAttribute associationAttribute,
 			final String relativePath) {
 		if ( associationAttribute.getPluralAttributeNature() == PluralAttributeSource.Nature.MAP ) {

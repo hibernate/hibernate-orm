@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.FetchStyle;
-import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
@@ -45,21 +45,21 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 
 	public SecondaryTableSourceImpl(
 			TableSpecificationSource joinTable,
-			List<PrimaryKeyJoinColumn> joinColumns) {
+			List<? extends Column> joinColumns) {
 		this.joinTable = joinTable;
 
 		// todo : following normal annotation idiom for source, we probably want to move this stuff up to EntityClass...
 		columnSources = new ArrayList<ColumnSource>();
 		final List<String> targetColumnNames = new ArrayList<String>();
 		boolean hadNamedTargetColumnReferences = false;
-		for ( PrimaryKeyJoinColumn primaryKeyJoinColumnSource : joinColumns ) {
+		for ( Column joinColumn : joinColumns ) {
 			columnSources.add(
 					new ColumnSourceImpl(
-							primaryKeyJoinColumnSource
+							joinColumn
 					)
 			);
-			targetColumnNames.add( primaryKeyJoinColumnSource.getReferencedColumnName() );
-			if ( primaryKeyJoinColumnSource.getReferencedColumnName() != null ) {
+			targetColumnNames.add( joinColumn.getReferencedColumnName() );
+			if ( joinColumn.getReferencedColumnName() != null ) {
 				hadNamedTargetColumnReferences = true;
 			}
 		}
@@ -138,7 +138,7 @@ public class SecondaryTableSourceImpl implements SecondaryTableSource {
 		}
 
 		@Override
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			List<Value> columns = new ArrayList<Value>();
 			for ( String name : targetColumnNames ) {
 				// the nulls represent table, schema and catalog name which are ignored anyway...

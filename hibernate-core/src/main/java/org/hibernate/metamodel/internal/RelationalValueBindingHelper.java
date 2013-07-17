@@ -37,6 +37,7 @@ import org.hibernate.metamodel.spi.domain.Attribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.DerivedValue;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
@@ -51,10 +52,20 @@ public class RelationalValueBindingHelper {
 	private final TableHelper tableHelper;
 	private final NaturalIdUniqueKeyHelper uniqueKeyHelper;
 
-	RelationalValueBindingHelper(LocalBindingContext bindingContext) {
+	public RelationalValueBindingHelper(LocalBindingContext bindingContext) {
 		this.tableHelper = new TableHelper( bindingContext );
 		this.uniqueKeyHelper = new NaturalIdUniqueKeyHelper();
 	}
+
+	public boolean hasDerivedValue(List<RelationalValueBinding> relationalValueBindings) {
+		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
+		if (relationalValueBinding.isDerived() ) {
+			return true;
+		}
+	}
+	return false;
+}
+
 
 	public List<RelationalValueBinding> createRelationalValueBindings(
 			final AttributeBindingContainer attributeBindingContainer,
@@ -167,5 +178,20 @@ public class RelationalValueBindingHelper {
 			}
 		}
 		return valueBindings;
+	}
+
+	public List<RelationalValueBinding> bindInverseRelationalValueBindings(
+			TableSpecification table,
+			List<? extends Value> values) {
+		final List<RelationalValueBinding> relationalValueBindings =
+				new ArrayList<RelationalValueBinding>( values.size() );
+		for ( Value value : values ) {
+			final RelationalValueBinding relationalValueBinding =
+					value.getValueType() == Value.ValueType.COLUMN ?
+							new RelationalValueBinding( table, (Column) value, false, false ) :
+							new RelationalValueBinding( table, (DerivedValue) value );
+			relationalValueBindings.add( relationalValueBinding );
+		}
+		return relationalValueBindings;
 	}
 }

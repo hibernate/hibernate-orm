@@ -267,8 +267,12 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 						break;
 					case MANY_TO_ONE:
 					case ONE_TO_ONE:
-						//others??
-						attributeSources.add( new ToOneAttributeSourceImpl( (SingularAssociationAttribute) attr,"" ) );
+						final SingularAssociationAttribute associationAttribute = (SingularAssociationAttribute) attr;
+						final SingularAttributeSource attributeSource =
+								associationAttribute.getMappedBy() == null ?
+										new ToOneAttributeSourceImpl( associationAttribute, "" ) :
+										new ToOneMappedByAttributeSourceImpl( associationAttribute, "" );
+						attributeSources.add( attributeSource );
 				}
 			}
 			return attributeSources;

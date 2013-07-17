@@ -131,6 +131,8 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 	public EntityBinding(EntityBinding superEntityBinding) {
 		this.superEntityBinding = superEntityBinding;
 		this.superEntityBinding.subEntityBindings.add( this );
+		// TODO: the ID attribute binding needs to be recreated for this EntityBinding
+		// otherwise, this !=  hierarchyDetails.getEntityIdentifier().getAttributeBinding().getContainer()
 		this.hierarchyDetails = superEntityBinding.getHierarchyDetails();
 		this.subEntityBindingId = superEntityBinding.nextSubEntityBindingId();
 	}
@@ -216,14 +218,22 @@ public class EntityBinding extends AbstractAttributeBindingContainer implements 
 		}
 	}
 
-	public AttributeBinding locateAttributeBinding(List<Value> values, boolean searchParent) {
-		AttributeBinding attributeBinding = locateAttributeBinding( values );
+	public SingularAttributeBinding locateAttributeBinding(
+			TableSpecification table,
+			List<? extends Value> values,
+			boolean searchParent) {
+		SingularAttributeBinding attributeBinding = null;
+		SingularAttributeBinding idAttributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+		if ( primaryTable.equals( table ) && idAttributeBinding.getValues().equals( values ) ) {
+			attributeBinding = hierarchyDetails.getEntityIdentifier().getAttributeBinding();
+		}
+		if ( attributeBinding ==  null ) {
+			attributeBinding = locateAttributeBinding( table, values );
+		}
 		if ( attributeBinding == null && searchParent && getSuperEntityBinding() != null ) {
-			return getSuperEntityBinding().locateAttributeBinding( values, searchParent );
+			attributeBinding = getSuperEntityBinding().locateAttributeBinding( table, values, searchParent );
 		}
-		else {
-			return attributeBinding;
-		}
+		return attributeBinding;
 	}
 
 	public AttributeBinding locateAttributeBindingByPath(String path, boolean searchParent) {

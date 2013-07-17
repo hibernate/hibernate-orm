@@ -25,12 +25,14 @@ package org.hibernate.metamodel.spi.binding;
 
 import java.util.List;
 
+import org.hibernate.AssertionFailure;
+
 /**
  *
  */
 public class BasicPluralAttributeIndexBinding extends AbstractPluralAttributeIndexBinding {
 
-	private List<RelationalValueBinding> relationalValueBindings;
+	private RelationalValueBindingContainer relationalValueBindingContainer;
 
 	public BasicPluralAttributeIndexBinding(
 			IndexedPluralAttributeBinding pluralAttributeBinding) {
@@ -39,11 +41,18 @@ public class BasicPluralAttributeIndexBinding extends AbstractPluralAttributeInd
 
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
-		return relationalValueBindings;
+		return relationalValueBindingContainer.relationalValueBindings();
 	}
 
 	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		this.relationalValueBindings = relationalValueBindings;
+		if ( relationalValueBindings == null || relationalValueBindings.isEmpty() ) {
+			throw new AssertionFailure( "relationalValueBindings argument must be non-null and non-empty." );
+		}
+		if ( this.relationalValueBindingContainer != null ) {
+			throw new AssertionFailure( "Relational value bindings have already initialized" );
+		}
+		this.relationalValueBindingContainer =
+				new RelationalValueBindingContainer( relationalValueBindings );
 	}
 
 	@Override

@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.FetchTiming;
@@ -38,6 +36,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.FilterSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 
 /**
@@ -45,7 +44,7 @@ import org.hibernate.metamodel.spi.source.RelationalValueSource;
  * @author Gail Badner
  */
 public class ManyToManyPluralAttributeElementSourceImpl
-		extends AbstractHbmSourceNode
+		extends AbstractPluralAssociationElementSourceImpl
 		implements ManyToManyPluralAttributeElementSource {
 	private final JaxbManyToManyElement manyToManyElement;
 	private final Iterable<CascadeStyle> cascadeStyles;
@@ -54,9 +53,10 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	private final FilterSource[] filterSources;
 	public ManyToManyPluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
+			final PluralAttributeSource pluralAttributeSource,
 			final JaxbManyToManyElement manyToManyElement,
 			String cascadeString) {
-		super( mappingDocument );
+		super( mappingDocument, pluralAttributeSource );
 		this.manyToManyElement = manyToManyElement;
 		this.cascadeStyles = Helper.interpretCascadeStyles( cascadeString, bindingContext() );
 
@@ -131,12 +131,6 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	@Override
 	public String getReferencedEntityAttributeName() {
 		return manyToManyElement.getPropertyRef();
-	}
-
-	@Override
-	// used by JPA instead of referenced entity attribute
-	public Collection<String> getReferencedColumnNames() {
-		return Collections.emptyList();
 	}
 
 	@Override
@@ -248,7 +242,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 		}
 
 		@Override
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			return context.resolveRelationalValuesForAttribute( manyToManyElement.getPropertyRef() );
 		}
 

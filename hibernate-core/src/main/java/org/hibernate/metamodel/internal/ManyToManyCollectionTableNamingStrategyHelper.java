@@ -39,10 +39,11 @@ public class ManyToManyCollectionTableNamingStrategyHelper extends TableNamingSt
 	private final String propertyName;
 
 	public ManyToManyCollectionTableNamingStrategyHelper(
-			final AbstractPluralAttributeBinding pluralAttributeBinding,
+			final String attributePath,
 			final boolean isInverse,
+			final EntityBinding entityBinding,
 			final EntityBinding associatedEntityBinding) {
-		super( pluralAttributeBinding.getContainer().seekEntityBinding() );
+		super( entityBinding );
 		if ( isInverse ) {
 			ownerEntityBinding = associatedEntityBinding;
 			inverseEntityBinding = entityBinding;
@@ -59,7 +60,7 @@ public class ManyToManyCollectionTableNamingStrategyHelper extends TableNamingSt
 				Table.class.isInstance( inverseEntityBinding.getPrimaryTable() )
 						? ( (Table) inverseEntityBinding.getPrimaryTable() ).getPhysicalName().getText()
 						: null;
-		propertyName = Binder.createAttributePath( pluralAttributeBinding );
+		propertyName = attributePath;
 	}
 
 	@Override

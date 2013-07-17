@@ -38,13 +38,11 @@ import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -65,6 +63,7 @@ import org.hibernate.metamodel.spi.source.MappingException;
  *
  * @author Hardy Ferentschik
  * @author Brett Meyer
+ * @author Gail Badner
  */
 public class AssociationAttribute extends MappedAttribute {
 	private static final CoreMessageLogger coreLogger = Logger.getMessageLogger(
@@ -76,7 +75,6 @@ public class AssociationAttribute extends MappedAttribute {
 	private final String referencedEntityType;
 	private final Class<?> referencedAttributeType;
 	private final String mappedBy;
-	private final boolean isJpaInverse;
 	private final Set<CascadeType> cascadeTypes;
 	private final Set<org.hibernate.annotations.CascadeType> hibernateCascadeTypes;
 	private final boolean isOptional;
@@ -90,27 +88,6 @@ public class AssociationAttribute extends MappedAttribute {
 	private ArrayList<Column> inverseJoinColumnValues = new ArrayList<Column>();
 	private final AnnotationInstance joinTableAnnotation;
 	private AttributeTypeResolver resolver;
-
-
-	static AssociationAttribute createAssociationAttribute(
-			ClassInfo classInfo,
-			String name,
-			Class<?> attributeType,
-			Nature attributeNature,
-			String accessType,
-			Map<DotName, List<AnnotationInstance>> annotations,
-			EntityBindingContext context) {
-		return new AssociationAttribute(
-				classInfo,
-				name,
-				attributeType,
-				attributeType,
-				attributeNature,
-				accessType,
-				annotations,
-				context
-		);
-	}
 
 	AssociationAttribute(
 			ClassInfo classInfo,
@@ -150,24 +127,27 @@ public class AssociationAttribute extends MappedAttribute {
 		this.referencedEntityType = determineReferencedEntityType( associationAnnotation, referencedAttributeType );
 		this.referencedAttributeType = referencedAttributeType;
 		this.mappedBy = determineMappedByAttributeName( associationAnnotation );
-		this.isJpaInverse  = mappedBy != null;
 		this.isOptional = determineOptionality( associationAnnotation );
 		this.isLazy = determineIsLazy( associationAnnotation );
 		this.isUnWrapProxy = determinIsUnwrapProxy();
 		this.isOrphanRemoval = determineOrphanRemoval( associationAnnotation );
 		this.cascadeTypes = determineCascadeTypes( associationAnnotation );
 		this.hibernateCascadeTypes = determineHibernateCascadeTypes( annotations );
-		
-		determineJoinColumnAnnotations( annotations );
-		determineJoinTableAnnotations( annotations, referencedAttributeType );
-		joinColumnValues.trimToSize();
-		inverseJoinColumnValues.trimToSize();
+
+		if ( this.mappedBy == null ) {
+			determineJoinColumnAnnotations( annotations );
+			determineJoinTableAnnotations( annotations, referencedAttributeType );
+			joinColumnValues.trimToSize();
+			inverseJoinColumnValues.trimToSize();
+			this.joinTableAnnotation = determineExplicitJoinTable( annotations );
+			}
+		else {
+			this.joinTableAnnotation = null;
+		}
 
 		this.fetchStyle = determineFetchStyle();
 		this.referencedIdAttributeName = determineMapsId();
 		this.mapsId = referencedIdAttributeName != null;
-
-		this.joinTableAnnotation = determineExplicitJoinTable( annotations );
 	}
 
 	public boolean isIgnoreNotFound() {
@@ -211,14 +191,23 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	public List<Column> getJoinColumnValues() {
+		if ( mappedBy != null ) {
+			throw new IllegalStateException( "Cannot determine join column information because assocation is not owner." );
+		}
 		return joinColumnValues;
 	}
 
 	public List<Column> getInverseJoinColumnValues() {
+		if ( mappedBy != null ) {
+			throw new IllegalStateException( "Cannot determine inverse join column information because assocation is not owner." );
+		}
 		return inverseJoinColumnValues;
 	}
 
 	public AnnotationInstance getJoinTableAnnotation() {
+		if ( mappedBy != null ) {
+			throw new IllegalStateException( "Cannot determine join table information because assocation is not owner." );
+		}
 		return joinTableAnnotation;
 	}
 
@@ -270,7 +259,6 @@ public class AssociationAttribute extends MappedAttribute {
 		}
 
 	}
-
 
 	@Override
 	public PropertyGeneration getPropertyGeneration() {
@@ -458,6 +446,12 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	private void determineJoinColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
+		// If mappedBy is defined, then annotations for this association are on the
+		// owning side of the association.
+		if ( mappedBy != null ) {
+			throw new IllegalStateException( "Cannot determine join column information because association is not the owner." );
+		}
+
 		Collection<AnnotationInstance> joinColumnAnnotations = JandexHelper.getAnnotations(
 				annotations,
 				JPADotNames.JOIN_COLUMN,
@@ -467,7 +461,6 @@ public class AssociationAttribute extends MappedAttribute {
 		for ( AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
 			joinColumnValues.add( new Column( joinColumnAnnotation ) );
 		}
-
 
 		// @JoinColumn as part of @CollectionTable
 		AnnotationInstance collectionTableAnnotation = JandexHelper.getSingleAnnotation(
@@ -487,21 +480,13 @@ public class AssociationAttribute extends MappedAttribute {
 	private void determineJoinTableAnnotations(
 			Map<DotName, List<AnnotationInstance>> annotations,
 			Class<?> referencedAttributeType ) {
-		
 
-		// If JPA and 'mappedBy' (inverse side), override the annotations
-		// with the owning side.
-		if ( isJpaInverse ) {
-			// TODO: Pull some of this into JandexHelper.
-			IndexView index = JandexHelper.indexForClass(
-					getContext().getServiceRegistry().getService(
-							ClassLoaderService.class ), referencedAttributeType );
-			ClassInfo classInfo = index.getClassByName( DotName.createSimple(
-					referencedAttributeType.getName() ) );
-			annotations = JandexHelper.getMemberAnnotations(
-					classInfo, getMappedBy(), getContext().getServiceRegistry() );
+		// If mappedBy is defined, then annotations for this association are on the
+		// owning side of the association.
+		if ( mappedBy != null ) {
+			throw new IllegalStateException( "Cannot determine join table information because association is not the owner." );
 		}
-		
+
 		// @JoinColumn as part of @JoinTable
 		AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
@@ -515,25 +500,22 @@ public class AssociationAttribute extends MappedAttribute {
 					JandexHelper.getValue( joinTableAnnotation, "inverseJoinColumns", AnnotationInstance[].class )
 			);
 			
-			// If the mappedBy inverse, flipped.  Confused yet?
 			for ( AnnotationInstance annotation : columnsList ) {
-				if ( isJpaInverse ) {
-					inverseJoinColumnValues.add( new Column( annotation ) );
-				} else {
-					joinColumnValues.add( new Column( annotation ) );
-				}
+				joinColumnValues.add( new Column( annotation ) );
 			}
 			for ( AnnotationInstance annotation : inverseColumnsList ) {
-				if ( isJpaInverse ) {
-					joinColumnValues.add( new Column( annotation ) );
-				} else {
-					inverseJoinColumnValues.add( new Column( annotation ) );
-				}
+				inverseJoinColumnValues.add( new Column( annotation ) );
 			}
 		}
 	}
 
 	private AnnotationInstance determineExplicitJoinTable(Map<DotName, List<AnnotationInstance>> annotations) {
+		// If mappedBy is defined, then annotations for this association are on the
+		// owning side of the association.
+		if ( mappedBy != null ) {
+			throw new IllegalStateException( "Cannot determine join table information because association is not the owner." );
+		}
+
 		AnnotationInstance annotationInstance = null;
 		AnnotationInstance collectionTableAnnotation = JandexHelper.getSingleAnnotation(
 				annotations,
@@ -582,5 +564,3 @@ public class AssociationAttribute extends MappedAttribute {
 		return annotationInstance;
 	}
 }
-
-

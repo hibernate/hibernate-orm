@@ -26,6 +26,7 @@ package org.hibernate.metamodel.spi.binding;
 import java.util.List;
 
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.Value;
 
 /**
  * Specialized binding contract for singular (non-collection) attributes
@@ -39,6 +40,7 @@ public interface SingularAttributeBinding extends AttributeBinding {
 
 	public List<RelationalValueBinding> getRelationalValueBindings();
 
+	public List<Value> getValues();
 	/**
 	 * Convenience method to determine if any {@link RelationalValueBinding simple value bindings} are derived values
 	 * (formula mappings).

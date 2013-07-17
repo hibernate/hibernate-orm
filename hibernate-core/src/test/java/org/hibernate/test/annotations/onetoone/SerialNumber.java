@@ -2,6 +2,7 @@
 package org.hibernate.test.annotations.onetoone;
 
 import javax.persistence.Column;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -28,7 +29,7 @@ public class SerialNumber {
 		return id.hashCode();
 	}
 
-	@Id
+	@EmbeddedId
 	public SerialNumberPk getId() {
 		return id;
 	}

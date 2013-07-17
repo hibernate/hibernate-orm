@@ -299,21 +299,28 @@ class HibernateTypeHelper {
 	void bindJdbcDataType(
 			final Type resolvedHibernateType,
 			final List<RelationalValueBinding> relationalValueBindings) {
-		if ( relationalValueBindings.size() <= 1 ) {
+		if ( resolvedHibernateType == null ) {
+			throw new IllegalArgumentException( "resolvedHibernateType must be non-null." );
+		}
+		if ( relationalValueBindings == null || relationalValueBindings.isEmpty() ) {
+			throw new IllegalArgumentException( "relationalValueBindings must be non-null." );
+		}
+		if ( relationalValueBindings.size() == 1 ) {
 			bindJdbcDataType( resolvedHibernateType, relationalValueBindings.get( 0 ).getValue() );
-			return;
 		}
-		final Type resolvedRelationalType =
-				resolvedHibernateType.isEntityType()
-						? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
-						: resolvedHibernateType;
-		if ( !CompositeType.class.isInstance( resolvedRelationalType ) ) {
-			throw bindingContext
-					.makeMappingException( "Column number mismatch" ); // todo refine the exception message
-		}
-		Type[] subTypes = CompositeType.class.cast( resolvedRelationalType ).getSubtypes();
-		for ( int i = 0; i < subTypes.length; i++ ) {
-			bindJdbcDataType( subTypes[i], relationalValueBindings.get( i ).getValue() );
+		else {
+			final Type resolvedRelationalType =
+					resolvedHibernateType.isEntityType()
+							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
+							: resolvedHibernateType;
+			if ( !CompositeType.class.isInstance( resolvedRelationalType ) ) {
+				throw bindingContext
+						.makeMappingException( "Column number mismatch" ); // todo refine the exception message
+			}
+			Type[] subTypes = CompositeType.class.cast( resolvedRelationalType ).getSubtypes();
+			for ( int i = 0; i < subTypes.length; i++ ) {
+				bindJdbcDataType( subTypes[i], relationalValueBindings.get( i ).getValue() );
+			}
 		}
 	}
 

@@ -51,7 +51,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
+@FailureExpectedWithNewMetamodel (message = "@Embeddable not detected on class used for @EmbeddedId" )
 public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEagerFetching() throws Exception {

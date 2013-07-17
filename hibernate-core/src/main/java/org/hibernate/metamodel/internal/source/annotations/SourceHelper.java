@@ -41,6 +41,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.ConfiguredClas
 import org.hibernate.metamodel.internal.source.annotations.entity.EmbeddableClass;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -110,7 +111,12 @@ public class SourceHelper {
 			switch ( associationAttribute.getNature() ) {
 				case ONE_TO_ONE:
 				case MANY_TO_ONE: {
-					ToOneAttributeSourceImpl source = new ToOneAttributeSourceImpl( (SingularAssociationAttribute) associationAttribute, relativePath );
+					final SingularAssociationAttribute singularAssociationAttribute =
+							(SingularAssociationAttribute) associationAttribute;
+					final SingularAttributeSource source =
+							associationAttribute.getMappedBy() == null ?
+									new ToOneAttributeSourceImpl( singularAssociationAttribute, relativePath ) :
+									new ToOneMappedByAttributeSourceImpl( singularAssociationAttribute, relativePath );
 					attributeList.add( source );
 					break;
 				}

@@ -28,6 +28,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
@@ -108,7 +109,8 @@ public class UniqueConstraintBindingTest extends BaseAnnotationBindingTestCase {
 		@ElementCollection
 		@CollectionTable(name = "CollectionTable", joinColumns = @JoinColumn(name = "element"), uniqueConstraints = @UniqueConstraint(columnNames = "element", name = "u4"))
 		@OrderColumn(name = "element_index")
-		public int[] elements;
+		public List<Integer> elements;
+				// TODO: int[] is not completely supported using the new metamodel yet, so I changed int[] to List<Integer>
 	}
 
 	@Entity

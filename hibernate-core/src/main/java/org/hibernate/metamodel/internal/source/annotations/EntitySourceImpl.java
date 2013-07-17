@@ -35,6 +35,9 @@ import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.Origin;
+import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -58,6 +61,7 @@ import org.jboss.jandex.ClassInfo;
 
 /**
  * @author Hardy Ferentschik
+ * @author Gail Badner
  */
 public class EntitySourceImpl implements EntitySource {
 	private final EntityClass entityClass;
@@ -397,7 +401,7 @@ public class EntitySourceImpl implements EntitySource {
 					JPADotNames.SECONDARY_TABLE
 			);
 			if ( secondaryTable != null ) {
-				secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
+				secondaryTableSources.add( createSecondaryTableSource( secondaryTable, true ) );
 			}
 		}
 
@@ -414,7 +418,20 @@ public class EntitySourceImpl implements EntitySource {
 						AnnotationInstance[].class
 				);
 				for ( AnnotationInstance secondaryTable : tableAnnotations ) {
-					secondaryTableSources.add( createSecondaryTableSource( secondaryTable ) );
+					secondaryTableSources.add( createSecondaryTableSource( secondaryTable, true ) );
+				}
+			}
+		}
+
+		for(AssociationAttribute associationAttribute: entityClass.getAssociationAttributes().values()){
+			if( ( associationAttribute.getNature() == MappedAttribute.Nature.MANY_TO_ONE ||
+					associationAttribute.getNature() == MappedAttribute.Nature.ONE_TO_ONE ) ) {
+				AnnotationInstance joinTableAnnotation = JandexHelper.getSingleAnnotation(
+						associationAttribute.annotations(),
+						JPADotNames.JOIN_TABLE
+				);
+				if ( joinTableAnnotation != null ) {
+					secondaryTableSources.add( createSecondaryTableSource( joinTableAnnotation, false ) );
 				}
 			}
 		}
@@ -515,24 +532,35 @@ public class EntitySourceImpl implements EntitySource {
 		}
 	}
 
-	private SecondaryTableSource createSecondaryTableSource(AnnotationInstance tableAnnotation) {
-		final List<PrimaryKeyJoinColumn> keys = collectionSecondaryTableKeys( tableAnnotation );
+	private SecondaryTableSource createSecondaryTableSource(
+			AnnotationInstance tableAnnotation,
+			boolean isPrimaryKeyJoinColumn) {
+		final List<? extends Column> keys = collectSecondaryTableKeys( tableAnnotation, isPrimaryKeyJoinColumn );
 		return new SecondaryTableSourceImpl( new TableSourceImpl( tableAnnotation ), keys );
 	}
 
-	private List<PrimaryKeyJoinColumn> collectionSecondaryTableKeys(final AnnotationInstance tableAnnotation) {
+	private List<? extends Column> collectSecondaryTableKeys(
+			final AnnotationInstance tableAnnotation,
+			final boolean isPrimaryKeyJoinColumn) {
 		final AnnotationInstance[] joinColumnAnnotations = JandexHelper.getValue(
 				tableAnnotation,
-				"pkJoinColumns",
+				isPrimaryKeyJoinColumn ? "pkJoinColumns" : "joinColumns",
 				AnnotationInstance[].class
 		);
 
 		if ( joinColumnAnnotations == null ) {
 			return Collections.emptyList();
 		}
-		final List<PrimaryKeyJoinColumn> keys = new ArrayList<PrimaryKeyJoinColumn>();
+		final List<Column> keys = new ArrayList<Column>();
 		for ( final AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
-			keys.add( new PrimaryKeyJoinColumn( joinColumnAnnotation ) );
+			final Column joinColumn;
+			if ( isPrimaryKeyJoinColumn ) {
+				joinColumn =  new PrimaryKeyJoinColumn( joinColumnAnnotation );
+			}
+			else {
+				joinColumn = new Column( joinColumnAnnotation );
+			}
+			keys.add( joinColumn );
 		}
 		return keys;
 	}

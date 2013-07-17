@@ -23,6 +23,9 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+
 /**
  * Contract describing the attribute binding for singular associations ({@code many-to-one}, {@code one-to-one}).
  *
@@ -43,4 +46,8 @@ public interface SingularAssociationAttributeBinding extends SingularAttributeBi
 	public SingularAttributeBinding getReferencedAttributeBinding();
 
 	public boolean isNotFoundAnException();
+
+	public TableSpecification getTable();
+
+	public ForeignKey getForeignKey();
 }

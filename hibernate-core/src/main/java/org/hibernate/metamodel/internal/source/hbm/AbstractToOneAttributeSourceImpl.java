@@ -24,7 +24,9 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.engine.FetchStyle;
@@ -36,7 +38,10 @@ import org.hibernate.metamodel.spi.binding.CompositeAttributeBinding;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.hibernate.metamodel.spi.source.AttributeSource;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
+import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
@@ -46,6 +51,7 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSourceNode implements ToOneAttributeSource{
 	private final SingularAttributeBinding.NaturalIdMutability naturalIdMutability;
 	private final String propertyRef;
+	private final Set<MappedByAssociationSource> ownedAssociationSources = new HashSet<MappedByAssociationSource>(  );
 
 	AbstractToOneAttributeSourceImpl(
 			MappingDocument sourceMappingDocument,
@@ -202,6 +208,32 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 	}
 
 	@Override
+	public Set<MappedByAssociationSource> getOwnedAssociationSources() {
+		return ownedAssociationSources;
+	}
+
+	@Override
+	public void addMappedByAssociationSource(MappedByAssociationSource attributeSource) {
+		ownedAssociationSources.add( attributeSource );
+	}
+
+	@Override
+	public boolean isMappedBy() {
+		// only applies to annotations
+		return false;
+	}
+
+	@Override
+	public AttributeSource getAttributeSource() {
+		return this;
+	}
+
+	@Override
+	public void resolveToOneAttributeSource(AttributeSourceResolutionContext context) {
+		// nothing to do
+	}
+
+	@Override
 	public JoinColumnResolutionDelegate getForeignKeyTargetColumnResolutionDelegate() {
 		return propertyRef == null
 				? null
@@ -221,7 +253,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends AbstractHbmSource
 		}
 
 		@Override
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			return context.resolveRelationalValuesForAttribute( propertyRef );
 		}
 

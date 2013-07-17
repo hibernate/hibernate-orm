@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,32 +23,36 @@
  */
 package org.hibernate.metamodel.spi.source;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.spi.CascadeStyle;
+import java.util.Set;
 
 /**
- * Contract describing sources for attributes which model associations.
- *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface AssociationAttributeSource extends AttributeSource {
-	/**
-	 * Obtain the cascade styles to be applied to this association.
-	 *
-	 * @return The cascade styles.
-	 */
-	public Iterable<CascadeStyle> getCascadeStyles();
+public interface AssociationSource extends CascadeStyleSource {
+
+	public AttributeSource getAttributeSource();
 
 	/**
-	 * Obtain the fetch mode to be applied to this association.
+	 * Obtain the name of the referenced entity.
 	 *
-	 * @return The fetch mode.
+	 * @return The name of the referenced entity
 	 */
-	public FetchMode getFetchMode();
+	public String getReferencedEntityName();
 
-	public FetchTiming getFetchTiming();
+	public boolean isNotFoundAnException();
 
-	public FetchStyle getFetchStyle();
+	/**
+	 * Returns the attribute source that is owned by this {@link AssociationSource},
+	 * if there is one.
+	 * <p/>
+	 * Specifically, this method returns the {@link AttributeSource} that is
+	 * "mappedBy" this {@link AssociationSource}.
+	 *
+	 * @return
+	 */
+	public Set<MappedByAssociationSource> getOwnedAssociationSources();
+
+	public void addMappedByAssociationSource(MappedByAssociationSource attributeSource);
+
+	public boolean isMappedBy();
 }

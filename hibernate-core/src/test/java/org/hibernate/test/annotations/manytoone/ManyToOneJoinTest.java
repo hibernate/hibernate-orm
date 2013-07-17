@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -36,7 +35,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class ManyToOneJoinTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testManyToOneJoinTable() throws Exception {

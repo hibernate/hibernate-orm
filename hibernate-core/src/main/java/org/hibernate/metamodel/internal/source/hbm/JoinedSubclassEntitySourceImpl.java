@@ -100,7 +100,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 				? null
 				: new JoinColumnResolutionDelegate() {
 			@Override
-			public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+			public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 				return context.resolveRelationalValuesForAttribute( key.getPropertyRef() );
 			}
 

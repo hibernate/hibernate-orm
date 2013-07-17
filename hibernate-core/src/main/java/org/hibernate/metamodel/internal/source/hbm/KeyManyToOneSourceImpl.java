@@ -32,6 +32,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -114,11 +115,6 @@ class KeyManyToOneSourceImpl
 	@Override
 	public Nature getNature() {
 		return Nature.MANY_TO_ONE;
-	}
-
-	@Override
-	public Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolutionContext context) {
-		return getNature();
 	}
 
 	@Override

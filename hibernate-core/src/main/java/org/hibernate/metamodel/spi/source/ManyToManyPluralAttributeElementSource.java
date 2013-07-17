@@ -31,12 +31,10 @@ import org.hibernate.engine.FetchTiming;
  * @author Steve Ebersole
  */
 public interface ManyToManyPluralAttributeElementSource
-		extends PluralAttributeElementSource, CascadeStyleSource, RelationalValueSourceContainer, ForeignKeyContributingSource, Orderable {
+		extends PluralAttributeElementSource, AssociationSource, RelationalValueSourceContainer, ForeignKeyContributingSource, Orderable {
 	public String getReferencedEntityName();
 
 	public String getReferencedEntityAttributeName();
-
-	public Collection<String> getReferencedColumnNames();
 
 	public boolean isNotFoundAnException();
 

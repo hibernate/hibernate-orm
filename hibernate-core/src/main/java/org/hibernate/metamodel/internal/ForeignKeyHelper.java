@@ -123,6 +123,7 @@ public class ForeignKeyHelper {
 		final AttributeBinding referencedAttributeBinding = explicitName != null
 				? referencedEntityBinding.locateAttributeBindingByPath( explicitName, true )
 				: referencedEntityBinding.locateAttributeBinding(
+				resolutionDelegate.getReferencedTable( resolutionContext ),
 				resolutionDelegate.getJoinColumns( resolutionContext ),
 				true
 		);

@@ -94,7 +94,7 @@ public class JoinedSubclassEntitySourceImpl extends SubclassEntitySourceImpl imp
 		}
 
 		@Override
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			List<Value> columns = new ArrayList<Value>();
 			for ( String name : targetColumnNames ) {
 				// the nulls represent table, schema and catalog name which are ignored anyway...

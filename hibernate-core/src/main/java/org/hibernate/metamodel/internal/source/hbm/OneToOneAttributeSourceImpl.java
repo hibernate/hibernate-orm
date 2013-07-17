@@ -29,6 +29,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbOneToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.type.ForeignKeyDirection;
@@ -132,11 +133,6 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	@Override
 	public Nature getNature() {
 		return Nature.ONE_TO_ONE;
-	}
-
-	@Override
-	public Nature resolveToOneAttributeSourceNature(ToOneAttributeSourceNatureResolutionContext context) {
-		return getNature();
 	}
 
 	@Override

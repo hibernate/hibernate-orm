@@ -346,8 +346,10 @@ public class CompositeAttributeBinding
 	}
 
 	@Override
-	public AttributeBinding locateAttributeBinding(List<Value> values) {
-		return compositeAttributeBindingContainer.locateAttributeBinding( values );
+	public SingularAttributeBinding locateAttributeBinding(
+			TableSpecification table,
+			List<? extends Value> values) {
+		return compositeAttributeBindingContainer.locateAttributeBinding( table, values );
 	}
 
 	@Override
@@ -419,8 +421,7 @@ public class CompositeAttributeBinding
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained,
-			List<RelationalValueBinding> valueBindings) {
+			boolean isConstrained) {
 		return compositeAttributeBindingContainer.makeOneToOneAttributeBinding(
 				attribute,
 				propertyAccessorName,
@@ -430,8 +431,7 @@ public class CompositeAttributeBinding
 				metaAttributeContext,
 				referencedEntityBinding,
 				referencedAttributeBinding,
-				isConstrained,
-				valueBindings
+				isConstrained
 		);
 	}
 
@@ -445,8 +445,7 @@ public class CompositeAttributeBinding
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
-			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> valueBindings) {
+			SingularAttributeBinding referencedAttributeBinding) {
 		return compositeAttributeBindingContainer.makeManyToOneAttributeBinding(
 				attribute,
 				propertyAccessorName,
@@ -456,8 +455,7 @@ public class CompositeAttributeBinding
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding,
-				referencedAttributeBinding,
-				valueBindings
+				referencedAttributeBinding
 		);
 	}
 

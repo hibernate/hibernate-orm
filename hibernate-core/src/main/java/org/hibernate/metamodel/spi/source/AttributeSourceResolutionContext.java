@@ -23,6 +23,10 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.List;
+
+import org.hibernate.metamodel.spi.relational.Column;
+
 /**
  *
  * @author Gail Badner
@@ -30,4 +34,5 @@ package org.hibernate.metamodel.spi.source;
 public interface AttributeSourceResolutionContext {
 	public IdentifierSource resolveIdentifierSource(String entityName);
 	public AttributeSource resolveAttributeSource(String entityName, String attributeName);
+	public List<Column> resolveIdentifierColumns();
 }

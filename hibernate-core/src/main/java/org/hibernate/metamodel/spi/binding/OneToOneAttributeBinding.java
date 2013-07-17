@@ -47,8 +47,7 @@ public class OneToOneAttributeBinding
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained,
-			List<RelationalValueBinding> valueBindings) {
+			boolean isConstrained) {
 		super(
 				container,
 				attribute,
@@ -59,7 +58,6 @@ public class OneToOneAttributeBinding
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding,
-				valueBindings,
 				referencedAttributeBinding
 		);
 		this.isConstrained = isConstrained;

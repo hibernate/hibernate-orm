@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.hibernate.FetchMode;
 import org.hibernate.internal.FilterConfiguration;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 
 /**
  * Describes plural attributes of {@link org.hibernate.metamodel.spi.binding.PluralAttributeElementBinding.Nature#MANY_TO_MANY} elements
@@ -40,8 +41,7 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 	private String manyToManyWhere;
 	private String manyToManyOrderBy;
 	private FetchMode fetchMode;
-	// TODO: really should have value defined (which defines table), but may not know 
-	private RelationalValueBindingContainer relationalValueBindingContainer;
+	private JoinRelationalValueBindingContainer relationalValueBindingContainer;
 
 	ManyToManyPluralAttributeElementBinding(AbstractPluralAttributeBinding binding) {
 		super( binding );
@@ -57,8 +57,17 @@ public class ManyToManyPluralAttributeElementBinding extends AbstractPluralAttri
 		return Nature.MANY_TO_MANY;
 	}
 
-	public void setRelationalValueBindings(List<RelationalValueBinding> relationalValueBindings) {
-		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
+	public void setJoinRelationalValueBindings(
+			List<RelationalValueBinding> relationalValueBindings,
+			ForeignKey foreignKey) {
+		this.relationalValueBindingContainer = new JoinRelationalValueBindingContainer(
+				relationalValueBindings,
+				foreignKey
+		);
+	}
+
+	public ForeignKey getForeignKey() {
+		return relationalValueBindingContainer.getForeignKey();
 	}
 
 	public String getManyToManyWhere() {

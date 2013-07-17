@@ -66,7 +66,7 @@ public interface ForeignKeyContributingSource {
 		 *
 		 * @return The resolved target columns.
 		 */
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context);
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context);
 
 		public TableSpecification getReferencedTable(JoinColumnResolutionContext context);
 
@@ -90,7 +90,7 @@ public interface ForeignKeyContributingSource {
 		 *
 		 * @return The corresponding referenced columns
 		 */
-		public List<Value> resolveRelationalValuesForAttribute(String attributeName);
+		public List<? extends Value> resolveRelationalValuesForAttribute(String attributeName);
 
 		public TableSpecification resolveTableForAttribute(String attributeName);
 

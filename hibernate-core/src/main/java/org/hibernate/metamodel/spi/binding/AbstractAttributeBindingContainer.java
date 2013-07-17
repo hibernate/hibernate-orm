@@ -23,13 +23,13 @@
  */
 package org.hibernate.metamodel.spi.binding;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.spi.domain.PluralAttribute;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
@@ -46,23 +46,34 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 	}
 
 	@Override
-	public AttributeBinding locateAttributeBinding(List<Value> values) {
+	public SingularAttributeBinding locateAttributeBinding(TableSpecification table, List<? extends Value> values) {
 		for ( AttributeBinding attributeBinding : attributeBindingMapInternal().values() ) {
 			if ( !attributeBinding.getAttribute().isSingular() ) {
 				continue;
 			}
-			SingularAttributeBinding basicAttributeBinding = (SingularAttributeBinding) attributeBinding;
-
-			List<org.hibernate.metamodel.spi.relational.Value> attributeValues = new ArrayList<Value>();
-			for ( RelationalValueBinding relationalBinding : basicAttributeBinding.getRelationalValueBindings() ) {
-				attributeValues.add( relationalBinding.getValue() );
-			}
-
-			if ( attributeValues.equals( values ) ) {
-				return attributeBinding;
+			SingularAttributeBinding singularAttributeBinding = (SingularAttributeBinding) attributeBinding;
+			if ( hasEqualValues( table, values, singularAttributeBinding.getRelationalValueBindings() ) ) {
+				return singularAttributeBinding;
 			}
 		}
 		return null;
+	}
+
+	private static boolean hasEqualValues(
+			TableSpecification table,
+			List<? extends Value> values,
+			List<RelationalValueBinding> relationalValueBindings) {
+		if ( values.size() != relationalValueBindings.size() ) {
+			return false;
+		}
+		for ( int i = 0 ; i < values.size() ; i++ ) {
+			final RelationalValueBinding relationalValueBinding = relationalValueBindings.get( i );
+			if ( !table.equals( relationalValueBinding.getTable() ) ||
+					!values.get( i ).equals( relationalValueBinding.getValue() ) ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override
@@ -153,8 +164,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained,
-			List<RelationalValueBinding> valueBindings) {
+			boolean isConstrained) {
 		final OneToOneAttributeBinding binding = new OneToOneAttributeBinding(
 				this,
 				attribute,
@@ -165,8 +175,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				metaAttributeContext,
 				referencedEntityBinding,
 				referencedAttributeBinding,
-				isConstrained,
-				valueBindings
+				isConstrained
 		);
 		registerAttributeBinding( binding );
 		return binding;
@@ -182,8 +191,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
-			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> valueBindings) {
+			SingularAttributeBinding referencedAttributeBinding) {
 		final ManyToOneAttributeBinding binding = new ManyToOneAttributeBinding(
 				this,
 				attribute,
@@ -194,8 +202,7 @@ public abstract class AbstractAttributeBindingContainer implements AttributeBind
 				naturalIdMutability,
 				metaAttributeContext,
 				referencedEntityBinding,
-				referencedAttributeBinding,
-				valueBindings
+				referencedAttributeBinding
 		);
 		registerAttributeBinding( binding );
 		return binding;

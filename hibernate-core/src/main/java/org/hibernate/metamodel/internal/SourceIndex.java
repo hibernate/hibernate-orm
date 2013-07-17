@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal;
 
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -35,7 +36,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -50,7 +50,6 @@ import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
-import org.hibernate.metamodel.spi.source.ToOneAttributeSourceNatureResolver;
 
 /**
  * @author Gail Badner
@@ -67,10 +66,6 @@ public class SourceIndex {
 	private final Map<AttributeSourceKey, AttributeSourceKey> mappedByAttributeKeysByOwnerAttributeKeys =
 			new HashMap<AttributeSourceKey, AttributeSourceKey>();
 
-	public void indexRootEntitySource(final RootEntitySource entitySource) {
-		indexEntitySource( entitySource, entitySource );
-	}
-
 	public void indexEntitySource(final RootEntitySource rootEntitySource, final EntitySource entitySource) {
 		String entityName = entitySource.getEntityName();
 		EntitySourceIndex entitySourceIndex = new EntitySourceIndex( this, rootEntitySource, entitySource );
@@ -79,15 +74,18 @@ public class SourceIndex {
 		indexAttributes( entitySourceIndex );
 	}
 
-	public void resolveAssociationSources(EntityBinding entityBinding) {
-		entitySourceIndexByEntityName.get( entityBinding.getEntityName() ).resolveAssociationSources( entityBinding );
+	public void resolveAssociationSources(EntityHierarchyHelper.LocalBindingContextExecutionContext bindingContextContext) {
+		entitySourceIndexByEntityName
+				.get( bindingContextContext.getEntityBinding().getEntityName() )
+				.resolveAttributeSources( bindingContextContext );
 	}
 
 	public Map<AttributeSourceKey, SingularAttributeSource> getSingularAttributeSources(
 			String entityName,
+			boolean isMappedBy,
 			SingularAttributeSource.Nature nature) {
 		final EntitySourceIndex entitySourceIndex = entitySourceIndexByEntityName.get( entityName );
-		return entitySourceIndex.getSingularAttributeSources( nature );
+		return entitySourceIndex.getSingularAttributeSources( isMappedBy, nature );
 	}
 
 	public Map<AttributeSourceKey, PluralAttributeSource> getPluralAttributeSources(
@@ -278,11 +276,15 @@ public class SourceIndex {
 		private final SourceIndex sourceIndex;
 		private final RootEntitySource rootEntitySource;
 		private final EntitySource entitySource;
-		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> identifierAttributeSourcesByNature =
-				new HashMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>();
-		// TODO: split out inverse and non-inverse SingularAttributeSource maps.
-		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> singularAttributeSourcesByNature =
-				new HashMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>();
+		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>
+				identifierAttributeSourcesByNature = new EnumMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>( SingularAttributeSource.Nature.class );
+		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>
+				nonMappedBySingularAttributeSourcesByNature = new EnumMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>( SingularAttributeSource.Nature.class );
+		private final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>
+				mappedBySingularAttributeSourcesByNature = new EnumMap<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>>( SingularAttributeSource.Nature.class );
+		private final Map<AttributeSourceKey, SingularAttributeSource> unresolvedSingularAttributeSourcesByKey =
+				new HashMap<AttributeSourceKey, SingularAttributeSource>();
+
 		// TODO: the following should not need to be LinkedHashMap, but it appears that some unit tests
 		//       depend on the ordering
 		// TODO: rework nonInversePluralAttributeSourcesByKey and inversePluralAttributeSourcesByKey
@@ -290,10 +292,6 @@ public class SourceIndex {
 				new LinkedHashMap<AttributeSourceKey, PluralAttributeSource>();
 		private final Map<AttributeSourceKey, PluralAttributeSource> inversePluralAttributeSourcesByKey =
 				new LinkedHashMap<AttributeSourceKey, PluralAttributeSource>();
-
-		private EntitySourceIndex(final SourceIndex sourceIndex, final RootEntitySource rootEntitySource) {
-			this( sourceIndex, rootEntitySource, rootEntitySource );
-		}
 
 		private EntitySourceIndex(
 				final SourceIndex sourceIndex,
@@ -310,12 +308,21 @@ public class SourceIndex {
 				boolean isInIdentifier) {
 			final AttributeSourceKey attributeSourceKey =
 					new AttributeSourceKey( entitySource.getEntityName(), pathBase, attributeSource.getName() );
+			if ( attributeSource.getNature() == null ) {
+				unresolvedSingularAttributeSourcesByKey.put( attributeSourceKey, attributeSource );
+				return;
+			}
+
 			final Map<SingularAttributeSource.Nature, Map<AttributeSourceKey, SingularAttributeSource>> map;
 			if ( isInIdentifier ) {
 				map = identifierAttributeSourcesByNature;
 			}
+			else if ( ToOneAttributeSource.class.isInstance( attributeSource ) &&
+					ToOneAttributeSource.class.cast( attributeSource ).isMappedBy() ) {
+				map = mappedBySingularAttributeSourcesByNature;
+			}
 			else {
-				map = singularAttributeSourcesByNature;
+				map = nonMappedBySingularAttributeSourcesByNature;
 			}
 			indexSingularAttributeSource(
 					attributeSourceKey,
@@ -344,10 +351,14 @@ public class SourceIndex {
 		}
 
 		private Map<AttributeSourceKey, SingularAttributeSource> getSingularAttributeSources(
+				boolean isMappedBy,
 				SingularAttributeSource.Nature nature) {
 			final Map<AttributeSourceKey, SingularAttributeSource> entries;
-			if ( singularAttributeSourcesByNature.containsKey( nature ) ) {
-				entries = Collections.unmodifiableMap( singularAttributeSourcesByNature.get( nature ) );
+			if ( isMappedBy && mappedBySingularAttributeSourcesByNature.containsKey( nature ) ) {
+				entries = Collections.unmodifiableMap( mappedBySingularAttributeSourcesByNature.get( nature ) );
+			}
+			else if ( !isMappedBy && nonMappedBySingularAttributeSourcesByNature.containsKey( nature ) ) {
+				entries = Collections.unmodifiableMap( nonMappedBySingularAttributeSourcesByNature.get( nature ) );
 			}
 			else {
 				entries = Collections.emptyMap();
@@ -383,119 +394,80 @@ public class SourceIndex {
 			return Collections.unmodifiableMap( map );
 		}
 
-		private void resolveAssociationSources(final EntityBinding entityBinding) {
-			// Cycle through non-inverse plural attributes.
-			for ( Map.Entry<AttributeSourceKey,PluralAttributeSource> entry : inversePluralAttributeSourcesByKey.entrySet() ) {
-				final AttributeSourceKey pluralAttributeSourceKey = entry.getKey();
-				final PluralAttributeSource pluralAttributeSource = entry.getValue();
+		private void resolveAttributeSources(EntityHierarchyHelper.LocalBindingContextExecutionContext bindingContextContext) {
+			final AttributeSourceResolutionContext sourceResolutionContext =
+					new AttributeSourceResolutionContextImpl( bindingContextContext );
+			// Resolve plural attributes.
+			for ( PluralAttributeSource pluralAttributeSource : inversePluralAttributeSourcesByKey.values() ) {
 				if ( pluralAttributeSource.getMappedBy() != null ) {
 					// This plural attribute is mappedBy the opposite side of the association,
 					// so it needs to be resolved.
-					// TODO: this should really just resolve PluralAttributeElementSource.Nature
-					pluralAttributeSource.resolvePluralAttributeElementSource(
-							new AttributeSourceResolutionContext() {
-								@Override
-								public IdentifierSource resolveIdentifierSource(String entityName) {
-									return sourceIndex.entitySourceIndex( entityName ).rootEntitySource.getIdentifierSource();
-								}
-
-								@Override
-								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {
-									AttributeSourceKey ownerAttributeSourceKey = new AttributeSourceKey( referencedEntityName, mappedBy );
-									AttributeSource ownerAttributeSource = sourceIndex.attributeSource( referencedEntityName, mappedBy );
-									// TODO: is this needed? if so, make more obvious and rename method.
-									// If it's not needed, then resolvePluralAttributeElementSource() and
-									// and resolvePluralAttributeIndexSource() can use the same
-									// AttributeSourceResolutionContext.
-									sourceIndex.addMappedByAssociationByOwnerAssociation(
-											ownerAttributeSourceKey,
-											pluralAttributeSourceKey
-									);
-									return ownerAttributeSource;
-								}
-							}
-					);
+					pluralAttributeSource.resolvePluralAttributeElementSource( sourceResolutionContext );
 				}
 				if ( IndexedPluralAttributeSource.class.isInstance( pluralAttributeSource ) ) {
 					IndexedPluralAttributeSource indexedPluralAttributeSource =
 							(IndexedPluralAttributeSource) pluralAttributeSource;
-					indexedPluralAttributeSource.resolvePluralAttributeIndexSource(
-							new AttributeSourceResolutionContext() {
-								@Override
-								public IdentifierSource resolveIdentifierSource(String entityName) {
-									return sourceIndex.entitySourceIndex( entityName ).rootEntitySource.getIdentifierSource();
-								}
-
-								@Override
-								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {;
-									return sourceIndex.attributeSource( referencedEntityName, mappedBy );
-								}
-							}
-					);
+					indexedPluralAttributeSource.resolvePluralAttributeIndexSource(  sourceResolutionContext );
 				}
 			}
 
-			for ( Map.Entry<AttributeSourceKey,PluralAttributeSource> entry : nonInversePluralAttributeSourcesByKey.entrySet() ) {
-				final AttributeSourceKey pluralAttributeSourceKey = entry.getKey();
-				final PluralAttributeSource pluralAttributeSource = entry.getValue();
+			for ( PluralAttributeSource pluralAttributeSource : nonInversePluralAttributeSourcesByKey.values() ) {
 				if ( IndexedPluralAttributeSource.class.isInstance( pluralAttributeSource ) ) {
 					IndexedPluralAttributeSource indexedPluralAttributeSource =
 							(IndexedPluralAttributeSource) pluralAttributeSource;
-					indexedPluralAttributeSource.resolvePluralAttributeIndexSource(
-							new AttributeSourceResolutionContext() {
-								@Override
-								public IdentifierSource resolveIdentifierSource(String entityName) {
-									return sourceIndex.entitySourceIndex( entityName ).rootEntitySource.getIdentifierSource();
-								}
-
-								@Override
-								public AttributeSource resolveAttributeSource(String referencedEntityName, String mappedBy) {;
-									return sourceIndex.attributeSource( referencedEntityName, mappedBy );
-								}
-							}
-					);
+					indexedPluralAttributeSource.resolvePluralAttributeIndexSource( sourceResolutionContext );
 				}
 			}
 
-			final Map<AttributeSourceKey,SingularAttributeSource> unresolvedSingularAttributeSourceMap =
-					singularAttributeSourcesByNature.get( null );
-			if ( unresolvedSingularAttributeSourceMap != null ) {
-				// cycle through unresolved SingularAttributeSource.
-				// TODO: rework so approach is similar to one-to-many/many-to-many resolution.
-				for ( Iterator<Map.Entry<AttributeSourceKey,SingularAttributeSource>> it = unresolvedSingularAttributeSourceMap.entrySet().iterator(); it.hasNext(); ) {
-					final Map.Entry<AttributeSourceKey,SingularAttributeSource> entry = it.next();
-					final AttributeSourceKey attributeSourceKey = entry.getKey();
-					final SingularAttributeSource attributeSource = entry.getValue();
-					if ( !ToOneAttributeSource.class.isInstance( attributeSource ) ) {
-						throw new AssertionFailure(
-								String.format( "Only a ToOneAttributeSource is expected to have a null nature; attribute: %s ", attributeSourceKey )
-						);
-					}
-					ToOneAttributeSource toOneAttributeSource = (ToOneAttributeSource) attributeSource;
-					toOneAttributeSource.resolveToOneAttributeSourceNature(
-							new ToOneAttributeSourceNatureResolver.ToOneAttributeSourceNatureResolutionContext() {
-
-								@Override
-								public boolean areIdentifierColumnsDefined() {
-									return false;
-								}
-
-								@Override
-								public List<Column> getIdentifierColumns() {
-									// TODO: should this return columns from EntityIdentifier???
-									//       (broken for joined-subclass)
-									return entityBinding.getPrimaryTable().getPrimaryKey().getColumns();
-								}
-							}
+			// cycle through unresolved SingularAttributeSource.
+			// TODO: rework so approach is similar to one-to-many/many-to-many resolution.
+			for ( Iterator<Map.Entry<AttributeSourceKey,SingularAttributeSource>> it = unresolvedSingularAttributeSourcesByKey.entrySet().iterator(); it.hasNext(); ) {
+				final Map.Entry<AttributeSourceKey,SingularAttributeSource> entry = it.next();
+				final AttributeSourceKey attributeSourceKey = entry.getKey();
+				final SingularAttributeSource attributeSource = entry.getValue();
+				if ( !ToOneAttributeSource.class.isInstance( attributeSource ) ) {
+					throw new AssertionFailure(
+							String.format( "Only a ToOneAttributeSource is expected to have a null nature; attribute: %s ", attributeSourceKey )
 					);
-					if ( toOneAttributeSource.getNature() == null ) {
-						throw new AssertionFailure(
-								String.format( "Null nature should have been resolved: %s ", attributeSourceKey )
-						);
-					}
-					it.remove();
-					indexSingularAttributeSource( attributeSourceKey,attributeSource, singularAttributeSourcesByNature );
 				}
+				ToOneAttributeSource toOneAttributeSource = (ToOneAttributeSource) attributeSource;
+				toOneAttributeSource.resolveToOneAttributeSource( sourceResolutionContext );
+				if ( toOneAttributeSource.getNature() == null ) {
+					throw new AssertionFailure(
+							String.format( "Null nature should have been resolved: %s ", attributeSourceKey )
+					);
+				}
+				indexSingularAttributeSource(
+						attributeSourceKey,
+						attributeSource,
+						toOneAttributeSource.isMappedBy() ?
+								mappedBySingularAttributeSourcesByNature :
+								nonMappedBySingularAttributeSourcesByNature
+				);
+			}
+		}
+
+		class AttributeSourceResolutionContextImpl implements AttributeSourceResolutionContext {
+			private final EntityHierarchyHelper.LocalBindingContextExecutionContext bindingContextContext;
+
+			public AttributeSourceResolutionContextImpl(
+					EntityHierarchyHelper.LocalBindingContextExecutionContext bindingContextContext) {
+				this.bindingContextContext = bindingContextContext;
+			}
+
+			@Override
+			public IdentifierSource resolveIdentifierSource(String entityName) {
+				return bindingContextContext.getRootEntitySource().getIdentifierSource();
+			}
+
+			@Override
+			public AttributeSource resolveAttributeSource(String entityName, String attributeName) {
+				return sourceIndex.attributeSource( entityName, attributeName );
+			}
+
+			@Override
+			public List<Column> resolveIdentifierColumns() {
+				return bindingContextContext.getEntityBinding().getPrimaryTable().getPrimaryKey().getColumns();
 			}
 		}
 	}

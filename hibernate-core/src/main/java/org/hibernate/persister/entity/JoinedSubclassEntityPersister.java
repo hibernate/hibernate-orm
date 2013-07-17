@@ -844,14 +844,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		//#3
 		System.arraycopy(
 				naturalOrderTableNames,
-				tableSpan - coreTableSpan,
+				coreTableSpan,
 				naturalOrderSubclassTableNameClosure,
 				coreTableSpan + subclassSpan,
 				secondaryTableSpan
 		);
 		System.arraycopy(
 				naturalOrderTableKeyColumns,
-				tableSpan - coreTableSpan,
+				coreTableSpan,
 				naturalOrderSubclassTableKeyColumnClosure,
 				coreTableSpan + subclassSpan,
 				secondaryTableSpan
@@ -929,7 +929,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			else  {
 				valueBindings = Collections.EMPTY_LIST;
 			}
-			TableSpecification table = attributeBinding.getContainer().seekEntityBinding().getPrimaryTable();// valueBinding.getValue().getTable();
+			final TableSpecification table;
+			if ( valueBindings.isEmpty() ) {
+				table = attributeBinding.getContainer().seekEntityBinding().getPrimaryTable();
+			}
+			else {
+				// TODO: Can relational value bindings for an attribute binding be in more than one table?
+				// For now, just get the table from the first one.
+				table = valueBindings.get( 0 ).getTable();
+			}
+
 			final String tableName = table.getQualifiedName( factory.getDialect() );
 			if ( i < hydrateSpan ) {
 				propertyTableNumbers[i] = getTableId( tableName, tableNames );

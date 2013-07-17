@@ -27,5 +27,5 @@ package org.hibernate.metamodel.spi.source;
  * @author Steve Ebersole
  */
 public interface ManyToAnyPluralAttributeElementSource
-		extends PluralAttributeElementSource, CascadeStyleSource {
+		extends PluralAttributeElementSource, AssociationSource {
 }

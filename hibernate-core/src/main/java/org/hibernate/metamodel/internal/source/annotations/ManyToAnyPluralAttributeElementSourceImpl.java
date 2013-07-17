@@ -1,28 +1,15 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
-import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.spi.source.ManyToAnyPluralAttributeElementSource;
 
 /**
  * @author Hardy Ferentschik
  */
-public class ManyToAnyPluralAttributeElementSourceImpl extends AbstractPluralAttributeElementSource implements ManyToAnyPluralAttributeElementSource {
-	private final PluralAssociationAttribute attribute;
+public class ManyToAnyPluralAttributeElementSourceImpl
+		extends AbstractPluralAssociationElementSourceImpl implements ManyToAnyPluralAttributeElementSource {
 
-	public ManyToAnyPluralAttributeElementSourceImpl(PluralAssociationAttribute attribute, String relativePath) {
-		super(attribute, relativePath);
-		this.attribute = attribute;
-	}
-
-	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-
-		return EnumConversionHelper.cascadeTypeToCascadeStyleSet(
-				attribute.getCascadeTypes(),
-				attribute.getHibernateCascadeTypes(),
-				attribute.getContext() );
+	public ManyToAnyPluralAttributeElementSourceImpl(PluralAttributeSourceImpl pluralAttributeSource, String relativePath) {
+		super( pluralAttributeSource, relativePath );
 	}
 
 	@Override

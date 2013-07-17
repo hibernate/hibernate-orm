@@ -29,7 +29,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.id.IdentifierGenerationException;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -42,7 +41,6 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  * @author Gail Badner
  */
-@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class OptionalOneToOnePKJCTest extends BaseCoreFunctionalTestCase {
 
 	@Test

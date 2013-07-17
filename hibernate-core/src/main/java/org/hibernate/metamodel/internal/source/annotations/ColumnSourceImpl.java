@@ -24,7 +24,6 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import org.hibernate.TruthValue;
-import org.hibernate.metamodel.internal.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
@@ -37,20 +36,26 @@ import org.hibernate.metamodel.spi.source.SizeSource;
  */
 public class ColumnSourceImpl implements ColumnSource {
 	private final Column columnValues;
+	private final String defaultTableName;
 	private final String readFragement;
 	private final String writeFragement;
 	private final String checkCondition;
 
 	public ColumnSourceImpl(Column columnValues) {
-		this( null, columnValues );
+		this( null, columnValues, null );
 	}
 
 	public ColumnSourceImpl(MappedAttribute attribute, Column columnValues) {
+		this( attribute, columnValues, null );
+	}
+
+	public ColumnSourceImpl(MappedAttribute attribute, Column columnValues, String defaultTableName) {
 		boolean isBasicAttribute = attribute != null && attribute.getNature() == MappedAttribute.Nature.BASIC;
 		this.readFragement = attribute != null && isBasicAttribute ? ( (BasicAttribute) attribute ).getCustomReadFragment() : null;
 		this.writeFragement = attribute != null && isBasicAttribute ? ( (BasicAttribute) attribute ).getCustomWriteFragment() : null;
 		this.checkCondition = attribute != null ? attribute.getCheckCondition() : null;
 		this.columnValues = columnValues;
+		this.defaultTableName = defaultTableName;
 	}
 
 	@Override
@@ -128,11 +133,15 @@ public class ColumnSourceImpl implements ColumnSource {
 	@Override
 	public String getContainingTableName() {
 		if ( columnValues == null ) {
-			return null;
+			return defaultTableName;
 		}
-		return columnValues.getTable();
+		else if ( columnValues.getTable() == null ) {
+			return defaultTableName;
+		}
+		else {
+			return columnValues.getTable();
+		}
 	}
-
 
 	// these come from attribute ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

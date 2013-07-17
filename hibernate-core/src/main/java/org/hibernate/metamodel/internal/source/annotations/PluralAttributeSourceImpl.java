@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.jboss.jandex.AnnotationInstance;
 
-import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.internal.util.StringHelper;
@@ -43,10 +43,12 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
+import org.hibernate.metamodel.spi.source.AssociationSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
+import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.Orderable;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
@@ -86,7 +88,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 
 		if ( associationAttribute.getMappedBy() == null ) {
 			this.ownerAttributeSource = this;
-			this.elementSource = determineElementSource( this, associationAttribute, entityClass, attributePath );
+			this.elementSource = determineElementSource( this, this, entityClass, attributePath );
 		}
 		this.filterSources = determineFilterSources(associationAttribute);
 	}
@@ -160,12 +162,6 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		return associationAttribute.getBatchSize();
 	}
 
-	public static boolean usesJoinTable(AttributeSource ownerAttributeSource) {
-		return ownerAttributeSource.isSingular() ?
-				( (ToOneAttributeSource) ownerAttributeSource ).getContainingTableName() != null :
-				( (PluralAttributeSource) ownerAttributeSource ).usesJoinTable();
-	}
-
 	@Override
 	public boolean usesJoinTable() {
 		if ( associationAttribute.getMappedBy() != null ) {
@@ -192,18 +188,34 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 
 	private static PluralAttributeElementSource determineElementSource(
 			AttributeSource ownerAttributeSource,
-			PluralAssociationAttribute associationAttribute,
+			PluralAttributeSourceImpl pluralAttributeSource,
 			ConfiguredClass entityClass,
 			String relativePath) {
-		switch ( associationAttribute.getNature() ) {
+		if ( ownerAttributeSource == null ) {
+			throw new AssertionFailure( "ownerAssociationSource must be non-null." );
+		}
+		final PluralAssociationAttribute associationAttribute = pluralAttributeSource.pluralAssociationAttribute();
+		switch ( pluralAttributeSource.pluralAssociationAttribute().getNature() ) {
 			case MANY_TO_MANY:
-				return new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, false, relativePath );
+				return associationAttribute.getMappedBy() == null ?
+						new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath ) :
+						new ManyToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
 			case MANY_TO_ANY:
-				return new ManyToAnyPluralAttributeElementSourceImpl( associationAttribute, relativePath );
+				return new ManyToAnyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
 			case ONE_TO_MANY:
-				return usesJoinTable( ownerAttributeSource ) ?
-						new ManyToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, true, relativePath ) :
-						new OneToManyPluralAttributeElementSourceImpl( ownerAttributeSource, associationAttribute, relativePath );
+				boolean usesJoinTable = ownerAttributeSource.isSingular() ?
+						( (ToOneAttributeSource) ownerAttributeSource ).getContainingTableName() != null :
+						( (PluralAttributeSource) ownerAttributeSource ).usesJoinTable();
+				if ( usesJoinTable ) {
+					return associationAttribute.getMappedBy() == null ?
+							new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath ) :
+							new ManyToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
+				}
+				else {
+					return associationAttribute.getMappedBy() == null ?
+							new OneToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath ) :
+							new OneToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
+				}
 			case ELEMENT_COLLECTION_BASIC:
 				return new BasicPluralAttributeElementSourceImpl( associationAttribute, entityClass, relativePath );
 			case ELEMENT_COLLECTION_EMBEDDABLE: {
@@ -226,14 +238,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		// todo - see org.hibernate.metamodel.internal.Binder#bindOneToManyCollectionKey
 		// todo - needs to cater for @CollectionTable and @JoinTable
 		if ( associationAttribute.getMappedBy() != null ) {
-			if ( ownerAttributeSource.isSingular() ) {
-				ToOneAttributeSource ownerSingularAttributeSource = (ToOneAttributeSource) ownerAttributeSource;
-				throw new NotYetImplementedException( "mappedBy many-to-many owned by many-to-one not supported yet." );
-			}
-			else {
-				PluralAttributeSource ownerPluralAttributeSource = (PluralAttributeSource) ownerAttributeSource;
-				return ownerPluralAttributeSource.getCollectionTableSpecificationSource();
-			}
+			throw new IllegalStateException( "Cannot get collection table because this association is not the owner." );
 		}
 		final AnnotationInstance joinTableAnnotation = associationAttribute.getJoinTableAnnotation();
 		return joinTableAnnotation == null ? null : new TableSourceImpl( joinTableAnnotation );
@@ -387,7 +392,22 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 					associationAttribute.getMappedBy()
 			);
 			// Initialize resolved entitySource.
-			elementSource = determineElementSource( ownerAttributeSource, associationAttribute, entityClass, "" ); //TODO not sure what relativePath should be here
+			elementSource = determineElementSource( ownerAttributeSource, this, entityClass, "" ); //TODO not sure what relativePath should be here
+			if ( !MappedByAssociationSource.class.isInstance( elementSource ) ) {
+				throw new AssertionFailure( "expected a mappedBy association." );
+			}
+			final AssociationSource ownerAssociationSource;
+			if ( ownerAttributeSource.isSingular() ) {
+				ownerAssociationSource = (ToOneAttributeSource) ownerAttributeSource;
+			}
+			else {
+				final PluralAttributeSource pluralAttributeSource = (PluralAttributeSource) ownerAttributeSource;
+				if ( !AssociationSource.class.isInstance( pluralAttributeSource.getElementSource() ) ) {
+					throw new AssertionFailure( "Owner is not an association." );
+				}
+				ownerAssociationSource = (AssociationSource) pluralAttributeSource.getElementSource();
+			}
+			ownerAssociationSource.addMappedByAssociationSource( (MappedByAssociationSource) elementSource );
 		}
 		return elementSource;
 	}

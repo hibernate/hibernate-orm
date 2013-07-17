@@ -176,7 +176,7 @@ class SecondaryTableSourceImpl extends AbstractHbmSourceNode implements Secondar
 		}
 
 		@Override
-		public List<Value> getJoinColumns(JoinColumnResolutionContext context) {
+		public List<? extends Value> getJoinColumns(JoinColumnResolutionContext context) {
 			return context.resolveRelationalValuesForAttribute( getReferencedAttributeName() );
 		}
 

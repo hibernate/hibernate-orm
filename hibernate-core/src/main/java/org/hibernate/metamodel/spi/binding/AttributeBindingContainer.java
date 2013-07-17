@@ -89,11 +89,12 @@ public interface AttributeBindingContainer {
 	/**
 	 * Locate a specific attribute binding, by its values.
 	 *
+	 * @param table The table containing the values
 	 * @param values The list of values
 	 *
 	 * @return The attribute binding or {@code null} if none could be found.
 	 */
-	AttributeBinding locateAttributeBinding(List<Value> values);
+	SingularAttributeBinding locateAttributeBinding(TableSpecification table, List<? extends Value> values);
 
 	/**
 	 * Seeks out the entity binding that is the root of this component path.
@@ -192,8 +193,7 @@ public interface AttributeBindingContainer {
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
 			SingularAttributeBinding referencedAttributeBinding,
-			boolean isConstrained,
-			List<RelationalValueBinding> valueBindings);
+			boolean isConstrained);
 
 
 	/**
@@ -207,7 +207,6 @@ public interface AttributeBindingContainer {
 	 * @param metaAttributeContext
 	 * @param referencedEntityBinding
 	 * @param referencedAttributeBinding
-	 * @param valueBindings
 	 *
 	 * @return The attribute binding instance.
 	 */
@@ -220,8 +219,7 @@ public interface AttributeBindingContainer {
 			SingularAttributeBinding.NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
-			SingularAttributeBinding referencedAttributeBinding,
-			List<RelationalValueBinding> valueBindings);
+			SingularAttributeBinding referencedAttributeBinding);
 
 	/**
 	 * Factory method for bag attribute bindings.

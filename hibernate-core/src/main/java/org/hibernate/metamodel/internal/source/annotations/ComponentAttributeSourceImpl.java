@@ -174,12 +174,13 @@ public class ComponentAttributeSourceImpl implements ComponentAttributeSource, A
 
 	@Override
 	public String getContainingTableName() {
+		// none, it is defined on the sub-attributes
 		return null;
 	}
 
 	@Override
 	public List<RelationalValueSource> relationalValueSources() {
-		// none, they are defined on the simple sub-attributes
+		// none, they are defined on the sub-attributes
 		return null;
 	}
 

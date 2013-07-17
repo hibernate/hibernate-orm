@@ -31,6 +31,9 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
@@ -38,9 +41,9 @@ import org.hibernate.metamodel.spi.source.MetaAttributeContext;
  */
 public abstract class AbstractSingularAssociationAttributeBinding extends AbstractSingularAttributeBinding
 		implements SingularAssociationAttributeBinding {
-	protected final EntityBinding referencedEntityBinding;
-	protected final SingularAttributeBinding referencedAttributeBinding;
-	protected final RelationalValueBindingContainer relationalValueBindingContainer;
+	private final EntityBinding referencedEntityBinding;
+	private final SingularAttributeBinding referencedAttributeBinding;
+	private JoinRelationalValueBindingContainer relationalValueBindingContainer;
 	private CascadeStyle cascadeStyle;
 	private FetchTiming fetchTiming;
 	private FetchStyle fetchStyle;
@@ -57,7 +60,6 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 			NaturalIdMutability naturalIdMutability,
 			MetaAttributeContext metaAttributeContext,
 			EntityBinding referencedEntityBinding,
-			List<RelationalValueBinding> relationalValueBindings,
 			SingularAttributeBinding referencedAttributeBinding) {
 		super(
 				container,
@@ -75,7 +77,6 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 			throw new IllegalArgumentException( "referencedAttributeBinding must be non-null." );
 		}
 		this.referencedEntityBinding = referencedEntityBinding;
-		this.relationalValueBindingContainer = new RelationalValueBindingContainer( relationalValueBindings );
 		this.referencedAttributeBinding = referencedAttributeBinding;
 		this.isNotFoundAnException = isNotFoundAnException;
 	}
@@ -151,6 +152,28 @@ public abstract class AbstractSingularAssociationAttributeBinding extends Abstra
 	@Override
 	public SingularAttributeBinding getReferencedAttributeBinding() {
 		return referencedAttributeBinding;
+	}
+
+	public void setJoinRelationalValueBindings(
+			List<RelationalValueBinding> relationalValueBindings,
+			ForeignKey foreignKey) {
+		this.relationalValueBindingContainer =
+				new JoinRelationalValueBindingContainer( relationalValueBindings, foreignKey );
+	}
+
+	@Override
+	public TableSpecification getTable() {
+		return relationalValueBindingContainer.getTable();
+	}
+
+	@Override
+	public ForeignKey getForeignKey() {
+		return relationalValueBindingContainer.getForeignKey();
+	}
+
+	@Override
+	public List<Value> getValues() {
+		return getRelationalValueBindingContainer().values();
 	}
 
 	@Override

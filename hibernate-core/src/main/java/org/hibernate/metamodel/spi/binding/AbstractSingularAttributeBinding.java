@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 
 /**
@@ -57,6 +58,11 @@ public abstract class AbstractSingularAttributeBinding
 	@Override
 	public List<RelationalValueBinding> getRelationalValueBindings() {
 		return getRelationalValueBindingContainer().relationalValueBindings();
+	}
+
+	@Override
+	public List<Value> getValues() {
+		return getRelationalValueBindingContainer().values();
 	}
 
 	@Override

@@ -58,7 +58,7 @@ public class JdbcTypeFamilyInformation {
 		}
 	}
 
-	private ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<Integer, Family>();
+	private final ConcurrentHashMap<Integer,Family> typeCodeToFamilyMap = new ConcurrentHashMap<Integer, Family>();
 
 	/**
 	 * Will return {@code null} if no match is found.
@@ -68,6 +68,6 @@ public class JdbcTypeFamilyInformation {
 	 * @return The family of datatypes the type code belongs to, or {@code null} if it belongs to no known families.
 	 */
 	public Family locateJdbcTypeFamilyByTypeCode(int typeCode) {
-		return typeCodeToFamilyMap.get( Integer.valueOf( typeCode ) );
+		return typeCodeToFamilyMap.get( typeCode );
 	}
 }

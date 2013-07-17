@@ -46,7 +46,7 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public class ManyToOneType extends EntityType {
 	private final boolean ignoreNotFound;
-	private boolean isLogicalOneToOne;
+	private final boolean isLogicalOneToOne;
 
 	/**
 	 * Creates a many-to-one association type with the given referenced entity.
@@ -113,11 +113,11 @@ public class ManyToOneType extends EntityType {
 		this.ignoreNotFound = ignoreNotFound;
 		this.isLogicalOneToOne = isLogicalOneToOne;
 	}
-
+	@Override
 	protected boolean isNullable() {
 		return ignoreNotFound;
 	}
-
+	@Override
 	public boolean isAlwaysDirtyChecked() {
 		// always need to dirty-check, even when non-updateable;
 		// this ensures that when the association is updated,
@@ -125,20 +125,20 @@ public class ManyToOneType extends EntityType {
 		// in the cache
 		return true;
 	}
-
+	@Override
 	public boolean isOneToOne() {
 		return false;
 	}
-
+	@Override
 	public boolean isLogicalOneToOne() {
 		return isLogicalOneToOne;
 	}
-
+	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		// our column span is the number of columns in the PK
 		return getIdentifierOrUniqueKeyType( mapping ).getColumnSpan( mapping );
 	}
-
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return getIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
 	}
@@ -152,7 +152,7 @@ public class ManyToOneType extends EntityType {
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
 		return getIdentifierOrUniqueKeyType( mapping ).defaultSizes( mapping );
 	}
-
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
@@ -162,7 +162,7 @@ public class ManyToOneType extends EntityType {
 		getIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, settable, session );
 	}
-
+	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,
@@ -171,11 +171,11 @@ public class ManyToOneType extends EntityType {
 		getIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeSet( st, getIdentifier( value, session ), index, session );
 	}
-
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return ForeignKeyDirection.FROM_PARENT;
 	}
-
+	@Override
 	public Object hydrate(
 			ResultSet rs,
 			String[] names,
@@ -204,11 +204,11 @@ public class ManyToOneType extends EntityType {
 			}
 		}
 	}
-	
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}
-
+	@Override
 	public boolean isModified(
 			Object old,
 			Object current,
@@ -225,7 +225,7 @@ public class ManyToOneType extends EntityType {
 		return getIdentifierOrUniqueKeyType( session.getFactory() )
 				.isDirty( old, getIdentifier( current, session ), session );
 	}
-
+	@Override
 	public Serializable disassemble(
 			Object value,
 			SessionImplementor session,
@@ -251,7 +251,7 @@ public class ManyToOneType extends EntityType {
 			return getIdentifierType( session ).disassemble( id, session, owner );
 		}
 	}
-
+	@Override
 	public Object assemble(
 			Serializable oid,
 			SessionImplementor session,
@@ -274,11 +274,11 @@ public class ManyToOneType extends EntityType {
 		//the owner of the association is not the owner of the id
 		return ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
 	}
-
+	@Override
 	public void beforeAssemble(Serializable oid, SessionImplementor session) {
 		scheduleBatchLoadIfNeeded( assembleId( oid, session ), session );
 	}
-	
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan( mapping ) ];
 		if ( value != null ) {
@@ -286,7 +286,7 @@ public class ManyToOneType extends EntityType {
 		}
 		return result;
 	}
-	
+	@Override
 	public boolean isDirty(
 			Object old,
 			Object current,
@@ -298,7 +298,7 @@ public class ManyToOneType extends EntityType {
 		Object newid = getIdentifier( current, session );
 		return getIdentifierType( session ).isDirty( oldid, newid, session );
 	}
-
+	@Override
 	public boolean isDirty(
 			Object old,
 			Object current,

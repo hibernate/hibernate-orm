@@ -72,7 +72,7 @@ public final class TypeFactory implements Serializable {
 			}
 			this.factory = factory;
 		}
-
+		@Override
 		public SessionFactoryImplementor resolveFactory() {
 			if ( factory == null ) {
 				throw new HibernateException( "SessionFactory for type scoping not yet known" );

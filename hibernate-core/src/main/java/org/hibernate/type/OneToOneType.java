@@ -98,11 +98,11 @@ public class OneToOneType extends EntityType {
 		this.entityName = entityName;
 	}
 
-
+	@Override
 	public String getPropertyName() {
 		return propertyName;
 	}
-	
+	@Override
 	public boolean isNull(Object owner, SessionImplementor session) {
 		if ( propertyName != null ) {
 			final EntityPersister ownerPersister = session.getFactory().getEntityPersister( entityName );
@@ -114,11 +114,11 @@ public class OneToOneType extends EntityType {
 			return false;
 		}
 	}
-
+	@Override
 	public int getColumnSpan(Mapping session) throws MappingException {
 		return 0;
 	}
-
+	@Override
 	public int[] sqlTypes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
@@ -134,39 +134,39 @@ public class OneToOneType extends EntityType {
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
 		return SIZES;
 	}
-
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return ArrayHelper.EMPTY_BOOLEAN_ARRAY;
 	}
-
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SessionImplementor session) {
 		//nothing to do
 	}
-
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SessionImplementor session) {
 		//nothing to do
 	}
-
+	@Override
 	public boolean isOneToOne() {
 		return true;
 	}
-
+	@Override
 	public boolean isDirty(Object old, Object current, SessionImplementor session) {
 		return false;
 	}
-
+	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) {
 		return false;
 	}
-
+	@Override
 	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session) {
 		return false;
 	}
-
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		return foreignKeyType;
 	}
-
+	@Override
 	public Object hydrate(
 		ResultSet rs,
 		String[] names,
@@ -176,20 +176,20 @@ public class OneToOneType extends EntityType {
 
 		return session.getContextEntityIdentifier(owner);
 	}
-
+	@Override
 	protected boolean isNullable() {
 		return foreignKeyType==ForeignKeyDirection.TO_PARENT;
 	}
-
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return true;
 	}
-
+	@Override
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
 		return null;
 	}
-
+	@Override
 	public Object assemble(Serializable oid, SessionImplementor session, Object owner)
 	throws HibernateException {
 		//this should be a call to resolve(), not resolveIdentifier(), 
@@ -203,6 +203,7 @@ public class OneToOneType extends EntityType {
 	 * assemble/disassemble is implemented and because a one-to-one 
 	 * association is never dirty
 	 */
+	@Override
 	public boolean isAlwaysDirtyChecked() {
 		//TODO: this is kinda inconsistent with CollectionType
 		return false; 

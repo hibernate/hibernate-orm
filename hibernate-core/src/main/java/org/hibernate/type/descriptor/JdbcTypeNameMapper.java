@@ -74,15 +74,6 @@ public class JdbcTypeNameMapper {
 	 *
 	 * @return {@code true} to indicate the type code is a standard type code; {@code false} otherwise.
 	 */
-	public static boolean isStandardTypeCode(int typeCode) {
-		return isStandardTypeCode( Integer.valueOf( typeCode ) );
-	}
-
-	/**
-	 * Same as call to {@link #isStandardTypeCode(int)}
-	 *
-	 * @see #isStandardTypeCode(int)
-	 */
 	public static boolean isStandardTypeCode(Integer typeCode) {
 		return JDBC_TYPE_MAP.containsKey( typeCode );
 	}

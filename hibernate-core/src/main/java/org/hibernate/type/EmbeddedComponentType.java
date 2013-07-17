@@ -36,15 +36,15 @@ public class EmbeddedComponentType extends ComponentType {
 	public EmbeddedComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
 		super( typeScope, metamodel );
 	}
-
+	@Override
 	public boolean isEmbedded() {
 		return true;
 	}
-
+	@Override
 	public boolean isMethodOf(Method method) {
 		return componentTuplizer.isMethodOf( method );
 	}
-
+	@Override
 	public Object instantiate(Object parent, SessionImplementor session) throws HibernateException {
 		final boolean useParent = parent!=null &&
 		                          //TODO: Yuck! This is not quite good enough, it's a quick

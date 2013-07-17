@@ -95,7 +95,7 @@ public class RootEntitySourceImpl extends AbstractEntitySourceImpl implements Ro
 	@Override
 	public IdentifierSource getIdentifierSource() {
 		if ( entityElement().getId() == null && entityElement().getCompositeId() == null ) {
-			throw new AssertionFailure(
+			throw makeMappingException(
 					String.format( "Entity [%s] did not define an identifier", getEntityName() )
 			);
 		}

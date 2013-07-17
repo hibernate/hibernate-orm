@@ -48,7 +48,7 @@ public class SqlTypeDescriptorRegistry {
 
 	private static final Logger log = Logger.getLogger( SqlTypeDescriptorRegistry.class );
 
-	private ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<Integer, SqlTypeDescriptor>();
+	private final ConcurrentHashMap<Integer,SqlTypeDescriptor> descriptorMap = new ConcurrentHashMap<Integer, SqlTypeDescriptor>();
 
 	public void addDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		descriptorMap.put( sqlTypeDescriptor.getSqlType(), sqlTypeDescriptor );
@@ -72,7 +72,7 @@ public class SqlTypeDescriptorRegistry {
 		if ( family != null ) {
 			for ( int potentialAlternateTypeCode : family.getTypeCodes() ) {
 				if ( potentialAlternateTypeCode != jdbcTypeCode ) {
-					final SqlTypeDescriptor potentialAlternateDescriptor = descriptorMap.get( Integer.valueOf( potentialAlternateTypeCode ) );
+					final SqlTypeDescriptor potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
 					if ( potentialAlternateDescriptor != null ) {
 						// todo : add a SqlTypeDescriptor.canBeAssignedFrom method...
 						return potentialAlternateDescriptor;

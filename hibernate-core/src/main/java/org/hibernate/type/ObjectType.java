@@ -36,11 +36,11 @@ public class ObjectType extends AnyType implements BasicType {
 	public ObjectType() {
 		super( StringType.INSTANCE, SerializableType.INSTANCE );
 	}
-
+	@Override
 	public String getName() {
 		return "object";
 	}
-
+	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), Object.class.getName() };
 	}

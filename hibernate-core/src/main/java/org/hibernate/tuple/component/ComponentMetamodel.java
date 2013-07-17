@@ -57,9 +57,7 @@ public class ComponentMetamodel implements Serializable {
 	private final int propertySpan;
 	private final Map<String,Integer> propertyIndexes = new HashMap<String,Integer>();
 
-//	public ComponentMetamodel(Component component, SessionFactoryImplementor sessionFactory) {
 	public ComponentMetamodel(Component component) {
-//		this.sessionFactory = sessionFactory;
 		this.isKey = component.isKey();
 		propertySpan = component.getPropertySpan();
 		properties = new StandardProperty[propertySpan];

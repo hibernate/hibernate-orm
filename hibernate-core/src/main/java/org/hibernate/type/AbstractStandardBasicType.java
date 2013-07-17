@@ -51,6 +51,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Steve Ebersole
  * @author Brett Meyer
  */
+@SuppressWarnings("unchecked")
 public abstract class AbstractStandardBasicType<T>
 		implements BasicType, StringRepresentableType<T>, ProcedureParameterExtractionAware<T> {
 
@@ -70,11 +71,11 @@ public abstract class AbstractStandardBasicType<T>
 	public T fromString(String string) {
 		return javaTypeDescriptor.fromString( string );
 	}
-
+	@Override
 	public String toString(T value) {
 		return javaTypeDescriptor.toString( value );
 	}
-
+	@Override
 	public T fromStringValue(String xml) throws HibernateException {
 		return fromString( xml );
 	}
@@ -94,11 +95,11 @@ public abstract class AbstractStandardBasicType<T>
 			return deepCopy( original );
 		}
 	}
-
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
-
+	@Override
 	public String[] getRegistrationKeys() {
 		return registerUnderJavaType()
 				? new String[] { getName(), javaTypeDescriptor.getJavaTypeClass().getName() }
@@ -134,15 +135,15 @@ public abstract class AbstractStandardBasicType<T>
 	public final void setSqlTypeDescriptor( SqlTypeDescriptor sqlTypeDescriptor ) {
 		this.sqlTypeDescriptor = sqlTypeDescriptor;
 	}
-
+	@Override
 	public final Class getReturnedClass() {
 		return javaTypeDescriptor.getJavaTypeClass();
 	}
-
+	@Override
 	public final int getColumnSpan(Mapping mapping) throws MappingException {
 		return sqlTypes( mapping ).length;
 	}
-
+	@Override
 	public final int[] sqlTypes(Mapping mapping) throws MappingException {
 		return new int[] { sqlTypeDescriptor.getSqlType() };
 	}
@@ -156,60 +157,60 @@ public abstract class AbstractStandardBasicType<T>
 	public Size[] defaultSizes(Mapping mapping) throws MappingException {
 		return new Size[] { getDefaultSize() };
 	}
-
+	@Override
 	public final boolean isAssociationType() {
 		return false;
 	}
-
+	@Override
 	public final boolean isCollectionType() {
 		return false;
 	}
-
+	@Override
 	public final boolean isComponentType() {
 		return false;
 	}
-
+	@Override
 	public final boolean isEntityType() {
 		return false;
 	}
-
+	@Override
 	public final boolean isAnyType() {
 		return false;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final boolean isSame(Object x, Object y) {
 		return isEqual( x, y );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final boolean isEqual(Object x, Object y, SessionFactoryImplementor factory) {
 		return isEqual( x, y );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final boolean isEqual(Object one, Object another) {
 		return javaTypeDescriptor.areEqual( (T) one, (T) another );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final int getHashCode(Object x) {
 		return javaTypeDescriptor.extractHashCode( (T) x );
 	}
-
+	@Override
 	public final int getHashCode(Object x, SessionFactoryImplementor factory) {
 		return getHashCode( x );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final int compare(Object x, Object y) {
 		return javaTypeDescriptor.getComparator().compare( (T) x, (T) y );
 	}
-
+	@Override
 	public final boolean isDirty(Object old, Object current, SessionImplementor session) {
 		return isDirty( old, current );
 	}
-
+	@Override
 	public final boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) {
 		return checkable[0] && isDirty( old, current );
 	}
@@ -217,7 +218,7 @@ public abstract class AbstractStandardBasicType<T>
 	protected final boolean isDirty(Object old, Object current) {
 		return !isSame( old, current );
 	}
-
+	@Override
 	public final boolean isModified(
 			Object oldHydratedState,
 			Object currentState,
@@ -225,7 +226,7 @@ public abstract class AbstractStandardBasicType<T>
 			SessionImplementor session) {
 		return isDirty( oldHydratedState, currentState );
 	}
-
+	@Override
 	public final Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
@@ -233,7 +234,7 @@ public abstract class AbstractStandardBasicType<T>
 			Object owner) throws SQLException {
 		return nullSafeGet( rs, names[0], session );
 	}
-
+	@Override
 	public final Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
 			throws SQLException {
 		return nullSafeGet( rs, name, session );
@@ -252,7 +253,7 @@ public abstract class AbstractStandardBasicType<T>
 		return nullSafeGet( rs, name, session );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final void nullSafeSet(
 			PreparedStatement st,
 			Object value,
@@ -262,7 +263,6 @@ public abstract class AbstractStandardBasicType<T>
 		nullSafeSet( st, value, index, options );
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	protected final void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
 		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, (T) value, index, options );
 	}
@@ -275,16 +275,16 @@ public abstract class AbstractStandardBasicType<T>
 		nullSafeSet( st, value, index, session );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		return javaTypeDescriptor.extractLoggableRepresentation( (T) value );
 	}
-
+	@Override
 	public final boolean isMutable() {
 		return getMutabilityPlan().isMutable();
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return deepCopy( (T) value );
 	}
@@ -293,41 +293,41 @@ public abstract class AbstractStandardBasicType<T>
 		return getMutabilityPlan().deepCopy( value );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final Serializable disassemble(Object value, SessionImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().disassemble( (T) value );
 	}
-
+	@Override
 	public final Object assemble(Serializable cached, SessionImplementor session, Object owner) throws HibernateException {
 		return getMutabilityPlan().assemble( cached );
 	}
-
+	@Override
 	public final void beforeAssemble(Serializable cached, SessionImplementor session) {
 	}
-
+	@Override
 	public final Object hydrate(ResultSet rs, String[] names, SessionImplementor session, Object owner)
 			throws HibernateException, SQLException {
 		return nullSafeGet( rs, names, session, owner );
 	}
-
+	@Override
 	public final Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
 		return value;
 	}
-
+	@Override
 	public final Object semiResolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
 		return value;
 	}
-
+	@Override
 	public final Type getSemiResolvedType(SessionFactoryImplementor factory) {
 		return this;
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public final Object replace(Object original, Object target, SessionImplementor session, Object owner, Map copyCache) {
 		return getReplacement( (T) original, (T) target, session );
 	}
 
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public Object replace(
 			Object original,
 			Object target,
@@ -364,15 +364,16 @@ public abstract class AbstractStandardBasicType<T>
 	// TODO : have SessionImplementor extend WrapperOptions
 	private WrapperOptions getOptions(final SessionImplementor session) {
 		return new WrapperOptions() {
+			@Override
 			public boolean useStreamForLobBinding() {
 				return Environment.useStreamsForBinary()
 						|| session.getFactory().getDialect().useInputStreamToInsertBlob();
 			}
-
+			@Override
 			public LobCreator getLobCreator() {
 				return Hibernate.getLobCreator( session );
 			}
-
+			@Override
 			public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 				final SqlTypeDescriptor remapped = sqlTypeDescriptor.canBeRemapped()
 						? session.getFactory().getDialect().remapSqlTypeDescriptor( sqlTypeDescriptor )

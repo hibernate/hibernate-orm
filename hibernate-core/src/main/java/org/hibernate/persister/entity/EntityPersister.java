@@ -675,6 +675,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	 * @deprecated Use {@link #getIdentifier(Object,SessionImplementor)} instead
 	 */
 	@SuppressWarnings( {"JavaDoc"})
+	@Deprecated
 	public Serializable getIdentifier(Object object) throws HibernateException;
 
 	/**

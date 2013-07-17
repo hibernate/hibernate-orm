@@ -61,43 +61,43 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		this.identifierType = identifierType;
 		this.metaType = metaType;
 	}
-
+	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory)
 	throws HibernateException {
 		return value;
 	}
-	
+	@Override
 	public boolean isMethodOf(Method method) {
 		return false;
 	}
-
+	@Override
 	public boolean isSame(Object x, Object y) throws HibernateException {
 		return x==y;
 	}
-
+	@Override
 	public int compare(Object x, Object y) {
 		return 0; //TODO: entities CAN be compared, by PK and entity name, fix this!
 	}
-
+	@Override
 	public int getColumnSpan(Mapping session)
 	throws MappingException {
 		return 2;
 	}
-
+	@Override
 	public String getName() {
 		return "object";
 	}
-
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
-
+	@Override
 	public Object nullSafeGet(ResultSet rs,	String name, SessionImplementor session, Object owner)
 	throws HibernateException, SQLException {
 
 		throw new UnsupportedOperationException("object is a multicolumn type");
 	}
-
+	@Override
 	public Object nullSafeGet(ResultSet rs,	String[] names,	SessionImplementor session,	Object owner)
 	throws HibernateException, SQLException {
 		return resolveAny(
@@ -106,20 +106,20 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 				session
 			);
 	}
-
+	@Override
 	public Object hydrate(ResultSet rs,	String[] names,	SessionImplementor session,	Object owner)
 	throws HibernateException, SQLException {
 		String entityName = (String) metaType.nullSafeGet(rs, names[0], session, owner);
 		Serializable id = (Serializable) identifierType.nullSafeGet(rs, names[1], session, owner);
 		return new ObjectTypeCacheEntry(entityName, id);
 	}
-
+	@Override
 	public Object resolve(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
 		ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) value;
 		return resolveAny(holder.entityName, holder.id, session);
 	}
-
+	@Override
 	public Object semiResolve(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
 		throw new UnsupportedOperationException("any mappings may not form part of a property-ref");
@@ -130,12 +130,12 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return entityName==null || id==null ?
 				null : session.internalLoad( entityName, id, false, false );
 	}
-
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value,	int index, SessionImplementor session)
 	throws HibernateException, SQLException {
 		nullSafeSet(st, value, index, null, session);
 	}
-	
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value,	int index, boolean[] settable, SessionImplementor session)
 	throws HibernateException, SQLException {
 
@@ -163,11 +163,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			identifierType.nullSafeSet(st, id, index+1, idsettable, session);
 		}
 	}
-
+	@Override
 	public Class getReturnedClass() {
 		return Object.class;
 	}
-
+	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
 		return ArrayHelper.join(
 				metaType.sqlTypes( mapping ),
@@ -190,7 +190,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 				identifierType.defaultSizes( mapping )
 		);
 	}
-
+	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) 
 	throws HibernateException {
 		//TODO: terrible implementation!
@@ -209,7 +209,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			this.id = id;
 		}
 	}
-
+	@Override
 	public Object assemble(
 		Serializable cached,
 		SessionImplementor session,
@@ -219,7 +219,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		ObjectTypeCacheEntry e = (ObjectTypeCacheEntry) cached;
 		return e==null ? null : session.internalLoad(e.entityName, e.id, false, false);
 	}
-
+	@Override
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
 		return value==null ?
@@ -231,11 +231,11 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 							)
 					);
 	}
-
+	@Override
 	public boolean isAnyType() {
 		return true;
 	}
-
+	@Override
 	public Object replace(
 			Object original, 
 			Object target,
@@ -261,20 +261,21 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 				);
 		}
 	}
+	@Override
 	public CascadeStyle getCascadeStyle(int i) {
 		return CascadeStyles.NONE;
 	}
-
+	@Override
 	public FetchMode getFetchMode(int i) {
 		return FetchMode.SELECT;
 	}
 
-	private static final String[] PROPERTY_NAMES = new String[] { "class", "id" };
-
+	private static final String[] PROPERTY_NAMES = { "class", "id" };
+	@Override
 	public String[] getPropertyNames() {
 		return PROPERTY_NAMES;
 	}
-
+	@Override
 	public Object getPropertyValue(Object component, int i, SessionImplementor session)
 		throws HibernateException {
 
@@ -282,7 +283,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 				session.bestGuessEntityName(component) :
 				getIdentifier(component, session);
 	}
-
+	@Override
 	public Object[] getPropertyValues(Object component, SessionImplementor session)
 		throws HibernateException {
 
@@ -297,43 +298,43 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return null;
 		}
 	}
-
+	@Override
 	public Type[] getSubtypes() {
 		return new Type[] { metaType, identifierType };
 	}
-
+	@Override
 	public void setPropertyValues(Object component, Object[] values, EntityMode entityMode)
 		throws HibernateException {
 
 		throw new UnsupportedOperationException();
 
 	}
-
+	@Override
 	public Object[] getPropertyValues(Object component, EntityMode entityMode) {
 		throw new UnsupportedOperationException();
 	}
-
+	@Override
 	public boolean isComponentType() {
 		return true;
 	}
-
+	@Override
 	public ForeignKeyDirection getForeignKeyDirection() {
 		//return AssociationType.TO_PARENT; //this is better but causes a transient object exception...
 		return ForeignKeyDirection.FROM_PARENT;
 	}
-
+	@Override
 	public boolean isAssociationType() {
 		return true;
 	}
-
+	@Override
 	public boolean useLHSPrimaryKey() {
 		return false;
 	}
-
+	@Override
 	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) {
 		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
 	}
-
+	@Override
 	public boolean isModified(Object old, Object current, boolean[] checkable, SessionImplementor session)
 	throws HibernateException {
 		if (current==null) return old!=null;
@@ -344,49 +345,46 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		return ( checkable[0] && !holder.entityName.equals( session.bestGuessEntityName(current) ) ) ||
 				identifierType.isModified(holder.id, getIdentifier(current, session), idcheckable, session);
 	}
-
+	@Override
 	public String getAssociatedEntityName(SessionFactoryImplementor factory)
 		throws MappingException {
 		throw new UnsupportedOperationException("any types do not have a unique referenced persister");
 	}
-	
+	@Override
 	public boolean[] getPropertyNullability() {
 		return null;
 	}
-
+	@Override
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 	throws MappingException {
 		throw new UnsupportedOperationException();
 	}
 	
-	public boolean isReferenceToPrimaryKey() {
-		return true;
-	}
-	
+	@Override
 	public String getRHSUniqueKeyPropertyName() {
 		return null;
 	}
-
+	@Override
 	public String getLHSPropertyName() {
 		return null;
 	}
-
+	@Override
 	public boolean isAlwaysDirtyChecked() {
 		return false;
 	}
-	
+	@Override
 	public boolean[] toColumnNullness(Object value, Mapping mapping) {
 		boolean[] result = new boolean[ getColumnSpan(mapping) ];
 		if (value!=null) Arrays.fill(result, true);
 		return result;
 	}
-
+	@Override
 	public boolean isDirty(Object old, Object current, boolean[] checkable, SessionImplementor session) 
 	throws HibernateException {
 		//TODO!!!
 		return isDirty(old, current, session);
 	}
-
+	@Override
 	public boolean isEmbedded() {
 		return false;
 	}

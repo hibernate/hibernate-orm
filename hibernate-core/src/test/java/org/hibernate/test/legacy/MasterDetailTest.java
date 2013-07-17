@@ -56,7 +56,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-
+/**
+ * see {@link SingularIdentifierAttributeSourceImpl} basically, the {@link Details} class doesn't have an 'id' attribute
+ * it is a virtual attribute, but we need some api to define this, maybe add a method to the {@link org.hibernate.metamodel.spi.source.AttributeSource}
+ * say "isSynthetic()"
+ */
 @FailureExpectedWithNewMetamodel
 public class MasterDetailTest extends LegacyTestCase {
 	@Override

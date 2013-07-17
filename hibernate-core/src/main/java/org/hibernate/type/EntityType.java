@@ -139,6 +139,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return True.
 	 */
+	@Override
 	public boolean isAssociationType() {
 		return true;
 	}
@@ -148,13 +149,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return True.
 	 */
+	@Override
 	public final boolean isEntityType() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
@@ -164,6 +164,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return string rep
 	 */
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + getAssociatedEntityName() + ')';
 	}
@@ -171,6 +172,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * For entity types, the name correlates to the associated entity name.
 	 */
+	@Override
 	public String getName() {
 		return associatedEntityName;
 	}
@@ -184,13 +186,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	public boolean isReferenceToPrimaryKey() {
 		return referenceToPrimaryKey;
 	}
-
+	@Override
 	public String getRHSUniqueKeyPropertyName() {
 		// Return null if this type references a PK.  This is important for
 		// associations' use of mappedBy referring to a derived ID.
 		return referenceToPrimaryKey ? null : uniqueKeyPropertyName;
 	}
-
+	@Override
 	public String getLHSPropertyName() {
 		return null;
 	}
@@ -214,6 +216,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param factory The session factory, for resolution.
 	 * @return The associated entity name.
 	 */
+	@Override
 	public String getAssociatedEntityName(SessionFactoryImplementor factory) {
 		return getAssociatedEntityName();
 	}
@@ -225,6 +228,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The associated joinable
 	 * @throws MappingException Generally indicates an invalid entity name.
 	 */
+	@Override
 	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) throws MappingException {
 		return ( Joinable ) factory.getEntityPersister( associatedEntityName );
 	}
@@ -237,8 +241,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * entity persister (nor to the session factory, to look it up) which is really
 	 * needed to "do the right thing" here...
 	 *
-	 * @return The entiyt class.
+	 * @return The entity class.
 	 */
+	@Override
 	public final Class getReturnedClass() {
 		if ( returnedClass == null ) {
 			returnedClass = determineAssociatedEntityClass();
@@ -257,17 +262,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
         }
     }
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
 	throws HibernateException, SQLException {
 		return nullSafeGet( rs, new String[] {name}, session, owner );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
@@ -284,27 +285,22 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param y Another entity instance
 	 * @return True if x == y; false otherwise.
 	 */
+	@Override
 	public final boolean isSame(Object x, Object y) {
 		return x == y;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int compare(Object x, Object y) {
 		return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return value; //special case ... this is the leaf of the containment graph, even though not immutable
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object replace(
 			Object original,
 			Object target,
@@ -342,9 +338,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
 		if ( !persister.canExtractIdOutOfEntity() ) {
@@ -413,7 +407,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return persister.getIdentifierType()
 				.isEqual(xid, yid, factory);
 	}
-
+	@Override
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map<String, Filter> enabledFilters)
 	throws MappingException {
 		if ( isReferenceToPrimaryKey() ) { //TODO: this is a bit arbitrary, expose a switch to the user?
@@ -427,6 +421,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Resolve an identifier or unique key value
 	 */
+	@Override
 	public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
 		if ( value == null ) {
 			return null;
@@ -445,7 +440,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		
 		return null;
 	}
-
+	@Override
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
 		return factory.getEntityPersister( associatedEntityName ).getIdentifierType();
 	}
@@ -480,6 +475,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The loggable string.
 	 * @throws HibernateException Generally some form of resolution problem.
 	 */
+	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";
@@ -524,6 +520,9 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return isOneToOne();
 	}
 
+	private transient Type identifierType;
+	private transient Type identifierOrUniqueType;
+
 	/**
 	 * Convenience method to locate the identifier type of the associated entity.
 	 *
@@ -531,7 +530,10 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The identifier type
 	 */
 	Type getIdentifierType(Mapping factory) {
-		return factory.getIdentifierType( getAssociatedEntityName() );
+		if ( identifierType == null ) {
+			identifierType = factory.getIdentifierType( getAssociatedEntityName() );
+		}
+		return identifierType;
 	}
 
 	/**
@@ -555,18 +557,21 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * or unique key property name.
 	 */
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
-			return getIdentifierType(factory);
-		}
-		else {
-			Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
-			if ( type.isEntityType() ) {
-				type = ( ( EntityType ) type).getIdentifierOrUniqueKeyType( factory );
+		if ( identifierOrUniqueType == null ) {
+			if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+				identifierOrUniqueType = getIdentifierType( factory );
 			}
-			return type;
+			else {
+				Type type = factory.getReferencedPropertyType( getAssociatedEntityName(), uniqueKeyPropertyName );
+				if ( type.isEntityType() ) {
+					type = ( (EntityType) type ).getIdentifierOrUniqueKeyType( factory );
+				}
+				identifierOrUniqueType = type;
+			}
 		}
+		return identifierOrUniqueType;
 	}
-
+	 private transient String identifierOrUniquePropertyName;
 	/**
 	 * The name of the property on the associated entity to which our FK
 	 * refers
@@ -575,16 +580,18 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The appropriate property name.
 	 * @throws MappingException Generally, if unable to resolve the associated entity name
 	 */
-	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
-	throws MappingException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
-			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
+	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory) throws MappingException {
+		if ( identifierOrUniquePropertyName == null ) {
+			if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+				identifierOrUniquePropertyName = factory.getIdentifierPropertyName( getAssociatedEntityName() );
+			}
+			else {
+				identifierOrUniquePropertyName = uniqueKeyPropertyName;
+			}
 		}
-		else {
-			return uniqueKeyPropertyName;
-		}
+		return identifierOrUniquePropertyName;
 	}
-	
+
 	protected abstract boolean isNullable();
 
 	/**

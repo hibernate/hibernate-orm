@@ -55,7 +55,6 @@ import org.hibernate.tuple.component.ComponentTuplizer;
  */
 public class ComponentType extends AbstractType implements CompositeType, ProcedureParameterExtractionAware {
 
-	private final TypeFactory.TypeScope typeScope;
 	private final String[] propertyNames;
 	private final Type[] propertyTypes;
 	private final boolean[] propertyNullability;
@@ -68,7 +67,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	protected final ComponentTuplizer componentTuplizer;
 
 	public ComponentType(TypeFactory.TypeScope typeScope, ComponentMetamodel metamodel) {
-		this.typeScope = typeScope;
 		// for now, just "re-flatten" the metamodel since this is temporary stuff anyway (HHH-1907)
 		this.isKey = metamodel.isKey();
 		this.propertySpan = metamodel.getPropertySpan();
@@ -102,23 +100,34 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	public ComponentTuplizer getComponentTuplizer() {
 		return componentTuplizer;
 	}
+
+	private transient int columnSpan = Integer.MIN_VALUE;
+
 	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
-		int span = 0;
-		for ( int i = 0; i < propertySpan; i++ ) {
-			span += propertyTypes[i].getColumnSpan( mapping );
+		if ( columnSpan == Integer.MIN_VALUE ) {
+			int span = 0;
+			for ( int i = 0; i < propertySpan; i++ ) {
+				span += propertyTypes[i].getColumnSpan( mapping );
+			}
+			columnSpan = span;
 		}
-		return span;
+		return columnSpan;
 	}
+
+	private transient int[] sqlTypes;
+
 	@Override
 	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		//Not called at runtime so doesn't matter if its slow :)
-		int[] sqlTypes = new int[getColumnSpan( mapping )];
-		int n = 0;
-		for ( int i = 0; i < propertySpan; i++ ) {
-			int[] subtypes = propertyTypes[i].sqlTypes( mapping );
-			for ( int subtype : subtypes ) {
-				sqlTypes[n++] = subtype;
+		if ( sqlTypes == null ) {
+			//Not called at runtime so doesn't matter if its slow :)
+			sqlTypes = new int[getColumnSpan( mapping )];
+			int n = 0;
+			for ( int i = 0; i < propertySpan; i++ ) {
+				int[] subtypes = propertyTypes[i].sqlTypes( mapping );
+				for ( int subtype : subtypes ) {
+					sqlTypes[n++] = subtype;
+				}
 			}
 		}
 		return sqlTypes;
@@ -282,7 +291,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		}
 		return false;
 	}
-
+	@Override
 	public boolean isDirty(Object x, Object y, boolean[] checkable, SessionImplementor session)
 			throws HibernateException {
 		if ( x == y ) {

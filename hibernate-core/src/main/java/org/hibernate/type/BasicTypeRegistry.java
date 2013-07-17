@@ -44,7 +44,7 @@ public class BasicTypeRegistry implements Serializable {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, BasicTypeRegistry.class.getName());
 
 	// TODO : analyze these sizing params; unfortunately this seems to be the only way to give a "concurrencyLevel"
-	private Map<String,BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
+	private final Map<String,BasicType> registry = new ConcurrentHashMap<String, BasicType>( 100, .75f, 1 );
 	private boolean locked = false;
 
 	public BasicTypeRegistry() {

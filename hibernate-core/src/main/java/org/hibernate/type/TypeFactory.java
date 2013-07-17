@@ -40,11 +40,8 @@ import org.hibernate.usertype.UserType;
 import org.jboss.logging.Logger;
 
 /**
- * Used internally to build instances of {@link Type}, specifically it builds instances of
- *
- *
- * Used internally to obtain instances of <tt>Type</tt>. Applications should use static methods
- * and constants on <tt>org.hibernate.Hibernate</tt>.
+ * Used internally to obtain instances of {@link Type}. Applications should use static methods
+ * and constants on {@link StandardBasicTypes}.
  *
  * @author Gavin King
  * @author Steve Ebersole

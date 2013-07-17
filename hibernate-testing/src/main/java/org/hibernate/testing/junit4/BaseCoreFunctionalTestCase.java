@@ -142,9 +142,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	}
 
 	protected void rebuildSessionFactory() {
-		if ( sessionFactory == null ) {
-			return;
-		}
+		releaseSessionFactory();
 		buildSessionFactory();
 	}
 

@@ -45,16 +45,12 @@ public class TypeLocatorImpl implements TypeHelper, Serializable {
 		this.typeResolver = typeResolver;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public BasicType basic(String name) {
 		return typeResolver.basic( name );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public BasicType basic(Class javaType) {
 		BasicType type = typeResolver.basic( javaType.getName() );
 		if ( type == null ) {
@@ -134,39 +130,27 @@ public class TypeLocatorImpl implements TypeHelper, Serializable {
 		return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type heuristicType(String name) {
 		return typeResolver.heuristicType( name );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type entity(Class entityClass) {
 		return entity( entityClass.getName() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type entity(String entityName) {
 		return typeResolver.getTypeFactory().manyToOne( entityName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public Type custom(Class userTypeClass) {
 		return custom( userTypeClass, null );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@SuppressWarnings({ "unchecked" })
+	@Override
 	public Type custom(Class userTypeClass, Properties parameters) {
 		if ( CompositeUserType.class.isAssignableFrom( userTypeClass ) ) {
 			return typeResolver.getTypeFactory().customComponent( userTypeClass, parameters );
@@ -176,9 +160,7 @@ public class TypeLocatorImpl implements TypeHelper, Serializable {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type any(Type metaType, Type identifierType) {
 		return typeResolver.getTypeFactory().any( metaType, identifierType );
 	}

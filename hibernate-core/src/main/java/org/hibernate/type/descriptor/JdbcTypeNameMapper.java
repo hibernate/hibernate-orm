@@ -41,7 +41,7 @@ import org.hibernate.internal.CoreMessageLogger;
 public class JdbcTypeNameMapper {
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JdbcTypeNameMapper.class.getName());
-	private static Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
+	private static final Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
 
 	private static Map<Integer, String> buildJdbcTypeMap() {
 		HashMap<Integer, String> map = new HashMap<Integer, String>();

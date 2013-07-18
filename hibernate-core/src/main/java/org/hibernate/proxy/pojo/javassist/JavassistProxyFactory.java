@@ -40,7 +40,6 @@ import org.hibernate.type.CompositeType;
  */
 public class JavassistProxyFactory implements ProxyFactory, Serializable {
 
-	protected static final Class[] NO_CLASSES = new Class[0];
 	private Class persistentClass;
 	private String entityName;
 	private Class[] interfaces;
@@ -60,7 +59,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 			CompositeType componentIdType) throws HibernateException {
 		this.entityName = entityName;
 		this.persistentClass = persistentClass;
-		this.interfaces = interfaces.toArray(NO_CLASSES);
+		this.interfaces = interfaces.toArray( new Class[interfaces.size()] );
 		this.getIdentifierMethod = getIdentifierMethod;
 		this.setIdentifierMethod = setIdentifierMethod;
 		this.componentIdType = componentIdType;

@@ -33,6 +33,7 @@ import javassist.util.proxy.ProxyFactory;
 import javassist.util.proxy.ProxyObject;
 import org.jboss.logging.Logger;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -50,7 +51,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JavassistLazyInitializer.class.getName());
 
-	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
+	public static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
+		@Override
 		public boolean isHandled(Method m) {
 			// skip finalize methods
 			return !( m.getParameterTypes().length == 0 && m.getName().equals( "finalize" ) );
@@ -75,41 +77,22 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 	}
 
 	public static HibernateProxy getProxy(
-			final String entityName,
-			final Class persistentClass,
-			final Class[] interfaces,
-			final Method getIdentifierMethod,
-			final Method setIdentifierMethod,
-			CompositeType componentIdType,
-			final Serializable id,
-			final SessionImplementor session) throws HibernateException {
-		// note: interface is assumed to already contain HibernateProxy.class
-		try {
-			final JavassistLazyInitializer instance = new JavassistLazyInitializer(
-					entityName,
-					persistentClass,
-					interfaces,
-					id,
-					getIdentifierMethod,
-					setIdentifierMethod,
-					componentIdType,
-					session,
-					ReflectHelper.overridesEquals(persistentClass)
-			);
-			ProxyFactory factory = new ProxyFactory();
-			factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
-			factory.setInterfaces( interfaces );
-			factory.setFilter( FINALIZE_FILTER );
-			Class cl = factory.createClass();
-			final HibernateProxy proxy = ( HibernateProxy ) cl.newInstance();
-			( ( ProxyObject ) proxy ).setHandler( instance );
-			instance.constructed = true;
-			return proxy;
-		}
-		catch ( Throwable t ) {
-			LOG.error(LOG.javassistEnhancementFailed(entityName), t);
-			throw new HibernateException(LOG.javassistEnhancementFailed(entityName), t);
-		}
+			final String entityName, final Class persistentClass, final Class[] interfaces,
+			final Method getIdentifierMethod, final Method setIdentifierMethod, CompositeType componentIdType,
+			final Serializable id, final SessionImplementor session) throws HibernateException {
+
+		return getProxy(
+				getProxyFactory( persistentClass, interfaces ),
+				entityName,
+				persistentClass,
+				interfaces,
+				getIdentifierMethod,
+				setIdentifierMethod,
+				componentIdType,
+				id,
+				session,
+				ReflectHelper.overridesEquals( persistentClass )
+		);
 	}
 
 	public static HibernateProxy getProxy(
@@ -127,7 +110,8 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 		final JavassistLazyInitializer instance = new JavassistLazyInitializer(
 				entityName,
 				persistentClass,
-				interfaces, id,
+				interfaces,
+				id,
 				getIdentifierMethod,
 				setIdentifierMethod,
 				componentIdType,
@@ -151,20 +135,23 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 	}
 
 	public static Class getProxyFactory(
-			Class persistentClass,
-			Class[] interfaces) throws HibernateException {
+			Class superClass, Class[] interfaces) throws HibernateException {
 		// note: interfaces is assumed to already contain HibernateProxy.class
+		if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
+			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
+		}
 
 		try {
 			ProxyFactory factory = new ProxyFactory();
-			factory.setSuperclass( interfaces.length == 1 ? persistentClass : null );
+			factory.setSuperclass( interfaces.length == 1 ? superClass : null );
 			factory.setInterfaces( interfaces );
 			factory.setFilter( FINALIZE_FILTER );
 			return factory.createClass();
 		}
 		catch ( Throwable t ) {
-			LOG.error(LOG.javassistEnhancementFailed(persistentClass.getName()), t);
-			throw new HibernateException(LOG.javassistEnhancementFailed(persistentClass.getName()), t);
+			Class caculatedSuperClass = superClass != null ? superClass : interfaces[0];
+			LOG.error( LOG.javassistEnhancementFailed( caculatedSuperClass.getName() ), t );
+			throw new HibernateException( LOG.javassistEnhancementFailed( caculatedSuperClass.getName() ), t );
 		}
 	}
 

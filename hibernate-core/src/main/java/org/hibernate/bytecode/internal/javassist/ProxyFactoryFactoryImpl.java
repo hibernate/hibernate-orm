@@ -26,15 +26,14 @@ package org.hibernate.bytecode.internal.javassist;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 
-import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyObject;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.proxy.ProxyFactory;
+import org.hibernate.proxy.pojo.javassist.JavassistLazyInitializer;
 import org.hibernate.proxy.pojo.javassist.JavassistProxyFactory;
 
 /**
@@ -69,19 +68,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 		private final Class proxyClass;
 
 		public BasicProxyFactoryImpl(Class superClass, Class[] interfaces) {
-			if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
-				throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
-			}
-
-			final javassist.util.proxy.ProxyFactory factory = new javassist.util.proxy.ProxyFactory();
-			factory.setFilter( FINALIZE_FILTER );
-			if ( superClass != null ) {
-				factory.setSuperclass( superClass );
-			}
-			if ( interfaces != null && interfaces.length > 0 ) {
-				factory.setInterfaces( interfaces );
-			}
-			proxyClass = factory.createClass();
+			proxyClass = JavassistLazyInitializer.getProxyFactory( superClass, interfaces );
 		}
 
 		public Object getProxy() {
@@ -100,12 +87,6 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 		}
 	}
 
-	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
-		public boolean isHandled(Method m) {
-			// skip finalize methods
-			return !( m.getParameterTypes().length == 0 && m.getName().equals( "finalize" ) );
-		}
-	};
 
 	private static class PassThroughHandler implements MethodHandler {
 		private HashMap data = new HashMap();

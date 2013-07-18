@@ -36,7 +36,6 @@ import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,7 +43,6 @@ import static org.junit.Assert.assertEquals;
  * @author Michael Rudolf
  * @author James Gilbertson
  */
-@FailureExpectedWithNewMetamodel
 public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
     @Before
     public void prepareTestData() {

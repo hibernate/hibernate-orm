@@ -35,7 +35,6 @@ import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -44,7 +43,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class UncorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 	@Test
 	public void testEqualAll() {

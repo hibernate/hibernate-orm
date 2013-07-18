@@ -34,7 +34,6 @@ import org.junit.Test;
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.HibernateEntityManager;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -42,7 +41,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class FetchTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testCascadeAndFetchCollection() throws Exception {

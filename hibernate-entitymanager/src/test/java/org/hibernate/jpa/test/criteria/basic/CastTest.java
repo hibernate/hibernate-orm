@@ -38,10 +38,8 @@ import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
-@FailureExpectedWithNewMetamodel(message = "@OneToOne with mappedBy specified is not supported yet")
 public class CastTest extends AbstractMetamodelSpecificTest {
 	private static final int QUANTITY = 2;
 

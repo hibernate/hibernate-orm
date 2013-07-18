@@ -37,14 +37,12 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 	@Test
 	public void basicTest() {

@@ -33,7 +33,6 @@ import org.hibernate.jpa.test.metamodel.LineItem;
 import org.hibernate.jpa.test.metamodel.LineItem_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import org.junit.Test;
 
@@ -42,7 +41,6 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel
 public class OnKeywordTest extends AbstractMetamodelSpecificTest {
 	@Test
 	public void basicTest() {

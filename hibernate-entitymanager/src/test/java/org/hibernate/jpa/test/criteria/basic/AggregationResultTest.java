@@ -38,12 +38,10 @@ import org.junit.Test;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 /**
  * @author Steve Ebersole
  */
-@FailureExpectedWithNewMetamodel(message = "@OneToOne with mappedBy specified is not supported yet")
 public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 

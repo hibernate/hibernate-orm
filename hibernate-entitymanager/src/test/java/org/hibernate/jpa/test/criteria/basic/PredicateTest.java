@@ -39,7 +39,6 @@ import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
 
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
@@ -51,7 +50,6 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Hardy Ferentschik
  */
-@FailureExpectedWithNewMetamodel
 public class PredicateTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 

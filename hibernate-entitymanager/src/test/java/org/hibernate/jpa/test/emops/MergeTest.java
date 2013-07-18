@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -38,7 +37,6 @@ import static org.junit.Assert.fail;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class MergeTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testMergeWithIndexColumn() {

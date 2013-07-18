@@ -31,7 +31,7 @@ ext {
     junitVersion = '4.10'
     h2Version = '1.2.145'
     bytemanVersion = '2.1.2'
-    infinispanVersion = '5.2.0.Beta3'
+    infinispanVersion = '5.3.0.Final'
     jnpVersion = '5.0.6.CR1'
 
     libraries = [
@@ -109,7 +109,7 @@ ext {
             jnp_server:      "org.jboss.naming:jnpserver:${jnpVersion}",
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~ c3p0
-            c3p0:            "c3p0:c3p0:0.9.1",
+            c3p0:            "com.mchange:c3p0:0.9.2.1",
             ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
             proxool:         "proxool:proxool:0.8.3"
 

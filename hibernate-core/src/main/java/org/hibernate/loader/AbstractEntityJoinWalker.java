@@ -205,6 +205,16 @@ public abstract class AbstractEntityJoinWalker extends JoinWalker {
 	public final String getAlias() {
 		return alias;
 	}
+	
+	/**
+	 * For entities, orderings added by, for example, Criteria#addOrder need to come before the associations' @OrderBy
+	 * values.  However, other sub-classes of JoinWalker (BasicCollectionJoinWalker, OneToManyJoinWalker, etc.)
+	 * still need the other way around.  So, override here instead.  See HHH-7116.
+	 */
+	@Override
+	protected String orderBy(final List associations, final String orderBy) {
+		return mergeOrderings( orderBy, orderBy( associations ) );
+	}
 
 	public String toString() {
 		return getClass().getName() + '(' + getPersister().getEntityName() + ')';

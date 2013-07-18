@@ -132,7 +132,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				}
 				else {
 					// use the read-only/modifiable setting indicated during deserialization
-					setReadOnly( readOnlyBeforeAttachedToSession.booleanValue() );
+					setReadOnly( readOnlyBeforeAttachedToSession );
 					readOnlyBeforeAttachedToSession = null;
 				}
 			}

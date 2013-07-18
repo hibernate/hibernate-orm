@@ -39,16 +39,17 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
 	public IntegerTypeDescriptor() {
 		super( Integer.class );
 	}
-
+	@Override
 	public String toString(Integer value) {
 		return value == null ? null : value.toString();
 	}
-
+	@Override
 	public Integer fromString(String string) {
 		return string == null ? null : Integer.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Integer value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -82,8 +83,7 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@Override
 	public <X> Integer wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -92,7 +92,7 @@ public class IntegerTypeDescriptor extends AbstractTypeDescriptor<Integer> {
 			return (Integer) value;
 		}
 		if ( Number.class.isInstance( value ) ) {
-			return Integer.valueOf( ( (Number) value ).intValue() );
+			return ( (Number) value ).intValue();
 		}
 		if ( String.class.isInstance( value ) ) {
 			return Integer.valueOf( ( (String) value ) );

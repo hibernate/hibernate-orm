@@ -61,6 +61,7 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.CHAR, "char(1)" );
 		registerColumnType( Types.FLOAT, "float" );
 		registerColumnType( Types.DOUBLE, "double precision" );
+		registerColumnType( Types.BOOLEAN, "bit" ); // HHH-6935
 		registerColumnType( Types.DATE, "date" );
 		registerColumnType( Types.TIME, "time" );
 		registerColumnType( Types.TIMESTAMP, "datetime" );

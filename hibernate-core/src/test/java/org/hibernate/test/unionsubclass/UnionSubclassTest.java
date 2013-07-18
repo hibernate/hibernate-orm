@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.unionsubclass;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.junit.Test;
@@ -45,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
+@SuppressWarnings("unchecked")
 public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
@@ -105,14 +105,14 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 			.setFetchMode("location", FetchMode.JOIN)
 			.setFetchMode("location.beings", FetchMode.JOIN)
 			.list();
-		
-		for (int i=0; i<list.size(); i++ ) {
-			Human h = (Human) list.get(i);
+
+		for ( Object aList : list ) {
+			Human h = (Human) aList;
 			assertTrue( Hibernate.isInitialized( h.getLocation() ) );
 			assertTrue( Hibernate.isInitialized( h.getLocation().getBeings() ) );
-			s.delete(h);
+			s.delete( h );
 		}
-		s.delete( s.get( Location.class, new Long(mel.getId()) ) );
+		s.delete( s.get( Location.class, mel.getId() ) );
 		t.commit();
 		s.close();
 	}
@@ -184,8 +184,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		
 		x23y4 = (Alien) s.createCriteria(Alien.class).addOrder( Order.asc("identity") ).list().get(0);
 		s.delete( x23y4.getHive() );
-		s.delete( s.get(Location.class, new Long( mel.getId() ) ) );
-		s.delete( s.get(Location.class, new Long( mars.getId() ) ) );
+		s.delete( s.get(Location.class, mel.getId() ) );
+		s.delete( s.get(Location.class, mars.getId() ) );
 		assertTrue( s.createQuery("from Being").list().isEmpty() );
 		t.commit();
 		s.close();
@@ -260,7 +260,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		assertEquals( ( (Thing) gavin.getThings().get(0) ).getDescription(), "some thing" );
 		s.clear();
 		
-		thing = (Thing) s.get( Thing.class, new Long( thing.getId() ) );
+		thing = (Thing) s.get( Thing.class, thing.getId() );
 		assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "gavin" );
 		
@@ -272,15 +272,15 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		
 		s.clear();
 
-		thing = (Thing) s.get( Thing.class, new Long( thing.getId() ) );
+		thing = (Thing) s.get( Thing.class, thing.getId() );
 		assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 		assertEquals( thing.getOwner().getIdentity(), "x23y4$$hu%3" );
 		
 		s.delete(thing);
 		x23y4 = (Alien) s.createCriteria(Alien.class).uniqueResult();
 		s.delete( x23y4.getHive() );
-		s.delete( s.get(Location.class, new Long( mel.getId() ) ) );
-		s.delete( s.get(Location.class, new Long( mars.getId() ) ) );
+		s.delete( s.get(Location.class, mel.getId() ) );
+		s.delete( s.get(Location.class, mars.getId() ) );
 		assertTrue( s.createQuery("from Being").list().isEmpty() );
 		t.commit();
 		s.close();
@@ -323,8 +323,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		List beings = s.createQuery("from Being b left join fetch b.location").list();
-		for ( Iterator iter = beings.iterator(); iter.hasNext(); ) {
-			Being b = (Being) iter.next();
+		for ( Object being : beings ) {
+			Being b = (Being) being;
 			assertTrue( Hibernate.isInitialized( b.getLocation() ) );
 			assertNotNull( b.getLocation().getName() );
 			assertNotNull( b.getIdentity() );
@@ -334,8 +334,8 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 		
 		beings = s.createQuery("from Being").list();
-		for ( Iterator iter = beings.iterator(); iter.hasNext(); ) {
-			Being b = (Being) iter.next();
+		for ( Object being : beings ) {
+			Being b = (Being) being;
 			assertFalse( Hibernate.isInitialized( b.getLocation() ) );
 			assertNotNull( b.getLocation().getName() );
 			assertNotNull( b.getIdentity() );
@@ -346,13 +346,12 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		
 		List locations = s.createQuery("from Location").list(); 
 		int count = 0;
-		for ( Iterator iter = locations.iterator(); iter.hasNext(); ) {
-			Location l = (Location) iter.next();
+		for ( Object location : locations ) {
+			Location l = (Location) location;
 			assertNotNull( l.getName() );
-			Iterator iter2 = l.getBeings().iterator();
-			while ( iter2.hasNext() ) {
+			for ( Object o : l.getBeings() ) {
 				count++;
-				assertSame( ( (Being) iter2.next() ).getLocation(), l );
+				assertSame( ( (Being) o ).getLocation(), l );
 			}
 		}
 		assertEquals(count, 2);
@@ -361,21 +360,20 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 
 		locations = s.createQuery("from Location loc left join fetch loc.beings").list(); 
 		count = 0;
-		for ( Iterator iter = locations.iterator(); iter.hasNext(); ) {
-			Location l = (Location) iter.next();
+		for ( Object location : locations ) {
+			Location l = (Location) location;
 			assertNotNull( l.getName() );
-			Iterator iter2 = l.getBeings().iterator();
-			while ( iter2.hasNext() ) {
+			for ( Object o : l.getBeings() ) {
 				count++;
-				assertSame( ( (Being) iter2.next() ).getLocation(), l );
+				assertSame( ( (Being) o ).getLocation(), l );
 			}
 		}
 		assertEquals(count, 2);
 		assertEquals( locations.size(), 3 );
 		s.clear();
 
-		gavin = (Human) s.get( Human.class, new Long( gavin.getId() ) );
-		atl = (Location) s.get( Location.class, new Long( atl.getId() ) );
+		gavin = (Human) s.get( Human.class, gavin.getId() );
+		atl = (Location) s.get( Location.class, atl.getId() );
 		
  		atl.addBeing(gavin);
 		assertEquals( s.createQuery("from Human h where h.location.name like '%GA'").list().size(), 1 );
@@ -403,7 +401,7 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 		Employee steve = new Employee();
 		steve.setIdentity("steve");
 		steve.setSex('M');
-		steve.setSalary( new Double(0) );
+		steve.setSalary( (double) 0 );
 		mel.addBeing(steve);
 		s.persist(mel);
 		tx.commit();

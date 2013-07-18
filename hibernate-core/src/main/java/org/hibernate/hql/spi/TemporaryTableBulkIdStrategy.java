@@ -162,16 +162,14 @@ public class TemporaryTableBulkIdStrategy implements MultiTableBulkIdStrategy {
 		}
 	}
 
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	protected boolean shouldIsolateTemporaryTableDDL(SessionImplementor session) {
 		Boolean dialectVote = session.getFactory().getDialect().performTemporaryTableDDLInIsolation();
 		if ( dialectVote != null ) {
-			return dialectVote.booleanValue();
+			return dialectVote;
 		}
 		return session.getFactory().getSettings().isDataDefinitionImplicitCommit();
 	}
 
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	protected boolean shouldTransactIsolatedTemporaryTableDDL(SessionImplementor session) {
 		// is there ever a time when it makes sense to do this?
 //		return session.getFactory().getSettings().isDataDefinitionInTransactionSupported();

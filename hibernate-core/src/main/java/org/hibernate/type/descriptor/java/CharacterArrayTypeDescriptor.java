@@ -44,11 +44,11 @@ public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Charact
 	public CharacterArrayTypeDescriptor() {
 		super( Character[].class, ArrayMutabilityPlan.INSTANCE );
 	}
-
+	@Override
 	public String toString(Character[] value) {
 		return new String( unwrapChars( value ) );
 	}
-
+	@Override
 	public Character[] fromString(String string) {
 		return wrapChars( string.toCharArray() );
 	}
@@ -69,6 +69,7 @@ public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Charact
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Character[] value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -90,7 +91,7 @@ public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Charact
 		}
 		throw unknownUnwrap( type );
 	}
-
+	@Override
 	public <X> Character[] wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -110,26 +111,24 @@ public class CharacterArrayTypeDescriptor extends AbstractTypeDescriptor<Charact
 		throw unknownWrap( value.getClass() );
 	}
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	private Character[] wrapChars(char[] chars) {
 		if ( chars == null ) {
 			return null;
 		}
 		final Character[] result = new Character[chars.length];
 		for ( int i = 0; i < chars.length; i++ ) {
-			result[i] = Character.valueOf( chars[i] );
+			result[i] = chars[i];
 		}
 		return result;
 	}
 
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
 	private char[] unwrapChars(Character[] chars) {
 		if ( chars == null ) {
 			return null;
 		}
 		final char[] result = new char[chars.length];
 		for ( int i = 0; i < chars.length; i++ ) {
-			result[i] = chars[i].charValue();
+			result[i] = chars[i];
 		}
 		return result;
 	}

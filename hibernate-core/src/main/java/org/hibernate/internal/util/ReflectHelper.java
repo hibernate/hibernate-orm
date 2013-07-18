@@ -45,6 +45,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  * @author Steve Ebersole
  */
+@SuppressWarnings("unchecked")
 public final class ReflectHelper {
 
 	//TODO: this dependency is kinda Bad

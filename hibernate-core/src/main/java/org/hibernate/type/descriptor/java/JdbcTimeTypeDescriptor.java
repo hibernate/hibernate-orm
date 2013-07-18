@@ -44,7 +44,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 
 	public static class TimeMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimeMutabilityPlan INSTANCE = new TimeMutabilityPlan();
-
+		@Override
 		public Date deepCopyNotNull(Date value) {
 			return Time.class.isInstance( value )
 					? new Time( value.getTime() )
@@ -55,11 +55,11 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public JdbcTimeTypeDescriptor() {
 		super( Date.class, TimeMutabilityPlan.INSTANCE );
 	}
-
+	@Override
 	public String toString(Date value) {
 		return new SimpleDateFormat( TIME_FORMAT ).format( value );
 	}
-
+	@Override
 	public java.util.Date fromString(String string) {
 		try {
 			return new Time( new SimpleDateFormat( TIME_FORMAT ).parse( string ).getTime() );
@@ -106,6 +106,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -141,8 +142,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -152,7 +152,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		if ( Long.class.isInstance( value ) ) {
-			return new Time( ( (Long) value ).longValue() );
+			return new Time( (Long) value );
 		}
 
 		if ( Calendar.class.isInstance( value ) ) {

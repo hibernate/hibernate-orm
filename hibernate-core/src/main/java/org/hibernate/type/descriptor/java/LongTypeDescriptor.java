@@ -39,16 +39,17 @@ public class LongTypeDescriptor extends AbstractTypeDescriptor<Long> {
 	public LongTypeDescriptor() {
 		super( Long.class );
 	}
-
+	@Override
 	public String toString(Long value) {
 		return value == null ? null : value.toString();
 	}
-
+	@Override
 	public Long fromString(String string) {
 		return Long.valueOf( string );
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Long value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -82,8 +83,7 @@ public class LongTypeDescriptor extends AbstractTypeDescriptor<Long> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryBoxing" })
+	@Override
 	public <X> Long wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -92,7 +92,7 @@ public class LongTypeDescriptor extends AbstractTypeDescriptor<Long> {
 			return (Long) value;
 		}
 		if ( Number.class.isInstance( value ) ) {
-			return Long.valueOf( ( (Number) value ).longValue() );
+			return ( (Number) value ).longValue();
 		}
 		else if ( String.class.isInstance( value ) ) {
 			return Long.valueOf( ( (String) value ) );

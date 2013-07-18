@@ -321,7 +321,6 @@ public class QueryPlanCache implements Serializable {
 		private final Map<String,Integer> parameterMetadata;
 		private final int hashCode;
 
-		@SuppressWarnings({ "UnnecessaryBoxing" })
 		private DynamicFilterKey(FilterImpl filter) {
 			this.filterName = filter.getName();
 			if ( filter.getParameters().isEmpty() ) {

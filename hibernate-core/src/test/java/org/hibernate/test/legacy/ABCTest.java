@@ -35,7 +35,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings( {"UnnecessaryBoxing"})
 public class ABCTest extends LegacyTestCase {
 	public String[] getMappings() {
 		return new String[] { "legacy/ABC.hbm.xml", "legacy/ABCExtends.hbm.xml" };

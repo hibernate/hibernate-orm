@@ -155,7 +155,6 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseCo
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	void check(boolean simplePropertyUpdated) {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
@@ -181,7 +180,6 @@ public abstract class AbstractRecursiveBidirectionalOneToManyTest extends BaseCo
 		s.close();
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	void delete() {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

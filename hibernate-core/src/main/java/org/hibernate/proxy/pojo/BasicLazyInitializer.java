@@ -68,7 +68,6 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	protected abstract Object serializableProxy();
 
-	@SuppressWarnings({ "UnnecessaryBoxing" })
 	protected final Object invoke(Method method, Object[] args, Object proxy) throws Throwable {
 		String methodName = method.getName();
 		int params = args.length;
@@ -78,7 +77,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 				return getReplacement();
 			}
 			else if ( !overridesEquals && "hashCode".equals(methodName) ) {
-				return Integer.valueOf( System.identityHashCode(proxy) );
+				return System.identityHashCode(proxy);
 			}
 			else if ( isUninitialized() && method.equals(getIdentifierMethod) ) {
 				return getIdentifier();

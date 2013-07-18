@@ -97,10 +97,10 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 			builder.withStrategySelectors( strategyRegistrationProvider );
 		}
         
-        final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
-        for (TypeContributor typeContributor : typeContributors) {
-        	configuration.registerTypeContributor( typeContributor );
-        }
+		final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+		for ( TypeContributor typeContributor : typeContributors ) {
+			configuration.registerTypeContributor( typeContributor );
+		}
 
 		final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( builder.build() )
 				.applySettings( configuration.getProperties() ).build();

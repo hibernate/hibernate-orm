@@ -44,7 +44,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 
 	public static class TimestampMutabilityPlan extends MutableMutabilityPlan<Date> {
 		public static final TimestampMutabilityPlan INSTANCE = new TimestampMutabilityPlan();
-
+		@Override
 		public Date deepCopyNotNull(Date value) {
 			if ( value instanceof Timestamp ) {
 				Timestamp orig = (Timestamp) value;
@@ -61,11 +61,11 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	public JdbcTimestampTypeDescriptor() {
 		super( Date.class, TimestampMutabilityPlan.INSTANCE );
 	}
-
+	@Override
 	public String toString(Date value) {
 		return new SimpleDateFormat( TIMESTAMP_FORMAT ).format( value );
 	}
-
+	@Override
 	public Date fromString(String string) {
 		try {
 			return new Timestamp( new SimpleDateFormat( TIMESTAMP_FORMAT ).parse( string ).getTime() );
@@ -115,6 +115,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	}
 
 	@SuppressWarnings({ "unchecked" })
+	@Override
 	public <X> X unwrap(Date value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -150,8 +151,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 		throw unknownUnwrap( type );
 	}
-
-	@SuppressWarnings({ "UnnecessaryUnboxing" })
+	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
@@ -161,7 +161,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTypeDescriptor<Date> {
 		}
 
 		if ( Long.class.isInstance( value ) ) {
-			return new Timestamp( ( (Long) value ).longValue() );
+			return new Timestamp( (Long) value );
 		}
 
 		if ( Calendar.class.isInstance( value ) ) {

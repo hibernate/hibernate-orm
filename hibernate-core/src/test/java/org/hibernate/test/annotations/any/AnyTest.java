@@ -187,4 +187,10 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
 				"org.hibernate.test.annotations.any"
 		};
 	}
+
+	// Simply having this orm.xml file in the classpath reproduces HHH-4261.
+    @Override
+    protected String[] getXmlFiles() {
+        return new String[] { "org/hibernate/test/annotations/any/orm.xml" };
+    }
 }

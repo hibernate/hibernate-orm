@@ -38,7 +38,6 @@ public class ManyToManyAssociationClassAssignedIdTest extends AbstractManyToMany
 	}
 
 	@Override
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public Membership createMembership(String name) {
 		return new Membership( Long.valueOf( 1000 ), name );
 	}

@@ -80,7 +80,6 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testUpdateFailureWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -101,7 +100,6 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testUpdateFailureWithParamChecking() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -122,7 +120,6 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteWithExceptionChecking() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -143,7 +140,6 @@ public abstract class ResultCheckStyleTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testDeleteWithParamChecking() {
 		Session s = openSession();
 		s.beginTransaction();

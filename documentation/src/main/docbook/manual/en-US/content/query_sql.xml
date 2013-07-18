@@ -260,7 +260,7 @@ List loggedCats = sess.createSQLQuery(sql)
               <row>
                 <entry>A simple property</entry>
 
-                <entry><literal>{[aliasname].[propertyname]</literal></entry>
+		<entry><literal>{[aliasname].[propertyname]}</literal></entry>
 
                 <entry><literal>A_NAME as {item.name}</literal></entry>
               </row>

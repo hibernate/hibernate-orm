@@ -102,7 +102,6 @@ public class CreateTest extends AbstractOperationTestCase {
 	}
 
 	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testCreateTreeWithGeneratedId() {
 		clearCounts();
 

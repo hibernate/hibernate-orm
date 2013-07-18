@@ -41,7 +41,6 @@ public class CustomSQLTest extends LegacyTestCase {
 	@Test
     @RequiresDialectFeature( NonIdentityGeneratorChecker.class )
     @SkipForDialect( value = {PostgreSQL81Dialect.class, PostgreSQLDialect.class}, jiraKey = "HHH-6704")
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public void testInsert() throws HibernateException, SQLException {
 		Session s = openSession();
 		s.beginTransaction();
@@ -85,7 +84,6 @@ public class CustomSQLTest extends LegacyTestCase {
 	}
 
 //	@Test
-	@SuppressWarnings( {"UnnecessaryBoxing", "unchecked"})
 //    @RequiresDialectFeature( NonIdentityGeneratorChecker.class )
 	public void testCollectionCUD() throws HibernateException, SQLException {
 		Role role = new Role();

@@ -225,7 +225,6 @@ public final class ForeignKeys {
 	 *
 	 * @return {@code true} if the given entity is transient (unsaved)
 	 */
-	@SuppressWarnings("UnnecessaryUnboxing")
 	public static boolean isTransient(String entityName, Object entity, Boolean assumed, SessionImplementor session) {
 		if ( entity == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 			// an unfetched association can only point to
@@ -236,20 +235,20 @@ public final class ForeignKeys {
 		// let the interceptor inspect the instance to decide
 		Boolean isUnsaved = session.getInterceptor().isTransient( entity );
 		if ( isUnsaved != null ) {
-			return isUnsaved.booleanValue();
+			return isUnsaved;
 		}
 
 		// let the persister inspect the instance to decide
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
 		isUnsaved = persister.isTransient( entity, session );
 		if ( isUnsaved != null ) {
-			return isUnsaved.booleanValue();
+			return isUnsaved;
 		}
 
 		// we use the assumed value, if there is one, to avoid hitting
 		// the database
 		if ( assumed != null ) {
-			return assumed.booleanValue();
+			return assumed;
 		}
 
 		// hit the database, after checking the session cache for a snapshot

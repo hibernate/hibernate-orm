@@ -89,10 +89,9 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	}
 
 	@Override
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( "findColumn".equals( method.getName() ) ) {
-			return Integer.valueOf( findColumn( (String) args[0] ) );
+			return findColumn( (String) args[0] );
 		}
 
 		if ( isFirstArgColumnLabel( method, args ) ) {
@@ -168,10 +167,9 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		return columnNameMethod.getDeclaringClass().getMethod( columnNameMethod.getName(), actualParameterTypes );
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
 	private Object[] buildColumnIndexMethodArgs(Object[] incomingArgs, int columnIndex) {
 		final Object[] actualArgs = new Object[incomingArgs.length];
-		actualArgs[0] = Integer.valueOf( columnIndex );
+		actualArgs[0] = columnIndex;
 		System.arraycopy( incomingArgs, 1, actualArgs, 1, incomingArgs.length - 1 );
 		return actualArgs;
 	}

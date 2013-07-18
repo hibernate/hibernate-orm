@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.custom;
 
+import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -71,7 +72,7 @@ public class CustomLoader extends Loader {
 	// Currently *not* cachable if autodiscover types is in effect (e.g. "select * ...")
 
 	private final String sql;
-	private final Set querySpaces = new HashSet();
+	private final Set<Serializable> querySpaces = new HashSet<Serializable>();
 	private final Map namedParameterBindPoints;
 
 	private final Queryable[] entityPersisters;

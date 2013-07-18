@@ -129,7 +129,7 @@ public class ParameterMetadata implements Serializable {
 	 *
 	 * @return The named parameter names
 	 */
-	public Set getNamedParameterNames() {
+	public Set<String> getNamedParameterNames() {
 		return namedDescriptorMap.keySet();
 	}
 

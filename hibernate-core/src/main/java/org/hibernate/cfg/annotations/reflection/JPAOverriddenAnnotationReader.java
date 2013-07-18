@@ -132,8 +132,10 @@ import org.dom4j.Element;
 import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Any;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
 import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
@@ -219,6 +221,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( OneToOne.class, "one-to-one" );
 		annotationToXml.put( OneToMany.class, "one-to-many" );
 		annotationToXml.put( ManyToMany.class, "many-to-many" );
+		annotationToXml.put( Any.class, "any" );
+		annotationToXml.put( ManyToAny.class, "many-to-any" );
 		annotationToXml.put( JoinTable.class, "join-table" );
 		annotationToXml.put( JoinColumn.class, "join-column" );
 		annotationToXml.put( JoinColumns.class, "join-column" );
@@ -414,6 +418,8 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 					getAssociation( OneToOne.class, annotationList, defaults );
 					getAssociation( OneToMany.class, annotationList, defaults );
 					getAssociation( ManyToMany.class, annotationList, defaults );
+					getAssociation( Any.class, annotationList, defaults );
+					getAssociation( ManyToAny.class, annotationList, defaults );
 					getElementCollection( annotationList, defaults );
 					addIfNotNull( annotationList, getSequenceGenerator( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getTableGenerator( elementsForProperty, defaults ) );

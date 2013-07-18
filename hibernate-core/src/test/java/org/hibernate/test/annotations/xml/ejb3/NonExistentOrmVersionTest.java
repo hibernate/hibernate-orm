@@ -40,7 +40,7 @@ public class NonExistentOrmVersionTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testNonExistentOrmVersion() {
 		try {
-			MetadataSources sources = new MetadataSources( buildBootstrapServiceRegistry() );
+			MetadataSources sources = new MetadataSources( getTestServiceRegistryHelper().buildBootstrapServiceRegistry() );
 			String xmlFileName = "org/hibernate/test/annotations/xml/ejb3/orm5.xml";
 			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFileName );
 			sources.addInputStream( is );

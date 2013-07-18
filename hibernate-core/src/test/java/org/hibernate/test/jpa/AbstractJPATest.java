@@ -72,18 +72,18 @@ public abstract class AbstractJPATest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.JPAQL_STRICT_COMPLIANCE, "true" );
 		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 
 	@Override
-	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+	public void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
 		sessionFactoryBuilder.with( new JPAEntityNotFoundDelegate() );
 	}
 
 	@Override
-	protected void prepareBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+	public void prepareBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		builder.with(
 				new Integrator() {
 

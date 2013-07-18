@@ -24,7 +24,7 @@ import org.junit.Test;
 		comment = "By default H2 places NULL values first, so testing 'NULLS LAST' expression.")
 public class DefaultNullOrderingTest extends BaseCoreFunctionalTestCase {
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		configuration.setProperty( AvailableSettings.DEFAULT_NULL_ORDERING, "last" );
 	}
 	

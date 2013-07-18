@@ -25,53 +25,31 @@ package org.hibernate.testing.junit4;
 
 import static org.junit.Assert.fail;
 
-import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.Work;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataBuilder;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
-import org.hibernate.metamodel.spi.binding.AbstractPluralAttributeBinding;
-import org.hibernate.metamodel.spi.binding.AttributeBinding;
-import org.hibernate.metamodel.spi.binding.Caching;
-import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
-import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.type.Type;
+
 import org.junit.After;
 import org.junit.Before;
 
@@ -80,14 +58,22 @@ import org.junit.Before;
  *
  * @author Steve Ebersole
  */
-public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase {
+public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase implements TestSessionFactoryHelper.Callback{
 
-	private SessionFactoryImplementor sessionFactory;
+	private TestSessionFactoryHelper sessionFactoryBuilder;
+
+	public BaseCoreFunctionalTestCase(){
+		initialize();
+		getTestConfiguration().setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
+		getTestConfiguration().setOverrideCacheStrategy( overrideCacheStrategy() );
+		sessionFactoryBuilder = new TestSessionFactoryHelper( getTestServiceRegistryHelper(),getTestConfiguration());
+		sessionFactoryBuilder.setCallback( this );
+	}
 
 	protected Session session;
 
-	protected SessionFactoryImplementor sessionFactory() {
-		return sessionFactory;
+	protected final SessionFactoryImplementor sessionFactory() {
+		return getSessionFactoryBuilder().getSessionFactory();
 	}
 
 	protected Session openSession() throws HibernateException {
@@ -100,190 +86,39 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		return session;
 	}
 
+	public TestSessionFactoryHelper getSessionFactoryBuilder() {
+		return sessionFactoryBuilder;
+	}
+
+	public void setSessionFactoryBuilder(final TestSessionFactoryHelper sessionFactoryBuilder) {
+		this.sessionFactoryBuilder = sessionFactoryBuilder;
+	}
 
 	// before/after test class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@BeforeClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
-		Properties properties = constructProperties();
-		
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		serviceRegistry = buildServiceRegistry( bootRegistry, properties );
-		
-		ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
-		isMetadataUsed = configService.getSetting(
-				USE_NEW_METADATA_MAPPINGS,
-				new ConfigurationService.Converter<Boolean>() {
-					@Override
-					public Boolean convert(Object value) {
-						return Boolean.parseBoolean( ( String ) value );
-					}
-				},
-				true
-		);
-		if ( isMetadataUsed ) {
-			MetadataBuilder metadataBuilder = getMetadataBuilder( bootRegistry, serviceRegistry );
-			configMetadataBuilder(metadataBuilder);
-			metadata = (MetadataImplementor)metadataBuilder.build();
-			afterConstructAndConfigureMetadata( metadata );
-			applyCacheSettings( metadata );
-			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-			configSessionFactoryBuilder(sessionFactoryBuilder);
-			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
-		}
-		else {
-			configuration = constructAndConfigureConfiguration(properties);
-			// this is done here because Configuration does not currently support 4.0 xsd
-			afterConstructAndConfigureConfiguration( configuration );
-			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
-		}
-		afterSessionFactoryBuilt();
+		getSessionFactoryBuilder().buildSessionFactory();
 	}
 
-	protected void rebuildSessionFactory() {
+	public void rebuildSessionFactory() {
 		releaseSessionFactory();
 		buildSessionFactory();
 	}
 
-
-	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+	@Override
+	public void afterMetadataBuilt(MetadataImplementor metadataImplementor) {
+	}
+	@Override
+	public void configure(MetadataBuilder metadataBuilder) {
+	}
+	@Override
+	public void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
 	}
 
-	protected void configMetadataBuilder(MetadataBuilder metadataBuilder) {
-	}
-
-	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
-	}
-
-	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder, Configuration configuration) {
-		if ( configuration.getEntityNotFoundDelegate() != null ) {
-			sessionFactoryBuilder.with( configuration.getEntityNotFoundDelegate() );
-		}
-		if ( configuration.getSessionFactoryObserver() != null ){
-			sessionFactoryBuilder.add( configuration.getSessionFactoryObserver() );
-		}
-		if ( configuration.getInterceptor() != EmptyInterceptor.INSTANCE ) {
-			sessionFactoryBuilder.with( configuration.getInterceptor() );
-		}
-	}
-
-	protected MetadataBuilder getMetadataBuilder(
-			BootstrapServiceRegistry bootRegistry,
-			StandardServiceRegistryImpl serviceRegistry) {
-		MetadataSources sources = new MetadataSources( bootRegistry );
-		addMappings( sources );
-		return sources.getMetadataBuilder(serviceRegistry);
-	}
-	
-	protected Configuration constructConfiguration() {
-		return new Configuration().setProperties( constructProperties() );
-	}
-
-	private Configuration constructAndConfigureConfiguration(Properties properties) {
-		Configuration cfg = new Configuration().setProperties( properties );
-		configure( cfg );
-		return cfg;
-	}
-
-	private void afterConstructAndConfigureConfiguration(Configuration cfg) {
-		addMappings( cfg );
-		cfg.buildMappings();
-		applyCacheSettings( cfg );
-		afterConfigurationBuilt( cfg );
-	}
-
-	protected Properties constructProperties() {
-		Properties properties = new Properties();
-		properties.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-		properties.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-		properties.put( Environment.DIALECT, getDialect().getClass().getName() );
-		if(createSchema()){
-			properties.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		}
-		return properties;
-	}
-
-	protected void configure(Configuration configuration) {
-	}
-
-	public static void applyCacheSettings(MetadataImplementor metadataImplementor, String strategy, boolean overrideCacheStrategy){
-		if( StringHelper.isEmpty(strategy)){
-			return;
-		}
-		for( EntityBinding entityBinding : metadataImplementor.getEntityBindings()){
-			boolean hasLob = false;
-			for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure()){
-				if ( attributeBinding.getAttribute().isSingular() ) {
-					Type type = attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping();
-					String typeName = type.getName();
-					if ( "blob".equals( typeName ) || "clob".equals( typeName ) ) {
-						hasLob = true;
-					}
-					if ( Blob.class.getName().equals( typeName ) || Clob.class.getName().equals( typeName ) ) {
-						hasLob = true;
-					}
-				}
-			}
-			if ( !hasLob && entityBinding.getSuperEntityBinding() == null && overrideCacheStrategy ) {
-				Caching caching = entityBinding.getHierarchyDetails().getCaching();
-				if ( caching == null ) {
-					caching = new Caching();
-				}
-				caching.setRegion( entityBinding.getEntity().getName() );
-				caching.setCacheLazyProperties( true );
-				caching.setAccessType( AccessType.fromExternalName( strategy ) );
-				entityBinding.getHierarchyDetails().setCaching( caching );
-			}
-			for( AttributeBinding attributeBinding : entityBinding.getAttributeBindingClosure()){
-				if ( !attributeBinding.getAttribute().isSingular() ) {
-					AbstractPluralAttributeBinding binding = AbstractPluralAttributeBinding.class.cast( attributeBinding );
-					Caching caching = binding.getCaching();
-					if(caching == null){
-						caching = new Caching(  );
-					}
-					caching.setRegion( StringHelper.qualify( entityBinding.getEntity().getName() , attributeBinding.getAttribute().getName() ) );
-					caching.setCacheLazyProperties( true );
-					caching.setAccessType( AccessType.fromExternalName( strategy ) );
-					binding.setCaching( caching );
-				}
-			}
-		}
-	}
-
-	protected void applyCacheSettings(MetadataImplementor metadataImplementor){
-		 applyCacheSettings( metadataImplementor, getCacheConcurrencyStrategy(), overrideCacheStrategy() );
-	}
-
-	protected void applyCacheSettings(Configuration configuration) {
-		if ( getCacheConcurrencyStrategy() != null ) {
-			Iterator itr = configuration.getClassMappings();
-			while ( itr.hasNext() ) {
-				PersistentClass clazz = (PersistentClass) itr.next();
-				Iterator props = clazz.getPropertyClosureIterator();
-				boolean hasLob = false;
-				while ( props.hasNext() ) {
-					Property prop = (Property) props.next();
-					if ( prop.getValue().isSimpleValue() ) {
-						String type = ( (SimpleValue) prop.getValue() ).getTypeName();
-						if ( "blob".equals(type) || "clob".equals(type) ) {
-							hasLob = true;
-						}
-						if ( Blob.class.getName().equals(type) || Clob.class.getName().equals(type) ) {
-							hasLob = true;
-						}
-					}
-				}
-				if ( !hasLob && !clazz.isInherited() && overrideCacheStrategy() ) {
-					configuration.setCacheConcurrencyStrategy( clazz.getEntityName(), getCacheConcurrencyStrategy() );
-				}
-			}
-			itr = configuration.getCollectionMappings();
-			while ( itr.hasNext() ) {
-				Collection coll = (Collection) itr.next();
-				configuration.setCollectionCacheConcurrencyStrategy( coll.getRole(), getCacheConcurrencyStrategy() );
-			}
-		}
+	@Override
+	public void configure(Configuration configuration) {
 	}
 
 	protected boolean overrideCacheStrategy() {
@@ -294,16 +129,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 		return null;
 	}
 
-	protected void afterConfigurationBuilt(Configuration configuration) {
-		afterConfigurationBuilt( configuration.createMappings(), getDialect() );
-	}
-
-	protected void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
+	@Override
+	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 	}
 
 
-
-	protected void afterSessionFactoryBuilt() {
+	@Override
+	public void afterSessionFactoryBuilt() {
 	}
 
 	protected boolean rebuildSessionFactoryOnError() {
@@ -313,18 +145,13 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	@AfterClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
 	private void releaseSessionFactory() {
-		if ( sessionFactory == null ) {
-			return;
+		if ( getSessionFactoryBuilder() != null ) {
+			getSessionFactoryBuilder().destory();
+//			setSessionFactoryBuilder( null );
 		}
-		sessionFactory.close();
-		sessionFactory = null;
-		configuration = null;
-		metadata = null;
-		if ( serviceRegistry == null ) {
-			return;
-		}
-		serviceRegistry.destroy();
-		serviceRegistry = null;
+		getTestConfiguration().setConfiguration( null );
+		getTestConfiguration().setMetadata( null );
+		getTestServiceRegistryHelper().destroy();
 	}
 
 	@OnFailure
@@ -360,12 +187,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	}
 
 	protected void cleanupCache() {
-		if ( sessionFactory != null ) {
-			sessionFactory.getCache().evictCollectionRegions();
-			sessionFactory.getCache().evictDefaultQueryRegion();
-			sessionFactory.getCache().evictEntityRegions();
-			sessionFactory.getCache().evictQueryRegions();
-			sessionFactory.getCache().evictNaturalIdRegions();
+		if ( sessionFactory() != null ) {
+			sessionFactory().getCache().evictCollectionRegions();
+			sessionFactory().getCache().evictDefaultQueryRegion();
+			sessionFactory().getCache().evictEntityRegions();
+			sessionFactory().getCache().evictQueryRegions();
+			sessionFactory().getCache().evictNaturalIdRegions();
 		}
 	}
 	
@@ -408,7 +235,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 			return;
 		}
 
-		Session tmpSession = sessionFactory.openSession();
+		Session tmpSession = sessionFactory().openSession();
 		try {
 			List list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
 

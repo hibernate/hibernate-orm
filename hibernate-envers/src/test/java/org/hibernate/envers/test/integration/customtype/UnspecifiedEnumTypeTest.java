@@ -31,7 +31,7 @@ public class UnspecifiedEnumTypeTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( Environment.HBM2DDL_AUTO, "" );
 	}

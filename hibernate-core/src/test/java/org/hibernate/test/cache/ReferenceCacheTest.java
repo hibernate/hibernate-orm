@@ -48,7 +48,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, "true" );
 	}

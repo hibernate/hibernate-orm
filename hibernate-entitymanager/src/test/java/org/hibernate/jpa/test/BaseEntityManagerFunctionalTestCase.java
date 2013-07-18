@@ -32,7 +32,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -40,7 +39,6 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -97,7 +95,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseFunctional
 		serviceRegistry = (StandardServiceRegistryImpl) entityManagerFactory.getSessionFactory()
 				.getServiceRegistry()
 				.getParentServiceRegistry();
-		configuration = entityManagerFactoryBuilder.getHibernateConfiguration();
+		getTestConfiguration().setConfiguration( entityManagerFactoryBuilder.getHibernateConfiguration() );
 		afterEntityManagerFactoryBuilt();
 	}
 

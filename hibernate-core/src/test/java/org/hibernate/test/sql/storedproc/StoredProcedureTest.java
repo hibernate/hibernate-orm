@@ -57,7 +57,7 @@ import static org.junit.Assert.fail;
 public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 
 	@Override
-	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+	public void afterMetadataBuilt(MetadataImplementor metadataImplementor) {
 		Database database = metadataImplementor.getDatabase();
 		database.addAuxiliaryDatabaseObject( new org.hibernate.metamodel.spi.relational.AuxiliaryDatabaseObject() {
 			@Override

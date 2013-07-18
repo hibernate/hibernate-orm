@@ -51,7 +51,7 @@ public class TransactionJoiningTest extends AbstractJPATest {
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		TestingJtaBootstrap.prepare( serviceRegistryBuilder.getSettings() );
 		serviceRegistryBuilder.applySetting( Environment.TRANSACTION_STRATEGY, CMTTransactionFactory.class.getName() );
 	}

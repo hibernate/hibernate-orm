@@ -660,7 +660,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		try {
 			Configuration config = new Configuration();
 			serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
-			if ( isMetadataUsed ) {
+			if ( isMetadataUsed() ) {
 				MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 				metadataSources.addAnnotatedClass( LocalContactDetails.class ).buildMetadata();
 			}

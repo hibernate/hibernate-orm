@@ -54,13 +54,13 @@ public class JpaLargeBlobTest extends BaseCoreFunctionalTestCase {
 	}
 
     @Override
-    protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
     	super.configure( configuration );
         configuration.setProperty(Environment.USE_STREAMS_FOR_BINARY, "true");
     }
 
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.USE_STREAMS_FOR_BINARY, "true" );
 	}
 

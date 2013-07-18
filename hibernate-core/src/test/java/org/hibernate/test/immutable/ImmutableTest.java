@@ -73,13 +73,13 @@ public class ImmutableTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 		serviceRegistryBuilder.applySetting( Environment.STATEMENT_BATCH_SIZE, "0" );
 	}
 	
 	@Override
-	protected void configMetadataBuilder(MetadataBuilder metadataBuilder) {
+	public void configure(MetadataBuilder metadataBuilder) {
 		metadataBuilder.with( TextAsMaterializedClobType.INSTANCE );
 	}
 

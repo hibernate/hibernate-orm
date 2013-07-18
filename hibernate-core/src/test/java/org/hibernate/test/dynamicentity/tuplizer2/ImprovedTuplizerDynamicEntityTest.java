@@ -66,7 +66,7 @@ public class ImprovedTuplizerDynamicEntityTest extends BaseCoreFunctionalTestCas
 		cfg.getEntityTuplizerFactory().registerDefaultTuplizerClass( EntityMode.POJO, MyEntityTuplizer.class );
 	}
 	@Override
-	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+	public void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
 		sessionFactoryBuilder.with( EntityMode.POJO, MyEntityTuplizer.class );
 	}
 

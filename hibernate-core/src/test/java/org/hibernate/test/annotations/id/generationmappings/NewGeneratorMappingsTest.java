@@ -67,7 +67,7 @@ public class NewGeneratorMappingsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "" );
 	}

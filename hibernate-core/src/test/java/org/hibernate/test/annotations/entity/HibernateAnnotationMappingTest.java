@@ -51,7 +51,7 @@ public class HibernateAnnotationMappingTest extends BaseUnitTestCase {
 		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( configuration.getProperties() );
 		SessionFactory sf = null;
 		try {
-			if ( isMetadataUsed ) {
+			if ( isMetadataUsed() ) {
 				MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 				sf = metadataSources.addAnnotatedClass( Month.class ).buildMetadata().buildSessionFactory();
 

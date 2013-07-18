@@ -60,12 +60,12 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Override
-	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+	public void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
 		sessionFactoryBuilder.add( observer );
 	}
 
 	@Override
-	protected void prepareBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
+	public void prepareBootstrapServiceRegistryBuilder(BootstrapServiceRegistryBuilder builder) {
 		super.prepareBootstrapServiceRegistryBuilder( builder );
 		builder.with(
 				new Integrator() {

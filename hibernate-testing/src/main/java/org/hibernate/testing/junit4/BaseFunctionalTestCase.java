@@ -1,20 +1,13 @@
 package org.hibernate.testing.junit4;
 
-import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Properties;
 
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
@@ -22,19 +15,57 @@ import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class BaseFunctionalTestCase extends BaseUnitTestCase {
+public class BaseFunctionalTestCase extends BaseUnitTestCase  {
 	public static final String VALIDATE_DATA_CLEANUP = "hibernate.test.validateDataCleanup";
 
-	public static final Dialect DIALECT = Dialect.getDialect();
 	protected static final String[] NO_MAPPINGS = new String[0];
 	protected static final Class<?>[] NO_CLASSES = new Class[0];
-	protected Configuration configuration;
-	protected MetadataImplementor metadata;
-	protected StandardServiceRegistryImpl serviceRegistry;
+	private TestServiceRegistryHelper testServiceRegistryHelper = new TestServiceRegistryHelper( getTestConfiguration() );
 
+	protected void initialize(){
+		//to keep compatibility, collect the static info here
+		getTestConfiguration().setCreateSchema( createSchema() );
+		getTestConfiguration().setSecondSchemaName( createSecondSchema() );
 
-	protected static Dialect getDialect() {
-		return DIALECT;
+		String[] mappings = getMappings();
+		if ( mappings != null ) {
+			for ( String mapping : mappings ) {
+				getTestConfiguration().getMappings().add(
+						getBaseForMappings() + mapping
+				);
+			}
+		}
+		Class<?>[] annotatedClasses = getAnnotatedClasses();
+		if ( annotatedClasses != null ) {
+			getTestConfiguration().getAnnotatedClasses().addAll( Arrays.asList( annotatedClasses ) );
+		}
+		String[] annotatedPackages = getAnnotatedPackages();
+		if ( annotatedPackages != null ) {
+			getTestConfiguration().getAnnotatedPackages().addAll( Arrays.asList( annotatedPackages ) );
+		}
+		String[] xmlFiles = getXmlFiles();
+		if ( xmlFiles != null ) {
+			getTestConfiguration().getOrmXmlFiles().addAll( Arrays.asList( xmlFiles ) );
+		}
+		getTestServiceRegistryHelper().setCallback(
+				new TestServiceRegistryHelper.Callback() {
+					@Override
+					public void prepareStandardServiceRegistryBuilder(
+							final StandardServiceRegistryBuilder serviceRegistryBuilder) {
+						BaseFunctionalTestCase.this.prepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+					}
+
+					@Override
+					public void prepareBootstrapServiceRegistryBuilder(
+							final BootstrapServiceRegistryBuilder builder) {
+						BaseFunctionalTestCase.this.prepareBootstrapServiceRegistryBuilder( builder );
+					}
+				}
+		);
+	}
+
+	protected  final Dialect getDialect() {
+		return getTestConfiguration().getDialect();
 	}
 	//----------------------- configuration properties
 
@@ -42,53 +73,22 @@ public class BaseFunctionalTestCase extends BaseUnitTestCase {
 		return true;
 	}
 
-	protected Configuration configuration() {
-		return configuration;
+	protected final Configuration configuration() {
+		return getTestConfiguration().getConfiguration();
 	}
 
-	protected MetadataImplementor metadata() {
-		return metadata;
+	protected final MetadataImplementor metadata() {
+		return getTestConfiguration().getMetadata();
 	}
 
 
 
 	//----------------------- services and service registry
-	protected BootstrapServiceRegistry buildBootstrapServiceRegistry() {
-		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
-		prepareBootstrapServiceRegistryBuilder( builder );
-		return builder.build();
-	}
 
 	protected StandardServiceRegistryImpl serviceRegistry() {
-		return serviceRegistry;
+		return getTestServiceRegistryHelper().getServiceRegistry();
 	}
 	
-
-	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Properties properties) {
-		Environment.verifyProperties( properties );
-		ConfigurationHelper.resolvePlaceHolders( properties );
-
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry ).applySettings( properties );
-		prepareStandardServiceRegistryBuilder( registryBuilder );
-		
-		// TODO: StandardServiceRegistryBuilder#applySettings sets up the
-		// Environment.URL property.  Rather than rely on that, createH2Schema
-		// could be refactored and this whole block put back in 
-		// BaseCoreFunctionalTestCase#constructProperties
-		if ( createSchema() ) {
-			registryBuilder.applySetting( Environment.HBM2DDL_AUTO, "create-drop" );
-			final String secondSchemaName = createSecondSchema();
-			if ( StringHelper.isNotEmpty( secondSchemaName ) ) {
-				if ( !( getDialect() instanceof H2Dialect ) ) {
-					throw new UnsupportedOperationException( "Only H2 dialect supports creation of second schema." );
-				}
-				Helper.createH2Schema( secondSchemaName, registryBuilder.getSettings() );
-			}
-		}
-		
-		return (StandardServiceRegistryImpl) registryBuilder.build();
-	}
-
 	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 	}
 
@@ -96,67 +96,6 @@ public class BaseFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 
-	//----------------------- source mappings
-	protected void addMappings(Configuration configuration) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				configuration.addResource(
-						getBaseForMappings() + mapping,
-						getClass().getClassLoader()
-				);
-			}
-		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				configuration.addAnnotatedClass( annotatedClass );
-			}
-		}
-		String[] annotatedPackages = getAnnotatedPackages();
-		if ( annotatedPackages != null ) {
-			for ( String annotatedPackage : annotatedPackages ) {
-				configuration.addPackage( annotatedPackage );
-			}
-		}
-		String[] xmlFiles = getXmlFiles();
-		if ( xmlFiles != null ) {
-			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				configuration.addInputStream( is );
-			}
-		}
-	}
-
-	protected void addMappings(MetadataSources sources) {
-		String[] mappings = getMappings();
-		if ( mappings != null ) {
-			for ( String mapping : mappings ) {
-				sources.addResource(
-						getBaseForMappings() + mapping
-				);
-			}
-		}
-		Class<?>[] annotatedClasses = getAnnotatedClasses();
-		if ( annotatedClasses != null ) {
-			for ( Class<?> annotatedClass : annotatedClasses ) {
-				sources.addAnnotatedClass( annotatedClass );
-			}
-		}
-		String[] annotatedPackages = getAnnotatedPackages();
-		if ( annotatedPackages != null ) {
-			for ( String annotatedPackage : annotatedPackages ) {
-				sources.addPackage( annotatedPackage );
-			}
-		}
-		String[] xmlFiles = getXmlFiles();
-		if ( xmlFiles != null ) {
-			for ( String xmlFile : xmlFiles ) {
-				InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( xmlFile );
-				sources.addInputStream( is );
-			}
-		}
-	}
 
 	/**
 	 * Feature supported only by H2 dialect.
@@ -189,15 +128,22 @@ public class BaseFunctionalTestCase extends BaseUnitTestCase {
 	//-------------------------------------------
 
 	protected EntityBinding getEntityBinding(Class<?> clazz) {
-		return metadata.getEntityBinding( clazz.getName() );
+		return getTestConfiguration().getMetadata().getEntityBinding( clazz.getName() );
 	}
 
 	protected EntityBinding getRootEntityBinding(Class<?> clazz) {
-		return metadata.getRootEntityBinding( clazz.getName() );
+		return getTestConfiguration().getMetadata().getRootEntityBinding( clazz.getName() );
 	}
 
 	protected Iterator<PluralAttributeBinding> getCollectionBindings() {
-		return metadata.getCollectionBindings().iterator();
+		return getTestConfiguration().getMetadata().getCollectionBindings().iterator();
 	}
 
+	public TestServiceRegistryHelper getTestServiceRegistryHelper() {
+		return testServiceRegistryHelper;
+	}
+
+	public void setTestServiceRegistryHelper(final TestServiceRegistryHelper testServiceRegistryHelper) {
+		this.testServiceRegistryHelper = testServiceRegistryHelper;
+	}
 }

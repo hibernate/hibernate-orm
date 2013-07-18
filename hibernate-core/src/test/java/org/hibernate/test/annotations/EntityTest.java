@@ -56,7 +56,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testLoad() throws Exception {
 		//put an object in DB
-		if ( isMetadataUsed ) {
+		if ( isMetadataUsed() ) {
 			assertEquals( "Flight", getEntityBinding( Flight.class ).getPrimaryTableName() );
 		}
 
@@ -313,7 +313,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testEntityName() throws Exception {
-		if ( isMetadataUsed ) {
+		if ( isMetadataUsed() ) {
 			assertEquals( "Corporation", getEntityBinding( Company.class ).getPrimaryTableName() );
 		}
 		Session s = openSession();

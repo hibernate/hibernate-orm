@@ -53,7 +53,7 @@ public class UserTypeMappingTest extends BaseUnitTestCase {
 		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
 		SessionFactory sessions = null;
 		try {
-			if ( isMetadataUsed ) {
+			if ( isMetadataUsed() ) {
 				MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 				for ( String mapping : mappings ) {
 					metadataSources.addResource( mapping );

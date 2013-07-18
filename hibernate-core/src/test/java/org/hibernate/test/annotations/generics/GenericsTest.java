@@ -68,13 +68,13 @@ public class GenericsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.AUTO_CLOSE_SESSION, "true" );
 		super.configure( cfg );
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.AUTO_CLOSE_SESSION, "true" );
 	}
 

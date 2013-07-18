@@ -80,7 +80,7 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
 	}

@@ -171,14 +171,14 @@ public class LazyLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 	}
 
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
 		serviceRegistryBuilder.applySetting( Environment.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 	}

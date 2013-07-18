@@ -43,7 +43,7 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 	}
 
 	private void buildSessionFactory(Class<?> entity) {
-		if ( isMetadataUsed ) {
+		if ( isMetadataUsed() ) {
 			StandardServiceRegistry registry = new StandardServiceRegistryBuilder().build();
 			MetadataSources metadataSources = new MetadataSources( registry );
 			metadataSources.addAnnotatedClass( entity );

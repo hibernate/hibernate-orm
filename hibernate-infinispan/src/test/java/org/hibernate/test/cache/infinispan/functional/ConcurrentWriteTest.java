@@ -101,33 +101,33 @@ public class ConcurrentWriteTest extends SingleNodeTestCase {
 	}
 
 	@Override
-	protected boolean getUseQueryCache() {
+	public boolean getUseQueryCache() {
 		return true;
 	}
 
 	@Override
-	protected TransactionManager getTransactionManager() {
+	public TransactionManager getTransactionManager() {
 		return DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.LOCAL );
 	}
 
 	@Override
-	protected Class<? extends ConnectionProvider> getConnectionProviderClass() {
+	public Class<? extends ConnectionProvider> getConnectionProviderClass() {
 		return DualNodeConnectionProviderImpl.class;
 	}
 
 	@Override
-	protected Class<? extends JtaPlatform> getJtaPlatform() {
+	public Class<? extends JtaPlatform> getJtaPlatform() {
 		return DualNodeJtaPlatformImpl.class;
 	}
 
 	@Override
-	protected void prepareTest() throws Exception {
+	public void prepareTest() throws Exception {
 		super.prepareTest();
 		TERMINATE_ALL_USERS = false;
 	}
 
 	@Override
-	protected void cleanupTest() throws Exception {
+	public void cleanupTest() throws Exception {
 		try {
 			super.cleanupTest();
 		}

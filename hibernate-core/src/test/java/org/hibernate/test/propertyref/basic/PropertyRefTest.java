@@ -282,7 +282,7 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testForeignKeyCreation() {
-		if ( !isMetadataUsed ) {
+		if ( !isMetadataUsed() ) {
 			return;
 		}
 		TableSpecification table = SchemaUtil.getTable( Account.class, metadata() );

@@ -9,7 +9,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit4.TestConfigurationHelper;
 
 /**
  * @author Steve Ebersole
@@ -37,7 +37,7 @@ public abstract class AbstractExecutable implements Executable {
 		serviceRegistry = standardServiceRegistryBuilder.applySettings( cfg.getProperties() ).build();
 
 		String[] resources = getResources();
-		if( BaseUnitTestCase.isMetadataUsed()){
+		if( TestConfigurationHelper.DEFAULT_USE_NEW_METAMODEL ){
 			MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 			for(String resource : resources){
 				metadataSources.addResource( resource );

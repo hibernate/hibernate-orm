@@ -34,7 +34,6 @@ import org.junit.runner.RunWith;
 
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 
 /**
@@ -45,16 +44,25 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 @RunWith( CustomRunner.class )
 public abstract class BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( BaseUnitTestCase.class );
-	public static final String USE_NEW_METADATA_MAPPINGS = MetadataSources.USE_NEW_METADATA_MAPPINGS;
 	/**
 	 * String that should be prepended to all standard output placed in tests.  Output without this prefix may cause test
 	 * subclasses of {@link BaseSqlOutputTest} to fail.
 	 */
 	protected static final String OUTPUT_PREFIX = SqlStatementLogger.OUTPUT_PREFIX;
-	protected static boolean isMetadataUsed = Boolean.valueOf(  System.getProperty( USE_NEW_METADATA_MAPPINGS, "true" ) );
-	public static boolean isMetadataUsed() {
-		return isMetadataUsed;
+	public boolean isMetadataUsed() {
+		return getTestConfiguration().isMetadataUsed();
 	}
+
+	private TestConfigurationHelper testConfiguration = new TestConfigurationHelper();
+
+	public TestConfigurationHelper getTestConfiguration() {
+		return testConfiguration;
+	}
+
+	public void setTestConfiguration(final TestConfigurationHelper testConfiguration) {
+		this.testConfiguration = testConfiguration;
+	}
+
 	@Rule
 	public TestRule globalTimeout = new Timeout( 30 * 60 * 1000 ); // no test should run longer than 30 minutes
 

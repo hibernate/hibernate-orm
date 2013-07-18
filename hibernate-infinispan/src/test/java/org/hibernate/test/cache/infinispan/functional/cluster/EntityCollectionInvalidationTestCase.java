@@ -57,9 +57,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 	private static final Log log = LogFactory.getLog( EntityCollectionInvalidationTestCase.class );
 
 	private static final long SLEEP_TIME = 50l;
-	private static final Integer CUSTOMER_ID = new Integer( 1 );
-
-	static int test = 0;
+	private static final int CUSTOMER_ID = 1;
 
 	@Test
 	public void testAll() throws Exception {
@@ -77,7 +75,8 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 		localContactCache.addListener( localListener );
 		localCollectionCache.addListener( localListener );
 		TransactionManager localTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.LOCAL );
-
+		SessionFactory localFactory = sessionFactory();
+		SessionFactory remoteFactory = secondNodeEnvironment().getSessionFactory();
 		// Bind a listener to the "remote" cache
 		CacheContainer remoteManager = ClusterAwareRegionFactory.getCacheManager( DualNodeTestCase.REMOTE );
 		Cache remoteCustomerCache = remoteManager.getCache( Customer.class.getName() );
@@ -89,8 +88,7 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 		remoteCollectionCache.addListener( remoteListener );
 		TransactionManager remoteTM = DualNodeJtaTransactionManagerImpl.getInstance( DualNodeTestCase.REMOTE );
 
-		SessionFactory localFactory = sessionFactory();
-		SessionFactory remoteFactory = secondNodeEnvironment().getSessionFactory();
+
 
 		try {
 			assertTrue( remoteListener.isEmpty() );
@@ -236,8 +234,8 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 	private Customer doGetCustomer(Integer id, Session session, TransactionManager tm) throws Exception {
 		Customer customer = (Customer) session.get( Customer.class, id );
 		// Access all the contacts
-		for ( Iterator it = customer.getContacts().iterator(); it.hasNext(); ) {
-			( (Contact) it.next() ).getName();
+		for ( final Contact contact : customer.getContacts() ) {
+			( contact ).getName();
 		}
 		return customer;
 	}
@@ -288,8 +286,8 @@ public class EntityCollectionInvalidationTestCase extends DualNodeTestCase {
 			Customer c = (Customer) session.get( Customer.class, CUSTOMER_ID );
 			if ( c != null ) {
 				Set contacts = c.getContacts();
-				for ( Iterator it = contacts.iterator(); it.hasNext(); ) {
-					session.delete( it.next() );
+				for ( final Object contact : contacts ) {
+					session.delete( contact );
 				}
 				c.setContacts( null );
 				session.delete( c );

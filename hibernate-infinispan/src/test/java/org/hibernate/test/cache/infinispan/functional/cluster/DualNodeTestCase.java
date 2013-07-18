@@ -23,11 +23,8 @@
  */
 package org.hibernate.test.cache.infinispan.functional.cluster;
 
-import java.util.Properties;
-
-import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,6 +33,10 @@ import org.hibernate.metamodel.MetadataBuilder;
 import org.hibernate.metamodel.SessionFactoryBuilder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.TestConfigurationHelper;
+import org.hibernate.testing.junit4.TestServiceRegistryHelper;
+import org.hibernate.testing.junit4.TestSessionFactoryHelper;
+
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
 import org.junit.After;
@@ -143,62 +144,55 @@ public abstract class DualNodeTestCase extends BaseCoreFunctionalTestCase {
 	}
 
 	public class SecondNodeEnvironment {
-		private StandardServiceRegistryBuilder serviceRegistryBuilder;
-		private StandardServiceRegistryImpl serviceRegistry;
-		private SessionFactoryImplementor sessionFactory;
+		private TestServiceRegistryHelper serviceRegistryHelper = new TestServiceRegistryHelper( getTestConfiguration() );
+		private TestSessionFactoryHelper sessionFactoryHelper = new TestSessionFactoryHelper( serviceRegistryHelper, getTestConfiguration() );
+
 
 		public SecondNodeEnvironment() {
-			Properties properties = constructProperties();
-			
+			serviceRegistryHelper.setCallback( new TestServiceRegistryHelper.DefaultCallback(){
+
+				@Override
+				public void prepareStandardServiceRegistryBuilder(
+						final StandardServiceRegistryBuilder serviceRegistryBuilder) {
+					corePrepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
+					serviceRegistryBuilder.applySetting( NODE_ID_PROP, REMOTE );
+					serviceRegistryBuilder.applySetting( NODE_ID_FIELD, REMOTE );
+					configureSecondNode( serviceRegistryBuilder );
+				}
+			});
+
 			// TODO: Look into separating out some of these steps in
-			// BaseCoreFuntionalTestCase
-			BootstrapServiceRegistry bootstrapServiceRegistry = buildBootstrapServiceRegistry();
-			serviceRegistryBuilder = new StandardServiceRegistryBuilder( bootstrapServiceRegistry )
-					.applySettings( properties );
-			corePrepareStandardServiceRegistryBuilder( serviceRegistryBuilder );
-			serviceRegistryBuilder.applySetting( NODE_ID_PROP, REMOTE );
-			serviceRegistryBuilder.applySetting( NODE_ID_FIELD, REMOTE );
-			configureSecondNode( serviceRegistryBuilder );
-			serviceRegistry = (StandardServiceRegistryImpl) serviceRegistryBuilder.build();
-			
-			MetadataBuilder metadataBuilder = getMetadataBuilder( bootstrapServiceRegistry, serviceRegistry );
-			configMetadataBuilder(metadataBuilder);
-			MetadataImplementor metadata = (MetadataImplementor)metadataBuilder.build();
-			afterConstructAndConfigureMetadata( metadata );
-			applyCacheSettings( metadata );
-			SessionFactoryBuilder sessionFactoryBuilder = metadata.getSessionFactoryBuilder();
-			configSessionFactoryBuilder(sessionFactoryBuilder);
-			sessionFactory = ( SessionFactoryImplementor )sessionFactoryBuilder.build();
-		}
+			sessionFactoryHelper.setCallback( new TestSessionFactoryHelper.CallbackImpl(){
+				@Override
+				public void configure(final MetadataBuilder metadataBuilder) {
+					DualNodeTestCase.this.configure( metadataBuilder );
+				}
 
-		public StandardServiceRegistryBuilder getServiceRegistryBuilder() {
-			return serviceRegistryBuilder;
-		}
+				@Override
+				public void afterMetadataBuilt(final MetadataImplementor metadataImplementor) {
+					DualNodeTestCase.this.afterMetadataBuilt( metadataImplementor );
 
-		public StandardServiceRegistryImpl getServiceRegistry() {
-			return serviceRegistry;
+				}
+
+				@Override
+				public void configSessionFactoryBuilder(final SessionFactoryBuilder sessionFactoryBuilder) {
+					DualNodeTestCase.this.configSessionFactoryBuilder( sessionFactoryBuilder );
+				}
+			});
 		}
 
 		public SessionFactoryImplementor getSessionFactory() {
-			return sessionFactory;
+			return sessionFactoryHelper.getSessionFactory();
 		}
 
 		public void shutDown() {
-			if ( sessionFactory != null ) {
-				try {
-					sessionFactory.close();
-					sessionFactory = null;
-				}
-				catch ( Exception ignore ) {
-				}
+			if(sessionFactoryHelper!=null){
+				sessionFactoryHelper.destory();
+				sessionFactoryHelper = null;
 			}
-			if ( serviceRegistry != null ) {
-				try {
-					serviceRegistry.destroy();
-					serviceRegistry = null;
-				}
-				catch ( Exception ignore ) {
-				}
+			if(serviceRegistryHelper!=null){
+				serviceRegistryHelper.destroy();
+				serviceRegistryHelper = null;
 			}
 		}
 	}

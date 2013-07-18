@@ -36,7 +36,7 @@ import org.hibernate.cfg.Environment;
 @SuppressWarnings("unchecked")
 public class ManyToManyMaxFetchDepth0Test extends ManyToManyComplexTest {
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.MAX_FETCH_DEPTH, "0" );
 		super.configure( cfg );
 	}

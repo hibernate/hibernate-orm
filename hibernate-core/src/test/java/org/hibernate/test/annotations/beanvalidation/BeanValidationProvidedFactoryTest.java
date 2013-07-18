@@ -73,7 +73,7 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		final MessageInterpolator messageInterpolator = new MessageInterpolator() {
 

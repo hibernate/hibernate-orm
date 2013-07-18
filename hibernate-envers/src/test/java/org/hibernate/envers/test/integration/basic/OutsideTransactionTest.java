@@ -24,7 +24,7 @@ public class OutsideTransactionTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		configuration.setProperty( EnversSettings.STORE_DATA_AT_DELETE, "true" );
 		configuration.setProperty( EnversSettings.REVISION_ON_COLLECTION_CHANGE, "true" );
 	}

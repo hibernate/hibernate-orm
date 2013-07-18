@@ -24,7 +24,7 @@ public class EntityNamesTest extends BaseEnversFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		configuration.setProperty( EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, "true" );
 	}
 

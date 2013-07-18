@@ -14,7 +14,7 @@ public abstract class AbstractCollectionChangeTest extends BaseEnversFunctionalT
 	protected Integer personId;
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		configuration.setProperty( EnversSettings.REVISION_ON_COLLECTION_CHANGE, getCollectionChangeValue() );
 	}
 

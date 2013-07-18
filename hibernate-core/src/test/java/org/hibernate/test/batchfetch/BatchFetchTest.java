@@ -56,14 +56,14 @@ public class BatchFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 		serviceRegistryBuilder.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 	}

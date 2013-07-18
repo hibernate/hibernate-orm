@@ -99,13 +99,13 @@ public class DDLWithoutCallbackTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( "javax.persistence.validation.mode", "ddl" );
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( "javax.persistence.validation.mode", "ddl" );
 	}
 

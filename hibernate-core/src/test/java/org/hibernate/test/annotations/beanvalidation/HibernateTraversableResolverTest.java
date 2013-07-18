@@ -208,7 +208,7 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( "hibernate.validator.autoregister_listeners", "false" );
 	}

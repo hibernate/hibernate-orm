@@ -33,17 +33,9 @@ public class HibernateSequenceTest extends BaseCoreFunctionalTestCase {
 				HibernateSequenceEntity.class
 		};
 	}
-
 	@Override
-	protected void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.addResource( "org/hibernate/test/annotations/id/sequences/orm.xml" );
-	}
-	
-	@Override
-	protected void addMappings(MetadataSources sources) {
-		super.addMappings( sources );
-		sources.addResource( "org/hibernate/test/annotations/id/sequences/orm.xml" );
+	protected String[] getXmlFiles() {
+		return new String[]{"org/hibernate/test/annotations/id/sequences/orm.xml"};
 	}
 
 	@Override

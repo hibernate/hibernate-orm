@@ -32,6 +32,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -306,11 +307,11 @@ public class FumTest extends LegacyTestCase {
 	}
 
 
-	public static FumCompositeID fumKey(String str) {
+	public  FumCompositeID fumKey(String str) {
 		return fumKey(str,false);
 	}
 
-	private static FumCompositeID fumKey(String str, boolean aCompositeQueryTest) {
+	private  FumCompositeID fumKey(String str, boolean aCompositeQueryTest) {
 		FumCompositeID id = new FumCompositeID();
 		if ( getDialect() instanceof MckoiDialect ) {
 			GregorianCalendar now = new GregorianCalendar();

@@ -87,23 +87,23 @@ public abstract class SingleNodeTestCase extends BaseCoreFunctionalTestCase {
 		return "transactional";
 	}
 
-	protected Class<? extends RegionFactory> getCacheRegionFactory() {
+	public Class<? extends RegionFactory> getCacheRegionFactory() {
 		return TestInfinispanRegionFactory.class;
 	}
 
-	protected Class<? extends TransactionFactory> getTransactionFactoryClass() {
+	public Class<? extends TransactionFactory> getTransactionFactoryClass() {
 		return CMTTransactionFactory.class;
 	}
 
-	protected Class<? extends ConnectionProvider> getConnectionProviderClass() {
+	public Class<? extends ConnectionProvider> getConnectionProviderClass() {
 		return org.hibernate.test.cache.infinispan.tm.XaConnectionProvider.class;
 	}
 
-	protected Class<? extends JtaPlatform> getJtaPlatform() {
+	public Class<? extends JtaPlatform> getJtaPlatform() {
 		return JtaPlatformImpl.class;
 	}
 
-	protected boolean getUseQueryCache() {
+	public boolean getUseQueryCache() {
 		return true;
 	}
 

@@ -153,7 +153,7 @@ public abstract class AbstractTransformingClassLoaderInstrumentTestCase extends 
 			throw new HibernateException( "could not load executable", t );
 		}
 		try {
-			if ( BaseUnitTestCase.isMetadataUsed() ) {
+			if ( isMetadataUsed() ) {
 				execClass.getMethod( PREPARE, SIG_METAMODEL )
 						.invoke( executable, new ClassLoader[] { Thread.currentThread().getContextClassLoader() } );
 			}

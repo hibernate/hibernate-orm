@@ -52,7 +52,7 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 public class ValueVisitorTest extends BaseUnitTestCase {
 	@Test
 	public void testProperCallbacks() {
-		if ( isMetadataUsed ) {
+		if ( isMetadataUsed() ) {
 			//doesn't mean anything for new metamodel
 			return;
 		}

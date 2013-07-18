@@ -88,7 +88,7 @@ public class BeanValidationGroupsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty(
 				"javax.persistence.validation.group.pre-persist",

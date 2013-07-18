@@ -67,7 +67,7 @@ public class TuplizerDynamicEntityTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Override
-	protected void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
+	public void configSessionFactoryBuilder(SessionFactoryBuilder sessionFactoryBuilder) {
 		sessionFactoryBuilder.with( new EntityNameInterceptor() );
 	}
 

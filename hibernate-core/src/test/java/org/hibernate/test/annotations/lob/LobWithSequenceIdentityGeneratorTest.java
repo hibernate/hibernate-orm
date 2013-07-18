@@ -18,7 +18,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 @RequiresDialect( Oracle8iDialect.class )
 public class LobWithSequenceIdentityGeneratorTest extends BaseCoreFunctionalTestCase {
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		configuration.setProperty( Environment.DIALECT, OracleSeqIdGenDialect.class.getName() );
 		configuration.setProperty( Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "false" );
 		configuration.setProperty( Environment.USE_GET_GENERATED_KEYS, "true" );

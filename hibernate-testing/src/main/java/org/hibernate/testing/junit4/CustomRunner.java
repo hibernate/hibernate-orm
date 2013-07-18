@@ -219,6 +219,9 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
         // Now process that full list of test methods and build our custom result
         final List<FrameworkMethod> result = new ArrayList<FrameworkMethod>();
 		final boolean doValidation = Boolean.getBoolean( Helper.VALIDATE_FAILURE_EXPECTED );
+		boolean useNewMetadata = TestConfigurationHelper.DEFAULT_USE_NEW_METAMODEL;
+
+
 		int testCount = 0;
 
 		Ignore virtualIgnore;
@@ -267,7 +270,16 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	}
 
 	boolean useNewMetamodel() {
-		return BaseUnitTestCase.isMetadataUsed();
+		try {
+			Object object = getTestInstance();
+			if ( object != null && object instanceof BaseUnitTestCase ) {
+				return ( (BaseUnitTestCase) object ).getTestConfiguration().isMetadataUsed();
+			}
+		}
+		catch ( Exception e ) {
+
+		}
+		return TestConfigurationHelper.DEFAULT_USE_NEW_METAMODEL;
 	}
 
 	protected Ignore convertSkipToIgnore(FrameworkMethod frameworkMethod) {

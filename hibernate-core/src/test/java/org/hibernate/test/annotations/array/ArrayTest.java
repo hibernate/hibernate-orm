@@ -27,8 +27,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Properties;
-
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -81,9 +79,8 @@ public class ArrayTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	public void testNoIndexAnnotationFailure() {
-		Properties properties = constructProperties();
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		StandardServiceRegistry serviceRegistry = buildServiceRegistry( bootRegistry, properties );
+		BootstrapServiceRegistry bootRegistry = getTestServiceRegistryHelper().buildBootstrapServiceRegistry();
+		StandardServiceRegistry serviceRegistry = getTestServiceRegistryHelper().getServiceRegistry();
 		MetadataSources sources = new MetadataSources( bootRegistry );
 		sources.addAnnotatedClass( NoIndexArrayEntity.class );
 		MetadataBuilder metadataBuilder = sources.getMetadataBuilder(serviceRegistry);

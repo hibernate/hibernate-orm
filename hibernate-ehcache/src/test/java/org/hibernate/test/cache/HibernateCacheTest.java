@@ -39,23 +39,15 @@ public class HibernateCacheTest extends BaseCoreFunctionalTestCase {
 	private static final String REGION_PREFIX = "hibernate.test.";
 
 	@Override
-	protected void configure(Configuration config) {
-		config.setProperty( AvailableSettings.USE_QUERY_CACHE, "true");
-		config.setProperty( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
-		config.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-		config.setProperty( AvailableSettings.CACHE_REGION_FACTORY,  EhCacheRegionFactory.class.getName());
-		config.setProperty( "net.sf.ehcache.configurationResourceName", "/hibernate-config/ehcache.xml" );
+	protected void initialize() {
+		super.initialize();
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.USE_QUERY_CACHE, "true");
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.CACHE_REGION_FACTORY,  EhCacheRegionFactory.class.getName());
+		getTestConfiguration().getProperties().setProperty( "net.sf.ehcache.configurationResourceName", "/hibernate-config/ehcache.xml" );
 	}
-	
-	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( AvailableSettings.USE_QUERY_CACHE, "true");
-		serviceRegistryBuilder.applySetting( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
-		serviceRegistryBuilder.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
-		serviceRegistryBuilder.applySetting( AvailableSettings.CACHE_REGION_FACTORY,  EhCacheRegionFactory.class.getName());
-		serviceRegistryBuilder.applySetting( "net.sf.ehcache.configurationResourceName", "/hibernate-config/ehcache.xml" );
-	}
-	
+
 	@Override
 	protected String getBaseForMappings() {
 		return "hibernate-config/domain/";

@@ -42,12 +42,12 @@ public class ExplicitSqlResultSetMappingTest extends BaseCoreFunctionalTestCase 
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.GLOBALLY_QUOTED_IDENTIFIERS, "true" );
 	}
 

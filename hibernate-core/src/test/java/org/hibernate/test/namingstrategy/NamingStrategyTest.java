@@ -54,12 +54,12 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Override
-	protected void configMetadataBuilder(MetadataBuilder metadataBuilder) {
+	public void configure(MetadataBuilder metadataBuilder) {
 		metadataBuilder.with( new TestNamingStrategy() );
 	}
 
     @Override
-    protected Class<?>[] getAnnotatedClasses() {
+	public Class<?>[] getAnnotatedClasses() {
         return new Class<?>[] {
                 Item.class
         };

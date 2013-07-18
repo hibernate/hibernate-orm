@@ -4527,7 +4527,7 @@ public class FooBarTest extends LegacyTestCase {
 			err=true;
 		}
 		assertTrue(err);
-		id = FumTest.fumKey( "abc" ); //yuck!!
+		id = new FumTest().fumKey( "abc" ); //yuck!!
 		Fo fo = Fo.newFo( (FumCompositeID) id );
 		s.save(fo);
 		s.flush();

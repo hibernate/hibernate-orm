@@ -19,6 +19,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @RunWith(EnversRunner.class)
 public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTestCase {
+	protected BaseEnversFunctionalTestCase() {
+		getTestConfiguration().getProperties().setProperty(  EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
+	}
+
 	private String auditStrategy;
 
 	@Parameterized.Parameters
@@ -46,13 +50,6 @@ public abstract class BaseEnversFunctionalTestCase extends BaseCoreFunctionalTes
 
 	protected AuditReader getAuditReader() {
 		return AuditReaderFactory.get( getSession() );
-	}
-
-	@Override
-	protected Configuration constructConfiguration() {
-		Configuration configuration = super.constructConfiguration();
-		configuration.setProperty( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
-		return configuration;
 	}
 
 	@Override

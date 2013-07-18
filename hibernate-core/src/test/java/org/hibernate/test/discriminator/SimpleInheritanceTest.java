@@ -50,16 +50,10 @@ import static org.junit.Assert.assertTrue;
  * @author Gavin King
  */
 public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( USE_NEW_METADATA_MAPPINGS, "true");
-	}
-
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( USE_NEW_METADATA_MAPPINGS, "true" );
+	public boolean isMetadataUsed() {
+		return true; //TODO why force to use new metamodel?
 	}
-
 	@Override
 	public String[] getMappings() {
 		return new String[] { "discriminator/SimpleInheritance.hbm.xml" };

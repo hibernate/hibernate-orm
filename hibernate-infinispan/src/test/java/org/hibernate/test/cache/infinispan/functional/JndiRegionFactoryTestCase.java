@@ -81,12 +81,12 @@ public class JndiRegionFactoryTestCase extends SingleNodeTestCase {
 	}
 
 	@Override
-	protected Class<? extends RegionFactory> getCacheRegionFactory() {
+	public Class<? extends RegionFactory> getCacheRegionFactory() {
 		return JndiInfinispanRegionFactory.class;
 	}
 
 	@Override
-	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
+	public void afterMetadataBuilt(MetadataImplementor metadataImplementor) {
 		bindToJndi();
 	}
 

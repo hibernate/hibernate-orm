@@ -46,7 +46,7 @@ public class CustomDirtinessStrategyTest extends BaseCoreFunctionalTestCase {
 	private static final String SUBSEQUENT_NAME = "thing 2";
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.getProperties().put( AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY, Strategy.INSTANCE );
 	}

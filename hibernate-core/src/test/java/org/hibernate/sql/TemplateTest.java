@@ -43,6 +43,7 @@ import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.sql.ordering.antlr.ColumnReference;
 import org.hibernate.sql.ordering.antlr.SqlValueReference;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.Type;
 
@@ -51,7 +52,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class TemplateTest extends BaseUnitTestCase {
+public class TemplateTest extends BaseCoreFunctionalTestCase {
 	private static final PropertyMapping PROPERTY_MAPPING = new PropertyMapping() {
 		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 			if ( "sql".equals( propertyName ) ) {
@@ -107,29 +108,29 @@ public class TemplateTest extends BaseUnitTestCase {
 
 	private static final SQLFunctionRegistry FUNCTION_REGISTRY = new SQLFunctionRegistry( DIALECT, Collections.EMPTY_MAP );
 
-	private static SessionFactoryImplementor SESSION_FACTORY = null; // Required for ORDER BY rendering.
-
-	@BeforeClass
-	public static void buildSessionFactory() {
-		Configuration cfg = new Configuration();
-		cfg.setProperty( AvailableSettings.DIALECT, DIALECT.getClass().getName() );
-		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
-		if ( isMetadataUsed ) {
-			SESSION_FACTORY = (SessionFactoryImplementor) new MetadataSources( serviceRegistry ).buildMetadata()
-					.buildSessionFactory();
-		}
-		else {
-			SESSION_FACTORY = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
-		}
-	}
-
-	@AfterClass
-	public static void closeSessionFactory() {
-		if ( SESSION_FACTORY != null ) {
-			SESSION_FACTORY.close();
-			SESSION_FACTORY = null;
-		}
-	}
+//	private static SessionFactoryImplementor SESSION_FACTORY = null; // Required for ORDER BY rendering.
+//
+//	@BeforeClass
+//	public static void buildSessionFactory() {
+//		Configuration cfg = new Configuration();
+//		cfg.setProperty( AvailableSettings.DIALECT, DIALECT.getClass().getName() );
+//		ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( cfg.getProperties() );
+//		if ( isMetadataUsed() ) {
+//			SESSION_FACTORY = (SessionFactoryImplementor) new MetadataSources( serviceRegistry ).buildMetadata()
+//					.buildSessionFactory();
+//		}
+//		else {
+//			SESSION_FACTORY = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+//		}
+//	}
+//
+//	@AfterClass
+//	public static void closeSessionFactory() {
+//		if ( SESSION_FACTORY != null ) {
+//			SESSION_FACTORY.close();
+//			SESSION_FACTORY = null;
+//		}
+//	}
 
 	@Test
 	public void testSqlExtractFunction() {
@@ -275,6 +276,6 @@ public class TemplateTest extends BaseUnitTestCase {
 	}
 
 	public String doStandardRendering(String fragment) {
-		return Template.renderOrderByStringTemplate( fragment, MAPPER, SESSION_FACTORY, DIALECT, FUNCTION_REGISTRY );
+		return Template.renderOrderByStringTemplate( fragment, MAPPER, sessionFactory(), DIALECT, FUNCTION_REGISTRY );
 	}
 }

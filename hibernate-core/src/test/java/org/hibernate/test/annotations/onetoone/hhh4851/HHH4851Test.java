@@ -68,7 +68,7 @@ public class HHH4851Test extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration cfg) {
+	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
 	}

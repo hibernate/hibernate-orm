@@ -59,7 +59,7 @@ public class ImmutableNaturalIdTest extends AbstractJPATest {
 	}
 	
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "true" );
 		serviceRegistryBuilder.applySetting( Environment.USE_QUERY_CACHE, "true" );
 		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );

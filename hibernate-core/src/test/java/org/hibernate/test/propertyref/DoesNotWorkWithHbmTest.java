@@ -53,14 +53,14 @@ public class DoesNotWorkWithHbmTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
+	public void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 		configuration.setProperty( AvailableSettings.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/propertyref/import.sql" );
 	}
 
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.applySetting( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 		serviceRegistryBuilder.applySetting( AvailableSettings.HBM2DDL_IMPORT_FILES, "/org/hibernate/test/propertyref/import.sql" );
 	}

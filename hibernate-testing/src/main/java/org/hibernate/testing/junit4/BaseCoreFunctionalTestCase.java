@@ -133,6 +133,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	public void afterConfigurationBuilt(Mappings mappings, Dialect dialect) {
 	}
 
+	@Override
+	public void afterConfigurationBuilt(final Configuration configuration) {
+	}
 
 	@Override
 	public void afterSessionFactoryBuilt() {

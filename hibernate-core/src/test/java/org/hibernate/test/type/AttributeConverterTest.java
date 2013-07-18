@@ -36,9 +36,13 @@ import org.junit.Test;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
+import org.hibernate.testing.junit4.TestSessionFactoryHelper;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -54,9 +58,13 @@ import static org.junit.Assert.assertSame;
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterTest extends BaseUnitTestCase {
+@FailureExpectedWithNewMetamodel
+public class AttributeConverterTest extends BaseCoreFunctionalTestMethod {
 	@Test
 	public void testBasicOperation() {
+		if(getTestConfiguration().isMetadataUsed()){
+			throw new NotYetImplementedException( "jpa attribute converter is not supportet yet" );
+		}
 		Configuration cfg = new Configuration();
 		SimpleValue simpleValue = new SimpleValue( cfg.createMappings() );
 		simpleValue.setJpaAttributeConverterDefinition(
@@ -74,6 +82,9 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNormalOperation() {
+		if(getTestConfiguration().isMetadataUsed()){
+			throw new NotYetImplementedException( "jpa attribute converter is not supportet yet" );
+		}
 		Configuration cfg = new Configuration();
 		cfg.addAttributeConverter( StringClobConverter.class, true );
 		cfg.addAnnotatedClass( Tester.class );

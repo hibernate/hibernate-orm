@@ -35,7 +35,13 @@ import org.hibernate.annotations.Type;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.MetadataImplementor;
+import org.hibernate.metamodel.spi.binding.AttributeBinding;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.junit4.TestSessionFactoryHelper;
 import org.hibernate.type.CharacterNCharType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
@@ -48,9 +54,10 @@ import static org.junit.Assert.assertSame;
 /**
  * @author Steve Ebersole
  */
-public class SimpleNationalizedTest extends BaseUnitTestCase {
+@FailureExpectedWithNewMetamodel
+public class SimpleNationalizedTest extends BaseCoreFunctionalTestMethod {
 
-	@Entity( name="NationalizedEntity")
+	@Entity(name = "NationalizedEntity")
 	public static class NationalizedEntity {
 		@Id
 		private Integer id;
@@ -68,19 +75,52 @@ public class SimpleNationalizedTest extends BaseUnitTestCase {
 
 		@Nationalized
 		private Character ncharacterAtt;
-		
+
 		@Nationalized
 		private Character[] ncharArrAtt;
-		
+
 		@Type(type = "ntext")
 		private String nlongvarcharcharAtt;
 	}
 
 	@Test
 	public void simpleNationalizedTest() {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( NationalizedEntity.class );
-		cfg.buildMappings();
+		getTestConfiguration().addAnnotatedClass( NationalizedEntity.class );
+		getSessionFactoryHelper().setCallback(
+				new TestSessionFactoryHelper.CallbackImpl() {
+					@Override
+					public void afterConfigurationBuilt(final Configuration configuration) {
+						assertConfiguration( configuration );
+					}
+
+					@Override
+					public void afterMetadataBuilt(final MetadataImplementor metadataImplementor) {
+						EntityBinding entityBinding = metadataImplementor.getEntityBinding( NationalizedEntity.class.getName() );
+						assertEntitybinding( entityBinding );
+					}
+				}
+		).getSessionFactory();
+
+	}
+
+	private void assertEntitybinding(EntityBinding entityBinding) {
+		assertNotNull( entityBinding );
+		assertAttributeType( entityBinding, "nvarcharAtt", StringNVarcharType.INSTANCE );
+		assertAttributeType( entityBinding, "materializedNclobAtt", MaterializedNClobType.INSTANCE );
+		assertAttributeType( entityBinding, "nclobAtt", NClobType.INSTANCE );
+		assertAttributeType( entityBinding, "nlongvarcharcharAtt", NTextType.INSTANCE );
+		assertAttributeType( entityBinding, "ncharArrAtt", StringNVarcharType.INSTANCE );
+		assertAttributeType( entityBinding, "ncharacterAtt", CharacterNCharType.INSTANCE );
+
+	}
+
+	private void assertAttributeType(EntityBinding entityBinding, String attributeName, org.hibernate.type.Type type) {
+		AttributeBinding attributeBinding = entityBinding.locateAttributeBinding( attributeName );
+		assertSame( attributeBinding.getHibernateTypeDescriptor().getResolvedTypeMapping(), type );
+
+	}
+
+	private void assertConfiguration(Configuration cfg) {
 		PersistentClass pc = cfg.getClassMapping( NationalizedEntity.class.getName() );
 		assertNotNull( pc );
 

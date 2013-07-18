@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.annotations.access.xml;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,11 +31,11 @@ import javax.persistence.AccessType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.tuple.entity.EntityTuplizer;
 
 
@@ -45,8 +44,9 @@ import org.hibernate.tuple.entity.EntityTuplizer;
  *
  * @author Hardy Ferentschik
  */
-public class XmlAccessTest extends BaseUnitTestCase {
+public class XmlAccessTest extends BaseCoreFunctionalTestMethod {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnBasicXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -66,6 +66,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnPersistenceUnitDefaultsXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -85,6 +86,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnEntityMappingsXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -104,6 +106,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnEntityXmlElement() throws Exception {
 		Class<?> classUnderTest = Tourist.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -136,6 +139,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnAssociationXmlElement() throws Exception {
 		Class<?> classUnderTest = RentalCar.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -149,6 +153,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnEmbeddedXmlElement() throws Exception {
 		Class<?> classUnderTest = Cook.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -162,6 +167,7 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testAccessOnElementCollectionXmlElement() throws Exception {
 		Class<?> classUnderTest = Boy.class;
 		List<Class<?>> classes = new ArrayList<Class<?>>();
@@ -176,15 +182,9 @@ public class XmlAccessTest extends BaseUnitTestCase {
 	private SessionFactoryImplementor buildSessionFactory(List<Class<?>> classesUnderTest, List<String> configFiles) {
 		assert classesUnderTest != null;
 		assert configFiles != null;
-		Configuration cfg = new Configuration();
-		for ( Class<?> clazz : classesUnderTest ) {
-			cfg.addAnnotatedClass( clazz );
-		}
-		for ( String configFile : configFiles ) {
-			InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile );
-			cfg.addInputStream( is );
-		}
-		return ( SessionFactoryImplementor ) cfg.buildSessionFactory();
+		getTestConfiguration().getAnnotatedClasses().addAll( classesUnderTest );
+		getTestConfiguration().getOrmXmlFiles().addAll( configFiles );
+		return getSessionFactoryHelper().getSessionFactory();
 	}
 
 	// uses the first getter of the tupelizer for the assertions

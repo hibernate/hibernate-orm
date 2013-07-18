@@ -16,13 +16,14 @@ import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * @author Nikolay Shestakov
  *
  */
-public class UniqueConstraintValidationTest extends BaseUnitTestCase {
+public class UniqueConstraintValidationTest extends BaseCoreFunctionalTestMethod {
 
 	@Test(expected = AnnotationException.class)
 	@TestForIssue(jiraKey = "HHH-4084")
@@ -43,22 +44,8 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 	}
 
 	private void buildSessionFactory(Class<?> entity) {
-		if ( isMetadataUsed() ) {
-			StandardServiceRegistry registry = new StandardServiceRegistryBuilder().build();
-			MetadataSources metadataSources = new MetadataSources( registry );
-			metadataSources.addAnnotatedClass( entity );
-			metadataSources.buildMetadata();
-			StandardServiceRegistryBuilder.destroy( registry );
-		}
-		else {
-			Configuration cfg = new Configuration();
-			cfg.addAnnotatedClass( entity );
-			cfg.buildMappings();
-			ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
-					.applySettings( cfg.getProperties() ).build();
-			cfg.buildSessionFactory( serviceRegistry ).close();
-			serviceRegistry.destroy();
-		}
+		getTestConfiguration().addAnnotatedClass( entity );
+		getSessionFactoryHelper().getSessionFactory();
 	}
 
 	@Entity

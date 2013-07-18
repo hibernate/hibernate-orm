@@ -312,6 +312,7 @@ public class TestSessionFactoryHelper {
 
 		void configure(Configuration configuration);
 		void afterConfigurationBuilt(Mappings mappings, Dialect dialect);
+		void afterConfigurationBuilt(Configuration configuration);
 	}
 
 	public static class CallbackImpl implements Callback {
@@ -335,6 +336,9 @@ public class TestSessionFactoryHelper {
 		public void configure(final MetadataBuilder metadataBuilder) {
 		}
 
+		@Override
+		public void afterConfigurationBuilt(final Configuration configuration) {
+		}
 
 		@Override
 		public void afterConfigurationBuilt(final Mappings mappings, final Dialect dialect) {

@@ -34,6 +34,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.SerializationException;
 
@@ -43,15 +44,15 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-public class SessionFactorySerializationTest extends BaseUnitTestCase {
+public class SessionFactorySerializationTest extends BaseCoreFunctionalTestMethod {
 	public static final String NAME = "mySF";
 
 	@Test
 	public void testNamedSessionFactorySerialization() throws Exception {
-		Configuration cfg = new Configuration()
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME )
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
-		SessionFactory factory = cfg.buildSessionFactory();
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.SESSION_FACTORY_NAME, NAME );
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" );     // default is true
+
+		SessionFactory factory = getSessionFactoryHelper().getSessionFactory();
 
 		// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
 		// different VM
@@ -72,10 +73,9 @@ public class SessionFactorySerializationTest extends BaseUnitTestCase {
 	public void testUnNamedSessionFactorySerialization() throws Exception {
 		// IMPL NOTE : this test is a control to testNamedSessionFactorySerialization
 		// 		here, the test should fail based just on attempted uuid resolution
-		Configuration cfg = new Configuration()
-				.setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" ); // default is true
-		SessionFactory factory = cfg.buildSessionFactory();
+		getTestConfiguration().getProperties().setProperty( AvailableSettings.SESSION_FACTORY_NAME_IS_JNDI, "false" );     // default is true
 
+		SessionFactory factory = getSessionFactoryHelper().getSessionFactory();
 		// we need to do some tricking here so that Hibernate thinks the deserialization happens in a
 		// different VM
 		Reference reference = factory.getReference();

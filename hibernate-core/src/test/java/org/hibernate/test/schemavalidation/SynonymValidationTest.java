@@ -30,7 +30,9 @@ import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -40,10 +42,14 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 @RequiresDialect( Oracle9iDialect.class )
+@FailureExpectedWithNewMetamodel
 public class SynonymValidationTest extends BaseUnitTestCase {
 	
 	@Test
 	public void testSynonymValidation() {
+		if(isMetadataUsed()){
+			throw new NotYetImplementedException( "SchemaValidator is not yet support metamodel" );
+		}
 //		Session s = openSession();
 //		s.getTransaction().begin();
 //		s.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();

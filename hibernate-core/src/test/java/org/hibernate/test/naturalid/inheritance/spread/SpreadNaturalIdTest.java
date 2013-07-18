@@ -27,7 +27,9 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.fail;
@@ -36,14 +38,15 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7129" )
-public class SpreadNaturalIdTest extends BaseUnitTestCase {
+public class SpreadNaturalIdTest extends BaseCoreFunctionalTestMethod {
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSpreadNaturalIdDeclarationGivesMappingException() {
-		Configuration cfg = new Configuration()
-				.addAnnotatedClass( Principal.class )
-				.addAnnotatedClass( User.class );
+
+
 		try {
-			cfg.buildMappings();
+			getTestConfiguration().addAnnotatedClass( Principal.class ).addAnnotatedClass( User.class );
+			getSessionFactoryHelper().getSessionFactory();
 			fail( "Expected binders to throw an exception" );
 		}
 		catch (AnnotationException expected) {

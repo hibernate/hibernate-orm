@@ -136,7 +136,6 @@ public class BasicAttribute extends MappedAttribute {
 		if ( isId() ) {
 			// an id must be unique and cannot be nullable
 			for ( Column columnValue : getColumnValues() ) {
-				columnValue.setUnique( true );
 				columnValue.setNullable( false );
 			}
 			identifierGeneratorDefinition = checkGeneratedValueAnnotation();

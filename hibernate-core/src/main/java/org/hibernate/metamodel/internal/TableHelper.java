@@ -28,7 +28,6 @@ import org.jboss.logging.Logger;
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.Schema;
@@ -39,11 +38,9 @@ import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
-import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 
 /**
  * @author Gail Badner
@@ -54,12 +51,10 @@ public class TableHelper {
 			TableHelper.class.getName()
 	);
 
-	private final LocalBindingContext bindingContext;
-	private final RelationalIdentifierHelper relationalIdentifierHelper;
+	private final HelperContext helperContext;
 
-	public TableHelper(LocalBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
-		this.relationalIdentifierHelper = new RelationalIdentifierHelper( bindingContext );
+	public TableHelper(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	public TableSpecification createTable(
@@ -73,7 +68,9 @@ public class TableHelper {
 			final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper,
 			final Table includedTable) {
 		if ( tableSpecSource == null && namingStrategyHelper == null ) {
-			throw bindingContext.makeMappingException( "An explicit name must be specified for the table" );
+			throw bindingContext().makeMappingException(
+					"An explicit name must be specified for the table"
+			);
 		}
 		final boolean isTableSourceNull = tableSpecSource == null;
 		final Schema schema = resolveSchema( tableSpecSource );
@@ -83,7 +80,7 @@ public class TableHelper {
 			String explicitName = isTableSourceNull ? null : TableSource.class.cast( tableSpecSource ).getExplicitTableName();
 			String tableName = normalizeDatabaseIdentifier( explicitName, namingStrategyHelper );
 			String logicTableName = TableNamingStrategyHelper.class.cast( namingStrategyHelper ).getLogicalName(
-					bindingContext.getNamingStrategy()
+					bindingContext().getNamingStrategy()
 			);
 			tableSpec = createTableSpecification( schema, tableName, logicTableName, includedTable );
 		}
@@ -99,7 +96,7 @@ public class TableHelper {
 
 	public Schema resolveSchema(final TableSpecificationSource tableSpecSource) {
 		final boolean tableSourceNull = tableSpecSource == null;
-		final MappingDefaults mappingDefaults = bindingContext.getMappingDefaults();
+		final MappingDefaults mappingDefaults = bindingContext().getMappingDefaults();
 		final String explicitCatalogName = tableSourceNull ? null : tableSpecSource.getExplicitCatalogName();
 		final String explicitSchemaName = tableSourceNull ? null : tableSpecSource.getExplicitSchemaName();
 		final Schema.Name schemaName =
@@ -107,7 +104,7 @@ public class TableHelper {
 						createIdentifier( explicitCatalogName, mappingDefaults.getCatalogName() ),
 						createIdentifier( explicitSchemaName, mappingDefaults.getSchemaName() )
 				);
-		return bindingContext.getMetadataImplementor().getDatabase().locateSchema( schemaName );
+		return bindingContext().getMetadataImplementor().getDatabase().locateSchema( schemaName );
 	}
 
 	public TableSpecification createTableSpecification(
@@ -136,7 +133,7 @@ public class TableHelper {
 			final String columnName,
 			final ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper) {
 		if ( columnName == null && namingStrategyHelper == null ) {
-			throw bindingContext.makeMappingException(
+			throw bindingContext().makeMappingException(
 					"Cannot resolve name for column because no name was specified and namingStrategyHelper is null."
 			);
 		}
@@ -210,14 +207,18 @@ public class TableHelper {
 	}
 
 	private Identifier createIdentifier(String name) {
-		return relationalIdentifierHelper.createIdentifier( name );
+		return helperContext.relationalIdentifierHelper().createIdentifier( name );
 	}
 
 	private Identifier createIdentifier(String name, String defaultName) {
-		return relationalIdentifierHelper.createIdentifier( name, defaultName );
+		return helperContext.relationalIdentifierHelper().createIdentifier( name, defaultName );
 	}
 
 	private String normalizeDatabaseIdentifier(String explicitName, ObjectNameNormalizer.NamingStrategyHelper namingStrategyHelper) {
-		return relationalIdentifierHelper.normalizeDatabaseIdentifier( explicitName, namingStrategyHelper );
+		return helperContext.relationalIdentifierHelper().normalizeDatabaseIdentifier( explicitName, namingStrategyHelper );
+	}
+
+	private LocalBindingContext bindingContext() {
+		return helperContext.bindingContext();
 	}
 }

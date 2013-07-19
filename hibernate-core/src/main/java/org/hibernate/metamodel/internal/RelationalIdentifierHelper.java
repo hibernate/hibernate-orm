@@ -33,19 +33,16 @@ import org.hibernate.metamodel.spi.source.LocalBindingContext;
  */
 public class RelationalIdentifierHelper {
 
-	private final LocalBindingContext bindingContext;
+	private final HelperContext helperContext;
 
-	RelationalIdentifierHelper(LocalBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
+	RelationalIdentifierHelper(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	public String normalizeDatabaseIdentifier(
 			final String explicitName,
-			ObjectNameNormalizer.NamingStrategyHelper helper) {
-		return bindingContext
-				.getMetadataImplementor()
-				.getObjectNameNormalizer()
-				.normalizeDatabaseIdentifier( explicitName, helper );
+			final ObjectNameNormalizer.NamingStrategyHelper helper) {
+		return getObjectNameNormalizer().normalizeDatabaseIdentifier( explicitName, helper );
 	}
 
 	public Identifier createIdentifier(final String name){
@@ -59,7 +56,10 @@ public class RelationalIdentifierHelper {
 	}
 
 	public String quotedIdentifier(final String name) {
-		return bindingContext.getMetadataImplementor().getObjectNameNormalizer().normalizeIdentifierQuoting( name );
+		return getObjectNameNormalizer().normalizeIdentifierQuoting( name );
 	}
 
+	private ObjectNameNormalizer getObjectNameNormalizer() {
+		return helperContext.bindingContext().getMetadataImplementor().getObjectNameNormalizer();
+	}
 }

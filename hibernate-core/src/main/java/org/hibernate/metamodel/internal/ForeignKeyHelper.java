@@ -55,12 +55,10 @@ public class ForeignKeyHelper {
 			ForeignKeyHelper.class.getName()
 	);
 
-	private final LocalBindingContext bindingContext;
-	private final RelationalIdentifierHelper relationalIdentifierHelper;
+	private final HelperContext helperContext;
 
-	public ForeignKeyHelper(LocalBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
-		this.relationalIdentifierHelper = new RelationalIdentifierHelper( bindingContext );
+	public ForeignKeyHelper(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	public List<Column> determineForeignKeyTargetColumns(
@@ -82,7 +80,7 @@ public class ForeignKeyHelper {
 			final ForeignKeyContributingSource.JoinColumnResolutionContext resolutionContext = new JoinColumnResolutionContextImpl( entityBinding );
 			for ( Value relationalValue : fkColumnResolutionDelegate.getJoinColumns( resolutionContext ) ) {
 				if ( !Column.class.isInstance( relationalValue ) ) {
-					throw bindingContext.makeMappingException(
+					throw bindingContext().makeMappingException(
 							"Foreign keys can currently only name columns, not formulas"
 					);
 				}
@@ -130,7 +128,7 @@ public class ForeignKeyHelper {
 
 		if ( referencedAttributeBinding == null ) {
 			if ( explicitName != null ) {
-				throw bindingContext.makeMappingException(
+				throw bindingContext().makeMappingException(
 						String.format(
 								"No attribute binding found with name: %s.%s",
 								referencedEntityBinding.getEntityName(),
@@ -146,7 +144,7 @@ public class ForeignKeyHelper {
 		}
 
 		if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-			throw bindingContext.makeMappingException(
+			throw bindingContext().makeMappingException(
 					String.format(
 							"Foreign key references a non-singular attribute [%s]",
 							referencedAttributeBinding.getAttribute().getName()
@@ -167,7 +165,7 @@ public class ForeignKeyHelper {
 			foreignKeyName = ForeignKey.generateName( sourceTable, targetTable, sourceColumns, targetColumns );
 		}
 		else {
-			foreignKeyName = relationalIdentifierHelper.quotedIdentifier( explicitForeignKeyName );
+			foreignKeyName = helperContext.relationalIdentifierHelper().quotedIdentifier( explicitForeignKeyName );
 		}
 		
 		ForeignKey foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
@@ -227,7 +225,7 @@ public class ForeignKeyHelper {
 			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
 		if ( sourceColumns.size() != targetColumns.size() ) {
-			throw bindingContext.makeMappingException(
+			throw bindingContext().makeMappingException(
 					String.format(
 							"Non-matching number columns in foreign key source columns [%s : %s] and target columns [%s : %s]",
 							sourceTable.getLogicalName().getText(),
@@ -254,7 +252,7 @@ public class ForeignKeyHelper {
 		ForeignKey foreignKey = sourceTable.locateForeignKey( foreignKeyName );
 		if ( foreignKey != null ) {
 			if ( !targetTable.equals( foreignKey.getTargetTable() ) ) {
-				throw bindingContext.makeMappingException(
+				throw bindingContext().makeMappingException(
 						String.format(
 								"Unexpected target table defined for foreign key \"%s\"; expected \"%s\"; found \"%s\"",
 								foreignKeyName,
@@ -273,7 +271,7 @@ public class ForeignKeyHelper {
 				// Make sure they are the same columns.
 				if ( !foreignKey.getSourceColumns().equals( sourceColumns ) ||
 						!foreignKey.getTargetColumns().equals( targetColumns ) ) {
-					throw bindingContext.makeMappingException(
+					throw bindingContext().makeMappingException(
 							String.format(
 									"Attempt to bind exisitng foreign key \"%s\" with different columns.",
 									foreignKeyName
@@ -285,7 +283,11 @@ public class ForeignKeyHelper {
 		return foreignKey;
 	}
 
-	public class JoinColumnResolutionContextImpl implements ForeignKeyContributingSource.JoinColumnResolutionContext {
+	private LocalBindingContext bindingContext() {
+		return helperContext.bindingContext();
+	}
+
+	private class JoinColumnResolutionContextImpl implements ForeignKeyContributingSource.JoinColumnResolutionContext {
 		private final EntityBinding referencedEntityBinding;
 
 
@@ -299,7 +301,7 @@ public class ForeignKeyHelper {
 				String logicalTableName,
 				String logicalSchemaName,
 				String logicalCatalogName) {
-			if ( bindingContext.isGloballyQuotedIdentifiers() && !org.hibernate
+			if ( bindingContext().isGloballyQuotedIdentifiers() && !org.hibernate
 					.internal
 					.util
 					.StringHelper
@@ -313,7 +315,7 @@ public class ForeignKeyHelper {
 
 		@Override
 		public TableSpecification resolveTable(String logicalTableName, String logicalSchemaName, String logicalCatalogName) {
-			Identifier tableIdentifier = relationalIdentifierHelper.createIdentifier( logicalTableName );
+			Identifier tableIdentifier = helperContext.relationalIdentifierHelper().createIdentifier( logicalTableName );
 			if ( tableIdentifier == null ) {
 				tableIdentifier = referencedEntityBinding.getPrimaryTable().getLogicalName();
 			}
@@ -325,7 +327,7 @@ public class ForeignKeyHelper {
 			Identifier schemaName = org.hibernate.internal.util.StringHelper.isNotEmpty( logicalCatalogName ) ?
 					Identifier.toIdentifier( logicalSchemaName )
 					: referencedEntityBinding.getPrimaryTable().getSchema().getName().getSchema();
-			Schema schema = bindingContext.getMetadataImplementor().getDatabase().getSchema( catalogName, schemaName );
+			Schema schema = bindingContext().getMetadataImplementor().getDatabase().getSchema( catalogName, schemaName );
 			return schema.locateTable( tableIdentifier );
 		}
 
@@ -364,7 +366,7 @@ public class ForeignKeyHelper {
 			final AttributeBinding referencedAttributeBinding =
 					referencedEntityBinding.locateAttributeBindingByPath( attributeName, true );
 			if ( referencedAttributeBinding == null ) {
-				throw bindingContext.makeMappingException(
+				throw bindingContext().makeMappingException(
 						String.format(
 								"Could not resolve named referenced property [%s] against entity [%s]",
 								attributeName,
@@ -373,7 +375,7 @@ public class ForeignKeyHelper {
 				);
 			}
 			if ( !referencedAttributeBinding.getAttribute().isSingular() ) {
-				throw bindingContext.makeMappingException(
+				throw bindingContext().makeMappingException(
 						String.format(
 								"Referenced property [%s] against entity [%s] is a plural attribute; it must be a singular attribute.",
 								attributeName,

@@ -40,7 +40,6 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ColumnSource;
 import org.hibernate.metamodel.spi.source.DerivedValueSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSourceContainer;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
@@ -49,23 +48,21 @@ import org.hibernate.metamodel.spi.source.SingularAttributeSource;
  * @author Gail Badner
  */
 public class RelationalValueBindingHelper {
-	private final TableHelper tableHelper;
-	private final NaturalIdUniqueKeyHelper uniqueKeyHelper;
 
-	public RelationalValueBindingHelper(LocalBindingContext bindingContext) {
-		this.tableHelper = new TableHelper( bindingContext );
-		this.uniqueKeyHelper = new NaturalIdUniqueKeyHelper();
+	private final HelperContext helperContext;
+
+	public RelationalValueBindingHelper(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	public boolean hasDerivedValue(List<RelationalValueBinding> relationalValueBindings) {
 		for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
-		if (relationalValueBinding.isDerived() ) {
-			return true;
+			if (relationalValueBinding.isDerived() ) {
+				return true;
+			}
 		}
+		return false;
 	}
-	return false;
-}
-
 
 	public List<RelationalValueBinding> createRelationalValueBindings(
 			final AttributeBindingContainer attributeBindingContainer,
@@ -105,14 +102,14 @@ public class RelationalValueBindingHelper {
 
 		if ( valueSourceContainer.relationalValueSources().isEmpty() ) {
 			for ( Binder.DefaultNamingStrategy defaultNameStrategy : defaultNameStrategies ) {
-				final Column column = tableHelper.locateOrCreateColumn(
+				final Column column = helperContext.tableHelper().locateOrCreateColumn(
 						defaultTable,
 						null,
 						new DefaultColumnNamingStrategyHelper( defaultNameStrategy )
 				);
 				column.setNullable( !reallyForceNonNullable && valueSourceContainer.areValuesNullableByDefault() );
 				if ( isNaturalId ) {
-					uniqueKeyHelper.addUniqueConstraintForNaturalIdColumn( defaultTable, column );
+					helperContext.naturalIdUniqueKeyHelper().addUniqueConstraintForNaturalIdColumn( defaultTable, column );
 				}
 				valueBindings.add(
 						new RelationalValueBinding(
@@ -141,7 +138,7 @@ public class RelationalValueBindingHelper {
 											defaultNameStrategies.get( i ) :
 											null
 							);
-					Column column = tableHelper.locateOrCreateColumn(
+					Column column = helperContext.tableHelper().locateOrCreateColumn(
 							table,
 							columnSource,
 							defaultColumnNamingStrategyHelper,
@@ -149,7 +146,7 @@ public class RelationalValueBindingHelper {
 							valueSourceContainer.areValuesNullableByDefault()
 					);
 					if ( isNaturalId ) {
-						uniqueKeyHelper.addUniqueConstraintForNaturalIdColumn( table, column );
+						helperContext.naturalIdUniqueKeyHelper().addUniqueConstraintForNaturalIdColumn( table, column );
 					}
 					final boolean isIncludedInInsert =
 							TruthValue.toBoolean(

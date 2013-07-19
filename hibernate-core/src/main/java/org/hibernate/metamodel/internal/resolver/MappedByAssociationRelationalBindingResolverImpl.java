@@ -29,6 +29,7 @@ import java.util.List;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.ForeignKeyHelper;
+import org.hibernate.metamodel.internal.HelperContext;
 import org.hibernate.metamodel.internal.RelationalValueBindingHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.AttributeBindingContainer;
@@ -55,14 +56,10 @@ import org.hibernate.type.ForeignKeyDirection;
  + * @author Gail Badner
  + */
 public class MappedByAssociationRelationalBindingResolverImpl implements AssociationRelationalBindingResolver {
-	private final LocalBindingContext bindingContext;
-	private final ForeignKeyHelper foreignKeyHelper;
-	private final RelationalValueBindingHelper relationalValueBindingHelper;
+	private final HelperContext helperContext;
 
-	public MappedByAssociationRelationalBindingResolverImpl(LocalBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
-		this.foreignKeyHelper = new ForeignKeyHelper( bindingContext );
-		this.relationalValueBindingHelper = new RelationalValueBindingHelper( bindingContext );
+	public MappedByAssociationRelationalBindingResolverImpl(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	@Override
@@ -93,15 +90,15 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 		if ( attributeSource.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
 			throw new AssertionFailure( "Cannot create a foreign key for one-to-one with foreign key direction going to the parent." );
 		}
-		final List<Column> targetColumns = foreignKeyHelper.determineForeignKeyTargetColumns(
+		final List<Column> targetColumns = foreignKeyHelper().determineForeignKeyTargetColumns(
 				referencedEntityBinding,
 				attributeSource
 		);
-		final TableSpecification targetTable = foreignKeyHelper.determineForeignKeyTargetTable(
+		final TableSpecification targetTable = foreignKeyHelper().determineForeignKeyTargetTable(
 				referencedEntityBinding,
 				attributeSource
 		);
-		return foreignKeyHelper.locateOrCreateForeignKey(
+		return foreignKeyHelper().locateOrCreateForeignKey(
 				attributeSource.getExplicitForeignKeyName(),
 				sourceTable,
 				sourceColumns,
@@ -143,7 +140,7 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 				getMappedByAssociationSource( attributeSource ),
 				referencedEntityBinding
 		);
-		return relationalValueBindingHelper.bindInverseRelationalValueBindings(
+		return relationalValueBindingHelper().bindInverseRelationalValueBindings(
 				ownerSecondaryTable.getForeignKeyReference().getSourceTable(),
 				ownerSecondaryTable.getForeignKeyReference().getSourceColumns()
 		);
@@ -180,14 +177,14 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 				// for the secondary table.
 				final SecondaryTable ownerSecondaryTable =
 						referencedEntityBinding.getSecondaryTables().get( collectionTable.getLogicalName() );
-				relationalValueBindings = relationalValueBindingHelper.bindInverseRelationalValueBindings(
+				relationalValueBindings = relationalValueBindingHelper().bindInverseRelationalValueBindings(
 						collectionTable,
 						ownerSecondaryTable.getForeignKeyReference().getSourceColumns()
 				);
 			}
 			else {
 				final PluralAttributeBinding ownerPluralAttributeBinding = (PluralAttributeBinding) ownerAttributeBinding;
-				relationalValueBindings = relationalValueBindingHelper.bindInverseRelationalValueBindings(
+				relationalValueBindings = relationalValueBindingHelper().bindInverseRelationalValueBindings(
 						collectionTable,
 						ownerPluralAttributeBinding.getPluralAttributeKeyBinding().getValues()
 				);
@@ -307,6 +304,10 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 		return referencedAttributeBinding;
 	}
 
+	private LocalBindingContext bindingContext() {
+		return helperContext.bindingContext();
+	}
+
 	private MappedByAssociationSource getMappedByAssociationSource(AssociationSource associationSource) {
 		if ( !associationSource.isMappedBy() || !MappedByAssociationSource.class.isInstance( associationSource ) ) {
 			throw new AssertionFailure( "Expected a MappedByAssociationSource." );
@@ -315,7 +316,7 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 	}
 
 	private AttributeBinding getOwnerAttributeBinding(MappedByAssociationSource associationSource) {
-		final EntityBinding referencedEntityBinding =   bindingContext.getMetadataImplementor().getEntityBinding(
+		final EntityBinding referencedEntityBinding =   bindingContext().getMetadataImplementor().getEntityBinding(
 				associationSource.getReferencedEntityName()
 		);
 		final AttributeBinding ownerAttributeBinding = referencedEntityBinding.locateAttributeBindingByPath(
@@ -323,7 +324,7 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 				true
 		);
 		if ( ownerAttributeBinding == null ) {
-			throw bindingContext.makeMappingException(
+			throw bindingContext().makeMappingException(
 					String.format(
 							"Attribute not found: [%s.%s]",
 							referencedEntityBinding.getEntityName(),
@@ -346,5 +347,13 @@ public class MappedByAssociationRelationalBindingResolverImpl implements Associa
 			throw new AssertionFailure( "many-to-one has mappedby specified but it does not use a join table." );
 		}
 		return referencedEntityBinding.getSecondaryTables().get( table.getLogicalName() );
+	}
+
+	private ForeignKeyHelper foreignKeyHelper() {
+		return helperContext.foreignKeyHelper();
+	}
+
+	private RelationalValueBindingHelper relationalValueBindingHelper() {
+		return helperContext.relationalValueBindingHelper();
 	}
 }

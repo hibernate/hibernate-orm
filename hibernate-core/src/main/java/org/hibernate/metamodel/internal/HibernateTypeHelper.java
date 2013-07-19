@@ -263,11 +263,11 @@ class HibernateTypeHelper {
 	}
 	//--------------------------------------------------------------------------------
 
- 	private final LocalBindingContext bindingContext;
+ 	private final HelperContext helperContext;
 
 	//package scope methods
-	HibernateTypeHelper(LocalBindingContext bindingContext) {
-		this.bindingContext = bindingContext;
+	HibernateTypeHelper(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	/**
@@ -314,7 +314,7 @@ class HibernateTypeHelper {
 							? EntityType.class.cast( resolvedHibernateType ).getIdentifierOrUniqueKeyType( metadata() )
 							: resolvedHibernateType;
 			if ( !CompositeType.class.isInstance( resolvedRelationalType ) ) {
-				throw bindingContext
+				throw bindingContext()
 						.makeMappingException( "Column number mismatch" ); // todo refine the exception message
 			}
 			Type[] subTypes = CompositeType.class.cast( resolvedRelationalType ).getSubtypes();
@@ -591,7 +591,7 @@ class HibernateTypeHelper {
 			final String defaultJavaTypeName) {
 		if ( explicitTypeName == null ) {
 			if ( defaultJavaTypeName != null && hibernateTypeDescriptor.getJavaTypeName() != null ) {
-				throw bindingContext.makeMappingException(
+				throw bindingContext().makeMappingException(
 						String.format(
 								"Attempt to re-initialize (non-explicit) Java type name; current=%s new=%s",
 								hibernateTypeDescriptor.getJavaTypeName(),
@@ -605,7 +605,7 @@ class HibernateTypeHelper {
 			// Check if user-specified name is of a User-Defined Type (UDT)
 			final TypeDefinition typeDef = metadata().getTypeDefinition( explicitTypeName );
 			if ( hibernateTypeDescriptor.getExplicitTypeName() != null ) {
-				throw bindingContext.makeMappingException(
+				throw bindingContext().makeMappingException(
 						String.format(
 								"Attempt to re-initialize explicity-mapped Java type name; current=%s new=%s",
 								hibernateTypeDescriptor.getExplicitTypeName(),
@@ -632,7 +632,7 @@ class HibernateTypeHelper {
 			final SingularAttributeBinding attributeBinding,
 			final Type resolvedHibernateType) {
 		if ( resolvedHibernateType == null ) {
-			throw bindingContext.makeMappingException( "Resolved hibernate type can't be null" );
+			throw bindingContext().makeMappingException( "Resolved hibernate type can't be null" );
 		}
 		final HibernateTypeDescriptor hibernateTypeDescriptor = attributeBinding.getHibernateTypeDescriptor();
 		if ( hibernateTypeDescriptor.getResolvedTypeMapping() == null ) {
@@ -701,12 +701,16 @@ class HibernateTypeHelper {
 		}
 	}
 
+	private LocalBindingContext bindingContext() {
+		return helperContext.bindingContext();
+	}
+
 	private MetadataImplementor metadata() {
-		return bindingContext.getMetadataImplementor();
+		return bindingContext().getMetadataImplementor();
 	}
 
 	private org.hibernate.metamodel.spi.domain.Type makeJavaType(String name) {
-		return bindingContext.makeJavaType( name );
+		return bindingContext().makeJavaType( name );
 	}
 
 

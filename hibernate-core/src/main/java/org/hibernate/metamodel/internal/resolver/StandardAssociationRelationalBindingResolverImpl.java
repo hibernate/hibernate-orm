@@ -32,6 +32,7 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.Binder;
 import org.hibernate.metamodel.internal.ForeignKeyHelper;
+import org.hibernate.metamodel.internal.HelperContext;
 import org.hibernate.metamodel.internal.ManyToManyCollectionTableNamingStrategyHelper;
 import org.hibernate.metamodel.internal.RelationalValueBindingHelper;
 import org.hibernate.metamodel.internal.TableHelper;
@@ -45,7 +46,6 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AssociationSource;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
-import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeKeySource;
@@ -60,14 +60,10 @@ import org.hibernate.type.ForeignKeyDirection;
  + * @author Gail Badner
  + */
 public class StandardAssociationRelationalBindingResolverImpl implements AssociationRelationalBindingResolver {
-	private final RelationalValueBindingHelper relationalValueBindingHelper;
-	private final ForeignKeyHelper foreignKeyHelper;
-	private final TableHelper tableHelper;
+	private final HelperContext helperContext;
 
-	public StandardAssociationRelationalBindingResolverImpl(LocalBindingContext bindingContext) {
-		this.relationalValueBindingHelper = new RelationalValueBindingHelper( bindingContext );
-		this.foreignKeyHelper = new ForeignKeyHelper( bindingContext );
-		this.tableHelper = new TableHelper( bindingContext );
+	public StandardAssociationRelationalBindingResolverImpl(HelperContext helperContext) {
+		this.helperContext = helperContext;
 	}
 
 	@Override
@@ -124,15 +120,15 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			throw new AssertionFailure( "Cannot create a foreign key for one-to-one with foreign key direction going to the parent." );
 		}
 
-		final TableSpecification targetTable = foreignKeyHelper.determineForeignKeyTargetTable(
+		final TableSpecification targetTable = foreignKeyHelper().determineForeignKeyTargetTable(
 				referencedEntityBinding,
 				attributeSource
 		);
-		final List<Column> targetColumns = foreignKeyHelper.determineForeignKeyTargetColumns(
+		final List<Column> targetColumns = foreignKeyHelper().determineForeignKeyTargetColumns(
 				referencedEntityBinding,
 				attributeSource
 		);
-		return foreignKeyHelper.locateOrCreateForeignKey(
+		return foreignKeyHelper().locateOrCreateForeignKey(
 				attributeSource.getExplicitForeignKeyName(),
 				sourceTable,
 				sourceColumns,
@@ -180,7 +176,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			AttributeBindingContainer attributeBindingContainer,
 			List<RelationalValueBinding> relationalValueBindings,
 			EntityBinding referencedEntityBinding) {
-		final List<Column> targetColumns = foreignKeyHelper.determineForeignKeyTargetColumns(
+		final List<Column> targetColumns = foreignKeyHelper().determineForeignKeyTargetColumns(
 				referencedEntityBinding,
 				attributeSource
 		);
@@ -200,7 +196,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			final TableSpecification collectionTable,
 			final EntityBinding referencedEntityBinding) {
 		final List<Column> targetColumns =
-				foreignKeyHelper.determineForeignKeyTargetColumns(
+				foreignKeyHelper().determineForeignKeyTargetColumns(
 						referencedEntityBinding,
 						elementSource
 				);
@@ -237,7 +233,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			final List<RelationalValueBinding> relationalValueBindings,
 			final EntityBinding referencedEntityBinding) {
 		final List<Column> targetColumns =
-				foreignKeyHelper.determineForeignKeyTargetColumns(
+				foreignKeyHelper().determineForeignKeyTargetColumns(
 						referencedEntityBinding,
 						elementSource
 				);
@@ -258,7 +254,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			EntityBinding referencedEntityBinding) {
 
 		final TableSpecificationSource collectionTableSource = pluralAttributeSource.getCollectionTableSpecificationSource();
-		return tableHelper.createTable(
+		return tableHelper().createTable(
 				collectionTableSource,
 				new ManyToManyCollectionTableNamingStrategyHelper(
 						attributePath,
@@ -277,7 +273,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			final EntityBinding referencedEntityBinding) {
 		final PluralAttributeKeySource keySource = attributeSource.getKeySource();
 
-		final List<Column>targetColumns = foreignKeyHelper.determineForeignKeyTargetColumns(
+		final List<Column>targetColumns = foreignKeyHelper().determineForeignKeyTargetColumns(
 				referencedEntityBinding,
 				keySource
 		);
@@ -334,7 +330,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			final EntityBinding referencedEntityBinding) {
 		final PluralAttributeKeySource keySource = attributeSource.getKeySource();
 		List<Column> targetColumns =
-				foreignKeyHelper.determineForeignKeyTargetColumns(
+				foreignKeyHelper().determineForeignKeyTargetColumns(
 						referencedEntityBinding,
 						keySource
 				);
@@ -353,7 +349,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 	public SingularAttributeBinding resolvePluralAttributeKeyReferencedBinding(
 			AttributeBindingContainer attributeBindingContainer,
 			PluralAttributeSource attributeSource) {
-		return foreignKeyHelper.determineReferencedAttributeBinding(
+		return foreignKeyHelper().determineReferencedAttributeBinding(
 				attributeSource.getKeySource(),
 				attributeBindingContainer.seekEntityBinding()
 		);
@@ -363,7 +359,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 	private SingularAttributeBinding resolveReferencedAttributeBinding(
 			ToOneAttributeSource attributeSource,
 			EntityBinding referencedEntityBinding) {
-		return foreignKeyHelper.determineReferencedAttributeBinding( attributeSource, referencedEntityBinding );
+		return foreignKeyHelper().determineReferencedAttributeBinding( attributeSource, referencedEntityBinding );
 	}
 
 	public List<RelationalValueBinding> resolveRelationalValueBindings(
@@ -372,7 +368,7 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			TableSpecification defaultTable,
 			boolean forceNonNullable,
 			List<Binder.DefaultNamingStrategy> defaultNamingStrategies) {
-		return relationalValueBindingHelper.createRelationalValueBindings(
+		return relationalValueBindingHelper().createRelationalValueBindings(
 				entityBinding,
 				relationalValueSourceContainer,
 				defaultTable,
@@ -387,17 +383,29 @@ public class StandardAssociationRelationalBindingResolverImpl implements Associa
 			final TableSpecification sourceTable,
 			final List<RelationalValueBinding> sourceRelationalValueBindings,
 			final List<Column> targetColumns) {
-		final TableSpecification targetTable = foreignKeyHelper.determineForeignKeyTargetTable(
+		final TableSpecification targetTable = foreignKeyHelper().determineForeignKeyTargetTable(
 				referencedEntityBinding,
 				foreignKeyContributingSource
 		);
-		return foreignKeyHelper.locateOrCreateForeignKey(
+		return foreignKeyHelper().locateOrCreateForeignKey(
 				foreignKeyContributingSource.getExplicitForeignKeyName(),
 				sourceTable,
 				extractColumnsFromRelationalValueBindings( sourceRelationalValueBindings ),
 				targetTable,
 				targetColumns
 		);
+	}
+
+	private TableHelper tableHelper() {
+		return helperContext.tableHelper();
+	}
+
+	private ForeignKeyHelper foreignKeyHelper() {
+		return helperContext.foreignKeyHelper();
+	}
+
+	private RelationalValueBindingHelper relationalValueBindingHelper() {
+		return helperContext.relationalValueBindingHelper();
 	}
 
 	// TODO: try to get rid of this...

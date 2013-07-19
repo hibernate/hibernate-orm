@@ -44,7 +44,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -63,7 +62,6 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
-import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.metamodel.internal.EntityHierarchyHelper.LocalBindingContextExecutionContext;
 import org.hibernate.metamodel.internal.EntityHierarchyHelper.LocalBindingContextExecutor;
 import org.hibernate.metamodel.internal.HibernateTypeHelper.ReflectedCollectionJavaTypes;
@@ -143,8 +141,6 @@ import org.hibernate.metamodel.spi.source.JoinedSubclassEntitySource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
-import org.hibernate.metamodel.spi.source.MappingDefaults;
-import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.MetaAttributeContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
@@ -167,11 +163,9 @@ import org.hibernate.metamodel.spi.source.UniqueConstraintSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -187,15 +181,13 @@ import org.jboss.logging.Logger;
  * @author Brett Meyer
  * @author Strong Liu
  */
-public class Binder {
+public class Binder implements HelperContext {
 	private static final CoreMessageLogger log = Logger.getMessageLogger(
 			CoreMessageLogger.class,
 			Binder.class.getName()
 	);
 
-	private final MetadataImplementor metadata;
 	private final IdentifierGeneratorFactory identifierGeneratorFactory;
-	private final ObjectNameNormalizer nameNormalizer;
 
 	// Entity hierarchies and source index need be available throughout the binding process
 	private final Map<String, EntityHierarchy> entityHierarchiesByRootEntityName =
@@ -204,14 +196,17 @@ public class Binder {
 
 	// todo : apply org.hibernate.metamodel.MetadataSources.getExternalCacheRegionDefinitions()
 
-	private final LocalBindingContext bindingContext;
+	private final MetadataImplementor metadata;
 
-	// helpers
+	private final EntityHierarchyHelper.LocalBindingContextManager localBindingContextManager;
+
 	private final EntityHierarchyHelper entityHierarchyHelper;
 	private final HibernateTypeHelper typeHelper; // todo: refactor helper and remove redundant methods in this class
+	private final RelationalIdentifierHelper relationalIdentifierHelper;
 	private final TableHelper tableHelper;
 	private final ForeignKeyHelper foreignKeyHelper;
 	private final RelationalValueBindingHelper relationalValueBindingHelper;
+	private final NaturalIdUniqueKeyHelper naturalIdUniqueKeyHelper;
 
 	private final StandardAssociationRelationalBindingResolverImpl standardAssociationRelationalBindingResolver;
 	private final MappedByAssociationRelationalBindingResolverImpl mappedByAssociationRelationalBindingResolver;
@@ -220,17 +215,18 @@ public class Binder {
 				  final IdentifierGeneratorFactory identifierGeneratorFactory) {
 		this.metadata = metadata;
 		this.identifierGeneratorFactory = identifierGeneratorFactory;
-		this.entityHierarchyHelper = new EntityHierarchyHelper( metadata );
-		this.bindingContext = new BinderLocalBindingContextImpl( entityHierarchyHelper );
-		this.typeHelper = new HibernateTypeHelper( bindingContext );
-		this.tableHelper = new TableHelper( bindingContext );
-		this.foreignKeyHelper = new ForeignKeyHelper( bindingContext );
-		this.relationalValueBindingHelper = new RelationalValueBindingHelper( bindingContext );
-		this.nameNormalizer = metadata.getObjectNameNormalizer();
+		this.localBindingContextManager = new LocalBindingContextManagerImpl();
+		this.entityHierarchyHelper = new EntityHierarchyHelper( localBindingContextManager );
+		this.typeHelper = new HibernateTypeHelper( this );
+		this.relationalIdentifierHelper = new RelationalIdentifierHelper( this );
+		this.tableHelper = new TableHelper( this );
+		this.foreignKeyHelper = new ForeignKeyHelper( this );
+		this.relationalValueBindingHelper = new RelationalValueBindingHelper( this );
+		this.naturalIdUniqueKeyHelper = new NaturalIdUniqueKeyHelper();
 		this.standardAssociationRelationalBindingResolver =
-				new StandardAssociationRelationalBindingResolverImpl( bindingContext );
+				new StandardAssociationRelationalBindingResolverImpl( this );
 		this.mappedByAssociationRelationalBindingResolver =
-				new MappedByAssociationRelationalBindingResolverImpl( bindingContext );
+				new MappedByAssociationRelationalBindingResolverImpl( this );
 
 	}
 
@@ -247,16 +243,22 @@ public class Binder {
 		LocalBindingContextExecutor executor = new LocalBindingContextExecutor() {
 			@Override
 			public void execute(LocalBindingContextExecutionContext bindingContextContext) {
-				sourceIndex.indexEntitySource( bindingContextContext.getRootEntitySource(), bindingContextContext.getEntitySource() );
+				sourceIndex.indexEntitySource(
+						bindingContextContext.getRootEntitySource(),
+						bindingContextContext.getEntitySource()
+				);
 				createEntityBinding(
 						bindingContextContext.getSuperEntityBinding(),
-						bindingContextContext.getEntitySource()
+						bindingContextContext.getEntitySource(),
+						bindingContextContext.getInheritanceType(),
+						bindingContextContext.getEntityMode()
 				);
 			}
 			private void resolveEntityLaziness(
 					final EntityBinding entityBinding,
-					final EntitySource entitySource) {
-				if ( entityMode() == EntityMode.POJO ) {
+					final EntitySource entitySource,
+					final EntityMode entityMode) {
+				if ( entityMode == EntityMode.POJO ) {
 					final String proxy = entitySource.getProxy();
 					if ( proxy == null ) {
 						if ( entitySource.isLazy() ) {
@@ -282,17 +284,16 @@ public class Binder {
 			}
 			private EntityBinding createEntityBinding(
 					final EntityBinding superEntityBinding,
-					final EntitySource entitySource) {
+					final EntitySource entitySource,
+					final InheritanceType inheritanceType,
+					final EntityMode entityMode) {
 				// Create binding
 				final EntityBinding entityBinding =
-						entitySource instanceof RootEntitySource ? new EntityBinding(
-								inheritanceType(),
-								entityMode()
-						) : new EntityBinding(
-								superEntityBinding
-						);
+						entitySource instanceof RootEntitySource ?
+								new EntityBinding( inheritanceType, entityMode ) :
+								new EntityBinding( superEntityBinding );
 				// Create domain entity
-				final String entityClassName = entityMode() == EntityMode.POJO ? entitySource.getClassName() : null;
+				final String entityClassName = entityMode == EntityMode.POJO ? entitySource.getClassName() : null;
 				LocalBindingContext bindingContext = bindingContext();
 				entityBinding.setEntity(
 						new Entity(
@@ -346,7 +347,7 @@ public class Binder {
 				if ( entitySource.getSynchronizedTableNames() != null ) {
 					entityBinding.addSynchronizedTableNames( entitySource.getSynchronizedTableNames() );
 				}
-				resolveEntityLaziness( entityBinding, entitySource );
+				resolveEntityLaziness( entityBinding, entitySource, entityMode );
 				if ( entitySource.getFilterSources() != null ) {
 					for ( FilterSource filterSource : entitySource.getFilterSources() ) {
 						entityBinding.addFilterConfiguration( createFilterConfiguration( filterSource, entityBinding ) );
@@ -415,6 +416,41 @@ public class Binder {
 		// TODO: when does this have to be done.
 	}
 
+	@Override
+	public LocalBindingContext bindingContext() {
+		return localBindingContextManager.localBindingContext();
+	}
+
+	@Override
+	public HibernateTypeHelper typeHelper() {
+		return typeHelper;
+	}
+
+	@Override
+	public RelationalIdentifierHelper relationalIdentifierHelper() {
+		return relationalIdentifierHelper;
+	}
+
+	@Override
+	public TableHelper tableHelper() {
+		return tableHelper;
+	}
+
+	@Override
+	public ForeignKeyHelper foreignKeyHelper() {
+		return foreignKeyHelper;
+	}
+
+	@Override
+	public RelationalValueBindingHelper relationalValueBindingHelper() {
+		return relationalValueBindingHelper;
+	}
+
+	@Override
+	public NaturalIdUniqueKeyHelper naturalIdUniqueKeyHelper() {
+		return naturalIdUniqueKeyHelper;
+	}
+
 	private LocalBindingContextExecutor bindIdentifierGeneratorExecutor() {
 		return new LocalBindingContextExecutor() {
 			@Override
@@ -427,24 +463,16 @@ public class Binder {
 		};
 	}
 
-	private InheritanceType inheritanceType() {
-		return entityHierarchyHelper.inheritanceType();
-	}
-
-	private EntityMode entityMode() {
-		return entityHierarchyHelper.entityMode();
-	}
-
-	private LocalBindingContext bindingContext() {
-		return bindingContext;
-	}
-
 	private void applyToAllEntityHierarchies(LocalBindingContextExecutor executor) {
 		applyToAllEntityHierarchies( executor, executor );
 	}
 
 	private void applyToAllEntityHierarchies(LocalBindingContextExecutor rootExecutor, LocalBindingContextExecutor subExecutor) {
-		entityHierarchyHelper.applyToAllEntityHierarchies( entityHierarchiesByRootEntityName.values(), rootExecutor, subExecutor );
+		entityHierarchyHelper.applyToAllEntityHierarchies(
+				entityHierarchiesByRootEntityName.values(),
+				rootExecutor,
+				subExecutor
+		);
 	}
 
 
@@ -863,7 +891,11 @@ public class Binder {
 			for ( Iterator<EntityHierarchy> it = unresolvedEntityHierarchies.iterator(); it.hasNext(); ) {
 				final EntityHierarchy entityHierarchy = it.next();
 				try {
-					entityHierarchyHelper.applyToEntityHierarchy( entityHierarchy, rootEntityCallback, subEntityCallback );
+					entityHierarchyHelper.applyToEntityHierarchy(
+							entityHierarchy,
+							rootEntityCallback,
+							subEntityCallback
+					);
 					// succeeded, so the entityHierarchy is no longer unresolved.
 					it.remove();
 				}
@@ -1457,7 +1489,10 @@ public class Binder {
 			properties.put( AvailableSettings.PREFER_POOLED_VALUES_LO, "false" );
 		}
 		if ( !properties.contains( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER ) ) {
-			properties.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, nameNormalizer );
+			properties.put(
+					PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
+					metadata.getObjectNameNormalizer()
+			);
 		}
 		final EntityIdentifier entityIdentifier = rootEntityBinding.getHierarchyDetails().getEntityIdentifier();
 		entityIdentifier.createIdentifierGenerator( identifierGeneratorFactory, properties );
@@ -2790,7 +2825,6 @@ public class Binder {
 			final PluralAttributeSource attributeSource) {
 		final PluralAttributeSource.Nature pluralAttributeSourceNature = attributeSource.getNature();
 		final PluralAttributeElementSource.Nature pluralElementSourceNature = attributeSource.getElementSource().getNature();
-		final PluralAttributeElementBinding.Nature pluralElementBindingNature = attributeBinding.getPluralAttributeElementBinding().getNature();
 
 		//TODO what is this case? it would be really good to add a comment
 		if ( pluralElementSourceNature == PluralAttributeElementSource.Nature.ONE_TO_MANY
@@ -3066,82 +3100,8 @@ public class Binder {
 		);
 	}
 
-
-
 	public static interface DefaultNamingStrategy {
 
 		String defaultName(NamingStrategy namingStrategy);
-	}
-
-	private static class BinderLocalBindingContextImpl implements LocalBindingContext {
-		private final EntityHierarchyHelper entityHierarchyHelper;
-
-		BinderLocalBindingContextImpl(EntityHierarchyHelper entityHierarchyHelper) {
-			this.entityHierarchyHelper = entityHierarchyHelper;
-		}
-
-		@Override
-		public Origin getOrigin() {
-			return bindingContext().getOrigin();
-		}
-
-		@Override
-		public MappingException makeMappingException(String message) {
-			return bindingContext().makeMappingException( message );
-		}
-
-		@Override
-		public MappingException makeMappingException(String message, Exception cause) {
-			return bindingContext().makeMappingException( message, cause );
-		}
-
-		@Override
-		public ServiceRegistry getServiceRegistry() {
-			return bindingContext().getServiceRegistry();
-		}
-
-		@Override
-		public NamingStrategy getNamingStrategy() {
-			return bindingContext().getNamingStrategy();
-		}
-
-		@Override
-		public MappingDefaults getMappingDefaults() {
-			return bindingContext().getMappingDefaults();
-		}
-
-		@Override
-		public MetadataImplementor getMetadataImplementor() {
-			return bindingContext().getMetadataImplementor();
-		}
-
-		@Override
-		public <T> Class<T> locateClassByName(String name) {
-			return bindingContext().locateClassByName( name );
-		}
-
-		@Override
-		public org.hibernate.metamodel.spi.domain.Type makeJavaType(String className) {
-			return bindingContext().makeJavaType( className );
-		}
-
-		@Override
-		public boolean isGloballyQuotedIdentifiers() {
-			return bindingContext().isGloballyQuotedIdentifiers();
-		}
-
-		@Override
-		public ValueHolder<Class<?>> makeClassReference(String className) {
-			return bindingContext().makeClassReference( className );
-		}
-
-		@Override
-		public String qualifyClassName(String name) {
-			return bindingContext().qualifyClassName( name );
-		}
-
-		private LocalBindingContext bindingContext() {
-			return entityHierarchyHelper.bindingContext();
-		}
 	}
 }

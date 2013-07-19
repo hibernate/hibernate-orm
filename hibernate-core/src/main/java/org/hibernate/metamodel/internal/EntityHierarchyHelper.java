@@ -23,10 +23,7 @@
  */
 package org.hibernate.metamodel.internal;
 
-import java.util.LinkedList;
-
 import org.hibernate.EntityMode;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
@@ -39,19 +36,32 @@ import org.hibernate.metamodel.spi.source.SubclassEntitySource;
  * @author Gail Badner
  */
 public class EntityHierarchyHelper {
+
 	public interface LocalBindingContextExecutor {
 		void execute(LocalBindingContextExecutionContext bindingContextContext);
 	}
 
-	private MetadataImplementor metadata;
+	public interface LocalBindingContextExecutionContext {
+		RootEntitySource getRootEntitySource();
+		EntitySource getEntitySource();
+		EntityBinding getEntityBinding();
+		EntityBinding getSuperEntityBinding();
+		InheritanceType getInheritanceType();
+		EntityMode getEntityMode();
+	}
 
-	// the inheritanceTypes and entityModes correspond with bindingContexts
-	private final LinkedList<LocalBindingContext> bindingContexts = new LinkedList<LocalBindingContext>();
-	private final LinkedList<InheritanceType> inheritanceTypes = new LinkedList<InheritanceType>();
-	private final LinkedList<EntityMode> entityModes = new LinkedList<EntityMode>();
+	public static interface LocalBindingContextManager extends LocalBindingContextExecutionContext  {
+		LocalBindingContext localBindingContext();
+		void cleanupLocalBindingContexts();
+		void setupLocalBindingContexts(final EntityHierarchy entityHierarchy);
+		void pushSubEntitySource(EntitySource entitySource);
+		void popSubEntitySource();
+	}
 
-	EntityHierarchyHelper(final MetadataImplementor metadata) {
-		this.metadata = metadata;
+	private LocalBindingContextManager localBindingContextManager;
+
+	EntityHierarchyHelper(final LocalBindingContextManager localBindingContextManager) {
+		this.localBindingContextManager = localBindingContextManager;
 	}
 
 	/**
@@ -79,127 +89,33 @@ public class EntityHierarchyHelper {
 			final EntityHierarchy entityHierarchy,
 			final LocalBindingContextExecutor rootEntityExecutor,
 			final LocalBindingContextExecutor subEntityExecutor) {
-		bindingContexts.clear();
-		inheritanceTypes.clear();
-		entityModes.clear();
-		final RootEntitySource rootEntitySource = entityHierarchy.getRootEntitySource();
-		setupBindingContext( entityHierarchy, rootEntitySource );
+		localBindingContextManager.cleanupLocalBindingContexts();
+		localBindingContextManager.setupLocalBindingContexts( entityHierarchy );
 		try {
-			LocalBindingContextExecutionContext executionContext =
-					new LocalBindingContextExecutionContextImpl( rootEntitySource, null );
-			rootEntityExecutor.execute( executionContext );
-			if ( inheritanceTypes.peek() != InheritanceType.NO_INHERITANCE ) {
-				applyToSubEntities(
-						executionContext.getEntityBinding(),
-						rootEntitySource,
-						rootEntitySource,
-						subEntityExecutor );
+			rootEntityExecutor.execute( localBindingContextManager );
+			if ( entityHierarchy.getHierarchyInheritanceType() != InheritanceType.NO_INHERITANCE ) {
+				applyToSubEntities( subEntityExecutor );
 			}
 		}
 		finally {
-			cleanupBindingContext();
+			localBindingContextManager.cleanupLocalBindingContexts();
 		}
 	}
 
-	private void cleanupBindingContext() {
-		bindingContexts.pop();
-		inheritanceTypes.pop();
-		entityModes.pop();
-	}
-
-	public LocalBindingContext bindingContext() {
-		return bindingContexts.peek();
-	}
-
-	public InheritanceType inheritanceType() {
-		return inheritanceTypes.peek();
-	}
-
-	public EntityMode entityMode() {
-		return entityModes.peek();
-	}
-
-	private void setupBindingContext(
-			final EntityHierarchy entityHierarchy,
-			final RootEntitySource rootEntitySource) {
-		// Save inheritance type and entity mode that will apply to entire hierarchy
-		inheritanceTypes.push( entityHierarchy.getHierarchyInheritanceType() );
-		entityModes.push( rootEntitySource.getEntityMode() );
-		bindingContexts.push( rootEntitySource.getLocalBindingContext() );
-	}
-
-	private void applyToSubEntities(
-			final EntityBinding entityBinding,
-			final RootEntitySource rootEntitySource,
-			final EntitySource entitySource,
-			final LocalBindingContextExecutor subEntityExecutor) {
-		for ( final SubclassEntitySource subEntitySource : entitySource.subclassEntitySources() ) {
-			applyToSubEntity( entityBinding, rootEntitySource, subEntitySource, subEntityExecutor );
+	private void applyToSubEntities(final LocalBindingContextExecutor subEntityExecutor) {
+		for ( final SubclassEntitySource subEntitySource : localBindingContextManager.getEntitySource().subclassEntitySources() ) {
+			applyToSubEntity( subEntitySource, subEntityExecutor );
 		}
 	}
 
-	private void applyToSubEntity(
-			final EntityBinding superEntityBinding,
-			final RootEntitySource rootEntitySource,
-			final EntitySource entitySource,
-			final LocalBindingContextExecutor subEntityExecutor) {
-		final LocalBindingContext bindingContext = entitySource.getLocalBindingContext();
-		bindingContexts.push( bindingContext );
+	private void applyToSubEntity(final EntitySource entitySource, final LocalBindingContextExecutor subEntityExecutor) {
+		localBindingContextManager.pushSubEntitySource( entitySource );
 		try {
-			LocalBindingContextExecutionContext executionContext =
-					new LocalBindingContextExecutionContextImpl( rootEntitySource, entitySource, superEntityBinding );
-			subEntityExecutor.execute( executionContext );
-			applyToSubEntities( executionContext.getEntityBinding(), rootEntitySource, entitySource, subEntityExecutor );
+			subEntityExecutor.execute( localBindingContextManager );
+			applyToSubEntities( subEntityExecutor );
 		}
 		finally {
-			bindingContexts.pop();
-		}
-	}
-
-	public interface LocalBindingContextExecutionContext {
-		RootEntitySource getRootEntitySource();
-		EntitySource getEntitySource();
-		EntityBinding getEntityBinding();
-		EntityBinding getSuperEntityBinding();
-	}
-
-	private class LocalBindingContextExecutionContextImpl implements LocalBindingContextExecutionContext {
-		private final RootEntitySource rootEntitySource;
-		private final EntitySource entitySource;
-		private final EntityBinding superEntityBinding;
-
-		private LocalBindingContextExecutionContextImpl(
-				RootEntitySource rootEntitySource,
-				EntityBinding superEntityBinding) {
-			this.rootEntitySource = rootEntitySource;
-			this.entitySource = rootEntitySource;
-			this.superEntityBinding = superEntityBinding;
-		}
-
-		private LocalBindingContextExecutionContextImpl(
-				RootEntitySource rootEntitySource,
-				EntitySource entitySource,
-				EntityBinding superEntityBinding) {
-			this.rootEntitySource = rootEntitySource;
-			this.entitySource = entitySource;
-			this.superEntityBinding = superEntityBinding;
-		}
-
-		@Override
-		public RootEntitySource getRootEntitySource() {
-			return rootEntitySource;
-		}
-		@Override
-		public EntitySource getEntitySource() {
-			return entitySource;
-		}
-		@Override
-		public EntityBinding getEntityBinding() {
-			return metadata.getEntityBinding( entitySource.getEntityName() );
-		}
-		@Override
-		public EntityBinding getSuperEntityBinding() {
-			return superEntityBinding;
+			localBindingContextManager.popSubEntitySource();
 		}
 	}
 }

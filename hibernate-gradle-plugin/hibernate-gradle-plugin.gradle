@@ -21,37 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.bytecode.enhance.contexts;
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'java'
 
-import javassist.CtClass;
-import javassist.CtField;
+repositories {
+    mavenCentral()
+}
 
-public class AssociationReference extends BaseContext {
+dependencies {
+   compile( project(':hibernate-core') ) 
+   compile( libraries.jpa )
+   compile( libraries.javassist )
+   compile gradleApi()
+   compile localGroovy()
+}
 
-	private ClassLoader overridden;
-
-	public ClassLoader getLoadingClassLoader() {
-		if ( null == this.overridden ) {
-			return getClass().getClassLoader();
-		}
-		else {
-			return this.overridden;
-		}
-	}
-
-	public void setClassLoader(ClassLoader loader) {
-		this.overridden = loader;
-	}
-
-	public boolean isEntityClass(CtClass classDescriptor) {
-		return true;
-	}
-
-	public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
-		return true;
-	}
-
-	public boolean isLazyLoadable(CtField field) {
-		return true;
-	}
+/* Available for testing locally. */
+install {
+    repositories.mavenInstaller {
+        pom.groupId = 'org.hibernate'
+        pom.artifactId = 'hibernate-gradle-plugin'
+        pom.version = '1.0'
+    }
 }

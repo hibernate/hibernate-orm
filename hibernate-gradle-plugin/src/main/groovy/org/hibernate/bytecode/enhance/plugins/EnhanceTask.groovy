@@ -24,6 +24,7 @@
 package org.hibernate.bytecode.enhance.plugins
  
 import org.hibernate.bytecode.enhance.spi.Enhancer
+import org.hibernate.bytecode.enhance.spi.EnhancementContext
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtField
@@ -41,8 +42,10 @@ import org.gradle.api.file.FileTree
 * which to apply.
 * @author Jeremy Whiting
 */
-public class EnhanceTask extends DefaultTask {
-   
+public class EnhanceTask extends DefaultTask implements EnhancementContext {
+
+    private ClassLoader overridden
+
     public EnhanceTask() {
         super()
         setDescription('Enhances Entity classes for efficient association referencing.')
@@ -52,59 +55,96 @@ public class EnhanceTask extends DefaultTask {
     def enhance () {
         logger.info( 'enhance task started')
         ext.pool = new ClassPool(false)
-        EnhancePluginConvention convention = (EnhancePluginConvention)project.getConvention().getPlugins().get( EnhancePlugin.PLUGIN_CONVENTION_NAME)
-        convention.contexts.each(
-        { String context ->
-            ext.enhancer = new Enhancer(EnhanceTask.class.getClassLoader().loadClass(context).newInstance())
-            FileTree tree = project.fileTree(dir: project.sourceSets.main.output.classesDir)
-            tree.include '**/*.class'
-            tree.each(
-            { File file ->
-                final byte[] enhancedBytecode;
-                InputStream is = null;
-                CtClass clas = null;
+        ext.enhancer = new Enhancer(this)
+        FileTree tree = project.fileTree(dir: project.sourceSets.main.output.classesDir)
+        tree.include '**/*.class'
+        tree.each(
+        { File file ->
+            final byte[] enhancedBytecode;
+            InputStream is = null;
+            CtClass clas = null;
+            try {
+                is = new FileInputStream(file.toString())
+                clas =ext.pool.makeClass(is)
+                if (!clas.hasAnnotation(Entity.class)){
+                    logger.debug("Class $file not an annotated Entity class. skipping...")
+                } else {
+                     enhancedBytecode = ext.enhancer.enhance( clas.getName(), clas.toBytecode() );
+                }
+            }
+            catch (Exception e) {
+                logger.error( "Unable to enhance class [${file.toString()}]", e )
+                return
+            } finally {
                 try {
-                    is = new FileInputStream(file.toString())
-                    clas =ext.pool.makeClass(is)
-                    if (!clas.hasAnnotation(Entity.class)){
-                        logger.debug("Class $file not an annotated Entity class. skipping...")
-                    } else {
-                         enhancedBytecode = ext.enhancer.enhance( clas.getName(), clas.toBytecode() );
+                   if (null != is) is.close();
+                } finally{}
+            }
+            if (null != enhancedBytecode){
+                if ( file.delete() ) {
+                    if ( ! file.createNewFile() ) {
+                       logger.error( "Unable to recreate class file [" + clas.getName() + "]")
                     }
                 }
-                catch (Exception e) {
-                    logger.error( "Unable to enhance class [${file.toString()}]", e )
-                    return
-                } finally {
-                    try {
-                       if (null != is) is.close();
-                    } finally{}
+                else {
+                   logger.error( "Unable to delete class file [" + clas.getName() + "]")
                 }
-                if (null != enhancedBytecode){
-                    if ( file.delete() ) {
-                        if ( ! file.createNewFile() ) {
-                           logger.error( "Unable to recreate class file [" + clas.getName() + "]")
-                        }
-                    }
-                    else {
-                       logger.error( "Unable to delete class file [" + clas.getName() + "]")
-                    }
-                    FileOutputStream outputStream = new FileOutputStream( file, false )
-                    try {
-                       outputStream.write( enhancedBytecode )
-                       outputStream.flush()
-                    }
-                    finally {
-                       try {
-                          if (outputStream != null) outputStream.close()
-                          clas.detach()//release memory
-                       }
-                       catch ( IOException ignore) {
-                       }
-                    }
-                 } 
-             }) 
+                FileOutputStream outputStream = new FileOutputStream( file, false )
+                try {
+                   outputStream.write( enhancedBytecode )
+                   outputStream.flush()
+                }
+                finally {
+                   try {
+                      if (outputStream != null) outputStream.close()
+                      clas.detach()//release memory
+                   }
+                   catch ( IOException ignore) {
+                   }
+                }
+             } 
          }) 
          logger.info( 'enhance task finished')
+    }
+    
+    public ClassLoader getLoadingClassLoader() {
+        if ( null == this.overridden ) {
+          return getClass().getClassLoader();
+        }
+        else {
+          return this.overridden;
+        }
+    }
+
+    public void setClassLoader(ClassLoader loader) {
+        this.overridden = loader;
+    }
+
+    public boolean isEntityClass(CtClass classDescriptor) {
+        return true;
+    }
+
+    public boolean hasLazyLoadableAttributes(CtClass classDescriptor) {
+        return true;
+    }
+
+    public boolean isLazyLoadable(CtField field) {
+        return true;
+    } 
+  
+    public boolean isCompositeClass(CtClass classDescriptor) {
+        return false;
+      }
+    public boolean doDirtyCheckingInline(CtClass classDescriptor) {
+        return false;
+    }
+
+    public CtField[] order(CtField[] fields) {
+        // TODO: load ordering from configuration.
+        return fields;
+    }
+
+    public boolean isPersistentField(CtField ctField) {
+        return !ctField.hasAnnotation( Transient.class );
     }
 } 

@@ -16,7 +16,6 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.tool.schema.spi.SchemaCreator;
@@ -28,7 +27,6 @@ import org.hibernate.tool.schema.spi.SchemaManagementTool;
  * @author Hardy Ferentschik
  *
  */
-@FailureExpectedWithNewMetamodel( message = "requires support for @OneToOne with mappedBy" )
 public class NullablePrimaryKeyTest extends BaseUnitTestCase {
 	private static final Logger log = Logger.getLogger( NullablePrimaryKeyTest.class );
     @Test
@@ -70,9 +68,19 @@ public class NullablePrimaryKeyTest extends BaseUnitTestCase {
 			for ( String s : commands ) {
 				log.debug( s );
 			}
+			// find the command that creates the personAddress table.
+			final String commandStart = "create table personAddress";
+			String selectedCommand = null;
+			for ( String command : commands ) {
+				if ( command.startsWith( commandStart ) ) {
+					Assert.assertNull( "more than one table created for personAddress", selectedCommand );
+					selectedCommand = command;
+				}
+			}
+			Assert.assertNotNull( "personAddress table not created", selectedCommand );
 			String expectedMappingTableSql = "create table personAddress (person_id numeric(19,0) not null, " +
 					"address_id numeric(19,0), primary key (person_id))";
-            Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, commands.get( 2 ) );
+            Assert.assertEquals( "Wrong SQL", expectedMappingTableSql, selectedCommand );
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail(e.getMessage());

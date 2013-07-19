@@ -140,7 +140,9 @@ public class StandardTableExporter implements Exporter<Table> {
 
 	protected void applyComments(Table table, List<String> sqlStrings) {
 		for ( String comment : table.getComments() ) {
-			sqlStrings.add( dialect.getTableComment( comment ) );
+			if ( comment != null ) {
+				sqlStrings.add( dialect.getTableComment( comment ) );
+			}
 		}
 	}
 

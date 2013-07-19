@@ -50,7 +50,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
+@FailureExpectedWithNewMetamodel( message = "@Embeddable not detected on class when it is actually present" )
 public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEager() throws Exception {

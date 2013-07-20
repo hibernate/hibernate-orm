@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -47,7 +48,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 		extends AbstractPluralAssociationElementSourceImpl
 		implements ManyToManyPluralAttributeElementSource {
 	private final JaxbManyToManyElement manyToManyElement;
-	private final Iterable<CascadeStyle> cascadeStyles;
+	private final Set<CascadeStyle> cascadeStyles;
 
 	private final List<RelationalValueSource> valueSources;
 	private final FilterSource[] filterSources;
@@ -166,7 +167,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return cascadeStyles;
 	}
 

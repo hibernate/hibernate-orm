@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.spi.source.AssociationPluralAttributeElementSource;
@@ -81,12 +82,16 @@ public abstract class AbstractPluralAssociationElementSourceImpl
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-		return EnumConversionHelper.cascadeTypeToCascadeStyleSet(
+	public Set<CascadeStyle> getCascadeStyles() {
+		final Set<CascadeStyle> cascadeStyles =  EnumConversionHelper.cascadeTypeToCascadeStyleSet(
 				pluralAssociationAttribute().getCascadeTypes(),
 				pluralAssociationAttribute().getHibernateCascadeTypes(),
 				pluralAssociationAttribute().getContext()
 		);
+		if ( getNature() == Nature.ONE_TO_MANY && pluralAssociationAttribute().isOrphanRemoval() ) {
+			cascadeStyles.add( CascadeStyles.DELETE_ORPHAN );
+		}
+		return cascadeStyles;
 	}
 
 	protected PluralAssociationAttribute pluralAssociationAttribute() {

@@ -24,6 +24,7 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
@@ -113,7 +114,7 @@ class ManyToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return Helper.interpretCascadeStyles( manyToOneElement.getCascade(), bindingContext() );
 	}
 

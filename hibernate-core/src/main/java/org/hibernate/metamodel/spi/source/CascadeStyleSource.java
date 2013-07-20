@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.spi.source;
 
+import java.util.Set;
+
 import org.hibernate.engine.spi.CascadeStyle;
 
 /**
@@ -36,5 +38,5 @@ public interface CascadeStyleSource {
 	 *
 	 * @return The cascade styles.
 	 */
-	public Iterable<CascadeStyle> getCascadeStyles();
+	public Set<CascadeStyle> getCascadeStyles();
 }

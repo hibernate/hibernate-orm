@@ -22,11 +22,12 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationOverride;
@@ -111,8 +112,8 @@ public class CompositePluralAttributeElementSourceImpl implements CompositePlura
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
-		List<CascadeStyle> cascadeStyles = new ArrayList<CascadeStyle>();
+	public Set<CascadeStyle> getCascadeStyles() {
+		Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
 		for ( javax.persistence.CascadeType cascadeType : associationAttribute
 				.getCascadeTypes() ) {
 			cascadeStyles.add( CascadeType.getCascadeType( cascadeType )

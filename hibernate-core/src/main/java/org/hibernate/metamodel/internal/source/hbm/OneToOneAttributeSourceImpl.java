@@ -24,12 +24,12 @@
 package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbOneToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.type.ForeignKeyDirection;
@@ -111,7 +111,7 @@ class OneToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl {
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return Helper.interpretCascadeStyles( oneToOneElement.getCascade(), bindingContext() );
 	}
 

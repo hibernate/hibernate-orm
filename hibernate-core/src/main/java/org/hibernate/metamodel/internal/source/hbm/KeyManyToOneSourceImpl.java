@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
@@ -32,11 +33,9 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbColumnElement;
 import org.hibernate.jaxb.spi.hbm.JaxbKeyManyToOneElement;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
-import org.hibernate.metamodel.spi.source.ToOneAttributeSourceNatureResolver;
 import org.hibernate.type.ForeignKeyDirection;
 
 /**
@@ -190,7 +189,7 @@ class KeyManyToOneSourceImpl
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return Collections.singleton( CascadeStyles.NONE );
 	}
 

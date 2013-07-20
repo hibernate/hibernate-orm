@@ -23,6 +23,8 @@
  */
 package org.hibernate.metamodel.internal.source.hbm;
 
+import java.util.Set;
+
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.hbm.JaxbOneToManyElement;
@@ -36,7 +38,7 @@ public class OneToManyPluralAttributeElementSourceImpl
 		extends AbstractPluralAssociationElementSourceImpl
 		implements OneToManyPluralAttributeElementSource {
 	private final JaxbOneToManyElement oneToManyElement;
-	private final Iterable<CascadeStyle> cascadeStyles;
+	private final Set<CascadeStyle> cascadeStyles;
 
 	public OneToManyPluralAttributeElementSourceImpl(
 			MappingDocument mappingDocument,
@@ -67,7 +69,7 @@ public class OneToManyPluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return cascadeStyles;
 	}
 }

@@ -25,6 +25,7 @@ package org.hibernate.metamodel.internal.source.hbm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -53,7 +54,7 @@ public class CompositePluralAttributeElementSourceImpl
 		implements CompositePluralAttributeElementSource {
 
 	private final JaxbCompositeElementElement compositeElement;
-	private final Iterable<CascadeStyle> cascadeStyles;
+	private final Set<CascadeStyle> cascadeStyles;
 	private final List<AttributeSource> attributeSources;
 
 	public CompositePluralAttributeElementSourceImpl(
@@ -138,7 +139,7 @@ public class CompositePluralAttributeElementSourceImpl
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return cascadeStyles;
 	}
 

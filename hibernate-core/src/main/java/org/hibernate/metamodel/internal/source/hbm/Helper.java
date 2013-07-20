@@ -250,7 +250,7 @@ public class Helper {
 		return value == null ? defaultValue : value;
 	}
 
-	public static Iterable<CascadeStyle> interpretCascadeStyles(String cascades, LocalBindingContext bindingContext) {
+	public static Set<CascadeStyle> interpretCascadeStyles(String cascades, LocalBindingContext bindingContext) {
 		final Set<CascadeStyle> cascadeStyles = new HashSet<CascadeStyle>();
 		if ( StringHelper.isEmpty( cascades ) ) {
 			cascades = bindingContext.getMappingDefaults().getCascadeStyle();

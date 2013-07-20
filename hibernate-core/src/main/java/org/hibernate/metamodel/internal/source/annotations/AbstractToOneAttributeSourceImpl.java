@@ -6,6 +6,7 @@ import java.util.Set;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
@@ -24,11 +25,19 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	public AbstractToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute, String relativePath) {
 		super( associationAttribute,  relativePath );
 		this.associationAttribute = associationAttribute;
-		this.cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
+		this.cascadeStyles = determineCascadeStyles( associationAttribute );
+	}
+
+	private static Set<CascadeStyle> determineCascadeStyles(SingularAssociationAttribute associationAttribute) {
+		final Set<CascadeStyle> cascadeStyles = EnumConversionHelper.cascadeTypeToCascadeStyleSet(
 				associationAttribute.getCascadeTypes(),
 				associationAttribute.getHibernateCascadeTypes(),
 				associationAttribute.getContext()
 		);
+		if ( associationAttribute.isOrphanRemoval() ) {
+			cascadeStyles.add( CascadeStyles.DELETE_ORPHAN );
+		}
+		return cascadeStyles;
 	}
 
 	@Override
@@ -86,7 +95,7 @@ public abstract class AbstractToOneAttributeSourceImpl extends SingularAttribute
 	}
 
 	@Override
-	public Iterable<CascadeStyle> getCascadeStyles() {
+	public Set<CascadeStyle> getCascadeStyles() {
 		return cascadeStyles;
 	}
 

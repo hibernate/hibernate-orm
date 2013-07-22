@@ -52,6 +52,7 @@ public class DistinctRootEntityResultTransformer implements TupleSubsetResultTra
 	 * @param aliases The tuple aliases
 	 * @return The transformed tuple row.
 	 */
+	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return RootEntityResultTransformer.INSTANCE.transformTuple( tuple, aliases );
 	}
@@ -62,20 +63,17 @@ public class DistinctRootEntityResultTransformer implements TupleSubsetResultTra
 	 * @param list The list to transform.
 	 * @return The transformed List.
 	 */
+	@Override
 	public List transformList(List list) {
 		return DistinctResultTransformer.INSTANCE.transformList( list );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
 		return RootEntityResultTransformer.INSTANCE.includeInTransform( aliases, tupleLength );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
 		return RootEntityResultTransformer.INSTANCE.isTransformedValueATupleElement( null, tupleLength );
 	}

@@ -33,6 +33,7 @@ import java.util.Map;
  *
  * @author Eric Dalquist
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface NaturalIdCacheStatistics extends Serializable {
 	long getHitCount();
 

@@ -63,6 +63,6 @@ public class StrategyTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Storm.class };
+		return new Class[] { Storm.class, Location.class };
 	}
 }

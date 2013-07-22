@@ -286,7 +286,8 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 				Vendor.class,
 				WarehouseItem.class,
 				Place.class,
-				HousePlaces.class
+				HousePlaces.class,
+				Places.class
 		};
 	}
 }

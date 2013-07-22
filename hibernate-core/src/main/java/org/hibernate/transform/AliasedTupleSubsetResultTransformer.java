@@ -35,9 +35,7 @@ public abstract class AliasedTupleSubsetResultTransformer
 		extends BasicTransformerAdapter
 		implements TupleSubsetResultTransformer {
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
 		if ( aliases == null ) {
 			throw new IllegalArgumentException( "aliases cannot be null" );
@@ -48,11 +46,9 @@ public abstract class AliasedTupleSubsetResultTransformer
 							"aliases.length=" + aliases.length + "tupleLength=" + tupleLength
 			);
 		}
-		boolean[] includeInTransform = new boolean[tupleLength];
+		final boolean[] includeInTransform = new boolean[tupleLength];
 		for ( int i = 0 ; i < aliases.length ; i++ ) {
-			if ( aliases[ i ] != null ) {
-				includeInTransform[ i ] = true;
-			}
+			includeInTransform[ i ] = (aliases[i] != null);
 		}
 		return includeInTransform;
 	}

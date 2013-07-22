@@ -32,6 +32,7 @@ import java.io.Serializable;
  *
  * @author Gavin King
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface QueryStatistics extends Serializable {
 	long getExecutionCount();
 

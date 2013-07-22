@@ -36,11 +36,12 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+import org.hibernate.metamodel.spi.binding.EntityBinding;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -51,7 +52,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel (message = "@Embeddable not detected on class used for @EmbeddedId" )
 public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testEagerFetching() throws Exception {
@@ -309,27 +309,38 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-4606" )
+	@TestForIssue(jiraKey = "HHH-4606")
 	public void testJoinColumnConfiguredInXml() {
-		// TODO: How to check joins with EntityBinding?
-		PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
-		Iterator iter = pc.getJoinIterator();
-		Table table = ( ( Join ) iter.next() ).getTable();
-		Iterator columnIter = table.getColumnIterator();
-		boolean fooFound = false;
-		boolean barFound = false;
-		while ( columnIter.hasNext() ) {
-			Column column = ( Column ) columnIter.next();
-			if ( column.getName().equals( "foo" ) ) {
-				fooFound = true;
-			}
-			if ( column.getName().equals( "bar" ) ) {
-				barFound = true;
-			}
+		if ( isMetadataUsed() ) {
+			EntityBinding entityBinding = getEntityBinding( Son.class );
+			TableSpecification table = entityBinding.getSecondaryTables().values().iterator().next().getSecondaryTableReference();
+			org.hibernate.metamodel.spi.relational.Column c1= table.locateColumn( "foo" );
+			assertNotNull( c1 );
+			org.hibernate.metamodel.spi.relational.Column c2= table.locateColumn( "bar" );
+			assertNotNull( c2 );
+
 		}
-		assertTrue(
-				"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
-		);
+		else {
+			// TODO: How to check joins with EntityBinding?
+			PersistentClass pc = configuration().getClassMapping( Son.class.getName() );
+			Iterator iter = pc.getJoinIterator();
+			Table table = ( (Join) iter.next() ).getTable();
+			Iterator columnIter = table.getColumnIterator();
+			boolean fooFound = false;
+			boolean barFound = false;
+			while ( columnIter.hasNext() ) {
+				Column column = (Column) columnIter.next();
+				if ( column.getName().equals( "foo" ) ) {
+					fooFound = true;
+				}
+				if ( column.getName().equals( "bar" ) ) {
+					barFound = true;
+				}
+			}
+			assertTrue(
+					"The mapping defines join columns which could not be found in the metadata.", fooFound && barFound
+			);
+		}
 	}
 
 	@Test
@@ -401,7 +412,9 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 				Client.class,
 				Address.class,
 				Computer.class,
+				ComputerPk.class,
 				SerialNumber.class,
+				SerialNumberPk.class,
 				Body.class,
 				Heart.class,
 				Owner.class,

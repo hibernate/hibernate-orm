@@ -55,51 +55,51 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 
 	private volatile boolean isStatisticsEnabled;
 	private volatile long startTime;
-	private AtomicLong sessionOpenCount = new AtomicLong();
-	private AtomicLong sessionCloseCount = new AtomicLong();
-	private AtomicLong flushCount = new AtomicLong();
-	private AtomicLong connectCount = new AtomicLong();
+	private final AtomicLong sessionOpenCount = new AtomicLong();
+	private final AtomicLong sessionCloseCount = new AtomicLong();
+	private final AtomicLong flushCount = new AtomicLong();
+	private final AtomicLong connectCount = new AtomicLong();
 
-	private AtomicLong prepareStatementCount = new AtomicLong();
-	private AtomicLong closeStatementCount = new AtomicLong();
+	private final AtomicLong prepareStatementCount = new AtomicLong();
+	private final AtomicLong closeStatementCount = new AtomicLong();
 
-	private AtomicLong entityLoadCount = new AtomicLong();
-	private AtomicLong entityUpdateCount = new AtomicLong();
-	private AtomicLong entityInsertCount = new AtomicLong();
-	private AtomicLong entityDeleteCount = new AtomicLong();
-	private AtomicLong entityFetchCount = new AtomicLong();
-	private AtomicLong collectionLoadCount = new AtomicLong();
-	private AtomicLong collectionUpdateCount = new AtomicLong();
-	private AtomicLong collectionRemoveCount = new AtomicLong();
-	private AtomicLong collectionRecreateCount = new AtomicLong();
-	private AtomicLong collectionFetchCount = new AtomicLong();
+	private final AtomicLong entityLoadCount = new AtomicLong();
+	private final AtomicLong entityUpdateCount = new AtomicLong();
+	private final AtomicLong entityInsertCount = new AtomicLong();
+	private final AtomicLong entityDeleteCount = new AtomicLong();
+	private final AtomicLong entityFetchCount = new AtomicLong();
+	private final AtomicLong collectionLoadCount = new AtomicLong();
+	private final AtomicLong collectionUpdateCount = new AtomicLong();
+	private final AtomicLong collectionRemoveCount = new AtomicLong();
+	private final AtomicLong collectionRecreateCount = new AtomicLong();
+	private final AtomicLong collectionFetchCount = new AtomicLong();
 
-	private AtomicLong secondLevelCacheHitCount = new AtomicLong();
-	private AtomicLong secondLevelCacheMissCount = new AtomicLong();
-	private AtomicLong secondLevelCachePutCount = new AtomicLong();
-	
-	private AtomicLong naturalIdCacheHitCount = new AtomicLong();
-	private AtomicLong naturalIdCacheMissCount = new AtomicLong();
-	private AtomicLong naturalIdCachePutCount = new AtomicLong();
-	private AtomicLong naturalIdQueryExecutionCount = new AtomicLong();
-	private AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
+	private final AtomicLong secondLevelCacheHitCount = new AtomicLong();
+	private final AtomicLong secondLevelCacheMissCount = new AtomicLong();
+	private final AtomicLong secondLevelCachePutCount = new AtomicLong();
+
+	private final AtomicLong naturalIdCacheHitCount = new AtomicLong();
+	private final AtomicLong naturalIdCacheMissCount = new AtomicLong();
+	private final AtomicLong naturalIdCachePutCount = new AtomicLong();
+	private final AtomicLong naturalIdQueryExecutionCount = new AtomicLong();
+	private final AtomicLong naturalIdQueryExecutionMaxTime = new AtomicLong();
 	private volatile String naturalIdQueryExecutionMaxTimeRegion;
-	
-	private AtomicLong queryExecutionCount = new AtomicLong();
-	private AtomicLong queryExecutionMaxTime = new AtomicLong();
+
+	private final AtomicLong queryExecutionCount = new AtomicLong();
+	private final AtomicLong queryExecutionMaxTime = new AtomicLong();
 	private volatile String queryExecutionMaxTimeQueryString;
-	private AtomicLong queryCacheHitCount = new AtomicLong();
-	private AtomicLong queryCacheMissCount = new AtomicLong();
-	private AtomicLong queryCachePutCount = new AtomicLong();
+	private final AtomicLong queryCacheHitCount = new AtomicLong();
+	private final AtomicLong queryCacheMissCount = new AtomicLong();
+	private final AtomicLong queryCachePutCount = new AtomicLong();
 
-	private AtomicLong updateTimestampsCacheHitCount = new AtomicLong();
-	private AtomicLong updateTimestampsCacheMissCount = new AtomicLong();
-	private AtomicLong updateTimestampsCachePutCount = new AtomicLong();
+	private final AtomicLong updateTimestampsCacheHitCount = new AtomicLong();
+	private final AtomicLong updateTimestampsCacheMissCount = new AtomicLong();
+	private final AtomicLong updateTimestampsCachePutCount = new AtomicLong();
 
-	private AtomicLong committedTransactionCount = new AtomicLong();
-	private AtomicLong transactionCount = new AtomicLong();
+	private final AtomicLong committedTransactionCount = new AtomicLong();
+	private final AtomicLong transactionCount = new AtomicLong();
 
-	private AtomicLong optimisticFailureCount = new AtomicLong();
+	private final AtomicLong optimisticFailureCount = new AtomicLong();
 
 	/**
 	 * natural id cache statistics per region
@@ -135,6 +135,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	/**
 	 * reset all statistics
 	 */
+	@Override
 	public void clear() {
 		secondLevelCacheHitCount.set( 0 );
 		secondLevelCacheMissCount.set( 0 );
@@ -190,28 +191,28 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 
 		startTime = System.currentTimeMillis();
 	}
-
+	@Override
 	public void openSession() {
 		sessionOpenCount.getAndIncrement();
 	}
-
+	@Override
 	public void closeSession() {
 		sessionCloseCount.getAndIncrement();
 	}
-
+	@Override
 	public void flush() {
 		flushCount.getAndIncrement();
 	}
-
+	@Override
 	public void connect() {
 		connectCount.getAndIncrement();
 	}
-
+	@Override
 	public void loadEntity(String entityName) {
 		entityLoadCount.getAndIncrement();
 		( (ConcurrentEntityStatisticsImpl) getEntityStatistics( entityName ) ).incrementLoadCount();
 	}
-
+	@Override
 	public void fetchEntity(String entityName) {
 		entityFetchCount.getAndIncrement();
 		( (ConcurrentEntityStatisticsImpl) getEntityStatistics( entityName ) ).incrementFetchCount();
@@ -224,6 +225,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	 *
 	 * @return EntityStatistics object
 	 */
+	@Override
 	public EntityStatistics getEntityStatistics(String entityName) {
 		ConcurrentEntityStatisticsImpl es = (ConcurrentEntityStatisticsImpl) entityStatistics.get( entityName );
 		if ( es == null ) {
@@ -237,19 +239,19 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		}
 		return es;
 	}
-
+	@Override
 	public void updateEntity(String entityName) {
 		entityUpdateCount.getAndIncrement();
 		ConcurrentEntityStatisticsImpl es = (ConcurrentEntityStatisticsImpl) getEntityStatistics( entityName );
 		es.incrementUpdateCount();
 	}
-
+	@Override
 	public void insertEntity(String entityName) {
 		entityInsertCount.getAndIncrement();
 		ConcurrentEntityStatisticsImpl es = (ConcurrentEntityStatisticsImpl) getEntityStatistics( entityName );
 		es.incrementInsertCount();
 	}
-
+	@Override
 	public void deleteEntity(String entityName) {
 		entityDeleteCount.getAndIncrement();
 		ConcurrentEntityStatisticsImpl es = (ConcurrentEntityStatisticsImpl) getEntityStatistics( entityName );
@@ -263,6 +265,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	 *
 	 * @return CollectionStatistics
 	 */
+	@Override
 	public CollectionStatistics getCollectionStatistics(String role) {
 		ConcurrentCollectionStatisticsImpl cs = (ConcurrentCollectionStatisticsImpl) collectionStatistics.get( role );
 		if ( cs == null ) {
@@ -276,27 +279,27 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		}
 		return cs;
 	}
-
+	@Override
 	public void loadCollection(String role) {
 		collectionLoadCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementLoadCount();
 	}
-
+	@Override
 	public void fetchCollection(String role) {
 		collectionFetchCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementFetchCount();
 	}
-
+	@Override
 	public void updateCollection(String role) {
 		collectionUpdateCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementUpdateCount();
 	}
-
+	@Override
 	public void recreateCollection(String role) {
 		collectionRecreateCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementRecreateCount();
 	}
-
+	@Override
 	public void removeCollection(String role) {
 		collectionRemoveCount.getAndIncrement();
 		( (ConcurrentCollectionStatisticsImpl) getCollectionStatistics( role ) ).incrementRemoveCount();
@@ -334,6 +337,7 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 	 *
 	 * @return SecondLevelCacheStatistics
 	 */
+	@Override
 	public SecondLevelCacheStatistics getSecondLevelCacheStatistics(String regionName) {
 		ConcurrentSecondLevelCacheStatisticsImpl slcs
 				= (ConcurrentSecondLevelCacheStatisticsImpl) secondLevelCacheStatistics.get( regionName );
@@ -355,17 +359,17 @@ public class ConcurrentStatisticsImpl implements StatisticsImplementor, Service 
 		}
 		return slcs;
 	}
-
+	@Override
 	public void secondLevelCachePut(String regionName) {
 		secondLevelCachePutCount.getAndIncrement();
 		( (ConcurrentSecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics( regionName ) ).incrementPutCount();
 	}
-
+	@Override
 	public void secondLevelCacheHit(String regionName) {
 		secondLevelCacheHitCount.getAndIncrement();
 		( (ConcurrentSecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics( regionName ) ).incrementHitCount();
 	}
-
+	@Override
 	public void secondLevelCacheMiss(String regionName) {
 		secondLevelCacheMissCount.getAndIncrement();
 		( (ConcurrentSecondLevelCacheStatisticsImpl) getSecondLevelCacheStatistics( regionName ) ).incrementMissCount();

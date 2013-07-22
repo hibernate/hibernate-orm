@@ -58,18 +58,11 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
 			this.entity = entity;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
         public boolean equals(Object other) {
 			return Identity.class.isInstance( other )
 					&& this.entity == ( ( Identity ) other ).entity;
 		}
-
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
         public int hashCode() {
 			return System.identityHashCode( entity );
@@ -89,8 +82,7 @@ public class DistinctResultTransformer extends BasicTransformerAdapter {
     public List transformList(List list) {
 		List result = new ArrayList( list.size() );
 		Set distinct = new HashSet();
-		for ( int i = 0; i < list.size(); i++ ) {
-			Object entity = list.get( i );
+		for ( Object entity : list ) {
 			if ( distinct.add( new Identity( entity ) ) ) {
 				result.add( entity );
 			}

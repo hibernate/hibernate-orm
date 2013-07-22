@@ -37,32 +37,32 @@ public class ConcurrentCollectionStatisticsImpl extends CategorizedStatistics im
 		super(role);
 	}
 
-	private	AtomicLong loadCount	 = new AtomicLong();
-	private	AtomicLong fetchCount	 = new AtomicLong();
-	private	AtomicLong updateCount	 = new AtomicLong();
-	private	AtomicLong removeCount	 = new AtomicLong();
-	private	AtomicLong recreateCount = new AtomicLong();
-
+	private final AtomicLong loadCount = new AtomicLong();
+	private final AtomicLong fetchCount = new AtomicLong();
+	private final AtomicLong updateCount = new AtomicLong();
+	private final AtomicLong removeCount = new AtomicLong();
+	private final AtomicLong recreateCount = new AtomicLong();
+	@Override
 	public long getLoadCount() {
 		return loadCount.get();
 	}
-
+	@Override
 	public long getFetchCount() {
 		return fetchCount.get();
 	}
-
+	@Override
 	public long getRecreateCount() {
 		return recreateCount.get();
 	}
-
+	@Override
 	public long getRemoveCount() {
 		return removeCount.get();
 	}
-
+	@Override
 	public long getUpdateCount() {
 		return updateCount.get();
 	}
-
+	@Override
 	public String toString() {
 		return new StringBuilder()
 				.append("CollectionStatistics")

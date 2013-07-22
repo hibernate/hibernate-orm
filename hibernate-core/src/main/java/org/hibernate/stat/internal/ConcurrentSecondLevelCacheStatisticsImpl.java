@@ -39,49 +39,48 @@ import org.hibernate.stat.SecondLevelCacheStatistics;
  */
 public class ConcurrentSecondLevelCacheStatisticsImpl extends CategorizedStatistics implements SecondLevelCacheStatistics {
 	private final transient Region region;
-	private AtomicLong hitCount = new AtomicLong();
-	private AtomicLong missCount = new AtomicLong();
-	private AtomicLong putCount = new AtomicLong();
+	private final AtomicLong hitCount = new AtomicLong();
+	private final AtomicLong missCount = new AtomicLong();
+	private final AtomicLong putCount = new AtomicLong();
 
 	ConcurrentSecondLevelCacheStatisticsImpl(Region region) {
 		super( region.getName() );
 		this.region = region;
 	}
-
+	@Override
 	public long getHitCount() {
 		return hitCount.get();
 	}
-
+	@Override
 	public long getMissCount() {
 		return missCount.get();
 	}
-
+	@Override
 	public long getPutCount() {
 		return putCount.get();
 	}
-
+	@Override
 	public long getElementCountInMemory() {
 		return region.getElementCountInMemory();
 	}
-
+	@Override
 	public long getElementCountOnDisk() {
 		return region.getElementCountOnDisk();
 	}
-
+	@Override
 	public long getSizeInMemory() {
 		return region.getSizeInMemory();
 	}
-
+	@Override
 	public Map getEntries() {
 		Map map = new HashMap();
-		Iterator iter = region.toMap().entrySet().iterator();
-		while (iter.hasNext()) {
-			Map.Entry me = (Map.Entry) iter.next();
-			map.put(((CacheKey) me.getKey()).getKey(), me.getValue());
+		for ( final Object o : region.toMap().entrySet() ) {
+			Map.Entry me = (Map.Entry) o;
+			map.put( ( (CacheKey) me.getKey() ).getKey(), me.getValue() );
 		}
 		return map;
 	}
-
+	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder()
 				.append("SecondLevelCacheStatistics")

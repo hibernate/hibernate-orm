@@ -105,6 +105,6 @@ public class TargetTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { LuggageImpl.class, Brand.class };
+		return new Class[] { LuggageImpl.class, Brand.class, OwnerImpl.class };
 	}
 }

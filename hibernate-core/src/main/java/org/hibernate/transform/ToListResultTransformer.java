@@ -27,7 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Tranforms each result row from a tuple into a {@link List}, such that what
+ * Transforms each result row from a tuple into a {@link List}, such that what
  * you end up with is a {@link List} of {@link List Lists}.
  */
 public class ToListResultTransformer extends BasicTransformerAdapter {
@@ -39,10 +39,8 @@ public class ToListResultTransformer extends BasicTransformerAdapter {
 	 */
 	private ToListResultTransformer() {
 	}
-	
-	/**
-	 * {@inheritDoc}
-	 */
+
+	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return Arrays.asList( tuple );
 	}

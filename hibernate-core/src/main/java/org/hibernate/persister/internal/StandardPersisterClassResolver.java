@@ -48,19 +48,19 @@ import org.hibernate.persister.spi.UnknownPersisterException;
  * @author Steve Ebersole
  */
 public class StandardPersisterClassResolver implements PersisterClassResolver {
-
-	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding metadata) {
-		if ( metadata.isRoot() ) {
-            Iterator<EntityBinding> subEntityBindingIterator = metadata.getDirectSubEntityBindings().iterator();
+	@Override
+	public Class<? extends EntityPersister> getEntityPersisterClass(EntityBinding entityBinding) {
+		if ( entityBinding.isRoot() ) {
+            Iterator<EntityBinding> subEntityBindingIterator = entityBinding.getDirectSubEntityBindings().iterator();
             if ( subEntityBindingIterator.hasNext() ) {
                 //If the class has children, we need to find of which kind
-                metadata = subEntityBindingIterator.next();
+                entityBinding = subEntityBindingIterator.next();
             }
             else {
 			    return singleTableEntityPersister();
             }
 		}
-		switch ( metadata.getHierarchyDetails().getInheritanceType() ) {
+		switch ( entityBinding.getHierarchyDetails().getInheritanceType() ) {
 			case JOINED: {
 				return joinedSubclassEntityPersister();
 			}
@@ -72,7 +72,7 @@ public class StandardPersisterClassResolver implements PersisterClassResolver {
 			}
 			default: {
 				throw new UnknownPersisterException(
-						"Could not determine persister implementation for entity [" + metadata.getEntity().getName() + "]"
+						"Could not determine persister implementation for entity [" + entityBinding.getEntity().getName() + "]"
 				);
 			}
 

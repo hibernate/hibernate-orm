@@ -108,7 +108,8 @@ public class AssociationOverrideTest extends BaseCoreFunctionalTestCase {
 				PhoneNumber.class,
 				Addr.class,
 				SocialSite.class,
-				SocialTouchPoints.class
+				SocialTouchPoints.class,
+				ContactInfo.class
 		};
 	}
 }

@@ -366,9 +366,12 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Parent.class,
+				ParentPk.class,
 				Child.class,
+				ChildPk.class,
 				Channel.class,
 				TvMagazin.class,
+				TvMagazinPk.class,
 				TvProgramIdClass.class,
 				TvProgram.class,
 				Presenter.class,
@@ -378,6 +381,7 @@ public class CompositeIdTest extends BaseCoreFunctionalTestCase {
 				OrderLinePk.class,
 				LittleGenius.class,
 				A.class,
+				AId.class,
 				B.class,
 				C.class,
 				SomeEntity.class

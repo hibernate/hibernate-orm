@@ -142,9 +142,8 @@ public class ConcurrentNaturalIdCacheStatisticsImpl extends CategorizedStatistic
 	@Override
 	public Map getEntries() {
 		final Map map = new HashMap();
-		final Iterator iter = this.region.toMap().entrySet().iterator();
-		while ( iter.hasNext() ) {
-			final Map.Entry me = (Map.Entry) iter.next();
+		for ( final Object o : this.region.toMap().entrySet() ) {
+			final Map.Entry me = (Map.Entry) o;
 			map.put( ( (CacheKey) me.getKey() ).getKey(), me.getValue() );
 		}
 		return map;

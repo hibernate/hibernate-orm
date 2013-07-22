@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -37,7 +36,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Emmanuel Bernard
  */
-@FailureExpectedWithNewMetamodel
 public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testSecondaryTableAndJoined() throws Exception {
@@ -90,6 +88,6 @@ public class JoinedSubclassAndSecondaryTable extends BaseCoreFunctionalTestCase 
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Pool.class, SwimmingPool.class };
+		return new Class[] { Pool.class,PoolAddress.class, SwimmingPool.class };
 	}
 }

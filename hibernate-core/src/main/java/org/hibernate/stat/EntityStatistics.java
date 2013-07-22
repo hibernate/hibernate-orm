@@ -30,6 +30,7 @@ import java.io.Serializable;
  *
  * @author Gavin King
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface EntityStatistics extends Serializable {
 	long getDeleteCount();
 

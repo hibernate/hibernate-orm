@@ -38,37 +38,37 @@ public class ConcurrentEntityStatisticsImpl extends CategorizedStatistics implem
 		super(name);
 	}
 
-	private	AtomicLong loadCount			  =	new	AtomicLong();
-	private	AtomicLong updateCount			  =	new	AtomicLong();
-	private	AtomicLong insertCount			  =	new	AtomicLong();
-	private	AtomicLong deleteCount			  =	new	AtomicLong();
-	private	AtomicLong fetchCount			  =	new	AtomicLong();
-	private	AtomicLong optimisticFailureCount =	new	AtomicLong();
-
+	private final AtomicLong loadCount = new AtomicLong();
+	private final AtomicLong updateCount = new AtomicLong();
+	private final AtomicLong insertCount = new AtomicLong();
+	private final AtomicLong deleteCount = new AtomicLong();
+	private final AtomicLong fetchCount = new AtomicLong();
+	private final AtomicLong optimisticFailureCount = new AtomicLong();
+	@Override
 	public long getDeleteCount() {
 		return deleteCount.get();
 	}
-
+	@Override
 	public long getInsertCount() {
 		return insertCount.get();
 	}
-
+	@Override
 	public long getLoadCount() {
 		return loadCount.get();
 	}
-
+	@Override
 	public long getUpdateCount() {
 		return updateCount.get();
 	}
-
+	@Override
 	public long getFetchCount() {
 		return fetchCount.get();
 	}
-
+	@Override
 	public long getOptimisticFailureCount() {
 		return optimisticFailureCount.get();
 	}
-
+	@Override
 	public String toString() {
 		return new StringBuilder()
 				.append("EntityStatistics")

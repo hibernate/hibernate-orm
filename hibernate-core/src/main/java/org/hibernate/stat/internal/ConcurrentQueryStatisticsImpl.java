@@ -63,6 +63,7 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 	/**
 	 * queries executed to the DB
 	 */
+	@Override
 	public long getExecutionCount() {
 		return executionCount.get();
 	}
@@ -70,14 +71,15 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 	/**
 	 * Queries retrieved successfully from the cache
 	 */
+	@Override
 	public long getCacheHitCount() {
 		return cacheHitCount.get();
 	}
-
+	@Override
 	public long getCachePutCount() {
 		return cachePutCount.get();
 	}
-
+	@Override
 	public long getCacheMissCount() {
 		return cacheMissCount.get();
 	}
@@ -91,13 +93,15 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 	 *         and scroll queries do not effect this total as their number of returned rows
 	 *         is not known at execution time.
 	 */
+	@Override
 	public long getExecutionRowCount() {
 		return executionRowCount.get();
 	}
 
 	/**
-	 * average time in ms taken by the excution of this query onto the DB
+	 * average time in ms taken by the execution of this query onto the DB
 	 */
+	@Override
 	public long getExecutionAvgTime() {
 		// We write lock here to be sure that we always calculate the average time
 		// with all updates from the executed applied: executionCount and totalExecutionTime
@@ -115,15 +119,17 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 	}
 
 	/**
-	 * max time in ms taken by the excution of this query onto the DB
+	 * max time in ms taken by the execution of this query onto the DB
 	 */
+	@Override
 	public long getExecutionMaxTime() {
 		return executionMaxTime.get();
 	}
 
 	/**
-	 * min time in ms taken by the excution of this query onto the DB
+	 * min time in ms taken by the execution of this query onto the DB
 	 */
+	@Override
 	public long getExecutionMinTime() {
 		return executionMinTime.get();
 	}
@@ -149,7 +155,7 @@ public class ConcurrentQueryStatisticsImpl extends CategorizedStatistics impleme
 			readLock.unlock();
 		}
 	}
-
+	@Override
 	public String toString() {
 		return new StringBuilder()
 				.append("QueryStatistics")

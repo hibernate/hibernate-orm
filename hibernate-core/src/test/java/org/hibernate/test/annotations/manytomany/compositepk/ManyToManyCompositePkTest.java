@@ -165,8 +165,11 @@ public class ManyToManyCompositePkTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Man.class,
+				ManPk.class,
 				Woman.class,
+				WomanPk.class,
 				Cat.class,
+				CatPk.class
 		};
 	}
 }

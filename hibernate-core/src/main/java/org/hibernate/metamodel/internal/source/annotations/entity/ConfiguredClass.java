@@ -596,7 +596,7 @@ public class ConfiguredClass {
 		final ClassInfo embeddableClassInfo = localBindingContext.getClassInfo( type.getName() );
 		if ( embeddableClassInfo == null ) {
 			final String msg = String.format(
-					"Attribute '%s#%s' is annotated with @Embedded, but '%s' does not seem to be annotated " +
+					"Attribute '%s#%s' is annotated with @Embedded,\n but '%s' does not seem to be annotated " +
 							"with @Embeddable.\n Are all annotated classes added to the configuration?",
 					getConfiguredClass().getName(),
 					attributeName,

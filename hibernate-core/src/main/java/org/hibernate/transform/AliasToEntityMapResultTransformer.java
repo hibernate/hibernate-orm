@@ -46,9 +46,7 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 	private AliasToEntityMapResultTransformer() {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		Map result = new HashMap(tuple.length);
 		for ( int i=0; i<tuple.length; i++ ) {
@@ -60,9 +58,7 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 		return result;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
 		return false;
 	}

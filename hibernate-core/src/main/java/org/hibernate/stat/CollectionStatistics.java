@@ -30,6 +30,7 @@ import java.io.Serializable;
  *
  * @author Gavin King
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface CollectionStatistics extends Serializable {
 
 	long getLoadCount();

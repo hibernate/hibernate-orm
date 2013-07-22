@@ -316,6 +316,12 @@ public abstract class AbstractEntityPersister
 
 	protected abstract boolean isPropertyOfTable(int property, int j);
 
+	/**
+	 *TODO here what we really want is the "columns" that this entity provides ( including primary table and secondary table )
+	 * not the _property_
+	 *
+	 * we just need this to determine which column belongs to which table, maybe we should design a new data structure here.
+	 */
 	protected abstract int[] getPropertyTableNumbersInSelect();
 
 	protected abstract int[] getPropertyTableNumbers();

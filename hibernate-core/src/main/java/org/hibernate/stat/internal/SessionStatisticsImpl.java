@@ -39,23 +39,23 @@ public class SessionStatisticsImpl implements SessionStatistics {
 	public SessionStatisticsImpl(SessionImplementor session) {
 		this.session = session;
 	}
-
+	@Override
 	public int getEntityCount() {
 		return session.getPersistenceContext().getNumberOfManagedEntities();
 	}
-	
+	@Override
 	public int getCollectionCount() {
 		return session.getPersistenceContext().getCollectionEntries().size();
 	}
-	
+	@Override
 	public Set getEntityKeys() {
 		return Collections.unmodifiableSet( session.getPersistenceContext().getEntitiesByKey().keySet() );
 	}
-	
+	@Override
 	public Set getCollectionKeys() {
 		return Collections.unmodifiableSet( session.getPersistenceContext().getCollectionsByKey().keySet() );
 	}
-	
+	@Override
 	public String toString() {
 		return new StringBuilder()
 			.append("SessionStatistics[")

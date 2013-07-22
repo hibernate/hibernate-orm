@@ -75,9 +75,7 @@ public class FetchStrategyHelper {
 				: rootPropertyName;
 		final String fetchRole = persister.getEntityName() + "." + relativePropertyPath;
 
-		Iterator profiles = loadQueryInfluencers.getEnabledFetchProfileNames().iterator();
-		while ( profiles.hasNext() ) {
-			final String profileName = ( String ) profiles.next();
+		for ( final String profileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 			final FetchProfile profile = loadQueryInfluencers.getSessionFactory().getFetchProfile( profileName );
 			final Fetch fetch = profile.getFetchByRole( fetchRole );
 			if ( fetch != null && Fetch.Style.JOIN == fetch.getStyle() ) {

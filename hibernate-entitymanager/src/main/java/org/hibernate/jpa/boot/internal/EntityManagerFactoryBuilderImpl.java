@@ -940,110 +940,111 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final StandardServiceRegistry serviceRegistry = buildServiceRegistry();
 		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
-		// IMPL NOTE : TCCL handling here is needed because of commons-annotations, Jandex, etc. relying on TCCL being set.
-		return ( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
-			new ClassLoaderServiceImpl.Work<EntityManagerFactoryImpl>() {
-				@Override
-				public EntityManagerFactoryImpl perform() {
-					
-					if ( usingNewMetadata ) {
-						final JaccService jaccService = serviceRegistry.getService( JaccService.class );
-						for ( GrantedPermission grantedPermission : grantedJaccPermissions ) {
-							jaccService.addPermission( grantedPermission );
-						}
-			
-						final Object strategyProviderValue = configurationValues.get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
-						final IdentifierGeneratorStrategyProvider strategyProvider = strategyProviderValue == null
-								? null
-								: serviceRegistry.getService( StrategySelector.class )
-								.resolveStrategy( IdentifierGeneratorStrategyProvider.class, strategyProviderValue );
-			
-						if ( strategyProvider != null ) {
-							for ( Map.Entry<String,Class<?>> entry : strategyProvider.getStrategies().entrySet() ) {
-								serviceRegistry.getService( MutableIdentifierGeneratorFactory.class ).register( entry.getKey(), entry.getValue() );
-							}
-						}
-			
-						metadataSources.addCacheRegionDefinitions( cacheRegionDefinitions );
-						for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping jaxbMapping : cfgXmlNamedMappings ) {
-							if ( jaxbMapping.getResource() != null ) {
-								metadataSources.addResource( jaxbMapping.getResource() );
-							}
-							else if ( jaxbMapping.getJar() != null ) {
-								metadataSources.addJar( new File( jaxbMapping.getJar() ) );
-							}
-						}
-			
-			
-			
-						MetadataBuilder builder = metadataSources.getMetadataBuilder( serviceRegistry );
-						builder.with( jandexIndex );
-						if ( namingStrategy != null ) {
-							builder.with( namingStrategy );
-						}
-			
-						MetadataImplementor metadata = (MetadataImplementor)builder.build();
-			
-			
-						SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
-						sfBuilder.with( jpaEntityNotFoundDelegate );
-						if ( sessionFactoryInterceptor != null ) {
-							sfBuilder.with( sessionFactoryInterceptor );
-						}
-			
-			
-						if ( suppliedSessionFactoryObserver != null ) {
-							sfBuilder.add( suppliedSessionFactoryObserver );
-						}
-						sfBuilder.add( new ServiceRegistryCloser() );
-			
-						SessionFactoryImplementor sessionFactory;
-						try {
-							sessionFactory = (SessionFactoryImplementor) sfBuilder.build();
-						}
-						catch ( MappingException e ) {
-							throw persistenceException( "Unable to build Hibernate SessionFactory", e );
-						}
-			
-						return new EntityManagerFactoryImpl(
-								persistenceUnit.getName(),
-								sessionFactory,
-								settings,
-								configurationValues,
-								serviceRegistry.getService( ConfigurationService.class ).getSettings(),
-								metadata
-						);
-					}
-					else {
-						hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
-						JpaSchemaGenerator.performGeneration( hibernateConfiguration, serviceRegistry );
-						SessionFactoryImplementor sessionFactory;
-						try {
-							sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory(
-									serviceRegistry
-							);
-						}
-						catch ( MappingException e ) {
-							throw persistenceException( "Unable to build Hibernate SessionFactory", e );
-						}
-				
-						if ( suppliedSessionFactoryObserver != null ) {
-							sessionFactory.addObserver( suppliedSessionFactoryObserver );
-						}
-						sessionFactory.addObserver( new ServiceRegistryCloser() );
-				
-						// NOTE : passing cfg is temporary until
-						return new EntityManagerFactoryImpl(
-								persistenceUnit.getName(),
-								sessionFactory,
-								settings,
-								configurationValues,
-								hibernateConfiguration
-						);
-					}
+		// IMPL NOTE : TCCL handling here is temporary.
+		//		It is needed because this code still uses Hibernate Configuration and Hibernate commons-annotations
+		// 		in turn which relies on TCCL being set.
+		if ( usingNewMetadata ) {
+			final JaccService jaccService = serviceRegistry.getService( JaccService.class );
+			for ( GrantedPermission grantedPermission : grantedJaccPermissions ) {
+				jaccService.addPermission( grantedPermission );
+			}
+
+			final Object strategyProviderValue = configurationValues.get( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
+			final IdentifierGeneratorStrategyProvider strategyProvider = strategyProviderValue == null
+					? null
+					: serviceRegistry.getService( StrategySelector.class )
+					.resolveStrategy( IdentifierGeneratorStrategyProvider.class, strategyProviderValue );
+
+			if ( strategyProvider != null ) {
+				for ( Map.Entry<String,Class<?>> entry : strategyProvider.getStrategies().entrySet() ) {
+					serviceRegistry.getService( MutableIdentifierGeneratorFactory.class ).register( entry.getKey(), entry.getValue() );
 				}
 			}
-		);
+
+			metadataSources.addCacheRegionDefinitions( cacheRegionDefinitions );
+			for ( JaxbHibernateConfiguration.JaxbSessionFactory.JaxbMapping jaxbMapping : cfgXmlNamedMappings ) {
+				if ( jaxbMapping.getResource() != null ) {
+					metadataSources.addResource( jaxbMapping.getResource() );
+				}
+				else if ( jaxbMapping.getJar() != null ) {
+					metadataSources.addJar( new File( jaxbMapping.getJar() ) );
+				}
+			}
+
+
+
+			MetadataBuilder builder = metadataSources.getMetadataBuilder( serviceRegistry );
+			builder.with( jandexIndex );
+			if ( namingStrategy != null ) {
+				builder.with( namingStrategy );
+			}
+
+			MetadataImplementor metadata = (MetadataImplementor)builder.build();
+
+
+			SessionFactoryBuilder sfBuilder = metadata.getSessionFactoryBuilder();
+			sfBuilder.with( jpaEntityNotFoundDelegate );
+			if ( sessionFactoryInterceptor != null ) {
+				sfBuilder.with( sessionFactoryInterceptor );
+			}
+
+
+			if ( suppliedSessionFactoryObserver != null ) {
+				sfBuilder.add( suppliedSessionFactoryObserver );
+			}
+			sfBuilder.add( new ServiceRegistryCloser() );
+
+			SessionFactoryImplementor sessionFactory;
+			try {
+				sessionFactory = (SessionFactoryImplementor) sfBuilder.build();
+			}
+			catch ( MappingException e ) {
+				throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+			}
+
+			return new EntityManagerFactoryImpl(
+					persistenceUnit.getName(),
+					sessionFactory,
+					settings,
+					configurationValues,
+					serviceRegistry.getService( ConfigurationService.class ).getSettings(),
+					metadata
+			);
+		}
+		else {
+			return ( (ClassLoaderServiceImpl) classLoaderService ).withTccl(
+					new ClassLoaderServiceImpl.Work<EntityManagerFactoryImpl>() {
+						@Override
+						public EntityManagerFactoryImpl perform() {
+							hibernateConfiguration = buildHibernateConfiguration( serviceRegistry );
+							JpaSchemaGenerator.performGeneration( hibernateConfiguration, serviceRegistry );
+							SessionFactoryImplementor sessionFactory;
+							try {
+								sessionFactory = (SessionFactoryImplementor) hibernateConfiguration.buildSessionFactory(
+										serviceRegistry
+								);
+							}
+							catch ( MappingException e ) {
+								throw persistenceException( "Unable to build Hibernate SessionFactory", e );
+							}
+
+							if ( suppliedSessionFactoryObserver != null ) {
+								sessionFactory.addObserver( suppliedSessionFactoryObserver );
+							}
+							sessionFactory.addObserver( new ServiceRegistryCloser() );
+
+							// NOTE : passing cfg is temporary until
+							return new EntityManagerFactoryImpl(
+									persistenceUnit.getName(),
+									sessionFactory,
+									settings,
+									configurationValues,
+									hibernateConfiguration
+							);
+						}
+					}
+			);
+		}
 	}
 
 	private void processProperties() {

@@ -21,7 +21,7 @@
 
 		<!-- These do not natively support OSGi, so using 3rd party bundles. -->
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.antlr/2.7.7_5</bundle>
-		<bundle>mvn:org.jboss.javassist/com.springsource.javassist/3.15.0.GA</bundle>
+		<bundle>wrap:mvn:org.javassist/javassist/3.18.0-GA</bundle>
 		<bundle>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr303-api-1.0.0/2.2.0</bundle>
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ant/1.8.2_2</bundle>
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/1.6.1_5</bundle>
@@ -36,8 +36,8 @@
 		<!-- Optional.  Needed to test ehcache 2lc. -->
 		<!-- <bundle>wrap:mvn:net.sf.ehcache/ehcache-core/2.4.3</bundle> -->
 		
-        <bundle>mvn:com.fasterxml/classmate/0.5.4</bundle>
-        <bundle>mvn:org.jboss.logging/jboss-logging/3.1.0.GA</bundle>
+        <bundle>mvn:com.fasterxml/classmate/0.8.0</bundle>
+        <bundle>mvn:org.jboss.logging/jboss-logging/3.1.1.GA</bundle>
         
         <!-- JACC is optional. -->
         <!--<bundle>mvn:javax.servlet/javax.servlet-api/3.0.1</bundle>
@@ -57,15 +57,15 @@
 		<bundle>mvn:org.jgroups/jgroups/3.2.8.Final</bundle>
 		<bundle>mvn:org.infinispan/infinispan-core/5.2.0.Beta3</bundle> -->
 
-        <bundle>mvn:org.hibernate/hibernate-core/4.3.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.hibernate/hibernate-core/5.0.0-SNAPSHOT</bundle>
         <!-- TODO: Shouldn't need this, but hibernate-osgi's activator is a catch-all for SF and EMF. -->
-        <bundle>mvn:org.hibernate/hibernate-entitymanager/4.3.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.hibernate/hibernate-envers/4.3.0-SNAPSHOT</bundle>
-        <!-- <bundle>mvn:org.hibernate/hibernate-c3p0/4.3.0-SNAPSHOT</bundle> -->
-        <!-- <bundle>mvn:org.hibernate/hibernate-proxool/4.3.0-SNAPSHOT</bundle> -->
-        <!-- <bundle>mvn:org.hibernate/hibernate-ehcache/4.3.0-SNAPSHOT</bundle> -->
-        <!-- <bundle>mvn:org.hibernate/hibernate-infinispan/4.3.0-SNAPSHOT</bundle> -->
-        <bundle>mvn:org.hibernate/hibernate-osgi/4.3.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.hibernate/hibernate-entitymanager/5.0.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.hibernate/hibernate-envers/5.0.0-SNAPSHOT</bundle>
+        <!-- <bundle>mvn:org.hibernate/hibernate-c3p0/5.0.0-SNAPSHOT</bundle> -->
+        <!-- <bundle>mvn:org.hibernate/hibernate-proxool/5.0.0-SNAPSHOT</bundle> -->
+        <!-- <bundle>mvn:org.hibernate/hibernate-ehcache/5.0.0-SNAPSHOT</bundle> -->
+        <!-- <bundle>mvn:org.hibernate/hibernate-infinispan/5.0.0-SNAPSHOT</bundle> -->
+        <bundle>mvn:org.hibernate/hibernate-osgi/5.0.0-SNAPSHOT</bundle>
         
         <bundle>mvn:org.hibernate.osgi/unmanaged-native/1.0.0</bundle>
 	</feature>

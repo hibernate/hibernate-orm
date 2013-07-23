@@ -122,3 +122,5 @@ runBnd.dependsOn copyBnd
 test.dependsOn runBnd
 test.dependsOn testClientBundleJar
 test.dependsOn jar
+
+test.enabled = false

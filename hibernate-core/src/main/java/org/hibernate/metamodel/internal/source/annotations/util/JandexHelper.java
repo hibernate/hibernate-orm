@@ -54,6 +54,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -501,7 +502,7 @@ public class JandexHelper {
 			return val;
 		}
 		try {
-			val = Index.class.getClassLoader().loadClass( name ).getMethod( element ).getDefaultValue();
+			val = ClassLoaderHelper.getContextClassLoader().loadClass( name ).getMethod( element ).getDefaultValue();
 			if ( val != null ) {
 				// Annotation parameters of type Class are handled using Strings
 				if ( val instanceof Class ) {

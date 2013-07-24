@@ -111,7 +111,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	@Override
 	public String getAlias(Dialect dialect) {
 		final int lastLetter = StringHelper.lastIndexOfLetter( name );
-		String suffix = Integer.toString(uniqueInteger) + '_';
+		final String suffix = Integer.toString(uniqueInteger) + '_';
 
 		String alias = name;
 		if ( lastLetter == -1 ) {

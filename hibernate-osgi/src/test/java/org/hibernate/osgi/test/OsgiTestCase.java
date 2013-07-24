@@ -18,10 +18,13 @@ package org.hibernate.osgi.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.InputStream;
 
+import org.hibernate.osgi.OsgiPersistenceProviderService;
+import org.hibernate.osgi.OsgiSessionFactoryService;
 import org.hibernate.osgi.test.result.OsgiTestResults;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
@@ -94,6 +97,8 @@ public class OsgiTestCase {
 				builder.addBundleSymbolicName( archive.getName() );
 				builder.addBundleManifestVersion( 2 );
 				builder.addImportPackages( OsgiTestResults.class );
+				// needed primarily to test service cleanup in #testStop
+				builder.addImportPackages( OsgiSessionFactoryService.class );
 				return builder.openStream();
 			}
 		} );
@@ -108,23 +113,46 @@ public class OsgiTestCase {
 	 */
 	@Test
 	public void testClientBundle() throws Exception {
-		assertNotNull( "BundleContext injected", context );
-		assertEquals( "System Bundle ID", 0, context.getBundle().getBundleId() );
-
-		testHibernateBundle( "org.hibernate.core" );
-		testHibernateBundle( "org.hibernate.entitymanager" );
+		commonTests();
 
 		final Bundle testClientBundle = findHibernateBundle( "testClientBundle" );
 		assertNotNull( "The test client bundle was not found!", testClientBundle );
 		testClientBundle.start();
 		assertEquals( "The test client bundle was not activated!", Bundle.ACTIVE, testClientBundle.getState() );
 
-		final ServiceReference serviceReference = context.getServiceReference( OsgiTestResults.class.getName() );
+		final ServiceReference<?> serviceReference = context.getServiceReference( OsgiTestResults.class.getName() );
 		final OsgiTestResults testResults = (OsgiTestResults) context.getService( serviceReference );
 
 		if ( testResults.getFailures().size() > 0 ) {
 			fail( testResults.getFailures().get( 0 ).getFailure() );
 		}
+	}
+	
+	/**
+	 * Test that stopping the hibernate-osgi bundle happens cleanly.
+	 * 
+	 * TODO: This will be really simplistic at first, but should be expanded upon.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testStop() throws Exception {
+		commonTests();
+
+		findHibernateBundle( "org.hibernate.osgi" ).stop();
+		testHibernateBundle( "org.hibernate.osgi", Bundle.RESOLVED );
+		
+		assertNull( context.getServiceReference( OsgiSessionFactoryService.class ) );
+		assertNull( context.getServiceReference( OsgiPersistenceProviderService.class ) );
+	}
+	
+	private void commonTests() {
+		assertNotNull( "BundleContext injected", context );
+		assertEquals( "System Bundle ID", 0, context.getBundle().getBundleId() );
+
+		testHibernateBundle( "org.hibernate.core", Bundle.ACTIVE );
+		testHibernateBundle( "org.hibernate.entitymanager", Bundle.ACTIVE );
+		testHibernateBundle( "org.hibernate.osgi", Bundle.ACTIVE );
 	}
 
 	private Bundle findHibernateBundle(String symbolicName) {
@@ -136,10 +164,10 @@ public class OsgiTestCase {
 		return null;
 	}
 
-	private void testHibernateBundle(String symbolicName) {
+	private void testHibernateBundle(String symbolicName, int state) {
 		final Bundle bundle = findHibernateBundle( symbolicName );
 
 		assertNotNull( "Bundle " + symbolicName + " was not found!", bundle );
-		assertEquals( "Bundle " + symbolicName + " was not activated!", Bundle.ACTIVE, bundle.getState() );
+		assertEquals( "Bundle " + symbolicName + " was not in the expected state!", state, bundle.getState() );
 	}
 }

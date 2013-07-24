@@ -27,6 +27,8 @@ import java.sql.Types;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.dialect.unique.InformixUniqueDelegate;
+import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
@@ -41,6 +43,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Molitor
  */
 public class InformixDialect extends Dialect {
+	
+	private final UniqueDelegate uniqueDelegate;
 
 	/**
 	 * Creates new <code>InformixDialect</code> instance. Sets up the JDBC /
@@ -72,6 +76,8 @@ public class InformixDialect extends Dialect {
 		registerColumnType(Types.VARCHAR, 32739, "lvarchar($l)");
 
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
+		
+		uniqueDelegate = new InformixUniqueDelegate( this );
 	}
 
 	public String getAddColumnString() {
@@ -270,5 +276,9 @@ public class InformixDialect extends Dialect {
 	public String getCreateTemporaryTablePostfix() {
 		return "with no log";
 	}
-
+	
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return uniqueDelegate;
+	}
 }

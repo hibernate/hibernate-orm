@@ -35,6 +35,7 @@ import org.hibernate.internal.util.ClassLoaderHelper;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * This BundleActivator provides three different uses of Hibernate in OSGi
@@ -58,34 +59,38 @@ import org.osgi.framework.FrameworkUtil;
  * @author Tim Ward
  */
 public class HibernateBundleActivator implements BundleActivator {
-
-	private OsgiClassLoader osgiClassLoader;
-
-	private OsgiJtaPlatform osgiJtaPlatform;
-
+	
+	private ServiceRegistration<?> persistenceProviderService;
+	private ServiceRegistration<?> sessionFactoryService;
+	
 	@Override
 	public void start(BundleContext context) throws Exception {
 
-		osgiClassLoader = new OsgiClassLoader();
+		OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( Session.class ) );
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernatePersistence.class ) );
 		ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
 
-		osgiJtaPlatform = new OsgiJtaPlatform( context );
+		OsgiJtaPlatform osgiJtaPlatform = new OsgiJtaPlatform( context );
 
 		Dictionary properties = new Hashtable();
 		// In order to support existing persistence.xml files, register
 		// using the legacy provider name.
 		properties.put( "javax.persistence.provider", HibernatePersistence.class.getName() );
-		context.registerService( PersistenceProvider.class.getName(), 
+		persistenceProviderService = context.registerService( PersistenceProvider.class.getName(), 
 				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ), properties );
 		
-		context.registerService( SessionFactory.class.getName(),
+		sessionFactoryService = context.registerService( SessionFactory.class.getName(),
 				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ), new Hashtable());
 	}
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
-		// Nothing else to do?
+		persistenceProviderService.unregister();
+		persistenceProviderService = null;
+		sessionFactoryService.unregister();
+		sessionFactoryService = null;
+
+		ClassLoaderHelper.overridenClassLoader = null;
 	}
 }

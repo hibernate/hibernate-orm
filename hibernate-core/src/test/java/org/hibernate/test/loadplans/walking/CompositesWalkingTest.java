@@ -1,5 +1,5 @@
 /*
- * jDocBook, processing of DocBook sources
+ * Hibernate, Relational Persistence for Idiomatic Java
  *
  * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -21,53 +21,32 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.walking;
+package org.hibernate.test.loadplans.walking;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import java.util.List;
-
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.test.annotations.collectionelement.TestCourse;
 
 /**
  * @author Steve Ebersole
  */
-public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Message.class, Poster.class };
-	}
-
+public class CompositesWalkingTest extends BaseUnitTestCase {
+	/**
+	 * Test one-level composites defined as part of an entity.
+	 */
 	@Test
-	public void testIt() {
-		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
+	public void testEntityComposite() {
+		final SessionFactory sf = new Configuration()
+				.addAnnotatedClass( TestCourse.class )
+				.buildSessionFactory();
+		final EntityPersister ep = (EntityPersister) sf.getClassMetadata( TestCourse.class );
+
 		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
-	}
-
-	@Entity( name = "Message" )
-	public static class Message {
-		@Id
-		private Integer id;
-		private String name;
-		@ManyToOne
-		@JoinColumn
-		private Poster poster;
-	}
-
-	@Entity( name = "Poster" )
-	public static class Poster {
-		@Id
-		private Integer id;
-		private String name;
-		@OneToMany(mappedBy = "poster")
-		private List<Message> messages;
 	}
 }

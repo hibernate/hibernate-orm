@@ -21,15 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.loader;
+package org.hibernate.test.loadplans.process;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -37,7 +32,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -55,59 +49,29 @@ import org.hibernate.testing.junit4.ExtraAssertions;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 /**
- * @author Gail Badner
+ * @author Steve Ebersole
  */
-public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCoreFunctionalTestCase {
+public class SimpleResultSetProcessorTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Poster.class, Message.class };
+		return new Class[] { SimpleEntity.class };
 	}
 
 	@Test
-	public void testEntityWithList() throws Exception {
-		final EntityPersister entityPersister = sessionFactory().getEntityPersister( Poster.class.getName() );
+	public void testSimpleEntityProcessing() throws Exception {
+		final EntityPersister entityPersister = sessionFactory().getEntityPersister( SimpleEntity.class.getName() );
 
 		// create some test data
 		Session session = openSession();
 		session.beginTransaction();
-		Poster poster = new Poster();
-		poster.pid = 0;
-		poster.name = "John Doe";
-		Message message1 = new Message();
-		message1.mid = 1;
-		message1.msgTxt = "Howdy!";
-		message1.poster = poster;
-		poster.messages.add( message1 );
-		Message message2 = new Message();
-		message2.mid = 2;
-		message2.msgTxt = "Bye!";
-		message2.poster = poster;
-		poster.messages.add( message2 );
-		session.save( poster );
+		session.save( new SimpleEntity( 1, "the only" ) );
 		session.getTransaction().commit();
 		session.close();
 
-//		session = openSession();
-//		session.beginTransaction();
-//		Poster posterGotten = (Poster) session.get( Poster.class, poster.pid );
-//		assertEquals( 0, posterGotten.pid.intValue() );
-//		assertEquals( poster.name, posterGotten.name );
-//		assertTrue( Hibernate.isInitialized( posterGotten.messages ) );
-//		assertEquals( 2, posterGotten.messages.size() );
-//		assertEquals( message1.msgTxt, posterGotten.messages.get( 0 ).msgTxt );
-//		assertEquals( message2.msgTxt, posterGotten.messages.get( 1 ).msgTxt );
-//		assertSame( posterGotten, posterGotten.messages.get( 0 ).poster );
-//		assertSame( posterGotten, posterGotten.messages.get( 1 ).poster );
-//		session.getTransaction().commit();
-//		session.close();
-
 		{
-
 			final LoadPlan plan = Helper.INSTANCE.buildLoadPlan( sessionFactory(), entityPersister );
 
 			final LoadQueryDetails queryDetails = Helper.INSTANCE.buildLoadQueryDetails( plan, sessionFactory() );
@@ -122,8 +86,9 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 					new Work() {
 						@Override
 						public void execute(Connection connection) throws SQLException {
+							( (SessionImplementor) workSession ).getFactory().getJdbcServices().getSqlStatementLogger().logStatement( sql );
 							PreparedStatement ps = connection.prepareStatement( sql );
-							ps.setInt( 1, 0 );
+							ps.setInt( 1, 1 );
 							ResultSet resultSet = ps.executeQuery();
 							results.addAll(
 									resultSetProcessor.extractResults(
@@ -147,22 +112,13 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 						}
 					}
 			);
-			assertEquals( 2, results.size() );
-			Object result1 = results.get( 0 );
-			assertNotNull( result1 );
-			assertSame( result1, results.get( 1 ) );
+			assertEquals( 1, results.size() );
+			Object result = results.get( 0 );
+			assertNotNull( result );
 
-			Poster workPoster = ExtraAssertions.assertTyping( Poster.class, result1 );
-			assertEquals( 0, workPoster.pid.intValue() );
-			assertEquals( poster.name, workPoster.name );
-			assertTrue( Hibernate.isInitialized( workPoster.messages ) );
-			assertEquals( 2, workPoster.messages.size() );
-			assertTrue( Hibernate.isInitialized( workPoster.messages ) );
-			assertEquals( 2, workPoster.messages.size() );
-			assertEquals( message1.msgTxt, workPoster.messages.get( 0 ).msgTxt );
-			assertEquals( message2.msgTxt, workPoster.messages.get( 1 ).msgTxt );
-			assertSame( workPoster, workPoster.messages.get( 0 ).poster );
-			assertSame( workPoster, workPoster.messages.get( 1 ).poster );
+			SimpleEntity workEntity = ExtraAssertions.assertTyping( SimpleEntity.class, result );
+			assertEquals( 1, workEntity.id.intValue() );
+			assertEquals( "the only", workEntity.name );
 			workSession.getTransaction().commit();
 			workSession.close();
 		}
@@ -170,27 +126,22 @@ public class EntityWithNonLazyOneToManyListResultSetProcessorTest extends BaseCo
 		// clean up test data
 		session = openSession();
 		session.beginTransaction();
-		session.delete( poster );
+		session.createQuery( "delete SimpleEntity" ).executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 	}
 
-	@Entity( name = "Message" )
-	public static class Message {
-		@Id
-		private Integer mid;
-		private String msgTxt;
-		@ManyToOne
-		@JoinColumn
-		private Poster poster;
-	}
+	@Entity(name = "SimpleEntity")
+	public static class SimpleEntity {
+		@Id public Integer id;
+		public String name;
 
-	@Entity( name = "Poster" )
-	public static class Poster {
-		@Id
-		private Integer pid;
-		private String name;
-		@OneToMany(mappedBy = "poster", fetch = FetchType.EAGER, cascade = CascadeType.ALL )
-		private List<Message> messages = new ArrayList<Message>();
+		public SimpleEntity() {
+		}
+
+		public SimpleEntity(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
 	}
 }

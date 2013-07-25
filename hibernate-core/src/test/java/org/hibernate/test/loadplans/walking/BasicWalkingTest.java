@@ -1,5 +1,5 @@
 /*
- * Hibernate, Relational Persistence for Idiomatic Java
+ * jDocBook, processing of DocBook sources
  *
  * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
@@ -21,7 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.walking;
+package org.hibernate.test.loadplans.walking;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import java.util.List;
 
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
@@ -29,22 +36,38 @@ import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.onetoone.formula.Address;
 
 /**
  * @author Steve Ebersole
  */
-public class KeyManyToOneWalkingTest extends BaseCoreFunctionalTestCase {
+public class BasicWalkingTest extends BaseCoreFunctionalTestCase {
 	@Override
-	protected String[] getMappings() {
-		return new String[] { "onetoone/formula/Person.hbm.xml" };
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Message.class, Poster.class };
 	}
 
 	@Test
-	public void testWalkingKeyManyToOneGraphs() {
-		// Address has a composite id with a bi-directional key-many to Person
-		final EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata( Address.class );
-
+	public void testIt() {
+		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
 		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+	}
+
+	@Entity( name = "Message" )
+	public static class Message {
+		@Id
+		private Integer id;
+		private String name;
+		@ManyToOne
+		@JoinColumn
+		private Poster poster;
+	}
+
+	@Entity( name = "Poster" )
+	public static class Poster {
+		@Id
+		private Integer id;
+		private String name;
+		@OneToMany(mappedBy = "poster")
+		private List<Message> messages;
 	}
 }

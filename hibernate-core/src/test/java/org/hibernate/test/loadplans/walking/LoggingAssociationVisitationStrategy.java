@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.walking;
+package org.hibernate.test.loadplans.walking;
 
 import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
@@ -41,7 +41,7 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
  * @author Steve Ebersole
  */
 public class LoggingAssociationVisitationStrategy implements AssociationVisitationStrategy {
-	private int depth = 0;
+	private int depth = 1;
 
 	@Override
 	public void start() {
@@ -176,7 +176,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 		System.out.println(
 				String.format(
 						"%s Finishing collection index (%s)",
-						StringHelper.repeat( ">>", ++depth ),
+						StringHelper.repeat( "<<", depth-- ),
 						collectionIndexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);
@@ -198,7 +198,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 		System.out.println(
 				String.format(
 						"%s Finishing collection elements (%s)",
-						StringHelper.repeat( ">>", ++depth ),
+						StringHelper.repeat( "<<", depth-- ),
 						elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);
@@ -223,7 +223,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 		System.out.println(
 				String.format(
 						"%s Finishing composite (%s)",
-						StringHelper.repeat( ">>", depth-- ),
+						StringHelper.repeat( "<<", depth-- ),
 						compositionElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				)
 		);

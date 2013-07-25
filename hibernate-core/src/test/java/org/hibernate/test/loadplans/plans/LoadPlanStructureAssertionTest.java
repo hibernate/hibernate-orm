@@ -21,20 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.loader.plan.spi;
+package org.hibernate.test.loadplans.plans;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.test.loader.EncapsulatedCompositeIdResultSetProcessorTest;
-import org.hibernate.test.loader.Helper;
+import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProcessorTest;
 
-import org.hibernate.loader.plan2.build.internal.returns.SimpleEntityIdentifierDescriptionImpl;
-import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessorImpl;
-import org.hibernate.loader.plan2.exec.spi.EntityLoadQueryDetails;
 //import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan2.build.internal.returns.CollectionFetchableElementEntityGraph;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.FetchSource;

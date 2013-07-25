@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.loader.plan.spi;
+package org.hibernate.test.loadplans.plans;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;

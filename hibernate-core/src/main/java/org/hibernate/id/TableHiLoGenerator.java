@@ -25,6 +25,7 @@ package org.hibernate.id;
 import java.io.Serializable;
 import java.util.Properties;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
@@ -63,8 +64,8 @@ public class TableHiLoGenerator extends TableGenerator {
 	private int maxLo;
 
 	@Override
-	public void configure(Type type, Properties params, Dialect d) {
-		super.configure( type, params, d );
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) {
+		super.configure( type, params, d, classLoaderService );
 		maxLo = ConfigurationHelper.getInt( MAX_LO, params, Short.MAX_VALUE );
 
 		if ( maxLo >= 1 ) {

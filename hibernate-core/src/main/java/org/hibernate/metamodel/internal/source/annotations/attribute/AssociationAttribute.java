@@ -30,26 +30,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.EnumConversionHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
@@ -57,6 +52,12 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.mocker.MockHelper;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 /**
  * Represents an association attribute.
@@ -291,7 +292,8 @@ public class AssociationAttribute extends MappedAttribute {
 	private boolean determinIsUnwrapProxy() {
 		AnnotationInstance lazyToOne = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.LAZY_TO_ONE );
 		if ( lazyToOne != null ) {
-			return JandexHelper.getEnumValue( lazyToOne, "value", LazyToOneOption.class ) == LazyToOneOption.NO_PROXY;
+			return JandexHelper.getEnumValue( lazyToOne, "value", LazyToOneOption.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) ) == LazyToOneOption.NO_PROXY;
 		}
 		return false;
 	}
@@ -317,14 +319,16 @@ public class AssociationAttribute extends MappedAttribute {
 	}
 
 	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
-		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class );
+		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class,
+				getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		boolean lazy = fetchType == FetchType.LAZY;
 		final AnnotationInstance lazyToOneAnnotation = JandexHelper.getSingleAnnotation(
 				annotations(),
 				HibernateDotNames.LAZY_TO_ONE
 		);
 		if ( lazyToOneAnnotation != null ) {
-			LazyToOneOption option = JandexHelper.getEnumValue( lazyToOneAnnotation, "value", LazyToOneOption.class );
+			LazyToOneOption option = JandexHelper.getEnumValue( lazyToOneAnnotation, "value", LazyToOneOption.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			lazy = option != LazyToOneOption.FALSE;
 		}
 
@@ -336,7 +340,8 @@ public class AssociationAttribute extends MappedAttribute {
 				HibernateDotNames.FETCH
 		);
 		if ( fetchAnnotation != null ) {
-			lazy = JandexHelper.getEnumValue( fetchAnnotation, "value", FetchMode.class ) != FetchMode.JOIN;
+			lazy = JandexHelper.getEnumValue( fetchAnnotation, "value", FetchMode.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) ) != FetchMode.JOIN;
 		}
 		if ( getFetchStyle() != null ) {
 			lazy = getFetchStyle() != FetchStyle.JOIN;
@@ -422,7 +427,8 @@ public class AssociationAttribute extends MappedAttribute {
 			org.hibernate.annotations.FetchMode annotationFetchMode = JandexHelper.getEnumValue(
 					fetchAnnotation,
 					"value",
-					org.hibernate.annotations.FetchMode.class
+					org.hibernate.annotations.FetchMode.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class )
 			);
 			return EnumConversionHelper.annotationFetchModeToFetchStyle( annotationFetchMode );
 		}
@@ -442,7 +448,8 @@ public class AssociationAttribute extends MappedAttribute {
 					getContext().getOrigin()
 			);
 		}
-		return JandexHelper.getValue( mapsIdAnnotation, "value", String.class );
+		return JandexHelper.getValue( mapsIdAnnotation, "value", String.class,
+				getContext().getServiceRegistry().getService( ClassLoaderService.class ));
 	}
 
 	private void determineJoinColumnAnnotations(Map<DotName, List<AnnotationInstance>> annotations) {
@@ -456,7 +463,8 @@ public class AssociationAttribute extends MappedAttribute {
 				annotations,
 				JPADotNames.JOIN_COLUMN,
 				JPADotNames.JOIN_COLUMNS,
-				true
+				true,
+				getContext().getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance joinColumnAnnotation : joinColumnAnnotations ) {
 			joinColumnValues.add( new Column( joinColumnAnnotation ) );
@@ -469,7 +477,8 @@ public class AssociationAttribute extends MappedAttribute {
 		);
 		if ( collectionTableAnnotation != null ) {
 			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( collectionTableAnnotation, "joinColumns", AnnotationInstance[].class )
+					JandexHelper.getValue( collectionTableAnnotation, "joinColumns", AnnotationInstance[].class,
+							getContext().getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 			for ( AnnotationInstance annotation : columnsList ) {
 				joinColumnValues.add( new Column( annotation ) );
@@ -494,10 +503,12 @@ public class AssociationAttribute extends MappedAttribute {
 		);
 		if (joinTableAnnotation != null) {
 			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( joinTableAnnotation, "joinColumns", AnnotationInstance[].class )
+					JandexHelper.getValue( joinTableAnnotation, "joinColumns", AnnotationInstance[].class,
+							getContext().getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 			List<AnnotationInstance> inverseColumnsList = Arrays.asList(
-					JandexHelper.getValue( joinTableAnnotation, "inverseJoinColumns", AnnotationInstance[].class )
+					JandexHelper.getValue( joinTableAnnotation, "inverseJoinColumns", AnnotationInstance[].class,
+							getContext().getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 			
 			for ( AnnotationInstance annotation : columnsList ) {

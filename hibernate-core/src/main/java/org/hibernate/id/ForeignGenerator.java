@@ -29,6 +29,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -81,7 +82,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 	/**
 	 * {@inheritDoc}
 	 */
-	public void configure(Type type, Properties params, Dialect d) {
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) {
 		propertyName = params.getProperty( "property" );
 		entityName = params.getProperty( ENTITY_NAME );
 		if ( propertyName==null ) {

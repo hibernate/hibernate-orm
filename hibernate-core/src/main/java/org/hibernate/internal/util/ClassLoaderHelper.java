@@ -25,6 +25,8 @@ package org.hibernate.internal.util;
  * prior to ServiceRegistry and ClassLoadingService existence.  This should be
  * replaced in Hibernate 5.
  * 
+ * TODO: Delete after HHH-6184.
+ * 
  * @author Brett Meyer
  */
 public class ClassLoaderHelper {

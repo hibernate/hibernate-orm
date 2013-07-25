@@ -32,8 +32,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -41,13 +39,13 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.jboss.logging.Logger;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -126,13 +124,8 @@ public class DriverManagerConnectionProviderImpl
 				// trying via forName() first to be as close to DriverManager's semantics
 				driver = (Driver) Class.forName( driverClassName ).newInstance();
 			}
-			catch ( Exception e1 ) {
-				try{
-					driver = (Driver) ReflectHelper.classForName( driverClassName ).newInstance();
-				}
-				catch ( Exception e2 ) {
-					throw new HibernateException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e2 );
-				}
+			catch ( Exception e ) {
+				throw new HibernateException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e );
 			}
 		}
 

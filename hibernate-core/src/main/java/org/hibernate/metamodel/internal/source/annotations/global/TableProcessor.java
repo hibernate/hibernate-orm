@@ -25,12 +25,10 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 
 import java.util.Collection;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
@@ -46,6 +44,8 @@ import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.Value;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.logging.Logger;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -71,25 +71,28 @@ public class TableProcessor {
 	public static void bind(AnnotationBindingContext bindingContext) {
 		Collection<AnnotationInstance> annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLE );
 		for ( AnnotationInstance tableAnnotation : annotations ) {
-			bind( bindingContext.getMetadataImplementor(), tableAnnotation );
+			bind( bindingContext, tableAnnotation );
 		}
 
 		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.TABLES );
 		for ( AnnotationInstance tables : annotations ) {
-			for ( AnnotationInstance table : JandexHelper.getValue( tables, "value", AnnotationInstance[].class ) ) {
-				bind( bindingContext.getMetadataImplementor(), table );
+			for ( AnnotationInstance table : JandexHelper.getValue( tables, "value", AnnotationInstance[].class,
+					bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) ) ) {
+				bind( bindingContext, table );
 			}
 		}
 	}
 
-	private static void bind(MetadataImplementor metadata, AnnotationInstance tableAnnotation) {
-		String tableName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class );
+	private static void bind(AnnotationBindingContext bindingContext, AnnotationInstance tableAnnotation) {
+		MetadataImplementor metadata = bindingContext.getMetadataImplementor();
+		String tableName = JandexHelper.getValue( tableAnnotation, "appliesTo", String.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 		ObjectName objectName = ObjectName.parse( tableName );
 		Schema schema = metadata.getDatabase().getSchema( objectName.getCatalog(), objectName.getSchema() );
 		Table table = schema.locateTable( objectName.getName() );
 		if ( table != null ) {
 			boolean isSecondaryTable = metadata.getSecondaryTables().containsKey( table.getLogicalName() );
-			bindHibernateTableAnnotation( table, tableAnnotation,isSecondaryTable, metadata );
+			bindHibernateTableAnnotation( table, tableAnnotation,isSecondaryTable, bindingContext );
 		}
 		else {
 			throw new MappingException( "Can't find table[" + tableName + "] from Annotation @Table" );
@@ -100,24 +103,28 @@ public class TableProcessor {
 			final Table table,
 			final AnnotationInstance tableAnnotation,
 			final boolean isSecondaryTable,
-			final MetadataImplementor metadata) {
+			final AnnotationBindingContext bindingContext) {
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		for ( AnnotationInstance indexAnnotation : JandexHelper.getValue(
 				tableAnnotation,
 				"indexes",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		) ) {
-			bindIndexAnnotation( table, tableAnnotation, indexAnnotation );
+			bindIndexAnnotation( table, tableAnnotation, indexAnnotation, bindingContext );
 		}
-		String comment = JandexHelper.getValue( tableAnnotation, "comment", String.class );
+		String comment = JandexHelper.getValue( tableAnnotation, "comment", String.class,
+				classLoaderService );
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			table.addComment( comment.trim() );
 		}
 		if ( !isSecondaryTable ) {
 			return;
 		}
-		SecondaryTable secondaryTable = metadata.getSecondaryTables().get( table.getLogicalName() );
+		SecondaryTable secondaryTable = bindingContext.getMetadataImplementor().getSecondaryTables().get( table.getLogicalName() );
 		if ( tableAnnotation.value( "fetch" ) != null ) {
-			FetchMode fetchMode = JandexHelper.getEnumValue( tableAnnotation, "fetch", FetchMode.class );
+			FetchMode fetchMode = JandexHelper.getEnumValue( tableAnnotation, "fetch", FetchMode.class,
+					classLoaderService );
 			secondaryTable.setFetchStyle( EnumConversionHelper.annotationFetchModeToFetchStyle( fetchMode ) );
 		}
 		if ( tableAnnotation.value( "inverse" ) != null ) {
@@ -165,9 +172,13 @@ public class TableProcessor {
 
 	}
 
-	private static void bindIndexAnnotation(Table table, AnnotationInstance tableAnnotation, AnnotationInstance indexAnnotation) {
-		String indexName = JandexHelper.getValue( indexAnnotation, "name", String.class );
-		String[] columnNames = JandexHelper.getValue( indexAnnotation, "columnNames", String[].class );
+	private static void bindIndexAnnotation(Table table, AnnotationInstance tableAnnotation,
+			AnnotationInstance indexAnnotation, AnnotationBindingContext bindingContext) {
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		String indexName = JandexHelper.getValue( indexAnnotation, "name", String.class,
+				classLoaderService );
+		String[] columnNames = JandexHelper.getValue( indexAnnotation, "columnNames", String[].class,
+				classLoaderService );
 		if ( columnNames == null ) {
 			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );
 			return;

@@ -33,18 +33,19 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.EntityMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
-
-import com.fasterxml.classmate.members.ResolvedMember;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
+
+import com.fasterxml.classmate.members.ResolvedMember;
 
 /**
  * Some annotation processing is identical between entity and attribute level (aka you can place the annotation on
@@ -91,7 +92,8 @@ public class AnnotationParserHelper {
 		return new CustomSQL( sql, isCallable, checkStyle );
 	}
 
-	public static String determineCustomTuplizer(Map<DotName, List<AnnotationInstance>> annotations, AnnotationTarget target){
+	public static String determineCustomTuplizer(Map<DotName, List<AnnotationInstance>> annotations,
+			AnnotationTarget target, ClassLoaderService classLoaderService){
 		//tuplizer on field
 		final AnnotationInstance tuplizersAnnotation = JandexHelper.getSingleAnnotation(
 				annotations, HibernateDotNames.TUPLIZERS, target
@@ -103,22 +105,26 @@ public class AnnotationParserHelper {
 		);
 		return determineCustomTuplizer(
 				tuplizersAnnotation,
-				tuplizerAnnotation
+				tuplizerAnnotation,
+				classLoaderService
 		);
 	}
 
-	public static String determineCustomTuplizer(Map<DotName, List<AnnotationInstance>> annotations){
-		return determineCustomTuplizer( annotations, null );
+	public static String determineCustomTuplizer(Map<DotName, List<AnnotationInstance>> annotations,
+			ClassLoaderService classLoaderService){
+		return determineCustomTuplizer( annotations, null, classLoaderService );
 	}
 
 	public static String determineCustomTuplizer(
 			final AnnotationInstance tuplizersAnnotation,
-			final AnnotationInstance tuplizerAnnotation) {
+			final AnnotationInstance tuplizerAnnotation,
+			final ClassLoaderService classLoaderService) {
 		if ( tuplizersAnnotation != null ) {
 			AnnotationInstance[] annotations = JandexHelper.getValue(
 					tuplizersAnnotation,
 					"value",
-					AnnotationInstance[].class
+					AnnotationInstance[].class,
+					classLoaderService
 			);
 			for ( final AnnotationInstance annotationInstance : annotations ) {
 				final String impl = findTuplizerImpl( annotationInstance );
@@ -174,7 +180,8 @@ public class AnnotationParserHelper {
 		}
 		if ( annotation != null && annotation.value( targetElementName ) != null ) {
 			return context.locateClassByName(
-					JandexHelper.getValue( annotation, targetElementName, String.class )
+					JandexHelper.getValue( annotation, targetElementName, String.class,
+							context.getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 		}
 		if ( resolvedMember.getType().isArray() ) {

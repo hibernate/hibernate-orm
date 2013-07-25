@@ -26,21 +26,20 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.TypeResolver;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.IndexView;
-
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.IndexView;
+
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.TypeResolver;
 
 /**
  * Default implementation of  {@code AnnotationBindingContext}
@@ -52,7 +51,7 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	private static final TypeResolver TYPE_RESOLVER = new TypeResolver();
 	private static final MemberResolver MEMBER_RESOLVER = new MemberResolver( TYPE_RESOLVER );
 	private final MetadataImplementor metadata;
-	private final ValueHolder<ClassLoaderService> classLoaderService;
+	private final ClassLoaderService classLoaderService;
 	private final IndexView index;
 
 	/**
@@ -63,16 +62,7 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 	 */
 	public AnnotationBindingContextImpl(MetadataImplementor metadata, IndexView index) {
 		this.metadata = metadata;
-		this.classLoaderService = new ValueHolder<ClassLoaderService>(
-				new ValueHolder.DeferredInitializer<ClassLoaderService>() {
-					@Override
-					public ClassLoaderService initialize() {
-						return AnnotationBindingContextImpl.this.metadata
-								.getServiceRegistry()
-								.getService( ClassLoaderService.class );
-					}
-				}
-		);
+		this.classLoaderService = metadata.getServiceRegistry().getService( ClassLoaderService.class );
 		this.index = index;
 	}
 
@@ -124,7 +114,7 @@ public class AnnotationBindingContextImpl implements AnnotationBindingContext {
 
 	@Override
 	public <T> Class<T> locateClassByName(String name) {
-		return classLoaderService.getValue().classForName( name );
+		return classLoaderService.classForName( name );
 	}
 
 	private Map<String, Type> nameToJavaTypeMap = new HashMap<String, Type>();

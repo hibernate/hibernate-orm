@@ -25,9 +25,8 @@ package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.EnumSet;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.Binder;
@@ -47,6 +46,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeIndexSource;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.SimpleIdentifierSource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -162,7 +162,8 @@ public class IndexedPluralAttributeSourceImpl extends PluralAttributeSourceImpl
 	private PluralAttributeIndexSource resolveMapKeyPluralAttributeIndexSource(AttributeSourceResolutionContext attributeSourceResolutionContext) {
 		final AnnotationInstance mapKeyAnnotation =
 				JandexHelper.getSingleAnnotation( pluralAssociationAttribute().annotations(), JPADotNames.MAP_KEY );
-		final String attributeName = JandexHelper.getValue( mapKeyAnnotation, "name", String.class );
+		final String attributeName = JandexHelper.getValue( mapKeyAnnotation, "name", String.class,
+				entityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		final PluralAttributeIndexSource innerIndexSource;
 		if ( attributeName == null ) {
 			IdentifierSource identifierSource = attributeSourceResolutionContext.resolveIdentifierSource(

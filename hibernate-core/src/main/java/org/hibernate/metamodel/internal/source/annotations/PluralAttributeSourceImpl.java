@@ -28,8 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -46,8 +44,8 @@ import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.AssociationSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
 import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
-import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.FilterSource;
+import org.hibernate.metamodel.spi.source.HibernateTypeSource;
 import org.hibernate.metamodel.spi.source.MappedByAssociationSource;
 import org.hibernate.metamodel.spi.source.MetaAttributeSource;
 import org.hibernate.metamodel.spi.source.Orderable;
@@ -57,6 +55,7 @@ import org.hibernate.metamodel.spi.source.PluralAttributeSource;
 import org.hibernate.metamodel.spi.source.Sortable;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Hardy Ferentschik
@@ -64,7 +63,7 @@ import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
 public class PluralAttributeSourceImpl implements AnnotationAttributeSource, PluralAttributeSource, Orderable, Sortable {
 
 	private final PluralAssociationAttribute associationAttribute;
-	private final ConfiguredClass entityClass;
+	protected final ConfiguredClass entityClass;
 	private final Nature nature;
 	private final HibernateTypeSource typeSource;
 	private final PluralAttributeKeySource keySource;
@@ -85,7 +84,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		this.typeSource = new HibernateTypeSourceImpl( associationAttribute );
 		this.nature = associationAttribute.getPluralAttributeNature();
 		this.attributePath = StringHelper.isEmpty( relativePath ) ? associationAttribute.getName() : relativePath + "." + associationAttribute.getName();
-
+		
 		if ( associationAttribute.getMappedBy() == null ) {
 			this.ownerAttributeSource = this;
 			this.elementSource = determineElementSource( this, this, entityClass, attributePath );
@@ -93,7 +92,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		this.filterSources = determineFilterSources(associationAttribute);
 	}
 
-	private static FilterSource[] determineFilterSources(PluralAssociationAttribute associationAttribute) {
+	private FilterSource[] determineFilterSources(PluralAssociationAttribute associationAttribute) {
 		AnnotationInstance filtersAnnotation = JandexHelper.getSingleAnnotation(
 				associationAttribute.annotations(),
 				HibernateDotNames.FILTERS
@@ -102,7 +101,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		if ( filtersAnnotation != null ) {
 			AnnotationInstance[] annotationInstances = filtersAnnotation.value().asNestedArray();
 			for ( AnnotationInstance filterAnnotation : annotationInstances ) {
-				FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+				FilterSource filterSource = new FilterSourceImpl( filterAnnotation, entityClass.getLocalBindingContext() );
 				filterSourceList.add( filterSource );
 			}
 
@@ -112,7 +111,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 				HibernateDotNames.FILTER
 		);
 		if ( filterAnnotation != null ) {
-			FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+			FilterSource filterSource = new FilterSourceImpl( filterAnnotation, entityClass.getLocalBindingContext() );
 			filterSourceList.add( filterSource );
 		}
 		if ( filterSourceList.isEmpty() ) {
@@ -198,7 +197,8 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 		switch ( pluralAttributeSource.pluralAssociationAttribute().getNature() ) {
 			case MANY_TO_MANY:
 				return associationAttribute.getMappedBy() == null ?
-						new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath ) :
+						new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath,
+								entityClass.getLocalBindingContext() ) :
 						new ManyToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
 			case MANY_TO_ANY:
 				return new ManyToAnyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
@@ -208,7 +208,8 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 						( (PluralAttributeSource) ownerAttributeSource ).usesJoinTable();
 				if ( usesJoinTable ) {
 					return associationAttribute.getMappedBy() == null ?
-							new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath ) :
+							new ManyToManyPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath,
+									entityClass.getLocalBindingContext() ) :
 							new ManyToManyMappedByPluralAttributeElementSourceImpl( pluralAttributeSource, relativePath );
 				}
 				else {
@@ -241,7 +242,7 @@ public class PluralAttributeSourceImpl implements AnnotationAttributeSource, Plu
 			throw new IllegalStateException( "Cannot get collection table because this association is not the owner." );
 		}
 		final AnnotationInstance joinTableAnnotation = associationAttribute.getJoinTableAnnotation();
-		return joinTableAnnotation == null ? null : new TableSourceImpl( joinTableAnnotation );
+		return joinTableAnnotation == null ? null : new TableSourceImpl( joinTableAnnotation, entityClass.getLocalBindingContext() );
 	}
 
 	@Override

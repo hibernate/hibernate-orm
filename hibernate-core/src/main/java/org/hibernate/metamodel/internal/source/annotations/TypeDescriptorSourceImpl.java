@@ -26,12 +26,12 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -40,14 +40,19 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 	private final String name;
 	private final String implementationClassName;
 	private final String[] registrationKeys;
+	private final AnnotationBindingContext bindingContext;
 
 	private Map<String, String> parameterValueMap;
 
-	public TypeDescriptorSourceImpl(AnnotationInstance typeDefAnnotation) {
-		this.name = JandexHelper.getValue( typeDefAnnotation, "name", String.class );
-		this.implementationClassName = JandexHelper.getValue( typeDefAnnotation, "typeClass", String.class );
+	public TypeDescriptorSourceImpl(AnnotationInstance typeDefAnnotation, AnnotationBindingContext bindingContext) {
+		this.bindingContext = bindingContext;
+		this.name = JandexHelper.getValue( typeDefAnnotation, "name", String.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
+		this.implementationClassName = JandexHelper.getValue( typeDefAnnotation, "typeClass", String.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 
-		String defaultForType = JandexHelper.getValue( typeDefAnnotation, "defaultForType", String.class );
+		String defaultForType = JandexHelper.getValue( typeDefAnnotation, "defaultForType", String.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 		if ( defaultForType != null ) {
 			if ( void.class.getName().equals( defaultForType ) ) {
 				defaultForType = null;
@@ -73,12 +78,15 @@ public class TypeDescriptorSourceImpl implements TypeDescriptorSource {
 		AnnotationInstance[] parameterAnnotations = JandexHelper.getValue(
 				typeDefAnnotation,
 				"parameters",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance parameterAnnotation : parameterAnnotations ) {
 			parameterMaps.put(
-					JandexHelper.getValue( parameterAnnotation, "name", String.class ),
-					JandexHelper.getValue( parameterAnnotation, "value", String.class )
+					JandexHelper.getValue( parameterAnnotation, "name", String.class,
+							bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) ),
+					JandexHelper.getValue( parameterAnnotation, "value", String.class,
+							bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 		}
 		return parameterMaps;

@@ -37,12 +37,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.ClassLoaderHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -162,7 +160,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static ClassLoader locateTCCL() {
 		try {
-			return ClassLoaderHelper.getContextClassLoader();
+			return Thread.currentThread().getContextClassLoader();
 		}
 		catch ( Exception e ) {
 			return null;

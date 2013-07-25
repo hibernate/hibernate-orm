@@ -80,7 +80,7 @@ public class SerializationHelperTest extends BaseUnitTestCase {
 	public void testSerDeserClassUnknownToCustomLoader() throws Exception {
 		Object instance = LockMode.OPTIMISTIC;
 		assertSame( 
-			SerializationHelper.hibernateClassLoader(),
+			this.getClass().getClassLoader(),
 			instance.getClass().getClassLoader() 
 		);
 

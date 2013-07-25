@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -56,6 +54,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
@@ -117,7 +116,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 			Class clazz = getIdentifierGeneratorClass( strategy );
 			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, dialect );
+				( ( Configurable ) identifierGenerator ).configure( type, config, dialect, classLoaderService );
 			}
 			return identifierGenerator;
 		}
@@ -136,12 +135,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
-				if ( classLoaderService != null ) {
-					generatorClass = classLoaderService.classForName( strategy );
-				}
-				else {
-					generatorClass = ReflectHelper.classForName( strategy );
-				}
+				generatorClass = ReflectHelper.classForName( strategy, classLoaderService );
 				register( strategy, generatorClass );
 			}
 		}

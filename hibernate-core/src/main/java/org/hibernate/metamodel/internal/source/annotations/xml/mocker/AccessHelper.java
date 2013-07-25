@@ -26,21 +26,21 @@ package org.hibernate.metamodel.internal.source.annotations.xml.mocker;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jaxb.spi.orm.JaxbAccessType;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu
@@ -60,7 +60,8 @@ class AccessHelper implements JPADotNames {
 			return null;
 		}
 		else {
-			return JandexHelper.getEnumValue( annotationInstance, "value", JaxbAccessType.class );
+			return JandexHelper.getEnumValue( annotationInstance, "value", JaxbAccessType.class,
+					indexBuilder.getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 
 	}
@@ -124,9 +125,9 @@ class AccessHelper implements JPADotNames {
 	static JaxbAccessType getEntityAccess(DotName className, IndexBuilder indexBuilder) {
 		Map<DotName, List<AnnotationInstance>> indexedAnnotations = indexBuilder.getIndexedAnnotations( className );
 		Map<DotName, List<AnnotationInstance>> ormAnnotations = indexBuilder.getClassInfoAnnotationsMap( className );
-		JaxbAccessType accessType = getAccess( ormAnnotations );
+		JaxbAccessType accessType = getAccess( ormAnnotations, indexBuilder );
 		if ( accessType == null ) {
-			accessType = getAccess( indexedAnnotations );
+			accessType = getAccess( indexedAnnotations, indexBuilder );
 		}
 		if ( accessType == null ) {
 			ClassInfo parent = indexBuilder.getClassInfo( className );
@@ -142,7 +143,7 @@ class AccessHelper implements JPADotNames {
 
 	}
 
-	private static JaxbAccessType getAccess(Map<DotName, List<AnnotationInstance>> annotations) {
+	private static JaxbAccessType getAccess(Map<DotName, List<AnnotationInstance>> annotations, IndexBuilder indexBuilder) {
 		if ( annotations == null || annotations.isEmpty() || !isEntityObject( annotations ) ) {
 			return null;
 		}
@@ -153,7 +154,8 @@ class AccessHelper implements JPADotNames {
 					return JandexHelper.getEnumValue(
 							annotationInstance,
 							"value",
-							JaxbAccessType.class
+							JaxbAccessType.class,
+							indexBuilder.getServiceRegistry().getService( ClassLoaderService.class )
 					);
 				}
 			}
@@ -183,7 +185,8 @@ class AccessHelper implements JPADotNames {
 						JaxbAccessType accessType = JandexHelper.getEnumValue(
 								annotationInstance,
 								"value",
-								JaxbAccessType.class
+								JaxbAccessType.class,
+								indexBuilder.getServiceRegistry().getService( ClassLoaderService.class )
 						);
 						/**
 						 * here we ignore @Access(FIELD) on property (getter) and @Access(PROPERTY) on field

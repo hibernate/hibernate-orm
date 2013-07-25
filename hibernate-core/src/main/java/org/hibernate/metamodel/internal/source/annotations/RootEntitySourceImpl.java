@@ -28,10 +28,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.id.EntityIdentifierNature;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
@@ -54,6 +53,7 @@ import org.hibernate.metamodel.spi.source.NonAggregatedCompositeIdentifierSource
 import org.hibernate.metamodel.spi.source.RootEntitySource;
 import org.hibernate.metamodel.spi.source.SingularAttributeSource;
 import org.hibernate.metamodel.spi.source.VersionAttributeSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Hardy Ferentschik
@@ -246,7 +246,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 			}
 
 			return rootEntitySource.getLocalBindingContext().locateClassByName(
-					JandexHelper.getValue( idClassAnnotation, "value", String.class )
+					JandexHelper.getValue( idClassAnnotation, "value", String.class,
+							rootEntityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 		}
 
@@ -270,7 +271,8 @@ public class RootEntitySourceImpl extends EntitySourceImpl implements RootEntity
 						final SingularAssociationAttribute associationAttribute = (SingularAssociationAttribute) attr;
 						final SingularAttributeSource attributeSource =
 								associationAttribute.getMappedBy() == null ?
-										new ToOneAttributeSourceImpl( associationAttribute, "" ) :
+										new ToOneAttributeSourceImpl( associationAttribute, "",
+												rootEntityClass.getLocalBindingContext() ) :
 										new ToOneMappedByAttributeSourceImpl( associationAttribute, "" );
 						attributeSources.add( attributeSource );
 				}

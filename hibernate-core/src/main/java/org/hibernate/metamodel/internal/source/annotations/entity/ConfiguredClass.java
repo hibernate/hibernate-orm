@@ -26,7 +26,6 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,23 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import javax.persistence.AccessType;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import com.fasterxml.classmate.members.HierarchicType;
-import com.fasterxml.classmate.members.ResolvedMember;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.logging.Logger;
+import javax.persistence.AccessType;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -70,6 +59,17 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding.NaturalIdMutability;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
+
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.members.ResolvedMember;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable
@@ -184,7 +184,8 @@ public class ConfiguredClass {
 		this.localBindingContext = new EntityBindingContext( context, this );
 		this.isAbstract = ReflectHelper.isAbstractClass( this.clazz );
 		this.classAccessType = determineClassAccessType( defaultAccessType );
-		this.customTuplizer = AnnotationParserHelper.determineCustomTuplizer( classInfo.annotations(), classInfo );
+		this.customTuplizer = AnnotationParserHelper.determineCustomTuplizer( classInfo.annotations(), classInfo,
+				localBindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 		this.simpleAttributeMap = new TreeMap<String, BasicAttribute>();
 		this.idAttributeMap = new TreeMap<String, MappedAttribute>();
 		this.associationAttributeMap = new TreeMap<String, AssociationAttribute>();
@@ -319,7 +320,8 @@ public class ConfiguredClass {
 				ClassInfo.class
 		);
 		if ( accessAnnotation != null ) {
-			accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
+			accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class,
+					localBindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 		} else {
 			accessAnnotation = JandexHelper.getSingleAnnotation( classInfo, HibernateDotNames.ACCESS_TYPE, ClassInfo.class );
 			if ( accessAnnotation != null ) {
@@ -399,7 +401,8 @@ public class ConfiguredClass {
 
 			final AccessType accessType;
 			if ( JPADotNames.ACCESS.equals( accessAnnotation.name() ) ) {
-				accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class );
+				accessType = JandexHelper.getEnumValue( accessAnnotation, "value", AccessType.class,
+						localBindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 				checkExplicitJpaAttributeAccessAnnotationPlacedCorrectly( annotationTarget, accessType );
 			} else {
 				accessType = AccessType.valueOf( accessAnnotation.value().asString().toUpperCase() );
@@ -539,7 +542,8 @@ public class ConfiguredClass {
 				);
 				if ( targetAnnotation != null ) {
 					attributeType = localBindingContext.locateClassByName(
-							JandexHelper.getValue( targetAnnotation, "value", String.class )
+							JandexHelper.getValue( targetAnnotation, "value", String.class,
+									localBindingContext.getServiceRegistry().getService( ClassLoaderService.class ) )
 					);
 				}
 				embeddedClasses.put( attributeName, resolveEmbeddable(
@@ -607,7 +611,8 @@ public class ConfiguredClass {
 
 		final NaturalIdMutability naturalIdMutability =  AnnotationParserHelper.checkNaturalId( annotations );
 		//tuplizer on field
-		final String customTuplizerClass = AnnotationParserHelper.determineCustomTuplizer( annotations );
+		final String customTuplizerClass = AnnotationParserHelper.determineCustomTuplizer( annotations,
+				localBindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 
 		final EmbeddableHierarchy hierarchy = EmbeddableHierarchy.createEmbeddableHierarchy(
 				localBindingContext.<Object>locateClassByName( embeddableClassInfo.toString() ),
@@ -756,7 +761,7 @@ public class ConfiguredClass {
 		if ( overrideAnnotations != null ) {
 			for ( AnnotationInstance annotation : overrideAnnotations ) {
 				AssociationOverride override = new AssociationOverride(
-						createPathPrefix( annotation.target() ), annotation
+						createPathPrefix( annotation.target() ), annotation, localBindingContext
 				);
 				associationOverrideMap.put(
 						override.getAttributePath(), override
@@ -776,7 +781,8 @@ public class ConfiguredClass {
 							createPathPrefix(
 									attributeOverridesAnnotation.target()
 							),
-							annotation
+							annotation,
+							localBindingContext
 					);
 					associationOverrideMap.put(
 							override.getAttributePath(), override
@@ -794,7 +800,7 @@ public class ConfiguredClass {
 		if ( attributeOverrideAnnotations != null ) {
 			for ( AnnotationInstance annotation : attributeOverrideAnnotations ) {
 				AttributeOverride override = new AttributeOverride( 
-						createPathPrefix( annotation.target() ), annotation );
+						createPathPrefix( annotation.target() ), annotation, localBindingContext );
 				attributeOverrideMap.put(
 						override.getAttributePath(), override
 				);
@@ -812,7 +818,8 @@ public class ConfiguredClass {
 					AttributeOverride override = new AttributeOverride( 
 							createPathPrefix( 
 									attributeOverridesAnnotation.target() ),
-									annotation );
+									annotation,
+									localBindingContext );
 					attributeOverrideMap.put(
 							override.getAttributePath(), override
 					);

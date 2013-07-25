@@ -644,10 +644,10 @@ public class MetadataSources {
 	}
 
 	private ClassInfo indexResource(String resourceName, Indexer indexer) {
-		ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 		
-		if ( cls.locateResource( resourceName ) != null ) {
-			InputStream stream = cls.locateResourceStream( resourceName );
+		if ( classLoaderService.locateResource( resourceName ) != null ) {
+			InputStream stream = classLoaderService.locateResourceStream( resourceName );
 			try {
 				return indexer.index( stream );
 			}

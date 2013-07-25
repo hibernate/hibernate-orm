@@ -27,13 +27,13 @@ package org.hibernate.metamodel.internal.source.annotations.attribute.type;
 import java.sql.Time;
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.TemporalType;
 
-import org.jboss.jandex.AnnotationInstance;
+import javax.persistence.TemporalType;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.source.annotations.attribute.BasicAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
@@ -41,6 +41,7 @@ import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingC
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.type.StandardBasicTypes;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu
@@ -118,7 +119,8 @@ public class TemporalTypeResolver extends AbstractAttributeTypeResolver {
 				final TemporalType temporalType = JandexHelper.getEnumValue(
 						annotation(),
 						"value",
-						TemporalType.class
+						TemporalType.class,
+						getContext().getServiceRegistry().getService( ClassLoaderService.class )
 				);
 				final boolean isDate = Date.class.isAssignableFrom( attributeType );
 				String type;

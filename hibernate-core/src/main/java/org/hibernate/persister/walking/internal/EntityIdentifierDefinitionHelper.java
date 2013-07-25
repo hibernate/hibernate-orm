@@ -85,9 +85,11 @@ public class EntityIdentifierDefinitionHelper {
 
 	public static EntityIdentifierDefinition buildNonEncapsulatedCompositeIdentifierDefinition(final AbstractEntityPersister entityPersister) {
 		return new NonEncapsulatedEntityIdentifierDefinition() {
+			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
+
 			@Override
 			public Iterable<AttributeDefinition> getAttributes() {
-				return CompositionSingularSubAttributesHelper.getIdentifierSubAttributes( entityPersister );
+				return compositionDefinition.getAttributes();
 			}
 
 			@Override
@@ -103,6 +105,32 @@ public class EntityIdentifierDefinitionHelper {
 			@Override
 			public EntityDefinition getEntityDefinition() {
 				return entityPersister;
+			}
+
+			@Override
+			public Type getCompositeType() {
+				return entityPersister.getEntityMetamodel().getIdentifierProperty().getType();
+			}
+
+			@Override
+			public AttributeSource getSource() {
+				return compositionDefinition;
+			}
+
+			@Override
+			public String getName() {
+				// Not sure this is always kosher.   See org.hibernate.tuple.entity.EntityMetamodel.hasNonIdentifierPropertyNamedId
+				return "id";
+			}
+
+			@Override
+			public CompositeType getType() {
+				return (CompositeType) getCompositeType();
+			}
+
+			@Override
+			public boolean isNullable() {
+				return compositionDefinition.isNullable();
 			}
 		};
 	}

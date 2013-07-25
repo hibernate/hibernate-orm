@@ -26,15 +26,15 @@ package org.hibernate.loader.plan.spi.build;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.MetadataDrivenModelGraphVisitor;
+import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
 
 /**
- * A metadata-driven builder of LoadPlans.  Coordinates between the {@link MetadataDrivenModelGraphVisitor} and
+ * A metadata-driven builder of LoadPlans.  Coordinates between the {@link org.hibernate.persister.walking.spi.MetamodelGraphWalker} and
  * {@link LoadPlanBuilderStrategy}.
  *
  * @author Steve Ebersole
  *
- * @see MetadataDrivenModelGraphVisitor
+ * @see org.hibernate.persister.walking.spi.MetamodelGraphWalker
  */
 public class MetadataDrivenLoadPlanBuilder {
 	/**
@@ -48,7 +48,7 @@ public class MetadataDrivenLoadPlanBuilder {
 	 * @return The built load plan.
 	 */
 	public static LoadPlan buildRootEntityLoadPlan(LoadPlanBuilderStrategy strategy, EntityPersister persister) {
-		MetadataDrivenModelGraphVisitor.visitEntity( strategy, persister );
+		MetamodelGraphWalker.visitEntity( strategy, persister );
 		return strategy.buildLoadPlan();
 	}
 
@@ -61,7 +61,7 @@ public class MetadataDrivenLoadPlanBuilder {
 	 * @return The built load plan.
 	 */
 	public static LoadPlan buildRootCollectionLoadPlan(LoadPlanBuilderStrategy strategy, CollectionPersister persister) {
-		MetadataDrivenModelGraphVisitor.visitCollection( strategy, persister );
+		MetamodelGraphWalker.visitCollection( strategy, persister );
 		return strategy.buildLoadPlan();
 	}
 }

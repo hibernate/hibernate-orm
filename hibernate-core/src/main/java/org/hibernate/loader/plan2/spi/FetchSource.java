@@ -54,6 +54,8 @@ public interface FetchSource {
 	 */
 	public PropertyPath getPropertyPath();
 
+	public String getQuerySpaceUid();
+
 	/**
 	 * Retrieve the fetches owned by this return.
 	 *

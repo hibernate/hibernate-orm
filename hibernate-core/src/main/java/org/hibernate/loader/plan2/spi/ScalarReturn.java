@@ -24,8 +24,6 @@
 package org.hibernate.loader.plan2.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan.spi.AbstractPlanNode;
-import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.type.Type;
 
 /**
@@ -35,11 +33,17 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ScalarReturn extends AbstractPlanNode implements Return {
+	private final String name;
 	private final Type type;
 
-	public ScalarReturn(SessionFactoryImplementor factory, Type type) {
+	public ScalarReturn(String name, Type type, SessionFactoryImplementor factory) {
 		super( factory );
+		this.name = name;
 		this.type = type;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public Type getType() {

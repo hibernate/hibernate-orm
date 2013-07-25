@@ -23,9 +23,17 @@
  */
 package org.hibernate.loader.plan2.build.internal;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan2.build.spi.LoadPlanTreePrinter;
+import org.hibernate.loader.plan2.build.spi.QuerySpaceTreePrinter;
+import org.hibernate.loader.plan2.build.spi.ReturnGraphTreePrinter;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.LoadPlan;
@@ -36,6 +44,8 @@ import org.hibernate.loader.plan2.spi.Return;
  * @author Steve Ebersole
  */
 public class LoadPlanImpl implements LoadPlan {
+	private static final Logger log = CoreLogging.logger( LoadPlanImpl.class );
+
 	private final List<? extends Return> returns;
 	private final QuerySpaces querySpaces;
 	private final Disposition disposition;

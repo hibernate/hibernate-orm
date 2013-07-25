@@ -30,12 +30,12 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
-import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
-import org.hibernate.loader.plan.internal.SingleRootReturnLoadPlanBuilderStrategy;
-import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.build.MetadataDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan2.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan2.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan2.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan2.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan2.exec.spi.EntityLoadQueryDetails;
+import org.hibernate.loader.plan2.spi.LoadPlan;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
@@ -72,12 +72,12 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
 
-		final SingleRootReturnLoadPlanBuilderStrategy strategy = new SingleRootReturnLoadPlanBuilderStrategy(
+		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 				factory,
 				buildingParameters.getQueryInfluencers()
 		);
 
-		this.plan = MetadataDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+		this.plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 		this.staticLoadQuery = EntityLoadQueryDetails.makeForBatching(
 				plan,
 				uniqueKeyColumnNames,

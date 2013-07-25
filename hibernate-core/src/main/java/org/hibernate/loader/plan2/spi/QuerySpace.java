@@ -23,6 +23,8 @@
  */
 package org.hibernate.loader.plan2.spi;
 
+import org.hibernate.persister.entity.PropertyMapping;
+
 /**
  * Defines a persister reference (either entity or collection) or a composite reference.  JPA terms this
  * an "abstract schema type" when discussing JPQL or JPA Criteria queries.  This models a single source of attributes
@@ -42,9 +44,24 @@ public interface QuerySpace {
 	public String getUid();
 
 	/**
+	 * Get the QuerySpaces object that is our owner.
+	 *
+	 * @return The QuerySpaces containing this QuerySpace
+	 */
+	public QuerySpaces getQuerySpaces();
+
+	/**
+	 * Get the PropertyMapping for this QuerySpace.
+	 *
+	 * @return The PropertyMapping
+	 */
+	public PropertyMapping getPropertyMapping();
+
+	/**
 	 * Enumeration of the different types of QuerySpaces we can have.
 	 */
 	public static enum Disposition {
+		// todo : account for special distinctions too like COLLECTION INDEX/ELEMENT too?
 		/**
 		 * We have an entity-based QuerySpace.  It is castable to {@link EntityQuerySpace} for more details.
 		 */

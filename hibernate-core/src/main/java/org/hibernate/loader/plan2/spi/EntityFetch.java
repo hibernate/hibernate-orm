@@ -23,8 +23,12 @@
  */
 package org.hibernate.loader.plan2.spi;
 
+import org.hibernate.type.EntityType;
+
 /**
  * @author Steve Ebersole
  */
 public interface EntityFetch extends Fetch, EntityReference {
+	@Override
+	EntityType getFetchedType();
 }

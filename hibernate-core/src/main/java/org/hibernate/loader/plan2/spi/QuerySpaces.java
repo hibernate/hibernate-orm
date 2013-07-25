@@ -23,6 +23,8 @@
  */
 package org.hibernate.loader.plan2.spi;
 
+import java.util.List;
+
 /**
  * Models a collection of {@link QuerySpace} references and exposes the ability to find a {@link QuerySpace} by its UID
  * <p/>
@@ -36,7 +38,7 @@ public interface QuerySpaces {
 	 *
 	 * @return The roots
 	 */
-	public Iterable<QuerySpace> getRootQuerySpaces();
+	public List<QuerySpace> getRootQuerySpaces();
 
 	/**
 	 * Locate a QuerySpace by its uid.
@@ -48,4 +50,15 @@ public interface QuerySpaces {
 	 * @see QuerySpace#getUid()
 	 */
 	public QuerySpace findQuerySpaceByUid(String uid);
+
+	/**
+	 * Like {@link #findQuerySpaceByUid}, except that here an exception is thrown if the uid cannot be resolved.
+	 *
+	 * @param uid The uid to resolve
+	 *
+	 * @return The QuerySpace
+	 *
+	 * @throws QuerySpaceUidNotRegisteredException Rather than return {@code null}
+	 */
+	public QuerySpace getQuerySpaceByUid(String uid);
 }

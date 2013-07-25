@@ -80,7 +80,7 @@ public class AssociationKey {
 	@Override
 	public String toString() {
 		if ( str == null ) {
-			str = "AssociationKey[table=" + table + ", columns={" + StringHelper.join( ",", columns ) + "}]";
+			str = "AssociationKey(table=" + table + ", columns={" + StringHelper.join( ",", columns ) + "})";
 		}
 		return str;
 	}

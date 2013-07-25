@@ -29,7 +29,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.spi.AbstractPlanNode;
-import org.hibernate.loader.plan2.build.internal.QuerySpacesImpl;
+import org.hibernate.loader.plan2.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.loader.plan2.spi.QuerySpace;
 
@@ -56,6 +56,10 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 		this.querySpaces = querySpaces;
 	}
 
+	protected SessionFactoryImplementor sessionFactory() {
+		return super.sessionFactory();
+	}
+
 	// todo : copy ctor - that depends how graph copying works here...
 
 
@@ -64,7 +68,7 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 	 *
 	 * @return The query spaces
 	 */
-	protected QuerySpacesImpl getQuerySpaces() {
+	public QuerySpacesImpl getQuerySpaces() {
 		return querySpaces;
 	}
 

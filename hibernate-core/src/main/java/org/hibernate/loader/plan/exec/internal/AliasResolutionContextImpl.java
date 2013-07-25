@@ -23,13 +23,19 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.NameGenerator;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.DefaultEntityAliases;
@@ -50,6 +56,9 @@ import org.hibernate.loader.plan.spi.FetchOwner;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.loader.plan.spi.ScalarReturn;
 import org.hibernate.loader.plan.spi.SourceQualifiable;
+import org.hibernate.loader.plan2.build.spi.TreePrinterHelper;
+import org.hibernate.loader.plan2.spi.LoadPlan;
+import org.hibernate.loader.plan2.spi.QuerySpace;
 import org.hibernate.loader.spi.JoinableAssociation;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -64,6 +73,8 @@ import org.hibernate.type.EntityType;
  * @author Steve Ebersole
  */
 public class AliasResolutionContextImpl implements AliasResolutionContext {
+	private static final Logger log = CoreLogging.logger( AliasResolutionContextImpl.class );
+
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final Map<Return,String> sourceAliasByReturnMap;

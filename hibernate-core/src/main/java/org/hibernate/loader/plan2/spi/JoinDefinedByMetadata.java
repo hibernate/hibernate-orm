@@ -23,18 +23,18 @@
  */
 package org.hibernate.loader.plan2.spi;
 
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-
 /**
- * Specialization of a Join that is defined by the metadata of a persistent attribute.
+ * Specialization of a Join that is defined by the metadata.
  *
  * @author Steve Ebersole
  */
 public interface JoinDefinedByMetadata extends Join {
 	/**
-	 * Get a reference to the attribute whose metadata defines this join.
+	 * Obtain the name of the property that defines the join, relative to the PropertyMapping
+	 * ({@link org.hibernate.loader.plan2.spi.QuerySpace#getPropertyMapping()}) of the left-hand-side
+	 * ({@link #getLeftHandSide()}) of the join
 	 *
-	 * @return The attribute defining the join.
+	 * @return The property name
 	 */
-	public AttributeDefinition getAttributeDefiningJoin();
+	public String getJoinedAssociationPropertyName();
 }

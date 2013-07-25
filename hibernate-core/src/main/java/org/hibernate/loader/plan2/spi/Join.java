@@ -41,4 +41,10 @@ public interface Join {
 	public QuerySpace getRightHandSide();
 
 	public boolean isRightHandSideOptional();
+
+	// Ugh!  This part will unfortunately be SQL specific :( ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	public String[] resolveAliasedLeftHandSideJoinConditionColumns(String leftHandSideTableAlias);
+	public String[] resolveNonAliasedRightHandSideJoinConditionColumns();
+	public String getAnyAdditionalJoinConditions(String rhsTableAlias);
 }

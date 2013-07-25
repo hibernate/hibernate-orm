@@ -24,7 +24,8 @@
 package org.hibernate.persister.walking.spi;
 
 /**
- * Strategy for walking associations as defined by the Hibernate metamodel.
+ * Strategy for walking associations as defined by the Hibernate metamodel.  Is essentially a callback listener for
+ * interesting events while walking a metamodel graph
  * <p/>
  * {@link #start()} and {@link #finish()} are called at the start and at the finish of the process.
  * <p/>

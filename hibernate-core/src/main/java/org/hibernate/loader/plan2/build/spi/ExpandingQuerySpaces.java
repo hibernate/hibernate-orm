@@ -23,7 +23,7 @@
  */
 package org.hibernate.loader.plan2.build.spi;
 
-import org.hibernate.loader.plan2.build.internal.CollectionQuerySpaceImpl;
+import org.hibernate.loader.plan2.build.internal.spaces.CollectionQuerySpaceImpl;
 import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;

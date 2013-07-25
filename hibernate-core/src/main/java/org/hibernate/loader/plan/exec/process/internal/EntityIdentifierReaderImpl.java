@@ -107,7 +107,6 @@ public class EntityIdentifierReaderImpl implements EntityIdentifierReader {
 			// broadcast the fact that a hydrated identifier value just became associated with
 			// this entity reference
 			processingState.registerIdentifierHydratedForm( identifierHydratedForm );
-//			hydrateIdentifierFetchIdentifiers( resultSet, context, identifierHydratedForm );
 			for ( EntityReferenceReader reader : identifierFetchReaders ) {
 				reader.hydrateIdentifier( resultSet, context );
 			}

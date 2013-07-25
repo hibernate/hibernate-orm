@@ -69,10 +69,10 @@ public class CompositionSingularSubAttributesHelper {
 	 * Get composite ID sub-attribute definitions.
 	 *
 	 * @param entityPersister - the entity persister.
+	 *
 	 * @return composite ID sub-attribute definitions.
 	 */
-	public static Iterable<AttributeDefinition> getIdentifierSubAttributes(
-			final AbstractEntityPersister entityPersister) {
+	public static Iterable<AttributeDefinition> getIdentifierSubAttributes(AbstractEntityPersister entityPersister) {
 		return getSingularSubAttributes(
 				entityPersister,
 				entityPersister,
@@ -236,7 +236,7 @@ public class CompositionSingularSubAttributesHelper {
 
 								@Override
 								public AttributeSource getSource() {
-									return this;
+									return source;
 								}
 
 								@Override

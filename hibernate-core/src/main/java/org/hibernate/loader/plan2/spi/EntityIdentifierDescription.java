@@ -28,5 +28,13 @@ package org.hibernate.loader.plan2.spi;
  *
  * @author Steve Ebersole
  */
-public interface EntityIdentifierDescription extends FetchSource {
+public interface EntityIdentifierDescription {
+	/**
+	 * Can this EntityIdentifierDescription be treated as a FetchSource and if so does it have any
+	 * fetches?
+	 *
+	 * @return {@code true} iff {@code this} can be cast to {@link FetchSource} and (after casting) it returns
+	 * non-empty results for {@link FetchSource#getFetches()}
+	 */
+	public boolean hasFetches();
 }

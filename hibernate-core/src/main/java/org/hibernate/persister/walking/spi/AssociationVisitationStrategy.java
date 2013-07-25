@@ -49,7 +49,7 @@ public interface AssociationVisitationStrategy {
 	/**
 	 * Notification we are starting to walk an entity.
 	 *
-	 * @param entityDefinition The entity we are starting to walk
+	 * @param entityDefinition The entity we are preparing to walk
 	 */
 	public void startingEntity(EntityDefinition entityDefinition);
 
@@ -63,7 +63,7 @@ public interface AssociationVisitationStrategy {
 	/**
 	 * Notification we are starting to walk the identifier of an entity.
 	 *
-	 * @param entityIdentifierDefinition The identifier we are starting to walk
+	 * @param entityIdentifierDefinition The identifier we are preparing to walk
 	 */
 	public void startingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition);
 
@@ -74,22 +74,93 @@ public interface AssociationVisitationStrategy {
 	 */
 	public void finishingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition);
 
+	/**
+	 * Notification that we are starting to walk a collection
+	 *
+	 * @param collectionDefinition The collection we are preparing to walk
+	 */
 	public void startingCollection(CollectionDefinition collectionDefinition);
+
+	/**
+	 * Notification that we are finishing walking a collection
+	 *
+	 * @param collectionDefinition The collection we are finishing
+	 */
 	public void finishingCollection(CollectionDefinition collectionDefinition);
 
+	/**
+	 * Notification that we are starting to walk the index of a collection (List/Map).  In the case of a Map,
+	 * if the indices (the keys) are entities this will be followed up by a call to {@link #startingEntity}
+	 *
+	 * @param collectionIndexDefinition The collection index we are preparing to walk.
+	 */
 	public void startingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition);
+
+	/**
+	 * Notification that we are finishing walking the index of a collection (List/Map).
+	 *
+	 * @param collectionIndexDefinition The collection index we are finishing
+	 */
 	public void finishingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition);
 
+	/**
+	 * Notification that we are starting to look at the element definition for the collection.  If the collection
+	 * elements are entities this will be followed up by a call to {@link #startingEntity}
+	 *
+	 * @param elementDefinition The collection element we are preparing to walk..
+	 */
 	public void startingCollectionElements(CollectionElementDefinition elementDefinition);
+
+	/**
+	 * Notification that we are finishing walking the elements of a collection (List/Map).
+	 *
+	 * @param elementDefinition The collection element we are finishing
+	 */
 	public void finishingCollectionElements(CollectionElementDefinition elementDefinition);
 
+	/**
+	 * Notification that we are preparing to walk a composite.  This is called only for:<ul>
+	 *     <li>
+	 *         top-level composites for entity attributes. composite entity identifiers do not route through here, see
+	 *         {@link #startingEntityIdentifier} if you need to hook into walking the top-level cid composite.
+	 *     </li>
+	 *     <li>
+	 *         All forms of nested composite paths
+	 *     </li>
+	 * </ul>
+	 *
+	 * @param compositionDefinition The composite we are preparing to walk.
+	 */
 	public void startingComposite(CompositionDefinition compositionDefinition);
+
+	/**
+	 * Notification that we are done walking a composite.  Called on the back-end of the situations listed
+	 * on {@link #startingComposite}
+	 *
+	 * @param compositionDefinition The composite we are finishing
+	 */
 	public void finishingComposite(CompositionDefinition compositionDefinition);
 
-	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition);
-	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition);
+	// get rid of these ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition);
+//	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition);
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Notification that we are preparing to walk an attribute.  May be followed by calls to {@link #startingEntity}
+	 * (one-to-one, many-to-one), {@link #startingComposite}, or {@link #startingCollection}.
+	 *
+	 * @param attributeDefinition The attribute we are preparing to walk.
+	 *
+	 * @return {@code true} if the walking should continue; {@code false} if walking should stop.
+	 */
 	public boolean startingAttribute(AttributeDefinition attributeDefinition);
+
+	/**
+	 * Notification that we are finishing walking an attribute.
+	 *
+	 * @param attributeDefinition The attribute we are done walking
+	 */
 	public void finishingAttribute(AttributeDefinition attributeDefinition);
 
 	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition);

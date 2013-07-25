@@ -45,8 +45,12 @@ public class CompositesWalkingTest extends BaseUnitTestCase {
 		final SessionFactory sf = new Configuration()
 				.addAnnotatedClass( TestCourse.class )
 				.buildSessionFactory();
-		final EntityPersister ep = (EntityPersister) sf.getClassMetadata( TestCourse.class );
-
-		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+		try {
+			final EntityPersister ep = (EntityPersister) sf.getClassMetadata( TestCourse.class );
+			MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
+		}
+		finally {
+			sf.close();
+		}
 	}
 }

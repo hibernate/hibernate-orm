@@ -30,15 +30,28 @@ import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.type.CompositeType;
 
 /**
+ * Models a composite entity identifier that is encapsulated (meaning there is a composite class and a single
+ * attribute that encapsulates the composite value).
+ *
  * @author Steve Ebersole
  */
 public class EncapsulatedEntityIdentifierDescription
 		extends AbstractCompositeEntityIdentifierDescription
 		implements ExpandingEntityIdentifierDescription {
+
+	/**
+	 * Build an encapsulated version of a composite EntityIdentifierDescription
+	 *
+	 * @param entityReference The entity whose identifier we describe
+	 * @param compositeQuerySpace The query space we are mapped to.
+	 * @param compositeType The type representing this composition
+	 * @param propertyPath The property path (informational)
+	 */
 	protected EncapsulatedEntityIdentifierDescription(
 			EntityReference entityReference,
 			CompositeQuerySpace compositeQuerySpace,
-			CompositeType identifierType, PropertyPath propertyPath) {
-		super( entityReference, compositeQuerySpace, identifierType, propertyPath );
+			CompositeType compositeType,
+			PropertyPath propertyPath) {
+		super( entityReference, compositeQuerySpace, compositeType, propertyPath );
 	}
 }

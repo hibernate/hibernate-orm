@@ -49,6 +49,7 @@ public abstract class BatchingEntityLoaderBuilder {
 			}
 			default: {
 				return org.hibernate.loader.entity.plan.LegacyBatchingEntityLoaderBuilder.INSTANCE;
+//				return LegacyBatchingEntityLoaderBuilder.INSTANCE;
 			}
 		}
 	}

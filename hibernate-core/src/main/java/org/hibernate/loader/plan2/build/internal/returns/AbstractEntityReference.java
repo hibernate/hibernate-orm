@@ -69,7 +69,7 @@ public abstract class AbstractEntityReference implements EntityReference, Expand
 			PropertyPath propertyPath) {
 		this.entityQuerySpace = entityQuerySpace;
 		this.propertyPath = propertyPath;
-		this.identifierDescription = buildIdentifierDescription( entityQuerySpace );
+		this.identifierDescription = buildIdentifierDescription();
 	}
 
 
@@ -77,11 +77,9 @@ public abstract class AbstractEntityReference implements EntityReference, Expand
 	 * Builds just the first level of identifier description.  This will be either a simple id descriptor (String,
 	 * Long, etc) or some form of composite id (either encapsulated or not).
 	 *
-	 * @param querySpace The entity query space
-	 *
 	 * @return the descriptor for the identifier
 	 */
-	private EntityIdentifierDescription buildIdentifierDescription(EntityQuerySpace querySpace) {
+	private EntityIdentifierDescription buildIdentifierDescription() {
 		final EntityPersister persister = entityQuerySpace.getEntityPersister();
 		final EntityIdentifierDefinition identifierDefinition = persister.getEntityKeyDefinition();
 
@@ -166,9 +164,8 @@ public abstract class AbstractEntityReference implements EntityReference, Expand
 					)
 			);
 		}
-		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) loadPlanBuildingContext.getQuerySpaces().getQuerySpaceByUid(
-				getQuerySpaceUid()
-		);
+
+		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) entityQuerySpace;
 		final Join join = leftHandSide.addEntityJoin(
 				attributeDefinition,
 				fetchedPersister,
@@ -196,9 +193,17 @@ public abstract class AbstractEntityReference implements EntityReference, Expand
 	public CompositeFetch buildCompositeFetch(
 			CompositionDefinition attributeDefinition,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
+		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) entityQuerySpace;
+		final Join join = leftHandSide.addCompositeJoin(
+				attributeDefinition,
+				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid()
+		);
+
 		final CompositeFetchImpl fetch = new CompositeFetchImpl(
 				this,
 				attributeDefinition.getType(),
+				(CompositeQuerySpace) join.getRightHandSide(),
+				true,
 				getPropertyPath()
 		);
 		addFetch( fetch );

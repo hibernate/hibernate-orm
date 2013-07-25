@@ -118,6 +118,8 @@ public class MetamodelGraphWalker {
 		// to make encapsulated and non-encapsulated composite identifiers work the same here, we "cheat" here a
 		// little bit and simply walk the attributes of the composite id in both cases.
 
+		// this works because the LoadPlans already build the top-level composite for composite ids
+
 		if ( identifierDefinition.isEncapsulated() ) {
 			// in the encapsulated composite id case that means we have a little bit of duplication between here and
 			// visitCompositeDefinition, but in the spirit of consistently handling composite ids, that is much better
@@ -125,12 +127,12 @@ public class MetamodelGraphWalker {
 			final EncapsulatedEntityIdentifierDefinition idAsEncapsulated = (EncapsulatedEntityIdentifierDefinition) identifierDefinition;
 			final AttributeDefinition idAttr = idAsEncapsulated.getAttributeDefinition();
 			if ( CompositionDefinition.class.isInstance( idAttr ) ) {
-				visitCompositeDefinition( (CompositionDefinition) idAttr );
+				visitAttributes( (CompositionDefinition) idAttr );
 			}
 		}
 		else {
 			// NonEncapsulatedEntityIdentifierDefinition itself is defined as a CompositionDefinition
-			visitCompositeDefinition( (NonEncapsulatedEntityIdentifierDefinition) identifierDefinition );
+			visitAttributes( (NonEncapsulatedEntityIdentifierDefinition) identifierDefinition );
 		}
 
 		strategy.finishingEntityIdentifier( identifierDefinition );
@@ -252,21 +254,13 @@ public class MetamodelGraphWalker {
 		strategy.startingCollectionElements( elementDefinition );
 
 		if ( elementDefinition.getType().isComponentType() ) {
-			visitCompositeCollectionElementDefinition( elementDefinition.toCompositeElementDefinition() );
+			visitAttributes( elementDefinition.toCompositeElementDefinition() );
 		}
 		else if ( elementDefinition.getType().isEntityType() ) {
 			visitEntityDefinition( elementDefinition.toEntityDefinition() );
 		}
 
 		strategy.finishingCollectionElements( elementDefinition );
-	}
-
-	private void visitCompositeCollectionElementDefinition(CompositeCollectionElementDefinition compositionElementDefinition) {
-		strategy.startingCompositeCollectionElement( compositionElementDefinition );
-
-		visitAttributes( compositionElementDefinition );
-
-		strategy.finishingCompositeCollectionElement( compositionElementDefinition );
 	}
 
 	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<AssociationKey>();

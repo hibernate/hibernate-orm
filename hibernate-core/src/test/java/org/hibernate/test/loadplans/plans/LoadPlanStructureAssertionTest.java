@@ -64,10 +64,15 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 		cfg.addResource( "org/hibernate/test/onetoone/joined/Person.hbm.xml" );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
 
-//		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Person.class ) );
-		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Entity.class ) );
+		try {
+//			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Person.class ) );
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Entity.class ) );
 
-//		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Address.class ) );
+//			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.joined.Address.class ) );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -77,7 +82,12 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 		cfg.addResource( "org/hibernate/test/onetoone/formula/Person.hbm.xml" );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
 
-		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.formula.Person.class ) );
+		try {
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.onetoone.formula.Person.class ) );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -88,8 +98,14 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 		cfg.addAnnotatedClass( EncapsulatedCompositeIdResultSetProcessorTest.CardField.class );
 		cfg.addAnnotatedClass( EncapsulatedCompositeIdResultSetProcessorTest.Card.class );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( EncapsulatedCompositeIdResultSetProcessorTest.CardField.class ) );
-		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( EncapsulatedCompositeIdResultSetProcessorTest.Card.class ) );
+
+		try {
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( EncapsulatedCompositeIdResultSetProcessorTest.CardField.class ) );
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( EncapsulatedCompositeIdResultSetProcessorTest.Card.class ) );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -99,7 +115,13 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( EncapsulatedCompositeIdResultSetProcessorTest.Parent.class );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( EncapsulatedCompositeIdResultSetProcessorTest.Parent.class ) );
+
+		try {
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( EncapsulatedCompositeIdResultSetProcessorTest.Parent.class ) );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -112,48 +134,53 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
 
-		final OuterJoinLoadable cardFieldPersister = (OuterJoinLoadable) sf.getClassMetadata( CardField.class );
-		doCompare( sf, cardFieldPersister );
+		try {
+			final OuterJoinLoadable cardFieldPersister = (OuterJoinLoadable) sf.getClassMetadata( CardField.class );
+			doCompare( sf, cardFieldPersister );
 
-		final LoadPlan loadPlan = LoadPlanStructureAssertionHelper.INSTANCE.buildLoadPlan( sf, cardFieldPersister );
-		assertEquals( LoadPlan.Disposition.ENTITY_LOADER, loadPlan.getDisposition() );
-		assertEquals( 1, loadPlan.getReturns().size() );
-		final EntityReturn cardFieldReturn = assertTyping( EntityReturn.class, loadPlan.getReturns().get( 0 ) );
-		assertEquals( 0, cardFieldReturn.getFetches().length );
+			final LoadPlan loadPlan = LoadPlanStructureAssertionHelper.INSTANCE.buildLoadPlan( sf, cardFieldPersister );
+			assertEquals( LoadPlan.Disposition.ENTITY_LOADER, loadPlan.getDisposition() );
+			assertEquals( 1, loadPlan.getReturns().size() );
+			final EntityReturn cardFieldReturn = assertTyping( EntityReturn.class, loadPlan.getReturns().get( 0 ) );
+			assertEquals( 0, cardFieldReturn.getFetches().length );
 
-		// CardField defines a composite pk with 2 fetches : Card and Key (the id description acts as the composite)
-		assertTrue( cardFieldReturn.getIdentifierDescription().hasFetches() );
-		final FetchSource cardFieldIdAsFetchSource = assertTyping( FetchSource.class, cardFieldReturn.getIdentifierDescription() );
-		assertEquals( 2, cardFieldIdAsFetchSource.getFetches().length );
+			// CardField defines a composite pk with 2 fetches : Card and Key (the id description acts as the composite)
+			assertTrue( cardFieldReturn.getIdentifierDescription().hasFetches() );
+			final FetchSource cardFieldIdAsFetchSource = assertTyping( FetchSource.class, cardFieldReturn.getIdentifierDescription() );
+			assertEquals( 2, cardFieldIdAsFetchSource.getFetches().length );
 
-		// First the key-many-to-one to Card...
-		final EntityFetch cardFieldIdCardFetch = assertTyping(
-				EntityFetch.class,
-				cardFieldIdAsFetchSource.getFetches()[0]
-		);
-		assertFalse( cardFieldIdCardFetch.getIdentifierDescription().hasFetches() );
-		// i think this one might be a mistake; i think the collection reader still needs to be registered.  Its zero
-		// because the inverse of the key-many-to-one already had a registered AssociationKey and so saw the
-		// CollectionFetch as a circularity (I think)
-		assertEquals( 0, cardFieldIdCardFetch.getFetches().length );
+			// First the key-many-to-one to Card...
+			final EntityFetch cardFieldIdCardFetch = assertTyping(
+					EntityFetch.class,
+					cardFieldIdAsFetchSource.getFetches()[0]
+			);
+			assertFalse( cardFieldIdCardFetch.getIdentifierDescription().hasFetches() );
+			// i think this one might be a mistake; i think the collection reader still needs to be registered.  Its zero
+			// because the inverse of the key-many-to-one already had a registered AssociationKey and so saw the
+			// CollectionFetch as a circularity (I think)
+			assertEquals( 0, cardFieldIdCardFetch.getFetches().length );
 
-		// then the Key..
-		final EntityFetch cardFieldIdKeyFetch = assertTyping(
-				EntityFetch.class,
-				cardFieldIdAsFetchSource.getFetches()[1]
-		);
-		assertFalse( cardFieldIdKeyFetch.getIdentifierDescription().hasFetches() );
-		assertEquals( 0, cardFieldIdKeyFetch.getFetches().length );
+			// then the Key..
+			final EntityFetch cardFieldIdKeyFetch = assertTyping(
+					EntityFetch.class,
+					cardFieldIdAsFetchSource.getFetches()[1]
+			);
+			assertFalse( cardFieldIdKeyFetch.getIdentifierDescription().hasFetches() );
+			assertEquals( 0, cardFieldIdKeyFetch.getFetches().length );
 
 
-		// we need the readers ordered in a certain manner.  Here specifically: Fetch(Card), Fetch(Key), Return(CardField)
-		//
-		// additionally, we need Fetch(Card) and Fetch(Key) to be hydrated/semi-resolved before attempting to
-		// resolve the EntityKey for Return(CardField)
-		//
-		// together those sound like argument enough to continue keeping readers for "identifier fetches" as part of
-		// a special "identifier reader".  generated aliases could help here too to remove cyclic-ness from the graph.
-		// but at any rate, we need to know still when this becomes circularity
+			// we need the readers ordered in a certain manner.  Here specifically: Fetch(Card), Fetch(Key), Return(CardField)
+			//
+			// additionally, we need Fetch(Card) and Fetch(Key) to be hydrated/semi-resolved before attempting to
+			// resolve the EntityKey for Return(CardField)
+			//
+			// together those sound like argument enough to continue keeping readers for "identifier fetches" as part of
+			// a special "identifier reader".  generated aliases could help here too to remove cyclic-ness from the graph.
+			// but at any rate, we need to know still when this becomes circularity
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -165,46 +192,52 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 		cfg.addAnnotatedClass( PrimaryKey.class );
 
 		final SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		final OuterJoinLoadable cardPersister = (OuterJoinLoadable) sf.getClassMetadata( Card.class );
-		doCompare( sf, cardPersister );
 
-		final LoadPlan cardLoadPlan = LoadPlanStructureAssertionHelper.INSTANCE.buildLoadPlan( sf, cardPersister );
-		assertEquals( LoadPlan.Disposition.ENTITY_LOADER, cardLoadPlan.getDisposition() );
-		assertEquals( 1, cardLoadPlan.getReturns().size() );
+		try {
+			final OuterJoinLoadable cardPersister = (OuterJoinLoadable) sf.getClassMetadata( Card.class );
+			doCompare( sf, cardPersister );
 
-		// Check the root EntityReturn(Card)
-		final EntityReturn cardReturn = assertTyping( EntityReturn.class, cardLoadPlan.getReturns().get( 0 ) );
-		assertFalse( cardReturn.getIdentifierDescription().hasFetches() );
+			final LoadPlan cardLoadPlan = LoadPlanStructureAssertionHelper.INSTANCE.buildLoadPlan( sf, cardPersister );
+			assertEquals( LoadPlan.Disposition.ENTITY_LOADER, cardLoadPlan.getDisposition() );
+			assertEquals( 1, cardLoadPlan.getReturns().size() );
 
-		// Card should have one fetch, the fields collection
-		assertEquals( 1, cardReturn.getFetches().length );
-		final CollectionFetch fieldsFetch = assertTyping( CollectionFetch.class, cardReturn.getFetches()[0] );
-		assertNotNull( fieldsFetch.getElementGraph() );
+			// Check the root EntityReturn(Card)
+			final EntityReturn cardReturn = assertTyping( EntityReturn.class, cardLoadPlan.getReturns().get( 0 ) );
+			assertFalse( cardReturn.getIdentifierDescription().hasFetches() );
 
-		// the Card.fields collection has entity elements of type CardField...
-		final CollectionFetchableElementEntityGraph cardFieldElementGraph = assertTyping( CollectionFetchableElementEntityGraph.class, fieldsFetch.getElementGraph() );
-		// CardField should have no fetches
-		assertEquals( 0, cardFieldElementGraph.getFetches().length );
-		// But it should have 1 key-many-to-one fetch for Key (Card is already handled)
-		assertTrue( cardFieldElementGraph.getIdentifierDescription().hasFetches() );
-		final FetchSource cardFieldElementGraphIdAsFetchSource = assertTyping(
-				FetchSource.class,
-				cardFieldElementGraph.getIdentifierDescription()
-		);
-		assertEquals( 1, cardFieldElementGraphIdAsFetchSource.getFetches().length );
+			// Card should have one fetch, the fields collection
+			assertEquals( 1, cardReturn.getFetches().length );
+			final CollectionFetch fieldsFetch = assertTyping( CollectionFetch.class, cardReturn.getFetches()[0] );
+			assertNotNull( fieldsFetch.getElementGraph() );
 
-//		BidirectionalEntityFetch circularCardFetch = assertTyping(
-//				BidirectionalEntityFetch.class,
-//				fieldsElementCompositeIdFetch.getFetches()[0]
-//		);
-//		assertSame( circularCardFetch.getTargetEntityReference(), cardReturn );
+			// the Card.fields collection has entity elements of type CardField...
+			final CollectionFetchableElementEntityGraph cardFieldElementGraph = assertTyping( CollectionFetchableElementEntityGraph.class, fieldsFetch.getElementGraph() );
+			// CardField should have no fetches
+			assertEquals( 0, cardFieldElementGraph.getFetches().length );
+			// But it should have 1 key-many-to-one fetch for Key (Card is already handled)
+			assertTrue( cardFieldElementGraph.getIdentifierDescription().hasFetches() );
+			final FetchSource cardFieldElementGraphIdAsFetchSource = assertTyping(
+					FetchSource.class,
+					cardFieldElementGraph.getIdentifierDescription()
+			);
+			assertEquals( 1, cardFieldElementGraphIdAsFetchSource.getFetches().length );
 
-		// the fetch above is to the other key-many-to-one for CardField.primaryKey composite: key
-		EntityFetch keyFetch = assertTyping(
-				EntityFetch.class,
-				cardFieldElementGraphIdAsFetchSource.getFetches()[0]
-		);
-		assertEquals( Key.class.getName(), keyFetch.getEntityPersister().getEntityName() );
+//			BidirectionalEntityFetch circularCardFetch = assertTyping(
+//					BidirectionalEntityFetch.class,
+//					fieldsElementCompositeIdFetch.getFetches()[0]
+//			);
+//			assertSame( circularCardFetch.getTargetEntityReference(), cardReturn );
+
+			// the fetch above is to the other key-many-to-one for CardField.primaryKey composite: key
+			EntityFetch keyFetch = assertTyping(
+					EntityFetch.class,
+					cardFieldElementGraphIdAsFetchSource.getFetches()[0]
+			);
+			assertEquals( Key.class.getName(), keyFetch.getEntityPersister().getEntityName() );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -212,7 +245,13 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration();
 		cfg.addResource( "org/hibernate/test/immutable/entitywithmutablecollection/inverse/ContractVariation.hbm.xml" );
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
-		doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.immutable.entitywithmutablecollection.Contract.class ) );
+
+		try {
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( org.hibernate.test.immutable.entitywithmutablecollection.Contract.class ) );
+		}
+		finally {
+			sf.close();
+		}
 
 	}
 

@@ -23,21 +23,19 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
+ * Models the index graph of a collection, where the index are composite.  This can only be a Map, where the keys are
+ * composite
+ *
  * @author Steve Ebersole
  */
 public class CollectionFetchableIndexCompositeGraph
@@ -45,17 +43,17 @@ public class CollectionFetchableIndexCompositeGraph
 		implements CompositeFetch, CollectionFetchableIndex {
 
 	private final CollectionReference collectionReference;
-	private final Join compositeJoin;
 
 	public CollectionFetchableIndexCompositeGraph(
 			CollectionReference collectionReference,
 			Join compositeJoin) {
 		super(
 				extractIndexType( compositeJoin ),
+				(CompositeQuerySpace) compositeJoin.getRightHandSide(),
+				false,
 				collectionReference.getPropertyPath().append( "<index>" )
 		);
 		this.collectionReference = collectionReference;
-		this.compositeJoin = compositeJoin;
 	}
 
 	private static CompositeType extractIndexType(Join compositeJoin) {
@@ -67,12 +65,6 @@ public class CollectionFetchableIndexCompositeGraph
 		throw new IllegalArgumentException( "Could note extract collection composite-index" );
 	}
 
-
-	@Override
-	protected String getFetchLeftHandSideUid() {
-		return compositeJoin.getRightHandSide().getUid();
-	}
-
 	@Override
 	public CollectionReference getCollectionReference() {
 		return collectionReference;
@@ -81,25 +73,5 @@ public class CollectionFetchableIndexCompositeGraph
 	@Override
 	public FetchSource getSource() {
 		return collectionReference.getIndexGraph();
-	}
-
-	@Override
-	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
-		// metamodel should already disallow collections to be defined as part of a collection composite-index
-		// so, nothing to do here
-		super.validateFetchPlan( fetchStrategy, attributeDefinition );
-	}
-
-	@Override
-	public CollectionFetch buildCollectionFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		throw new WalkingException( "Encountered collection as part of the Map composite-index" );
-	}
-
-	@Override
-	public String getQuerySpaceUid() {
-		return compositeJoin.getRightHandSide().getUid();
 	}
 }

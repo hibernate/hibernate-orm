@@ -272,7 +272,10 @@ public class LoadQueryJoinAndFetchProcessor {
 			//
 			// long story short, for now we'll use an assumption that the last join in the CollectionQuerySpace is the
 			// element join (that's how the joins are built as of now..)
-			// todo : remove this assumption ^^
+			//
+			// todo : remove this assumption ^^; maybe we make CollectionQuerySpace "special" and rather than have it
+			// hold a list of joins, we have it expose the 2 (index, element) separately.
+
 			Join collectionElementJoin = null;
 			for ( Join collectionJoin : rightHandSide.getJoins() ) {
 				collectionElementJoin = collectionJoin;

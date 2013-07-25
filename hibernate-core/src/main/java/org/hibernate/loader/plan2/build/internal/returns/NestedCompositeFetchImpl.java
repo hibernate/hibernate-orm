@@ -25,6 +25,7 @@ package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.type.CompositeType;
 
@@ -33,30 +34,18 @@ import org.hibernate.type.CompositeType;
  */
 public class NestedCompositeFetchImpl extends AbstractCompositeFetch {
 	private final CompositeFetch source;
-	private final String fetchLeftHandSideUid;
 
 	public NestedCompositeFetchImpl(
 			CompositeFetch source,
 			CompositeType type,
-			PropertyPath propertyPath,
-			String fetchLeftHandSideUid) {
-		super( type, propertyPath );
+			CompositeQuerySpace compositeQuerySpace,
+			boolean allowCollectionFetches, PropertyPath propertyPath) {
+		super( type, compositeQuerySpace, allowCollectionFetches, propertyPath );
 		this.source = source;
-		this.fetchLeftHandSideUid = fetchLeftHandSideUid;
-	}
-
-	@Override
-	protected String getFetchLeftHandSideUid() {
-		return fetchLeftHandSideUid;
 	}
 
 	@Override
 	public FetchSource getSource() {
 		return source;
-	}
-
-	@Override
-	public String getQuerySpaceUid() {
-		return source.getQuerySpaceUid();
 	}
 }

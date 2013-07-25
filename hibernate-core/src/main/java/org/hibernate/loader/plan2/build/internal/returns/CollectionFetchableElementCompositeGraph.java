@@ -23,19 +23,17 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.CompositeType;
 
 /**
+ * Models the element graph of a collection, where the elements are composite
+ *
  * @author Steve Ebersole
  */
 public class CollectionFetchableElementCompositeGraph
@@ -43,23 +41,16 @@ public class CollectionFetchableElementCompositeGraph
 		implements CompositeFetch, CollectionFetchableElement {
 
 	private final CollectionReference collectionReference;
-	private final Join compositeJoin;
 
-	public CollectionFetchableElementCompositeGraph(
-			CollectionReference collectionReference,
-			Join compositeJoin) {
+	public CollectionFetchableElementCompositeGraph(CollectionReference collectionReference, Join compositeJoin) {
 		super(
 				(CompositeType) compositeJoin.getRightHandSide().getPropertyMapping().getType(),
+				(CompositeQuerySpace) compositeJoin.getRightHandSide(),
+				false,
 				// these property paths are just informational...
 				collectionReference.getPropertyPath().append( "<element>" )
 		);
 		this.collectionReference = collectionReference;
-		this.compositeJoin = compositeJoin;
-	}
-
-	@Override
-	protected String getFetchLeftHandSideUid() {
-		return compositeJoin.getRightHandSide().getUid();
 	}
 
 	@Override
@@ -70,18 +61,5 @@ public class CollectionFetchableElementCompositeGraph
 	@Override
 	public FetchSource getSource() {
 		return collectionReference.getElementGraph();
-	}
-
-	@Override
-	public CollectionFetch buildCollectionFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		throw new WalkingException( "Encountered collection as part of fetched Collection composite-element" );
-	}
-
-	@Override
-	public String getQuerySpaceUid() {
-		return compositeJoin.getLeftHandSide().getUid();
 	}
 }

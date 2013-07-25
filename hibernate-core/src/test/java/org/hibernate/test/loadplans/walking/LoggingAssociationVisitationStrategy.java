@@ -131,7 +131,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 		System.out.println(
 				String.format(
 						"%s Finishing composite (%s)",
-						StringHelper.repeat( ">>", depth-- ),
+						StringHelper.repeat( "<<", depth-- ),
 						compositionDefinition.getName()
 				)
 		);
@@ -206,28 +206,28 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 
 
 	// why do we have these + startingCollectionElements/finishingCollectionElements ???
-
-	@Override
-	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition) {
-		System.out.println(
-				String.format(
-						"%s Starting composite (%s)",
-						StringHelper.repeat( ">>", ++depth ),
-						compositionElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
-				)
-		);
-	}
-
-	@Override
-	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition) {
-		System.out.println(
-				String.format(
-						"%s Finishing composite (%s)",
-						StringHelper.repeat( "<<", depth-- ),
-						compositionElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
-				)
-		);
-	}
+//
+//	@Override
+//	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition) {
+//		System.out.println(
+//				String.format(
+//						"%s Starting composite (%s)",
+//						StringHelper.repeat( ">>", ++depth ),
+//						compositionElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//				)
+//		);
+//	}
+//
+//	@Override
+//	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositionElementDefinition) {
+//		System.out.println(
+//				String.format(
+//						"%s Finishing composite (%s)",
+//						StringHelper.repeat( "<<", depth-- ),
+//						compositionElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//				)
+//		);
+//	}
 
 	@Override
 	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {

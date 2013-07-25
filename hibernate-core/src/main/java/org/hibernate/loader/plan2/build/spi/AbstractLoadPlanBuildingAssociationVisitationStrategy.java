@@ -58,7 +58,6 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -201,7 +200,13 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final ExpandingFetchSource fetchSource = popFromStack();
 
 		if ( ! EntityReference.class.isInstance( fetchSource ) ) {
-			throw new WalkingException( "Mismatched FetchSource from stack on pop" );
+			throw new WalkingException(
+					String.format(
+							"Mismatched FetchSource from stack on pop.  Expecting EntityReference(%s), but found %s",
+							entityDefinition.getEntityPersister().getEntityName(),
+							fetchSource
+					)
+			);
 		}
 
 		final EntityReference entityReference = (EntityReference) fetchSource;
@@ -366,39 +371,79 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	}
 
 	@Override
-	public void startingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition) {
-		final Type indexType = collectionIndexDefinition.getType();
-		if ( indexType.isAssociationType() || indexType.isComponentType() ) {
-			final CollectionReference collectionReference = collectionReferenceStack.peekFirst();
-			final CollectionFetchableIndex indexGraph = collectionReference.getIndexGraph();
+	public void startingCollectionIndex(CollectionIndexDefinition indexDefinition) {
+		final Type indexType = indexDefinition.getType();
+		if ( indexType.isAnyType() ) {
+			throw new WalkingException( "CollectionIndexDefinition reported any-type mapping as map index" );
+		}
+
+		log.tracef(
+				"%s Starting collection index graph : %s",
+				StringHelper.repeat( ">>", fetchSourceStack.size() ),
+				indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+		);
+
+		final CollectionReference collectionReference = collectionReferenceStack.peekFirst();
+		final CollectionFetchableIndex indexGraph = collectionReference.getIndexGraph();
+
+		if ( indexType.isEntityType() || indexType.isComponentType() ) {
 			if ( indexGraph == null ) {
-				throw new WalkingException( "Collection reference did not return index handler" );
+				throw new WalkingException(
+						"CollectionReference did not return an expected index graph : " +
+								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+				);
 			}
 			pushToStack( (ExpandingFetchSource) indexGraph );
+		}
+		else {
+			if ( indexGraph != null ) {
+				throw new WalkingException(
+						"CollectionReference returned an unexpected index graph : " +
+								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+				);
+			}
 		}
 	}
 
 	@Override
-	public void finishingCollectionIndex(CollectionIndexDefinition collectionIndexDefinition) {
-		// nothing to do here
-		// 	- the element graph pushed while starting would be popped in finishingEntity/finishingComposite
+	public void finishingCollectionIndex(CollectionIndexDefinition indexDefinition) {
+		final Type indexType = indexDefinition.getType();
+		if ( indexType.isComponentType() ) {
+			// todo : validate the stack?
+			popFromStack();
+
+		}
+
+		// entity indexes would be popped during finishingEntity processing
+
+		log.tracef(
+				"%s Finished collection index graph : %s",
+				StringHelper.repeat( "<<", fetchSourceStack.size() ),
+				indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+		);
 	}
 
 	@Override
 	public void startingCollectionElements(CollectionElementDefinition elementDefinition) {
+		final Type elementType = elementDefinition.getType();
+		if ( elementType.isAnyType() ) {
+			return;
+		}
+
+		log.tracef(
+				"%s Starting collection element graph : %s",
+				StringHelper.repeat( ">>", fetchSourceStack.size() ),
+				elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+		);
+
 		final CollectionReference collectionReference = collectionReferenceStack.peekFirst();
 		final CollectionFetchableElement elementGraph = collectionReference.getElementGraph();
 
-		final Type elementType = elementDefinition.getType();
-		final boolean expectFetchSourceElements =
-				( elementType.isAssociationType() || elementType.isComponentType() )
-				&& ! elementType.isAnyType();
-
-		if ( expectFetchSourceElements ) {
+		if ( elementType.isAssociationType() || elementType.isComponentType() ) {
 			if ( elementGraph == null ) {
 				throw new IllegalStateException(
-						"Expecting CollectionFetchableElement, but element graph was null : "
-								+ elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+						"CollectionReference did not return an expected element graph : " +
+								elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				);
 			}
 
@@ -407,8 +452,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		else {
 			if ( elementGraph != null ) {
 				throw new IllegalStateException(
-						"Not expecting CollectionFetchableElement, but element graph was non-null : "
-								+ elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+						"CollectionReference returned an unexpected element graph : " +
+								elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				);
 			}
 		}
@@ -416,41 +461,31 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	public void finishingCollectionElements(CollectionElementDefinition elementDefinition) {
-		// nothing to do here
-		// 	- the element graph pushed while starting would be popped in finishing/Entity/finishingComposite
-	}
+		final Type elementType = elementDefinition.getType();
+		if ( elementType.isComponentType() ) {
+			// pop it from the stack
+			final ExpandingFetchSource popped = popFromStack();
 
-	@Override
-	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
-		log.tracef(
-				"%s Starting composite collection element for (%s)",
-				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
-		);
-	}
+			// validation
 
-	@Override
-	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
-		// pop the current fetch owner, and make sure what we just popped represents this composition
-		final ExpandingFetchSource popped = popFromStack();
-
-		if ( ! CollectionFetchableElement.class.isInstance( popped ) ) {
-			throw new WalkingException( "Mismatched FetchSource from stack on pop" );
+			if ( ! CollectionFetchableElement.class.isInstance( popped ) ) {
+				throw new WalkingException( "Mismatched FetchSource from stack on pop" );
+			}
 		}
 
-		// NOTE : not much else we can really check here atm since on the walking spi side we do not have path
+		// entity indexes would be popped during finishingEntity processing
 
 		log.tracef(
-				"%s Finished composite element for  : %s",
+				"%s Finished collection element graph : %s",
 				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+				elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 		);
 	}
 
 	@Override
 	public void startingComposite(CompositionDefinition compositionDefinition) {
 		log.tracef(
-				"%s Starting composition : %s",
+				"%s Starting composite : %s",
 				StringHelper.repeat( ">>", fetchSourceStack.size() ),
 				compositionDefinition.getName()
 		);
@@ -458,6 +493,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( fetchSourceStack.isEmpty() ) {
 			throw new HibernateException( "A component cannot be the root of a walk nor a graph" );
 		}
+
+		final CompositeFetch compositeFetch = currentSource().buildCompositeFetch( compositionDefinition, this );
+		pushToStack( (ExpandingFetchSource) compositeFetch );
 	}
 
 	@Override
@@ -469,10 +507,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			throw new WalkingException( "Mismatched FetchSource from stack on pop" );
 		}
 
-		// NOTE : not much else we can really check here atm since on the walking spi side we do not have path
-
 		log.tracef(
-				"%s Finished composition : %s",
+				"%s Finishing composite : %s",
 				StringHelper.repeat( "<<", fetchSourceStack.size() ),
 				compositionDefinition.getName()
 		);
@@ -672,9 +708,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	}
 
 	protected boolean handleCompositeAttribute(CompositionDefinition attributeDefinition) {
-		final ExpandingFetchSource currentSource = currentSource();
-		final CompositeFetch fetch = currentSource.buildCompositeFetch( attributeDefinition, this );
-		pushToStack( (ExpandingFetchSource) fetch );
+//		final ExpandingFetchSource currentSource = currentSource();
+//		final CompositeFetch fetch = currentSource.buildCompositeFetch( attributeDefinition, this );
+//		pushToStack( (ExpandingFetchSource) fetch );
 		return true;
 	}
 

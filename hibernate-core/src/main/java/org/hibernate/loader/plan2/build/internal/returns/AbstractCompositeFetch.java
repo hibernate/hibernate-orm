@@ -35,6 +35,7 @@ import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.Join;
@@ -56,16 +57,31 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 	private static final FetchStrategy FETCH_STRATEGY = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	private final CompositeType compositeType;
+	private final CompositeQuerySpace compositeQuerySpace;
 	private final PropertyPath propertyPath;
+	private final boolean allowCollectionFetches;
 
 	private List<Fetch> fetches;
 
-	protected AbstractCompositeFetch(CompositeType compositeType, PropertyPath propertyPath) {
+	protected AbstractCompositeFetch(
+			CompositeType compositeType,
+			CompositeQuerySpace compositeQuerySpace,
+			boolean allowCollectionFetches, PropertyPath propertyPath) {
 		this.compositeType = compositeType;
+		this.compositeQuerySpace = compositeQuerySpace;
+		this.allowCollectionFetches = allowCollectionFetches;
 		this.propertyPath = propertyPath;
 	}
 
-	protected abstract String getFetchLeftHandSideUid();
+	@SuppressWarnings("UnusedParameters")
+	protected CompositeQuerySpace resolveCompositeQuerySpace(LoadPlanBuildingContext loadPlanBuildingContext) {
+		return compositeQuerySpace;
+	}
+
+	@Override
+	public String getQuerySpaceUid() {
+		return compositeQuerySpace.getUid();
+	}
 
 	@Override
 	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
@@ -92,8 +108,8 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 			);
 		}
 
-		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) loadPlanBuildingContext.getQuerySpaces().getQuerySpaceByUid(
-				getFetchLeftHandSideUid()
+		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) resolveCompositeQuerySpace(
+				loadPlanBuildingContext
 		);
 		final Join join = leftHandSide.addEntityJoin(
 				attributeDefinition,
@@ -122,11 +138,18 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 	public CompositeFetch buildCompositeFetch(
 			CompositionDefinition attributeDefinition,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
+		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) resolveCompositeQuerySpace( loadPlanBuildingContext );
+		final Join join = leftHandSide.addCompositeJoin(
+				attributeDefinition,
+				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid()
+		);
+
 		final NestedCompositeFetchImpl fetch = new NestedCompositeFetchImpl(
 				this,
 				attributeDefinition.getType(),
-				getPropertyPath(),
-				getFetchLeftHandSideUid()
+				(CompositeQuerySpace) join.getRightHandSide(),
+				allowCollectionFetches,
+				getPropertyPath()
 		);
 		addFetch( fetch );
 		return fetch;
@@ -137,6 +160,15 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
+		if ( !allowCollectionFetches ) {
+			throw new WalkingException(
+					String.format(
+							"This composite path [%s] does not allow collection fetches (composite id or composite collection index/element",
+							propertyPath.getFullPath()
+					)
+			);
+		}
+
 		// general question here wrt Joins and collection fetches...  do we create multiple Joins for many-to-many,
 		// for example, or do we allow the Collection QuerySpace to handle that?
 

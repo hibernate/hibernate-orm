@@ -39,21 +39,14 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 		implements EntityIdentifierDescription, FetchSource, ExpandingEntityIdentifierDescription {
 
 	private final EntityReference entityReference;
-	private final CompositeQuerySpace compositeQuerySpace;
 
 	protected AbstractCompositeEntityIdentifierDescription(
 			EntityReference entityReference,
 			CompositeQuerySpace compositeQuerySpace,
 			CompositeType identifierType,
 			PropertyPath propertyPath) {
-		super( identifierType, propertyPath );
+		super( identifierType, compositeQuerySpace, false, propertyPath );
 		this.entityReference = entityReference;
-		this.compositeQuerySpace = compositeQuerySpace;
-	}
-
-	@Override
-	protected String getFetchLeftHandSideUid() {
-		return compositeQuerySpace.getUid();
 	}
 
 	@Override
@@ -66,11 +59,4 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 		// the source for this (as a Fetch) is the entity reference
 		return (FetchSource) entityReference.getIdentifierDescription();
 	}
-
-	@Override
-	public String getQuerySpaceUid() {
-		return compositeQuerySpace.getUid();
-	}
-
-
 }

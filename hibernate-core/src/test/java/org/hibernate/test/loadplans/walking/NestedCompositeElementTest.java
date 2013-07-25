@@ -21,32 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan2.build.internal.returns;
+package org.hibernate.test.loadplans.walking;
 
-import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
-import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.type.CompositeType;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.test.loadplans.process.EncapsulatedCompositeAttributeResultSetProcessorTest.Person;
+import org.hibernate.test.loadplans.process.EncapsulatedCompositeAttributeResultSetProcessorTest.Customer;
 
 /**
  * @author Steve Ebersole
  */
-public class CompositeFetchImpl extends AbstractCompositeFetch implements CompositeFetch {
-	private final FetchSource source;
-
-	protected CompositeFetchImpl(
-			FetchSource source,
-			CompositeType compositeType,
-			CompositeQuerySpace compositeQuerySpace,
-			boolean allowCollectionFetches,
-			PropertyPath propertyPath) {
-		super( compositeType, compositeQuerySpace, allowCollectionFetches, propertyPath );
-		this.source = source;
+public class NestedCompositeElementTest extends BaseCoreFunctionalTestCase {
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Person.class, Customer.class };
 	}
 
-	@Override
-	public FetchSource getSource() {
-		return source;
+	@Test
+	public void testWalkingKeyManyToOneGraphs() {
+		final EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata( Customer.class );
+		MetamodelGraphWalker.visitEntity( new LoggingAssociationVisitationStrategy(), ep );
 	}
 }

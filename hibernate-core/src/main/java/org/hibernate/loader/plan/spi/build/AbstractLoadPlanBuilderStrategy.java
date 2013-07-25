@@ -309,32 +309,32 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 		// 	- the element graph pushed while starting would be popped in finishing/Entity/finishingComposite
 	}
 
-	@Override
-	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
-		log.tracef(
-				"%s Starting composite collection element for (%s)",
-				StringHelper.repeat( ">>", fetchOwnerStack.size() ),
-				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
-		);
-	}
-
-	@Override
-	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
-		// pop the current fetch owner, and make sure what we just popped represents this composition
-		final FetchOwner poppedFetchOwner = popFromStack();
-
-		if ( ! CompositeElementGraph.class.isInstance( poppedFetchOwner ) ) {
-			throw new WalkingException( "Mismatched FetchOwner from stack on pop" );
-		}
-
-		// NOTE : not much else we can really check here atm since on the walking spi side we do not have path
-
-		log.tracef(
-				"%s Finished composite element for  : %s",
-				StringHelper.repeat( "<<", fetchOwnerStack.size() ),
-				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
-		);
-	}
+//	@Override
+//	public void startingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
+//		log.tracef(
+//				"%s Starting composite collection element for (%s)",
+//				StringHelper.repeat( ">>", fetchOwnerStack.size() ),
+//				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//		);
+//	}
+//
+//	@Override
+//	public void finishingCompositeCollectionElement(CompositeCollectionElementDefinition compositeElementDefinition) {
+//		// pop the current fetch owner, and make sure what we just popped represents this composition
+//		final FetchOwner poppedFetchOwner = popFromStack();
+//
+//		if ( ! CompositeElementGraph.class.isInstance( poppedFetchOwner ) ) {
+//			throw new WalkingException( "Mismatched FetchOwner from stack on pop" );
+//		}
+//
+//		// NOTE : not much else we can really check here atm since on the walking spi side we do not have path
+//
+//		log.tracef(
+//				"%s Finished composite element for  : %s",
+//				StringHelper.repeat( "<<", fetchOwnerStack.size() ),
+//				compositeElementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
+//		);
+//	}
 
 	@Override
 	public void finishingCollection(CollectionDefinition collectionDefinition) {

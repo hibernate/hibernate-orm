@@ -27,6 +27,8 @@ import javax.persistence.PersistenceException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -37,6 +39,8 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
  * @author Steve Ebersole
  */
 class JdbcConnectionContext {
+	private static final Logger log = Logger.getLogger( JdbcConnectionContext.class );
+
 	private final JdbcConnectionAccess jdbcConnectionAccess;
 	private final SqlStatementLogger sqlStatementLogger;
 
@@ -61,6 +65,15 @@ class JdbcConnectionContext {
 
 	public void release() {
 		if ( jdbcConnection != null ) {
+			try {
+				if ( ! jdbcConnection.getAutoCommit() ) {
+					jdbcConnection.commit();
+				}
+			}
+			catch (SQLException e) {
+				log.debug( "Unable to commit JDBC transaction used for JPA schema export; may or may not be a problem" );
+			}
+
 			try {
 				jdbcConnectionAccess.releaseConnection( jdbcConnection );
 			}

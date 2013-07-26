@@ -80,6 +80,7 @@ public class BasicEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SuppressWarnings("unchecked")
 	public void testBasicGraphImmutability() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph<Entity1> graphRoot = em.createEntityGraph( Entity1.class );
@@ -88,7 +89,7 @@ public class BasicEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 
 		em.getEntityManagerFactory().addNamedEntityGraph( "immutable", graphRoot );
 
-		graphRoot = em.getEntityGraph( "immutable" );
+		graphRoot = (EntityGraph<Entity1>) em.getEntityGraph( "immutable" );
 
 		assertEquals( "immutable", graphRoot.getName() );
 		assertEquals( 2, graphRoot.getAttributeNodes().size() );

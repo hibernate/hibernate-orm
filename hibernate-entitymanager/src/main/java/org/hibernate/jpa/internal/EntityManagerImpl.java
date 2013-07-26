@@ -197,7 +197,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> EntityGraph<T> getEntityGraph(String graphName) {
+	public EntityGraph<?> getEntityGraph(String graphName) {
 		checkOpen();
 		final EntityGraphImpl named = getEntityManagerFactory().findEntityGraphByName( graphName );
 		if ( named == null ) {

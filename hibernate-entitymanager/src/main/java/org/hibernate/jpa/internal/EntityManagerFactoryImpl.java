@@ -309,6 +309,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 
 	@Override
 	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
+		validateNotClosed();
+
 		//TODO support discardOnClose, persistencecontexttype?, interceptor,
 		return new EntityManagerImpl(
 				this,
@@ -322,42 +324,49 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public CriteriaBuilder getCriteriaBuilder() {
+		validateNotClosed();
 		return criteriaBuilder;
 	}
 
 	public Metamodel getMetamodel() {
+		validateNotClosed();
 		return metamodel;
 	}
 
 	public void close() {
+		// The spec says so, that's why :(
+		validateNotClosed();
+
 		sessionFactory.close();
 		EntityManagerFactoryRegistry.INSTANCE.removeEntityManagerFactory(entityManagerFactoryName, this);
 	}
 
 	public Map<String, Object> getProperties() {
+		validateNotClosed();
 		return properties;
 	}
 
 	public Cache getCache() {
+		validateNotClosed();
+
 		// TODO : cache the cache reference?
-		if ( ! isOpen() ) {
-			throw new IllegalStateException("EntityManagerFactory is closed");
-		}
 		return new JPACache( sessionFactory );
 	}
 
-	public PersistenceUnitUtil getPersistenceUnitUtil() {
+	protected void validateNotClosed() {
 		if ( ! isOpen() ) {
-			throw new IllegalStateException("EntityManagerFactory is closed");
+			throw new IllegalStateException( "EntityManagerFactory is closed" );
 		}
+	}
+
+	public PersistenceUnitUtil getPersistenceUnitUtil() {
+		validateNotClosed();
 		return util;
 	}
 
 	@Override
 	public void addNamedQuery(String name, Query query) {
-		if ( ! isOpen() ) {
-			throw new IllegalStateException( "EntityManagerFactory is closed" );
-		}
+		validateNotClosed();
 
 		if ( StoredProcedureQueryImpl.class.isInstance( query ) ) {
 			final ProcedureCall procedureCall = ( (StoredProcedureQueryImpl) query ).getHibernateProcedureCall();

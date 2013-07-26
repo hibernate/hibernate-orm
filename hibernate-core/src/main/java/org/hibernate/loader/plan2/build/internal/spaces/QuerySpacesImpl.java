@@ -95,6 +95,7 @@ public class QuerySpacesImpl implements QuerySpaces, ExpandingQuerySpaces {
 				entityPersister,
 				uid,
 				this,
+				true,
 				sessionFactory
 		);
 		registerQuerySpace( space );
@@ -113,6 +114,7 @@ public class QuerySpacesImpl implements QuerySpaces, ExpandingQuerySpaces {
 				collectionPersister,
 				uid,
 				this,
+				true,
 				sessionFactory
 		);
 		registerQuerySpace( space );

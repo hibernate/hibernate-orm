@@ -25,6 +25,11 @@ package org.hibernate.test.loadplans.plans;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+
+import org.hibernate.test.annotations.Country;
+import org.hibernate.test.annotations.collectionelement.Boy;
+import org.hibernate.test.annotations.collectionelement.Matrix;
+import org.hibernate.test.annotations.collectionelement.TestCourse;
 import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProcessorTest;
 
 //import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
@@ -253,6 +258,23 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 			sf.close();
 		}
 
+	}
+
+	@Test
+	public void testAnotherBasicCollection() {
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( Boy.class );
+		cfg.addAnnotatedClass( Country.class );
+		cfg.addAnnotatedClass( TestCourse.class );
+		cfg.addAnnotatedClass( Matrix.class );
+		SessionFactoryImplementor sf = (SessionFactoryImplementor) cfg.buildSessionFactory();
+
+		try {
+			doCompare( sf, (OuterJoinLoadable) sf.getClassMetadata( Boy.class ) );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	private void doCompare(SessionFactoryImplementor sf, OuterJoinLoadable persister) {

@@ -69,7 +69,7 @@ public class JoinImpl implements JoinDefinedByMetadata {
 	}
 
 	@Override
-	public boolean isRightHandSideOptional() {
+	public boolean isRightHandSideRequired() {
 		return rightHandSideOptional;
 	}
 

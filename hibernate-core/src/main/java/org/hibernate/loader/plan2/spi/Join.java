@@ -40,7 +40,7 @@ public interface Join {
 
 	public QuerySpace getRightHandSide();
 
-	public boolean isRightHandSideOptional();
+	public boolean isRightHandSideRequired();
 
 	// Ugh!  This part will unfortunately be SQL specific :( ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

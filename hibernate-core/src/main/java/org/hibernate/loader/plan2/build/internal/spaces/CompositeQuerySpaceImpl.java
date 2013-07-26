@@ -45,20 +45,23 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 			CompositePropertyMapping compositeSubPropertyMapping,
 			String uid,
 			QuerySpacesImpl querySpaces,
+			boolean canJoinsBeRequired,
 			SessionFactoryImplementor sessionFactory) {
-		super( uid, Disposition.COMPOSITE, querySpaces, sessionFactory );
+		super( uid, Disposition.COMPOSITE, querySpaces, canJoinsBeRequired, sessionFactory );
 		this.compositeSubPropertyMapping = compositeSubPropertyMapping;
 	}
 
 	public CompositeQuerySpaceImpl(
 			EntityQuerySpaceImpl entityQuerySpace,
 			CompositePropertyMapping compositePropertyMapping,
-			String uid) {
+			String uid,
+			boolean canJoinsBeRequired) {
 		// todo : we may need to keep around the owning entity query space to be able to properly handle circularity...
 		this(
 				compositePropertyMapping,
 				uid,
 				entityQuerySpace.getQuerySpaces(),
+				canJoinsBeRequired,
 				entityQuerySpace.sessionFactory()
 		);
 	}
@@ -71,11 +74,13 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 	@Override
 	public JoinImpl addCompositeJoin(CompositionDefinition compositionDefinition, String querySpaceUid) {
 		final String propertyPath = compositionDefinition.getName();
+		final boolean required = canJoinsBeRequired() && !compositionDefinition.isNullable();
 
 		final CompositeQuerySpaceImpl rhs = new CompositeQuerySpaceImpl(
 				compositeSubPropertyMapping,
 				querySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
@@ -85,7 +90,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 				propertyPath,
 				rhs,
 				null,
-				compositionDefinition.isNullable()
+				required
 		);
 		internalGetJoins().add( join );
 
@@ -98,10 +103,13 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 			EntityPersister persister,
 			String querySpaceUid,
 			boolean optional) {
+		final boolean required = canJoinsBeRequired() && !optional;
+
 		final EntityQuerySpaceImpl rhs = new EntityQuerySpaceImpl(
 				persister,
 				querySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
@@ -115,7 +123,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 						(EntityType) attributeDefinition.getType(),
 						sessionFactory()
 				),
-				optional
+				required
 		);
 		internalGetJoins().add( join );
 
@@ -127,10 +135,13 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 			AttributeDefinition attributeDefinition,
 			CollectionPersister collectionPersister,
 			String querySpaceUid) {
+		final boolean required = canJoinsBeRequired() && ! attributeDefinition.isNullable();
+
 		final CollectionQuerySpaceImpl rhs = new CollectionQuerySpaceImpl(
 				collectionPersister,
 				querySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
@@ -140,7 +151,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 				attributeDefinition.getName(),
 				rhs,
 				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
-				attributeDefinition.isNullable()
+				required
 		);
 		internalGetJoins().add( join );
 

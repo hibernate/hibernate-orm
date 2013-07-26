@@ -179,7 +179,7 @@ public class LoadQueryJoinAndFetchProcessor {
 		addJoins(
 				joinFragment,
 				joinable,
-				join.isRightHandSideOptional() ? JoinType.LEFT_OUTER_JOIN : JoinType.INNER_JOIN,
+				join.isRightHandSideRequired() ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN,
 				aliases.getTableAlias(),
 				rhsColumnNames,
 				aliasedLhsColumnNames,

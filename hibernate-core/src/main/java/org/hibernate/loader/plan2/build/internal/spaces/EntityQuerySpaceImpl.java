@@ -47,8 +47,9 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 			EntityPersister persister,
 			String uid,
 			QuerySpacesImpl querySpaces,
+			boolean canJoinsBeRequired,
 			SessionFactoryImplementor sessionFactory) {
-		super( uid, Disposition.ENTITY, querySpaces, sessionFactory );
+		super( uid, Disposition.ENTITY, querySpaces, canJoinsBeRequired, sessionFactory );
 		this.persister = persister;
 	}
 
@@ -71,6 +72,8 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 
 	@Override
 	public JoinImpl addCompositeJoin(CompositionDefinition compositionDefinition, String querySpaceUid) {
+		final boolean required = canJoinsBeRequired() && !compositionDefinition.isNullable();
+
 		final CompositeQuerySpaceImpl rhs = new CompositeQuerySpaceImpl(
 				new CompositePropertyMapping(
 						compositionDefinition.getType(),
@@ -79,6 +82,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				),
 				querySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
@@ -88,7 +92,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				compositionDefinition.getName(),
 				rhs,
 				null,
-				compositionDefinition.isNullable()
+				required
 		);
 		internalGetJoins().add( join );
 
@@ -100,10 +104,13 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 			EntityPersister persister,
 			String querySpaceUid,
 			boolean optional) {
+		final boolean required = canJoinsBeRequired() && !optional;
+
 		final EntityQuerySpaceImpl rhs = new EntityQuerySpaceImpl(
 				persister,
 				querySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
@@ -116,7 +123,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 						(EntityType) attribute.getType(),
 						sessionFactory()
 				),
-				optional
+				required
 		);
 		internalGetJoins().add( join );
 
@@ -128,10 +135,13 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 			AttributeDefinition attributeDefinition,
 			CollectionPersister collectionPersister,
 			String querySpaceUid) {
+		final boolean required = canJoinsBeRequired() && !attributeDefinition.isNullable();
+
 		final CollectionQuerySpaceImpl rhs = new CollectionQuerySpaceImpl(
 				collectionPersister,
 				querySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
@@ -141,7 +151,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				attributeDefinition.getName(),
 				rhs,
 				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
-				attributeDefinition.isNullable()
+				required
 		);
 		internalGetJoins().add( join );
 
@@ -158,7 +168,8 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 						(PropertyMapping) getEntityPersister(),
 						getEntityPersister().getIdentifierPropertyName()
 				),
-				compositeQuerySpaceUid
+				compositeQuerySpaceUid,
+				canJoinsBeRequired()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
 
@@ -167,7 +178,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				"id",
 				rhs,
 				null,
-				false
+				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
 

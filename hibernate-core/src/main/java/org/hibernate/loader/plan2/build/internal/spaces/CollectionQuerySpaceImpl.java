@@ -44,8 +44,9 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 			CollectionPersister persister,
 			String uid,
 			QuerySpacesImpl querySpaces,
+			boolean canJoinsBeRequired,
 			SessionFactoryImplementor sessionFactory) {
-		super( uid, Disposition.COLLECTION, querySpaces, sessionFactory );
+		super( uid, Disposition.COLLECTION, querySpaces, canJoinsBeRequired, sessionFactory );
 		this.persister = persister;
 	}
 
@@ -62,11 +63,13 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 	public JoinImpl addIndexEntityJoin(
 			final EntityPersister indexPersister,
 			LoadPlanBuildingContext context) {
+		final boolean required = canJoinsBeRequired();
 		final String entityQuerySpaceUid = getQuerySpaces().generateImplicitUid();
 		final EntityQuerySpaceImpl entityQuerySpace = new EntityQuerySpaceImpl(
 				indexPersister,
 				entityQuerySpaceUid,
 				getQuerySpaces(),
+				required,
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( entityQuerySpace );
@@ -77,7 +80,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				entityQuerySpace,
 				// not sure this 'rhsColumnNames' bit is correct...
 				( (Queryable) indexPersister ).getKeyColumnNames(),
-				false
+				required
 		);
 		internalGetJoins().add( join );
 
@@ -96,6 +99,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				),
 				compositeQuerySpaceUid,
 				getQuerySpaces(),
+				canJoinsBeRequired(),
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( compositeQuerySpace );
@@ -105,7 +109,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				"index",
 				compositeQuerySpace,
 				null,
-				false
+				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
 
@@ -120,6 +124,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				elementPersister,
 				entityQuerySpaceUid,
 				getQuerySpaces(),
+				canJoinsBeRequired(),
 				sessionFactory()
 		);
 		( (QuerySpacesImpl) context.getQuerySpaces() ).registerQuerySpace( entityQuerySpace );
@@ -130,7 +135,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				"id",
 				entityQuerySpace,
 				( (Queryable) elementPersister ).getKeyColumnNames(),
-				false
+				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
 
@@ -150,6 +155,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				),
 				compositeQuerySpaceUid,
 				getQuerySpaces(),
+				canJoinsBeRequired(),
 				sessionFactory()
 		);
 		( (QuerySpacesImpl) context.getQuerySpaces() ).registerQuerySpace( compositeQuerySpace );
@@ -160,7 +166,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				"elements",
 				compositeQuerySpace,
 				null,
-				false
+				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
 

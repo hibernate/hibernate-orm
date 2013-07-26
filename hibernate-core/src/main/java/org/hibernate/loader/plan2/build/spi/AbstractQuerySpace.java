@@ -42,6 +42,7 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 	private final String uid;
 	private final Disposition disposition;
 	private final QuerySpacesImpl querySpaces;
+	private final boolean canJoinsBeRequired;
 
 	private List<Join> joins;
 
@@ -49,11 +50,13 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 			String uid,
 			Disposition disposition,
 			QuerySpacesImpl querySpaces,
+			boolean canJoinsBeRequired,
 			SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
 		this.uid = uid;
 		this.disposition = disposition;
 		this.querySpaces = querySpaces;
+		this.canJoinsBeRequired = canJoinsBeRequired;
 	}
 
 	protected SessionFactoryImplementor sessionFactory() {
@@ -62,6 +65,15 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 
 	// todo : copy ctor - that depends how graph copying works here...
 
+
+	/**
+	 * Can any joins created from here (with this as the left-hand side) be required joins?
+	 *
+	 * @return {@code true} indicates joins can be required; {@code false} indicates they cannot.
+	 */
+	public boolean canJoinsBeRequired() {
+		return canJoinsBeRequired;
+	}
 
 	/**
 	 * Provides subclasses access to the spaces to which this space belongs.

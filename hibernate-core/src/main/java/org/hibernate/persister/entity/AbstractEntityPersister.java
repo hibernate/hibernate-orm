@@ -3859,6 +3859,11 @@ public abstract class AbstractEntityPersister
 		createLoaders();
 		createUniqueKeyLoaders();
 		createQueryLoader();
+
+		doPostInstantiate();
+	}
+
+	protected void doPostInstantiate() {
 	}
 
 	//needed by subclasses to override the createLoader strategy

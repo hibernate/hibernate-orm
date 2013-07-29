@@ -1025,7 +1025,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 	
 	protected void doPostInstantiate() {
-		super.postInstantiate();
 		if (hasSequentialSelects) {
 			String[] entityNames = getSubclassClosure();
 			for ( int i=1; i<entityNames.length; i++ ) {

@@ -105,10 +105,10 @@ public class AuditConfiguration {
 	}
 
 	public AuditConfiguration(Configuration cfg, ClassLoaderService classLoaderService) {
-		// TODO: Temporarily allow Envers to continuing using
-		// hibernate-commons-annotations' for reflection and class loading.
+		// TODO: Temporarily allow Envers to continuing to use hibernate-commons-annotations' for reflection and class
+		// loading.
 		final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
-		Thread.currentThread().setContextClassLoader( ClassLoaderHelper.getContextClassLoader() );
+		Thread.currentThread().setContextClassLoader( classLoaderService.getAggregatedClassLoader() );
 
 		final Properties properties = cfg.getProperties();
 

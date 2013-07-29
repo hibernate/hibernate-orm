@@ -325,6 +325,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 		return services;
 	}
+	
+	@Override
+	public ClassLoader getAggregatedClassLoader() {
+		return aggregatedClassLoader;
+	}
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// completely temporary !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

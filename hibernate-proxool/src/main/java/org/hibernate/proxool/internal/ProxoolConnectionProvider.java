@@ -28,14 +28,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.logicalcobwebs.proxool.ProxoolException;
-import org.logicalcobwebs.proxool.ProxoolFacade;
-import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
-import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.ConfigHelper;
@@ -43,7 +37,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+import org.jboss.logging.Logger;
+import org.logicalcobwebs.proxool.ProxoolException;
+import org.logicalcobwebs.proxool.ProxoolFacade;
+import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
+import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 /**
  * A connection provider that uses a Proxool connection pool. Hibernate will use this by
@@ -51,7 +52,7 @@ import org.hibernate.service.spi.Stoppable;
  *
  * @see ConnectionProvider
  */
-public class ProxoolConnectionProvider implements ConnectionProvider, Configurable, Stoppable {
+public class ProxoolConnectionProvider implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
 	private static final ProxoolMessageLogger LOG = Logger.getMessageLogger(
 			ProxoolMessageLogger.class,
 			ProxoolConnectionProvider.class.getName()
@@ -69,6 +70,8 @@ public class ProxoolConnectionProvider implements ConnectionProvider, Configurab
 	private Integer isolation;
 
 	private boolean autocommit;
+	
+	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
 	public Connection getConnection() throws SQLException {
@@ -114,6 +117,8 @@ public class ProxoolConnectionProvider implements ConnectionProvider, Configurab
 
 	@Override
 	public void configure(Map props) {
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+		
 		// Get the configurator files (if available)
 		final String jaxpFile = (String) props.get( Environment.PROXOOL_XML );
 		final String propFile = (String) props.get( Environment.PROXOOL_PROPERTIES );
@@ -152,7 +157,7 @@ public class ProxoolConnectionProvider implements ConnectionProvider, Configurab
 			}
 
 			try {
-				JAXPConfigurator.configure( ConfigHelper.getConfigStreamReader( jaxpFile ), false );
+				JAXPConfigurator.configure( ConfigHelper.getConfigStreamReader( jaxpFile, classLoaderService ), false );
 			}
 			catch (ProxoolException e) {
 				final String msg = LOG.unableToLoadJaxpConfiguratorFile( jaxpFile );
@@ -177,7 +182,7 @@ public class ProxoolConnectionProvider implements ConnectionProvider, Configurab
 			}
 
 			try {
-				PropertyConfigurator.configure( ConfigHelper.getConfigProperties( propFile ) );
+				PropertyConfigurator.configure( ConfigHelper.getConfigProperties( propFile, classLoaderService ) );
 			}
 			catch (ProxoolException e) {
 				final String msg = LOG.unableToLoadPropertyConfiguratorFile( propFile );
@@ -241,6 +246,11 @@ public class ProxoolConnectionProvider implements ConnectionProvider, Configurab
 	@Deprecated
 	public void close() throws HibernateException {
 		stop();
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 
 }

@@ -23,19 +23,28 @@
  */
 package org.hibernate.jpa.test.packaging;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
-import org.junit.Test;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.event.spi.EventType;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
@@ -56,18 +65,9 @@ import org.hibernate.jpa.test.pack.explodedpar.Elephant;
 import org.hibernate.jpa.test.pack.externaljar.Scooter;
 import org.hibernate.jpa.test.pack.various.Airplane;
 import org.hibernate.jpa.test.pack.various.Seat;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
-import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.stat.Statistics;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * In this test we verify that  it is possible to bootstrap Hibernate/JPA from
@@ -306,7 +306,8 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		HashMap properties = new HashMap();
 		properties.put( AvailableSettings.JTA_DATASOURCE, null );
 		Properties p = new Properties();
-		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
+		p.load( serviceRegistry().getService( ClassLoaderService.class ).locateResourceStream(
+				"/overridenpar.properties" ) );
 		properties.putAll( p );
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		EntityManager em = emf.createEntityManager();

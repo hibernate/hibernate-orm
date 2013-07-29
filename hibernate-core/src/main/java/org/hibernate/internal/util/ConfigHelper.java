@@ -32,6 +32,7 @@ import java.net.URL;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.jboss.logging.Logger;
@@ -50,51 +51,20 @@ public final class ConfigHelper {
 
 	/** Try to locate a local URL representing the incoming path.  The first attempt
 	 * assumes that the incoming path is an actual URL string (file://, etc).  If this
-	 * does not work, then the next attempts try to locate this UURL as a java system
-	 * resource.
+	 * does not work, then the next attempts try to locate this URL as a java system
+	 * resource through {@link ClassLoaderService}.
 	 *
 	 * @param path The path representing the config location.
+	 * @param classLoaderService The ClassLoaderService.
 	 * @return An appropriate URL or null.
 	 */
-	public static URL locateConfig(final String path) {
+	public static URL locateConfig(final String path, final ClassLoaderService classLoaderService) {
 		try {
 			return new URL(path);
 		}
 		catch(MalformedURLException e) {
-			return findAsResource(path);
+			return classLoaderService.locateResource( path );
 		}
-	}
-
-	/**
-	 * Try to locate a local URL representing the incoming path.
-	 * This method <b>only</b> attempts to locate this URL as a
-	 * java system resource.
-	 *
-	 * @param path The path representing the config location.
-	 * @return An appropriate URL or null.
-	 */
-	public static URL findAsResource(final String path) {
-		URL url = null;
-
-		// First, try to locate this resource through the current
-		// context classloader.
-		ClassLoader contextClassLoader = ClassLoaderHelper.getContextClassLoader();
-		if (contextClassLoader!=null) {
-			url = contextClassLoader.getResource(path);
-		}
-		if (url != null)
-			return url;
-
-		// Next, try to locate this resource through this class's classloader
-		url = ConfigHelper.class.getClassLoader().getResource(path);
-		if (url != null)
-			return url;
-
-		// Next, try to locate this resource through the system classloader
-		url = ClassLoader.getSystemClassLoader().getResource(path);
-
-		// Anywhere else we should look?
-		return url;
 	}
 
 	/** Open an InputStream to the URL represented by the incoming path.  First makes a call
@@ -102,11 +72,13 @@ public final class ConfigHelper {
 	 * {@link java.net.URL#openStream()} is then called to obtain the stream.
 	 *
 	 * @param path The path representing the config location.
+	 * @param classLoaderService The ClassLoaderService.
 	 * @return An input stream to the requested config resource.
 	 * @throws HibernateException Unable to open stream to that resource.
 	 */
-	public static InputStream getConfigStream(final String path) throws HibernateException {
-		final URL url = ConfigHelper.locateConfig(path);
+	public static InputStream getConfigStream(final String path,
+			final ClassLoaderService classLoaderService) throws HibernateException {
+		final URL url = ConfigHelper.locateConfig(path, classLoaderService);
 
 		if (url == null) {
             String msg = LOG.unableToLocateConfigFile(path);
@@ -128,23 +100,27 @@ public final class ConfigHelper {
 	 * wrapped in a Reader.
 	 *
 	 * @param path The path representing the config location.
+	 * @param classLoaderService The ClassLoaderService.
 	 * @return An input stream to the requested config resource.
 	 * @throws HibernateException Unable to open reader to that resource.
 	 */
-	public static Reader getConfigStreamReader(final String path) throws HibernateException {
-		return new InputStreamReader( getConfigStream(path) );
+	public static Reader getConfigStreamReader(final String path,
+			final ClassLoaderService classLoaderService) throws HibernateException {
+		return new InputStreamReader( getConfigStream(path, classLoaderService) );
 	}
 
 	/** Loads a properties instance based on the data at the incoming config location.
 	 *
 	 * @param path The path representing the config location.
+	 * @param classLoaderService The ClassLoaderService.
 	 * @return The loaded properties instance.
 	 * @throws HibernateException Unable to load properties from that resource.
 	 */
-	public static Properties getConfigProperties(String path) throws HibernateException {
+	public static Properties getConfigProperties(String path,
+			final ClassLoaderService classLoaderService) throws HibernateException {
 		try {
 			Properties properties = new Properties();
-			properties.load( getConfigStream(path) );
+			properties.load( getConfigStream(path, classLoaderService) );
 			return properties;
 		}
 		catch(IOException e) {

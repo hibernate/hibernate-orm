@@ -12,8 +12,31 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
+import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
+import org.hibernate.cache.infinispan.impl.BaseRegion;
+import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
+import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
 import org.hibernate.cache.infinispan.timestamp.ClusteredTimestampsRegionImpl;
+import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
+import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
+import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
+import org.hibernate.cache.infinispan.util.CacheCommandFactory;
 import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.spi.AbstractRegionFactory;
+import org.hibernate.cache.spi.CacheDataDescription;
+import org.hibernate.cache.spi.CollectionRegion;
+import org.hibernate.cache.spi.EntityRegion;
+import org.hibernate.cache.spi.NaturalIdRegion;
+import org.hibernate.cache.spi.QueryResultsRegion;
+import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.cache.spi.TimestampsRegion;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.infinispan.AdvancedCache;
 import org.infinispan.commands.module.ModuleCommandFactory;
 import org.infinispan.configuration.cache.CacheMode;
@@ -26,35 +49,10 @@ import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.infinispan.transaction.TransactionMode;
 import org.infinispan.transaction.lookup.GenericTransactionManagerLookup;
-import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.FileLookupFactory;
+import org.infinispan.util.concurrent.IsolationLevel;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
-
-import org.hibernate.cache.infinispan.impl.BaseRegion;
-import org.hibernate.cache.infinispan.naturalid.NaturalIdRegionImpl;
-import org.hibernate.cache.infinispan.util.CacheCommandFactory;
-import org.hibernate.cache.spi.AbstractRegionFactory;
-import org.hibernate.cache.spi.CacheDataDescription;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.collection.CollectionRegionImpl;
-import org.hibernate.cache.infinispan.entity.EntityRegionImpl;
-import org.hibernate.cache.infinispan.query.QueryResultsRegionImpl;
-import org.hibernate.cache.infinispan.timestamp.TimestampTypeOverrides;
-import org.hibernate.cache.infinispan.timestamp.TimestampsRegionImpl;
-import org.hibernate.cache.infinispan.tm.HibernateTransactionManagerLookup;
-import org.hibernate.cache.spi.CollectionRegion;
-import org.hibernate.cache.spi.EntityRegion;
-import org.hibernate.cache.spi.NaturalIdRegion;
-import org.hibernate.cache.spi.QueryResultsRegion;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cache.spi.TimestampsRegion;
-import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Settings;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
  * A {@link RegionFactory} for <a href="http://www.jboss.org/infinispan">Infinispan</a>-backed cache
@@ -396,10 +394,10 @@ public class InfinispanRegionFactory extends AbstractRegionFactory {
       try {
          String configLoc = ConfigurationHelper.getString(
                INFINISPAN_CONFIG_RESOURCE_PROP, properties, DEF_INFINISPAN_CONFIG_RESOURCE);
-         ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+         ClassLoaderService classLoaderService = getServiceRegistry().getService( ClassLoaderService.class );
          InputStream is = FileLookupFactory.newInstance().lookupFileStrict(
-               configLoc, classLoader);
-         ParserRegistry parserRegistry = new ParserRegistry(classLoader);
+               configLoc, classLoaderService.getAggregatedClassLoader());
+         ParserRegistry parserRegistry = new ParserRegistry(classLoaderService.getAggregatedClassLoader());
          ConfigurationBuilderHolder holder = parserRegistry.parse(is);
 
          // Override global jmx statistics exposure

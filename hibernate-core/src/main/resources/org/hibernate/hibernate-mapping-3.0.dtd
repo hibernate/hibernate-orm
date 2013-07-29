@@ -444,6 +444,7 @@ component element, etc. to an entity). -->
 	<!ATTLIST key-many-to-one column CDATA #IMPLIED>
 	<!ATTLIST key-many-to-one foreign-key CDATA #IMPLIED>
 	<!ATTLIST key-many-to-one lazy (false|proxy) #IMPLIED>
+	<!ATTLIST key-many-to-one on-delete (cascade|noaction) "noaction">
 
 <!-- An "any" association is a polymorphic association to any table with
 the given identifier type. The first listed column is a VARCHAR column 

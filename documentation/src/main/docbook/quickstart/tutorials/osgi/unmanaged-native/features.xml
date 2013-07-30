@@ -8,7 +8,7 @@
         <bundle start-level="30">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         
         <!-- JPA -->
-        <bundle start-level="30">mvn:org.hibernate.javax.persistence/hibernate-jpa-2.1-api/1.0.0-SNAPSHOT</bundle>
+        <bundle start-level="30">mvn:org.hibernate.javax.persistence/hibernate-jpa-2.1-api/1.0.0.Final</bundle>
         
         <!-- Taken from Karaf-Tutorial -->
         <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>

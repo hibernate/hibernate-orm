@@ -283,14 +283,12 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 			}
 
 			final EntityKey ownerEntityKey = fetchOwnerState.getEntityKey();
-			if ( ownerEntityKey == null ) {
-				throw new IllegalStateException( "Could not locate fetch owner EntityKey" );
+			if ( ownerEntityKey != null ) {
+				context.getSession().getPersistenceContext().addNullProperty(
+						ownerEntityKey,
+						fetchedType.getPropertyName()
+				);
 			}
-
-			context.getSession().getPersistenceContext().addNullProperty(
-					ownerEntityKey,
-					fetchedType.getPropertyName()
-			);
 		}
 	}
 

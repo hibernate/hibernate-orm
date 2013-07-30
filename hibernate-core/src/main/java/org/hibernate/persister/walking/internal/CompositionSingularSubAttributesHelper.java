@@ -131,7 +131,9 @@ public class CompositionSingularSubAttributesHelper {
 						final int columnSpan = type.getColumnSpan( ownerEntityPersister.getFactory() );
 						final String[] subAttributeLhsColumns = ArrayHelper.slice( lhsColumns, columnPosition, columnSpan );
 
-						final boolean nullable = compositeType.getPropertyNullability()[subAttributeNumber];
+
+						final boolean[] propertyNullability = compositeType.getPropertyNullability();
+						final boolean nullable = propertyNullability == null || propertyNullability[subAttributeNumber];
 
 						currentColumnPosition += columnSpan;
 

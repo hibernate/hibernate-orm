@@ -49,7 +49,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
+public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void testMultipleGetUpdateCountCalls() {
@@ -60,7 +60,7 @@ public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 		// this is what the TCK attempts to do, don't shoot the messenger...
 		query.getUpdateCount();
 		// yep, twice
-		int updateCount = query.getUpdateCount();
+		query.getUpdateCount();
 
 		em.getTransaction().commit();
 		em.close();

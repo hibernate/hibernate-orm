@@ -251,6 +251,8 @@ public class ResultImpl implements Result {
 	}
 
 	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
+		// might be better to just manually construct the Return(s).. SQLQueryReturnProcessor does a lot of
+		// work that is really unnecessary here.
 		final SQLQueryReturnProcessor processor = new SQLQueryReturnProcessor(
 				context.getQueryReturns(),
 				context.getSession().getFactory()
@@ -292,8 +294,7 @@ public class ResultImpl implements Result {
 		private QueryParameters queryParameters;
 		private SessionImplementor session;
 
-		// temp
-		private final CustomQuery customQuery;
+		private boolean needsDiscovery = true;
 
 		public CustomLoaderExtension(
 				CustomQuery customQuery,
@@ -302,14 +303,16 @@ public class ResultImpl implements Result {
 			super( customQuery, session.getFactory() );
 			this.queryParameters = queryParameters;
 			this.session = session;
-
-			this.customQuery = customQuery;
 		}
 
 		// todo : this would be a great way to add locking to stored procedure support (at least where returning entities).
 
 		public List processResultSet(ResultSet resultSet) throws SQLException {
-			super.autoDiscoverTypes( resultSet );
+			if ( needsDiscovery ) {
+				super.autoDiscoverTypes( resultSet );
+				// todo : EntityAliases discovery
+				needsDiscovery = false;
+			}
 			return super.processResultSet(
 					resultSet,
 					queryParameters,
@@ -318,13 +321,6 @@ public class ResultImpl implements Result {
 					null,
 					Integer.MAX_VALUE,
 					Collections.<AfterLoadAction>emptyList()
-			);
-		}
-
-		@Override
-		protected void validateAlias(String alias) {
-			System.out.println(
-					"TEMPORARY... discovered result set alias from stored procedure [" + alias + "] : " + customQuery.getSQL()
 			);
 		}
 	}

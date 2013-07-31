@@ -112,11 +112,9 @@ import org.hibernate.metamodel.spi.domain.SingularAttribute;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
-import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-import org.hibernate.metamodel.spi.relational.UniqueKey;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.AggregatedCompositeIdentifierSource;
 import org.hibernate.metamodel.spi.source.AttributeSource;
@@ -222,7 +220,7 @@ public class Binder implements HelperContext {
 		this.tableHelper = new TableHelper( this );
 		this.foreignKeyHelper = new ForeignKeyHelper( this );
 		this.relationalValueBindingHelper = new RelationalValueBindingHelper( this );
-		this.naturalIdUniqueKeyHelper = new NaturalIdUniqueKeyHelper();
+		this.naturalIdUniqueKeyHelper = new NaturalIdUniqueKeyHelper( this );
 		this.standardAssociationRelationalBindingResolver =
 				new StandardAssociationRelationalBindingResolverImpl( this );
 		this.mappedByAssociationRelationalBindingResolver =
@@ -1127,49 +1125,28 @@ public class Binder implements HelperContext {
 				final EntitySource entitySource = bindingContextContext.getEntitySource();
 					for ( final ConstraintSource constraintSource : entitySource.getConstraints() ) {
 						if ( UniqueConstraintSource.class.isInstance( constraintSource ) ) {
-							UniqueConstraintSource uniqueConstraintSource = (UniqueConstraintSource) constraintSource;
+							final UniqueConstraintSource uniqueConstraintSource = (UniqueConstraintSource) constraintSource;
 
-							UniqueKey uk = new UniqueKey();
+							final TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
 
-							TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
-
-							final List<String> columnNames = uniqueConstraintSource.columnNames();
-							final String constraintName = StringHelper.isEmpty( constraintSource.name() )
-									? HashedNameUtil.generateName( "UK_", table, columnNames.toArray( new String[columnNames.size()] ) )
-									: constraintSource.name();
-							for ( final String columnName : columnNames ) {
-								uk.addColumn(
-										tableHelper.locateOrCreateColumn(
-												table,
-												columnName,
-												new ColumnNamingStrategyHelper( null, false )
-
-										)
-								);
+							final List<Column> columns = new ArrayList<Column>();
+							for ( final String columnName : uniqueConstraintSource.columnNames() ) {
+								columns.add( tableHelper.locateOrCreateColumn( table, columnName,
+										new ColumnNamingStrategyHelper( null, false ) ) );
 							}
-							uk.setTable( table );
-							uk.setName( constraintName );
-							table.addUniqueKey( uk );
+							tableHelper.createUniqueKey( table, columns, constraintSource.name() );
 						}
 						else if ( IndexConstraintSource.class.isInstance( constraintSource ) ) {
-							IndexConstraintSource indexConstraintSource = (IndexConstraintSource) constraintSource;
+							final IndexConstraintSource indexConstraintSource = (IndexConstraintSource) constraintSource;
 
-							TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
+							final TableSpecification table = findConstraintTable( entityBinding, constraintSource.getTableName() );
 
-							final List<String> columnNames = indexConstraintSource.columnNames();
-							final List<String> orderings = indexConstraintSource.orderings();
-							final String constraintName = StringHelper.isEmpty( constraintSource.name() )
-									? HashedNameUtil.generateName( "IDX_", table, columnNames.toArray( new String[columnNames.size()] ) )
-									: constraintSource.name();
-							final Index index = table.getOrCreateIndex( constraintName );
-							for ( int i = 0; i < columnNames.size(); i++ ) {
-								Column column = tableHelper.locateOrCreateColumn(
-										table,
-										columnNames.get( i ),
-										new DefaultColumnNamingStrategyHelper( null )
-								);
-								index.addColumn( column, orderings.get( i ) );
+							final List<Column> columns = new ArrayList<Column>();
+							for ( final String columnName : indexConstraintSource.columnNames() ) {
+								columns.add( tableHelper.locateOrCreateColumn( table, columnName,
+										new ColumnNamingStrategyHelper( null, false ) ) );
 							}
+							tableHelper.createIndex( table, columns, constraintSource.name() );
 						}
 					}
 				}
@@ -2477,15 +2454,13 @@ public class Binder implements HelperContext {
 			foreignKey = null;
 		}
 		if ( elementSource.isUnique() ) {
-			UniqueKey uk = new UniqueKey();
+			final List<Column> columns = new ArrayList<Column>();
 			for ( RelationalValueBinding relationalValueBinding : relationalValueBindings ) {
 				if ( ! relationalValueBinding.isDerived() )  {
-					uk.addColumn( (Column) relationalValueBinding.getValue() );
+					columns.add( (Column) relationalValueBinding.getValue() );
 				}
 			}
-			uk.setTable( collectionTable );
-			HashedNameUtil.setName("UK_", uk);
-			collectionTable.addUniqueKey( uk );
+			tableHelper.createUniqueKey( collectionTable, columns, null );
 		}
 		elementBinding.setJoinRelationalValueBindings( relationalValueBindings, foreignKey );
 		typeHelper.bindManyToManyAttributeType(

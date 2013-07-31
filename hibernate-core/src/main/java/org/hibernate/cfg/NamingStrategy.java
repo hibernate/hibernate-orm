@@ -23,6 +23,8 @@
  */
 package org.hibernate.cfg;
 
+import java.util.List;
+
 
 /**
  * A set of rules for determining the physical column
@@ -37,6 +39,7 @@ package org.hibernate.cfg;
  * @see ImprovedNamingStrategy
  * @author Gavin King
  * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 public interface NamingStrategy {
 	/**
@@ -93,6 +96,33 @@ public interface NamingStrategy {
 	public String foreignKeyColumnName(
 			String propertyName, String propertyEntityName, String propertyTableName, String referencedColumnName
 	);
+	/**
+	 * Return a constraint name for foreign keys that are not explicitly named in the mappings/annotations.
+	 * 
+	 * @param tableName The foreign key's source table
+	 * @param columnNames The source columns within the foreign key
+	 * @param tableName The foreign key's target table
+	 * @param columnNames The target columns within the foreign key
+	 * @return The generated foreign key constraint name
+	 */
+	public String foreignKeyName(String sourceTableName, List<String> sourceColumnNames,
+			String targetTableName, List<String> targetColumnNames);
+	/**
+	 * Return a constraint name for unique keys that are not explicitly named in the mappings/annotations.
+	 * 
+	 * @param tableName The unique key's table
+	 * @param columnNames The columns within the unique key
+	 * @return The generated unique key constraint name
+	 */
+	public String uniqueKeyName(String tableName, List<String> columnNames);
+	/**
+	 * Return a constraint name for indexes that are not explicitly named in the mappings/annotations.
+	 * 
+	 * @param tableName The index's table
+	 * @param columnNames The columns within the index
+	 * @return The generated index constraint name
+	 */
+	public String indexName(String tableName, List<String> columnNames);
 	/**
 	 * Return the logical column name used to refer to a column in the metadata
 	 * (like index, unique constraints etc)

@@ -69,7 +69,7 @@ public class InLineView extends AbstractTableSpecification {
 	}
 
 	@Override
-	public Index getOrCreateIndex(String name) {
+	public void addIndex(Index index) {
 		throw new UnsupportedOperationException( "Cannot create index on inline view" );
 	}
 

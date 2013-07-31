@@ -147,16 +147,8 @@ public class Table extends AbstractTableSpecification implements Exportable {
 	}
 
 	@Override
-	public Index getOrCreateIndex(String name) {
-		Index result = null;
-		if ( name != null ) {
-			result = locateConstraint( indexes, name );
-		}
-		if ( result == null ) {
-			result = new Index( this, name );
-			indexes.add( result );
-		}
-		return result;
+	public void addIndex(Index idx) {
+		indexes.add( idx );
 	}
 
 	@Override

@@ -33,6 +33,10 @@ import org.hibernate.dialect.Dialect;
  */
 public class Index extends AbstractConstraint {
 	
+	public Index() {
+		this( null, null );
+	}
+
 	protected Index(Table table, String name) {
 		super( table, name );
 	}

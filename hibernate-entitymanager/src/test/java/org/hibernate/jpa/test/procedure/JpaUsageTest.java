@@ -90,7 +90,6 @@ public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-8398" )
 	public void testResultClassHandling() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

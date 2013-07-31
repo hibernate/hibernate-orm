@@ -2316,7 +2316,7 @@ public class Flight implements Serializable {
       </section>
     </section>
 
-    <section xml:id="mapping-declaration-property" revision="4">
+    <section xml:id="mapping-declaration-property" revision="5">
       <title>Property</title>
 
       <para>You need to decide which property needs to be made persistent in a
@@ -2552,8 +2552,14 @@ public class MonetaryAmount implements Serializable {
           are on a field, then only fields are considered for persistence and
           the state is accessed via the field. If there annotations are on a
           getter, then only the getters are considered for persistence and the
-          state is accessed via the getter/setter. That works well in practice
+          state is accessed via the getter/setter. The latter works well in practice
           and is the recommended approach.<note>
+              <para>The choice of access type has a notable effect on the behavior
+              of proxies. If using the recommended property access approach,
+              the identifier getter method can be called without requiring the
+              proxy to be initialized. On the other hand, when using field access,
+              any method invocation will cause proxy initialization.</para>
+            </note><note>
               <para>The placement of annotations within a class hierarchy has
               to be consistent (either field or on property) to be able to
               determine the default access type. It is recommended to stick to

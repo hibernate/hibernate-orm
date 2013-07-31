@@ -92,7 +92,7 @@ task copyBnd(type: Copy) {
 
 task runBnd(type: JavaExec){
 	main = "-jar"
-	args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/javassist.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
+	args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
 }
 
 task copyToLib(type: Copy) {

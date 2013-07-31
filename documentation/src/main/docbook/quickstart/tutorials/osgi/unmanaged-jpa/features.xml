@@ -21,7 +21,6 @@
 
 		<!-- These do not natively support OSGi, so using 3rd party bundles. -->
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.antlr/2.7.7_5</bundle>
-		<bundle>mvn:org.jboss.javassist/com.springsource.javassist/3.15.0.GA</bundle>
 		<bundle>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr303-api-1.0.0/2.2.0</bundle>
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ant/1.8.2_2</bundle>
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/1.6.1_5</bundle>
@@ -32,6 +31,7 @@
 		
         <bundle>mvn:com.fasterxml/classmate/0.5.4</bundle>
         <bundle>mvn:org.jboss.logging/jboss-logging/3.1.0.GA</bundle>
+		<bundle>mvn:org.javassist/javassist/3.18.0-GA</bundle>
         
         <bundle>mvn:org.hibernate/hibernate-core/4.3.0-SNAPSHOT</bundle>
         <bundle>mvn:org.hibernate/hibernate-entitymanager/4.3.0-SNAPSHOT</bundle>

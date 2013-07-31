@@ -1,6 +1,0 @@
- Bundle-SymbolicName: javassist
- Bundle-Version: 3.18.0
-
- Include-Resource: @../javassist-3.18.0-GA.jar
-Import-Package: com.sun.jdi;resolution:=optional,com.sun.jdi.connect;resolution:=optional,com.sun.jdi.event;resolution:=optional,com.sun.jdi.request;resolution:=optional
--exportcontents: javassist,javassist.bytecode,javassist.bytecode.analysis,javassist.bytecode.annotation,javassist.bytecode.stackmap,javassist.compiler,javassist.compiler.ast,javassist.convert,javassist.expr,javassist.runtime,javassist.scopedpool,javassist.tools,javassist.tools.reflect,javassist.tools.rmi,javassist.tools.web,javassist.util,javassist.util.proxy

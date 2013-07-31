@@ -23,13 +23,17 @@
  */
 package org.hibernate.metamodel.internal;
 
-import org.jboss.logging.Logger;
+import java.util.List;
 
 import org.hibernate.TruthValue;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.internal.ConstraintNamingStrategyHelper.IndexNamingStrategyHelper;
+import org.hibernate.metamodel.internal.ConstraintNamingStrategyHelper.UniqueKeyNamingStrategyHelper;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -41,6 +45,7 @@ import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.SizeSource;
 import org.hibernate.metamodel.spi.source.TableSource;
 import org.hibernate.metamodel.spi.source.TableSpecificationSource;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gail Badner
@@ -173,13 +178,41 @@ public class TableHelper {
 		column.setComment( columnSource.getComment() );
 
 		if (columnSource.isUnique()) {
-			UniqueKey uk = new UniqueKey();
-			uk.addColumn( column );
-			uk.setTable( table );
-			HashedNameUtil.setName("UK_", uk);
-			table.addUniqueKey( uk );
+			createUniqueKey( table, CollectionHelper.singleEntryList( column ), null );
 		}
 		return column;
+	}
+	
+	public void createUniqueKey(
+			final TableSpecification table,
+			final List<Column> columns,
+			final String name) {
+		final UniqueKey uk = new UniqueKey();
+		for ( final Column column : columns ) {
+			uk.addColumn( column );
+		}
+		uk.setTable( table );
+		
+		final String normalizedName = normalizeDatabaseIdentifier( name, new UniqueKeyNamingStrategyHelper( table, columns ) );
+		
+		uk.setName( normalizedName );
+		table.addUniqueKey( uk );
+	}
+	
+	public void createIndex(
+			final TableSpecification table,
+			final List<Column> columns,
+			final String name) {
+		final Index idx = new Index();
+		for ( final Column column : columns ) {
+			idx.addColumn( column );
+		}
+		idx.setTable( table );
+		
+		final String normalizedName = normalizeDatabaseIdentifier( name, new IndexNamingStrategyHelper( table, columns ) );
+		
+		idx.setName( normalizedName );
+		table.addIndex( idx );
 	}
 
 	private void resolveColumnNullable(

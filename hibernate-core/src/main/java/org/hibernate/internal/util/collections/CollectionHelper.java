@@ -207,4 +207,10 @@ public final class CollectionHelper {
 			}
 		}
 	}
+	
+	public static <T> List<T> singleEntryList(T entry) {
+		final List<T> list = new ArrayList<T>();
+		list.add( entry );
+		return list;
+	}
 }

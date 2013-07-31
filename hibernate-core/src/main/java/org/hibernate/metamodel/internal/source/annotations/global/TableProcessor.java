@@ -25,10 +25,6 @@ package org.hibernate.metamodel.internal.source.annotations.global;
 
 import java.util.Collection;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
-
-import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.internal.CoreMessageLogger;
@@ -40,12 +36,11 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.SecondaryTable;
-import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.Table;
-import org.hibernate.metamodel.spi.relational.Value;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.logging.Logger;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.
@@ -101,13 +96,6 @@ public class TableProcessor {
 			final AnnotationInstance tableAnnotation,
 			final boolean isSecondaryTable,
 			final MetadataImplementor metadata) {
-		for ( AnnotationInstance indexAnnotation : JandexHelper.getValue(
-				tableAnnotation,
-				"indexes",
-				AnnotationInstance[].class
-		) ) {
-			bindIndexAnnotation( table, tableAnnotation, indexAnnotation );
-		}
 		String comment = JandexHelper.getValue( tableAnnotation, "comment", String.class );
 		if ( StringHelper.isNotEmpty( comment ) ) {
 			table.addComment( comment.trim() );
@@ -163,36 +151,5 @@ public class TableProcessor {
 //		}
 
 
-	}
-
-	private static void bindIndexAnnotation(Table table, AnnotationInstance tableAnnotation, AnnotationInstance indexAnnotation) {
-		String indexName = JandexHelper.getValue( indexAnnotation, "name", String.class );
-		String[] columnNames = JandexHelper.getValue( indexAnnotation, "columnNames", String[].class );
-		if ( columnNames == null ) {
-			LOG.noColumnsSpecifiedForIndex( indexName, table.toLoggableString() );
-			return;
-		}
-		Index index = table.getOrCreateIndex( indexName );
-		for ( String columnName : columnNames ) {
-			Column column = findColumn( table, columnName );
-			if ( column == null ) {
-				throw new AnnotationException( "@Index references a unknown column: " + columnName );
-			}
-			index.addColumn( column );
-		}
-	}
-
-	private static Column findColumn(Table table, String columnName) {
-		Column column = null;
-		for ( Value value : table.values() ) {
-			if ( Column.class.isInstance( value ) && Column.class.cast( value )
-					.getColumnName()
-					.getText()
-					.equals( columnName ) ) {
-				column = (Column) value;
-				break;
-			}
-		}
-		return column;
 	}
 }

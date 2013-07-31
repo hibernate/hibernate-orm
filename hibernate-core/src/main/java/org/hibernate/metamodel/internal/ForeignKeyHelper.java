@@ -27,9 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.metamodel.internal.ConstraintNamingStrategyHelper.ForeignKeyNamingStrategyHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.RelationalValueBinding;
@@ -42,7 +42,6 @@ import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -160,60 +159,15 @@ public class ForeignKeyHelper {
 			final List<Column> sourceColumns,
 			final TableSpecification targetTable,
 			final List<Column> targetColumns) {
-		final String foreignKeyName;
-		if ( StringHelper.isEmpty( explicitForeignKeyName ) ) {
-			foreignKeyName = ForeignKey.generateName( sourceTable, targetTable, sourceColumns, targetColumns );
-		}
-		else {
-			foreignKeyName = helperContext.relationalIdentifierHelper().quotedIdentifier( explicitForeignKeyName );
-		}
+		final String foreignKeyName = helperContext.relationalIdentifierHelper().normalizeDatabaseIdentifier(
+				explicitForeignKeyName, new ForeignKeyNamingStrategyHelper(
+						sourceTable, sourceColumns, targetTable, targetColumns ) );
 		
 		ForeignKey foreignKey = locateAndBindForeignKeyByName( foreignKeyName, sourceTable, sourceColumns, targetTable, targetColumns );
-		if ( foreignKey == null ) {
-			foreignKey = locateForeignKeyByColumnMapping( sourceTable, sourceColumns, targetTable, targetColumns );
-			if ( foreignKey != null ) {
-				if ( foreignKey.getName() == null ) {
-					// the foreign key name has not be initialized; set it to foreignKeyName
-					foreignKey.setName( foreignKeyName );
-				}
-				else {
-					// the foreign key name has already been initialized so cannot rename it
-					// TODO: should this just be INFO?
-					log.warn(
-							String.format(
-									"A foreign key mapped as %s will not be created because foreign key %s already exists with the same column mapping.",
-									foreignKeyName,
-									foreignKey.getName()
-							)
-					);
-				}
-			}
-		}
 		if ( foreignKey == null ) {
 			// no foreign key found; create one
 			foreignKey = sourceTable.createForeignKey( targetTable, foreignKeyName );
 			bindForeignKeyColumns( foreignKey, sourceTable, sourceColumns, targetTable, targetColumns );
-		}
-		return foreignKey;
-	}
-
-	private static ForeignKey locateForeignKeyByColumnMapping(
-			final TableSpecification sourceTable,
-			final List<Column> sourceColumns,
-			final TableSpecification targetTable,
-			final List<Column> targetColumns) {
-		// check for an existing foreign key with the same source/target columns
-		ForeignKey foreignKey = null;
-		Iterable<ForeignKey> possibleForeignKeys = sourceTable.locateForeignKey( targetTable );
-		if ( possibleForeignKeys != null ) {
-			for ( ForeignKey possibleFK : possibleForeignKeys ) {
-				if ( possibleFK.getSourceColumns().equals( sourceColumns ) &&
-						possibleFK.getTargetColumns().equals( targetColumns ) ) {
-					// this is the foreign key
-					foreignKey = possibleFK;
-					break;
-				}
-			}
 		}
 		return foreignKey;
 	}

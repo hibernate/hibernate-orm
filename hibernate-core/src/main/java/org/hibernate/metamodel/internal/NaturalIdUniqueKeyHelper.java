@@ -31,9 +31,15 @@ import org.hibernate.metamodel.spi.relational.UniqueKey;
  * @author Brett Meyer
  */
 public class NaturalIdUniqueKeyHelper {
+	
+	private final HelperContext helperContext;
 
 	private Map<TableSpecification, UniqueKey> naturalIdUniqueKeys
 			= new HashMap<TableSpecification, UniqueKey>();
+	
+	public NaturalIdUniqueKeyHelper(HelperContext helperContext) {
+		this.helperContext = helperContext;
+	}
 
 	/**
 	 * Natural ID columns must reside in one single UniqueKey within the Table.
@@ -50,6 +56,7 @@ public class NaturalIdUniqueKeyHelper {
 			uniqueKey = naturalIdUniqueKeys.get( table );
 		}
 		else {
+			// TODO: For now, leave this out of the naming strategy.  It has nothing to do with the columns.
 			String keyName = "UK_" + HashedNameUtil.hashedName( table.getLogicalName().getText() + "_NaturalID" ); 
 			uniqueKey = new UniqueKey();
 			uniqueKey.setTable( table );

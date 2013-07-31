@@ -32,4 +32,8 @@ public class NoMoreReturnsException extends HibernateException {
 	public NoMoreReturnsException(String message) {
 		super( message );
 	}
+
+	public NoMoreReturnsException() {
+		super( "Results have been exhausted" );
+	}
 }

@@ -34,6 +34,13 @@ package org.hibernate.result;
  */
 public interface Result {
 	/**
+	 * Retrieve the current return.
+	 *
+	 * @return The current return.
+	 */
+	public Return getCurrentReturn();
+
+	/**
 	 * Are there any more returns associated with this result?
 	 *
 	 * @return {@code true} means there are more returns available via {@link #getNextReturn()}; {@code false}
@@ -42,9 +49,12 @@ public interface Result {
 	public boolean hasMoreReturns();
 
 	/**
-	 * Retrieve the next return.
+	 * Retrieve the next return
 	 *
 	 * @return The next return.
+	 *
+	 * @throws NoMoreReturnsException Thrown if there are no more returns associated with this Result, as would
+	 * have been indicated by a {@code false} return from {@link #hasMoreReturns()}.
 	 */
 	public Return getNextReturn() throws NoMoreReturnsException;
 }

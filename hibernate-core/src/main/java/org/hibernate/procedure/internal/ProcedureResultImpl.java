@@ -25,9 +25,7 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
-import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureResult;
@@ -70,19 +68,25 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 	}
 
 	@Override
-	protected CurrentReturnDescriptor buildCurrentReturnDescriptor(boolean isResultSet, int updateCount) {
-		return new ProcedureCurrentReturnDescriptor( isResultSet, updateCount, refCursorParamIndex );
+	protected CurrentReturnState buildCurrentReturnDescriptor(boolean isResultSet, int updateCount) {
+		return new ProcedureCurrentReturnState( isResultSet, updateCount, refCursorParamIndex );
 	}
 
-	protected boolean hasMoreReturns(CurrentReturnDescriptor descriptor) {
+	protected boolean hasMoreReturns(CurrentReturnState descriptor) {
 		return super.hasMoreReturns( descriptor )
-				|| ( (ProcedureCurrentReturnDescriptor) descriptor ).refCursorParamIndex < refCursorParameters.length;
+				|| ( (ProcedureCurrentReturnState) descriptor ).refCursorParamIndex < refCursorParameters.length;
 	}
 
 	@Override
-	protected Return buildExtendedReturn(CurrentReturnDescriptor returnDescriptor) {
+	protected boolean hasExtendedReturns(CurrentReturnState currentReturnState) {
+		return ProcedureCurrentReturnState.class.isInstance( currentReturnState )
+				&& ( (ProcedureCurrentReturnState) currentReturnState ).refCursorParamIndex < refCursorParameters.length;
+	}
+
+	@Override
+	protected Return buildExtendedReturn(CurrentReturnState returnDescriptor) {
 		this.refCursorParamIndex++;
-		final int refCursorParamIndex = ( (ProcedureCurrentReturnDescriptor) returnDescriptor ).refCursorParamIndex;
+		final int refCursorParamIndex = ( (ProcedureCurrentReturnState) returnDescriptor ).refCursorParamIndex;
 		final ParameterRegistrationImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
 		ResultSet resultSet;
 		if ( refCursorParam.getName() != null ) {
@@ -95,21 +99,13 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 					.getService( RefCursorSupport.class )
 					.getResultSet( callableStatement, refCursorParam.getPosition() );
 		}
-		return new ResultSetReturn( this, resultSet );
+		return new ResultSetReturnImpl( extractResults( resultSet ) );
 	}
 
-	protected JDBCException convert(SQLException e, String message) {
-		return procedureCall.getSession().getFactory().getSQLExceptionHelper().convert(
-				e,
-				message,
-				procedureCall.getProcedureName()
-		);
-	}
-
-	protected static class ProcedureCurrentReturnDescriptor extends CurrentReturnDescriptor {
+	protected class ProcedureCurrentReturnState extends CurrentReturnState {
 		private final int refCursorParamIndex;
 
-		private ProcedureCurrentReturnDescriptor(boolean isResultSet, int updateCount, int refCursorParamIndex) {
+		private ProcedureCurrentReturnState(boolean isResultSet, int updateCount, int refCursorParamIndex) {
 			super( isResultSet, updateCount );
 			this.refCursorParamIndex = refCursorParamIndex;
 		}

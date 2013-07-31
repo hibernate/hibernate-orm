@@ -385,6 +385,11 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		// for now assume there are no resultClasses nor mappings defined..
 		// 	TOTAL PROOF-OF-CONCEPT!!!!!!
 
+		// todo : how to identify calls which should be in the form `{? = call procName...}` ??? (note leading param marker)
+		// 		more than likely this will need to be a method on the native API.  I can see this as a trigger to
+		//		both: (1) add the `? = ` part and also (2) register a REFCURSOR parameter for DBs (Oracle, PGSQL) that
+		//		need it.
+
 		final StringBuilder buffer = new StringBuilder().append( "{call " )
 				.append( procedureName )
 				.append( "(" );

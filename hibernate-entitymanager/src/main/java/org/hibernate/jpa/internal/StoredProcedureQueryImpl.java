@@ -25,8 +25,11 @@ package org.hibernate.jpa.internal;
 
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
 import javax.persistence.ParameterMode;
+import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TemporalType;
@@ -197,7 +200,8 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public boolean execute() {
-		return outputs().hasMoreReturns();
+		final Return rtn = outputs().getCurrentReturn();
+		return rtn != null && ResultSetReturn.class.isInstance( rtn );
 	}
 
 	@Override
@@ -212,34 +216,76 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public int getUpdateCount() {
-		final Return nextReturn = outputs().getNextReturn();
-		if ( nextReturn.isResultSet() ) {
+		final Return rtn = outputs().getCurrentReturn();
+		if ( rtn == null ) {
 			return -1;
 		}
-		return ( (UpdateCountReturn) nextReturn ).getUpdateCount();
+		else if ( UpdateCountReturn.class.isInstance( rtn ) ) {
+			return ( (UpdateCountReturn) rtn ).getUpdateCount();
+		}
+		else {
+			return -1;
+		}
 	}
 
 	@Override
 	public List getResultList() {
-		final Return nextReturn = outputs().getNextReturn();
-		if ( ! nextReturn.isResultSet() ) {
-			return null; // todo : what should be thrown/returned here?
+		final Return rtn = outputs().getCurrentReturn();
+		if ( ! ResultSetReturn.class.isInstance( rtn ) ) {
+			throw new IllegalStateException( "Current CallableStatement was not a ResultSet, but getResultList was called" );
 		}
-		return ( (ResultSetReturn) nextReturn ).getResultList();
+
+		if ( outputs().hasMoreReturns() ) {
+			outputs().getNextReturn();
+		}
+
+		return ( (ResultSetReturn) rtn ).getResultList();
 	}
 
 	@Override
 	public Object getSingleResult() {
-		final Return nextReturn = outputs().getNextReturn();
-		if ( ! nextReturn.isResultSet() ) {
-			return null; // todo : what should be thrown/returned here?
+		final List resultList = getResultList();
+		if ( resultList == null || resultList.isEmpty() ) {
+			throw new NoResultException(
+					String.format(
+							"Call to stored procedure [%s] returned no results",
+							procedureCall.getProcedureName()
+					)
+			);
 		}
-		return ( (ResultSetReturn) nextReturn ).getSingleResult();
+		else if ( resultList.size() > 1 ) {
+			throw new NonUniqueResultException(
+					String.format(
+							"Call to stored procedure [%s] returned multiple results",
+							procedureCall.getProcedureName()
+					)
+			);
+		}
+
+		return resultList.get( 0 );
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <T> T unwrap(Class<T> cls) {
-		return null;
+		if ( ProcedureCall.class.isAssignableFrom( cls ) ) {
+			return (T) procedureCall;
+		}
+		else if ( ProcedureResult.class.isAssignableFrom( cls ) ) {
+			return (T) outputs();
+		}
+		else if ( BaseQueryImpl.class.isAssignableFrom( cls ) ) {
+			return (T) this;
+		}
+
+		throw new PersistenceException(
+				String.format(
+						"Unsure how to unwrap %s impl [%s] as requested type [%s]",
+						StoredProcedureQuery.class.getSimpleName(),
+						this.getClass().getName(),
+						cls.getName()
+				)
+		);
 	}
 
 

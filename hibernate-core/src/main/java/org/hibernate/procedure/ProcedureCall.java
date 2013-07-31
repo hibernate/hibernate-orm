@@ -134,11 +134,12 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
-	 * Output instance each time.
+	 * ProcedureResult instance each time.
 	 * <p/>
-	 * Note that the procedure will not actually be executed until the outputs are actually accessed.
+	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureResult
+	 * will be returned.
 	 *
-	 * @return The outputs representation
+	 * @return The ProcedureResult representation
 	 */
 	public ProcedureResult getResult();
 

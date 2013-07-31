@@ -44,31 +44,43 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests various JPA usage scenarios for performing stored procedures.
+ * Tests various JPA usage scenarios for performing stored procedures.  Inspired by the awesomely well-done JPA TCK
  *
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-@FailureExpected( jiraKey = "HHH-8389", message = "Waiting clarification from EG" )
 public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 
-	/**
-	 * Some tests inspired by the awesomely well-done JPA TCK
-	 */
 	@Test
-	public void testJpaUsage1() {
+	public void testMultipleGetUpdateCountCalls() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
-		StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
+		StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser" );
 		// this is what the TCK attempts to do, don't shoot the messenger...
 		query.getUpdateCount();
 		// yep, twice
 		int updateCount = query.getUpdateCount();
 
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testBasicScalarResults() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser" );
+		boolean isResult = query.execute();
+		assertTrue( isResult );
+		int updateCount = query.getUpdateCount();
+
 		boolean results = false;
 		do {
 			List list = query.getResultList();
+			assertEquals( 1, list.size() );
+
 			results = query.hasMoreResults();
 			// and it only sets the updateCount once lol
 		} while ( results || updateCount != -1);
@@ -78,15 +90,15 @@ public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testJpaUsage2() {
+	@FailureExpected( jiraKey = "HHH-8398" )
+	public void testResultClassHandling() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
 		StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
 		boolean isResult = query.execute();
 		assertTrue( isResult );
-//		int updateCount = query.getUpdateCount();
-		int updateCount = -1;
+		int updateCount = query.getUpdateCount();
 
 		boolean results = false;
 		do {
@@ -122,7 +134,7 @@ public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 			"    return rs;\n" +
 			"}\n" +
 			"$$";
-	public static final String DROP_CMD = "DROP ALIAS findUser IF EXISTS";
+	public static final String DROP_CMD = "DROP ALIAS findOneUser IF EXISTS";
 
 	@Override
 	protected void afterEntityManagerFactoryBuilt() {
@@ -130,6 +142,7 @@ public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	private void execute(String sql) {
+		System.out.println( "Executing SQL : " + sql );
 		final SessionFactoryImplementor sf = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
 		final Connection conn;
 		try {
@@ -153,14 +166,13 @@ public class JpaUsageTest extends BaseEntityManagerFunctionalTestCase {
 			}
 		}
 		catch (SQLException e) {
-			throw new RuntimeException( "Unable to execute SQL : " + sql );
+			throw new RuntimeException( "Unable to execute SQL : " + sql, e );
 		}
 	}
 
 	@Override
 	public void releaseResources() {
 		execute( DROP_CMD );
-
 		super.releaseResources();
 	}
 }

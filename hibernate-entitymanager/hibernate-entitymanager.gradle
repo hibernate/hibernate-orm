@@ -24,7 +24,7 @@ dependencies {
 //    testRuntime( "org.glassfish.web:el-impl:2.1.2-b04" )
 
     // for testing stored procedure support
-    testRuntime( libraries.derby )
+    testCompile( libraries.derby )
 }
 
 def pomName() {

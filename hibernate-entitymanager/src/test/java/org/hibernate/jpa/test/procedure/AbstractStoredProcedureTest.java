@@ -52,13 +52,13 @@ public abstract class AbstractStoredProcedureTest extends BaseEntityManagerFunct
 		list = m2.getParameterDeclarations();
 
 		memento = list.get( 0 );
-		assertEquals( Integer.valueOf( 0 ), memento.getPosition() );
+		assertEquals( Integer.valueOf( 1 ), memento.getPosition() );
 		assertEquals( javax.persistence.ParameterMode.INOUT, memento.getMode() );
 		assertEquals( StringType.INSTANCE, memento.getHibernateType() );
 		assertEquals( String.class, memento.getType() );
 
 		memento = list.get( 1 );
-		assertEquals( Integer.valueOf( 1 ), memento.getPosition() );
+		assertEquals( Integer.valueOf( 2 ), memento.getPosition() );
 		assertEquals( javax.persistence.ParameterMode.INOUT, memento.getMode() );
 		assertEquals( LongType.INSTANCE, memento.getHibernateType() );
 		assertEquals( Long.class, memento.getType() );

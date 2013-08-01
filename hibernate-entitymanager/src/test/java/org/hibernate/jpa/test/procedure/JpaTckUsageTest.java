@@ -24,7 +24,6 @@
 package org.hibernate.jpa.test.procedure;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.StoredProcedureQuery;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -32,13 +31,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.h2.tools.SimpleResultSet;
 
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -51,7 +47,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
@@ -223,7 +218,8 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DerbyTenSevenDialect.class );
 		settings.put( org.hibernate.cfg.AvailableSettings.DRIVER,  org.apache.derby.jdbc.EmbeddedDriver.class.getName() );
-		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:hibernate-orm-testing;create=true" );
+//		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:/tmp/hibernate-orm-testing;create=true" );
+		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:memory:hibernate-orm-testing;create=true" );
 		settings.put( org.hibernate.cfg.AvailableSettings.USER, "" );
 
 		settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );

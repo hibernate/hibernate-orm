@@ -40,7 +40,9 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
+import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureResult;
 import org.hibernate.result.ResultSetReturn;
 import org.hibernate.result.Return;
@@ -58,6 +60,21 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	public StoredProcedureQueryImpl(ProcedureCall procedureCall, HibernateEntityManagerImplementor entityManager) {
 		super( entityManager );
 		this.procedureCall = procedureCall;
+	}
+
+	/**
+	 * This form is used to build a StoredProcedureQueryImpl from a memento (usually from a NamedStoredProcedureQuery).
+	 *
+	 * @param memento The memento
+	 * @param entityManager The EntityManager
+	 */
+	@SuppressWarnings("unchecked")
+	public StoredProcedureQueryImpl(ProcedureCallMemento memento, HibernateEntityManagerImplementor entityManager) {
+		super( entityManager );
+		this.procedureCall = memento.makeProcedureCall( entityManager.getSession() );
+		for ( org.hibernate.procedure.ParameterRegistration nativeParamReg : procedureCall.getRegisteredParameters() ) {
+			registerParameter( new ParameterRegistrationImpl( nativeParamReg ) );
+		}
 	}
 
 	@Override

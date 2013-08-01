@@ -92,6 +92,7 @@ ext {
             shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
             validator:       'org.hibernate:hibernate-validator:5.0.1.Final',
             h2:              "com.h2database:h2:${h2Version}",
+            derby:           "org.apache.derby:derby:10.9.1.0",
             jboss_jta:       "org.jboss.jbossts:jbossjta:4.16.4.Final",
             xapool:          "com.experlog:xapool:1.5.0",
             mockito:         'org.mockito:mockito-core:1.9.0',

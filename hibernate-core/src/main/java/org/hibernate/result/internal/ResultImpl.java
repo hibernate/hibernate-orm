@@ -31,9 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.custom.CustomLoader;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
@@ -49,6 +52,8 @@ import org.hibernate.result.spi.ResultContext;
  * @author Steve Ebersole
  */
 public class ResultImpl implements Result {
+	private static final Logger log = CoreLogging.logger( ResultImpl.class );
+
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
 	private final CustomLoaderExtension loader;
@@ -188,6 +193,15 @@ public class ResultImpl implements Result {
 		}
 
 		protected Return buildReturn() {
+			if ( log.isDebugEnabled() ) {
+				log.debugf(
+						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
+						isResultSet(),
+						getUpdateCount(),
+						hasExtendedReturns( currentReturnState )
+				);
+			}
+
 			if ( isResultSet() ) {
 				return new ResultSetReturnImpl( extractCurrentResults() );
 			}

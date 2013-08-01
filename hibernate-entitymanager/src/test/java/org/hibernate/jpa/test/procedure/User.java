@@ -9,6 +9,7 @@ import javax.persistence.NamedStoredProcedureQuery;
 import javax.persistence.ParameterMode;
 import javax.persistence.SqlResultSetMapping;
 import javax.persistence.StoredProcedureParameter;
+import javax.persistence.Table;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -43,6 +44,13 @@ import javax.persistence.StoredProcedureParameter;
 						},
 						resultSetMappings = { "srms" }
 
+				),
+				@NamedStoredProcedureQuery(
+						name = "positional-param",
+						procedureName = "positionalParameterTesting",
+						parameters = {
+								@StoredProcedureParameter( mode = ParameterMode.IN, type = Integer.class )
+						}
 				)
 		}
 )
@@ -54,10 +62,19 @@ import javax.persistence.StoredProcedureParameter;
 				})
 		}
 )
+@Table( name = "T_USER" )
 public class User {
 	@Id
 	private int id;
 	private String name;
+
+	public User() {
+	}
+
+	public User(int id, String name) {
+		this.id = id;
+		this.name = name;
+	}
 
 	public int getId() {
 		return id;

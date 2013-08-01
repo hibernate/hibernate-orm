@@ -22,6 +22,9 @@ dependencies {
     testRuntime( libraries.validator )
     testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Alpha2" )
 //    testRuntime( "org.glassfish.web:el-impl:2.1.2-b04" )
+
+    // for testing stored procedure support
+    testRuntime( libraries.derby )
 }
 
 def pomName() {

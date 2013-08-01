@@ -838,8 +838,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		if ( memento == null ) {
 			throw new IllegalArgumentException( "No @NamedStoredProcedureQuery was found with that name : " + name );
 		}
-		final ProcedureCall procedureCall = memento.makeProcedureCall( internalGetSession() );
-		final StoredProcedureQueryImpl jpaImpl = new StoredProcedureQueryImpl( procedureCall, this );
+		final StoredProcedureQueryImpl jpaImpl = new StoredProcedureQueryImpl( memento, this );
 		// apply hints
 		if ( memento.getHintsMap() != null ) {
 			for ( Map.Entry<String,Object> hintEntry : memento.getHintsMap().entrySet() ) {

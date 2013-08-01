@@ -326,6 +326,19 @@
                             Name of column used for storing ordinal of the change in sets of embeddable elements.
                         </entry>
                     </row>
+                    <row>
+                        <entry>
+                            <property>org.hibernate.envers.allow_identifier_reuse</property>
+                        </entry>
+                        <entry>
+                            false
+                        </entry>
+                        <entry>
+                            Guarantees proper validity audit strategy behavior when application reuses identifiers
+                            of deleted entities. Exactly one row with <literal>null</literal> end date exists
+                            for each identifier.
+                        </entry>
+                    </row>
                 </tbody>
             </tgroup>
         </table>

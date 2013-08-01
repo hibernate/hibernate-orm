@@ -55,7 +55,7 @@ public class NaturalIdXrefDelegate {
 	private static final Logger LOG = Logger.getLogger( NaturalIdXrefDelegate.class );
 
 	private final StatefulPersistenceContext persistenceContext;
-	private final Map<EntityPersister, NaturalIdResolutionCache> naturalIdResolutionCacheMap = new ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache>();
+	private final ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache> naturalIdResolutionCacheMap = new ConcurrentHashMap<EntityPersister, NaturalIdResolutionCache>();
 
 	/**
 	 * Constructs a NaturalIdXrefDelegate
@@ -92,7 +92,10 @@ public class NaturalIdXrefDelegate {
 		NaturalIdResolutionCache entityNaturalIdResolutionCache = naturalIdResolutionCacheMap.get( persister );
 		if ( entityNaturalIdResolutionCache == null ) {
 			entityNaturalIdResolutionCache = new NaturalIdResolutionCache( persister );
-			naturalIdResolutionCacheMap.put( persister, entityNaturalIdResolutionCache );
+			NaturalIdResolutionCache previousInstance = naturalIdResolutionCacheMap.putIfAbsent( persister, entityNaturalIdResolutionCache );
+			if ( previousInstance != null ) {
+				entityNaturalIdResolutionCache = previousInstance;
+			}
 		}
 		return entityNaturalIdResolutionCache.cache( pk, naturalIdValues );
 	}
@@ -279,7 +282,10 @@ public class NaturalIdXrefDelegate {
 
 			if ( entityNaturalIdResolutionCache == null ) {
 				entityNaturalIdResolutionCache = new NaturalIdResolutionCache( persister );
-				naturalIdResolutionCacheMap.put( persister, entityNaturalIdResolutionCache );
+				NaturalIdResolutionCache existingCache = naturalIdResolutionCacheMap.putIfAbsent( persister, entityNaturalIdResolutionCache );
+				if ( existingCache != null ) {
+					entityNaturalIdResolutionCache = existingCache;
+				}
 			}
 
 			entityNaturalIdResolutionCache.pkToNaturalIdMap.put( pk, cachedNaturalId );

@@ -23,6 +23,10 @@
  */
 package org.hibernate.ejb;
 
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +35,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Parameter;
@@ -40,14 +45,11 @@ import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.QueryParameterException;
-import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.ejb.internal.EntityManagerMessageLogger;
 import org.hibernate.ejb.util.ConfigurationHelper;
@@ -56,13 +58,11 @@ import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
-import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.internal.AbstractQueryImpl;
+import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.type.CompositeCustomType;
-
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
+import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -111,7 +111,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			final NamedParameterDescriptor descriptor =
 					queryImpl.getParameterMetadata().getNamedParameterDescriptor( name );
 			Class javaType = namedParameterTypeRedefinition.get( name );
-			if ( javaType != null && mightNeedRedefinition( javaType, descriptor.getExpectedType().getClass() ) ) {
+			if ( javaType != null && mightNeedRedefinition( javaType, descriptor.getExpectedType() ) ) {
 				descriptor.resetExpectedType(
 						sfi().getTypeResolver().heuristicType( javaType.getName() )
 				);
@@ -151,10 +151,12 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 		return (SessionFactoryImplementor) getEntityManager().getFactory().getSessionFactory();
 	}
 
-	private boolean mightNeedRedefinition(Class javaType, Class expectedType) {
+	private boolean mightNeedRedefinition(Class javaType, Type expectedType) {
 		// only redefine dates/times/timestamps that are not wrapped in a CompositeCustomType
-		return java.util.Date.class.isAssignableFrom( javaType ) 
-				&& !CompositeCustomType.class.isAssignableFrom( expectedType );
+		if (expectedType == null)
+			return java.util.Date.class.isAssignableFrom( javaType );
+		else
+			return java.util.Date.class.isAssignableFrom( javaType ) && !CompositeCustomType.class.isAssignableFrom( expectedType.getClass() );
 	}
 
 	private static class ParameterImpl implements Parameter {

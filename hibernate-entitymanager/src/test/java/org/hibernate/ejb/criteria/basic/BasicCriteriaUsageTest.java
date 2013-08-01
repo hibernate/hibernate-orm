@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
@@ -39,7 +40,6 @@ import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.ejb.criteria.basic.Payment_;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -47,6 +47,7 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase {
+
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { Wall.class, Payment.class };
@@ -59,9 +60,7 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 		CriteriaQuery<Wall> criteria = em.getCriteriaBuilder().createQuery( Wall.class );
 		Root<Wall> from = criteria.from( Wall.class );
 		ParameterExpression param = em.getCriteriaBuilder().parameter( String.class );
-		SingularAttribute<? super Wall,?> colorAttribute = em.getMetamodel()
-				.entity( Wall.class )
-				.getDeclaredSingularAttribute( "color" );
+		SingularAttribute<? super Wall, ?> colorAttribute = em.getMetamodel().entity( Wall.class ).getDeclaredSingularAttribute( "color" );
 		assertNotNull( "metamodel returned null singular attribute", colorAttribute );
 		Predicate predicate = em.getCriteriaBuilder().equal( from.get( colorAttribute ), param );
 		criteria.where( predicate );
@@ -102,6 +101,28 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 
 		assertEquals( 1, payments.size() );
 
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8373")
+	public void testFunctionCriteria() {
+		Wall wall = new Wall();
+		wall.setColor( "yellow" );
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( wall );
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
+		Root<Wall> root = query.from( Wall.class );
+		
+		query.select( root ).where( cb.equal( root.get( "color" ), cb.lower( cb.literal( "YELLOW" ) ) ) );
+		
+		Wall resultItem = em.createQuery( query ).getSingleResult();
+		assertNotNull( resultItem );
+		
 		em.getTransaction().commit();
 		em.close();
 	}

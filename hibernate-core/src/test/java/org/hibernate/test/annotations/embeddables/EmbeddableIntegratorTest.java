@@ -55,50 +55,56 @@ public class EmbeddableIntegratorTest extends BaseUnitTestCase {
 	 */
 	@Test(expected = GenericJDBCException.class)
 	public void testWithoutIntegrator() {
-
 		ServiceRegistry reg = new StandardServiceRegistryBuilder( new BootstrapServiceRegistryImpl() ).build();
-
 		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
 				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" ).buildSessionFactory( reg );
 
-		Session sess = sf.openSession();
-		Investor myInv = getInvestor();
-		myInv.setId( 1L );
+		try {
+			Session sess = sf.openSession();
+			Investor myInv = getInvestor();
+			myInv.setId( 1L );
 
-		sess.save( myInv );
-		sess.flush();
-		sess.clear();
+			sess.save( myInv );
+			sess.flush();
+			sess.clear();
 
-		Investor inv = (Investor) sess.get( Investor.class, 1L );
-		assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
+			Investor inv = (Investor) sess.get( Investor.class, 1L );
+			assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
 
-		sess.close();
-		sf.close();
-		StandardServiceRegistryBuilder.destroy( reg );
+			sess.close();
+		}
+		finally {
+			sf.close();
+			StandardServiceRegistryBuilder.destroy( reg );
+		}
 	}
 
 	@Test
 	public void testWithIntegrator() {
-		StandardServiceRegistry reg = new StandardServiceRegistryBuilder( new BootstrapServiceRegistryBuilder().with(
-				new InvestorIntegrator() ).build() ).build();
-
+		StandardServiceRegistry reg = new StandardServiceRegistryBuilder(
+				new BootstrapServiceRegistryBuilder().with( new InvestorIntegrator() ).build()
+		).build();
 		SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
 				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" ).buildSessionFactory( reg );
 
-		Session sess = sf.openSession();
-		Investor myInv = getInvestor();
-		myInv.setId( 2L );
+		try {
+			Session sess = sf.openSession();
+			Investor myInv = getInvestor();
+			myInv.setId( 2L );
 
-		sess.save( myInv );
-		sess.flush();
-		sess.clear();
+			sess.save( myInv );
+			sess.flush();
+			sess.clear();
 
-		Investor inv = (Investor) sess.get( Investor.class, 2L );
-		assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
+			Investor inv = (Investor) sess.get( Investor.class, 2L );
+			assertEquals( new BigDecimal( "100" ), inv.getInvestments().get( 0 ).getAmount().getAmount() );
 
-		sess.close();
-		sf.close();
-		StandardServiceRegistryBuilder.destroy( reg );
+			sess.close();
+		}
+		finally {
+			sf.close();
+			StandardServiceRegistryBuilder.destroy( reg );
+		}
 	}
 
 	private Investor getInvestor() {

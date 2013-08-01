@@ -153,6 +153,12 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( sessionFactory == null ) {
 			return;
 		}
+		try {
+			sessionFactory.close();
+		}
+		catch (Exception ignore) {
+		}
+
 		buildSessionFactory();
 	}
 
@@ -386,7 +392,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@AfterClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
-	private void releaseSessionFactory() {
+	protected void releaseSessionFactory() {
 		if ( sessionFactory == null ) {
 			return;
 		}

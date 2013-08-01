@@ -39,6 +39,6 @@ public class AnnotatedFormWithBeanValidationNotNullTest extends BaseUnitTestCase
 	public void testAnnotatedFormWithBeanValidationNotNull() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( AnnotatedMaster.class ).addAnnotatedClass( AnnotatedDetail.class );
-		cfg.buildSessionFactory();
+		cfg.buildSessionFactory().close();
 	}
 }

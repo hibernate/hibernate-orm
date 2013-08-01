@@ -95,6 +95,7 @@ public class MetadataImplTest extends BaseUnitTestCase {
 
 		SessionFactory sessionFactory = metadata.buildSessionFactory();
 		assertNotNull( sessionFactory );
+		sessionFactory.close();
 	}
 
 	private void assertFetchProfile(MetadataImpl metadata) {

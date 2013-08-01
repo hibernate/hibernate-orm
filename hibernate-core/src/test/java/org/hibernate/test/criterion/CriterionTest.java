@@ -24,26 +24,20 @@
 package org.hibernate.test.criterion;
 
 import org.hibernate.Criteria;
-import org.hibernate.HibernateException;
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.criterion.CriteriaQuery;
 import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.LikeExpression;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
-import org.hibernate.type.Type;
 
 import org.junit.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -51,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class CriterionTest extends BaseCoreFunctionalTestCase {
+public class CriterionTest extends BaseUnitTestCase {
 	@Test
 	public void testIlikeRendering() {
 		SessionFactory sf = new Configuration()
@@ -59,16 +53,21 @@ public class CriterionTest extends BaseCoreFunctionalTestCase {
 				.setProperty( AvailableSettings.DIALECT, IlikeSupportingDialect.class.getName() )
 				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
-		final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
-		final CriteriaQueryTranslator translator = new CriteriaQueryTranslator( 
-				(SessionFactoryImplementor) sf, 
-				(CriteriaImpl) criteria, 
-				IrrelevantEntity.class.getName(), 
-				"a" 
-		);
-		final Criterion ilikeExpression = Restrictions.ilike( "name", "abc" );
-		final String ilikeExpressionSqlFragment = ilikeExpression.toSqlString( criteria, translator );
-		assertEquals( "a.name insensitiveLike ?", ilikeExpressionSqlFragment );
+		try {
+			final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
+			final CriteriaQueryTranslator translator = new CriteriaQueryTranslator(
+					(SessionFactoryImplementor) sf,
+					(CriteriaImpl) criteria,
+					IrrelevantEntity.class.getName(),
+					"a"
+			);
+			final Criterion ilikeExpression = Restrictions.ilike( "name", "abc" );
+			final String ilikeExpressionSqlFragment = ilikeExpression.toSqlString( criteria, translator );
+			assertEquals( "a.name insensitiveLike ?", ilikeExpressionSqlFragment );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	@Test
@@ -78,16 +77,21 @@ public class CriterionTest extends BaseCoreFunctionalTestCase {
 				.setProperty( AvailableSettings.DIALECT, NonIlikeSupportingDialect.class.getName() )
 				.setProperty( Environment.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
-		final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
-		final CriteriaQueryTranslator translator = new CriteriaQueryTranslator(
-				(SessionFactoryImplementor) sf,
-				(CriteriaImpl) criteria,
-				IrrelevantEntity.class.getName(),
-				"a"
-		);
-		final Criterion ilikeExpression = Restrictions.ilike( "name", "abc" );
-		final String ilikeExpressionSqlFragment = ilikeExpression.toSqlString( criteria, translator );
-		assertEquals( "lowLowLow(a.name) like ?", ilikeExpressionSqlFragment );
+		try {
+			final Criteria criteria = sf.openSession().createCriteria( IrrelevantEntity.class );
+			final CriteriaQueryTranslator translator = new CriteriaQueryTranslator(
+					(SessionFactoryImplementor) sf,
+					(CriteriaImpl) criteria,
+					IrrelevantEntity.class.getName(),
+					"a"
+			);
+			final Criterion ilikeExpression = Restrictions.ilike( "name", "abc" );
+			final String ilikeExpressionSqlFragment = ilikeExpression.toSqlString( criteria, translator );
+			assertEquals( "lowLowLow(a.name) like ?", ilikeExpressionSqlFragment );
+		}
+		finally {
+			sf.close();
+		}
 	}
 
 	public static class IlikeSupportingDialect extends Dialect {

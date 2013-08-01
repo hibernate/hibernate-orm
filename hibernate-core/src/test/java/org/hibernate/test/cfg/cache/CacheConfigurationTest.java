@@ -23,7 +23,6 @@
  */
 package org.hibernate.test.cfg.cache;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -38,7 +37,8 @@ public class CacheConfigurationTest extends BaseUnitTestCase {
 
 	@Test
 	public void testCacheConfiguration() throws Exception {
+		// we only care if the SF builds successfully.
 		Configuration cfg = new Configuration().configure(CFG_XML);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.buildSessionFactory().close();
 	}
 }

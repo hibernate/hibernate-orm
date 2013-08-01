@@ -1092,9 +1092,17 @@ public class Configuration implements Serializable {
 								)
 						);
 				}
+			}
+		}
+
+		// Foreign keys must be created *after* unique keys for numerous DBs.  See HH-8390.
+		iter = getTableMappings();
+		while ( iter.hasNext() ) {
+			Table table = (Table) iter.next();
+			if ( table.isPhysicalTable() ) {
 
 				if ( dialect.hasAlterTable() ) {
-					subIter = table.getForeignKeyIterator();
+					Iterator subIter = table.getForeignKeyIterator();
 					while ( subIter.hasNext() ) {
 						ForeignKey fk = (ForeignKey) subIter.next();
 						if ( fk.isPhysicalConstraint() ) {
@@ -1232,6 +1240,33 @@ public class Configuration implements Serializable {
 					}
 				}
 
+				Iterator subIter = table.getIndexIterator();
+				while ( subIter.hasNext() ) {
+					final Index index = (Index) subIter.next();
+					// Skip if index already exists
+					if ( tableInfo != null && StringHelper.isNotEmpty( index.getName() ) ) {
+						final IndexMetadata meta = tableInfo.getIndexMetadata( index.getName() );
+						if ( meta != null ) {
+							continue;
+						}
+					}
+					scripts.add( new SchemaUpdateScript( index.sqlCreateString( dialect, mapping, tableCatalog,
+							tableSchema ), false ) );
+				}
+			}
+		}
+
+		// Foreign keys must be created *after* unique keys for numerous DBs.  See HH-8390.
+		iter = getTableMappings();
+		while ( iter.hasNext() ) {
+			Table table = (Table) iter.next();
+			String tableSchema = ( table.getSchema() == null ) ? defaultSchema : table.getSchema();
+			String tableCatalog = ( table.getCatalog() == null ) ? defaultCatalog : table.getCatalog();
+			if ( table.isPhysicalTable() ) {
+
+				TableMetadata tableInfo = databaseMetadata.getTableMetadata( table.getName(), tableSchema,
+						tableCatalog, table.isQuoted() );
+
 				if ( dialect.hasAlterTable() ) {
 					Iterator subIter = table.getForeignKeyIterator();
 					while ( subIter.hasNext() ) {
@@ -1246,20 +1281,6 @@ public class Configuration implements Serializable {
 							}
 						}
 					}
-				}
-
-				Iterator subIter = table.getIndexIterator();
-				while ( subIter.hasNext() ) {
-					final Index index = (Index) subIter.next();
-					// Skip if index already exists
-					if ( tableInfo != null && StringHelper.isNotEmpty( index.getName() ) ) {
-						final IndexMetadata meta = tableInfo.getIndexMetadata( index.getName() );
-						if ( meta != null ) {
-							continue;
-						}
-					}
-					scripts.add( new SchemaUpdateScript( index.sqlCreateString( dialect, mapping, tableCatalog,
-							tableSchema ), false ) );
 				}
 			}
 		}

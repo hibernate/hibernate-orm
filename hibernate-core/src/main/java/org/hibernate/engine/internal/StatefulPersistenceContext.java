@@ -37,6 +37,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentMap;
 
 import org.jboss.logging.Logger;
 
@@ -109,7 +110,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 //	private Map<Object,EntityEntry> entityEntries;
 
 	// Entity proxies, by EntityKey
-	private Map<EntityKey, Object> proxiesByKey;
+	private ConcurrentMap<EntityKey, Object> proxiesByKey;
 
 	// Snapshots of current database state for entities
 	// that have *not* been loaded
@@ -563,9 +564,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final EntityPersister persister = session.getFactory().getEntityPersister( li.getEntityName() );
 			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
 		  	// any earlier proxy takes precedence
-			if ( !proxiesByKey.containsKey( key ) ) {
-				proxiesByKey.put( key, proxy );
-			}
+			proxiesByKey.putIfAbsent( key, proxy );
 			proxy.getHibernateLazyInitializer().setSession( session );
 		}
 	}

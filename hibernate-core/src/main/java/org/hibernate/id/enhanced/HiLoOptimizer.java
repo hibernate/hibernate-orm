@@ -152,7 +152,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public synchronized IntegralDataTypeHolder getLastSourceValue() {
 		return noTenantGenerationState().lastSourceValue;
 	}
 
@@ -168,7 +168,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'lastValue'.
 	 */
-	public IntegralDataTypeHolder getLastValue() {
+	public synchronized IntegralDataTypeHolder getLastValue() {
 		return noTenantGenerationState().value.copy().decrement();
 	}
 
@@ -179,7 +179,7 @@ public class HiLoOptimizer extends AbstractOptimizer {
 	 *
 	 * @return Value for property 'upperLimit'.
 	 */
-	public IntegralDataTypeHolder getHiValue() {
+	public synchronized IntegralDataTypeHolder getHiValue() {
 		return noTenantGenerationState().upperLimit;
 	}
 }

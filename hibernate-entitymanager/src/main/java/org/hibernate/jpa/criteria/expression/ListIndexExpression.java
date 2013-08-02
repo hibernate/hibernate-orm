@@ -60,7 +60,7 @@ public class ListIndexExpression extends ExpressionImpl<Integer> implements Seri
 
 	public String render(RenderingContext renderingContext) {
 		return "index("
-				+ origin.getPathIdentifier() + '.' + getListAttribute().getName()
+				+ origin.getPathIdentifier()
 				+ ")";
 	}
 

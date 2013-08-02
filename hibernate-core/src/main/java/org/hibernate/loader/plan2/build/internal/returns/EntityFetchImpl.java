@@ -89,12 +89,6 @@ public class EntityFetchImpl extends AbstractEntityReference implements EntityFe
 
 	@Override
 	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
-		if ( attributeDefinition.getType().isCollectionType() ) {
-			throw new WalkingException(
-					"Encountered collection attribute in identifier fetches: " + attributeDefinition.getSource() +
-							"." + attributeDefinition.getName()
-			);
-		}
 		// todo : allow bi-directional key-many-to-one fetches?
 		//		those do cause problems in Loader; question is whether those are indicative of that situation or
 		// 		of Loaders ability to handle it.

@@ -125,7 +125,12 @@ public class LoadQueryJoinAndFetchProcessor {
 			handleCompositeJoin( join, joinFragment );
 		}
 		else if ( EntityQuerySpace.class.isInstance( join.getRightHandSide() ) ) {
-			renderEntityJoin( join, joinFragment );
+			// do not render the entity join for a one-to-many association, since the collection join
+			// already joins to the associated entity table (see doc in renderCollectionJoin()).
+			if ( join.getLeftHandSide().getDisposition() != QuerySpace.Disposition.COLLECTION ||
+					! CollectionQuerySpace.class.cast( join.getLeftHandSide() ).getCollectionPersister().isOneToMany() ) {
+				renderEntityJoin( join, joinFragment );
+			}
 		}
 		else if ( CollectionQuerySpace.class.isInstance( join.getRightHandSide() ) ) {
 			renderCollectionJoin( join, joinFragment );
@@ -249,14 +254,14 @@ public class LoadQueryJoinAndFetchProcessor {
 				rightHandSide.getCollectionPersister()
 		);
 
-		// if the collection being joined is a one-to-many there is actually nothing to render here - there will
-		// be a follow-on join (rhs will have a join) for the associated entity.
+		// The SQL join to the "collection table" needs to be rendered.
 		//
-		// otherwise the SQL join to the "collection table" needs to be rendered.  In the case of a basic collection,
-		// that's the only join needed.  For many-to-many, we need to render the "collection table join" here (as
-		// already stated), but joining to the entity element table is handled by a follow-on join for the associated
-		// entity as discussed with regard to one-to-many
+		// In the case of a basic collection, that's the only join needed.
 		//
+		// For one-to-many/many-to-many, we need to render the "collection table join"
+		// here (as already stated). There will be a follow-on join (rhs will have a join) for the associated entity.
+		// For many-to-many, the follow-on join will join to the associated entity element table. For one-to-many,
+		// the collection table is the associated entity table, so the follow-on join will not be rendered..
 
 		if ( rightHandSide.getCollectionPersister().isOneToMany()
 				|| rightHandSide.getCollectionPersister().isManyToMany() ) {
@@ -296,11 +301,6 @@ public class LoadQueryJoinAndFetchProcessor {
 							aliases.getEntityElementColumnAliases()
 					)
 			);
-		}
-
-		if ( rightHandSide.getCollectionPersister().isOneToMany() ) {
-			// as stated, nothing to do...
-			return;
 		}
 
 		renderSqlJoinToCollectionTable(

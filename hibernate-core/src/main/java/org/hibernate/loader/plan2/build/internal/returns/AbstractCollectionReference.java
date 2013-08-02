@@ -95,11 +95,11 @@ public abstract class AbstractCollectionReference implements CollectionReference
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
 			if ( type.isEntityType() ) {
-				final EntityPersister indexPersister = persister.getFactory().getEntityPersister(
+				final EntityPersister elementPersister = persister.getFactory().getEntityPersister(
 						( (EntityType) type ).getAssociatedEntityName()
 				);
 
-				final Join join = collectionQuerySpace.addElementEntityJoin( indexPersister, loadPlanBuildingContext );
+				final Join join = collectionQuerySpace.addElementEntityJoin( elementPersister, loadPlanBuildingContext );
 				return new CollectionFetchableElementEntityGraph( this, join );
 			}
 		}

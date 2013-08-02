@@ -1,34 +1,38 @@
 // $Id$
 package org.hibernate.test.annotations.namingstrategy;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Iterator;
 
-import org.jboss.logging.Logger;
-import org.junit.Test;
-
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.EJB3NamingStrategy;
 import org.hibernate.cfg.Mappings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.MetadataBuilder;
+import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Schema;
+import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.test.util.SchemaUtil;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.testing.junit4.TestSessionFactoryHelper;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.jboss.logging.Logger;
+import org.junit.Test;
 
 /**
  * Test harness for ANN-716.
  *
  * @author Hardy Ferentschik
+ * @author Brett Meyer
  */
 public class NamingStrategyTest extends BaseCoreFunctionalTestMethod {
 	private static final Logger log = Logger.getLogger( NamingStrategyTest.class );
@@ -57,6 +61,36 @@ public class NamingStrategyTest extends BaseCoreFunctionalTestMethod {
 			log.debug( writer.toString() );
 			fail( e.getMessage() );
 		}
+	}
+
+	@Test
+	public void testConstraintsCustomNamingStrategy() throws Exception {
+		// ignoring Configuration here -- this is really specific to metamodel
+		MetadataSources sources = new MetadataSources( new BootstrapServiceRegistryBuilder().build() );
+		sources.addAnnotatedClass( Address.class );
+		sources.addAnnotatedClass( Person.class );
+		MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
+		metadataBuilder.with( new DummyNamingStrategy() );
+		MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
+		
+		TableSpecification table = SchemaUtil.getTable( Person.class, metadata );
+		// UK, DummyNamingStrategy generated
+		assertTrue( SchemaUtil.hasUniqueKey( table, "Uname" ) );
+		// UK, DummyNamingStrategy generated
+		assertTrue( SchemaUtil.hasUniqueKey( table, "Ubio" ) );
+		// UK, explicit name
+		assertTrue( SchemaUtil.hasUniqueKey( table, "uk_nickname" ) );
+		// UK, explicit name, created by unique @Index
+		assertTrue( SchemaUtil.hasUniqueKey( table, "uk_color" ) );
+		// Index, DummyNamingStrategy generated
+		assertTrue( SchemaUtil.hasIndex( table, "IfavoriteSong" ) );
+		// Index, explicit name
+		assertTrue( SchemaUtil.hasIndex( table, "idx_band" ) );
+		
+		table = SchemaUtil.getTable( "person_address", metadata );
+		// FKs in JoinTable, DummyNamingStrategy generated
+		assertTrue( SchemaUtil.hasForeignKey( table, "F0" ) );
+		assertTrue( SchemaUtil.hasForeignKey( table, "F1" ) );
 	}
 
 	@Test

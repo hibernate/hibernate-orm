@@ -31,10 +31,13 @@ import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.binding.PluralAttributeBinding;
 import org.hibernate.metamodel.spi.relational.Column;
+import org.hibernate.metamodel.spi.relational.ForeignKey;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.metamodel.spi.relational.Index;
 import org.hibernate.metamodel.spi.relational.PrimaryKey;
 import org.hibernate.metamodel.spi.relational.Schema;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 
 /**
  * Check that the Hibernate metamodel contains some database objects
@@ -119,5 +122,32 @@ public class SchemaUtil {
 			}
 		}
 		return true;
+	}
+
+	public static boolean hasUniqueKey(TableSpecification table, String keyName) {
+		for ( UniqueKey uk : table.getUniqueKeys() ) {
+			if ( uk.getName().equals( keyName ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean hasForeignKey(TableSpecification table, String keyName) {
+		for ( ForeignKey fk : table.getForeignKeys() ) {
+			if ( fk.getName().equals( keyName ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean hasIndex(TableSpecification table, String indexName) {
+		for ( Index index : table.getIndexes() ) {
+			if ( index.getName().equals( indexName ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

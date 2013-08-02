@@ -150,16 +150,16 @@ public class BasicWhereJoinTable extends BaseEnversJPAFunctionalTestCase {
 		WhereJoinTableEntity rev4 = getAuditReader().find( WhereJoinTableEntity.class, wjte1_id, 4 );
 
 		// Checking 1st list
-		assert TestTools.checkList( rev1.getReferences1() );
-		assert TestTools.checkList( rev2.getReferences1(), ite1_1 );
-		assert TestTools.checkList( rev3.getReferences1(), ite1_1 );
-		assert TestTools.checkList( rev4.getReferences1() );
+		assert TestTools.checkCollection( rev1.getReferences1() );
+		assert TestTools.checkCollection( rev2.getReferences1(), ite1_1 );
+		assert TestTools.checkCollection( rev3.getReferences1(), ite1_1 );
+		assert TestTools.checkCollection( rev4.getReferences1() );
 
 		// Checking 2nd list
-		assert TestTools.checkList( rev1.getReferences2() );
-		assert TestTools.checkList( rev2.getReferences2(), ite2_1 );
-		assert TestTools.checkList( rev3.getReferences2(), ite2_1 );
-		assert TestTools.checkList( rev4.getReferences2(), ite2_1 );
+		assert TestTools.checkCollection( rev1.getReferences2() );
+		assert TestTools.checkCollection( rev2.getReferences2(), ite2_1 );
+		assert TestTools.checkCollection( rev3.getReferences2(), ite2_1 );
+		assert TestTools.checkCollection( rev4.getReferences2(), ite2_1 );
 	}
 
 	@Test
@@ -174,15 +174,15 @@ public class BasicWhereJoinTable extends BaseEnversJPAFunctionalTestCase {
 		WhereJoinTableEntity rev4 = getAuditReader().find( WhereJoinTableEntity.class, wjte2_id, 4 );
 
 		// Checking 1st list
-		assert TestTools.checkList( rev1.getReferences1() );
-		assert TestTools.checkList( rev2.getReferences1() );
-		assert TestTools.checkList( rev3.getReferences1(), ite1_1, ite1_2 );
-		assert TestTools.checkList( rev4.getReferences1(), ite1_1, ite1_2 );
+		assert TestTools.checkCollection( rev1.getReferences1() );
+		assert TestTools.checkCollection( rev2.getReferences1() );
+		assert TestTools.checkCollection( rev3.getReferences1(), ite1_1, ite1_2 );
+		assert TestTools.checkCollection( rev4.getReferences1(), ite1_1, ite1_2 );
 
 		// Checking 2nd list
-		assert TestTools.checkList( rev1.getReferences2() );
-		assert TestTools.checkList( rev2.getReferences2() );
-		assert TestTools.checkList( rev3.getReferences2() );
-		assert TestTools.checkList( rev4.getReferences2(), ite2_2 );
+		assert TestTools.checkCollection( rev1.getReferences2() );
+		assert TestTools.checkCollection( rev2.getReferences2() );
+		assert TestTools.checkCollection( rev3.getReferences2() );
+		assert TestTools.checkCollection( rev4.getReferences2(), ite2_2 );
 	}
 }

@@ -34,7 +34,7 @@ import org.hibernate.envers.test.entities.onetomany.detached.DoubleListJoinColum
 
 import org.junit.Test;
 
-import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.hibernate.envers.test.tools.TestTools.checkCollection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -266,15 +266,15 @@ public class DoubleJoinColumnBidirectionalList extends BaseEnversJPAFunctionalTe
 				4
 		);
 
-		assertTrue( checkList( rev1.getReferences1(), ed1_1_fromRev1 ) );
-		assertTrue( checkList( rev2.getReferences1(), ed1_1_fromRev1, ed1_2 ) );
-		assertTrue( checkList( rev3.getReferences1(), ed1_1_fromRev3, ed1_2 ) );
-		assertTrue( checkList( rev4.getReferences1() ) );
+		assertTrue( checkCollection( rev1.getReferences1(), ed1_1_fromRev1 ) );
+		assertTrue( checkCollection( rev2.getReferences1(), ed1_1_fromRev1, ed1_2 ) );
+		assertTrue( checkCollection( rev3.getReferences1(), ed1_1_fromRev3, ed1_2 ) );
+		assertTrue( checkCollection( rev4.getReferences1() ) );
 
-		assertTrue( checkList( rev1.getReferences2(), ed2_1 ) );
-		assertTrue( checkList( rev2.getReferences2(), ed2_1, ed2_2_fromRev1 ) );
-		assertTrue( checkList( rev3.getReferences2(), ed2_1, ed2_2_fromRev3 ) );
-		assertTrue( checkList( rev4.getReferences2(), ed2_2_fromRev3 ) );
+		assertTrue( checkCollection( rev1.getReferences2(), ed2_1 ) );
+		assertTrue( checkCollection( rev2.getReferences2(), ed2_1, ed2_2_fromRev1 ) );
+		assertTrue( checkCollection( rev3.getReferences2(), ed2_1, ed2_2_fromRev3 ) );
+		assertTrue( checkCollection( rev4.getReferences2(), ed2_2_fromRev3 ) );
 	}
 
 	@Test
@@ -319,15 +319,15 @@ public class DoubleJoinColumnBidirectionalList extends BaseEnversJPAFunctionalTe
 				4
 		);
 
-		assertTrue( checkList( rev1.getReferences1(), ed1_2 ) );
-		assertTrue( checkList( rev2.getReferences1() ) );
-		assertTrue( checkList( rev3.getReferences1() ) );
-		assertTrue( checkList( rev4.getReferences1(), ed1_1_fromRev3, ed1_2 ) );
+		assertTrue( checkCollection( rev1.getReferences1(), ed1_2 ) );
+		assertTrue( checkCollection( rev2.getReferences1() ) );
+		assertTrue( checkCollection( rev3.getReferences1() ) );
+		assertTrue( checkCollection( rev4.getReferences1(), ed1_1_fromRev3, ed1_2 ) );
 
-		assertTrue( checkList( rev1.getReferences2(), ed2_2_fromRev1 ) );
-		assertTrue( checkList( rev2.getReferences2() ) );
-		assertTrue( checkList( rev3.getReferences2() ) );
-		assertTrue( checkList( rev4.getReferences2(), ed2_1 ) );
+		assertTrue( checkCollection( rev1.getReferences2(), ed2_2_fromRev1 ) );
+		assertTrue( checkCollection( rev2.getReferences2() ) );
+		assertTrue( checkCollection( rev3.getReferences2() ) );
+		assertTrue( checkCollection( rev4.getReferences2(), ed2_1 ) );
 	}
 
 	@Test

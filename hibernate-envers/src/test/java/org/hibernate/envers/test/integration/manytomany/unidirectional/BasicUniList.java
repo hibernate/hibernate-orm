@@ -151,9 +151,9 @@ public class BasicUniList extends BaseEnversJPAFunctionalTestCase {
 		ListUniEntity rev5 = getAuditReader().find( ListUniEntity.class, ing1_id, 5 );
 
 		assert rev1.getReferences().equals( Collections.EMPTY_LIST );
-		assert TestTools.checkList( rev2.getReferences(), ed1 );
-		assert TestTools.checkList( rev3.getReferences(), ed1, ed2 );
-		assert TestTools.checkList( rev4.getReferences(), ed2 );
+		assert TestTools.checkCollection( rev2.getReferences(), ed1 );
+		assert TestTools.checkCollection( rev3.getReferences(), ed1, ed2 );
+		assert TestTools.checkCollection( rev4.getReferences(), ed2 );
 		assert rev5.getReferences().equals( Collections.EMPTY_LIST );
 	}
 
@@ -169,9 +169,9 @@ public class BasicUniList extends BaseEnversJPAFunctionalTestCase {
 		ListUniEntity rev5 = getAuditReader().find( ListUniEntity.class, ing2_id, 5 );
 
 		assert rev1.getReferences().equals( Collections.EMPTY_LIST );
-		assert TestTools.checkList( rev2.getReferences(), ed1, ed2 );
-		assert TestTools.checkList( rev3.getReferences(), ed1, ed2 );
-		assert TestTools.checkList( rev4.getReferences(), ed1, ed2 );
-		assert TestTools.checkList( rev5.getReferences(), ed1, ed2 );
+		assert TestTools.checkCollection( rev2.getReferences(), ed1, ed2 );
+		assert TestTools.checkCollection( rev3.getReferences(), ed1, ed2 );
+		assert TestTools.checkCollection( rev4.getReferences(), ed1, ed2 );
+		assert TestTools.checkCollection( rev5.getReferences(), ed1, ed2 );
 	}
 }

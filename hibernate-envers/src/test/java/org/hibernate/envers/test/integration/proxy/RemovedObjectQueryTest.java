@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.proxy;
 
 import javax.persistence.EntityManager;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +18,13 @@ import org.hibernate.envers.test.entities.IntTestPrivSeqEntity;
 import org.hibernate.envers.test.entities.StrTestPrivSeqEntity;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.collection.StringSetEntity;
+import org.hibernate.envers.test.entities.manytomany.ListOwnedEntity;
+import org.hibernate.envers.test.entities.manytomany.ListOwningEntity;
 import org.hibernate.envers.test.entities.manytomany.SetOwnedEntity;
 import org.hibernate.envers.test.entities.manytomany.SetOwningEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MIndexedListTargetNotAuditedEntity;
+import org.hibernate.envers.test.entities.onetomany.CollectionRefEdEntity;
+import org.hibernate.envers.test.entities.onetomany.CollectionRefIngEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefEdEntity;
 import org.hibernate.envers.test.entities.onetomany.SetRefIngEntity;
 import org.hibernate.envers.test.integration.manytomany.ternary.TernaryMapEntity;
@@ -55,7 +60,8 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 		return new Class<?>[] {
 				SetRefEdEntity.class, SetRefIngEntity.class, SetOwnedEntity.class, SetOwningEntity.class,
 				StringSetEntity.class, UnversionedStrTestEntity.class, M2MIndexedListTargetNotAuditedEntity.class,
-				TernaryMapEntity.class, StrTestPrivSeqEntity.class, IntTestPrivSeqEntity.class
+				TernaryMapEntity.class, StrTestPrivSeqEntity.class, IntTestPrivSeqEntity.class,
+				CollectionRefEdEntity.class, CollectionRefIngEntity.class, ListOwnedEntity.class, ListOwningEntity.class
 		};
 	}
 
@@ -212,10 +218,74 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		ternaryMapId = mapEntity.getId();
 
-		// Revision 16 - removing ternary map
+		// Revision 16 - updating ternary map
+		em.getTransaction().begin();
+		intEntity2 = em.find( IntTestPrivSeqEntity.class, intEntity2.getId() );
+		intEntity2.setNumber( 3 );
+		intEntity2 = em.merge( intEntity2 );
+		stringEntity2 = em.find( StrTestPrivSeqEntity.class, stringEntity2.getId() );
+		stringEntity2.setStr( "Value 3" );
+		stringEntity2 = em.merge( stringEntity2 );
+		em.getTransaction().commit();
+
+		// Revision 17 - removing ternary map
 		em.getTransaction().begin();
 		mapEntity = em.find( TernaryMapEntity.class, mapEntity.getId() );
 		em.remove( mapEntity );
+		em.getTransaction().commit();
+
+		CollectionRefEdEntity collEd1 = new CollectionRefEdEntity( 1, "data_ed_1" );
+		CollectionRefIngEntity collIng1 = new CollectionRefIngEntity( 2, "data_ing_1", collEd1 );
+		collEd1.setReffering( new ArrayList<CollectionRefIngEntity>() );
+		collEd1.getReffering().add( collIng1 );
+
+		// Revision 18 - testing one-to-many collection
+		em.getTransaction().begin();
+		em.persist( collEd1 );
+		em.persist( collIng1 );
+		em.getTransaction().commit();
+
+		// Revision 19
+		em.getTransaction().begin();
+		collIng1 = em.find( CollectionRefIngEntity.class, collIng1.getId() );
+		collIng1.setData( "modified data_ing_1" );
+		collIng1 = em.merge( collIng1 );
+		em.getTransaction().commit();
+
+		// Revision 20
+		em.getTransaction().begin();
+		collEd1 = em.find( CollectionRefEdEntity.class, collEd1.getId() );
+		collIng1 = em.find( CollectionRefIngEntity.class, collIng1.getId() );
+		em.remove( collIng1 );
+		em.remove( collEd1 );
+		em.getTransaction().commit();
+
+		ListOwnedEntity listEd1 = new ListOwnedEntity( 1, "data_ed_1" );
+		ListOwningEntity listIng1 = new ListOwningEntity( 2, "data_ing_1" );
+		listEd1.setReferencing( new ArrayList<ListOwningEntity>() );
+		listIng1.setReferences( new ArrayList<ListOwnedEntity>() );
+		listEd1.getReferencing().add( listIng1 );
+		listIng1.getReferences().add( listEd1 );
+
+		// Revision 21 - testing many-to-many collection
+		em.getTransaction().begin();
+		em.persist( listEd1 );
+		em.persist( listIng1 );
+		em.getTransaction().commit();
+
+		// Revision 22
+		em.getTransaction().begin();
+		listIng1 = em.find( ListOwningEntity.class, listIng1.getId() );
+		listIng1.setData( "modified data_ing_1" );
+		listIng1 = em.merge( listIng1 );
+		em.getTransaction().commit();
+
+		// Revision 23
+		em.getTransaction().begin();
+		listIng1 = em.find( ListOwningEntity.class, listIng1.getId() );
+		listEd1 = em.find( ListOwnedEntity.class, listEd1.getId() );
+		em.remove( listIng1 );
+		em.remove( listEd1 );
 		em.getTransaction().commit();
 
 		em.close();
@@ -223,19 +293,33 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testTernaryMap() {
+		final TernaryMapEntity ternaryMap = new TernaryMapEntity();
+		ternaryMap.setId( ternaryMapId );
+		ternaryMap.getMap().put( intEntity1, stringEntity1 );
+		ternaryMap.getMap().put( new IntTestPrivSeqEntity( 2, intEntity2.getId() ) , new StrTestPrivSeqEntity( "Value 2", stringEntity2.getId() ) );
+
+		TernaryMapEntity entity = getAuditReader().find( TernaryMapEntity.class, ternaryMapId, 15 );
+
+		Assert.assertEquals( ternaryMap.getMap(), entity.getMap() );
+
+		ternaryMap.getMap().clear();
+		ternaryMap.getMap().put( intEntity1, stringEntity1 );
+		ternaryMap.getMap().put( intEntity2, stringEntity2 );
+
+		entity = getAuditReader().find( TernaryMapEntity.class, ternaryMapId, 16 );
+
+		Assert.assertEquals( ternaryMap.getMap(), entity.getMap() );
+
 		List queryResult = getAuditReader().createQuery().forRevisionsOfEntity( TernaryMapEntity.class, false, true )
 				.add( AuditEntity.id().eq( ternaryMapId ) )
 				.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
 				.getResultList();
 		Object[] objArray = (Object[]) queryResult.get( 0 );
 
-		Assert.assertEquals( 16, getRevisionNumber( objArray[1] ) );
+		Assert.assertEquals( 17, getRevisionNumber( objArray[1] ) );
 
-		TernaryMapEntity mapEntity = (TernaryMapEntity) objArray[0];
-		Assert.assertEquals(
-				TestTools.makeMap( intEntity1, stringEntity1, intEntity2, stringEntity2 ),
-				mapEntity.getMap()
-		);
+		entity = (TernaryMapEntity) objArray[0];
+		Assert.assertEquals( ternaryMap.getMap(), entity.getMap() );
 	}
 
 	@Test
@@ -251,7 +335,7 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 
 		M2MIndexedListTargetNotAuditedEntity relationNotAuditedEntity = (M2MIndexedListTargetNotAuditedEntity) objArray[0];
 		Assert.assertTrue(
-				TestTools.checkList(
+				TestTools.checkCollection(
 						relationNotAuditedEntity.getReferences(),
 						unversionedEntity1, unversionedEntity2
 				)
@@ -273,6 +357,34 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	// One to many tests.
+
+	@Test
+	public void testOneToManyCollectionSemantics() {
+		final CollectionRefEdEntity edVer1 = new CollectionRefEdEntity( 1, "data_ed_1" );
+		final CollectionRefIngEntity ingVer1 = new CollectionRefIngEntity( 2, "data_ing_1" );
+		final CollectionRefIngEntity ingVer2 = new CollectionRefIngEntity( 2, "modified data_ing_1" );
+
+		CollectionRefEdEntity entity = getAuditReader().find( CollectionRefEdEntity.class, 1, 18 );
+
+		Assert.assertEquals( edVer1, entity );
+		Assert.assertTrue( TestTools.checkCollection( entity.getReffering(), ingVer1 ) );
+
+		entity = getAuditReader().find( CollectionRefEdEntity.class, 1, 19 );
+
+		Assert.assertTrue( TestTools.checkCollection( entity.getReffering(), ingVer2 ) );
+
+		List queryResult = getAuditReader().createQuery().forRevisionsOfEntity( CollectionRefEdEntity.class, false, true )
+				.add( AuditEntity.id().eq( 1 ) )
+				.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
+				.getResultList();
+		Object[] objArray = (Object[]) queryResult.get( 0 );
+
+		Assert.assertEquals( 20, getRevisionNumber( objArray[1] ) );
+
+		entity = (CollectionRefEdEntity) objArray[0];
+		Assert.assertEquals( "data_ed_1", entity.getData() );
+		Assert.assertTrue( TestTools.checkCollection( entity.getReffering(), ingVer2 ) );
+	}
 
 	@Test
 	public void testReferencedOneToManySameRevision() {
@@ -359,6 +471,34 @@ public class RemovedObjectQueryTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	// Many to many tests.
+
+	@Test
+	public void testManyToManyCollectionSemantics() {
+		final ListOwnedEntity edVer1 = new ListOwnedEntity( 1, "data_ed_1" );
+		final ListOwningEntity ingVer1 = new ListOwningEntity( 2, "data_ing_1" );
+		final ListOwningEntity ingVer2 = new ListOwningEntity( 2, "modified data_ing_1" );
+
+		ListOwnedEntity entity = getAuditReader().find( ListOwnedEntity.class, 1, 21 );
+
+		Assert.assertEquals( edVer1, entity );
+		Assert.assertTrue( TestTools.checkCollection( entity.getReferencing(), ingVer1 ) );
+
+		entity = getAuditReader().find( ListOwnedEntity.class, 1, 22 );
+
+		Assert.assertTrue( TestTools.checkCollection( entity.getReferencing(), ingVer2 ) );
+
+		List queryResult = getAuditReader().createQuery().forRevisionsOfEntity( ListOwnedEntity.class, false, true )
+				.add( AuditEntity.id().eq( 1 ) )
+				.add( AuditEntity.revisionType().eq( RevisionType.DEL ) )
+				.getResultList();
+		Object[] objArray = (Object[]) queryResult.get( 0 );
+
+		Assert.assertEquals( 23, getRevisionNumber( objArray[1] ) );
+
+		entity = (ListOwnedEntity) objArray[0];
+		Assert.assertEquals( "data_ed_1", entity.getData() );
+		Assert.assertTrue( TestTools.checkCollection( entity.getReferencing(), ingVer2 ) );
+	}
 
 	@Test
 	public void testOwnedManyToManySameRevision() {

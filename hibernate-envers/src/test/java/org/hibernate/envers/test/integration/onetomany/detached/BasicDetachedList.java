@@ -126,10 +126,10 @@ public class BasicDetachedList extends BaseEnversJPAFunctionalTestCase {
 		ListRefCollEntity rev3 = getAuditReader().find( ListRefCollEntity.class, coll1_id, 3 );
 		ListRefCollEntity rev4 = getAuditReader().find( ListRefCollEntity.class, coll1_id, 4 );
 
-		assert TestTools.checkList( rev1.getCollection(), str1 );
-		assert TestTools.checkList( rev2.getCollection(), str1, str2 );
-		assert TestTools.checkList( rev3.getCollection(), str2 );
-		assert TestTools.checkList( rev4.getCollection() );
+		assert TestTools.checkCollection( rev1.getCollection(), str1 );
+		assert TestTools.checkCollection( rev2.getCollection(), str1, str2 );
+		assert TestTools.checkCollection( rev3.getCollection(), str2 );
+		assert TestTools.checkCollection( rev4.getCollection() );
 
 		assert "coll1".equals( rev1.getData() );
 		assert "coll1".equals( rev2.getData() );

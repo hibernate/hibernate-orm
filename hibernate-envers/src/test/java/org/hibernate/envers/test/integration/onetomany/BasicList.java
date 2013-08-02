@@ -118,9 +118,9 @@ public class BasicList extends BaseEnversJPAFunctionalTestCase {
 		ListRefEdEntity rev2 = getAuditReader().find( ListRefEdEntity.class, ed1_id, 2 );
 		ListRefEdEntity rev3 = getAuditReader().find( ListRefEdEntity.class, ed1_id, 3 );
 
-		assert TestTools.checkList( rev1.getReffering(), ing1, ing2 );
-		assert TestTools.checkList( rev2.getReffering(), ing2 );
-		assert TestTools.checkList( rev3.getReffering() );
+		assert TestTools.checkCollection( rev1.getReffering(), ing1, ing2 );
+		assert TestTools.checkCollection( rev2.getReffering(), ing2 );
+		assert TestTools.checkCollection( rev3.getReffering() );
 	}
 
 	@Test
@@ -132,9 +132,9 @@ public class BasicList extends BaseEnversJPAFunctionalTestCase {
 		ListRefEdEntity rev2 = getAuditReader().find( ListRefEdEntity.class, ed2_id, 2 );
 		ListRefEdEntity rev3 = getAuditReader().find( ListRefEdEntity.class, ed2_id, 3 );
 
-		assert TestTools.checkList( rev1.getReffering() );
-		assert TestTools.checkList( rev2.getReffering(), ing1 );
-		assert TestTools.checkList( rev3.getReffering(), ing1, ing2 );
+		assert TestTools.checkCollection( rev1.getReffering() );
+		assert TestTools.checkCollection( rev2.getReffering(), ing1 );
+		assert TestTools.checkCollection( rev3.getReffering(), ing1, ing2 );
 	}
 
 	@Test

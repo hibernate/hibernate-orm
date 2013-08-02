@@ -180,7 +180,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 				originalIdPropertyName,
 				REFERENCED_ENTITY_ALIAS,
 				REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
-				inclusive
+				true
 		);
 		// (selecting f entities at revision :revision)
 		// --> based on auditStrategy (see above)
@@ -188,15 +188,15 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 				globalCfg,
 				qb,
 				rootParameters,
-				REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
-				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(),
+				INDEX_ENTITY_ALIAS + "." + revisionPropertyPath,
+				INDEX_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(),
 				false,
 				referencedIdData,
 				revisionPropertyPath,
 				originalIdPropertyName,
 				INDEX_ENTITY_ALIAS,
 				INDEX_ENTITY_ALIAS_DEF_AUD_STR,
-				inclusive
+				true
 		);
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)

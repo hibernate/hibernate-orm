@@ -11,7 +11,7 @@ import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MIndexedLi
 
 import org.junit.Test;
 
-import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.hibernate.envers.test.tools.TestTools.checkCollection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -114,9 +114,9 @@ public class M2MIndexedListNotAuditedTarget extends BaseEnversJPAFunctionalTestC
 				3
 		);
 
-		assertTrue( checkList( rev1.getReferences(), uste1, uste2 ) );
-		assertTrue( checkList( rev2.getReferences(), uste1, uste2 ) );
-		assertTrue( checkList( rev3.getReferences(), uste2, uste1 ) );
+		assertTrue( checkCollection( rev1.getReferences(), uste1, uste2 ) );
+		assertTrue( checkCollection( rev2.getReferences(), uste1, uste2 ) );
+		assertTrue( checkCollection( rev3.getReferences(), uste2, uste1 ) );
 	}
 
 	@Test
@@ -138,7 +138,7 @@ public class M2MIndexedListNotAuditedTarget extends BaseEnversJPAFunctionalTestC
 		);
 
 		assertNull( rev1 );
-		assertTrue( checkList( rev2.getReferences(), uste2 ) );
-		assertTrue( checkList( rev3.getReferences(), uste2 ) );
+		assertTrue( checkCollection( rev2.getReferences(), uste2 ) );
+		assertTrue( checkCollection( rev3.getReferences(), uste2 ) );
 	}
 }

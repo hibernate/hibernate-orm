@@ -113,11 +113,7 @@ public class ResultImpl implements Result {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
 		}
 
-		return hasMoreReturns( currentReturnState );
-	}
-
-	protected boolean hasMoreReturns(CurrentReturnState descriptor) {
-		return descriptor != null && ( descriptor.isResultSet() || descriptor.getUpdateCount() >= 0 );
+		return currentReturnState != null && currentReturnState.indicatesMoreReturns();
 	}
 
 	@Override
@@ -127,10 +123,6 @@ public class ResultImpl implements Result {
 		}
 
 		return getCurrentReturn();
-	}
-
-	protected boolean hasExtendedReturns(CurrentReturnState currentReturnState) {
-		return false;
 	}
 
 	private List extractCurrentResults() {
@@ -149,10 +141,6 @@ public class ResultImpl implements Result {
 		catch (SQLException e) {
 			throw convert( e, "Error extracting results from CallableStatement" );
 		}
-	}
-
-	protected Return buildExtendedReturn(CurrentReturnState copyReturnDescriptor) {
-		throw new NoMoreReturnsException();
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
@@ -177,6 +165,10 @@ public class ResultImpl implements Result {
 			this.updateCount = updateCount;
 		}
 
+		public boolean indicatesMoreReturns() {
+			return isResultSet() || getUpdateCount() >= 0;
+		}
+
 		public boolean isResultSet() {
 			return isResultSet;
 		}
@@ -198,9 +190,18 @@ public class ResultImpl implements Result {
 						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
 						isResultSet(),
 						getUpdateCount(),
-						hasExtendedReturns( currentReturnState )
+						hasExtendedReturns()
 				);
 			}
+			// todo : temporary for tck testing...
+			System.out.println(
+					String.format(
+							"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
+							isResultSet(),
+							getUpdateCount(),
+							hasExtendedReturns()
+					)
+			);
 
 			if ( isResultSet() ) {
 				return new ResultSetReturnImpl( extractCurrentResults() );
@@ -208,11 +209,21 @@ public class ResultImpl implements Result {
 			else if ( getUpdateCount() >= 0 ) {
 				return new UpdateCountReturnImpl( updateCount );
 			}
-			else if ( hasExtendedReturns( currentReturnState ) ) {
-				return buildExtendedReturn( currentReturnState );
+			else if ( hasExtendedReturns() ) {
+				return buildExtendedReturn();
 			}
 
 			throw new NoMoreReturnsException();
+		}
+
+		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		protected boolean hasExtendedReturns() {
+			return false;
+		}
+
+		protected Return buildExtendedReturn() {
+			throw new IllegalStateException( "State does not define extended returns" );
 		}
 	}
 

@@ -755,16 +755,20 @@ public abstract class BaseQueryImpl implements Query {
 		checkOpen( false );
 
 		final ParameterRegistration<T> registration = findParameterRegistration( param );
-		if ( registration != null ) {
-			if ( ! registration.isBindable() ) {
-				throw new IllegalArgumentException( "Passed parameter [" + param + "] is not bindable" );
-			}
-			final ParameterBind<T> bind = registration.getBind();
-			if ( bind != null ) {
-				return bind.getValue();
-			}
+		if ( registration == null ) {
+			throw new IllegalArgumentException( "Passed parameter [" + param + "] is not a (registered) parameter of this query" );
 		}
-		throw new IllegalStateException( "Parameter [" + param + "] has not yet been bound" );
+
+		if ( ! registration.isBindable() ) {
+			throw new IllegalStateException( "Passed parameter [" + param + "] is not bindable" );
+		}
+
+		final ParameterBind<T> bind = registration.getBind();
+		if ( bind == null ) {
+			throw new IllegalStateException( "Parameter [" + param + "] has not yet been bound" );
+		}
+
+		return bind.getValue();
 	}
 
 	@Override

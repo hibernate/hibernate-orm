@@ -33,6 +33,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TemporalType;
+import javax.persistence.TransactionRequiredException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -44,6 +45,7 @@ import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.ResultSetReturn;
 import org.hibernate.result.Return;
 import org.hibernate.result.UpdateCountReturn;
@@ -217,46 +219,63 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public boolean execute() {
-		final Return rtn = outputs().getCurrentReturn();
-		return rtn != null && ResultSetReturn.class.isInstance( rtn );
+		try {
+			final Return rtn = outputs().getCurrentReturn();
+			return rtn != null && ResultSetReturn.class.isInstance( rtn );
+		}
+		catch (NoMoreReturnsException e) {
+			return false;
+		}
 	}
 
 	@Override
 	public int executeUpdate() {
+		if ( ! entityManager().isTransactionInProgress() ) {
+			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
+		}
 		return getUpdateCount();
 	}
 
 	@Override
 	public boolean hasMoreResults() {
-		return outputs().hasMoreReturns();
+		return outputs().hasMoreReturns() && ResultSetReturn.class.isInstance( outputs().getCurrentReturn() );
 	}
 
 	@Override
 	public int getUpdateCount() {
-		final Return rtn = outputs().getCurrentReturn();
-		if ( rtn == null ) {
-			return -1;
+		try {
+			final Return rtn = outputs().getCurrentReturn();
+			if ( rtn == null ) {
+				return -1;
+			}
+			else if ( UpdateCountReturn.class.isInstance( rtn ) ) {
+				return ( (UpdateCountReturn) rtn ).getUpdateCount();
+			}
+			else {
+				return -1;
+			}
 		}
-		else if ( UpdateCountReturn.class.isInstance( rtn ) ) {
-			return ( (UpdateCountReturn) rtn ).getUpdateCount();
-		}
-		else {
+		catch (NoMoreReturnsException e) {
 			return -1;
 		}
 	}
 
 	@Override
 	public List getResultList() {
-		final Return rtn = outputs().getCurrentReturn();
-		if ( ! ResultSetReturn.class.isInstance( rtn ) ) {
-			throw new IllegalStateException( "Current CallableStatement was not a ResultSet, but getResultList was called" );
-		}
+		try {
+			final Return rtn = outputs().getCurrentReturn();
+			if ( ! ResultSetReturn.class.isInstance( rtn ) ) {
+				throw new IllegalStateException( "Current CallableStatement return was not a ResultSet, but getResultList was called" );
+			}
 
-		if ( outputs().hasMoreReturns() ) {
-			outputs().getNextReturn();
+			return ( (ResultSetReturn) rtn ).getResultList();
 		}
-
-		return ( (ResultSetReturn) rtn ).getResultList();
+		catch (NoMoreReturnsException e) {
+			// todo : the spec is completely silent on these type of edge-case scenarios.
+			// Essentially here we'd have a case where there are no more results (ResultSets nor updateCount) but
+			// getResultList was called.
+			return null;
+		}
 	}
 
 	@Override
@@ -305,17 +324,14 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		);
 	}
 
-
-	// ugh ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	@Override
 	public Query setLockMode(LockModeType lockMode) {
-		return null;
+		throw new IllegalStateException( "javax.persistence.Query.setLockMode not valid on javax.persistence.StoredProcedureQuery" );
 	}
 
 	@Override
 	public LockModeType getLockMode() {
-		return null;
+		throw new IllegalStateException( "javax.persistence.Query.getLockMode not valid on javax.persistence.StoredProcedureQuery" );
 	}
 
 

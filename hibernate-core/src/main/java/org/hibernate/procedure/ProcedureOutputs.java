@@ -23,20 +23,20 @@
  */
 package org.hibernate.procedure;
 
-import org.hibernate.result.Result;
+import org.hibernate.result.Outputs;
 
 /**
- * Specialization of the {@link Result} contract providing access to the stored procedure's registered
+ * Specialization of the {@link org.hibernate.result.Outputs} contract providing access to the stored procedure's registered
  * output parameters.
  *
  * @author Steve Ebersole
  */
-public interface ProcedureResult extends Result {
+public interface ProcedureOutputs extends Outputs {
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
 	 * <p/>
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
-	 * accessed via the returns (see {@link #getNextReturn}
+	 * accessed via the returns (see {@link #getNextOutput}
 	 *
 	 * @param parameterRegistration The parameter's registration memento.
 	 *

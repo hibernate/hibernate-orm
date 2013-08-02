@@ -42,17 +42,17 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.result.NoMoreReturnsException;
-import org.hibernate.result.Result;
-import org.hibernate.result.ResultSetReturn;
-import org.hibernate.result.Return;
-import org.hibernate.result.UpdateCountReturn;
+import org.hibernate.result.Outputs;
+import org.hibernate.result.ResultSetOutput;
+import org.hibernate.result.Output;
+import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 
 /**
  * @author Steve Ebersole
  */
-public class ResultImpl implements Result {
-	private static final Logger log = CoreLogging.logger( ResultImpl.class );
+public class OutputsImpl implements Outputs {
+	private static final Logger log = CoreLogging.logger( OutputsImpl.class );
 
 	private final ResultContext context;
 	private final PreparedStatement jdbcStatement;
@@ -60,7 +60,7 @@ public class ResultImpl implements Result {
 
 	private CurrentReturnState currentReturnState;
 
-	public ResultImpl(ResultContext context, PreparedStatement jdbcStatement) {
+	public OutputsImpl(ResultContext context, PreparedStatement jdbcStatement) {
 		this.context = context;
 		this.jdbcStatement = jdbcStatement;
 
@@ -95,7 +95,7 @@ public class ResultImpl implements Result {
 	}
 
 	@Override
-	public Return getCurrentReturn() {
+	public Output getCurrentOutput() {
 		if ( currentReturnState == null ) {
 			return null;
 		}
@@ -103,7 +103,7 @@ public class ResultImpl implements Result {
 	}
 
 	@Override
-	public boolean hasMoreReturns() {
+	public boolean hasMoreOutput() {
 		// prepare the next return state
 		try {
 			final boolean isResultSet = jdbcStatement.getMoreResults();
@@ -117,12 +117,12 @@ public class ResultImpl implements Result {
 	}
 
 	@Override
-	public Return getNextReturn() {
-		if ( !hasMoreReturns() ) {
+	public Output getNextOutput() {
+		if ( !hasMoreOutput() ) {
 			throw new NoMoreReturnsException( "Results have been exhausted" );
 		}
 
-		return getCurrentReturn();
+		return getCurrentOutput();
 	}
 
 	private List extractCurrentResults() {
@@ -158,7 +158,7 @@ public class ResultImpl implements Result {
 		private final boolean isResultSet;
 		private final int updateCount;
 
-		private Return rtn;
+		private Output rtn;
 
 		protected CurrentReturnState(boolean isResultSet, int updateCount) {
 			this.isResultSet = isResultSet;
@@ -177,14 +177,14 @@ public class ResultImpl implements Result {
 			return updateCount;
 		}
 
-		public Return getReturn() {
+		public Output getReturn() {
 			if ( rtn == null ) {
 				rtn = buildReturn();
 			}
 			return rtn;
 		}
 
-		protected Return buildReturn() {
+		protected Output buildReturn() {
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
@@ -204,10 +204,10 @@ public class ResultImpl implements Result {
 			);
 
 			if ( isResultSet() ) {
-				return new ResultSetReturnImpl( extractCurrentResults() );
+				return new ResultSetOutputImpl( extractCurrentResults() );
 			}
 			else if ( getUpdateCount() >= 0 ) {
-				return new UpdateCountReturnImpl( updateCount );
+				return new UpdateCountOutputImpl( updateCount );
 			}
 			else if ( hasExtendedReturns() ) {
 				return buildExtendedReturn();
@@ -222,15 +222,15 @@ public class ResultImpl implements Result {
 			return false;
 		}
 
-		protected Return buildExtendedReturn() {
+		protected Output buildExtendedReturn() {
 			throw new IllegalStateException( "State does not define extended returns" );
 		}
 	}
 
-	protected static class ResultSetReturnImpl implements ResultSetReturn {
+	protected static class ResultSetOutputImpl implements ResultSetOutput {
 		private final List results;
 
-		public ResultSetReturnImpl(List results) {
+		public ResultSetOutputImpl(List results) {
 			this.results = results;
 		}
 
@@ -257,10 +257,10 @@ public class ResultImpl implements Result {
 		}
 	}
 
-	protected static class UpdateCountReturnImpl implements UpdateCountReturn {
+	protected static class UpdateCountOutputImpl implements UpdateCountOutput {
 		private final int updateCount;
 
-		public UpdateCountReturnImpl(int updateCount) {
+		public UpdateCountOutputImpl(int updateCount) {
 			this.updateCount = updateCount;
 		}
 

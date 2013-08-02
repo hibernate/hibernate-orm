@@ -141,7 +141,7 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 *
 	 * @return The ProcedureResult representation
 	 */
-	public ProcedureResult getResult();
+	public ProcedureOutputs getResult();
 
 	/**
 	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query

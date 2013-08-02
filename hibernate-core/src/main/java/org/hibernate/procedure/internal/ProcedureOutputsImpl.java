@@ -28,23 +28,23 @@ import java.sql.ResultSet;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.procedure.ProcedureResult;
-import org.hibernate.result.Return;
-import org.hibernate.result.internal.ResultImpl;
+import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.result.Output;
+import org.hibernate.result.internal.OutputsImpl;
 
 /**
  * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
  *
  * @author Steve Ebersole
  */
-public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
+public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
 	private final ProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
 	private final ParameterRegistrationImplementor[] refCursorParameters;
 	private int refCursorParamIndex;
 
-	ProcedureResultImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
+	ProcedureOutputsImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
 		super( procedureCall, callableStatement );
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
@@ -83,7 +83,7 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 		@Override
 		public boolean indicatesMoreReturns() {
 			return super.indicatesMoreReturns()
-					|| ProcedureResultImpl.this.refCursorParamIndex < ProcedureResultImpl.this.refCursorParameters.length;
+					|| ProcedureOutputsImpl.this.refCursorParamIndex < ProcedureOutputsImpl.this.refCursorParameters.length;
 		}
 
 		@Override
@@ -92,21 +92,21 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 		}
 
 		@Override
-		protected Return buildExtendedReturn() {
-			ProcedureResultImpl.this.refCursorParamIndex++;
-			final ParameterRegistrationImplementor refCursorParam = ProcedureResultImpl.this.refCursorParameters[refCursorParamIndex];
+		protected Output buildExtendedReturn() {
+			ProcedureOutputsImpl.this.refCursorParamIndex++;
+			final ParameterRegistrationImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
 			ResultSet resultSet;
 			if ( refCursorParam.getName() != null ) {
-				resultSet = ProcedureResultImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
+				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
 						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureResultImpl.this.callableStatement, refCursorParam.getName() );
+						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
 			}
 			else {
-				resultSet = ProcedureResultImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
+				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
 						.getService( RefCursorSupport.class )
-						.getResultSet( ProcedureResultImpl.this.callableStatement, refCursorParam.getPosition() );
+						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
 			}
-			return new ResultSetReturnImpl( extractResults( resultSet ) );
+			return new ResultSetOutputImpl( extractResults( resultSet ) );
 		}
 	}
 

@@ -28,7 +28,7 @@ package org.hibernate.result;
  *
  * @author Steve Ebersole
  */
-public interface UpdateCountReturn extends Return {
+public interface UpdateCountOutput extends Output {
 	/**
 	 * Retrieve the associated update count
 	 *

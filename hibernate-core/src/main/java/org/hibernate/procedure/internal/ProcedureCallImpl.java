@@ -53,7 +53,7 @@ import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;
 
@@ -75,7 +75,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 
 	private Set<String> synchronizedQuerySpaces;
 
-	private ProcedureResultImpl outputs;
+	private ProcedureOutputsImpl outputs;
 
 	/**
 	 * The no-returns form.
@@ -367,7 +367,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	}
 
 	@Override
-	public ProcedureResult getResult() {
+	public ProcedureOutputs getResult() {
 		if ( outputs == null ) {
 			outputs = buildOutputs();
 		}
@@ -375,7 +375,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		return outputs;
 	}
 
-	private ProcedureResultImpl buildOutputs() {
+	private ProcedureOutputsImpl buildOutputs() {
 		// todo : going to need a very specialized Loader for this.
 		// or, might be a good time to look at splitting Loader up into:
 		//		1) building statement objects
@@ -419,7 +419,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 				i += parameter.getSqlTypes().length;
 			}
 
-			return new ProcedureResultImpl( this, statement );
+			return new ProcedureOutputsImpl( this, statement );
 		}
 		catch (SQLException e) {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(

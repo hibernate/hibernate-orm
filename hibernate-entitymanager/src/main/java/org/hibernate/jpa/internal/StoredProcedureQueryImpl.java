@@ -41,14 +41,13 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
-import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.NoMoreReturnsException;
-import org.hibernate.result.ResultSetReturn;
-import org.hibernate.result.Return;
-import org.hibernate.result.UpdateCountReturn;
+import org.hibernate.result.ResultSetOutput;
+import org.hibernate.result.Output;
+import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.jpa.spi.BaseQueryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 
@@ -57,7 +56,7 @@ import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
  */
 public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredProcedureQuery {
 	private final ProcedureCall procedureCall;
-	private ProcedureResult procedureResult;
+	private ProcedureOutputs procedureResult;
 
 	public StoredProcedureQueryImpl(ProcedureCall procedureCall, HibernateEntityManagerImplementor entityManager) {
 		super( entityManager );
@@ -200,7 +199,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	// outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private ProcedureResult outputs() {
+	private ProcedureOutputs outputs() {
 		if ( procedureResult == null ) {
 			procedureResult = procedureCall.getResult();
 		}
@@ -220,8 +219,8 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@Override
 	public boolean execute() {
 		try {
-			final Return rtn = outputs().getCurrentReturn();
-			return rtn != null && ResultSetReturn.class.isInstance( rtn );
+			final Output rtn = outputs().getCurrentOutput();
+			return rtn != null && ResultSetOutput.class.isInstance( rtn );
 		}
 		catch (NoMoreReturnsException e) {
 			return false;
@@ -238,18 +237,18 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public boolean hasMoreResults() {
-		return outputs().hasMoreReturns() && ResultSetReturn.class.isInstance( outputs().getCurrentReturn() );
+		return outputs().hasMoreOutput() && ResultSetOutput.class.isInstance( outputs().getCurrentOutput() );
 	}
 
 	@Override
 	public int getUpdateCount() {
 		try {
-			final Return rtn = outputs().getCurrentReturn();
+			final Output rtn = outputs().getCurrentOutput();
 			if ( rtn == null ) {
 				return -1;
 			}
-			else if ( UpdateCountReturn.class.isInstance( rtn ) ) {
-				return ( (UpdateCountReturn) rtn ).getUpdateCount();
+			else if ( UpdateCountOutput.class.isInstance( rtn ) ) {
+				return ( (UpdateCountOutput) rtn ).getUpdateCount();
 			}
 			else {
 				return -1;
@@ -263,12 +262,12 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@Override
 	public List getResultList() {
 		try {
-			final Return rtn = outputs().getCurrentReturn();
-			if ( ! ResultSetReturn.class.isInstance( rtn ) ) {
+			final Output rtn = outputs().getCurrentOutput();
+			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
 				throw new IllegalStateException( "Current CallableStatement return was not a ResultSet, but getResultList was called" );
 			}
 
-			return ( (ResultSetReturn) rtn ).getResultList();
+			return ( (ResultSetOutput) rtn ).getResultList();
 		}
 		catch (NoMoreReturnsException e) {
 			// todo : the spec is completely silent on these type of edge-case scenarios.
@@ -307,7 +306,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		if ( ProcedureCall.class.isAssignableFrom( cls ) ) {
 			return (T) procedureCall;
 		}
-		else if ( ProcedureResult.class.isAssignableFrom( cls ) ) {
+		else if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {
 			return (T) outputs();
 		}
 		else if ( BaseQueryImpl.class.isAssignableFrom( cls ) ) {

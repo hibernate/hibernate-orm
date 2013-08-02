@@ -23,26 +23,19 @@
  */
 package org.hibernate.result;
 
-import java.util.List;
-
 /**
- * Models a return that is a result set.
+ * Common contract for individual return objects which can be either results ({@link ResultSetOutput}) or update
+ * counts ({@link UpdateCountOutput}).
  *
  * @author Steve Ebersole
  */
-public interface ResultSetReturn extends Return {
+public interface Output {
 	/**
-	 * Consume the underlying {@link java.sql.ResultSet} and return the resulting List.
+	 * Determine if this return is a result (castable to {@link ResultSetOutput}).  The alternative is that it is
+	 * an update count (castable to {@link UpdateCountOutput}).
 	 *
-	 * @return The consumed ResultSet values.
+	 * @return {@code true} indicates that {@code this} can be safely cast to {@link ResultSetOutput}), other wise
+	 * it can be cast to {@link UpdateCountOutput}.
 	 */
-	public List getResultList();
-
-	/**
-	 * Consume the underlying {@link java.sql.ResultSet} with the expectation that there is just a single level of
-	 * root returns.
-	 *
-	 * @return The single result.
-	 */
-	public Object getSingleResult();
+	public boolean isResultSet();
 }

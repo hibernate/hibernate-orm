@@ -24,29 +24,29 @@
 package org.hibernate.result;
 
 /**
- * Represents the result of executing a JDBC statement accounting for mixing of result sets and update counts hiding the
- * complexity (IMO) of how this is exposed in the JDBC API.
- *
- * A result is made up of group of {@link Return} objects, each representing a single result set or update count.
+ * Represents the outputs of executing a JDBC statement accounting for mixing of result sets and update counts
+ * hiding the complexity (IMO) of how this is exposed in the JDBC API.
+ * <p/>
+ * The outputs are exposed as a group of {@link Output} objects, each representing a single result set or update count.
  * Conceptually, Result presents those Returns as an iterator.
  *
  * @author Steve Ebersole
  */
-public interface Result {
+public interface Outputs {
 	/**
-	 * Retrieve the current return.
+	 * Retrieve the current Output object.
 	 *
-	 * @return The current return.
+	 * @return The current Output object.  Can be {@code null}
 	 */
-	public Return getCurrentReturn();
+	public Output getCurrentOutput();
 
 	/**
-	 * Are there any more returns associated with this result?
+	 * Are there any more Output objects associated with {@code this}?
 	 *
-	 * @return {@code true} means there are more returns available via {@link #getNextReturn()}; {@code false}
-	 * indicates that calling {@link #getNextReturn()} will certainly result in an exception.
+	 * @return {@code true} means there are more Output objects available via {@link #getNextOutput()}; {@code false}
+	 * indicates that calling {@link #getNextOutput()} will certainly result in an exception.
 	 */
-	public boolean hasMoreReturns();
+	public boolean hasMoreOutput();
 
 	/**
 	 * Retrieve the next return
@@ -54,7 +54,7 @@ public interface Result {
 	 * @return The next return.
 	 *
 	 * @throws NoMoreReturnsException Thrown if there are no more returns associated with this Result, as would
-	 * have been indicated by a {@code false} return from {@link #hasMoreReturns()}.
+	 * have been indicated by a {@code false} return from {@link #hasMoreOutput()}.
 	 */
-	public Return getNextReturn() throws NoMoreReturnsException;
+	public Output getNextOutput() throws NoMoreReturnsException;
 }

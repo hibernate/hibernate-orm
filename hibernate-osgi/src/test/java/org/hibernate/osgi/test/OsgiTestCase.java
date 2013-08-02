@@ -28,6 +28,7 @@ import org.hibernate.osgi.OsgiSessionFactoryService;
 import org.hibernate.osgi.test.result.OsgiTestResults;
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.arquillian.junit.InSequence;
 import org.jboss.arquillian.test.api.ArquillianResource;
 import org.jboss.osgi.metadata.OSGiManifestBuilder;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -112,6 +113,7 @@ public class OsgiTestCase {
 	 * @throws Exception
 	 */
 	@Test
+	@InSequence(1)
 	public void testClientBundle() throws Exception {
 		commonTests();
 
@@ -136,6 +138,9 @@ public class OsgiTestCase {
 	 * @throws Exception
 	 */
 	@Test
+	// Arquillian does not restart the container between runs (afaik).  Without the ordering, the tests will
+	// intermittently fail since this method stops the bundle.
+	@InSequence(2)
 	public void testStop() throws Exception {
 		commonTests();
 

@@ -169,9 +169,9 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		Session session = openSession();
 		session.beginTransaction();
 
-		ProcedureCall query = session.createStoredProcedureCall( "user");
-		ProcedureOutputs procedureResult = query.getResult();
-		Output currentOutput = procedureResult.getCurrentOutput();
+		ProcedureCall procedureCall = session.createStoredProcedureCall( "user");
+		ProcedureOutputs procedureOutputs = procedureCall.getResult();
+		Output currentOutput = procedureOutputs.getCurrent();
 		assertNotNull( currentOutput );
 		ResultSetOutput resultSetReturn = assertTyping( ResultSetOutput.class, currentOutput );
 		String name = (String) resultSetReturn.getSingleResult();
@@ -188,7 +188,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 
 		ProcedureCall query = session.createStoredProcedureCall( "findOneUser" );
 		ProcedureOutputs procedureResult = query.getResult();
-		Output currentOutput = procedureResult.getCurrentOutput();
+		Output currentOutput = procedureResult.getCurrent();
 		assertNotNull( currentOutput );
 		ResultSetOutput resultSetReturn = assertTyping( ResultSetOutput.class, currentOutput );
 		Object result = resultSetReturn.getSingleResult();
@@ -207,7 +207,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 
 		ProcedureCall query = session.createStoredProcedureCall( "findUsers" );
 		ProcedureOutputs procedureResult = query.getResult();
-		Output currentOutput = procedureResult.getCurrentOutput();
+		Output currentOutput = procedureResult.getCurrent();
 		assertNotNull( currentOutput );
 		ResultSetOutput resultSetReturn = assertTyping( ResultSetOutput.class, currentOutput );
 		List results = resultSetReturn.getResultList();
@@ -244,7 +244,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		query.registerParameter( "start", Integer.class, ParameterMode.IN ).bindValue( 1 );
 		query.registerParameter( "end", Integer.class, ParameterMode.IN ).bindValue( 2 );
 		ProcedureOutputs procedureResult = query.getResult();
-		Output currentOutput = procedureResult.getCurrentOutput();
+		Output currentOutput = procedureResult.getCurrent();
 		assertNotNull( currentOutput );
 		ResultSetOutput resultSetReturn = assertTyping( ResultSetOutput.class, currentOutput );
 		List results = resultSetReturn.getResultList();
@@ -269,7 +269,7 @@ public class StoredProcedureTest extends BaseCoreFunctionalTestCase {
 		query.registerParameter( 1, Integer.class, ParameterMode.IN ).bindValue( 1 );
 		query.registerParameter( 2, Integer.class, ParameterMode.IN ).bindValue( 2 );
 		ProcedureOutputs procedureResult = query.getResult();
-		Output currentOutput = procedureResult.getCurrentOutput();
+		Output currentOutput = procedureResult.getCurrent();
 		assertNotNull( currentOutput );
 		ResultSetOutput resultSetReturn = assertTyping( ResultSetOutput.class, currentOutput );
 		List results = resultSetReturn.getResultList();

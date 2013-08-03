@@ -82,6 +82,9 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param position The parameter position
 	 *
 	 * @return The parameter registration memento
+	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
+	 * @throws NoSuchParameterException If no parameter with that position exists
 	 */
 	public ParameterRegistration getParameterRegistration(int position);
 
@@ -122,6 +125,9 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param name The parameter name
 	 *
 	 * @return The parameter registration memento
+	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
+	 * @throws NoSuchParameterException If no parameter with that name exists
 	 */
 	public ParameterRegistration getParameterRegistration(String name);
 

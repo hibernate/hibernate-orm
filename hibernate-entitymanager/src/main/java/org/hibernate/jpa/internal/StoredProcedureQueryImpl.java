@@ -41,6 +41,8 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
+import org.hibernate.procedure.NoSuchParameterException;
+import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureOutputs;
@@ -199,27 +201,10 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	// outputs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private ProcedureOutputs outputs() {
-		if ( procedureResult == null ) {
-			procedureResult = procedureCall.getResult();
-		}
-		return procedureResult;
-	}
-
-	@Override
-	public Object getOutputParameterValue(int position) {
-		return outputs().getOutputParameterValue( position );
-	}
-
-	@Override
-	public Object getOutputParameterValue(String parameterName) {
-		return outputs().getOutputParameterValue( parameterName );
-	}
-
 	@Override
 	public boolean execute() {
 		try {
-			final Output rtn = outputs().getCurrentOutput();
+			final Output rtn = outputs().getCurrent();
 			return rtn != null && ResultSetOutput.class.isInstance( rtn );
 		}
 		catch (NoMoreReturnsException e) {
@@ -227,23 +212,64 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		}
 	}
 
+	protected ProcedureOutputs outputs() {
+		if ( procedureResult == null ) {
+			procedureResult = procedureCall.getResult();
+		}
+		return procedureResult;
+	}
+
 	@Override
 	public int executeUpdate() {
 		if ( ! entityManager().isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
 		}
-		return getUpdateCount();
+
+		// the expectation is that there is just one Output, of type UpdateCountOutput
+		try {
+			execute();
+			return getUpdateCount();
+		}
+		finally {
+			outputs().release();
+		}
+	}
+
+	@Override
+	public Object getOutputParameterValue(int position) {
+		try {
+			return outputs().getOutputParameterValue( position );
+		}
+		catch (ParameterStrategyException e) {
+			throw new IllegalArgumentException( "Invalid mix of named and positional parameters", e );
+		}
+		catch (NoSuchParameterException e) {
+			throw new IllegalArgumentException( e.getMessage(), e );
+		}
+	}
+
+	@Override
+	public Object getOutputParameterValue(String parameterName) {
+		try {
+			return outputs().getOutputParameterValue( parameterName );
+		}
+		catch (ParameterStrategyException e) {
+			throw new IllegalArgumentException( "Invalid mix of named and positional parameters", e );
+		}
+		catch (NoSuchParameterException e) {
+			throw new IllegalArgumentException( e.getMessage(), e );
+		}
 	}
 
 	@Override
 	public boolean hasMoreResults() {
-		return outputs().hasMoreOutput() && ResultSetOutput.class.isInstance( outputs().getCurrentOutput() );
+		return outputs().goToNext() && ResultSetOutput.class.isInstance( outputs().getCurrent() );
 	}
 
 	@Override
 	public int getUpdateCount() {
 		try {
-			final Output rtn = outputs().getCurrentOutput();
+			final Output rtn = outputs().getCurrent();
 			if ( rtn == null ) {
 				return -1;
 			}
@@ -262,9 +288,9 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@Override
 	public List getResultList() {
 		try {
-			final Output rtn = outputs().getCurrentOutput();
+			final Output rtn = outputs().getCurrent();
 			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
-				throw new IllegalStateException( "Current CallableStatement return was not a ResultSet, but getResultList was called" );
+				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
 			}
 
 			return ( (ResultSetOutput) rtn ).getResultList();

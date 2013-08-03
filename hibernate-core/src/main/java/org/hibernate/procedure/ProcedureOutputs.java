@@ -53,6 +53,9 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @return The output value.
 	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
+	 * @throws NoSuchParameterException If no parameter with that name exists
+	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(String name);
@@ -63,6 +66,9 @@ public interface ProcedureOutputs extends Outputs {
 	 * @param position The position at which the parameter was registered.
 	 *
 	 * @return The output value.
+	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
+	 * @throws NoSuchParameterException If no parameter with that position exists
 	 *
 	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */

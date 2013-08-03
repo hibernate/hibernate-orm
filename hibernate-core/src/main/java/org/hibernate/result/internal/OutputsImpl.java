@@ -43,9 +43,7 @@ import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.result.NoMoreReturnsException;
 import org.hibernate.result.Outputs;
-import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.Output;
-import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 
 /**
@@ -69,14 +67,14 @@ public class OutputsImpl implements Outputs {
 
 		try {
 			final boolean isResultSet = jdbcStatement.execute();
-			currentReturnState = buildCurrentReturnDescriptor( isResultSet );
+			currentReturnState = buildCurrentReturnState( isResultSet );
 		}
 		catch (SQLException e) {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
 		}
 	}
 
-	private CurrentReturnState buildCurrentReturnDescriptor(boolean isResultSet) {
+	private CurrentReturnState buildCurrentReturnState(boolean isResultSet) {
 		int updateCount = -1;
 		if ( ! isResultSet ) {
 			try {
@@ -87,42 +85,57 @@ public class OutputsImpl implements Outputs {
 			}
 		}
 
-		return buildCurrentReturnDescriptor( isResultSet, updateCount );
+		return buildCurrentReturnState( isResultSet, updateCount );
 	}
 
-	protected CurrentReturnState buildCurrentReturnDescriptor(boolean isResultSet, int updateCount) {
+	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, int updateCount) {
 		return new CurrentReturnState( isResultSet, updateCount );
 	}
 
-	@Override
-	public Output getCurrentOutput() {
-		if ( currentReturnState == null ) {
-			return null;
-		}
-		return currentReturnState.getReturn();
+	protected JDBCException convert(SQLException e, String message) {
+		return context.getSession().getFactory().getSQLExceptionHelper().convert(
+				e,
+				message,
+				context.getSql()
+		);
 	}
 
 	@Override
-	public boolean hasMoreOutput() {
+	public Output getCurrent() {
+		if ( currentReturnState == null ) {
+			return null;
+		}
+		return currentReturnState.getOutput();
+	}
+
+	@Override
+	public boolean goToNext() {
+		if ( currentReturnState == null ) {
+			return false;
+		}
+
+		if ( currentReturnState.indicatesMoreOutputs() )
 		// prepare the next return state
 		try {
 			final boolean isResultSet = jdbcStatement.getMoreResults();
-			currentReturnState = buildCurrentReturnDescriptor( isResultSet );
+			currentReturnState = buildCurrentReturnState( isResultSet );
 		}
 		catch (SQLException e) {
 			throw convert( e, "Error calling CallableStatement.getMoreResults" );
 		}
 
-		return currentReturnState != null && currentReturnState.indicatesMoreReturns();
+		// and return
+		return currentReturnState != null && currentReturnState.indicatesMoreOutputs();
 	}
 
 	@Override
-	public Output getNextOutput() {
-		if ( !hasMoreOutput() ) {
-			throw new NoMoreReturnsException( "Results have been exhausted" );
+	public void release() {
+		try {
+			jdbcStatement.close();
 		}
-
-		return getCurrentOutput();
+		catch (SQLException e) {
+			log.debug( "Unable to close PreparedStatement", e );
+		}
 	}
 
 	private List extractCurrentResults() {
@@ -143,14 +156,6 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
-	protected JDBCException convert(SQLException e, String message) {
-		return context.getSession().getFactory().getSQLExceptionHelper().convert(
-				e,
-				message,
-				context.getSql()
-		);
-	}
-
 	/**
 	 * Encapsulates the information needed to interpret the current return within a result
 	 */
@@ -165,7 +170,7 @@ public class OutputsImpl implements Outputs {
 			this.updateCount = updateCount;
 		}
 
-		public boolean indicatesMoreReturns() {
+		public boolean indicatesMoreOutputs() {
 			return isResultSet() || getUpdateCount() >= 0;
 		}
 
@@ -177,14 +182,14 @@ public class OutputsImpl implements Outputs {
 			return updateCount;
 		}
 
-		public Output getReturn() {
+		public Output getOutput() {
 			if ( rtn == null ) {
-				rtn = buildReturn();
+				rtn = buildOutput();
 			}
 			return rtn;
 		}
 
-		protected Output buildReturn() {
+		protected Output buildOutput() {
 			if ( log.isDebugEnabled() ) {
 				log.debugf(
 						"Building Return [isResultSet=%s, updateCount=%s, extendedReturn=%s",
@@ -204,10 +209,10 @@ public class OutputsImpl implements Outputs {
 			);
 
 			if ( isResultSet() ) {
-				return new ResultSetOutputImpl( extractCurrentResults() );
+				return buildResultSetOutput( extractCurrentResults() );
 			}
 			else if ( getUpdateCount() >= 0 ) {
-				return new UpdateCountOutputImpl( updateCount );
+				return buildUpdateCountOutput( updateCount );
 			}
 			else if ( hasExtendedReturns() ) {
 				return buildExtendedReturn();
@@ -218,6 +223,14 @@ public class OutputsImpl implements Outputs {
 
 		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+		protected Output buildResultSetOutput(List list) {
+			return new ResultSetOutputImpl( list );
+		}
+
+		protected Output buildUpdateCountOutput(int updateCount) {
+			return new UpdateCountOutputImpl( updateCount );
+		}
+
 		protected boolean hasExtendedReturns() {
 			return false;
 		}
@@ -227,53 +240,9 @@ public class OutputsImpl implements Outputs {
 		}
 	}
 
-	protected static class ResultSetOutputImpl implements ResultSetOutput {
-		private final List results;
 
-		public ResultSetOutputImpl(List results) {
-			this.results = results;
-		}
-
-		@Override
-		public boolean isResultSet() {
-			return true;
-		}
-
-		@Override
-		@SuppressWarnings("unchecked")
-		public List getResultList() {
-			return results;
-		}
-
-		@Override
-		public Object getSingleResult() {
-			final List results = getResultList();
-			if ( results == null || results.isEmpty() ) {
-				return null;
-			}
-			else {
-				return results.get( 0 );
-			}
-		}
-	}
-
-	protected static class UpdateCountOutputImpl implements UpdateCountOutput {
-		private final int updateCount;
-
-		public UpdateCountOutputImpl(int updateCount) {
-			this.updateCount = updateCount;
-		}
-
-		@Override
-		public int getUpdateCount() {
-			return updateCount;
-		}
-
-		@Override
-		public boolean isResultSet() {
-			return false;
-		}
-	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Hooks into Hibernate's Loader hierarchy for ResultSet -> Object mapping
 
 	private static CustomLoaderExtension buildSpecializedCustomLoader(final ResultContext context) {
 		// might be better to just manually construct the Return(s).. SQLQueryReturnProcessor does a lot of

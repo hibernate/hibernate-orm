@@ -21,35 +21,29 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.result;
+package org.hibernate.result.internal;
+
+import org.hibernate.result.UpdateCountOutput;
 
 /**
- * Represents the outputs of executing a JDBC statement accounting for mixing of result sets and update counts
- * hiding the complexity (IMO) of how this is exposed in the JDBC API.
- * <p/>
- * The outputs are exposed as a group of {@link Output} objects, each representing a single result set or update count.
- * Conceptually, Result presents those Returns as an iterator.
+ * Implementation of UpdateCountOutput
  *
  * @author Steve Ebersole
  */
-public interface Outputs {
-	/**
-	 * Retrieve the current Output object.
-	 *
-	 * @return The current Output object.  Can be {@code null}
-	 */
-	public Output getCurrent();
+class UpdateCountOutputImpl implements UpdateCountOutput {
+	private final int updateCount;
 
-	/**
-	 * Go to the next Output object (if any), returning an indication of whether there was another (aka, will
-	 * the next call to {@link #getCurrent()} return {@code null}?
-	 *
-	 * @return {@code true} if the next call to {@link #getCurrent()} will return a non-{@code null} value.
-	 */
-	public boolean goToNext();
+	public UpdateCountOutputImpl(int updateCount) {
+		this.updateCount = updateCount;
+	}
 
-	/**
-	 * Eagerly release any resources held by this Outputs.
-	 */
-	public void release();
+	@Override
+	public int getUpdateCount() {
+		return updateCount;
+	}
+
+	@Override
+	public boolean isResultSet() {
+		return false;
+	}
 }

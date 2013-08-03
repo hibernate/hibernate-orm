@@ -54,7 +54,9 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests various JPA usage scenarios for performing stored procedures.  Inspired by the awesomely well-done JPA TCK
@@ -108,6 +110,42 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpected( jiraKey = "HHH-8416", message = "JPA TCK challenge" )
+	public void testHasMoreResultsHandlingTckChallenge() {
+		EntityManager em = entityManagerFactory.createEntityManager();
+		em.getTransaction().begin();
+
+		try {
+			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
+			assertTrue( query.execute() );
+			assertTrue( query.hasMoreResults() );
+			query.getResultList();
+			assertFalse( query.hasMoreResults() );
+		}
+		finally {
+			em.getTransaction().commit();
+			em.close();
+		}
+	}
+
+	@Test
+	public void testHasMoreResultsHandling() {
+		EntityManager em = entityManagerFactory.createEntityManager();
+		em.getTransaction().begin();
+
+		try {
+			StoredProcedureQuery query = em.createStoredProcedureQuery( "findOneUser", User.class );
+			assertTrue( query.execute() );
+			query.getResultList();
+			assertFalse( query.hasMoreResults() );
+		}
+		finally {
+			em.getTransaction().commit();
+			em.close();
+		}
+	}
+
+	@Test
 	public void testResultClassHandling() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
@@ -149,6 +187,38 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	public void testSettingNonExistingParams() {
+		EntityManager em = entityManagerFactory.createEntityManager();
+		em.getTransaction().begin();
+
+		try {
+			// non-existing positional param
+			try {
+				StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
+				query.setParameter( 99, 1 );
+				fail( "Expecting an exception" );
+			}
+			catch (IllegalArgumentException expected) {
+				// this is the expected condition
+			}
+
+			// non-existing named param
+			try {
+				StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
+				query.setParameter( "does-not-exist", 1 );
+				fail( "Expecting an exception" );
+			}
+			catch (IllegalArgumentException expected) {
+				// this is the expected condition
+			}
+		}
+		finally {
+			em.getTransaction().commit();
+			em.close();
+		}
+	}
+
+	@Test
 	@FailureExpected( jiraKey = "HHH-8395", message = "Out of the frying pan into the fire: https://issues.apache.org/jira/browse/DERBY-211" )
 	public void testExecuteUpdate() {
 		EntityManager em = entityManagerFactory.createEntityManager();
@@ -165,6 +235,10 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 			em.getTransaction().commit();
 			em.close();
 		}
+	}
+
+	public void testParameterRegistration() {
+
 	}
 
 	// todo : look at ways to allow "Auxiliary DB Objects" to the db via EMF bootstrapping.
@@ -313,6 +387,13 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		Connection conn = DriverManager.getConnection( "jdbc:default:connection" );
 		PreparedStatement ps = conn.prepareStatement( "select id, name from t_user where name=?" );
 		ps.setString( 1, "steve" );
+		results[0] = ps.executeQuery();
+		conn.close();
+	}
+
+	public static void findUserIds(ResultSet[] results) throws SQLException {
+		Connection conn = DriverManager.getConnection( "jdbc:default:connection" );
+		PreparedStatement ps = conn.prepareStatement( "select id from t_user" );
 		results[0] = ps.executeQuery();
 		conn.close();
 	}

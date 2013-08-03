@@ -68,7 +68,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	}
 
 	@Override
-	protected CurrentReturnState buildCurrentReturnDescriptor(boolean isResultSet, int updateCount) {
+	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, int updateCount) {
 		return new ProcedureCurrentReturnState( isResultSet, updateCount, refCursorParamIndex );
 	}
 
@@ -81,8 +81,8 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 		}
 
 		@Override
-		public boolean indicatesMoreReturns() {
-			return super.indicatesMoreReturns()
+		public boolean indicatesMoreOutputs() {
+			return super.indicatesMoreOutputs()
 					|| ProcedureOutputsImpl.this.refCursorParamIndex < ProcedureOutputsImpl.this.refCursorParameters.length;
 		}
 
@@ -106,7 +106,7 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 						.getService( RefCursorSupport.class )
 						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
 			}
-			return new ResultSetOutputImpl( extractResults( resultSet ) );
+			return buildResultSetOutput( extractResults( resultSet ) );
 		}
 	}
 

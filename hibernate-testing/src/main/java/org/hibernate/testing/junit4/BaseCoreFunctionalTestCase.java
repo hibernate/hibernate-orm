@@ -147,7 +147,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 
 	@AfterClassOnce
 	@SuppressWarnings( {"UnusedDeclaration"})
-	private void releaseSessionFactory() {
+	public void releaseSessionFactory() {
 		if ( getSessionFactoryBuilder() != null ) {
 			getSessionFactoryBuilder().destory();
 		}

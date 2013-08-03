@@ -50,6 +50,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -173,6 +174,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testSettingInParamDefinedOnNamedStoredProcedureQuery() {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();

@@ -21,7 +21,7 @@
 package org.hibernate.dialect.unique;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.metamodel.relational.UniqueKey;
+import org.hibernate.metamodel.spi.relational.UniqueKey;
 
 /**
  * Informix requires the constraint name to come last on the alter table.

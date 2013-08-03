@@ -173,7 +173,8 @@ public class NamedProcedureCallDefinition {
 						: ParameterStrategy.POSITIONAL;
 				parameterDefinitions = new ParameterDefinition[ parameters.length ];
 				for ( int i = 0; i < parameters.length; i++ ) {
-					parameterDefinitions[i] = new ParameterDefinition( i, parameters[i] );
+					// i+1 for the position because the apis say the numbers are 1-based, not zero
+					parameterDefinitions[i] = new ParameterDefinition( i+1, parameters[i] );
 				}
 			}
 		}

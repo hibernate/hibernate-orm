@@ -98,8 +98,15 @@ public class ValidityAuditStrategy implements AuditStrategy {
 		session.save( auditedEntityName, data );
 		sessionCacheCleaner.scheduleAuditDataRemoval( session, data );
 
-		// Update the end date of the previous row if this operation is expected to have a previous row
-		if ( getRevisionType( auditCfg, data ) != RevisionType.ADD ) {
+		// Update the end date of the previous row.
+		//
+		// When application reuses identifiers of previously removed entities:
+		// The UPDATE statement will no-op if an entity with a given identifier has been
+		// inserted for the first time. But in case a deleted primary key value was
+		// reused, this guarantees correct strategy behavior: exactly one row with
+		// null end date exists for each identifier.
+		final boolean reuseEntityIdentifier = auditCfg.getGlobalCfg().isAllowIdentifierReuse();
+		if ( reuseEntityIdentifier || getRevisionType( auditCfg, data ) != RevisionType.ADD ) {
 			final Queryable productionEntityQueryable = getQueryable( entityName, sessionImplementor );
 			final Queryable rootProductionEntityQueryable = getQueryable(
 					productionEntityQueryable.getRootEntityName(),
@@ -238,7 +245,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 					}
 			);
 
-			if ( rowCount != 1 ) {
+			if ( rowCount != 1 && ( !reuseEntityIdentifier || ( getRevisionType( auditCfg, data ) != RevisionType.ADD ) ) ) {
 				throw new RuntimeException(
 						"Cannot update previous revision for entity " + auditedEntityName + " and id " + id
 				);

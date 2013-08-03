@@ -35,6 +35,7 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * This BundleActivator provides three different uses of Hibernate in OSGi
@@ -59,6 +60,10 @@ import org.osgi.framework.FrameworkUtil;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class HibernateBundleActivator implements BundleActivator {
+	
+	private ServiceRegistration<?> persistenceProviderService;
+	private ServiceRegistration<?> sessionFactoryService;
+	
 	@Override
 	@SuppressWarnings("unchecked")
 	public void start(BundleContext context) throws Exception {
@@ -75,12 +80,12 @@ public class HibernateBundleActivator implements BundleActivator {
 		final Dictionary properties = new Hashtable();
 		// In order to support existing persistence.xml files, register using the legacy provider name.
 		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
-		context.registerService(
+		persistenceProviderService = context.registerService(
 				PersistenceProvider.class.getName(),
 				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ),
 				properties
 		);
-		context.registerService(
+		sessionFactoryService = context.registerService(
 				SessionFactory.class.getName(),
 				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ),
 				new Hashtable()
@@ -89,6 +94,11 @@ public class HibernateBundleActivator implements BundleActivator {
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
-		// Nothing else to do?
+		persistenceProviderService.unregister();
+		persistenceProviderService = null;
+		sessionFactoryService.unregister();
+		sessionFactoryService = null;
+
+		ClassLoaderHelper.overridenClassLoader = null;
 	}
 }

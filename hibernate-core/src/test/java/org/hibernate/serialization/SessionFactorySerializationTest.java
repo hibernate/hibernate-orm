@@ -38,6 +38,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.SerializationException;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
@@ -66,7 +67,11 @@ public class SessionFactorySerializationTest extends BaseCoreFunctionalTestMetho
 
 		SessionFactory factory2 = (SessionFactory) SerializationHelper.clone( factory );
 		assertSame( factory, factory2 );
+
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", NAME, false, null );
 		factory.close();
+
+		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
 	}
 
 	@Test
@@ -82,17 +87,20 @@ public class SessionFactorySerializationTest extends BaseCoreFunctionalTestMetho
 		StringRefAddr refAddr = (StringRefAddr) reference.get( "uuid" );
 		String uuid = (String) refAddr.getContent();
 		// deregister under this uuid...
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, NAME, false, null );
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( uuid, null, false, null );
 		// and then register under a different uuid...
-		SessionFactoryRegistry.INSTANCE.addSessionFactory( "some-other-uuid", NAME, false, factory, null );
+		SessionFactoryRegistry.INSTANCE.addSessionFactory( "some-other-uuid", null, false, factory, null );
 
 		try {
 			SerializationHelper.clone( factory );
 			fail( "Expecting an error" );
 		}
 		catch ( SerializationException expected ) {
-
 		}
+
+		SessionFactoryRegistry.INSTANCE.removeSessionFactory( "some-other-uuid", null, false, null );
 		factory.close();
+
+		assertFalse( SessionFactoryRegistry.INSTANCE.hasRegistrations() );
 	}
 }

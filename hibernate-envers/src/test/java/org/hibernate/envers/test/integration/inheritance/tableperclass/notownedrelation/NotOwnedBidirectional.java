@@ -106,7 +106,6 @@ public class NotOwnedBidirectional extends BaseEnversJPAFunctionalTestCase {
 
 	@Test
 	public void testHistoryOfPersonalContact() {
-		System.out.println( getAuditReader().find( PersonalContact.class, pc_id, 1 ).getAddresses() );
 		assert getAuditReader().find( PersonalContact.class, pc_id, 1 ).getAddresses().equals(
 				TestTools.makeSet( new Address( a1_id, "a1" ) )
 		);

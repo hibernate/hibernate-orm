@@ -25,28 +25,26 @@ package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
-import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.procedure.ProcedureResult;
-import org.hibernate.result.Return;
-import org.hibernate.result.internal.ResultImpl;
+import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.result.Output;
+import org.hibernate.result.internal.OutputsImpl;
 
 /**
  * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
  *
  * @author Steve Ebersole
  */
-public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
+public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutputs {
 	private final ProcedureCallImpl procedureCall;
 	private final CallableStatement callableStatement;
 
 	private final ParameterRegistrationImplementor[] refCursorParameters;
 	private int refCursorParamIndex;
 
-	ProcedureResultImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
+	ProcedureOutputsImpl(ProcedureCallImpl procedureCall, CallableStatement callableStatement) {
 		super( procedureCall, callableStatement );
 		this.procedureCall = procedureCall;
 		this.callableStatement = callableStatement;
@@ -70,48 +68,45 @@ public class ProcedureResultImpl extends ResultImpl implements ProcedureResult {
 	}
 
 	@Override
-	protected CurrentReturnDescriptor buildCurrentReturnDescriptor(boolean isResultSet, int updateCount) {
-		return new ProcedureCurrentReturnDescriptor( isResultSet, updateCount, refCursorParamIndex );
+	protected CurrentReturnState buildCurrentReturnState(boolean isResultSet, int updateCount) {
+		return new ProcedureCurrentReturnState( isResultSet, updateCount, refCursorParamIndex );
 	}
 
-	protected boolean hasMoreReturns(CurrentReturnDescriptor descriptor) {
-		return super.hasMoreReturns( descriptor )
-				|| ( (ProcedureCurrentReturnDescriptor) descriptor ).refCursorParamIndex < refCursorParameters.length;
-	}
-
-	@Override
-	protected Return buildExtendedReturn(CurrentReturnDescriptor returnDescriptor) {
-		this.refCursorParamIndex++;
-		final int refCursorParamIndex = ( (ProcedureCurrentReturnDescriptor) returnDescriptor ).refCursorParamIndex;
-		final ParameterRegistrationImplementor refCursorParam = refCursorParameters[refCursorParamIndex];
-		ResultSet resultSet;
-		if ( refCursorParam.getName() != null ) {
-			resultSet = procedureCall.getSession().getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
-					.getResultSet( callableStatement, refCursorParam.getName() );
-		}
-		else {
-			resultSet = procedureCall.getSession().getFactory().getServiceRegistry()
-					.getService( RefCursorSupport.class )
-					.getResultSet( callableStatement, refCursorParam.getPosition() );
-		}
-		return new ResultSetReturn( this, resultSet );
-	}
-
-	protected JDBCException convert(SQLException e, String message) {
-		return procedureCall.getSession().getFactory().getSQLExceptionHelper().convert(
-				e,
-				message,
-				procedureCall.getProcedureName()
-		);
-	}
-
-	protected static class ProcedureCurrentReturnDescriptor extends CurrentReturnDescriptor {
+	protected class ProcedureCurrentReturnState extends CurrentReturnState {
 		private final int refCursorParamIndex;
 
-		private ProcedureCurrentReturnDescriptor(boolean isResultSet, int updateCount, int refCursorParamIndex) {
+		private ProcedureCurrentReturnState(boolean isResultSet, int updateCount, int refCursorParamIndex) {
 			super( isResultSet, updateCount );
 			this.refCursorParamIndex = refCursorParamIndex;
+		}
+
+		@Override
+		public boolean indicatesMoreOutputs() {
+			return super.indicatesMoreOutputs()
+					|| ProcedureOutputsImpl.this.refCursorParamIndex < ProcedureOutputsImpl.this.refCursorParameters.length;
+		}
+
+		@Override
+		protected boolean hasExtendedReturns() {
+			return refCursorParamIndex < refCursorParameters.length;
+		}
+
+		@Override
+		protected Output buildExtendedReturn() {
+			ProcedureOutputsImpl.this.refCursorParamIndex++;
+			final ParameterRegistrationImplementor refCursorParam = ProcedureOutputsImpl.this.refCursorParameters[refCursorParamIndex];
+			ResultSet resultSet;
+			if ( refCursorParam.getName() != null ) {
+				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
+						.getService( RefCursorSupport.class )
+						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getName() );
+			}
+			else {
+				resultSet = ProcedureOutputsImpl.this.procedureCall.getSession().getFactory().getServiceRegistry()
+						.getService( RefCursorSupport.class )
+						.getResultSet( ProcedureOutputsImpl.this.callableStatement, refCursorParam.getPosition() );
+			}
+			return buildResultSetOutput( extractResults( resultSet ) );
 		}
 	}
 

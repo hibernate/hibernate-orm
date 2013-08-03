@@ -24,7 +24,6 @@
 package org.hibernate.jpa.event.internal.jpa;
 
 import javax.persistence.PersistenceException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
@@ -36,7 +35,8 @@ import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
  * @author Steve Ebersole
  */
 public class StandardListenerFactory implements ListenerFactory {
-	private Map listenerInstances = new ConcurrentHashMap();
+
+	private final ConcurrentHashMap listenerInstances = new ConcurrentHashMap();
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -52,7 +52,10 @@ public class StandardListenerFactory implements ListenerFactory {
 						e
 				);
 			}
-			listenerInstances.put( listenerClass, listenerInstance );
+			Object existing = listenerInstances.putIfAbsent( listenerClass, listenerInstance );
+			if ( existing != null ) {
+				listenerInstance = existing;
+			}
 		}
 		return (T) listenerInstance;
 	}

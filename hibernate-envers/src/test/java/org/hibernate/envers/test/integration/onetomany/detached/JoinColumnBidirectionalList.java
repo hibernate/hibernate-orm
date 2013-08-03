@@ -33,7 +33,7 @@ import org.hibernate.envers.test.entities.onetomany.detached.ListJoinColumnBidir
 
 import org.junit.Test;
 
-import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.hibernate.envers.test.tools.TestTools.checkCollection;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -199,10 +199,10 @@ public class JoinColumnBidirectionalList extends BaseEnversJPAFunctionalTestCase
 				4
 		);
 
-		assertTrue( checkList( rev1.getReferences(), ed1_fromRev1 ) );
-		assertTrue( checkList( rev2.getReferences(), ed1_fromRev1, ed2 ) );
-		assertTrue( checkList( rev3.getReferences(), ed1_fromRev3, ed2 ) );
-		assertTrue( checkList( rev4.getReferences() ) );
+		assertTrue( checkCollection( rev1.getReferences(), ed1_fromRev1 ) );
+		assertTrue( checkCollection( rev2.getReferences(), ed1_fromRev1, ed2 ) );
+		assertTrue( checkCollection( rev3.getReferences(), ed1_fromRev3, ed2 ) );
+		assertTrue( checkCollection( rev4.getReferences() ) );
 	}
 
 	@Test
@@ -237,10 +237,10 @@ public class JoinColumnBidirectionalList extends BaseEnversJPAFunctionalTestCase
 				4
 		);
 
-		assertTrue( checkList( rev1.getReferences(), ed2 ) );
-		assertTrue( checkList( rev2.getReferences() ) );
-		assertTrue( checkList( rev3.getReferences() ) );
-		assertTrue( checkList( rev4.getReferences(), ed1, ed2 ) );
+		assertTrue( checkCollection( rev1.getReferences(), ed2 ) );
+		assertTrue( checkCollection( rev2.getReferences() ) );
+		assertTrue( checkCollection( rev3.getReferences() ) );
+		assertTrue( checkCollection( rev4.getReferences(), ed1, ed2 ) );
 	}
 
 	@Test

@@ -125,7 +125,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public IntegralDataTypeHolder getLastSourceValue() {
+	public synchronized IntegralDataTypeHolder getLastSourceValue() {
 		return noTenantGenerationState().lastSourceValue.copy();
 	}
 
@@ -142,7 +142,7 @@ public class LegacyHiLoAlgorithmOptimizer extends AbstractOptimizer {
 	 * @return Value for property 'lastValue'.
 	 */
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public IntegralDataTypeHolder getLastValue() {
+	public synchronized IntegralDataTypeHolder getLastValue() {
 		return noTenantGenerationState().value;
 	}
 }

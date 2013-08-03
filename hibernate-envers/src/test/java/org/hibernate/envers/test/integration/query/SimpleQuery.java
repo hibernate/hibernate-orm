@@ -311,7 +311,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 				.addProjection( AuditEntity.revisionType() ).add( AuditEntity.id().eq( id1 ) )
 				.getSingleResult();
 
-		Assert.assertTrue( TestTools.checkList( result, site1, site2, site3 ) );
+		Assert.assertTrue( TestTools.checkCollection( result, site1, site2, site3 ) );
 		Assert.assertEquals( revisionType, RevisionType.ADD );
 	}
 
@@ -330,7 +330,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 				.addProjection( AuditEntity.revisionType() ).add( AuditEntity.id().eq( id1 ) )
 				.getSingleResult();
 
-		Assert.assertTrue( TestTools.checkList( result, site1, site2 ) );
+		Assert.assertTrue( TestTools.checkCollection( result, site1, site2 ) );
 		Assert.assertEquals( revisionType, RevisionType.MOD );
 	}
 
@@ -348,7 +348,7 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 				.addProjection( AuditEntity.revisionType() ).add( AuditEntity.id().eq( id1 ) )
 				.getSingleResult();
 
-		Assert.assertTrue( TestTools.checkList( result, site1 ) );
+		Assert.assertTrue( TestTools.checkCollection( result, site1 ) );
 		Assert.assertEquals( revisionType, RevisionType.DEL );
 	}
 

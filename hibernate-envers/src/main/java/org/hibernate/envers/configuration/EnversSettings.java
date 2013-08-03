@@ -125,4 +125,10 @@ public interface EnversSettings {
 	 * Name of column used for storing ordinal of the change in sets of embeddable elements. Defaults to {@literal SETORDINAL}.
 	 */
 	public static final String EMBEDDABLE_SET_ORDINAL_FIELD_NAME = "org.hibernate.envers.embeddable_set_ordinal_field_name";
+
+	/**
+	 * Guarantees proper validity audit strategy behavior when application reuses identifiers of deleted entities.
+	 * Exactly one row with {@code null} end date exists for each identifier.
+	 */
+	public static final String ALLOW_IDENTIFIER_REUSE = "org.hibernate.envers.allow_identifier_reuse";
 }

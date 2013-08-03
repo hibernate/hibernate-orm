@@ -35,12 +35,10 @@ dependencies {
 	
 	// Local copies of all jars needed fur the OSGi runtime.
 	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" )
-	osgiRuntime( "org.ops4j.pax.url:pax-url-wrap:1.5.2" )
-	// TODO: Temporarily using a pre-built jar in src/test/resources.  It's needed for a recent manifest change.  Once this is available in Maven, use it.
-	//osgiRuntime( "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.0-SNAPSHOT" )
+	osgiRuntime( libraries.jpa )
 	osgiRuntime( "javax.enterprise:cdi-api:1.1-PFD" )
 	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" )
-	osgiRuntime( "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec:1.0.0.Alpha1" )
+	osgiRuntime( libraries.jta )
 	osgiRuntime( "commons-collections:commons-collections:3.2.1" )
 	osgiRuntime( "commons-pool:commons-pool:1.6" )
 	osgiRuntime( "commons-dbcp:commons-dbcp:1.4" )
@@ -93,7 +91,7 @@ task copyBnd(type: Copy) {
 
 task runBnd(type: JavaExec){
 	main = "-jar"
-	args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/javassist.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
+	args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
 }
 
 task copyToLib(type: Copy) {

@@ -51,6 +51,8 @@ import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
+import org.hibernate.procedure.NoSuchParameterException;
+import org.hibernate.procedure.ParameterStrategyException;
 
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
@@ -439,7 +441,8 @@ public abstract class BaseQueryImpl implements Query {
 	protected abstract boolean isJpaPositionalParameter(int position);
 
 	/**
-	 * Hibernate specific extension to the JPA {@link javax.persistence.Parameter} contract.
+	 * Hibernate specific extension to the JPA {@link javax.persistence.Parameter} contract.  Used here to track
+	 * information known about the parameter.
 	 */
 	protected static interface ParameterRegistration<T> extends Parameter<T> {
 		/**
@@ -450,6 +453,12 @@ public abstract class BaseQueryImpl implements Query {
 		 */
 		public ParameterMode getMode();
 
+		/**
+		 * Can we bind (set) values on this parameter?  Generally this is {@code true}, but would not be in the case
+		 * of parameters with OUT or REF_CURSOR mode.
+		 *
+		 * @return Whether the parameter is bindable (can set be called).
+		 */
 		public boolean isBindable();
 
 		public void bindValue(T value);
@@ -459,6 +468,11 @@ public abstract class BaseQueryImpl implements Query {
 		public ParameterBind<T> getBind();
 	}
 
+	/**
+	 * Represents the value currently bound to a particular parameter.
+	 *
+	 * @param <T>
+	 */
 	protected static interface ParameterBind<T> {
 		public T getValue();
 
@@ -648,6 +662,12 @@ public abstract class BaseQueryImpl implements Query {
 		try {
 			findParameterRegistration( position ).bindValue( value, temporalType );
 		}
+		catch (ParameterStrategyException e) {
+			throw new IllegalArgumentException( "Invalid mix of named and positional parameters", e );
+		}
+		catch (NoSuchParameterException e) {
+			throw new IllegalArgumentException( e.getMessage(), e );
+		}
 		catch (QueryParameterException e) {
 			throw new IllegalArgumentException( e );
 		}
@@ -755,16 +775,20 @@ public abstract class BaseQueryImpl implements Query {
 		checkOpen( false );
 
 		final ParameterRegistration<T> registration = findParameterRegistration( param );
-		if ( registration != null ) {
-			if ( ! registration.isBindable() ) {
-				throw new IllegalArgumentException( "Passed parameter [" + param + "] is not bindable" );
-			}
-			final ParameterBind<T> bind = registration.getBind();
-			if ( bind != null ) {
-				return bind.getValue();
-			}
+		if ( registration == null ) {
+			throw new IllegalArgumentException( "Passed parameter [" + param + "] is not a (registered) parameter of this query" );
 		}
-		throw new IllegalStateException( "Parameter [" + param + "] has not yet been bound" );
+
+		if ( ! registration.isBindable() ) {
+			throw new IllegalStateException( "Passed parameter [" + param + "] is not bindable" );
+		}
+
+		final ParameterBind<T> bind = registration.getBind();
+		if ( bind == null ) {
+			throw new IllegalStateException( "Parameter [" + param + "] has not yet been bound" );
+		}
+
+		return bind.getValue();
 	}
 
 	@Override

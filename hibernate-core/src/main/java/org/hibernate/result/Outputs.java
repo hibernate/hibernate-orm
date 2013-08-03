@@ -24,27 +24,32 @@
 package org.hibernate.result;
 
 /**
- * Represents the result of executing a JDBC statement accounting for mixing of result sets and update counts hiding the
- * complexity (IMO) of how this is exposed in the JDBC API.
- *
- * A result is made up of group of {@link Return} objects, each representing a single result set or update count.
+ * Represents the outputs of executing a JDBC statement accounting for mixing of result sets and update counts
+ * hiding the complexity (IMO) of how this is exposed in the JDBC API.
+ * <p/>
+ * The outputs are exposed as a group of {@link Output} objects, each representing a single result set or update count.
  * Conceptually, Result presents those Returns as an iterator.
  *
  * @author Steve Ebersole
  */
-public interface Result {
+public interface Outputs {
 	/**
-	 * Are there any more returns associated with this result?
+	 * Retrieve the current Output object.
 	 *
-	 * @return {@code true} means there are more returns available via {@link #getNextReturn()}; {@code false}
-	 * indicates that calling {@link #getNextReturn()} will certainly result in an exception.
+	 * @return The current Output object.  Can be {@code null}
 	 */
-	public boolean hasMoreReturns();
+	public Output getCurrent();
 
 	/**
-	 * Retrieve the next return.
+	 * Go to the next Output object (if any), returning an indication of whether there was another (aka, will
+	 * the next call to {@link #getCurrent()} return {@code null}?
 	 *
-	 * @return The next return.
+	 * @return {@code true} if the next call to {@link #getCurrent()} will return a non-{@code null} value.
 	 */
-	public Return getNextReturn() throws NoMoreReturnsException;
+	public boolean goToNext();
+
+	/**
+	 * Eagerly release any resources held by this Outputs.
+	 */
+	public void release();
 }

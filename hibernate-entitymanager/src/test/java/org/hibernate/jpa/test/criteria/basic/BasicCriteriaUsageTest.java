@@ -32,6 +32,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Predicate;
@@ -100,6 +101,28 @@ public class BasicCriteriaUsageTest extends BaseEntityManagerFunctionalTestCase 
 
 		assertEquals( 1, payments.size() );
 
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8373")
+	public void testFunctionCriteria() {
+		Wall wall = new Wall();
+		wall.setColor( "yellow" );
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( wall );
+
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Wall> query = cb.createQuery( Wall.class );
+		Root<Wall> root = query.from( Wall.class );
+		
+		query.select( root ).where( cb.equal( root.get( "color" ), cb.lower( cb.literal( "YELLOW" ) ) ) );
+		
+		Wall resultItem = em.createQuery( query ).getSingleResult();
+		assertNotNull( resultItem );
+		
 		em.getTransaction().commit();
 		em.close();
 	}

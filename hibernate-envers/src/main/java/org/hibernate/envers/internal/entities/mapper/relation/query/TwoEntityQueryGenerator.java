@@ -152,7 +152,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 				originalIdPropertyName,
 				REFERENCED_ENTITY_ALIAS,
 				REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
-				inclusive
+				true
 		);
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)

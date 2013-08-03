@@ -34,6 +34,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.FetchStyle;
@@ -58,56 +59,59 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
 		return new String[] { "stats/Continent.hbm.xml" };
 	}
-
 	@Override
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
+	protected void initialize(){
+		super.initialize();
+		getTestConfiguration().getProperties().setProperty(  Environment.GENERATE_STATISTICS, "true" );
+		getTestConfiguration().getProperties().setProperty(  AvailableSettings.HBM2DDL_AUTO, "create");
+
+
 	}
 
 	@Override
-	protected void prepareStandardServiceRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
-		serviceRegistryBuilder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+	protected boolean createSchema() {
+		return false;
 	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testCollectionFetchVsLoad() throws Exception {
-		Statistics stats = sessionFactory().getStatistics();
-		stats.clear();
+		SessionFactory sf =sessionFactory();
 
-		Session s = openSession();
+		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();
 		Continent europe = fillDb(s);
 		tx.commit();
-		s.clear();
+		s.close();
 
+		s = sf.openSession();
 		tx = s.beginTransaction();
-		assertEquals(0, stats.getCollectionLoadCount() );
-		assertEquals(0,  stats.getCollectionFetchCount() );
+		assertEquals(0, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals(0,  sf.getStatistics().getCollectionFetchCount() );
 		Continent europe2 = (Continent) s.get( Continent.class, europe.getId() );
-		assertEquals("Lazy true: no collection should be loaded", 0, stats.getCollectionLoadCount() );
-		assertEquals( 0, stats.getCollectionFetchCount() );
+		assertEquals("Lazy true: no collection should be loaded", 0, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionFetchCount() );
 		europe2.getCountries().size();
-		assertEquals( 1, stats.getCollectionLoadCount() );
-		assertEquals("Explicit fetch of the collection state", 1, stats.getCollectionFetchCount() );
+		assertEquals( 1, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals("Explicit fetch of the collection state", 1, sf.getStatistics().getCollectionFetchCount() );
 		tx.commit();
 		s.close();
 
-		s = openSession();
+		sf.getStatistics().clear();
+
+		s = sf.openSession();
 		tx = s.beginTransaction();
-		stats.clear();
 		europe = fillDb(s);
 		tx.commit();
 		s.clear();
 		tx = s.beginTransaction();
-		assertEquals( 0, stats.getCollectionLoadCount() );
-		assertEquals( 0, stats.getCollectionFetchCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionFetchCount() );
 		europe2 = (Continent) s.createQuery(
 				"from " + Continent.class.getName() + " a join fetch a.countries where a.id = " + europe.getId()
 			).uniqueResult();
-		assertEquals( 1, stats.getCollectionLoadCount() );
-		assertEquals( "collection should be loaded in the same query as its parent", 0, stats.getCollectionFetchCount() );
+		assertEquals( 1, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( "collection should be loaded in the same query as its parent", 0, sf.getStatistics().getCollectionFetchCount() );
 		tx.commit();
 		s.close();
 
@@ -115,21 +119,23 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		PluralAttributeBinding coll = SchemaUtil.getCollection( Continent.class, "countries", metadata() );
 		coll.setFetchStyle( FetchStyle.JOIN );
 		coll.setFetchTiming( FetchTiming.IMMEDIATE );
-		SessionFactory sf = metadata().getSessionFactoryBuilder().build();
-		stats = sf.getStatistics();
+		sf = metadata().getSessionFactoryBuilder().build();
+		Statistics stats = sf.getStatistics();
 		stats.clear();
 		stats.setStatisticsEnabled(true);
 		s = sf.openSession();
 		tx = s.beginTransaction();
 		europe = fillDb(s);
 		tx.commit();
-		s.clear();
+		s.close();
+
+		s = sf.openSession();
 		tx = s.beginTransaction();
-		assertEquals( 0, stats.getCollectionLoadCount() );
-		assertEquals( 0, stats.getCollectionFetchCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionFetchCount() );
 		europe2 = (Continent) s.get( Continent.class, europe.getId() );
-		assertEquals( 1, stats.getCollectionLoadCount() );
-		assertEquals( "Should do direct load, not indirect second load when lazy false and JOIN", 0, stats.getCollectionFetchCount() );
+		assertEquals( 1, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( "Should do direct load, not indirect second load when lazy false and JOIN", 0, sf.getStatistics().getCollectionFetchCount() );
 		tx.commit();
 		s.close();
 		sf.close();
@@ -146,42 +152,45 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		tx = s.beginTransaction();
 		europe = fillDb(s);
 		tx.commit();
-		s.clear();
+		s.close();
+
+		s = sf.openSession();
 		tx = s.beginTransaction();
-		assertEquals( 0, stats.getCollectionLoadCount() );
-		assertEquals( 0, stats.getCollectionFetchCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( 0, sf.getStatistics().getCollectionFetchCount() );
 		europe2 = (Continent) s.get( Continent.class, europe.getId() );
-		assertEquals( 1, stats.getCollectionLoadCount() );
-		assertEquals( "Should do explicit collection load, not part of the first one", 1, stats.getCollectionFetchCount() );
+		assertEquals( 1, sf.getStatistics().getCollectionLoadCount() );
+		assertEquals( "Should do explicit collection load, not part of the first one", 1, sf.getStatistics().getCollectionFetchCount() );
 		for ( Object o : europe2.getCountries() ) {
 			s.delete( o );
 		}
 		cleanDb( s );
 		tx.commit();
 		s.close();
+
+		sf.close();
 	}
 
 	@Test
 	public void testQueryStatGathering() {
-		Statistics stats = sessionFactory().getStatistics();
-		stats.clear();
+		SessionFactory sf = sessionFactory();
 
-		Session s = openSession();
+		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();
 		fillDb(s);
 		tx.commit();
 		s.close();
 
-		s = openSession();
+		s = sf.openSession();
 		tx = s.beginTransaction();
 		final String continents = "from Continent";
 		int results = s.createQuery( continents ).list().size();
-		QueryStatistics continentStats = stats.getQueryStatistics( continents );
+		QueryStatistics continentStats = sf.getStatistics().getQueryStatistics( continents );
 		assertNotNull( "stats were null",  continentStats );
 		assertEquals( "unexpected execution count", 1, continentStats.getExecutionCount() );
 		assertEquals( "unexpected row count", results, continentStats.getExecutionRowCount() );
 		long maxTime = continentStats.getExecutionMaxTime();
-		assertEquals( maxTime, stats.getQueryExecutionMaxTime() );
+		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( continents, stats.getQueryExecutionMaxTimeQueryString() );
 
 		Iterator itr = s.createQuery( continents ).iterate();
@@ -206,44 +215,47 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 
 		// explicitly check that statistics for "split queries" get collected
 		// under the original query
-		stats.clear();
-		s = openSession();
+		sf.getStatistics().clear();
+
+		s = sf.openSession();
 		tx = s.beginTransaction();
 		final String localities = "from Locality";
 		results = s.createQuery( localities ).list().size();
-		QueryStatistics localityStats = stats.getQueryStatistics( localities );
+		QueryStatistics localityStats = sf.getStatistics().getQueryStatistics( localities );
 		assertNotNull( "stats were null",  localityStats );
 		// ...one for each split query
 		assertEquals( "unexpected execution count", 2, localityStats.getExecutionCount() );
 		assertEquals( "unexpected row count", results, localityStats.getExecutionRowCount() );
 		maxTime = localityStats.getExecutionMaxTime();
-		assertEquals( maxTime, stats.getQueryExecutionMaxTime() );
+		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( localities, stats.getQueryExecutionMaxTimeQueryString() );
 		tx.commit();
 		s.close();
 		assertFalse( s.isOpen() );
 
 		// native sql queries
-		stats.clear();
-		s = openSession();
+		sf.getStatistics().clear();
+
+		s = sf.openSession();
 		tx = s.beginTransaction();
 		final String sql = "select id, name from Country";
 		results = s.createSQLQuery( sql ).addEntity( Country.class ).list().size();
-		QueryStatistics sqlStats = stats.getQueryStatistics( sql );
+		QueryStatistics sqlStats = sf.getStatistics().getQueryStatistics( sql );
 		assertNotNull( "sql stats were null", sqlStats );
 		assertEquals( "unexpected execution count", 1, sqlStats.getExecutionCount() );
 		assertEquals( "unexpected row count", results, sqlStats.getExecutionRowCount() );
 		maxTime = sqlStats.getExecutionMaxTime();
-		assertEquals( maxTime, stats.getQueryExecutionMaxTime() );
+		assertEquals( maxTime, sf.getStatistics().getQueryExecutionMaxTime() );
 //		assertEquals( sql, stats.getQueryExecutionMaxTimeQueryString() );
 		tx.commit();
 		s.close();
 
-		s = openSession();
+		s = sf.openSession();
 		tx = s.beginTransaction();
 		cleanDb( s );
 		tx.commit();
 		s.close();
+		sf.close();
 	}
 
 	private Continent fillDb(Session s) {

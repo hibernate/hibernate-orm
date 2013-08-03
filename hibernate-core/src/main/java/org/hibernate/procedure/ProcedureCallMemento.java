@@ -29,7 +29,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * Represents a "memento" of a ProcedureCall
+ * Represents a "memento" (disconnected, externalizable form) of a ProcedureCall
  *
  * @author Steve Ebersole
  */

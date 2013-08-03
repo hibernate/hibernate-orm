@@ -23,13 +23,10 @@
  */
 package org.hibernate.jpa.internal;
 
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.ParameterMode;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +36,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.ParameterMode;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -59,10 +62,8 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.AbstractEntityManagerImpl;
 import org.hibernate.jpa.spi.AbstractQueryImpl;
 import org.hibernate.type.CompositeCustomType;
-
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
+import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -103,7 +104,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		for ( String name : (Set<String>) parameterMetadata.getNamedParameterNames() ) {
 			final NamedParameterDescriptor descriptor = parameterMetadata.getNamedParameterDescriptor( name );
 			Class javaType = namedParameterTypeRedefinition.get( name );
-			if ( javaType != null && mightNeedRedefinition( javaType, descriptor.getExpectedType().getClass() ) ) {
+			if ( javaType != null && mightNeedRedefinition( javaType, descriptor.getExpectedType() ) ) {
 				descriptor.resetExpectedType(
 						sfi().getTypeResolver().heuristicType( javaType.getName() )
 				);
@@ -136,10 +137,13 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		return (SessionFactoryImplementor) getEntityManager().getFactory().getSessionFactory();
 	}
 
-	private boolean mightNeedRedefinition(Class javaType, Class expectedType) {
+	private boolean mightNeedRedefinition(Class javaType, Type expectedType) {
 		// only redefine dates/times/timestamps that are not wrapped in a CompositeCustomType
-		return java.util.Date.class.isAssignableFrom( javaType ) 
-				&& !CompositeCustomType.class.isAssignableFrom( expectedType );
+		if ( expectedType == null )
+			return java.util.Date.class.isAssignableFrom( javaType );
+		else
+			return java.util.Date.class.isAssignableFrom( javaType )
+					&& !CompositeCustomType.class.isAssignableFrom( expectedType.getClass() );
 	}
 
 	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {

@@ -71,6 +71,7 @@ public class DriverManagerConnectionProviderImpl
 	private int poolSize;
 	private boolean autocommit;
 
+	//Access guarded by synchronization on the pool instance
 	private final ArrayList<Connection> pool = new ArrayList<Connection>();
 	private final AtomicInteger checkedOut = new AtomicInteger();
 
@@ -170,15 +171,17 @@ public class DriverManagerConnectionProviderImpl
 	public void stop() {
 		LOG.cleaningUpConnectionPool( url );
 
-		for ( Connection connection : pool ) {
-			try {
-				connection.close();
+		synchronized ( pool ) {
+			for ( Connection connection : pool ) {
+				try {
+					connection.close();
+				}
+				catch (SQLException sqle) {
+					LOG.unableToClosePooledConnection( sqle );
+				}
 			}
-			catch (SQLException sqle) {
-				LOG.unableToClosePooledConnection( sqle );
-			}
+			pool.clear();
 		}
-		pool.clear();
 		stopped = true;
 	}
 

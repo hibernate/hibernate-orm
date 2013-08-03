@@ -17,7 +17,7 @@
         <bundle start-level="30">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/1.0.1</bundle>
         
         <!-- JPA -->
-        <bundle start-level="30">mvn:org.hibernate.javax.persistence/hibernate-jpa-2.1-api/1.0.0-SNAPSHOT</bundle>
+        <bundle start-level="30">mvn:org.hibernate.javax.persistence/hibernate-jpa-2.1-api/1.0.0.Final</bundle>
         <!-- No container currently supports JPA 2.1.  Clone and build Aries JPA from the following fork (upgrades to
              JPA 2.1).  Aries should be upgrading as soon as the spec is out.
              https://github.com/brmeyer/aries/tree/jpa21 -->
@@ -46,7 +46,6 @@
 
 		<!-- These do not natively support OSGi, so using 3rd party bundles. -->
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.antlr/2.7.7_5</bundle>
-		<bundle>wrap:mvn:org.javassist/javassist/3.18.0-GA</bundle>
 		<bundle>mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr303-api-1.0.0/2.2.0</bundle>
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.ant/1.8.2_2</bundle>
 		<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.dom4j/1.6.1_5</bundle>
@@ -55,9 +54,10 @@
 		<bundle>wrap:mvn:org.jboss/jandex/1.1.0.Alpha1</bundle>
 		
         <bundle>wrap:mvn:org.hibernate.common/hibernate-commons-annotations/4.0.2.Final</bundle>
-        <bundle>mvn:com.fasterxml/classmate/0.8.0</bundle>
-        <bundle>mvn:org.jboss.logging/jboss-logging/3.1.1.GA</bundle>
-        
+        <bundle>mvn:com.fasterxml/classmate/0.5.4</bundle>
+        <bundle>mvn:org.jboss.logging/jboss-logging/3.1.0.GA</bundle>
+		<bundle>mvn:org.javassist/javassist/3.18.0-GA</bundle>
+
         <bundle>mvn:org.hibernate/hibernate-core/5.0.0-SNAPSHOT</bundle>
         <bundle>mvn:org.hibernate/hibernate-entitymanager/5.0.0-SNAPSHOT</bundle>
         

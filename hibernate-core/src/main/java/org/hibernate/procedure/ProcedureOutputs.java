@@ -23,20 +23,20 @@
  */
 package org.hibernate.procedure;
 
-import org.hibernate.result.Result;
+import org.hibernate.result.Outputs;
 
 /**
- * Specialization of the {@link Result} contract providing access to the stored procedure's registered
+ * Specialization of the {@link org.hibernate.result.Outputs} contract providing access to the stored procedure's registered
  * output parameters.
  *
  * @author Steve Ebersole
  */
-public interface ProcedureResult extends Result {
+public interface ProcedureOutputs extends Outputs {
 	/**
 	 * Retrieve the value of an OUTPUT parameter by the parameter's registration memento.
 	 * <p/>
 	 * Should NOT be called for parameters registered as REF_CURSOR.  REF_CURSOR parameters should be
-	 * accessed via the returns (see {@link #getNextReturn}
+	 * accessed via the returns (see {@link #getNextOutput}
 	 *
 	 * @param parameterRegistration The parameter's registration memento.
 	 *
@@ -53,6 +53,9 @@ public interface ProcedureResult extends Result {
 	 *
 	 * @return The output value.
 	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
+	 * @throws NoSuchParameterException If no parameter with that name exists
+	 *
 	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
 	 */
 	public Object getOutputParameterValue(String name);
@@ -63,6 +66,9 @@ public interface ProcedureResult extends Result {
 	 * @param position The position at which the parameter was registered.
 	 *
 	 * @return The output value.
+	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
+	 * @throws NoSuchParameterException If no parameter with that position exists
 	 *
 	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
 	 */

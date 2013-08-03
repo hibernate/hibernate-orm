@@ -70,6 +70,9 @@ public class OrmVersion1SupportedTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertEquals( "HHH00196 should not be called", 0, BytemanHelper.getAndResetInvocationCount() );
+
+		// which means we also need to close it manually
+		releaseSessionFactory();
 	}
 
 	@Override

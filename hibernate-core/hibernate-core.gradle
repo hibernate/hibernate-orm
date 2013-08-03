@@ -29,6 +29,9 @@ dependencies {
         // for test runtime
         transitive = true
     }
+    // for testing stored procedure support
+    testCompile( libraries.derby )
+
 
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )

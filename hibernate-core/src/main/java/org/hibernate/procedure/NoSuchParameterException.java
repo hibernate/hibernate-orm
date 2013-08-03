@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,18 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.result;
+package org.hibernate.procedure;
+
+import org.hibernate.HibernateException;
 
 /**
- * Models a return that is an update count (count of rows affected)
- *
  * @author Steve Ebersole
  */
-public interface UpdateCountReturn extends Return {
-	/**
-	 * Retrieve the associated update count
-	 *
-	 * @return The update count
-	 */
-	public int getUpdateCount();
+public class NoSuchParameterException extends HibernateException {
+	public NoSuchParameterException(String message) {
+		super( message );
+	}
 }

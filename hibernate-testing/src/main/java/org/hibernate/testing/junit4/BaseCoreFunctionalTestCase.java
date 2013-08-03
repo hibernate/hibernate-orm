@@ -150,7 +150,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseFunctionalTestCase 
 	private void releaseSessionFactory() {
 		if ( getSessionFactoryBuilder() != null ) {
 			getSessionFactoryBuilder().destory();
-//			setSessionFactoryBuilder( null );
 		}
 		getTestConfiguration().setConfiguration( null );
 		getTestConfiguration().setMetadata( null );

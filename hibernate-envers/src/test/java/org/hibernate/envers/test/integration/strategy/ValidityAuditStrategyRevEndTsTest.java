@@ -289,17 +289,17 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 		ParentEntity rev4 = getAuditReader().find( ParentEntity.class, p1_id, 4 );
 		ParentEntity rev5 = getAuditReader().find( ParentEntity.class, p1_id, 5 );
 
-		assert TestTools.checkList( rev1.getChildren1() );
-		assert TestTools.checkList( rev2.getChildren1(), c1_1 );
-		assert TestTools.checkList( rev3.getChildren1(), c1_1, c1_2 );
-		assert TestTools.checkList( rev4.getChildren1(), c1_2 );
-		assert TestTools.checkList( rev5.getChildren1() );
+		assert TestTools.checkCollection( rev1.getChildren1() );
+		assert TestTools.checkCollection( rev2.getChildren1(), c1_1 );
+		assert TestTools.checkCollection( rev3.getChildren1(), c1_1, c1_2 );
+		assert TestTools.checkCollection( rev4.getChildren1(), c1_2 );
+		assert TestTools.checkCollection( rev5.getChildren1() );
 
-		assert TestTools.checkList( rev1.getChildren2() );
-		assert TestTools.checkList( rev2.getChildren2() );
-		assert TestTools.checkList( rev3.getChildren2(), c2_2 );
-		assert TestTools.checkList( rev4.getChildren2(), c2_2 );
-		assert TestTools.checkList( rev5.getChildren2(), c2_2 );
+		assert TestTools.checkCollection( rev1.getChildren2() );
+		assert TestTools.checkCollection( rev2.getChildren2() );
+		assert TestTools.checkCollection( rev3.getChildren2(), c2_2 );
+		assert TestTools.checkCollection( rev4.getChildren2(), c2_2 );
+		assert TestTools.checkCollection( rev5.getChildren2(), c2_2 );
 	}
 
 	@Test
@@ -317,17 +317,17 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 		ParentEntity rev4 = getAuditReader().find( ParentEntity.class, p2_id, 4 );
 		ParentEntity rev5 = getAuditReader().find( ParentEntity.class, p2_id, 5 );
 
-		assert TestTools.checkList( rev1.getChildren1() );
-		assert TestTools.checkList( rev2.getChildren1() );
-		assert TestTools.checkList( rev3.getChildren1(), c1_1 );
-		assert TestTools.checkList( rev4.getChildren1(), c1_1 );
-		assert TestTools.checkList( rev5.getChildren1(), c1_1 );
+		assert TestTools.checkCollection( rev1.getChildren1() );
+		assert TestTools.checkCollection( rev2.getChildren1() );
+		assert TestTools.checkCollection( rev3.getChildren1(), c1_1 );
+		assert TestTools.checkCollection( rev4.getChildren1(), c1_1 );
+		assert TestTools.checkCollection( rev5.getChildren1(), c1_1 );
 
-		assert TestTools.checkList( rev1.getChildren2() );
-		assert TestTools.checkList( rev2.getChildren2(), c2_1 );
-		assert TestTools.checkList( rev3.getChildren2(), c2_1 );
-		assert TestTools.checkList( rev4.getChildren2(), c2_1, c2_2 );
-		assert TestTools.checkList( rev5.getChildren2(), c2_1 );
+		assert TestTools.checkCollection( rev1.getChildren2() );
+		assert TestTools.checkCollection( rev2.getChildren2(), c2_1 );
+		assert TestTools.checkCollection( rev3.getChildren2(), c2_1 );
+		assert TestTools.checkCollection( rev4.getChildren2(), c2_1, c2_2 );
+		assert TestTools.checkCollection( rev5.getChildren2(), c2_1 );
 	}
 
 	@Test
@@ -356,11 +356,11 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				5
 		);
 
-		assert TestTools.checkList( rev1.getParents() );
-		assert TestTools.checkList( rev2.getParents(), p1 );
-		assert TestTools.checkList( rev3.getParents(), p1, p2 );
-		assert TestTools.checkList( rev4.getParents(), p2 );
-		assert TestTools.checkList( rev5.getParents(), p2 );
+		assert TestTools.checkCollection( rev1.getParents() );
+		assert TestTools.checkCollection( rev2.getParents(), p1 );
+		assert TestTools.checkCollection( rev3.getParents(), p1, p2 );
+		assert TestTools.checkCollection( rev4.getParents(), p2 );
+		assert TestTools.checkCollection( rev5.getParents(), p2 );
 	}
 
 	// TODO: this was disabled?
@@ -389,11 +389,11 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				5
 		);
 
-		assert TestTools.checkList( rev1.getParents() );
-		assert TestTools.checkList( rev2.getParents() );
-		assert TestTools.checkList( rev3.getParents(), p1 );
-		assert TestTools.checkList( rev4.getParents(), p1 );
-		assert TestTools.checkList( rev5.getParents() );
+		assert TestTools.checkCollection( rev1.getParents() );
+		assert TestTools.checkCollection( rev2.getParents() );
+		assert TestTools.checkCollection( rev3.getParents(), p1 );
+		assert TestTools.checkCollection( rev4.getParents(), p1 );
+		assert TestTools.checkCollection( rev5.getParents() );
 	}
 
 	@Test
@@ -421,11 +421,11 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				5
 		);
 
-		assert TestTools.checkList( rev1.getParents() );
-		assert TestTools.checkList( rev2.getParents(), p2 );
-		assert TestTools.checkList( rev3.getParents(), p2 );
-		assert TestTools.checkList( rev4.getParents(), p2 );
-		assert TestTools.checkList( rev5.getParents(), p2 );
+		assert TestTools.checkCollection( rev1.getParents() );
+		assert TestTools.checkCollection( rev2.getParents(), p2 );
+		assert TestTools.checkCollection( rev3.getParents(), p2 );
+		assert TestTools.checkCollection( rev4.getParents(), p2 );
+		assert TestTools.checkCollection( rev5.getParents(), p2 );
 	}
 
 	@Test
@@ -454,11 +454,11 @@ public class ValidityAuditStrategyRevEndTsTest extends BaseEnversJPAFunctionalTe
 				5
 		);
 
-		assert TestTools.checkList( rev1.getParents() );
-		assert TestTools.checkList( rev2.getParents() );
-		assert TestTools.checkList( rev3.getParents(), p1 );
-		assert TestTools.checkList( rev4.getParents(), p1, p2 );
-		assert TestTools.checkList( rev5.getParents(), p1 );
+		assert TestTools.checkCollection( rev1.getParents() );
+		assert TestTools.checkCollection( rev2.getParents() );
+		assert TestTools.checkCollection( rev3.getParents(), p1 );
+		assert TestTools.checkCollection( rev4.getParents(), p1, p2 );
+		assert TestTools.checkCollection( rev5.getParents(), p1 );
 	}
 
 	private List<Map<String, Object>> getRevisions(

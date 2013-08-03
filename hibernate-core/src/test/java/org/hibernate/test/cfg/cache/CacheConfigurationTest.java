@@ -25,7 +25,6 @@ package org.hibernate.test.cfg.cache;
 
 import org.junit.Test;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -44,7 +43,8 @@ public class CacheConfigurationTest extends BaseUnitTestCase {
 		if(isMetadataUsed()){
 			throw new IllegalStateException( "what should we do here " );
 		}
+		// we only care if the SF builds successfully.
 		Configuration cfg = new Configuration().configure(CFG_XML);
-		SessionFactory sessionFactory = cfg.buildSessionFactory();
+		cfg.buildSessionFactory().close();
 	}
 }

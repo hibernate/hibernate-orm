@@ -24,18 +24,15 @@
 package org.hibernate.result;
 
 /**
- * Common contract for individual return objects which can be either results ({@link ResultSetReturn}) or update
- * counts ({@link UpdateCountReturn}).
+ * Models a return that is an update count (count of rows affected)
  *
  * @author Steve Ebersole
  */
-public interface Return {
+public interface UpdateCountOutput extends Output {
 	/**
-	 * Determine if this return is a result (castable to {@link ResultSetReturn}).  The alternative is that it is
-	 * an update count (castable to {@link UpdateCountReturn}).
+	 * Retrieve the associated update count
 	 *
-	 * @return {@code true} indicates that {@code this} can be safely cast to {@link ResultSetReturn}), other wise
-	 * it can be cast to {@link UpdateCountReturn}.
+	 * @return The update count
 	 */
-	public boolean isResultSet();
+	public int getUpdateCount();
 }

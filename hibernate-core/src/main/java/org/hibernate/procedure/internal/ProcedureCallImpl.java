@@ -50,10 +50,12 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.NamedParametersNotSupportedException;
+import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterRegistration;
+import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.ProcedureResult;
+import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;
 
@@ -75,7 +77,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 
 	private Set<String> synchronizedQuerySpaces;
 
-	private ProcedureResultImpl outputs;
+	private ProcedureOutputsImpl outputs;
 
 	/**
 	 * The no-returns form.
@@ -321,21 +323,22 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	@Override
 	public ParameterRegistrationImplementor getParameterRegistration(int position) {
 		if ( parameterStrategy != ParameterStrategy.POSITIONAL ) {
-			throw new IllegalArgumentException( "Positions were not used to register parameters with this stored procedure call" );
+			throw new ParameterStrategyException(
+					"Attempt to access positional parameter [" + position + "] but ProcedureCall using named parameters"
+			);
 		}
-		try {
-			return registeredParameters.get( position );
+		for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
+			if ( position == parameter.getPosition() ) {
+				return parameter;
+			}
 		}
-		catch ( Exception e ) {
-			throw new QueryException( "Could not locate parameter registered using that position [" + position + "]" );
-		}
+		throw new NoSuchParameterException( "Could not locate parameter registered using that position [" + position + "]" );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ParameterRegistration<T> registerParameter(String name, Class<T> type, ParameterMode mode) {
-		final NamedParameterRegistration parameterRegistration
-				= new NamedParameterRegistration( this, name, mode, type );
+		final NamedParameterRegistration parameterRegistration = new NamedParameterRegistration( this, name, mode, type );
 		registerParameter( parameterRegistration );
 		return parameterRegistration;
 	}
@@ -350,14 +353,14 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	@Override
 	public ParameterRegistrationImplementor getParameterRegistration(String name) {
 		if ( parameterStrategy != ParameterStrategy.NAMED ) {
-			throw new IllegalArgumentException( "Names were not used to register parameters with this stored procedure call" );
+			throw new ParameterStrategyException( "Names were not used to register parameters with this stored procedure call" );
 		}
 		for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
 			if ( name.equals( parameter.getName() ) ) {
 				return parameter;
 			}
 		}
-		throw new IllegalArgumentException( "Could not locate parameter registered under that name [" + name + "]" );
+		throw new NoSuchParameterException( "Could not locate parameter registered under that name [" + name + "]" );
 	}
 
 	@Override
@@ -367,7 +370,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	}
 
 	@Override
-	public ProcedureResult getResult() {
+	public ProcedureOutputs getResult() {
 		if ( outputs == null ) {
 			outputs = buildOutputs();
 		}
@@ -375,7 +378,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		return outputs;
 	}
 
-	private ProcedureResultImpl buildOutputs() {
+	private ProcedureOutputsImpl buildOutputs() {
 		// todo : going to need a very specialized Loader for this.
 		// or, might be a good time to look at splitting Loader up into:
 		//		1) building statement objects
@@ -384,6 +387,11 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 
 		// for now assume there are no resultClasses nor mappings defined..
 		// 	TOTAL PROOF-OF-CONCEPT!!!!!!
+
+		// todo : how to identify calls which should be in the form `{? = call procName...}` ??? (note leading param marker)
+		// 		more than likely this will need to be a method on the native API.  I can see this as a trigger to
+		//		both: (1) add the `? = ` part and also (2) register a REFCURSOR parameter for DBs (Oracle, PGSQL) that
+		//		need it.
 
 		final StringBuilder buffer = new StringBuilder().append( "{call " )
 				.append( procedureName )
@@ -414,7 +422,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 				i += parameter.getSqlTypes().length;
 			}
 
-			return new ProcedureResultImpl( this, statement );
+			return new ProcedureOutputsImpl( this, statement );
 		}
 		catch (SQLException e) {
 			throw getSession().getFactory().getSQLExceptionHelper().convert(

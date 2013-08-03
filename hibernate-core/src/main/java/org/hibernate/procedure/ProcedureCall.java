@@ -82,6 +82,9 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param position The parameter position
 	 *
 	 * @return The parameter registration memento
+	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
+	 * @throws NoSuchParameterException If no parameter with that position exists
 	 */
 	public ParameterRegistration getParameterRegistration(int position);
 
@@ -122,6 +125,9 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 	 * @param name The parameter name
 	 *
 	 * @return The parameter registration memento
+	 *
+	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
+	 * @throws NoSuchParameterException If no parameter with that name exists
 	 */
 	public ParameterRegistration getParameterRegistration(String name);
 
@@ -134,13 +140,14 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
-	 * Output instance each time.
+	 * ProcedureResult instance each time.
 	 * <p/>
-	 * Note that the procedure will not actually be executed until the outputs are actually accessed.
+	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureResult
+	 * will be returned.
 	 *
-	 * @return The outputs representation
+	 * @return The ProcedureResult representation
 	 */
-	public ProcedureResult getResult();
+	public ProcedureOutputs getResult();
 
 	/**
 	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query

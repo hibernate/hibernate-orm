@@ -25,6 +25,7 @@ package org.hibernate.envers.test.tools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -63,7 +64,7 @@ public class TestTools {
 		return ret;
 	}
 
-	public static <T> boolean checkList(List<T> list, T... objects) {
+	public static <T> boolean checkCollection(Collection<T> list, T... objects) {
 		if ( list.size() != objects.length ) {
 			return false;
 		}

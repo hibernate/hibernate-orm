@@ -63,15 +63,15 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 	protected void initialize(){
 		super.initialize();
 		getTestConfiguration().getProperties().setProperty(  Environment.GENERATE_STATISTICS, "true" );
-		getTestConfiguration().getProperties().setProperty(  AvailableSettings.HBM2DDL_AUTO, "create");
+//		getTestConfiguration().getProperties().setProperty(  AvailableSettings.HBM2DDL_AUTO, "create");
 
 
 	}
 
-	@Override
-	protected boolean createSchema() {
-		return false;
-	}
+//	@Override
+//	protected boolean createSchema() {
+//		return false;
+//	}
 
 	@Test
 	@SuppressWarnings( {"UnusedAssignment"})
@@ -168,13 +168,13 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-		sf.close();
+//		sf.close();
 	}
 
 	@Test
 	public void testQueryStatGathering() {
 		SessionFactory sf = sessionFactory();
-
+		sf.getStatistics().clear();
 		Session s = sf.openSession();
 		Transaction tx = s.beginTransaction();
 		fillDb(s);
@@ -255,7 +255,7 @@ public class StatsTest extends BaseCoreFunctionalTestCase {
 		cleanDb( s );
 		tx.commit();
 		s.close();
-		sf.close();
+//		sf.close();
 	}
 
 	private Continent fillDb(Session s) {

@@ -27,15 +27,16 @@ package org.hibernate.serialization;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
+import org.jboss.logging.Logger;
+
 import org.junit.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
+
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestMethod;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.SerializationException;
 
 import static org.junit.Assert.assertFalse;
@@ -47,6 +48,23 @@ import static org.junit.Assert.fail;
  */
 public class SessionFactorySerializationTest extends BaseCoreFunctionalTestMethod {
 	public static final String NAME = "mySF";
+	private static final Logger logger = Logger.getLogger( SessionFactorySerializationTest.class );
+
+	@Override
+	protected void prepareTest() throws Exception {
+		if(SessionFactoryRegistry.INSTANCE.hasRegistrations()){
+			logger.warn( "There are uncleaned SessionFactory instance, probably because some previous tests didn't do their job correctly, now we need clean it up" );
+			SessionFactoryRegistry.INSTANCE.clearRegistrations();
+		}
+	}
+
+	@Override
+	protected void prepareCleanup() {
+		if(SessionFactoryRegistry.INSTANCE.hasRegistrations()){
+			logger.warn( "There are uncleaned SessionFactory instance, this test is doing something wrong" );
+			SessionFactoryRegistry.INSTANCE.clearRegistrations();
+		}
+	}
 
 	@Test
 	public void testNamedSessionFactorySerialization() throws Exception {

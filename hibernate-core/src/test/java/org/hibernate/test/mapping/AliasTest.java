@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -45,6 +46,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  * 
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel
 public class AliasTest extends BaseCoreFunctionalTestCase {
 	
 	/**

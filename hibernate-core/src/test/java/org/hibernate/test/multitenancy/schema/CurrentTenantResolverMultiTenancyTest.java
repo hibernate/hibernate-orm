@@ -30,7 +30,9 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.env.ConnectionProviderBuilder;
 
 /**
  * SessionFactory has to use the {@link CurrentTenantIdentifierResolver} when
@@ -40,6 +42,7 @@ import org.hibernate.testing.TestForIssue;
  * @author Steve Ebersole
  */
 @TestForIssue(jiraKey = "HHH-7306")
+@RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenancyTest {
 
 	private TestCurrentTenantIdentifierResolver currentTenantResolver = new TestCurrentTenantIdentifierResolver();

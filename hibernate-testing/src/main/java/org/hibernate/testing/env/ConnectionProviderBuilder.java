@@ -29,13 +29,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+import org.hibernate.testing.DialectCheck;
 
 /**
  * Defines the JDBC connection information (currently H2) used by Hibernate for unit (not functional!) tests
  *
  * @author Steve Ebersole
  */
-public class ConnectionProviderBuilder {
+public class ConnectionProviderBuilder implements DialectCheck {
 	public static final String DRIVER = "org.h2.Driver";
 	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;MVCC=TRUE";
 	public static final String USER = "sa";
@@ -78,5 +79,10 @@ public class ConnectionProviderBuilder {
 
 	public static Dialect getCorrespondingDialect() {
 		return new H2Dialect();
+	}
+
+	@Override
+	public boolean isMatch(Dialect dialect) {
+		return getCorrespondingDialect().getClass().equals( dialect.getClass() );
 	}
 }

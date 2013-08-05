@@ -16,7 +16,7 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "USER")
+@Table(name = "USERTABLE")
 public class UserEntity implements Serializable{
 
 	private static final long serialVersionUID = 1L;

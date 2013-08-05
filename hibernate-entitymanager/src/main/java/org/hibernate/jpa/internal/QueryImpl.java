@@ -61,6 +61,8 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.AbstractEntityManagerImpl;
 import org.hibernate.jpa.spi.AbstractQueryImpl;
+import org.hibernate.jpa.spi.ParameterBind;
+import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
@@ -112,7 +114,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			else if ( descriptor.getExpectedType() != null ) {
 				javaType = descriptor.getExpectedType().getReturnedClass();
 			}
-			registerParameter( new ParameterRegistrationImpl( query, name, javaType ) );
+			registerParameter( new ParameterRegistrationImpl( this, query, name, javaType ) );
 			if ( descriptor.isJpaStyle() ) {
 				if ( jpaPositionalIndices == null ) {
 					jpaPositionalIndices = new HashSet<Integer>();
@@ -125,7 +127,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		for ( int i = 0, max = parameterMetadata.getOrdinalParameterCount(); i < max; i++ ) {
 			final OrdinalParameterDescriptor descriptor = parameterMetadata.getOrdinalParameterDescriptor( i + 1 );
 			Class javaType = descriptor.getExpectedType() == null ? null : descriptor.getExpectedType().getReturnedClass();
-			registerParameter( new ParameterRegistrationImpl( query, i+1, javaType ) );
+			registerParameter( new ParameterRegistrationImpl( this, query, i+1, javaType ) );
 			Integer position = descriptor.getOrdinalPosition();
             if ( jpaPositionalIndices != null && jpaPositionalIndices.contains(position) ) {
 				LOG.parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(position);
@@ -147,7 +149,8 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	}
 
 	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
-		private final org.hibernate.Query query;
+		private final Query jpaQuery;
+		private final org.hibernate.Query nativeQuery;
 
 		private final String name;
 		private final Integer position;
@@ -155,18 +158,33 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 		private ParameterBind<T> bind;
 
-		private ParameterRegistrationImpl(org.hibernate.Query query, String name, Class<T> javaType) {
-			this.query = query;
+		private ParameterRegistrationImpl(
+				Query jpaQuery,
+				org.hibernate.Query nativeQuery,
+				String name,
+				Class<T> javaType) {
+			this.jpaQuery = jpaQuery;
+			this.nativeQuery = nativeQuery;
 			this.name = name;
 			this.javaType = javaType;
 			this.position = null;
 		}
 
-		private ParameterRegistrationImpl(org.hibernate.Query query, Integer position, Class<T> javaType) {
-			this.query = query;
+		private ParameterRegistrationImpl(
+				Query jpaQuery,
+				org.hibernate.Query nativeQuery,
+				Integer position,
+				Class<T> javaType) {
+			this.jpaQuery = jpaQuery;
+			this.nativeQuery = nativeQuery;
 			this.position = position;
 			this.javaType = javaType;
 			this.name = null;
+		}
+
+		@Override
+		public Query getQuery() {
+			return jpaQuery;
 		}
 
 		@Override
@@ -202,14 +220,14 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 			if ( name != null ) {
 				if ( value instanceof Collection ) {
-					query.setParameterList( name, (Collection) value );
+					nativeQuery.setParameterList( name, (Collection) value );
 				}
 				else {
-					query.setParameter( name, value );
+					nativeQuery.setParameter( name, value );
 				}
 			}
 			else {
-				query.setParameter( position-1, value );
+				nativeQuery.setParameter( position - 1, value );
 			}
 
 			bind = new ParameterBindImpl<T>( value, null );
@@ -222,48 +240,48 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			if ( Date.class.isInstance( value ) ) {
 				if ( name != null ) {
 					if ( specifiedTemporalType == DATE ) {
-						query.setDate( name, (Date) value );
+						nativeQuery.setDate( name, (Date) value );
 					}
 					else if ( specifiedTemporalType == TIME ) {
-						query.setTime( name, (Date) value );
+						nativeQuery.setTime( name, (Date) value );
 					}
 					else if ( specifiedTemporalType == TIMESTAMP ) {
-						query.setTimestamp( name, (Date) value );
+						nativeQuery.setTimestamp( name, (Date) value );
 					}
 				}
 				else {
 					if ( specifiedTemporalType == DATE ) {
-						query.setDate( position-1, (Date) value );
+						nativeQuery.setDate( position - 1, (Date) value );
 					}
 					else if ( specifiedTemporalType == TIME ) {
-						query.setTime( position-1, (Date) value );
+						nativeQuery.setTime( position - 1, (Date) value );
 					}
 					else if ( specifiedTemporalType == TIMESTAMP ) {
-						query.setTimestamp( position-1, (Date) value );
+						nativeQuery.setTimestamp( position - 1, (Date) value );
 					}
 				}
 			}
 			else if ( Calendar.class.isInstance( value ) ) {
 				if ( name != null ) {
 					if ( specifiedTemporalType == DATE ) {
-						query.setCalendarDate( name, (Calendar) value );
+						nativeQuery.setCalendarDate( name, (Calendar) value );
 					}
 					else if ( specifiedTemporalType == TIME ) {
 						throw new IllegalArgumentException( "not yet implemented" );
 					}
 					else if ( specifiedTemporalType == TIMESTAMP ) {
-						query.setCalendar( name, (Calendar) value );
+						nativeQuery.setCalendar( name, (Calendar) value );
 					}
 				}
 				else {
 					if ( specifiedTemporalType == DATE ) {
-						query.setCalendarDate( position-1, (Calendar) value );
+						nativeQuery.setCalendarDate( position - 1, (Calendar) value );
 					}
 					else if ( specifiedTemporalType == TIME ) {
 						throw new IllegalArgumentException( "not yet implemented" );
 					}
 					else if ( specifiedTemporalType == TIMESTAMP ) {
-						query.setCalendar( position-1, (Calendar) value );
+						nativeQuery.setCalendar( position - 1, (Calendar) value );
 					}
 				}
 			}

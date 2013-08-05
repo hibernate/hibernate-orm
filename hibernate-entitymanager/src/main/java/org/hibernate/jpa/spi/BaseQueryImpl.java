@@ -27,7 +27,6 @@ import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
-import javax.persistence.ParameterMode;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import java.util.Calendar;
@@ -409,7 +408,12 @@ public abstract class BaseQueryImpl implements Query {
 
 	protected <X> ParameterRegistration<X> findParameterRegistration(Parameter<X> parameter) {
 		if ( ParameterRegistration.class.isInstance( parameter ) ) {
-			return (ParameterRegistration<X>) parameter;
+			final ParameterRegistration<X> reg = (ParameterRegistration<X>) parameter;
+			// validate the parameter source
+			if ( reg.getQuery() != this ) {
+				throw new IllegalArgumentException( "Passed Parameter was from different Query" );
+			}
+			return reg;
 		}
 		else {
 			if ( parameter.getName() != null ) {
@@ -439,45 +443,6 @@ public abstract class BaseQueryImpl implements Query {
 	}
 
 	protected abstract boolean isJpaPositionalParameter(int position);
-
-	/**
-	 * Hibernate specific extension to the JPA {@link javax.persistence.Parameter} contract.  Used here to track
-	 * information known about the parameter.
-	 */
-	protected static interface ParameterRegistration<T> extends Parameter<T> {
-		/**
-		 * Retrieves the parameter "mode" which describes how the parameter is defined in the actual database procedure
-		 * definition (is it an INPUT parameter?  An OUTPUT parameter? etc).
-		 *
-		 * @return The parameter mode.
-		 */
-		public ParameterMode getMode();
-
-		/**
-		 * Can we bind (set) values on this parameter?  Generally this is {@code true}, but would not be in the case
-		 * of parameters with OUT or REF_CURSOR mode.
-		 *
-		 * @return Whether the parameter is bindable (can set be called).
-		 */
-		public boolean isBindable();
-
-		public void bindValue(T value);
-
-		public void bindValue(T value, TemporalType specifiedTemporalType);
-
-		public ParameterBind<T> getBind();
-	}
-
-	/**
-	 * Represents the value currently bound to a particular parameter.
-	 *
-	 * @param <T>
-	 */
-	protected static interface ParameterBind<T> {
-		public T getValue();
-
-		public TemporalType getSpecifiedTemporalType();
-	}
 
 	protected static class ParameterBindImpl<T> implements ParameterBind<T> {
 		private final T value;

@@ -41,6 +41,8 @@ import java.util.List;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
+import org.hibernate.jpa.spi.ParameterBind;
+import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
@@ -76,7 +78,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		super( entityManager );
 		this.procedureCall = memento.makeProcedureCall( entityManager.getSession() );
 		for ( org.hibernate.procedure.ParameterRegistration nativeParamReg : procedureCall.getRegisteredParameters() ) {
-			registerParameter( new ParameterRegistrationImpl( nativeParamReg ) );
+			registerParameter( new ParameterRegistrationImpl( this, nativeParamReg ) );
 		}
 	}
 
@@ -122,6 +124,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		entityManager().checkOpen( true );
 		registerParameter(
 				new ParameterRegistrationImpl(
+						this,
 						procedureCall.registerParameter( position, type, mode )
 				)
 		);
@@ -134,6 +137,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		entityManager().checkOpen( true );
 		registerParameter(
 				new ParameterRegistrationImpl(
+						this,
 						procedureCall.registerParameter( parameterName, type, mode )
 				)
 		);
@@ -407,11 +411,15 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	}
 
 	private static class ParameterRegistrationImpl<T> implements ParameterRegistration<T> {
+		private final StoredProcedureQueryImpl query;
 		private final org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration;
 
 		private ParameterBind<T> bind;
 
-		private ParameterRegistrationImpl(org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration) {
+		public ParameterRegistrationImpl(
+				StoredProcedureQueryImpl query,
+				org.hibernate.procedure.ParameterRegistration<T> nativeParamRegistration) {
+			this.query = query;
 			this.nativeParamRegistration = nativeParamRegistration;
 		}
 
@@ -428,6 +436,11 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		@Override
 		public Class<T> getParameterType() {
 			return nativeParamRegistration.getType();
+		}
+
+		@Override
+		public Query getQuery() {
+			return query;
 		}
 
 		@Override

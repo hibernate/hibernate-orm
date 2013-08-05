@@ -80,7 +80,7 @@ public class ProxyInterfaceClassLoaderTest extends BaseCoreFunctionalTestCase {
 
 	}
 
-	@Entity
+	@Entity( name = "Person" )
 	@Proxy(proxyClass = IPerson.class)
 	static class Person implements IPerson {
 

@@ -23,6 +23,11 @@
  */
 package org.hibernate.loader;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -32,12 +37,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -57,12 +62,7 @@ import org.hibernate.loader.spi.NoOpLoadPlanAdvisor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Gail Badner
@@ -173,6 +173,7 @@ public class EntityWithNonLazyCollectionResultSetProcessorTest extends BaseCoreF
 		private Integer id;
 		private String name;
 		@ElementCollection( fetch = FetchType.EAGER )
+		@CollectionTable( name = "NickNames" )
 		private Set<String> nickNames = new HashSet<String>();
 	}
 }

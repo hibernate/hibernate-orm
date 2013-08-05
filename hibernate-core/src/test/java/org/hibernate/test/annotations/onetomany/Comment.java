@@ -14,7 +14,7 @@ import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-@Entity(name="Comment")
+@Entity(name="CommentTable") // "Comment" reserved in Oracle
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "DTYPE", discriminatorType= DiscriminatorType.STRING, length = 3)
 @DiscriminatorValue(value = "WPT")

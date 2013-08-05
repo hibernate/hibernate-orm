@@ -3,7 +3,8 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false">
-    <class name="org.hibernate.envers.test.integration.components.dynamic.NotAuditedDynamicMapComponent">
+	<!-- shortened table name for Oracle -->
+    <class name="org.hibernate.envers.test.integration.components.dynamic.NotAuditedDynamicMapComponent" table="NotAudited">
         <id name="id" type="long" column="id"/>
         <property name="note" type="string"/>
         <dynamic-component name="customFields">

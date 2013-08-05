@@ -44,6 +44,7 @@ import org.hibernate.engine.jdbc.connections.spi.AbstractMultiTenantConnectionPr
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -53,6 +54,7 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class SchemaBasedMultiTenancyTest extends BaseUnitTestCase {
 	private DriverManagerConnectionProviderImpl acmeProvider;
 	private DriverManagerConnectionProviderImpl jbossProvider;

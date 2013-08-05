@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
@@ -281,6 +283,7 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 		}
 
 		@ElementCollection(fetch = FetchType.EAGER)
+		@CollectionTable( name = "Investments" )
 		public List<Investment> getInvestments() {
 			return investments;
 		}

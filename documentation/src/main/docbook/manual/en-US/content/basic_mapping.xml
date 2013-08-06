@@ -2316,7 +2316,7 @@ public class Flight implements Serializable {
       </section>
     </section>
 
-    <section xml:id="mapping-declaration-property" revision="4">
+    <section xml:id="mapping-declaration-property" revision="5">
       <title>Property</title>
 
       <para>You need to decide which property needs to be made persistent in a
@@ -2550,7 +2550,7 @@ public class MonetaryAmount implements Serializable {
           the position of the <classname>@Id</classname> or
           <classname>@EmbeddedId</classname> annotations. If these annotations
           are on a field, then only fields are considered for persistence and
-          the state is accessed via the field. If there annotations are on a
+          the state is accessed via the field. If these annotations are on a
           getter, then only the getters are considered for persistence and the
           state is accessed via the getter/setter. That works well in practice
           and is the recommended approach.<note>

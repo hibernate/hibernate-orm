@@ -45,6 +45,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NullPrecedence;
+import org.hibernate.ScrollMode;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CastFunction;
 import org.hibernate.dialect.function.SQLFunction;
@@ -2670,5 +2671,14 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getQueryHintString(String query, List<String> hints) {
 		return query;
-	} 
+	}
+	
+	/**
+	 * Certain dialects support a subset of ScrollModes.  Provide a default to be used by Criteria and Query.
+	 * 
+	 * @return ScrollMode
+	 */
+	public ScrollMode defaultScrollMode() {
+		return ScrollMode.SCROLL_INSENSITIVE;
+	}
 }

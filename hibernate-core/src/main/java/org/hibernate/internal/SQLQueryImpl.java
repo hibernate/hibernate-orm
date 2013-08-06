@@ -171,7 +171,7 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 	}
 
 	public ScrollableResults scroll() throws HibernateException {
-		return scroll(ScrollMode.SCROLL_INSENSITIVE);
+		return scroll( session.getFactory().getDialect().defaultScrollMode() );
 	}
 
 	public Iterator iterate() throws HibernateException {

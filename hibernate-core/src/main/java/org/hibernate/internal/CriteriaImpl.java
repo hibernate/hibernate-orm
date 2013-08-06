@@ -385,7 +385,7 @@ public class CriteriaImpl implements Criteria, Serializable {
 	}
 	@Override
 	public ScrollableResults scroll() {
-		return scroll( ScrollMode.SCROLL_INSENSITIVE );
+		return scroll( session.getFactory().getDialect().defaultScrollMode() );
 	}
 	@Override
 	public ScrollableResults scroll(ScrollMode scrollMode) {

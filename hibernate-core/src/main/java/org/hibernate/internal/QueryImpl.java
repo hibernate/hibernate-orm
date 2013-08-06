@@ -76,7 +76,7 @@ public class QueryImpl extends AbstractQueryImpl {
 	}
 
 	public ScrollableResults scroll() throws HibernateException {
-		return scroll( ScrollMode.SCROLL_INSENSITIVE );
+		return scroll( session.getFactory().getDialect().defaultScrollMode() );
 	}
 
 	public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException {

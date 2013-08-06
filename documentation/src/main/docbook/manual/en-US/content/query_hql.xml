@@ -78,7 +78,7 @@
 
     </section>
 
-    <section xml:id="queryhql-joins" revision="2">
+    <section xml:id="queryhql-joins" revision="3">
         <title>Associations and joins</title>
 
         <para>
@@ -167,7 +167,7 @@
         <para>
             The <literal>fetch</literal> construct cannot be used in queries called using
             <literal>iterate()</literal> (though <literal>scroll()</literal> can be used). 
-            <literal>Fetch</literal> should be used together with <literal>setMaxResults()</literal> or
+            <literal>Fetch</literal> should not be used together with <literal>setMaxResults()</literal> or
             <literal>setFirstResult()</literal>, as these operations are based on the result rows which
             usually contain duplicates for eager collection fetching, hence, the number of rows is not what
             you would expect.

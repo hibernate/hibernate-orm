@@ -44,9 +44,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityNotFoundException;
 
-import org.jboss.logging.Logger;
+import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
@@ -158,6 +157,7 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Concrete implementation of a Session.
@@ -2247,7 +2247,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		private LobCreator lobCreator() {
 			// Always use NonContextualLobCreator.  If ContextualLobCreator is
 			// used both here and in WrapperOptions, 
-			return NonContextualLobCreator.INSTANCE;
+			return new NonContextualLobCreator(session.classLoaderService());
 		}
 
 		@Override

@@ -39,9 +39,11 @@ import org.hibernate.JDBCException;
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ * @author Brett Meyer
  */
 public class ContextualLobCreator extends AbstractLobCreator implements LobCreator {
-	private LobCreationContext lobCreationContext;
+	private final LobCreationContext lobCreationContext;
+	private final NonContextualLobCreator nonContextCreator;
 
 	/**
 	 * Constructs a ContextualLobCreator
@@ -49,7 +51,9 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	 * @param lobCreationContext The context for performing LOB creation
 	 */
 	public ContextualLobCreator(LobCreationContext lobCreationContext) {
+		super( lobCreationContext.classLoaderService() );
 		this.lobCreationContext = lobCreationContext;
+		nonContextCreator = new NonContextualLobCreator( lobCreationContext.classLoaderService() );
 	}
 
 	/**
@@ -77,7 +81,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	public Blob createBlob(InputStream inputStream, long length) {
 		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
 		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
-		return NonContextualLobCreator.INSTANCE.createBlob( inputStream, length );
+		return nonContextCreator.createBlob( inputStream, length );
 	}
 
 	/**
@@ -105,7 +109,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	public Clob createClob(Reader reader, long length) {
 		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
 		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
-		return NonContextualLobCreator.INSTANCE.createClob( reader, length );
+		return nonContextCreator.createClob( reader, length );
 	}
 
 	/**
@@ -133,7 +137,7 @@ public class ContextualLobCreator extends AbstractLobCreator implements LobCreat
 	public NClob createNClob(Reader reader, long length) {
 		// IMPL NOTE : it is inefficient to use JDBC LOB locator creation to create a LOB
 		// backed by a given stream.  So just wrap the stream (which is what the NonContextualLobCreator does).
-		return NonContextualLobCreator.INSTANCE.createNClob( reader, length );
+		return nonContextCreator.createNClob( reader, length );
 	}
 
 	/**

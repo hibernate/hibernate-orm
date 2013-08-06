@@ -25,6 +25,7 @@ package org.hibernate.engine.jdbc.internal;
 
 import java.sql.ResultSet;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.jdbc.ResultSetWrapperProxy;
 import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
@@ -46,7 +47,7 @@ public class ResultSetWrapperImpl implements ResultSetWrapper {
 	}
 
 	@Override
-	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache) {
-		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache );
+	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache, ClassLoaderService classLoaderService) {
+		return ResultSetWrapperProxy.generateProxy( resultSet, columnNameCache, classLoaderService );
 	}
 }

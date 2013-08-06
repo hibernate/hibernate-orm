@@ -25,10 +25,13 @@ package org.hibernate.engine.jdbc;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+
 /**
  * Provides callback access into the context in which the LOB is to be created.
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public interface LobCreationContext {
 	/**
@@ -57,4 +60,11 @@ public interface LobCreationContext {
 	 * @return The LOB created by the callback.
 	 */
 	public <T> T execute(Callback<T> callback);
+	
+	/**
+	 * The lob proxies need a ClassLoader for use during creation.
+	 * 
+	 * @return ClassLoaderService
+	 */
+	public ClassLoaderService classLoaderService();
 }

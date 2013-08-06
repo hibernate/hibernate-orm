@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NClobProxy;
@@ -77,7 +78,8 @@ public class NClobTypeDescriptor extends AbstractTypeDescriptor<NClob> {
 	}
 
 	public NClob fromString(String string) {
-		return NClobProxy.generateProxy( string );
+		// TODO: Temporary fix.  Need to thing through how to wire CLS up properly.
+		return NClobProxy.generateProxy( string, new ClassLoaderServiceImpl() );
 	}
 
 	@Override

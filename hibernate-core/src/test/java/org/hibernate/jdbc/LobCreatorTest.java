@@ -23,6 +23,8 @@
  */
 package org.hibernate.jdbc;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -38,8 +40,8 @@ import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.junit.Test;
-
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.ClobImplementer;
@@ -51,9 +53,7 @@ import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.env.internal.LobCreatorBuilderImpl;
-
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -79,7 +79,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 
 		LobCreator lobCreator = LobCreatorBuilderImpl.makeLobCreatorBuilder( new Properties(), connection )
 						.buildLobCreator( lobCreationContext );
-		assertSame( NonContextualLobCreator.INSTANCE, lobCreator );
+		assertTrue( lobCreator instanceof NonContextualLobCreator );
 
 		testLobCreation( lobCreator );
 		connection.close();
@@ -91,7 +91,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 
 		LobCreator lobCreator = LobCreatorBuilderImpl.makeLobCreatorBuilder( new Properties(), connection )
 						.buildLobCreator( lobCreationContext );
-		assertSame( NonContextualLobCreator.INSTANCE, lobCreator );
+		assertTrue( lobCreator instanceof NonContextualLobCreator );
 
 		testLobCreation( lobCreator );
 		connection.close();
@@ -105,7 +105,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		props.setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
 		LobCreator lobCreator = LobCreatorBuilderImpl.makeLobCreatorBuilder( props, connection )
 						.buildLobCreator( lobCreationContext );
-		assertSame( NonContextualLobCreator.INSTANCE, lobCreator );
+		assertTrue( lobCreator instanceof NonContextualLobCreator );
 
 		testLobCreation( lobCreator );
 		connection.close();
@@ -113,7 +113,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 
 	private void testLobCreation(LobCreator lobCreator) throws SQLException{
 		Blob blob = lobCreator.createBlob( new byte[] {} );
-		if ( lobCreator == NonContextualLobCreator.INSTANCE ) {
+		if ( lobCreator instanceof NonContextualLobCreator ) {
 			assertTrue( blob instanceof BlobImplementer );
 		}
 		else {
@@ -123,7 +123,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		assertTrue( blob instanceof WrappedBlob );
 
 		Clob clob = lobCreator.createClob( "Hi" );
-		if ( lobCreator == NonContextualLobCreator.INSTANCE ) {
+		if ( lobCreator instanceof NonContextualLobCreator ) {
 			assertTrue( clob instanceof ClobImplementer );
 		}
 		else {
@@ -133,7 +133,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 		assertTrue( clob instanceof WrappedClob );
 
 		Clob nclob = lobCreator.createNClob( "Hi" );
-		if ( lobCreator == NonContextualLobCreator.INSTANCE ) {
+		if ( lobCreator instanceof NonContextualLobCreator ) {
 			assertTrue( nclob instanceof NClobImplementer );
 		}
 		else {
@@ -149,7 +149,8 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 	}
 
 	private class LobCreationContextImpl implements LobCreationContext {
-		private Connection connection;
+		private final ClassLoaderService classLoaderService = new ClassLoaderServiceImpl();
+		private final Connection connection;
 
 		private LobCreationContextImpl(Connection connection) {
 			this.connection = connection;
@@ -162,6 +163,11 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			catch ( SQLException e ) {
 				throw new RuntimeException( "Unexpected SQLException", e );
 			}
+		}
+
+		@Override
+		public ClassLoaderService classLoaderService() {
+			return classLoaderService;
 		}
 	}
 

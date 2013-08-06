@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.util.Comparator;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
@@ -92,7 +93,9 @@ public class BlobTypeDescriptor extends AbstractTypeDescriptor<Blob> {
 	 * {@inheritDoc}
 	 */
 	public Blob fromString(String string) {
-		return BlobProxy.generateProxy( PrimitiveByteArrayTypeDescriptor.INSTANCE.fromString( string ) );
+		// TODO: Temporary fix.  Need to thing through how to wire CLS up properly.
+		return BlobProxy.generateProxy( PrimitiveByteArrayTypeDescriptor.INSTANCE.fromString( string ),
+				new ClassLoaderServiceImpl() );
 	}
 
 	@Override

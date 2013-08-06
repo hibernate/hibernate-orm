@@ -52,6 +52,7 @@ import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.Transaction;
 import org.hibernate.TypeHelper;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -788,6 +789,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public LobHelper getLobHelper() {
 		return session.getLobHelper();
+	}
+	
+	@Override
+	public ClassLoaderService classLoaderService() {
+		return getFactory().getServiceRegistry().getService( ClassLoaderService.class );
 	}
 
 }

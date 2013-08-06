@@ -906,7 +906,7 @@ public class Person {
 
         </section>
 
-        <section xml:id="tutorial-associations-unidirset" revision="3">
+        <section xml:id="tutorial-associations-unidirset" revision="4">
             <title>A unidirectional Set-based association</title>
 
             <para>
@@ -967,7 +967,7 @@ public class Person {
                 association, or <emphasis>n:m</emphasis> entity relationship, an
                 association table is required.  Each row in this table represents
                 a link between a person and an event.  The table name is
-                decalred using the <literal>table</literal> attribute of the
+                declared using the <literal>table</literal> attribute of the
                 <literal>set</literal> element.  The identifier column name in
                 the association, for the person side, is defined with the
                 <literal>key</literal> element, the column name for the event's

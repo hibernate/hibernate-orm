@@ -82,7 +82,7 @@ public class XmlMetaEntity implements MetaEntity {
 	protected AccessTypeInformation accessTypeInfo;
 
 	public XmlMetaEntity(Entity ormEntity, String defaultPackageName, TypeElement element, Context context) {
-		this( ormEntity.getClazz(), defaultPackageName, element, context, ormEntity.getMetadataComplete() );
+		this( ormEntity.getClazz(), defaultPackageName, element, context, ormEntity.isMetadataComplete() );
 		this.attributes = ormEntity.getAttributes();
 		this.embeddableAttributes = null;
 		// entities can be directly initialised
@@ -95,7 +95,7 @@ public class XmlMetaEntity implements MetaEntity {
 				defaultPackageName,
 				element,
 				context,
-				mappedSuperclass.getMetadataComplete()
+				mappedSuperclass.isMetadataComplete()
 		);
 		this.attributes = mappedSuperclass.getAttributes();
 		this.embeddableAttributes = null;
@@ -104,7 +104,7 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	protected XmlMetaEntity(Embeddable embeddable, String defaultPackageName, TypeElement element, Context context) {
-		this( embeddable.getClazz(), defaultPackageName, element, context, embeddable.getMetadataComplete() );
+		this( embeddable.getClazz(), defaultPackageName, element, context, embeddable.isMetadataComplete() );
 		this.attributes = null;
 		this.embeddableAttributes = embeddable.getAttributes();
 	}

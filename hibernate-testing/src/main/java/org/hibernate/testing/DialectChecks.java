@@ -80,6 +80,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsCascadeDeleteCheck implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsCascadeDelete();
+		}
+	}
+
 	public static class SupportsCircularCascadeDeleteCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsCircularCascadeDeleteConstraints();

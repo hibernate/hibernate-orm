@@ -889,6 +889,14 @@ arbitrary number of queries, and import declarations of arbitrary classes.
     <xs:attribute name="foreign-key" type="xs:string"/>
     <xs:attribute name="lazy" type="lazy-attribute"/>
     <xs:attribute name="name" use="required" type="xs:string"/>
+    <xs:attribute name="on-delete" default="noaction">
+      <xs:simpleType>
+        <xs:restriction base="xs:token">
+          <xs:enumeration value="cascade"/>
+          <xs:enumeration value="noaction"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:attribute>
   </xs:complexType>
 
   <!-- A property embedded in a composite identifier or map index (always not-null). -->

@@ -74,6 +74,9 @@ public class GlobalConfiguration {
 
 	// Use revision entity with native id generator
 	private final boolean useRevisionEntityWithNativeId;
+	
+	// While deleting revision entry, remove data of associated audited entities
+	private final boolean cascadeDeleteRevision;
 
 	// Support reused identifiers of previously deleted entities
 	private final boolean allowIdentifierReuse;
@@ -106,6 +109,9 @@ public class GlobalConfiguration {
 		trackEntitiesChangedInRevision = ConfigurationHelper.getBoolean(
 				EnversSettings.TRACK_ENTITIES_CHANGED_IN_REVISION, properties, false
 		);
+		
+		cascadeDeleteRevision = ConfigurationHelper.getBoolean(
+				"org.hibernate.envers.cascade_delete_revision", properties, false );
 
 		useRevisionEntityWithNativeId = ConfigurationHelper.getBoolean(
 				EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, properties, true
@@ -190,6 +196,10 @@ public class GlobalConfiguration {
 
 	public boolean isUseRevisionEntityWithNativeId() {
 		return useRevisionEntityWithNativeId;
+	}
+	
+	public boolean isCascadeDeleteRevision() {
+		return cascadeDeleteRevision;
 	}
 
 	public boolean isAllowIdentifierReuse() {

@@ -479,7 +479,12 @@ public class AttributeFactory {
                 final Attribute.PersistentAttributeType elementPersistentAttributeType;
                 final Attribute.PersistentAttributeType persistentAttributeType;
                 if (elementType.isAnyType()) {
-                    throw new UnsupportedOperationException("collection of any not supported yet");
+                	if ( context.isIgnoreUnsupported() ) {
+                        return null;
+                    }
+        			else {
+        				throw new UnsupportedOperationException("collection of any not supported yet");
+        			}
                 }
                 final boolean isManyToMany = isManyToMany(member);
                 if (elementValue instanceof Component) {
@@ -500,8 +505,14 @@ public class AttributeFactory {
                     final Value keyValue = ((Map)value).getIndex();
                     final org.hibernate.type.Type keyType = keyValue.getType();
 
-                    if (keyType.isAnyType()) throw new UnsupportedOperationException("collection of any not supported yet");
-                    if (keyValue instanceof Component) keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
+                    if (keyType.isAnyType()) {
+                    	if ( context.isIgnoreUnsupported() ) {
+                            return null;
+                        }
+            			else {
+            				throw new UnsupportedOperationException("collection of any not supported yet");
+            			}
+                    }                    if (keyValue instanceof Component) keyPersistentAttributeType = Attribute.PersistentAttributeType.EMBEDDED;
                     else if (keyType.isAssociationType()) keyPersistentAttributeType = Attribute.PersistentAttributeType.MANY_TO_ONE;
                     else keyPersistentAttributeType = Attribute.PersistentAttributeType.BASIC;
                 } else keyPersistentAttributeType = null;

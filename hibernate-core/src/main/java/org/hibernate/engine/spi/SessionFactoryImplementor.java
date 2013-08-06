@@ -28,6 +28,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
+import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
@@ -190,6 +191,13 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * Statistics SPI
 	 */
 	public StatisticsImplementor getStatisticsImplementor();
+	
+	/**
+	 * Get entity-name resolver
+	 * 
+	 * @return entity-name resolver
+	 */
+	public EntityNameResolver getEntityNameResolver();
 
 	public NamedQueryDefinition getNamedQuery(String queryName);
 

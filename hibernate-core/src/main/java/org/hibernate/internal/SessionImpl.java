@@ -191,7 +191,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private transient StatefulPersistenceContext persistenceContext;
 	private transient TransactionCoordinatorImpl transactionCoordinator;
 	private transient Interceptor interceptor;
-	private transient EntityNameResolver entityNameResolver = new CoordinatingEntityNameResolver();
+	private transient EntityNameResolver entityNameResolver;
 
 	private transient ConnectionReleaseMode connectionReleaseMode;
 	private transient FlushMode flushMode = FlushMode.AUTO;
@@ -241,6 +241,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.timestamp = timestamp;
 		this.sessionOwner = sessionOwner;
 		this.interceptor = interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+		this.entityNameResolver = interceptor == null ? factory.getEntityNameResolver() : new SessionEntityNameResolver();
 		this.actionQueue = new ActionQueue( this );
 		this.persistenceContext = new StatefulPersistenceContext( this );
 
@@ -2149,8 +2150,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 		ois.defaultReadObject();
 
-		entityNameResolver = new CoordinatingEntityNameResolver();
-
 		connectionReleaseMode = ConnectionReleaseMode.parse( ( String ) ois.readObject() );
 		autoClear = ois.readBoolean();
 		autoJoinTransactions = ois.readBoolean();
@@ -2169,6 +2168,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		actionQueue = ActionQueue.deserialize( ois, this );
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
+		
+		entityNameResolver = EmptyInterceptor.class.isInstance(interceptor) ? factory.getEntityNameResolver() : new SessionEntityNameResolver();
 
 		// LoadQueryInfluencers.getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl.afterDeserialize( factory );
@@ -2374,28 +2375,16 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
-	private class CoordinatingEntityNameResolver implements EntityNameResolver {
-		public String resolveEntityName(Object entity) {
-			String entityName = interceptor.getEntityName( entity );
-			if ( entityName != null ) {
-				return entityName;
-			}
+    private class SessionEntityNameResolver implements EntityNameResolver {
+        public String resolveEntityName(Object entity) {
+            String entityName = interceptor.getEntityName( entity );
+            if ( entityName != null ) {
+                return entityName;
+            }
+            return factory.getEntityNameResolver().resolveEntityName(entity);
+        }
+    }
 
-			for ( EntityNameResolver resolver : factory.iterateEntityNameResolvers() ) {
-				entityName = resolver.resolveEntityName( entity );
-				if ( entityName != null ) {
-					break;
-				}
-			}
-
-			if ( entityName != null ) {
-				return entityName;
-			}
-
-			// the old-time stand-by...
-			return entity.getClass().getName();
-		}
-	}
 
 	private class LockRequestImpl implements LockRequest {
 		private final LockOptions lockOptions;

@@ -37,6 +37,7 @@ public class ImportContextImpl implements ImportContext {
 
 	private String basePackage = "";
 
+	private static String LINE_SEPARATOR = System.getProperty( "line.separator" );
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
 
 	static {
@@ -155,24 +156,24 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public String generateImports() {
-		StringBuffer buf = new StringBuffer();
+		StringBuilder builder = new StringBuilder();
 
 		for ( String next : imports ) {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
 				if ( staticImports.contains( next ) ) {
-					buf.append( "import static " ).append( next ).append( ";\r\n" );
+					builder.append( "import static " ).append( next ).append( ";" ).append( LINE_SEPARATOR );
 				}
 				else {
-					buf.append( "import " ).append( next ).append( ";\r\n" );
+					builder.append( "import " ).append( next ).append( ";" ).append( LINE_SEPARATOR );
 				}
 			}
 		}
 
-		if ( buf.indexOf( "$" ) >= 0 ) {
-			return buf.toString();
+		if ( builder.indexOf( "$" ) >= 0 ) {
+			return builder.toString();
 		}
-		return buf.toString();
+		return builder.toString();
 	}
 
 	private boolean isAutoImported(String next) {

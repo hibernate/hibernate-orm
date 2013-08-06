@@ -36,7 +36,6 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
@@ -175,14 +174,14 @@ public final class ReflectHelper {
 	 *
 	 * @param name The class name
 	 * @param caller The class from which this call originated (in order to access that class's loader).
-	 * @param classLoaderService ClassLoaderService
 	 * @return The class reference.
 	 * @throws ClassNotFoundException From {@link Class#forName(String, boolean, ClassLoader)}.
 	 */
-	public static Class classForName(String name, Class caller, ClassLoaderService classLoaderService) throws ClassNotFoundException {
+	public static Class classForName(String name, Class caller) throws ClassNotFoundException {
 		try {
-			if ( classLoaderService != null ) {
-				return classLoaderService.classForName(name);
+			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+			if ( classLoader != null ) {
+				return classLoader.loadClass( name );
 			}
 		}
 		catch ( Throwable ignore ) {
@@ -202,35 +201,19 @@ public final class ReflectHelper {
 	 * {@link Class#forName(String)} if the context classloader lookup is unsuccessful.
 	 *
 	 * @param name The class name
-	 * @param classLoaderService ClassLoaderService
 	 * @return The class reference.
 	 * @throws ClassNotFoundException From {@link Class#forName(String)}.
 	 */
-	public static Class classForName(String name, ClassLoaderService classLoaderService) throws ClassNotFoundException {
+	public static Class classForName(String name) throws ClassNotFoundException {
 		try {
-			if ( classLoaderService != null ) {
-				return classLoaderService.classForName(name);
+			ClassLoader classLoader = ClassLoaderHelper.getContextClassLoader();
+			if ( classLoader != null ) {
+				return classLoader.loadClass(name);
 			}
 		}
 		catch ( Throwable ignore ) {
 		}
 		return Class.forName( name );
-	}
-	
-	/**
-	 * TODO: Kept only for org.hibernate.cfg.  Remove in 5.0.
-	 */
-	@Deprecated
-	public static Class classForName(String name, Class caller) throws ClassNotFoundException {
-		return classForName( name, caller, new ClassLoaderServiceImpl() );
-	}
-
-	/**
-	 * TODO: Kept only for org.hibernate.cfg.  Remove in 5.0.
-	 */
-	@Deprecated
-	public static Class classForName(String name) throws ClassNotFoundException {
-		return classForName( name, new ClassLoaderServiceImpl() );
 	}
 
 	/**
@@ -261,26 +244,17 @@ public final class ReflectHelper {
 	 *
 	 * @param className The name of the class owning the property.
 	 * @param name The name of the property.
-	 * @param classLoaderService ClassLoaderService
 	 * @return The type of the property.
 	 * @throws MappingException Indicates we were unable to locate the property.
 	 */
-	public static Class reflectedPropertyClass(String className, String name, ClassLoaderService classLoaderService) throws MappingException {
+	public static Class reflectedPropertyClass(String className, String name) throws MappingException {
 		try {
-			Class clazz = classForName( className, classLoaderService );
+			Class clazz = classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
 		catch ( ClassNotFoundException cnfe ) {
 			throw new MappingException( "class " + className + " not found while looking for property: " + name, cnfe );
 		}
-	}
-	
-	/**
-	 * TODO: Kept only for org.hibernate.cfg.  Remove in 5.0.
-	 */
-	@Deprecated
-	public static Class reflectedPropertyClass(String className, String name) throws MappingException {
-		return reflectedPropertyClass( className, name, new ClassLoaderServiceImpl() );
 	}
 
 	/**
@@ -291,7 +265,6 @@ public final class ReflectHelper {
 	 *
 	 * @param clazz The class owning the property.
 	 * @param name The name of the property.
-	 * @param classLoaderService ClassLoaderService
 	 * @return The type of the property.
 	 * @throws MappingException Indicates we were unable to locate the property.
 	 */
@@ -330,7 +303,7 @@ public final class ReflectHelper {
 	public static Object getConstantValue(String name, ClassLoaderService classLoaderService) {
 		Class clazz;
 		try {
-			clazz = classForName( StringHelper.qualifier( name ), classLoaderService );
+			clazz = classLoaderService.classForName( StringHelper.qualifier( name ) );
 		}
 		catch ( Throwable t ) {
 			return null;

@@ -35,6 +35,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.InjectService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Standard implementation of the {@link DialectFactory} service.
@@ -43,6 +44,13 @@ import org.hibernate.service.spi.InjectService;
  */
 public class DialectFactoryImpl implements DialectFactory {
 	private StrategySelector strategySelector;
+	
+	private ServiceRegistryImplementor serviceRegistry;
+	
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
 
 	@InjectService
 	public void setStrategySelector(StrategySelector strategySelector) {
@@ -74,6 +82,9 @@ public class DialectFactoryImpl implements DialectFactory {
 			if ( dialect == null ) {
 				throw new HibernateException( "Unable to construct requested dialect [" + dialectName+ "]" );
 			}
+			
+			dialect.injectServices( serviceRegistry );
+			
 			return dialect;
 		}
 		catch (HibernateException e) {
@@ -109,6 +120,8 @@ public class DialectFactoryImpl implements DialectFactory {
 								"]; user must register resolver or explicitly set 'hibernate.dialect'"
 				);
 			}
+			
+			dialect.injectServices( serviceRegistry );
 
 			return dialect;
 		}

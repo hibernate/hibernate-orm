@@ -55,10 +55,12 @@ public class SchemaValidator {
 	private Configuration configuration;
 	private Dialect dialect;
 
+	@Deprecated
 	public SchemaValidator(Configuration cfg) throws HibernateException {
 		this( cfg, cfg.getProperties() );
 	}
 
+	@Deprecated
 	public SchemaValidator(Configuration cfg, Properties connectionProperties) throws HibernateException {
 		this.configuration = cfg;
 		dialect = Dialect.getDialect( connectionProperties );
@@ -75,7 +77,7 @@ public class SchemaValidator {
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper( jdbcServices.getConnectionProvider() );
 	}
 
-	private static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
+	public static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().applySettings( properties ).build();

@@ -29,13 +29,14 @@ import java.util.Map;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
 
 /**
  * A factory for generating Dialect instances.
  *
  * @author Steve Ebersole
  */
-public interface DialectFactory extends Service {
+public interface DialectFactory extends Service, ServiceRegistryAwareService {
 	/**
 	 * Builds an appropriate Dialect instance.
 	 * <p/>

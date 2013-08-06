@@ -35,6 +35,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorBuilder;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.cfg.Environment;
@@ -79,6 +80,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		dialectFactory = new DialectFactoryImpl();
+		dialectFactory.injectServices( new BootstrapServiceRegistryImpl() );
 		dialectFactory.setStrategySelector(
 				new StrategySelectorBuilder().buildSelector( new ClassLoaderServiceImpl( getClass().getClassLoader() ) )
 		);

@@ -31,6 +31,7 @@ import java.util.Map;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.hql.internal.ast.DetailedSemanticException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -176,11 +177,11 @@ public class ConstructorNode extends SelectExpressionList implements AggregatedS
 			throw new SemanticException( "Unable to locate class [" + path + "]" );
 		}
 		try {
-			Class holderClass = ReflectHelper.classForName( className,
-					getSessionFactoryHelper().getFactory().getServiceRegistry().getService( ClassLoaderService.class ) );
+			Class holderClass = getSessionFactoryHelper().getFactory().getServiceRegistry().getService(
+					ClassLoaderService.class ).classForName( className );
 			return ReflectHelper.getConstructor( holderClass, constructorArgumentTypes );
 		}
-		catch ( ClassNotFoundException e ) {
+		catch ( ClassLoadingException e ) {
 			throw new DetailedSemanticException( "Unable to locate class [" + className + "]", e );
 		}
 		catch ( PropertyNotFoundException e ) {

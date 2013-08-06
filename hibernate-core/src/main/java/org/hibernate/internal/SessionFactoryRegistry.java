@@ -167,11 +167,8 @@ public class SessionFactoryRegistry {
 	public SessionFactory getNamedSessionFactory(String name) {
 		LOG.debugf( "Lookup: name=%s", name );
 		final String uuid = nameUuidXref.get( name );
-		if ( uuid != null ) {
-			return getSessionFactory( uuid );
-		} else {
-			return null;
-		}
+		// protect against NPE -- see HHH-8428
+		return uuid == null ? null : getSessionFactory( uuid );
 	}
 
 	public SessionFactory getSessionFactory(String uuid) {

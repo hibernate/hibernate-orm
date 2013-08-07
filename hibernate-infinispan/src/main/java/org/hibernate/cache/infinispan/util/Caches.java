@@ -23,13 +23,14 @@
 
 package org.hibernate.cache.infinispan.util;
 
-import org.infinispan.AdvancedCache;
-import org.infinispan.context.Flag;
-import org.infinispan.remoting.rpc.RpcManager;
+import java.util.concurrent.Callable;
 
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-import java.util.concurrent.Callable;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
+import org.infinispan.remoting.rpc.RpcManager;
 
 /**
  * Helper for dealing with Infinispan cache instances.
@@ -49,19 +50,32 @@ public class Caches {
       return withinTx(cache.getTransactionManager(), c);
    }
 
-   public static <T> T withinTx(TransactionManager tm,
-         Callable<T> c) throws Exception {
-      tm.begin();
-      try {
-         return c.call();
-      } catch (Exception e) {
-         tm.setRollbackOnly();
-         throw e;
-      } finally {
-         if (tm.getStatus() == Status.STATUS_ACTIVE) tm.commit();
-         else tm.rollback();
-      }
-   }
+	public static <T> T withinTx(TransactionManager tm, Callable<T> c) throws Exception {
+		if ( tm == null ) {
+			try {
+				return c.call();
+			}
+			catch ( Exception e ) {
+				throw e;
+			}
+		}
+		else {
+			tm.begin();
+			try {
+				return c.call();
+			}
+			catch ( Exception e ) {
+				tm.setRollbackOnly();
+				throw e;
+			}
+			finally {
+				if ( tm.getStatus() == Status.STATUS_ACTIVE )
+					tm.commit();
+				else
+					tm.rollback();
+			}
+		}
+	}
 
    public static AdvancedCache localCache(AdvancedCache cache) {
       return cache.withFlags(Flag.CACHE_MODE_LOCAL);

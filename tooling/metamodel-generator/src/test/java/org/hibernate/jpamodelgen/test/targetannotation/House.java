@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// $Id:$
 package org.hibernate.jpamodelgen.test.targetannotation;
 
 import javax.persistence.Embedded;

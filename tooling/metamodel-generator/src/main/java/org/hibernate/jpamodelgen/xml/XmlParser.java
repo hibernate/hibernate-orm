@@ -146,7 +146,7 @@ public class XmlParser {
 			}
 			catch ( XmlParsingException e ) {
 				context.logMessage(
-						Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
+						Diagnostic.Kind.WARNING, "Unable to parse " + mappingFile + ": " + e.getMessage()
 				);
 			}
 			if ( mapping != null ) {

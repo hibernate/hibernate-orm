@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.xmlmetacomplete;
+package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -35,5 +35,3 @@ public class Dummy {
 		this.id = id;
 	}
 }
-
-

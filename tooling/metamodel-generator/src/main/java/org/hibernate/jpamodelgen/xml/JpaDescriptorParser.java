@@ -80,7 +80,7 @@ public class JpaDescriptorParser {
 		loadEntityMappings( mappingFileNames );
 		determineDefaultAccessTypeAndMetaCompleteness();
 		determineXmlAccessTypes();
-		if ( !context.isPersistenceUnitCompletelyXmlConfigured() ) {
+		if ( !context.isFullyXmlConfigured() ) {
 			// need to take annotations into consideration, since they can override xml settings
 			// we have to at least determine whether any of the xml configured entities is influenced by annotations
 			determineAnnotationAccessTypes();
@@ -422,7 +422,10 @@ public class JpaDescriptorParser {
 			PersistenceUnitMetadata meta = mappings.getPersistenceUnitMetadata();
 			if ( meta != null ) {
 				if ( meta.getXmlMappingMetadataComplete() != null ) {
-					context.setPersistenceUnitCompletelyXmlConfigured( true );
+					context.mappingDocumentFullyXmlConfigured( true );
+				}
+				else {
+					context.mappingDocumentFullyXmlConfigured( false );
 				}
 
 				PersistenceUnitDefaults persistenceUnitDefaults = meta.getPersistenceUnitDefaults();
@@ -432,10 +435,9 @@ public class JpaDescriptorParser {
 						context.setPersistenceUnitDefaultAccessType( mapXmlAccessTypeToJpaAccessType( xmlAccessType ) );
 					}
 				}
-				// for simplicity we stop looking for PersistenceUnitMetadata instances. We assume that all files
-				// are consistent in the data specified in PersistenceUnitMetadata. If not the behaviour is not specified
-				// anyways. It is up to the JPA provider to handle this when bootstrapping
-				break;
+			}
+			else {
+				context.mappingDocumentFullyXmlConfigured( false );
 			}
 		}
 	}

@@ -45,7 +45,7 @@ import org.hibernate.jpamodelgen.model.MetaEntity;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
-import org.hibernate.jpamodelgen.xml.XmlParser;
+import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
 /**
  * Main annotation processor.
@@ -106,7 +106,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		boolean fullyAnnotationConfigured = Boolean.parseBoolean( tmp );
 
 		if ( !fullyAnnotationConfigured ) {
-			XmlParser parser = new XmlParser( context );
+			JpaDescriptorParser parser = new JpaDescriptorParser( context );
 			parser.parseXml();
 			if ( context.isPersistenceUnitCompletelyXmlConfigured() ) {
 				createMetaModelClasses();

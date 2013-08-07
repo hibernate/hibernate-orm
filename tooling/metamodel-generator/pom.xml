@@ -185,6 +185,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <schemaFiles>orm_2_1.xsd,persistence_2_1.xsd</schemaFiles>
                     <packageName>org.hibernate.jpamodelgen.xml.jaxb</packageName>
                     <outputDirectory>${basedir}/target/generated-sources</outputDirectory>
                     <extension>true</extension>

@@ -32,26 +32,18 @@ import java.util.List;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-import javax.tools.StandardLocation;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
-import org.xml.sax.SAXException;
 
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
-import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.FileTimeStampChecker;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
+import org.hibernate.jpamodelgen.util.xml.XmlParserHelper;
+import org.hibernate.jpamodelgen.util.xml.XmlParsingException;
 import org.hibernate.jpamodelgen.xml.jaxb.Entity;
 import org.hibernate.jpamodelgen.xml.jaxb.EntityMappings;
-import org.hibernate.jpamodelgen.xml.jaxb.ObjectFactory;
 import org.hibernate.jpamodelgen.xml.jaxb.Persistence;
 import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitDefaults;
 import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
@@ -60,18 +52,20 @@ import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
  * @author Hardy Ferentschik
  */
 public class XmlParser {
-	private static final String ORM_XML = "/META-INF/orm.xml";
-	private static final String PERSISTENCE_XML_XSD = "persistence_2_0.xsd";
-	private static final String ORM_XSD = "orm_2_0.xsd";
+	private static final String DEFAULT_ORM_XML_LOCATION = "/META-INF/orm.xml";
 	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
-	private static final String PATH_SEPARATOR = "/";
 
-	private Context context;
-	private List<EntityMappings> entityMappings;
+	private static final String PERSISTENCE_SCHEMA = "persistence_2_1.xsd";
+	private static final String ORM_SCHEMA = "orm_2_1.xsd";
+
+	private final Context context;
+	private final List<EntityMappings> entityMappings;
+	private final XmlParserHelper xmlParserHelper;
 
 	public XmlParser(Context context) {
 		this.context = context;
 		this.entityMappings = new ArrayList<EntityMappings>();
+		this.xmlParserHelper = new XmlParserHelper( context );
 	}
 
 	public void parseXml() {
@@ -101,10 +95,9 @@ public class XmlParser {
 	private Collection<String> determineMappingFileNames() {
 		Collection<String> mappingFileNames = new ArrayList<String>();
 
-		Persistence persistence = parseXml(
-				context.getPersistenceXmlLocation(), Persistence.class, PERSISTENCE_XML_XSD
-		);
+		Persistence persistence = getPersistence();
 		if ( persistence != null ) {
+			// get mapping file names from persistence.xml
 			List<Persistence.PersistenceUnit> persistenceUnits = persistence.getPersistenceUnit();
 			for ( Persistence.PersistenceUnit unit : persistenceUnits ) {
 				mappingFileNames.addAll( unit.getMappingFile() );
@@ -112,7 +105,7 @@ public class XmlParser {
 		}
 
 		// /META-INF/orm.xml is implicit
-		mappingFileNames.add( ORM_XML );
+		mappingFileNames.add( DEFAULT_ORM_XML_LOCATION );
 
 		// not really part of the official spec, but the processor allows to specify mapping files directly as
 		// command line options
@@ -120,9 +113,42 @@ public class XmlParser {
 		return mappingFileNames;
 	}
 
+	private Persistence getPersistence() {
+		Persistence persistence = null;
+		String persistenceXmlLocation = context.getPersistenceXmlLocation();
+		InputStream stream = xmlParserHelper.getInputStreamForResource( persistenceXmlLocation );
+		if ( stream == null ) {
+			return null;
+		}
+
+		try {
+			Schema schema = xmlParserHelper.getSchema( PERSISTENCE_SCHEMA );
+			persistence = xmlParserHelper.getJaxbRoot( stream, Persistence.class, schema );
+		}
+		catch ( XmlParsingException e ) {
+			context.logMessage(
+					Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
+			);
+		}
+		return persistence;
+	}
+
 	private void loadEntityMappings(Collection<String> mappingFileNames) {
 		for ( String mappingFile : mappingFileNames ) {
-			EntityMappings mapping = parseXml( mappingFile, EntityMappings.class, ORM_XSD );
+			InputStream stream = xmlParserHelper.getInputStreamForResource( mappingFile );
+			if ( stream == null ) {
+				continue;
+			}
+			EntityMappings mapping = null;
+			try {
+				Schema schema = xmlParserHelper.getSchema( ORM_SCHEMA );
+				mapping = xmlParserHelper.getJaxbRoot( stream, EntityMappings.class, schema );
+			}
+			catch ( XmlParsingException e ) {
+				context.logMessage(
+						Diagnostic.Kind.WARNING, "Unable to parse persistence.xml: " + e.getMessage()
+				);
+			}
 			if ( mapping != null ) {
 				entityMappings.add( mapping );
 			}
@@ -278,107 +304,6 @@ public class XmlParser {
 				);
 			}
 			context.addMetaEntity( fqcn, metaEntity );
-		}
-	}
-
-	/**
-	 * Tries to open the specified xml file and return an instance of the specified class using JAXB.
-	 *
-	 * @param resource the xml file name
-	 * @param clazz The type of jaxb node to return
-	 * @param schemaName The schema to validate against (can be {@code null});
-	 *
-	 * @return The top level jaxb instance contained in the xml file or {@code null} in case the file could not be found
-	 *         or could not be unmarshalled.
-	 */
-	private <T> T parseXml(String resource, Class<T> clazz, String schemaName) {
-
-		InputStream stream = getInputStreamForResource( resource );
-
-		if ( stream == null ) {
-			context.logMessage( Diagnostic.Kind.OTHER, resource + " not found." );
-			return null;
-		}
-		try {
-			JAXBContext jc = JAXBContext.newInstance( ObjectFactory.class );
-			Unmarshaller unmarshaller = jc.createUnmarshaller();
-			if ( schemaName != null ) {
-				unmarshaller.setSchema( getSchema( schemaName ) );
-			}
-			return clazz.cast( unmarshaller.unmarshal( stream ) );
-		}
-		catch ( JAXBException e ) {
-			String message = "Error unmarshalling " + resource + " with exception :\n " + e;
-			context.logMessage( Diagnostic.Kind.WARNING, message );
-			return null;
-		}
-		catch ( Exception e ) {
-			String message = "Error reading " + resource + " with exception :\n " + e;
-			context.logMessage( Diagnostic.Kind.WARNING, message );
-			return null;
-		}
-	}
-
-	private Schema getSchema(String schemaName) {
-		Schema schema = null;
-		URL schemaUrl = this.getClass().getClassLoader().getResource( schemaName );
-		if ( schemaUrl == null ) {
-			return schema;
-		}
-
-		SchemaFactory sf = SchemaFactory.newInstance( javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI );
-		try {
-			schema = sf.newSchema( schemaUrl );
-		}
-		catch ( SAXException e ) {
-			context.logMessage(
-					Diagnostic.Kind.WARNING, "Unable to create schema for " + schemaName + ": " + e.getMessage()
-			);
-		}
-		return schema;
-	}
-
-	private InputStream getInputStreamForResource(String resource) {
-		// METAGEN-75
-		if ( !resource.startsWith( PATH_SEPARATOR ) ) {
-			resource = PATH_SEPARATOR + resource;
-		}
-
-		String pkg = getPackage( resource );
-		String name = getRelativeName( resource );
-		InputStream ormStream;
-		try {
-			FileObject fileObject = context.getProcessingEnvironment()
-					.getFiler()
-					.getResource( StandardLocation.CLASS_OUTPUT, pkg, name );
-			ormStream = fileObject.openInputStream();
-		}
-		catch ( IOException e1 ) {
-			// TODO - METAGEN-12
-			// unfortunately, the Filer.getResource API seems not to be able to load from /META-INF. One gets a
-			// FilerException with the message with "Illegal name /META-INF". This means that we have to revert to
-			// using the classpath. This might mean that we find a persistence.xml which is 'part of another jar.
-			// Not sure what else we can do here
-			ormStream = this.getClass().getResourceAsStream( resource );
-		}
-		return ormStream;
-	}
-
-	private String getPackage(String resourceName) {
-		if ( !resourceName.contains( Constants.PATH_SEPARATOR ) ) {
-			return "";
-		}
-		else {
-			return resourceName.substring( 0, resourceName.lastIndexOf( Constants.PATH_SEPARATOR ) );
-		}
-	}
-
-	private String getRelativeName(String resourceName) {
-		if ( !resourceName.contains( Constants.PATH_SEPARATOR ) ) {
-			return resourceName;
-		}
-		else {
-			return resourceName.substring( resourceName.lastIndexOf( Constants.PATH_SEPARATOR ) + 1 );
 		}
 	}
 

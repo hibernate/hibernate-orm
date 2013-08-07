@@ -60,7 +60,11 @@ public final class Context {
 	private final String persistenceXmlLocation;
 	private final List<String> ormXmlFiles;
 
-	private boolean isPersistenceUnitCompletelyXmlConfigured;
+	/**
+	 * Keeping track which (if any) of the mapping files is xml-mapping-metadata-complete. If all are metadata complete
+	 * no annotation processing will take place.
+	 */
+	private List<Boolean> fullyXmlConfigured;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
@@ -68,6 +72,7 @@ public final class Context {
 
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
+		this.fullyXmlConfigured = new ArrayList<Boolean>();
 
 		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION ) != null ) {
 			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
@@ -194,12 +199,17 @@ public final class Context {
 		pe.getMessager().printMessage( type, message );
 	}
 
-	public boolean isPersistenceUnitCompletelyXmlConfigured() {
-		return isPersistenceUnitCompletelyXmlConfigured;
+	public boolean isFullyXmlConfigured() {
+		if ( fullyXmlConfigured.isEmpty() ) {
+			return false;
+		}
+		else {
+			return !fullyXmlConfigured.contains( Boolean.FALSE );
+		}
 	}
 
-	public void setPersistenceUnitCompletelyXmlConfigured(boolean persistenceUnitCompletelyXmlConfigured) {
-		isPersistenceUnitCompletelyXmlConfigured = persistenceUnitCompletelyXmlConfigured;
+	public void mappingDocumentFullyXmlConfigured(boolean fullyXmlConfigured) {
+		this.fullyXmlConfigured.add( fullyXmlConfigured );
 	}
 
 	public AccessType getPersistenceUnitDefaultAccessType() {
@@ -221,7 +231,7 @@ public final class Context {
 		sb.append( "{accessTypeInformation=" ).append( accessTypeInformation );
 		sb.append( ", logDebug=" ).append( logDebug );
 		sb.append( ", lazyXmlParsing=" ).append( lazyXmlParsing );
-		sb.append( ", isPersistenceUnitCompletelyXmlConfigured=" ).append( isPersistenceUnitCompletelyXmlConfigured );
+		sb.append( ", isPersistenceUnitCompletelyXmlConfigured=" ).append( fullyXmlConfigured );
 		sb.append( ", ormXmlFiles=" ).append( ormXmlFiles );
 		sb.append( ", persistenceXmlLocation='" ).append( persistenceXmlLocation ).append( '\'' );
 		sb.append( '}' );

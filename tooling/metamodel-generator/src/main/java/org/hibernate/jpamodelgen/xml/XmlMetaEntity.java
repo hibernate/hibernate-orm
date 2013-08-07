@@ -187,7 +187,7 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	private boolean initIsMetaComplete(Boolean metadataComplete) {
-		return context.isPersistenceUnitCompletelyXmlConfigured() || Boolean.TRUE.equals( metadataComplete );
+		return context.isFullyXmlConfigured() || Boolean.TRUE.equals( metadataComplete );
 	}
 
 	private String[] getCollectionTypes(String propertyName, String explicitTargetEntity, String explicitMapKeyClass, ElementKind expectedElementKind) {

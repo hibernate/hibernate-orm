@@ -16,7 +16,7 @@
  */
 
 // $Id: XmlMappingTest.java 20721 2010-09-27 12:40:10Z hardy.ferentschik $
-package org.hibernate.jpamodelgen.test.xmlmetacomplete;
+package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,7 +32,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGen
 /**
  * @author Hardy Ferentschik
  */
-public class XmlMetaDataCompleteTest extends CompilationTest {
+public class XmlMetaDataCompleteSinglePersistenceUnitTest extends CompilationTest {
 	@Test
 	public void testNoMetaModelGenerated() {
 		// the xml mapping files used in the example say that the xml data is meta complete. For that
@@ -42,7 +42,7 @@ public class XmlMetaDataCompleteTest extends CompilationTest {
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return XmlMetaDataCompleteTest.class.getPackage().getName();
+		return XmlMetaDataCompleteSinglePersistenceUnitTest.class.getPackage().getName();
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class XmlMetaDataCompleteTest extends CompilationTest {
 		Map<String, String> properties = new HashMap<String, String>();
 		properties.put(
 				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-				TestUtil.fcnToPath( XmlMetaDataCompleteTest.class.getPackage().getName() ) + "/persistence.xml"
+				TestUtil.fcnToPath( XmlMetaDataCompleteSinglePersistenceUnitTest.class.getPackage().getName() ) + "/persistence.xml"
 		);
 		return properties;
 	}

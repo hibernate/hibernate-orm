@@ -39,9 +39,33 @@ import javax.xml.stream.util.EventReaderDelegate;
 import org.hibernate.internal.util.xml.LocalXmlResourceResolver;
 
 /**
+ *
+ * We're lying to the xml validator here :D
+ * <p/>
+ *
+ * Since JPA 2.1 changed its orm.xml namespace, so to support all versions
+ * <ul>
+ *     <li>1.0</li>
+ *     <li>2.0</li>
+ *     <li>2.1</li>
+ * </ul>
+ *
+ * the validator must recognize all of these two namespaces.
+ *
+ * but it is very hard to do that, so we're making an assumption (because I really don't konw if this is true or not)
+ * here that JPA 2.1 is backward compatible w/ the old releases.
+ *
+ * So, there it comes, we just simply remove all legacy namespaces if it is an orm.xml and add the expected namespace
+ * , here is it JPA 2.1, to every elements in the xml.
+ *
+ * Finally, for the xml validator, it always see the JPA 2.1 namespace only, and it would be happy to do the validation.
+ *
+ * <p/>
+ * {@see HHH-8108} for more discussion.
+ *
  * @author Strong Liu <stliu@hibernate.org>
  */
-public class LegacyJPAEventReader   extends EventReaderDelegate {
+public class LegacyJPAEventReader extends EventReaderDelegate {
 	private final XMLEventFactory xmlEventFactory;
 	private final String namespaceUri;
 

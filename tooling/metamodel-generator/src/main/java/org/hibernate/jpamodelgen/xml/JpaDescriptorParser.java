@@ -51,7 +51,7 @@ import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
 /**
  * @author Hardy Ferentschik
  */
-public class XmlParser {
+public class JpaDescriptorParser {
 	private static final String DEFAULT_ORM_XML_LOCATION = "/META-INF/orm.xml";
 	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
 
@@ -62,7 +62,7 @@ public class XmlParser {
 	private final List<EntityMappings> entityMappings;
 	private final XmlParserHelper xmlParserHelper;
 
-	public XmlParser(Context context) {
+	public JpaDescriptorParser(Context context) {
 		this.context = context;
 		this.entityMappings = new ArrayList<EntityMappings>();
 		this.xmlParserHelper = new XmlParserHelper( context );

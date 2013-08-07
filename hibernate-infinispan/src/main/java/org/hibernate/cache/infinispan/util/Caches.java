@@ -74,20 +74,30 @@ public class Caches {
 	public static <T> T withinTx(
 			TransactionManager tm,
 			Callable<T> c) throws Exception {
-		tm.begin();
-		try {
-			return c.call();
-		}
-		catch (Exception e) {
-			tm.setRollbackOnly();
-			throw e;
-		}
-		finally {
-			if ( tm.getStatus() == Status.STATUS_ACTIVE ) {
-				tm.commit();
+		if ( tm == null ) {
+			try {
+				return c.call();
 			}
-			else {
-				tm.rollback();
+			catch (Exception e) {
+				throw e;
+			}
+		}
+		else {
+			tm.begin();
+			try {
+				return c.call();
+			}
+			catch (Exception e) {
+				tm.setRollbackOnly();
+				throw e;
+			}
+			finally {
+				if ( tm.getStatus() == Status.STATUS_ACTIVE ) {
+					tm.commit();
+				}
+				else {
+					tm.rollback();
+				}
 			}
 		}
 	}

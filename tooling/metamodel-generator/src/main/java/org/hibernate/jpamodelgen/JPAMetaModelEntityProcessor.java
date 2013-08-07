@@ -63,6 +63,7 @@ import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 		JPAMetaModelEntityProcessor.ORM_XML_OPTION,
 		JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION,
 		JPAMetaModelEntityProcessor.LAZY_XML_PARSING,
+		JPAMetaModelEntityProcessor.ADD_GENERATION_DATE,
 		JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION,
 		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION
 })
@@ -108,7 +109,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		if ( !fullyAnnotationConfigured ) {
 			JpaDescriptorParser parser = new JpaDescriptorParser( context );
 			parser.parseXml();
-			if ( context.isPersistenceUnitCompletelyXmlConfigured() ) {
+			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}
 		}
@@ -126,7 +127,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
-		if ( context.isPersistenceUnitCompletelyXmlConfigured() ) {
+		if ( context.isFullyXmlConfigured() ) {
 			context.logMessage(
 					Diagnostic.Kind.OTHER,
 					"Skipping the processing of annotations since persistence unit is purely xml configured."

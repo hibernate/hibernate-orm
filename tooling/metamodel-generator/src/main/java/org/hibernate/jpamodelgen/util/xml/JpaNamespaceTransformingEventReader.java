@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2013, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat, Inc. and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -117,7 +117,7 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 
 	private List<Namespace> updateElementNamespaces(StartElement startElement) {
 		List<Namespace> newNamespaceList = new ArrayList<Namespace>();
-		Iterator existingNamespaceIterator = startElement.getNamespaces();
+		Iterator<?> existingNamespaceIterator = startElement.getNamespaces();
 		while ( existingNamespaceIterator.hasNext() ) {
 			Namespace namespace = (Namespace) existingNamespaceIterator.next();
 			if ( NAMESPACE_MAPPING.containsKey( namespace.getNamespaceURI() ) ) {
@@ -139,7 +139,7 @@ public class JpaNamespaceTransformingEventReader extends EventReaderDelegate {
 	private List<Attribute> updateElementAttributes(StartElement startElement) {
 		// adjust the version attribute
 		List<Attribute> newElementAttributeList = new ArrayList<Attribute>();
-		Iterator existingAttributesIterator = startElement.getAttributes();
+		Iterator<?> existingAttributesIterator = startElement.getAttributes();
 		while ( existingAttributesIterator.hasNext() ) {
 			Attribute attribute = (Attribute) existingAttributesIterator.next();
 			if ( VERSION_ATTRIBUTE_NAME.equals( attribute.getName().getLocalPart() ) ) {

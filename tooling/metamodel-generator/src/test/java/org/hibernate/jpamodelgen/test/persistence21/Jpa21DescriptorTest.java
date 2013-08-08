@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat, Inc. and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,30 +21,28 @@ import java.util.Map;
 
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
-import org.hibernate.jpamodelgen.test.xmlonly.Car;
-import org.hibernate.jpamodelgen.test.xmlonly.Course;
-import org.hibernate.jpamodelgen.test.xmlonly.Option;
-import org.hibernate.jpamodelgen.test.xmlonly.Period;
-import org.hibernate.jpamodelgen.test.xmlonly.Teacher;
-import org.hibernate.jpamodelgen.test.xmlonly.Tire;
 import org.testng.annotations.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
 
 /**
+ * Test for parsing JPA 2.1 descriptors.
+ *
  * @author Hardy Ferentschik
  */
-public class SnafuTest extends CompilationTest {
+public class Jpa21DescriptorTest extends CompilationTest {
+
 	@Test
+	@TestForIssue( jiraKey = "METAGEN-92" )
 	public void testMetaModelGeneratedForXmlConfiguredEntity() {
 		assertMetamodelClassGeneratedFor( Snafu.class );
 	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return SnafuTest.class.getPackage().getName();
+		return Jpa21DescriptorTest.class.getPackage().getName();
 	}
 
 	@Override
@@ -52,7 +50,7 @@ public class SnafuTest extends CompilationTest {
 		Map<String, String> properties = new HashMap<String, String>();
 		properties.put(
 				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-				TestUtil.fcnToPath( SnafuTest.class.getPackage().getName() ) + "/persistence.xml"
+				TestUtil.fcnToPath( Jpa21DescriptorTest.class.getPackage().getName() ) + "/persistence.xml"
 		);
 		return properties;
 	}

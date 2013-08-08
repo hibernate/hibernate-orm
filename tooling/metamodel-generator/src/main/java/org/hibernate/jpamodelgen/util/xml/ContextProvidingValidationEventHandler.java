@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2013, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat, Inc. and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -21,6 +21,8 @@ import javax.xml.bind.ValidationEventHandler;
 import javax.xml.bind.ValidationEventLocator;
 
 /**
+ * Validation event handler used for obtaining line and column numbers in case of parsing failures.
+ *
  * @author Hardy Ferentschik
  */
 public class ContextProvidingValidationEventHandler implements ValidationEventHandler {

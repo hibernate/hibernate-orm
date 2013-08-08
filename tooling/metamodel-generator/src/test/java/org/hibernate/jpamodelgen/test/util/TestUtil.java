@@ -241,8 +241,8 @@ public class TestUtil {
 		return fcn.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 	}
 
-	public static void assertNoCompilationError(List<Diagnostic> diagnostics) {
-		for ( Diagnostic diagnostic : diagnostics ) {
+	public static void assertNoCompilationError(List<Diagnostic<?>> diagnostics) {
+		for ( Diagnostic<?> diagnostic : diagnostics ) {
 			if ( diagnostic.getKind().equals( Diagnostic.Kind.ERROR ) ) {
 				fail( "There was a compilation error. " + diagnostic.getMessage( null ) );
 			}

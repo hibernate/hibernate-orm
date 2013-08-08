@@ -54,7 +54,7 @@ public abstract class CompilationTest {
 
 	public static final String DIRECTORY_SEPARATOR = File.separator;
 
-	private List<Diagnostic> compilationDiagnostics;
+	private List<Diagnostic<?>> compilationDiagnostics;
 
 	static {
 		String tmp = System.getProperty( SOURCE_BASE_DIR_PROPERTY );
@@ -71,10 +71,10 @@ public abstract class CompilationTest {
 	}
 
 	public CompilationTest() {
-		compilationDiagnostics = new ArrayList<Diagnostic>();
+		compilationDiagnostics = new ArrayList<Diagnostic<?>>();
 	}
 
-	public final List<Diagnostic> getCompilationDiagnostics() {
+	public final List<Diagnostic<?>> getCompilationDiagnostics() {
 		return compilationDiagnostics;
 	}
 
@@ -149,7 +149,7 @@ public abstract class CompilationTest {
 				null, fileManager, diagnostics, options, null, compilationUnits
 		);
 		task.call();
-		for ( Diagnostic diagnostic : diagnostics.getDiagnostics() ) {
+		for ( Diagnostic<?> diagnostic : diagnostics.getDiagnostics() ) {
 			log.debug( diagnostic.getMessage( null ) );
 		}
 	}

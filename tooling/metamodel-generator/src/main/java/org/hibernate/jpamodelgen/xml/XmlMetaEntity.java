@@ -360,7 +360,7 @@ public class XmlMetaEntity implements MetaEntity {
 		context.logMessage(
 				Diagnostic.Kind.WARNING,
 				"Unable to determine type for property " + propertyName + " of class " + getQualifiedName()
-						+ " using assess type " + accessTypeInfo.getDefaultAccessType()
+						+ " using access type " + accessTypeInfo.getDefaultAccessType()
 		);
 		return null;
 	}

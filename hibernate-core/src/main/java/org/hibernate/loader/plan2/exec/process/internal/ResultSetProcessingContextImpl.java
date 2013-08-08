@@ -84,12 +84,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private Map<EntityPersister,Set<EntityKey>> subselectLoadableEntityKeyMap;
 	private List<HydratedEntityRegistration> hydratedEntityRegistrationList;
 
-	private LockModeResolver lockModeResolverDelegate = new LockModeResolver() {
-		@Override
-		public LockMode resolveLockMode(EntityReference entityReference) {
-			return LockMode.NONE;
-		}
-	};
+	private final LockModeResolver lockModeResolverDelegate;
 
 	/**
 	 * Builds a ResultSetProcessingContextImpl
@@ -108,16 +103,16 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	 * @param hadSubselectFetches
 	 */
 	public ResultSetProcessingContextImpl(
-			ResultSet resultSet,
-			SessionImplementor session,
-			LoadPlan loadPlan,
-			boolean readOnly,
-			boolean shouldUseOptionalEntityInformation,
-			boolean forceFetchLazyAttributes,
-			boolean shouldReturnProxies,
-			QueryParameters queryParameters,
-			NamedParameterContext namedParameterContext,
-			boolean hadSubselectFetches) {
+			final ResultSet resultSet,
+			final SessionImplementor session,
+			final LoadPlan loadPlan,
+			final boolean readOnly,
+			final boolean shouldUseOptionalEntityInformation,
+			final boolean forceFetchLazyAttributes,
+			final boolean shouldReturnProxies,
+			final QueryParameters queryParameters,
+			final NamedParameterContext namedParameterContext,
+			final boolean hadSubselectFetches) {
 		this.resultSet = resultSet;
 		this.session = session;
 		this.loadPlan = loadPlan;
@@ -137,6 +132,16 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				}
 			}
 		}
+		this.lockModeResolverDelegate = new LockModeResolver() {
+			@Override
+			public LockMode resolveLockMode(EntityReference entityReference) {
+				if ( queryParameters.getLockOptions() != null && queryParameters.getLockOptions()
+						.getLockMode() != null ) {
+					return queryParameters.getLockOptions().getLockMode();
+				}
+				return LockMode.READ;
+			}
+		};
 	}
 
 	@Override

@@ -252,7 +252,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			metaEntity = new AnnotationMetaEntity( (TypeElement) element, context, requiresLazyMemberInitialization );
 
 			if ( alreadyExistingMetaEntity != null ) {
-				metaEntity.mergeInMembers( alreadyExistingMetaEntity.getMembers() );
+				metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 			}
 			addMetaEntityToContext( mirror, metaEntity );
 		}

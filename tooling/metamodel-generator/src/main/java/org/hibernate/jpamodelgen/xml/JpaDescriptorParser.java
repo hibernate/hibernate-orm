@@ -49,6 +49,8 @@ import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitDefaults;
 import org.hibernate.jpamodelgen.xml.jaxb.PersistenceUnitMetadata;
 
 /**
+ * Parser for JPA XML descriptors (persistence.xml and referenced mapping files).
+ *
  * @author Hardy Ferentschik
  */
 public class JpaDescriptorParser {
@@ -234,7 +236,7 @@ public class JpaDescriptorParser {
 			if ( !xmlMappedTypeExists( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fqcn + " is mapped in xml, but class does not exists. Skipping meta model generation."
+						fqcn + " is mapped in xml, but class does not exist. Skipping meta model generation."
 				);
 				continue;
 			}
@@ -261,7 +263,7 @@ public class JpaDescriptorParser {
 			if ( !xmlMappedTypeExists( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fqcn + " is mapped in xml, but class does not exists. Skipping meta model generation."
+						fqcn + " is mapped in xml, but class does not exist. Skipping meta model generation."
 				);
 				continue;
 			}
@@ -288,7 +290,7 @@ public class JpaDescriptorParser {
 			if ( !xmlMappedTypeExists( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,
-						fqcn + " is mapped in xml, but class does not exists. Skipping meta model generation."
+						fqcn + " is mapped in xml, but class does not exist. Skipping meta model generation."
 				);
 				continue;
 			}

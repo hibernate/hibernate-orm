@@ -53,11 +53,11 @@ public class LoadPlanTreePrinter {
 	 */
 	public static final LoadPlanTreePrinter INSTANCE = new LoadPlanTreePrinter();
 
-	public String toString(LoadPlan loadPlan) {
+	private String toString(LoadPlan loadPlan) {
 		return toString( loadPlan, null );
 	}
 
-	public String toString(LoadPlan loadPlan, AliasResolutionContextImpl aliasResolutionContext) {
+	private String toString(LoadPlan loadPlan, AliasResolutionContextImpl aliasResolutionContext) {
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		final PrintStream printStream = new PrintStream( byteArrayOutputStream );
 		final PrintWriter printWriter = new PrintWriter( printStream );
@@ -83,8 +83,9 @@ public class LoadPlanTreePrinter {
 
 		printWriter.flush();
 		printStream.flush();
+		log.debug( new String( byteArrayOutputStream.toByteArray() ) );
 
-		log.debug( toString( loadPlan, aliasResolutionContext ) );
+//		log.debug( toString( loadPlan, aliasResolutionContext ) );
 	}
 
 	private void logTree(

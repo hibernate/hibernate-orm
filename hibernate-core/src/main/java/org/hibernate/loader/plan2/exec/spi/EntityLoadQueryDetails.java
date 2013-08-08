@@ -121,10 +121,12 @@ public class EntityLoadQueryDetails implements LoadQueryDetails {
 			QueryBuildingParameters buildingParameters,
 			SessionFactoryImplementor factory) {
 		this.loadPlan = loadPlan;
+		final AliasResolutionContextImpl aliasResolutionContext = new AliasResolutionContextImpl( factory );
 
-		if ( log.isDebugEnabled() ) {
-			log.debug( LoadPlanTreePrinter.INSTANCE.toString( loadPlan ) );
-		}
+//		LoadPlanTreePrinter.INSTANCE.logTree( loadPlan, aliasResolutionContext );
+//		if ( log.isDebugEnabled() ) {
+//			log.debug( LoadPlanTreePrinter.INSTANCE.toString( loadPlan ) );
+//		}
 
 		// There are 2 high-level requirements to perform here:
 		// 	1) Determine the SQL required to carry out the given LoadPlan (and fulfill
@@ -136,7 +138,6 @@ public class EntityLoadQueryDetails implements LoadQueryDetails {
 
 		final SelectStatementBuilder select = new SelectStatementBuilder( factory.getDialect() );
 		final EntityReturn rootReturn = Helper.INSTANCE.extractRootReturn( loadPlan, EntityReturn.class );
-		final AliasResolutionContextImpl aliasResolutionContext = new AliasResolutionContextImpl( factory );
 		final ReaderCollectorImpl readerCollector = new ReaderCollectorImpl();
 
 		final LoadQueryJoinAndFetchProcessor helper = new LoadQueryJoinAndFetchProcessor( aliasResolutionContext , buildingParameters, factory );
@@ -386,7 +387,7 @@ public class EntityLoadQueryDetails implements LoadQueryDetails {
 		}
 	}
 
-	public static class EntityLoaderRowReader extends AbstractRowReader implements RowReader {
+	public static class EntityLoaderRowReader extends AbstractRowReader {
 		private final EntityReturnReader rootReturnReader;
 		private final List<EntityReferenceInitializer> entityReferenceInitializers;
 		private final List<CollectionReferenceInitializer> arrayReferenceInitializers;

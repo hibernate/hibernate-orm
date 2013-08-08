@@ -84,7 +84,7 @@ public enum LockMode {
 	WRITE( 10 ),
 
 	/**
-	 * Similiar to {@link #UPGRADE} except that, for versioned entities,
+	 * Similar to {@link #UPGRADE} except that, for versioned entities,
 	 * it results in a forced version increment.
 	 *
 	 * @deprecated instead use PESSIMISTIC_FORCE_INCREMENT
@@ -97,13 +97,13 @@ public enum LockMode {
 	 */
 
 	/**
-	 * Optimisticly assume that transaction will not experience contention for
+	 * Optimistically assume that transaction will not experience contention for
 	 * entities.  The entity version will be verified near the transaction end.
 	 */
 	OPTIMISTIC( 6 ),
 
 	/**
-	 * Optimisticly assume that transaction will not experience contention for
+	 * Optimistically assume that transaction will not experience contention for
 	 * entities.  The entity version will be verified and incremented near the transaction end.
 	 */
 	OPTIMISTIC_FORCE_INCREMENT( 7 ),

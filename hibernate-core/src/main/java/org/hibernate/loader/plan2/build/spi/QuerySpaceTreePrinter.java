@@ -102,7 +102,7 @@ public class QuerySpaceTreePrinter {
 		writeJoins( querySpace.getJoins(), depth + 1, aliasResolutionContext, printWriter );
 	}
 
-	final int detailDepthOffset = 4;
+	final int detailDepthOffset = 1;
 
 	private void generateDetailLines(
 			QuerySpace querySpace,

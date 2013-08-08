@@ -23,17 +23,7 @@
  */
 package org.hibernate.loader.plan2.spi;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
-
-import org.hibernate.loader.plan.spi.SqlSelectFragmentResolver;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuildingContext;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AnyMappingDefinition;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.type.Type;
 
 /**
  * Contract for a FetchSource (aka, the thing that owns the fetched attribute).

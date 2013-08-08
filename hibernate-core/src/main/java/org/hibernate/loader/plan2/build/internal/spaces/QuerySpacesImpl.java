@@ -43,7 +43,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Steve Ebersole
  */
-public class QuerySpacesImpl implements QuerySpaces, ExpandingQuerySpaces {
+public class QuerySpacesImpl implements ExpandingQuerySpaces {
 	private static final Logger log = CoreLogging.logger( QuerySpacesImpl.class );
 
 	private final SessionFactoryImplementor sessionFactory;

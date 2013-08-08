@@ -63,7 +63,7 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 		return new LegacyBatchingEntityLoader( persister, batchSize, lockOptions, factory, influencers );
 	}
 
-	public static class LegacyBatchingEntityLoader extends BatchingEntityLoader implements UniqueEntityLoader {
+	public static class LegacyBatchingEntityLoader extends BatchingEntityLoader  {
 		private final int[] batchSizes;
 		private final EntityLoader[] loaders;
 

@@ -26,7 +26,7 @@ package org.hibernate.loader.plan2.spi;
 import org.hibernate.persister.entity.PropertyMapping;
 
 /**
- * Defines a persister reference (either entity or collection) or a composite reference.  JPA terms this
+ * Defines a persister reference (either entity or collection) or a composite reference. In JPA terms this is
  * an "abstract schema type" when discussing JPQL or JPA Criteria queries.  This models a single source of attributes
  * (and fetches).
  *

@@ -170,7 +170,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return !enabledFetchProfileNames.isEmpty();
 	}
 
-	public Set getEnabledFetchProfileNames() {
+	public Set<String> getEnabledFetchProfileNames() {
 		return enabledFetchProfileNames;
 	}
 

@@ -55,8 +55,7 @@ import org.hibernate.persister.walking.spi.EntityDefinition;
  * @author Steve Ebersole
  */
 public class SingleRootReturnLoadPlanBuilderStrategy
-		extends AbstractLoadPlanBuilderStrategy
-		implements LoadPlanBuilderStrategy {
+		extends AbstractLoadPlanBuilderStrategy {
 
 	private final LoadQueryInfluencers loadQueryInfluencers;
 

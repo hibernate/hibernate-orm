@@ -50,8 +50,7 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
  * @author Steve Ebersole
  */
 public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
-		extends AbstractLoadPlanBuildingAssociationVisitationStrategy
-		implements LoadPlanBuildingAssociationVisitationStrategy {
+		extends AbstractLoadPlanBuildingAssociationVisitationStrategy {
 	private static final Logger log = CoreLogging.logger( FetchStyleLoadPlanBuildingAssociationVisitationStrategy.class );
 
 	private final LoadQueryInfluencers loadQueryInfluencers;

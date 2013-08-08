@@ -61,10 +61,10 @@ public final class Context {
 	private final List<String> ormXmlFiles;
 
 	/**
-	 * Keeping track which (if any) of the mapping files is xml-mapping-metadata-complete. If all are metadata complete
-	 * no annotation processing will take place.
+	 * Whether all mapping files are xml-mapping-metadata-complete. In this case no annotation processing will take
+	 * place.
 	 */
-	private List<Boolean> fullyXmlConfigured;
+	private Boolean fullyXmlConfigured = null;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
@@ -72,7 +72,6 @@ public final class Context {
 
 	public Context(ProcessingEnvironment pe) {
 		this.pe = pe;
-		this.fullyXmlConfigured = new ArrayList<Boolean>();
 
 		if ( pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION ) != null ) {
 			String tmp = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
@@ -200,16 +199,16 @@ public final class Context {
 	}
 
 	public boolean isFullyXmlConfigured() {
-		if ( fullyXmlConfigured.isEmpty() ) {
-			return false;
-		}
-		else {
-			return !fullyXmlConfigured.contains( Boolean.FALSE );
-		}
+		return Boolean.TRUE == fullyXmlConfigured;
 	}
 
 	public void mappingDocumentFullyXmlConfigured(boolean fullyXmlConfigured) {
-		this.fullyXmlConfigured.add( fullyXmlConfigured );
+		if ( this.fullyXmlConfigured == null ) {
+			this.fullyXmlConfigured = fullyXmlConfigured;
+		}
+		else {
+			this.fullyXmlConfigured = this.fullyXmlConfigured && fullyXmlConfigured;
+		}
 	}
 
 	public AccessType getPersistenceUnitDefaultAccessType() {
@@ -231,7 +230,7 @@ public final class Context {
 		sb.append( "{accessTypeInformation=" ).append( accessTypeInformation );
 		sb.append( ", logDebug=" ).append( logDebug );
 		sb.append( ", lazyXmlParsing=" ).append( lazyXmlParsing );
-		sb.append( ", isPersistenceUnitCompletelyXmlConfigured=" ).append( fullyXmlConfigured );
+		sb.append( ", fullyXmlConfigured=" ).append( fullyXmlConfigured );
 		sb.append( ", ormXmlFiles=" ).append( ormXmlFiles );
 		sb.append( ", persistenceXmlLocation='" ).append( persistenceXmlLocation ).append( '\'' );
 		sb.append( '}' );

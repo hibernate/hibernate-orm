@@ -5,6 +5,31 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.4.Final (2013.08.07)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-3078] - Problem with multiple classloaders and cglib proxy enhancement, e.g. in the usual tomcat configuration
+    * [HHH-4141] - Typo in tutorial docs
+    * [HHH-4261] - @Any mapping fails during configuration: "@Any requires an explicit @JoinColumn(s)"
+    * [HHH-4294] - Generated SQL includes a column named "null" when referencing a map entry by key and using @LazyCollection(LazyCollectionOption.EXTRA)
+    * [HHH-7959] - Hibernate/Infinispan 2nd Level Caches set to JBoss7 transaction-mode=NONE stop functioning after an explicit eviction
+    * [HHH-8055] - Typo in docs? 16.3. Associations and joins
+    * [HHH-8193] - MSSQL: The stream value is not the specified length. The specified length was 7, the actual length is 0.
+    * [HHH-8302] - C3P0 initialPoolSize non longer initialized with minPoolSize
+    * [HHH-8362] - Wrong add contraint unique statement for informix
+    * [HHH-8371] - The method org.hibernate.internal.util.StringHelper.lastIndexOfLetter does not consider the character '_'
+    * [HHH-8373] - NullPointerException in QueryImpl#extractParameterInfo
+    * [HHH-8390] - Foreign key reference generated before unique constraint exists
+    * [HHH-8397] - MultiLineImportFileTest failing on some platforms
+    * [HHH-8420] - Correct test-only failures occurring in matrix CI
+    * [HHH-8427] - Typo in documentation - Basic Mapping
+    * [HHH-8428] - ProviderMBeanRegistration.locateSessionFactory() NPE
+
+** Improvement
+    * [HHH-8378] - hibernate-osgi cleanup on bundle stop
+    * [HHH-8424] - Skip collection element/map key AnyTypes in JPA metamodel
+
 Changes in version 4.2.3.Final (2013.07.03)
 ------------------------------------------------------------------------------------------------------------------------
 

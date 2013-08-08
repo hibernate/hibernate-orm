@@ -136,7 +136,7 @@ public interface TableSpecification extends ValueContainer, Loggable {
 
 	public Iterable<Index> getIndexes();
 
-	public Index getOrCreateIndex(String name);
+	public void addIndex(Index idx);
 
 	public Iterable<UniqueKey> getUniqueKeys();
 

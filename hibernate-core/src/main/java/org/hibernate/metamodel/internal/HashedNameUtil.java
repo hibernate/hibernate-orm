@@ -27,8 +27,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.metamodel.spi.relational.AbstractConstraint;
-import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
 
 /**
@@ -47,11 +45,11 @@ public class HashedNameUtil {
 	 * @param columnNames
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, TableSpecification table, String... columnNames ) {
+	public static String generateName(String prefix, String tableName, String... columnNames ) {
 		// Use a concatenation that guarantees uniqueness, even if identical names
 		// exist between all table and column identifiers.
 
-		StringBuilder sb = new StringBuilder( "table`" + table.getLogicalName().getText() + "`" );
+		StringBuilder sb = new StringBuilder( "table`" + tableName + "`" );
 
 		// Ensure a consistent ordering of columns, regardless of the order
 		// they were bound.
@@ -73,20 +71,12 @@ public class HashedNameUtil {
 	 * @param columns
 	 * @return String The generated name
 	 */
-	public static String generateName(String prefix, TableSpecification table, List<Column> columns) {
-		String[] columnNames = new String[columns.size()];
-		for ( int i = 0; i < columns.size(); i++ ) {
-			columnNames[i] = columns.get( i ).getColumnName().getText();
+	public static String generateName(String prefix, String tableName, List<String> columnNames) {
+		String[] columnNamesArray = new String[columnNames.size()];
+		for ( int i = 0; i < columnNames.size(); i++ ) {
+			columnNamesArray[i] = columnNames.get( i );
 		}
-		return generateName( prefix, table, columnNames );
-	}
-
-	/**
-	 * Helper method for {@link #generateName(String, TableSpecification, String...)}.
-	 * Generates and sets a name for an existing constraint.
-	 */
-	public static void setName(String prefix, AbstractConstraint constraint) {
-		constraint.setName( generateName( prefix, constraint.getTable(), constraint.getColumns() ) );
+		return generateName( prefix, tableName, columnNamesArray );
 	}
 
 	/**

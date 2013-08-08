@@ -55,6 +55,8 @@ import org.hibernate.jpamodelgen.xml.jaxb.OneToMany;
 import org.hibernate.jpamodelgen.xml.jaxb.OneToOne;
 
 /**
+ * Collects XML-based meta information about an annotated type (entity, embeddable or mapped superclass).
+ *
  * @author Hardy Ferentschik
  */
 public class XmlMetaEntity implements MetaEntity {
@@ -68,20 +70,33 @@ public class XmlMetaEntity implements MetaEntity {
 		COLLECTIONS.put( "java.util.Map", "javax.persistence.metamodel.MapAttribute" );
 	}
 
-	protected final String clazzName;
-	protected final String packageName;
-	protected final String defaultPackageName;
-	protected final ImportContext importContext;
-	protected final List<MetaAttribute> members = new ArrayList<MetaAttribute>();
-	protected final TypeElement element;
-	protected final Context context;
-	protected final boolean isMetaComplete;
+	private final String clazzName;
+	private final String packageName;
+	private final String defaultPackageName;
+	private final ImportContext importContext;
+	private final List<MetaAttribute> members = new ArrayList<MetaAttribute>();
+	private final TypeElement element;
+	private final Context context;
+	private final boolean isMetaComplete;
 
 	private Attributes attributes;
 	private EmbeddableAttributes embeddableAttributes;
-	protected AccessTypeInformation accessTypeInfo;
+	private AccessTypeInformation accessTypeInfo;
 
-	public XmlMetaEntity(Entity ormEntity, String defaultPackageName, TypeElement element, Context context) {
+	/**
+	 * Whether the members of this type have already been initialized or not.
+	 * <p>
+	 * Embeddables and mapped super-classes need to be lazily initialized since the access type may be determined by
+	 * the class which is embedding or sub-classing the entity or super-class. This might not be known until
+	 * annotations are processed.
+	 * <p>
+	 * Also note, that if two different classes with different access types embed this entity or extend this mapped
+	 * super-class, the access type of the embeddable/super-class will be the one of the last embedding/sub-classing
+	 * entity processed. The result is not determined (that's ok according to the spec).
+	 */
+	private boolean initialized;
+
+	XmlMetaEntity(Entity ormEntity, String defaultPackageName, TypeElement element, Context context) {
 		this( ormEntity.getClazz(), defaultPackageName, element, context, ormEntity.isMetadataComplete() );
 		this.attributes = ormEntity.getAttributes();
 		this.embeddableAttributes = null;
@@ -89,7 +104,7 @@ public class XmlMetaEntity implements MetaEntity {
 		init();
 	}
 
-	protected XmlMetaEntity(MappedSuperclass mappedSuperclass, String defaultPackageName, TypeElement element, Context context) {
+	XmlMetaEntity(MappedSuperclass mappedSuperclass, String defaultPackageName, TypeElement element, Context context) {
 		this(
 				mappedSuperclass.getClazz(),
 				defaultPackageName,
@@ -99,11 +114,9 @@ public class XmlMetaEntity implements MetaEntity {
 		);
 		this.attributes = mappedSuperclass.getAttributes();
 		this.embeddableAttributes = null;
-		// entities can be directly initialised
-		init();
 	}
 
-	protected XmlMetaEntity(Embeddable embeddable, String defaultPackageName, TypeElement element, Context context) {
+	XmlMetaEntity(Embeddable embeddable, String defaultPackageName, TypeElement element, Context context) {
 		this( embeddable.getClazz(), defaultPackageName, element, context, embeddable.isMetadataComplete() );
 		this.attributes = null;
 		this.embeddableAttributes = embeddable.getAttributes();
@@ -127,7 +140,9 @@ public class XmlMetaEntity implements MetaEntity {
 		this.isMetaComplete = initIsMetaComplete( metaComplete );
 	}
 
-	protected final void init() {
+	private final void init() {
+		context.logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
+
 		this.accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
 		if ( attributes != null ) {
 			parseAttributes( attributes );
@@ -135,6 +150,8 @@ public class XmlMetaEntity implements MetaEntity {
 		else {
 			parseEmbeddableAttributes( embeddableAttributes );
 		}
+
+		initialized = true;
 	}
 
 	public String getSimpleName() {
@@ -150,6 +167,10 @@ public class XmlMetaEntity implements MetaEntity {
 	}
 
 	public List<MetaAttribute> getMembers() {
+		if ( !initialized ) {
+			init();
+		}
+
 		return members;
 	}
 

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat, Inc. and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// $Id: XmlMappingTest.java 20721 2010-09-27 12:40:10Z hardy.ferentschik $
 package org.hibernate.jpamodelgen.test.xmlmetacomplete.multiplepus;
 
 import java.util.HashMap;
@@ -23,6 +21,7 @@ import java.util.Map;
 
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 import org.testng.annotations.Test;
 
@@ -31,7 +30,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
 /**
  * @author Hardy Ferentschik
  */
+@TestForIssue( jiraKey = "METAGEN-86" )
 public class XmlMetaDataCompleteMultiplePersistenceUnitsTest extends CompilationTest {
+
 	@Test
 	public void testMetaModelGenerated() {
 		// only one of the xml files in the example uses 'xml-mapping-metadata-complete', hence annotation processing

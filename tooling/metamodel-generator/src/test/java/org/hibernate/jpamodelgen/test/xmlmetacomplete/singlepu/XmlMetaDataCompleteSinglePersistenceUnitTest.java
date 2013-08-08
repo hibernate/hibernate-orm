@@ -14,8 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-// $Id: XmlMappingTest.java 20721 2010-09-27 12:40:10Z hardy.ferentschik $
 package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 
 import java.util.HashMap;

@@ -67,6 +67,13 @@ public class AnnotationMetaEntity implements MetaEntity {
 	 */
 	private boolean initialized;
 
+	/**
+	 * Another meta entity for the same type which should be merged lazily with this meta entity. Doing the merge
+	 * lazily is required for embeddedables and mapped supertypes to only pull in those members matching the access
+	 * type as configured via the embedding entity or subclass (also see METAGEN-85).
+	 */
+	private MetaEntity entityToMerge;
+
 	public AnnotationMetaEntity(TypeElement element, Context context, boolean lazilyInitialised) {
 		this.element = element;
 		this.context = context;
@@ -101,6 +108,9 @@ public class AnnotationMetaEntity implements MetaEntity {
 	public List<MetaAttribute> getMembers() {
 		if ( !initialized ) {
 			init();
+			if ( entityToMerge != null ) {
+				mergeInMembers( entityToMerge.getMembers() );
+			}
 		}
 
 		return new ArrayList<MetaAttribute>( members.values() );
@@ -111,9 +121,23 @@ public class AnnotationMetaEntity implements MetaEntity {
 		return false;
 	}
 
-	public void mergeInMembers(Collection<MetaAttribute> attributes) {
+	private void mergeInMembers(Collection<MetaAttribute> attributes) {
 		for ( MetaAttribute attribute : attributes ) {
+			// propagate types to be imported
+			importType( attribute.getMetaType() );
+			importType( attribute.getTypeDeclaration() );
+
 			members.put( attribute.getPropertyName(), attribute );
+		}
+	}
+
+	public void mergeInMembers(MetaEntity other) {
+		// store the entity in order do the merge lazily in case of a non-initialized embeddedable or mapped superclass
+		if ( !initialized ) {
+			this.entityToMerge = other;
+		}
+		else {
+			mergeInMembers( other.getMembers() );
 		}
 	}
 

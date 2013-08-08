@@ -39,7 +39,6 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleTypeVisitor6;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.annotation.AnnotationEmbeddable;
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
 import org.hibernate.jpamodelgen.model.MetaEntity;
 import org.hibernate.jpamodelgen.util.Constants;
@@ -243,13 +242,14 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				continue;
 			}
 
+			boolean requiresLazyMemberInitialization = false;
 			AnnotationMetaEntity metaEntity;
-			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ) {
-				metaEntity = new AnnotationEmbeddable( (TypeElement) element, context );
+			if ( TypeUtils.containsAnnotation( element, Constants.EMBEDDABLE ) ||
+					TypeUtils.containsAnnotation( element, Constants.MAPPED_SUPERCLASS ) ) {
+				requiresLazyMemberInitialization = true;
 			}
-			else {
-				metaEntity = new AnnotationMetaEntity( (TypeElement) element, context );
-			}
+
+			metaEntity = new AnnotationMetaEntity( (TypeElement) element, context, requiresLazyMemberInitialization );
 
 			if ( alreadyExistingMetaEntity != null ) {
 				metaEntity.mergeInMembers( alreadyExistingMetaEntity.getMembers() );

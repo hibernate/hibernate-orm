@@ -268,7 +268,7 @@ public class JpaDescriptorParser {
 				continue;
 			}
 
-			XmlMetaEntity metaEntity = new XmlMetaEmbeddable( embeddable, pkg, getXmlMappedType( fqcn ), context );
+			XmlMetaEntity metaEntity = new XmlMetaEntity( embeddable, pkg, getXmlMappedType( fqcn ), context );
 			if ( context.containsMetaEmbeddable( fqcn ) ) {
 				context.logMessage(
 						Diagnostic.Kind.WARNING,

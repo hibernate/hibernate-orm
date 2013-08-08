@@ -26,6 +26,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
+import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
@@ -38,7 +39,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
 /**
- * Class used to collect meta information about an annotated entity.
+ * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
  *
  * @author Max Andersen
  * @author Hardy Ferentschik
@@ -49,15 +50,24 @@ public class AnnotationMetaEntity implements MetaEntity {
 	private final ImportContext importContext;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
-	private Context context;
+	private final Context context;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
-	public AnnotationMetaEntity(TypeElement element, Context context) {
-		this( element, context, false );
-	}
+	/**
+	 * Whether the members of this type have already been initialized or not.
+	 * <p>
+	 * Embeddables and mapped super-classes need to be lazily initialized since the access type may be determined by
+	 * the class which is embedding or sub-classing the entity or super-class. This might not be known until
+	 * annotations are processed.
+	 * <p>
+	 * Also note, that if two different classes with different access types embed this entity or extend this mapped
+	 * super-class, the access type of the embeddable/super-class will be the one of the last embedding/sub-classing
+	 * entity processed. The result is not determined (that's ok according to the spec).
+	 */
+	private boolean initialized;
 
-	protected AnnotationMetaEntity(TypeElement element, Context context, boolean lazilyInitialised) {
+	public AnnotationMetaEntity(TypeElement element, Context context, boolean lazilyInitialised) {
 		this.element = element;
 		this.context = context;
 		this.members = new HashMap<String, MetaAttribute>();
@@ -89,6 +99,10 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	public List<MetaAttribute> getMembers() {
+		if ( !initialized ) {
+			init();
+		}
+
 		return new ArrayList<MetaAttribute>( members.values() );
 	}
 
@@ -134,6 +148,8 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	protected final void init() {
+		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
+
 		TypeUtils.determineAccessTypeForHierarchy( element, context );
 		entityAccessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
 
@@ -142,6 +158,8 @@ public class AnnotationMetaEntity implements MetaEntity {
 
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
 		addPersistentMembers( methodsOfClass, AccessType.PROPERTY );
+
+		initialized = true;
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {

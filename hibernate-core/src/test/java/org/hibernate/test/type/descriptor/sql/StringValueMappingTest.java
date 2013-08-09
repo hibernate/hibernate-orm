@@ -29,6 +29,7 @@ import java.sql.SQLException;
 
 import org.junit.Test;
 
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -53,12 +54,15 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
+		private final NonContextualLobCreator creator = new NonContextualLobCreator(
+				new ClassLoaderServiceImpl() );
+		
 		public boolean useStreamForLobBinding() {
 			return false;
 		}
 
 		public LobCreator getLobCreator() {
-			return NonContextualLobCreator.INSTANCE;
+			return creator;
 		}
 
 		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {

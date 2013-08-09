@@ -37,6 +37,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -358,5 +359,10 @@ public abstract class AbstractDelegateSessionImplementor implements SessionImple
 	@Override
 	public boolean isClosed() {
 		return delegate.isClosed();
+	}
+	
+	@Override
+	public ClassLoaderService classLoaderService() {
+		return getFactory().getServiceRegistry().getService( ClassLoaderService.class );
 	}
 }

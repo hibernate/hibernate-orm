@@ -27,6 +27,7 @@ import java.io.Reader;
 import java.lang.reflect.Proxy;
 import java.sql.NClob;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.ClassLoaderHelper;
 
 /**
@@ -56,11 +57,13 @@ public class NClobProxy extends ClobProxy {
 	 * Generates a {@link java.sql.Clob} proxy using the string data.
 	 *
 	 * @param string The data to be wrapped as a {@link java.sql.Clob}.
+	 * @param classLoaderService
 	 *
 	 * @return The generated proxy.
 	 */
-	public static NClob generateProxy(String string) {
-		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( string ) );
+	public static NClob generateProxy(String string, ClassLoaderService classLoaderService) {
+		return (NClob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(), PROXY_INTERFACES,
+				new ClobProxy( string ) );
 	}
 
 	/**
@@ -68,24 +71,12 @@ public class NClobProxy extends ClobProxy {
 	 *
 	 * @param reader The character reader
 	 * @param length The length of the character reader
+	 * @param classLoaderService
 	 *
 	 * @return The generated proxy.
 	 */
-	public static NClob generateProxy(Reader reader, long length) {
-		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( reader, length ) );
-	}
-
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	protected static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = NClobImplementer.class.getClassLoader();
-		}
-		return cl;
+	public static NClob generateProxy(Reader reader, long length, ClassLoaderService classLoaderService) {
+		return (NClob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(), PROXY_INTERFACES,
+				new ClobProxy( reader, length ) );
 	}
 }

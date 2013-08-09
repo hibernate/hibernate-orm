@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.testing.TestForIssue;
@@ -44,9 +46,10 @@ import org.junit.Test;
  * @author Steve Ebersole
  */
 public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
-	final Blob original = BlobProxy.generateProxy( new byte[] { 1, 2, 3 } );
-	final Blob copy = BlobProxy.generateProxy( new byte[] { 1, 2, 3 } );
-	final Blob different = BlobProxy.generateProxy( new byte[] { 3, 2, 1 } );
+	private final ClassLoaderService classLoaderService = new ClassLoaderServiceImpl();
+	final Blob original = BlobProxy.generateProxy( new byte[] { 1, 2, 3 }, classLoaderService );
+	final Blob copy = BlobProxy.generateProxy( new byte[] { 1, 2, 3 }, classLoaderService );
+	final Blob different = BlobProxy.generateProxy( new byte[] { 3, 2, 1 }, classLoaderService );
 
 	public BlobDescriptorTest() {
 		super( BlobTypeDescriptor.INSTANCE );
@@ -93,7 +96,7 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 	@TestForIssue( jiraKey = "HHH-8193" )
 	public void testStreamResetOnAccess() throws IOException {
 		byte[] bytes = new byte[] { 1, 2, 3, 4 };
-		BlobImplementer blob = (BlobImplementer) BlobProxy.generateProxy( bytes );
+		BlobImplementer blob = (BlobImplementer) BlobProxy.generateProxy( bytes, classLoaderService );
 		int value = blob.getUnderlyingStream().getInputStream().read();
 		// Call to BlobImplementer#getUnderlyingStream() should mark input stream for reset.
 		assertEquals( bytes.length, blob.getUnderlyingStream().getInputStream().available() );

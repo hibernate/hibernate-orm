@@ -32,8 +32,8 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.SQLException;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -185,11 +185,13 @@ public class ClobProxy implements InvocationHandler {
 	 * Generates a {@link Clob} proxy using the string data.
 	 *
 	 * @param string The data to be wrapped as a {@link Clob}.
+	 * @param classLoaderService
 	 *
 	 * @return The generated proxy.
 	 */
-	public static Clob generateProxy(String string) {
-		return (Clob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( string ) );
+	public static Clob generateProxy(String string, ClassLoaderService classLoaderService) {
+		return (Clob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(), PROXY_INTERFACES,
+				new ClobProxy( string ) );
 	}
 
 	/**
@@ -197,24 +199,12 @@ public class ClobProxy implements InvocationHandler {
 	 *
 	 * @param reader The character reader
 	 * @param length The length of the character reader
+	 * @param classLoaderService
 	 *
 	 * @return The generated proxy.
 	 */
-	public static Clob generateProxy(Reader reader, long length) {
-		return (Clob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new ClobProxy( reader, length ) );
-	}
-
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	protected static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = ClobImplementer.class.getClassLoader();
-		}
-		return cl;
+	public static Clob generateProxy(Reader reader, long length, ClassLoaderService classLoaderService) {
+		return (Clob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(), PROXY_INTERFACES,
+				new ClobProxy( reader, length ) );
 	}
 }

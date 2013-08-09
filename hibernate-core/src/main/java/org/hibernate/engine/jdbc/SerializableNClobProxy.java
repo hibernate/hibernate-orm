@@ -27,6 +27,8 @@ import java.lang.reflect.Proxy;
 import java.sql.Clob;
 import java.sql.NClob;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+
 /**
  * Manages aspects of proxying java.sql.NClobs to add serializability.
  *
@@ -64,19 +66,11 @@ public class SerializableNClobProxy extends SerializableClobProxy {
 	 * Generates a SerializableNClobProxy proxy wrapping the provided NClob object.
 	 *
 	 * @param nclob The NClob to wrap.
+	 * @param classLoaderService
 	 * @return The generated proxy.
 	 */
-	public static NClob generateProxy(NClob nclob) {
-		return (NClob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new SerializableNClobProxy( nclob ) );
-	}
-
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	public static ClassLoader getProxyClassLoader() {
-		return SerializableClobProxy.getProxyClassLoader();
+	public static NClob generateProxy(NClob nclob, ClassLoaderService classLoaderService) {
+		return (NClob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(), PROXY_INTERFACES,
+				new SerializableNClobProxy( nclob ) );
 	}
 }

@@ -26,15 +26,24 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+
 /**
  * Convenient base class for proxy-based LobCreator for handling wrapping.
  *
  * @author Steve Ebersole
  */
 public abstract class AbstractLobCreator implements LobCreator {
+	
+	private final ClassLoaderService classLoaderService;
+	
+	public AbstractLobCreator(ClassLoaderService classLoaderService) {
+		this.classLoaderService = classLoaderService;
+	}
+	
 	@Override
 	public Blob wrap(Blob blob) {
-		return SerializableBlobProxy.generateProxy( blob );
+		return SerializableBlobProxy.generateProxy( blob, classLoaderService );
 	}
 
 	@Override
@@ -43,12 +52,12 @@ public abstract class AbstractLobCreator implements LobCreator {
 			return wrap( (NClob) clob );
 		}
 		else {
-			return SerializableClobProxy.generateProxy( clob );
+			return SerializableClobProxy.generateProxy( clob, classLoaderService );
 		}
 	}
 
 	@Override
 	public NClob wrap(NClob nclob) {
-		return SerializableNClobProxy.generateProxy( nclob );
+		return SerializableNClobProxy.generateProxy( nclob, classLoaderService );
 	}
 }

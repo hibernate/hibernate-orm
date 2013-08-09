@@ -31,8 +31,8 @@ import java.lang.reflect.Proxy;
 import java.sql.Blob;
 import java.sql.SQLException;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -169,11 +169,13 @@ public class BlobProxy implements InvocationHandler {
 	 * Generates a BlobImpl proxy using byte data.
 	 *
 	 * @param bytes The data to be created as a Blob.
+	 * @param classLoaderService
 	 *
 	 * @return The generated proxy.
 	 */
-	public static Blob generateProxy(byte[] bytes) {
-		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new BlobProxy( bytes ) );
+	public static Blob generateProxy(byte[] bytes, ClassLoaderService classLoaderService) {
+		return (Blob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(),
+				PROXY_INTERFACES, new BlobProxy( bytes ) );
 	}
 
 	/**
@@ -181,25 +183,13 @@ public class BlobProxy implements InvocationHandler {
 	 *
 	 * @param stream The input stream of bytes to be created as a Blob.
 	 * @param length The number of bytes from stream to be written to the Blob.
+	 * @param classLoaderService
 	 *
 	 * @return The generated proxy.
 	 */
-	public static Blob generateProxy(InputStream stream, long length) {
-		return (Blob) Proxy.newProxyInstance( getProxyClassLoader(), PROXY_INTERFACES, new BlobProxy( stream, length ) );
-	}
-
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	private static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = BlobImplementer.class.getClassLoader();
-		}
-		return cl;
+	public static Blob generateProxy(InputStream stream, long length, ClassLoaderService classLoaderService) {
+		return (Blob) Proxy.newProxyInstance( classLoaderService.getAggregatedClassLoader(),
+				PROXY_INTERFACES, new BlobProxy( stream, length ) );
 	}
 
 	private static class StreamBackedBinaryStream implements BinaryStream {

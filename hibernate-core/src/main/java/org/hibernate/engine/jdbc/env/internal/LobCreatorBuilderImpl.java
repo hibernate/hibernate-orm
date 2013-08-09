@@ -58,7 +58,7 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	public LobCreator buildLobCreator(LobCreationContext lobCreationContext) {
 		return useContextualLobCreation
 				? new ContextualLobCreator( lobCreationContext )
-				: NonContextualLobCreator.INSTANCE;
+				: new NonContextualLobCreator( lobCreationContext.classLoaderService() );
 	}
 
 

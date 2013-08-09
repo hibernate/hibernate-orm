@@ -27,17 +27,16 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfiles;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.FetchProfile;
 import org.hibernate.metamodel.spi.binding.FetchProfile.Fetch;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * Binds fetch profiles found in annotations.
@@ -60,7 +59,7 @@ public class FetchProfileProcessor {
 		Collection<AnnotationInstance> annotations = bindingContext.getIndex()
 				.getAnnotations( HibernateDotNames.FETCH_PROFILE );
 		for ( AnnotationInstance fetchProfile : annotations ) {
-			bind( bindingContext.getMetadataImplementor(), fetchProfile );
+			bind( bindingContext, fetchProfile );
 		}
 
 		annotations = bindingContext.getIndex().getAnnotations( HibernateDotNames.FETCH_PROFILES );
@@ -68,31 +67,34 @@ public class FetchProfileProcessor {
 			AnnotationInstance[] fetchProfileAnnotations = JandexHelper.getValue(
 					fetchProfiles,
 					"value",
-					AnnotationInstance[].class
+					AnnotationInstance[].class,
+					bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
 			);
 			for ( AnnotationInstance fetchProfile : fetchProfileAnnotations ) {
-				bind( bindingContext.getMetadataImplementor(), fetchProfile );
+				bind( bindingContext, fetchProfile );
 			}
 		}
 	}
 
-	private static void bind(MetadataImplementor metadata, AnnotationInstance fetchProfile) {
-		String name = JandexHelper.getValue( fetchProfile, "name", String.class );
+	private static void bind(AnnotationBindingContext bindingContext, AnnotationInstance fetchProfile) {
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		String name = JandexHelper.getValue( fetchProfile, "name", String.class, classLoaderService);
 		Set<Fetch> fetches = new HashSet<Fetch>();
 		AnnotationInstance[] overrideAnnotations = JandexHelper.getValue(
 				fetchProfile,
 				"fetchOverrides",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		);
 		for ( AnnotationInstance override : overrideAnnotations ) {
-			FetchMode fetchMode = JandexHelper.getEnumValue( override, "mode", FetchMode.class );
+			FetchMode fetchMode = JandexHelper.getEnumValue( override, "mode", FetchMode.class, classLoaderService );
 			if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
 				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
 			}
-			final String entityName = JandexHelper.getValue( override, "entity", String.class );
-			final String associationName = JandexHelper.getValue( override, "association", String.class );
+			final String entityName = JandexHelper.getValue( override, "entity", String.class, classLoaderService );
+			final String associationName = JandexHelper.getValue( override, "association", String.class, classLoaderService );
 			fetches.add( new Fetch( entityName, associationName, fetchMode.toString().toLowerCase() ) );
 		}
-		metadata.addFetchProfile( new FetchProfile( name, fetches ) );
+		bindingContext.getMetadataImplementor().addFetchProfile( new FetchProfile( name, fetches ) );
 	}
 }

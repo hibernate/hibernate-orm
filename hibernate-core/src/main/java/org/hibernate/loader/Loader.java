@@ -2070,7 +2070,8 @@ public abstract class Loader {
 			      LOG.debugf( "Wrapping result set [%s]", rs );
 				return session.getFactory()
 						.getJdbcServices()
-						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ) );
+						.getResultSetWrapper().wrap( rs, retreiveColumnNameToIndexCache( rs ),
+								session.classLoaderService());
 			}
 			catch(SQLException e) {
 				LOG.unableToWrapResultSet( e );

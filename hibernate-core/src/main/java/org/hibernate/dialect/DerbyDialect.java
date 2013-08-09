@@ -26,15 +26,16 @@ package org.hibernate.dialect;
 import java.lang.reflect.Method;
 import java.sql.Types;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.function.AnsiTrimFunction;
 import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate Dialect for Cloudscape 10 - aka Derby. This implements both an
@@ -70,17 +71,22 @@ public class DerbyDialect extends DB2Dialect {
 		registerFunction( "concat", new DerbyConcatFunction() );
 		registerFunction( "trim", new AnsiTrimFunction() );
 		registerColumnType( Types.BLOB, "blob" );
-		determineDriverVersion();
 
 		if ( driverVersionMajor > 10 || ( driverVersionMajor == 10 && driverVersionMinor >= 7 ) ) {
 			registerColumnType( Types.BOOLEAN, "boolean" );
 		}
 	}
+	
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		super.injectServices( serviceRegistry );
+		determineDriverVersion();
+	}
 
 	private void determineDriverVersion() {
 		try {
 			// locate the derby sysinfo class and query its version info
-			final Class sysinfoClass = ReflectHelper.classForName( "org.apache.derby.tools.sysinfo", this.getClass() );
+			final Class sysinfoClass = classLoaderService.classForName( "org.apache.derby.tools.sysinfo" );
 			final Method majorVersionGetter = sysinfoClass.getMethod( "getMajorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
 			final Method minorVersionGetter = sysinfoClass.getMethod( "getMinorVersion", ReflectHelper.NO_PARAM_SIGNATURE );
 			driverVersionMajor = (Integer) majorVersionGetter.invoke( null, ReflectHelper.NO_PARAMS );

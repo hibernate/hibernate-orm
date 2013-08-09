@@ -38,7 +38,6 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.FileSet;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
@@ -202,7 +201,7 @@ public class SchemaUpdateTask extends MatchingTask {
 			properties.load( new FileInputStream(propertiesFile) );
 		}
 		cfg.setProperties(properties);
-		SchemaUpdate su = new SchemaUpdate(cfg);
+		SchemaUpdate su = new SchemaUpdate(SchemaUpdate.createServiceRegistry( properties ), cfg);
 		su.setOutputFile( outputFile.getPath() );
 		su.setDelimiter(delimiter);
 		su.setHaltOnError(haltOnError);

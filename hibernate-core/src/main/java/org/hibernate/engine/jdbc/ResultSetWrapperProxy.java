@@ -30,11 +30,10 @@ import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ClassLoaderHelper;
+import org.jboss.logging.Logger;
 
 /**
  * A proxy for a ResultSet delegate, responsible for locally caching the columnName-to-columnIndex resolution that
@@ -64,28 +63,16 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 *
 	 * @param resultSet The resultSet to wrap.
 	 * @param columnNameCache The cache storing data for converting column names to column indexes.
+	 * @param classLoaderService
 	 * @return The generated proxy.
 	 */
-	public static ResultSet generateProxy(ResultSet resultSet, ColumnNameCache columnNameCache) {
+	public static ResultSet generateProxy(ResultSet resultSet, ColumnNameCache columnNameCache,
+			ClassLoaderService classLoaderService) {
 		return (ResultSet) Proxy.newProxyInstance(
-				getProxyClassLoader(),
+				classLoaderService.getAggregatedClassLoader(),
 				PROXY_INTERFACES,
 				new ResultSetWrapperProxy( resultSet, columnNameCache )
 		);
-	}
-
-	/**
-	 * Determines the appropriate class loader to which the generated proxy
-	 * should be scoped.
-	 *
-	 * @return The class loader appropriate for proxy construction.
-	 */
-	public static ClassLoader getProxyClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
-		if ( cl == null ) {
-			cl = ResultSet.class.getClassLoader();
-		}
-		return cl;
 	}
 
 	@Override

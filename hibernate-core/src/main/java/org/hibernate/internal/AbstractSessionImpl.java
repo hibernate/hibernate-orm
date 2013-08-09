@@ -37,6 +37,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -315,6 +316,11 @@ public abstract class AbstractSessionImpl
 	@Override
 	public CacheKey generateCacheKey(Serializable id, Type type, String entityOrRoleName) {
 		return new CacheKey( id, type, entityOrRoleName, getTenantIdentifier(), getFactory() );
+	}
+	
+	@Override
+	public ClassLoaderService classLoaderService() {
+		return getFactory().getServiceRegistry().getService( ClassLoaderService.class );
 	}
 
 	private transient JdbcConnectionAccess jdbcConnectionAccess;

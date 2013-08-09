@@ -32,17 +32,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.ANTLRException;
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -74,6 +69,12 @@ import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
+
+import antlr.ANTLRException;
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
 
 /**
  * A QueryTranslator that uses an Antlr-based parser.
@@ -281,7 +282,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 		final AST hqlAst = parser.getAST();
 
-		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter() );
+		final NodeTraverser walker = new NodeTraverser( new JavaConstantConverter(
+				factory.getServiceRegistry().getService( ClassLoaderService.class ) ) );
 		walker.traverseDepthFirst( hqlAst );
 
 		showHqlAst( hqlAst );
@@ -587,7 +589,14 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	}
 
 	public static class JavaConstantConverter implements NodeTraverser.VisitationStrategy {
+		
+		final private ClassLoaderService classLoaderService;
 		private AST dotRoot;
+		
+		public JavaConstantConverter(final ClassLoaderService classLoaderService) {
+			this.classLoaderService = classLoaderService;
+		}
+		
 		@Override
 		public void visit(AST node) {
 			if ( dotRoot != null ) {
@@ -602,9 +611,10 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				handleDotStructure( dotRoot );
 			}
 		}
+		
 		private void handleDotStructure(AST dotStructureRoot) {
 			String expression = ASTUtil.getPathText( dotStructureRoot );
-			Object constant = ReflectHelper.getConstantValue( expression );
+			Object constant = ReflectHelper.getConstantValue( expression, classLoaderService );
 			if ( constant != null ) {
 				dotStructureRoot.setFirstChild( null );
 				dotStructureRoot.setType( HqlTokenTypes.JAVA_CONSTANT );

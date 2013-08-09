@@ -28,14 +28,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PluralAssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 /**
  * Type Resolver which checks {@link org.hibernate.annotations.Type} to find the type info.
@@ -73,7 +73,8 @@ public class HibernateTypeResolver extends AbstractAttributeTypeResolver {
 		);
 		final AnnotationInstance typeAnnotation = annotation == null ?
 				null :
-				JandexHelper.getValue( annotation, "value", AnnotationInstance.class );
+				JandexHelper.getValue( annotation, "value", AnnotationInstance.class,
+						pluralAssociationAttribute.getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		return new HibernateTypeResolver(
 				pluralAssociationAttribute.getName(),
 				pluralAssociationAttribute.getIndexType(),
@@ -94,7 +95,8 @@ public class HibernateTypeResolver extends AbstractAttributeTypeResolver {
 	protected String resolveHibernateTypeName() {
 		return annotation() == null ?
 				null :
-				JandexHelper.getValue( annotation(), "type", String.class );
+				JandexHelper.getValue( annotation(), "type", String.class,
+						getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 	}
 
 	@Override
@@ -106,8 +108,10 @@ public class HibernateTypeResolver extends AbstractAttributeTypeResolver {
 				final HashMap<String, String> typeParameters = new HashMap<String, String>( parameterAnnotations.length );
 				for ( AnnotationInstance parameterAnnotationInstance : parameterAnnotations ) {
 					typeParameters.put(
-							JandexHelper.getValue( parameterAnnotationInstance, "name", String.class ),
-							JandexHelper.getValue( parameterAnnotationInstance, "value", String.class )
+							JandexHelper.getValue( parameterAnnotationInstance, "name", String.class,
+									getContext().getServiceRegistry().getService( ClassLoaderService.class ) ),
+							JandexHelper.getValue( parameterAnnotationInstance, "value", String.class,
+									getContext().getServiceRegistry().getService( ClassLoaderService.class ) )
 					);
 				}
 				return typeParameters;

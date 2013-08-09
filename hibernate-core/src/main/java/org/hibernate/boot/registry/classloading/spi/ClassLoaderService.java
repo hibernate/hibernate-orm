@@ -87,4 +87,11 @@ public interface ClassLoaderService extends Service {
 	 * @return The ordered set of discovered services.
 	 */
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract);
+	
+	/**
+	 * Some 3rd party libraries take ClassLoaders as arguments.  Support using the aggregated ClassLoader.
+	 * 
+	 * @return The aggregated ClassLoader
+	 */
+	public ClassLoader getAggregatedClassLoader();
 }

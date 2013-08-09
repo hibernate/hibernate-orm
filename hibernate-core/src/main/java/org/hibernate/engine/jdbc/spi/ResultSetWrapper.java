@@ -25,6 +25,7 @@ package org.hibernate.engine.jdbc.spi;
 
 import java.sql.ResultSet;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.jdbc.ColumnNameCache;
 
 /**
@@ -38,8 +39,9 @@ public interface ResultSetWrapper {
 	 *
 	 * @param resultSet The result set to wrap
 	 * @param columnNameCache The column name cache.
+	 * @param classLoaderService
 	 *
 	 * @return The wrapped result set.
 	 */
-	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache);
+	public ResultSet wrap(ResultSet resultSet, ColumnNameCache columnNameCache, ClassLoaderService classLoaderService);
 }

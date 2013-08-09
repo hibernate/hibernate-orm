@@ -26,17 +26,14 @@ package org.hibernate.metamodel.internal.source.annotations.entity;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.AccessType;
 
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
+import javax.persistence.AccessType;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.PolymorphismType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -51,6 +48,11 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
 import org.hibernate.metamodel.spi.source.JpaCallbackSource;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 
 /**
  * Represents an entity or mapped superclass configured via annotations/orm-xml.
@@ -150,8 +152,10 @@ public class EntityClass extends ConfiguredClass {
 		this.joinedSubclassPrimaryKeyJoinColumnSources = determinePrimaryKeyJoinColumns();
 		if ( foreignKey != null ) {
 			ensureJoinedSubEntity();
-			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class );
-			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class );
+			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
+			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
 		}
 		else {
@@ -170,7 +174,8 @@ public class EntityClass extends ConfiguredClass {
 		);
 		if ( onDeleteAnnotation != null ) {
 			ensureJoinedSubEntity();
-			return JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class );
+			return JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 		return null;
 	}
@@ -306,7 +311,8 @@ public class EntityClass extends ConfiguredClass {
 		final AnnotationInstance jpaEntityAnnotation = JandexHelper.getSingleAnnotation(
 				getClassInfo(), JPADotNames.ENTITY
 		);
-		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class );
+		return JandexHelper.getValue( jpaEntityAnnotation, "name", String.class,
+				getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 	}
 
 	protected List<PrimaryKeyJoinColumn> determinePrimaryKeyJoinColumns() {
@@ -373,7 +379,8 @@ public class EntityClass extends ConfiguredClass {
 			optimisticLockType = JandexHelper.getEnumValue(
 					optimisticLockAnnotation,
 					"type",
-					OptimisticLockType.class
+					OptimisticLockType.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
 			);
 		}
 		optimisticLockStyle = OptimisticLockStyle.valueOf( optimisticLockType.name() );
@@ -406,7 +413,8 @@ public class EntityClass extends ConfiguredClass {
 				HibernateDotNames.DYNAMIC_INSERT
 		);
 		if ( dynamicInsertAnnotation != null ) {
-			isDynamicInsert = JandexHelper.getValue( dynamicInsertAnnotation, "value", Boolean.class );
+			isDynamicInsert = JandexHelper.getValue( dynamicInsertAnnotation, "value", Boolean.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 
 		// see HHH-6398
@@ -415,7 +423,8 @@ public class EntityClass extends ConfiguredClass {
 				HibernateDotNames.DYNAMIC_UPDATE
 		);
 		if ( dynamicUpdateAnnotation != null ) {
-			isDynamicUpdate = JandexHelper.getValue( dynamicUpdateAnnotation, "value", Boolean.class );
+			isDynamicUpdate = JandexHelper.getValue( dynamicUpdateAnnotation, "value", Boolean.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 
 
@@ -425,7 +434,8 @@ public class EntityClass extends ConfiguredClass {
 				HibernateDotNames.SELECT_BEFORE_UPDATE
 		);
 		if ( selectBeforeUpdateAnnotation != null ) {
-			isSelectBeforeUpdate = JandexHelper.getValue( selectBeforeUpdateAnnotation, "value", Boolean.class );
+			isSelectBeforeUpdate = JandexHelper.getValue( selectBeforeUpdateAnnotation, "value", Boolean.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 
 		// Custom persister
@@ -494,12 +504,14 @@ public class EntityClass extends ConfiguredClass {
 			}
 			case ENABLE_SELECTIVE: {
 				doCaching = jpaCacheableAnnotation != null
-						&& JandexHelper.getValue( jpaCacheableAnnotation, "value", Boolean.class );
+						&& JandexHelper.getValue( jpaCacheableAnnotation, "value", Boolean.class,
+								getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 				break;
 			}
 			case DISABLE_SELECTIVE: {
 				doCaching = jpaCacheableAnnotation == null
-						|| !JandexHelper.getValue( jpaCacheableAnnotation, "value", Boolean.class );
+						|| !JandexHelper.getValue( jpaCacheableAnnotation, "value", Boolean.class,
+								getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 				break;
 			}
 			default: {

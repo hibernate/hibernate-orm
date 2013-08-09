@@ -28,10 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
@@ -41,6 +39,8 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.SingularAttributeBinding;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * Base class for the different types of mapped attributes
@@ -253,7 +253,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 			if ( !getColumnValues().isEmpty() ) {
 				throw new AnnotationException( "Can't having both @Formula and @Column on same attribute : " + getRole() );
 			}
-			final String expression = JandexHelper.getValue( formulaAnnotation, "value", String.class );
+			final String expression = JandexHelper.getValue( formulaAnnotation, "value", String.class,
+					context.getServiceRegistry().getService( ClassLoaderService.class ));
 			if ( StringHelper.isEmpty( expression ) ) {
 				throw new AnnotationException(
 						String.format(
@@ -285,7 +286,8 @@ public abstract class MappedAttribute implements Comparable<MappedAttribute> {
 		if ( columnsAnnotation != null ) {
 			checkWrongColumnAnnotationLocation();
 			List<AnnotationInstance> columnsList = Arrays.asList(
-					JandexHelper.getValue( columnsAnnotation, "columns", AnnotationInstance[].class )
+					JandexHelper.getValue( columnsAnnotation, "columns", AnnotationInstance[].class,
+							context.getServiceRegistry().getService( ClassLoaderService.class ) )
 			);
 			for ( AnnotationInstance annotation : columnsList ) {
 				columnValues.add( new Column( annotation ) );

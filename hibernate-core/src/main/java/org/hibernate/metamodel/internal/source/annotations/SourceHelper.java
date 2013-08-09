@@ -115,7 +115,8 @@ public class SourceHelper {
 							(SingularAssociationAttribute) associationAttribute;
 					final SingularAttributeSource source =
 							associationAttribute.getMappedBy() == null ?
-									new ToOneAttributeSourceImpl( singularAssociationAttribute, relativePath ) :
+									new ToOneAttributeSourceImpl( singularAssociationAttribute, relativePath,
+											configuredClass.getLocalBindingContext() ) :
 									new ToOneMappedByAttributeSourceImpl( singularAssociationAttribute, relativePath );
 					attributeList.add( source );
 					break;

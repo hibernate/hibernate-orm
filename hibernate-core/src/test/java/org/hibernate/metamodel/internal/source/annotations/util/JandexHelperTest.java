@@ -114,14 +114,15 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		// try to retrieve the name
-		String name = JandexHelper.getValue( annotationInstance, "name", String.class );
+		String name = JandexHelper.getValue( annotationInstance, "name", String.class, classLoaderService );
 		assertEquals( "Wrong nested annotation", "foo", name );
 
 		// try to retrieve the nested column annotation instance
 		AnnotationInstance columnAnnotationInstance = JandexHelper.getValue(
 				annotationInstance,
 				"column",
-				AnnotationInstance.class
+				AnnotationInstance.class,
+				classLoaderService
 		);
 		assertNotNull( columnAnnotationInstance );
 		assertEquals(
@@ -142,7 +143,8 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
-		JandexHelper.getValue( annotationInstance, "name", Float.class );
+		JandexHelper.getValue( annotationInstance, "name", Float.class,
+				classLoaderService);
 	}
 
 	@Test
@@ -156,7 +158,8 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
-		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class );
+		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class,
+				classLoaderService );
 		assertEquals( "Wrong lock mode", LockModeType.NONE, lockMode );
 	}
 
@@ -171,7 +174,8 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
-		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class );
+		LockModeType lockMode = JandexHelper.getEnumValue( annotationInstance, "lockMode", LockModeType.class,
+				classLoaderService );
 		assertEquals( "Wrong lock mode", LockModeType.OPTIMISTIC, lockMode );
 	}
 
@@ -187,7 +191,8 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
-		String[] columnNames = JandexHelper.getValue( annotationInstance, "columnNames", String[].class );
+		String[] columnNames = JandexHelper.getValue( annotationInstance, "columnNames", String[].class,
+				classLoaderService );
 		Assert.assertTrue( columnNames.length == 3 );
 	}
 
@@ -202,7 +207,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
-		JandexHelper.getValue( annotationInstance, "resultClass", Class.class );
+		JandexHelper.getValue( annotationInstance, "resultClass", Class.class, classLoaderService );
 	}
 
 	@Test
@@ -216,7 +221,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		assertTrue( annotationInstances.size() == 1 );
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
-		String fqcn = JandexHelper.getValue( annotationInstance, "resultClass", String.class );
+		String fqcn = JandexHelper.getValue( annotationInstance, "resultClass", String.class, classLoaderService );
 		assertEquals( "Wrong class names", Foo.class.getName(), fqcn );
 	}
 
@@ -232,7 +237,7 @@ public class JandexHelperTest extends BaseUnitTestCase {
 		AnnotationInstance annotationInstance = annotationInstances.iterator().next();
 
 		try {
-			JandexHelper.getValue( annotationInstance, "foo", String.class );
+			JandexHelper.getValue( annotationInstance, "foo", String.class, classLoaderService );
 			fail();
 		}
 		catch ( AssertionFailure e ) {

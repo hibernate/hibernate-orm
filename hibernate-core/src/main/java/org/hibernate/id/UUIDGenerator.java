@@ -27,17 +27,17 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.UUID;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
+import org.jboss.logging.Logger;
 
 /**
  * An {@link IdentifierGenerator} which generates {@link UUID} values using a pluggable
@@ -72,7 +72,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 		return generator;
 	}
 
-	public void configure(Type type, Properties params, Dialect d) throws MappingException {
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) throws MappingException {
 		// check first for the strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
 		if ( strategy == null ) {
@@ -80,7 +80,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 			final String strategyClassName = params.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
-					final Class strategyClass = ReflectHelper.classForName( strategyClassName );
+					final Class strategyClass = classLoaderService.classForName( strategyClassName );
 					try {
 						strategy = (UUIDGenerationStrategy) strategyClass.newInstance();
 					}
@@ -88,7 +88,7 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
                         LOG.unableToInstantiateUuidGenerationStrategy(ignore);
 					}
 				}
-				catch ( ClassNotFoundException ignore ) {
+				catch ( ClassLoadingException ignore ) {
                     LOG.unableToLocateUuidGenerationStrategy(strategyClassName);
 				}
 			}

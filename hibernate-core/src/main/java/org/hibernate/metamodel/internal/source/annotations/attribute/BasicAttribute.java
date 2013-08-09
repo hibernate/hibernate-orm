@@ -25,28 +25,22 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.FetchType;
 import javax.persistence.GenerationType;
-
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.SourceType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.PropertyGeneration;
-import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainerImpl;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.EnumeratedTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.TemporalTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
@@ -55,8 +49,10 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.MappingException;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 /**
  * Represent a basic attribute (explicitly or implicitly mapped).
@@ -127,7 +123,8 @@ public class BasicAttribute extends MappedAttribute {
 					HibernateDotNames.SOURCE
 			);
 			this.versionSourceType = sourceAnnotation !=null ?
-					JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class ) : null;
+					JandexHelper.getEnumValue( sourceAnnotation, "value", SourceType.class,
+							getContext().getServiceRegistry().getService( ClassLoaderService.class ) ) : null;
 		}
 		else {
 			versionSourceType = null;
@@ -328,7 +325,8 @@ public class BasicAttribute extends MappedAttribute {
 		}
 
 		IdentifierGeneratorDefinition generator = null;
-		String name = JandexHelper.getValue( generatedValueAnnotation, "generator", String.class );
+		String name = JandexHelper.getValue( generatedValueAnnotation, "generator", String.class,
+				getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		if ( StringHelper.isNotEmpty( name ) ) {
 			generator = getContext().findIdGenerator( name );
 			if ( generator == null ) {
@@ -336,7 +334,8 @@ public class BasicAttribute extends MappedAttribute {
 			}
 		}
 		else {
-			GenerationType genType = JandexHelper.getEnumValue( generatedValueAnnotation, "strategy", GenerationType.class );
+			GenerationType genType = JandexHelper.getEnumValue( generatedValueAnnotation, "strategy", GenerationType.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			String strategy = EnumConversionHelper.generationTypeToGeneratorStrategyName(
 					genType,
 					getContext().getMetadataImplementor().getOptions().useNewIdentifierGenerators()

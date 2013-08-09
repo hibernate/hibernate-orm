@@ -37,6 +37,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
@@ -85,7 +86,8 @@ public class SqlResultSetProcessor {
 			for ( AnnotationInstance annotationInstance : JandexHelper.getValue(
 					sqlResultSetMappingsAnnotationInstance,
 					"value",
-					AnnotationInstance[].class
+					AnnotationInstance[].class,
+					bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
 			) ) {
 				bindSqlResultSetMapping( bindingContext, annotationInstance );
 			}
@@ -95,21 +97,24 @@ public class SqlResultSetProcessor {
 	private static int entityAliasIndex = 0;
 
 	private static void bindSqlResultSetMapping(final AnnotationBindingContext bindingContext, final AnnotationInstance annotation) {
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		entityAliasIndex = 0;
-		final String name = JandexHelper.getValue( annotation, "name", String.class );
+		final String name = JandexHelper.getValue( annotation, "name", String.class, classLoaderService );
 		LOG.debugf( "Binding @SqlResultSetMapping(name=%s)", name );
 		final ResultSetMappingDefinition definition = new ResultSetMappingDefinition( name );
 		for ( final AnnotationInstance entityResult : JandexHelper.getValue(
 				annotation,
 				"entities",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		) ) {
 			bindEntityResult( bindingContext, entityResult, definition );
 		}
 		for ( final AnnotationInstance columnResult : JandexHelper.getValue(
 				annotation,
 				"columns",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		) ) {
 			bindColumnResult( bindingContext, columnResult, definition );
 		}
@@ -120,7 +125,8 @@ public class SqlResultSetProcessor {
 	private static void bindEntityResult(final AnnotationBindingContext bindingContext,
 										 final AnnotationInstance entityResult,
 										 final ResultSetMappingDefinition definition) {
-		final String className = JandexHelper.getValue( entityResult, "entityClass", String.class );
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		final String className = JandexHelper.getValue( entityResult, "entityClass", String.class, classLoaderService );
 		final EntityBinding targetEntityBinding = bindingContext.getMetadataImplementor().getEntityBinding( className );
 		if ( targetEntityBinding == null ) {
 			throw new MappingException(
@@ -132,7 +138,8 @@ public class SqlResultSetProcessor {
 			);
 		}
 
-		final String discriminatorColumn = JandexHelper.getValue( entityResult, "discriminatorColumn", String.class );
+		final String discriminatorColumn = JandexHelper.getValue( entityResult, "discriminatorColumn", String.class,
+				classLoaderService );
 
 		final Map<String, String[]> propertyResults = new HashMap<String, String[]>();
 
@@ -170,16 +177,18 @@ public class SqlResultSetProcessor {
 														AnnotationInstance entityResult,
 														EntityBinding entityBinding,
 														String resultSetMappingDefinitionName) {
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 		final AnnotationInstance[] fieldResultAnnotationInstances = JandexHelper.getValue(
 				entityResult,
 				"fields",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		);
 		List<FieldResult> results = new ArrayList<FieldResult>( fieldResultAnnotationInstances.length );
 		List<String> propertyNames = new ArrayList<String>();
 		final Set<String> uniqueReturnProperty = new HashSet<String>();
 		for ( final AnnotationInstance fieldResult : fieldResultAnnotationInstances ) {
-			final String name = JandexHelper.getValue( fieldResult, "name", String.class );
+			final String name = JandexHelper.getValue( fieldResult, "name", String.class, classLoaderService );
 			if ( !uniqueReturnProperty.add( name ) ) {
 				throw new MappingException(
 						"duplicate @FieldResult for property " + name +
@@ -192,7 +201,8 @@ public class SqlResultSetProcessor {
 						"class is not a valid property name to use in a @FieldResult, use @EntityResult(discriminatorColumn) instead"
 				);
 			}
-			final String column = JandexHelper.getValue( fieldResult, "column", String.class );
+			final String column = JandexHelper.getValue( fieldResult, "column", String.class,
+					classLoaderService );
 			final String quotingNormalizedColumnName = normalize( bindingContext, column );
 			if ( name.contains( "." ) ) {
 				int dotIndex = name.lastIndexOf( '.' );
@@ -319,7 +329,8 @@ public class SqlResultSetProcessor {
 	private static void bindColumnResult(final AnnotationBindingContext bindingContext,
 										 final AnnotationInstance columnResult,
 										 final ResultSetMappingDefinition definition) {
-		final String name = JandexHelper.getValue( columnResult, "name", String.class );
+		final String name = JandexHelper.getValue( columnResult, "name", String.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 		final String normalizedName = normalize( bindingContext, name );
 		//todo TYPE
 		definition.addQueryReturn( new NativeSQLQueryScalarReturn( normalizedName, null ) );

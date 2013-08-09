@@ -185,6 +185,7 @@ public class SchemaExport {
 		schemaManagementTool.getSchemaCreator( settings ).doCreation( metadata.getDatabase(), false, target );
 		this.createSQL = commands.toArray( new String[commands.size()] );
 	}
+	
 	public SchemaExport(MetadataImplementor metadata) {
 		this(metadata, null);
 	}
@@ -196,6 +197,7 @@ public class SchemaExport {
 	 *
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
+	@Deprecated
 	public SchemaExport(Configuration configuration) {
 		this( configuration, configuration.getProperties() );
 	}
@@ -241,6 +243,7 @@ public class SchemaExport {
 	 *
 	 * @throws HibernateException Indicates problem preparing for schema export.
 	 */
+	@Deprecated
 	public SchemaExport(Configuration configuration, Connection connection) throws HibernateException {
 		this.connectionHelper = new SuppliedConnectionHelper( connection );
 
@@ -259,6 +262,7 @@ public class SchemaExport {
 		this.createSQL = configuration.generateSchemaCreationScript( dialect );
 	}
 
+	@Deprecated
 	public SchemaExport(
 			ConnectionHelper connectionHelper,
 			String[] dropSql,

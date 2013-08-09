@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -52,10 +50,10 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Basic <tt>templated</tt> support for {@link org.hibernate.id.factory.IdentifierGeneratorFactory} implementations.
@@ -117,7 +115,7 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 			Class clazz = getIdentifierGeneratorClass( strategy );
 			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			if ( identifierGenerator instanceof Configurable ) {
-				( ( Configurable ) identifierGenerator ).configure( type, config, dialect );
+				( ( Configurable ) identifierGenerator ).configure( type, config, dialect, classLoaderService );
 			}
 			return identifierGenerator;
 		}
@@ -136,19 +134,20 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
-				if ( classLoaderService != null ) {
-					generatorClass = classLoaderService.classForName( strategy );
+				// TODO: Temporary until SchemaExport refactored to not rely on Configuration.
+				if ( classLoaderService == null ) {
+					generatorClass = Class.forName( strategy );
 				}
 				else {
-					generatorClass = ReflectHelper.classForName( strategy );
+					generatorClass = classLoaderService.classForName( strategy );
 				}
 				register( strategy, generatorClass );
 			}
 		}
-		catch ( ClassLoadingException e ) {
+		catch ( ClassNotFoundException e ) {
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
-		catch ( ClassNotFoundException e ) {
+		catch ( ClassLoadingException e ) {
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 		return generatorClass;

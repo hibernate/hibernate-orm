@@ -26,11 +26,11 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.FilterSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -42,15 +42,19 @@ public class FilterSourceImpl implements FilterSource {
 	private final Map<String, String> aliasTableMap = new HashMap<String, String>();
 	private final Map<String, String> aliasEntityMap = new HashMap<String, String>();
 
-	public FilterSourceImpl(AnnotationInstance filterAnnotation) {
-		this.name = JandexHelper.getValue( filterAnnotation, "name", String.class );
-		this.condition = JandexHelper.getValue( filterAnnotation, "condition", String.class );
-		this.autoAliasInjection = JandexHelper.getValue( filterAnnotation, "deduceAliasInjectionPoints", Boolean.class );
+	public FilterSourceImpl(AnnotationInstance filterAnnotation, AnnotationBindingContext bindingContext) {
+		final ClassLoaderService classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		
+		this.name = JandexHelper.getValue( filterAnnotation, "name", String.class, classLoaderService );
+		this.condition = JandexHelper.getValue( filterAnnotation, "condition", String.class, classLoaderService );
+		this.autoAliasInjection = JandexHelper.getValue( filterAnnotation, "deduceAliasInjectionPoints", Boolean.class,
+				classLoaderService );
 
-		for ( AnnotationInstance aliasAnnotation : JandexHelper.getValue( filterAnnotation, "aliases", AnnotationInstance[].class ) ) {
-			final String alias = JandexHelper.getValue( aliasAnnotation, "alias", String.class );
-			final String table = JandexHelper.getValue( aliasAnnotation, "table", String.class );
-			final String entity = JandexHelper.getValue( aliasAnnotation, "entity", String.class );
+		for ( AnnotationInstance aliasAnnotation : JandexHelper.getValue( filterAnnotation, "aliases",
+				AnnotationInstance[].class, classLoaderService ) ) {
+			final String alias = JandexHelper.getValue( aliasAnnotation, "alias", String.class, classLoaderService );
+			final String table = JandexHelper.getValue( aliasAnnotation, "table", String.class, classLoaderService );
+			final String entity = JandexHelper.getValue( aliasAnnotation, "entity", String.class, classLoaderService );
 			if ( StringHelper.isNotEmpty( table ) ) {
 				aliasTableMap.put( alias, table );
 			}

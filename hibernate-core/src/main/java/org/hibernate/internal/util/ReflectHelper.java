@@ -36,6 +36,7 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.property.BasicPropertyAccessor;
 import org.hibernate.property.DirectPropertyAccessor;
 import org.hibernate.property.Getter;
@@ -296,12 +297,13 @@ public final class ReflectHelper {
 	 * Resolve a constant to its actual value.
 	 *
 	 * @param name The name
+	 * @param classLoaderService ClassLoaderService
 	 * @return The value
 	 */
-	public static Object getConstantValue(String name) {
+	public static Object getConstantValue(String name, ClassLoaderService classLoaderService) {
 		Class clazz;
 		try {
-			clazz = classForName( StringHelper.qualifier( name ) );
+			clazz = classLoaderService.classForName( StringHelper.qualifier( name ) );
 		}
 		catch ( Throwable t ) {
 			return null;

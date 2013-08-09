@@ -23,8 +23,7 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import org.jboss.jandex.AnnotationInstance;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.FormulaValue;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
@@ -32,6 +31,7 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.MultiTenancySource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -42,17 +42,19 @@ public class MutliTenancySourceImpl implements MultiTenancySource  {
 	private final boolean bindAsParameter;
 
 	public MutliTenancySourceImpl(EntityClass entityClass) {
+		final ClassLoaderService classLoaderService = entityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class );
+		
 		final AnnotationInstance columnAnnotation = JandexHelper.getSingleAnnotation(
 				entityClass.getClassInfo(),
 				HibernateDotNames.TENANT_COLUMN
 		);
 		if ( columnAnnotation != null ) {
 			final Column column = new Column(  null );
-			column.setName( JandexHelper.getValue( columnAnnotation, "column", String.class ) );
+			column.setName( JandexHelper.getValue( columnAnnotation, "column", String.class, classLoaderService ) );
 			column.setTable( null ); // primary table
-			column.setLength( JandexHelper.getValue( columnAnnotation, "length", int.class ) );
-			column.setPrecision( JandexHelper.getValue( columnAnnotation, "precision", int.class ) );
-			column.setScale( JandexHelper.getValue( columnAnnotation, "scale", int.class ) );
+			column.setLength( JandexHelper.getValue( columnAnnotation, "length", int.class, classLoaderService ) );
+			column.setPrecision( JandexHelper.getValue( columnAnnotation, "precision", int.class, classLoaderService ) );
+			column.setScale( JandexHelper.getValue( columnAnnotation, "scale", int.class, classLoaderService ) );
 			// todo : type
 			relationalValueSource = new ColumnSourceImpl( column );
 		}
@@ -65,7 +67,7 @@ public class MutliTenancySourceImpl implements MultiTenancySource  {
 				relationalValueSource = new DerivedValueSourceImpl(
 						new FormulaValue(
 								null, // primary table
-								JandexHelper.getValue( formulaAnnotation, "value", String.class )
+								JandexHelper.getValue( formulaAnnotation, "value", String.class, classLoaderService )
 						)
 				);
 			}
@@ -83,8 +85,8 @@ public class MutliTenancySourceImpl implements MultiTenancySource  {
 			bindAsParameter = true;
 		}
 		else {
-			shared = JandexHelper.getValue( multiTenantAnnotation, "shared", Boolean.class );
-			bindAsParameter = JandexHelper.getValue( multiTenantAnnotation, "useParameterBinding", Boolean.class );
+			shared = JandexHelper.getValue( multiTenantAnnotation, "shared", Boolean.class, classLoaderService );
+			bindAsParameter = JandexHelper.getValue( multiTenantAnnotation, "useParameterBinding", Boolean.class, classLoaderService );
 		}
 	}
 

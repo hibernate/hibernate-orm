@@ -38,24 +38,21 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.service.ServiceRegistry;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.internal.util.ClassLoaderHelper;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * Utility methods for working with the jandex annotation index.
@@ -91,6 +88,7 @@ public class JandexHelper {
 	 * <li>Boolean</li>
 	 * <li>String</li>
 	 * <li>AnnotationInstance</li>
+	 * @param classLoaderService ClassLoaderService
 	 *
 	 * @return the value if not {@code null}, else the default value if not
 	 *         {@code null}, else {@code null}.
@@ -99,7 +97,8 @@ public class JandexHelper {
 	 * when retrieving the value.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T getValue(AnnotationInstance annotation, String element, Class<T> type) throws AssertionFailure {
+	public static <T> T getValue(AnnotationInstance annotation, String element, Class<T> type,
+			ClassLoaderService classLoaderService) throws AssertionFailure {
 		if ( Class.class.equals( type ) ) {
 			throw new AssertionFailure(
 					"Annotation parameters of type Class should be retrieved as strings (fully qualified class names)"
@@ -114,7 +113,7 @@ public class JandexHelper {
 				return explicitAnnotationParameter( annotationValue, type );
 			}
 			else {
-				return defaultAnnotationParameter( getDefaultValue( annotation, element ), type );
+				return defaultAnnotationParameter( getDefaultValue( annotation, element, classLoaderService ), type );
 			}
 		}
 		catch ( ClassCastException e ) {
@@ -137,6 +136,7 @@ public class JandexHelper {
 	 * @param annotation the annotation containing the enumerated element with the supplied name
 	 * @param element the name of the enumerated element value to be retrieve
 	 * @param type the type to which to convert the value before being returned
+	 * @param classLoaderService ClassLoaderService
 	 *
 	 * @return the value converted to the supplied enumerated type if the value is not <code>null</code>, else the default value if
 	 *         not <code>null</code>, else <code>null</code>.
@@ -144,10 +144,11 @@ public class JandexHelper {
 	 * @see #getValue(AnnotationInstance, String, Class)
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Enum<T>> T getEnumValue(AnnotationInstance annotation, String element, Class<T> type) {
+	public static <T extends Enum<T>> T getEnumValue(AnnotationInstance annotation, String element, Class<T> type,
+			ClassLoaderService classLoaderService) {
 		AnnotationValue val = annotation.value( element );
 		if ( val == null ) {
-			return (T) getDefaultValue( annotation, element );
+			return (T) getDefaultValue( annotation, element, classLoaderService );
 		}
 		return Enum.valueOf( type, val.asEnum() );
 	}
@@ -207,17 +208,19 @@ public class JandexHelper {
 	public static Collection<AnnotationInstance> getAnnotations(
 			final IndexView indexView,
 			final DotName singularDotName,
-			final DotName pluralDotName
+			final DotName pluralDotName,
+			final ClassLoaderService classLoaderService
 	) {
 		List<AnnotationInstance> annotationInstances = new ArrayList<AnnotationInstance>();
 		annotationInstances.addAll( indexView.getAnnotations( singularDotName ) );
 
 		Collection<AnnotationInstance> pluralAnnotations = indexView.getAnnotations( pluralDotName );
 		for ( AnnotationInstance ann : pluralAnnotations ) {
-			AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
+			AnnotationInstance[] typeDefAnnotations = getValue(
 					ann,
 					"value",
-					AnnotationInstance[].class
+					AnnotationInstance[].class,
+					classLoaderService
 			);
 			annotationInstances.addAll( Arrays.asList( typeDefAnnotations ) );
 		}
@@ -227,15 +230,17 @@ public class JandexHelper {
 	public static Collection<AnnotationInstance> getAnnotations(
 			final Map<DotName, List<AnnotationInstance>> annotations,
 			final DotName singularDotName,
-			final DotName pluralDotName) {
-		return getAnnotations( annotations, singularDotName, pluralDotName, false );
+			final DotName pluralDotName,
+			final ClassLoaderService classLoaderService) {
+		return getAnnotations( annotations, singularDotName, pluralDotName, false, classLoaderService );
 	}
 
 	public static Collection<AnnotationInstance> getAnnotations(
 			final Map<DotName, List<AnnotationInstance>> annotations,
 			final DotName singularDotName,
 			final DotName pluralDotName,
-			final boolean checkSingle) {
+			final boolean checkSingle,
+			final ClassLoaderService classLoaderService) {
 		List<AnnotationInstance> annotationInstances = new ArrayList<AnnotationInstance>();
 
 		List<AnnotationInstance> list = annotations.get( singularDotName );
@@ -251,10 +256,11 @@ public class JandexHelper {
 				assertSingularAnnotationInstances( pluralAnnotations );
 			}
 			for ( AnnotationInstance ann : pluralAnnotations ) {
-				AnnotationInstance[] typeDefAnnotations = JandexHelper.getValue(
+				AnnotationInstance[] typeDefAnnotations = getValue(
 						ann,
 						"value",
-						AnnotationInstance[].class
+						AnnotationInstance[].class,
+						classLoaderService
 				);
 				annotationInstances.addAll( Arrays.asList( typeDefAnnotations ) );
 			}
@@ -494,7 +500,7 @@ public class JandexHelper {
 		list.add( instance );
 	}
 
-	private static Object getDefaultValue(AnnotationInstance annotation, String element) {
+	private static Object getDefaultValue(AnnotationInstance annotation, String element, ClassLoaderService classLoaderService) {
 		String name = annotation.name().toString();
 		String fqElement = name + '.' + element;
 		Object val = DEFAULT_VALUES_BY_ELEMENT.get( fqElement );
@@ -502,7 +508,7 @@ public class JandexHelper {
 			return val;
 		}
 		try {
-			val = ClassLoaderHelper.getContextClassLoader().loadClass( name ).getMethod( element ).getDefaultValue();
+			val = classLoaderService.classForName( name ).getMethod( element ).getDefaultValue();
 			if ( val != null ) {
 				// Annotation parameters of type Class are handled using Strings
 				if ( val instanceof Class ) {

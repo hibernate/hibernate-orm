@@ -26,11 +26,11 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.FilterParameterSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -38,17 +38,20 @@ import org.hibernate.metamodel.spi.source.FilterParameterSource;
 public class FilterDefinitionSourceImpl implements FilterDefinitionSource {
 	private final String name;
 	private final String condition;
+	private final ClassLoaderService classLoaderService;
 	private List<FilterParameterSource> parameterSources;
 
-	public FilterDefinitionSourceImpl(AnnotationInstance filterDefAnnotation) {
-		this.name = JandexHelper.getValue( filterDefAnnotation, "name", String.class );
-		this.condition = JandexHelper.getValue( filterDefAnnotation, "defaultCondition", String.class );
+	public FilterDefinitionSourceImpl(AnnotationInstance filterDefAnnotation, AnnotationBindingContext bindingContext) {
+		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		this.name = JandexHelper.getValue( filterDefAnnotation, "name", String.class, classLoaderService );
+		this.condition = JandexHelper.getValue( filterDefAnnotation, "defaultCondition", String.class, classLoaderService );
 		this.parameterSources = buildParameterSources( filterDefAnnotation );
 	}
 
 	private List<FilterParameterSource> buildParameterSources(AnnotationInstance filterDefAnnotation) {
 		final List<FilterParameterSource> parameterSources = new ArrayList<FilterParameterSource>();
-		for ( AnnotationInstance paramAnnotation : JandexHelper.getValue( filterDefAnnotation, "parameters", AnnotationInstance[].class ) ) {
+		for ( AnnotationInstance paramAnnotation : JandexHelper.getValue( filterDefAnnotation, "parameters",
+				AnnotationInstance[].class, classLoaderService ) ) {
 			parameterSources.add( new FilterParameterSourceImpl( paramAnnotation ) );
 		}
 		return parameterSources;
@@ -69,13 +72,13 @@ public class FilterDefinitionSourceImpl implements FilterDefinitionSource {
 		return parameterSources;
 	}
 
-	private static class FilterParameterSourceImpl implements FilterParameterSource {
+	private class FilterParameterSourceImpl implements FilterParameterSource {
 		private final String name;
 		private final String type;
 
 		public FilterParameterSourceImpl(AnnotationInstance paramAnnotation) {
-			this.name = JandexHelper.getValue( paramAnnotation, "name", String.class );
-			this.type = JandexHelper.getValue( paramAnnotation, "type", String.class );
+			this.name = JandexHelper.getValue( paramAnnotation, "name", String.class, classLoaderService );
+			this.type = JandexHelper.getValue( paramAnnotation, "type", String.class, classLoaderService );
 		}
 
 		@Override

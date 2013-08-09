@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
-import org.hibernate.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * Contains the information about a single {@link javax.persistence.AttributeOverride}. Instances of this class
@@ -41,10 +41,12 @@ public class AttributeOverride extends AbstractOverrideDefinition{
 	private final Column column;
 	private final AnnotationInstance columnAnnotation;
 
-	public AttributeOverride(String prefix, AnnotationInstance attributeOverrideAnnotation) {
-		super(prefix, attributeOverrideAnnotation);
+	public AttributeOverride(String prefix, AnnotationInstance attributeOverrideAnnotation,
+			EntityBindingContext bindingContext) {
+		super(prefix, attributeOverrideAnnotation, bindingContext);
 
-		this.columnAnnotation= JandexHelper.getValue( attributeOverrideAnnotation, "column", AnnotationInstance.class );
+		this.columnAnnotation= JandexHelper.getValue( attributeOverrideAnnotation, "column", AnnotationInstance.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ));
 		this.column = new Column( columnAnnotation );
 	}
 

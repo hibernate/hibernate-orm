@@ -23,12 +23,13 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.attribute;
 
+import org.hibernate.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
+import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
@@ -37,10 +38,12 @@ public abstract class AbstractOverrideDefinition {
 
 	protected static final String PROPERTY_PATH_SEPARATOR = ".";
 	protected final String attributePath;
+	protected final EntityBindingContext bindingContext;
 
 	private boolean isApplied;
 
-	public AbstractOverrideDefinition(String prefix, AnnotationInstance attributeOverrideAnnotation) {
+	public AbstractOverrideDefinition(String prefix, AnnotationInstance attributeOverrideAnnotation,
+			EntityBindingContext bindingContext) {
 		if ( attributeOverrideAnnotation == null ) {
 			throw new IllegalArgumentException( "An AnnotationInstance needs to be passed" );
 		}
@@ -50,8 +53,10 @@ public abstract class AbstractOverrideDefinition {
 		}
 		this.attributePath = createAttributePath(
 				prefix,
-				JandexHelper.getValue( attributeOverrideAnnotation, "name", String.class )
+				JandexHelper.getValue( attributeOverrideAnnotation, "name", String.class,
+						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ))
 		);
+		this.bindingContext = bindingContext;
 	}
 
 	protected static String createAttributePath(String prefix, String name) {

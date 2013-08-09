@@ -14,13 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.embeddedid;
+package org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance;
+
+import javax.persistence.EmbeddedId;
+import javax.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik
  */
-public class XmlPerson {
+@Entity
+public class Person {
+	@EmbeddedId
 	private PersonId id;
+
 	private String address;
 }
 

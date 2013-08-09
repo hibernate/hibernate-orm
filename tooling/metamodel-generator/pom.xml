@@ -4,7 +4,7 @@
 
     <groupId>org.hibernate</groupId>
     <artifactId>hibernate-jpamodelgen</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.4.0-SNAPSHOT</version>
 
     <name>Hibernate JPA 2 Metamodel Generator</name>
     <description>Annotation Processor to generate JPA 2 static metamodel classes</description>
@@ -28,7 +28,8 @@
         <connection>scm:git:git://github.com/hibernate/hibernate-metamodelgen.git</connection>
         <developerConnection>scm:git:git@github.com:hibernate/hibernate-metamodelgen.git</developerConnection>
         <url>http://github.com/hibernate/hibernate-metamodelgen</url>
-    </scm>
+      <tag>HEAD</tag>
+  </scm>
 
     <distributionManagement>
         <repository>
@@ -381,7 +382,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore></ignore>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>

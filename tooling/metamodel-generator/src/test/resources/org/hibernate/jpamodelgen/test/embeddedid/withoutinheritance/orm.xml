@@ -6,13 +6,13 @@
                  version="2.0"
         >
     <package>org.hibernate.jpamodelgen.test.embeddedid</package>
-    <entity class="XmlPerson" access="FIELD">
+    <entity class="org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance.XmlPerson" access="FIELD">
         <attributes>
             <embedded-id name="id"/>
             <basic name="address"/>
         </attributes>
     </entity>
-    <embeddable class="PersonId">
+    <embeddable class="org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance.PersonId">
         <attributes>
             <basic name="name"/>
             <basic name="snn"/>

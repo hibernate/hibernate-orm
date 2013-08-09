@@ -177,7 +177,9 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 	private boolean isBasicAttribute(Element element, Element returnedElement) {
 		if ( TypeUtils.containsAnnotation( element, Constants.BASIC )
 				|| TypeUtils.containsAnnotation( element, Constants.ONE_TO_ONE )
-				|| TypeUtils.containsAnnotation( element, Constants.MANY_TO_ONE ) ) {
+				|| TypeUtils.containsAnnotation( element, Constants.MANY_TO_ONE )
+				|| TypeUtils.containsAnnotation( element, Constants.EMBEDDED_ID )
+				|| TypeUtils.containsAnnotation( element, Constants.ID )) {
 			return true;
 		}
 

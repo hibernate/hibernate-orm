@@ -14,16 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.embeddedid;
+package org.hibernate.jpamodelgen.test.embeddedid.withinheritance;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.testng.annotations.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -31,37 +30,24 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
 /**
  * @author Hardy Ferentschik
  */
-public class EmbeddedIdTest extends CompilationTest {
+public class EmbeddedIdWithInheritanceTest extends CompilationTest {
 	@Test
-	public void testGeneratedAnnotationNotGenerated() {
-		assertMetamodelClassGeneratedFor( Person.class );
+	public void testEntityContainsEmbeddedIdProperty() {
+		assertMetamodelClassGeneratedFor( TestEntity.class );
 		assertPresenceOfFieldInMetamodelFor(
-				Person.class, "id", "Property id should be in metamodel"
+				TestEntity.class, "ref", "Property ref should be in metamodel"
 		);
-
-		assertPresenceOfFieldInMetamodelFor(
-				Person.class, "address", "Property id should be in metamodel"
-		);
-
-		assertPresenceOfFieldInMetamodelFor(
-				XmlPerson.class, "id", "Property id should be in metamodel"
-		);
-
-		assertPresenceOfFieldInMetamodelFor(
-				XmlPerson.class, "address", "Property id should be in metamodel"
-		);
-
 	}
 
 	@Override
 	protected String getPackageNameOfCurrentTest() {
-		return EmbeddedIdTest.class.getPackage().getName();
+		return EmbeddedIdWithInheritanceTest.class.getPackage().getName();
 	}
 
 	@Override
 	protected Collection<String> getOrmFiles() {
 		List<String> ormFiles = new ArrayList<String>();
-		String dir = TestUtil.fcnToPath( EmbeddedIdTest.class.getPackage().getName() );
+		String dir = TestUtil.fcnToPath( EmbeddedIdWithInheritanceTest.class.getPackage().getName() );
 		ormFiles.add( dir + "/orm.xml" );
 		return ormFiles;
 	}

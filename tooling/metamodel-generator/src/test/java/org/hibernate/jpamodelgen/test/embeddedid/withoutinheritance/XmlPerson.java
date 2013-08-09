@@ -14,33 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.embeddedid;
-
-import javax.persistence.Embeddable;
+package org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance;
 
 /**
  * @author Hardy Ferentschik
  */
-@Embeddable
-public class PersonId {
-	private String name;
-	private String snn;
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getSnn() {
-		return snn;
-	}
-
-	public void setSnn(String snn) {
-		this.snn = snn;
-	}
+public class XmlPerson {
+	private PersonId id;
+	private String address;
 }
 
 

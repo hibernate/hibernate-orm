@@ -24,7 +24,9 @@
 package org.hibernate.loader.plan2.build.spi;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan2.spi.QuerySpaces;
+import org.hibernate.loader.plan2.spi.EntityReference;
+import org.hibernate.loader.plan2.spi.FetchSource;
+import org.hibernate.persister.walking.spi.AssociationKey;
 
 /**
  * Provides access to context needed in building a LoadPlan.
@@ -40,4 +42,6 @@ public interface LoadPlanBuildingContext {
 	public SessionFactoryImplementor getSessionFactory();
 
 	public ExpandingQuerySpaces getQuerySpaces();
+
+	public FetchSource registeredFetchSource(AssociationKey associationKey);
 }

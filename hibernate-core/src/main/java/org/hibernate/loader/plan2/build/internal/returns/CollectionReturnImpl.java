@@ -24,6 +24,7 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan2.build.internal.spaces.CollectionQuerySpaceImpl;
 import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
@@ -35,7 +36,7 @@ public class CollectionReturnImpl extends AbstractCollectionReference implements
 
 	public CollectionReturnImpl(CollectionDefinition collectionDefinition, LoadPlanBuildingContext context) {
 		super(
-				context.getQuerySpaces().makeCollectionQuerySpace(
+				(CollectionQuerySpaceImpl) context.getQuerySpaces().makeCollectionQuerySpace(
 						context.getQuerySpaces().generateImplicitUid(),
 						collectionDefinition.getCollectionPersister()
 				),

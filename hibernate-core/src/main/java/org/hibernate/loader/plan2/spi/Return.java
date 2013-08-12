@@ -26,7 +26,7 @@ package org.hibernate.loader.plan2.spi;
 /**
  * Represents a return value in the query results.  Not the same as a result (column) in the JDBC ResultSet!
  * <p/>
- * Return is distinctly different from a {@link org.hibernate.loader.plan.spi.Fetch} and so modeled as completely separate hierarchy.
+ * Return is distinctly different from a {@link org.hibernate.loader.plan2.spi.Fetch} and so modeled as completely separate hierarchy.
  *
  * @see ScalarReturn
  * @see EntityReturn

@@ -25,7 +25,9 @@ package org.hibernate.loader.plan2.exec.process.spi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.jboss.logging.Logger;
 
@@ -37,6 +39,13 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan2.exec.process.internal.HydratedEntityRegistration;
 import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessingContextImpl;
+import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.EntityFetch;
+import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
+import org.hibernate.loader.plan2.spi.EntityReference;
+import org.hibernate.loader.plan2.spi.Fetch;
+import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.Loadable;
 
@@ -66,8 +75,18 @@ public abstract class AbstractRowReader implements RowReader {
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				entityReferenceInitializer.hydrateIdentifier( resultSet, context );
 			}
+			final Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference =
+					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.size() );
+			for ( EntityReferenceInitializer entityReferenceInitializerFromMap : entityReferenceInitializers ) {
+				initializerByEntityReference.put( entityReferenceInitializerFromMap.getEntityReference(), entityReferenceInitializerFromMap );
+			}
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
-				entityReferenceInitializer.resolveEntityKey( resultSet, context );
+				resolveEntityKey(
+						resultSet,
+						context,
+						entityReferenceInitializer,
+						initializerByEntityReference
+				);
 			}
 
 			// 2) allow entity references to resolve their non-identifier hydrated state and entity instance
@@ -100,6 +119,58 @@ public abstract class AbstractRowReader implements RowReader {
 		}
 
 		return logicalRow;
+	}
+
+	private void resolveEntityKey(
+			ResultSet resultSet,
+			ResultSetProcessingContextImpl context,
+			EntityReferenceInitializer entityReferenceInitializer,
+			Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference) throws SQLException {
+		final EntityReference entityReference = entityReferenceInitializer.getEntityReference();
+		final EntityIdentifierDescription identifierDescription = entityReference.getIdentifierDescription();
+
+		if ( identifierDescription.hasFetches() ) {
+			resolveEntityKey( resultSet, context, (FetchSource) identifierDescription, initializerByEntityReference );
+		}
+		entityReferenceInitializer.resolveEntityKey( resultSet, context );
+	}
+
+	private void resolveEntityKey(
+			ResultSet resultSet,
+			ResultSetProcessingContextImpl context,
+			FetchSource fetchSource,
+			Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference) throws SQLException {
+		for ( Fetch fetch : fetchSource.getFetches() ) {
+			if ( EntityFetch.class.isInstance( fetch ) ) {
+				final EntityFetch entityFetch = (EntityFetch) fetch;
+				final EntityReferenceInitializer targetEntityReferenceInitializer;
+				if ( BidirectionalEntityFetch.class.isInstance( fetch ) ) {
+					final BidirectionalEntityFetch bidirectionalEntityFetch = (BidirectionalEntityFetch) fetch;
+					targetEntityReferenceInitializer = initializerByEntityReference.get(
+							bidirectionalEntityFetch.getTargetEntityReference()
+					);
+				}
+				else {
+					targetEntityReferenceInitializer = initializerByEntityReference.get( entityFetch );
+				}
+				if ( targetEntityReferenceInitializer != null ) {
+					resolveEntityKey(
+							resultSet,
+							context,
+							targetEntityReferenceInitializer,
+							initializerByEntityReference
+					);
+					targetEntityReferenceInitializer.hydrateEntityState( resultSet, context );
+				}
+			}
+			else if ( CompositeFetch.class.isInstance( fetch ) ) {
+				resolveEntityKey(
+						resultSet,
+						context,
+						(CompositeFetch) fetch,
+						initializerByEntityReference );
+			}
+		}
 	}
 
 	@Override

@@ -35,29 +35,18 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan2.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.plan2.exec.spi.LockModeResolver;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
-import org.hibernate.loader.plan2.spi.CollectionReturn;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.visit.LoadPlanVisitationStrategyAdapter;
-import org.hibernate.loader.plan.spi.visit.LoadPlanVisitor;
-import org.hibernate.loader.spi.AfterLoadAction;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.EntityType;
@@ -276,27 +265,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 
 	@Override
 	public EntityReferenceProcessingState getOwnerProcessingState(Fetch fetch) {
-		return getProcessingState( resolveFetchOwnerEntityReference( fetch ) );
-	}
-
-	private EntityReference resolveFetchOwnerEntityReference(Fetch fetch) {
-		final FetchSource fetchSource = fetch.getSource();
-
-		if ( EntityReference.class.isInstance( fetchSource ) ) {
-			return (EntityReference) fetchSource;
-		}
-		else if ( CompositeFetch.class.isInstance( fetchSource ) ) {
-			return resolveFetchOwnerEntityReference( (CompositeFetch) fetchSource );
-		}
-
-		throw new IllegalStateException(
-				String.format(
-						"Cannot resolve FetchOwner [%s] of Fetch [%s (%s)] to an EntityReference",
-						fetchSource,
-						fetch,
-						fetch.getPropertyPath()
-				)
-		);
+		return getProcessingState( fetch.getSource().resolveEntityReference() );
 	}
 
 	@Override

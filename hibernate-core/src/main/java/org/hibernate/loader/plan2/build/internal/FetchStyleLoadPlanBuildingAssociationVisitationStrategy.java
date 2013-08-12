@@ -34,14 +34,15 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.AbstractLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
+import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
+import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.LoadPlan;
 import org.hibernate.loader.plan2.spi.Return;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
 
 /**
  * LoadPlanBuilderStrategy implementation used for building LoadPlans based on metamodel-defined fetching.  Built
@@ -127,11 +128,6 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	protected boolean isTooManyCollections() {
 		return false;
-	}
-
-	@Override
-	public void foundCircularAssociationKey(AssociationKey associationKey, AttributeDefinition attributeDefinition) {
-		// todo : implement this
 	}
 
 //	@Override

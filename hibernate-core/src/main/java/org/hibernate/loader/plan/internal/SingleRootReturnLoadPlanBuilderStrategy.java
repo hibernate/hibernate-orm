@@ -36,10 +36,11 @@ import org.hibernate.loader.plan.spi.build.AbstractLoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.plan.spi.build.LoadPlanBuilderStrategy;
 import org.hibernate.loader.plan.spi.Return;
+import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 
@@ -151,5 +152,10 @@ public class SingleRootReturnLoadPlanBuilderStrategy
 				persister.getOwnerEntityPersister().getEntityName(),
 				StringHelper.unqualify( collectionRole )
 		);
+	}
+
+	@Override
+	public FetchSource registeredFetchSource(AssociationKey associationKey) {
+		return null;
 	}
 }

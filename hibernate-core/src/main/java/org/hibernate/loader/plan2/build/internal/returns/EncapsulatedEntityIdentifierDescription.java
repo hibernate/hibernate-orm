@@ -54,4 +54,5 @@ public class EncapsulatedEntityIdentifierDescription
 			PropertyPath propertyPath) {
 		super( entityReference, compositeQuerySpace, compositeType, propertyPath );
 	}
+
 }

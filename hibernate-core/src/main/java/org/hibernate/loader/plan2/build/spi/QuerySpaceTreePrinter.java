@@ -29,7 +29,6 @@ import java.io.PrintWriter;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.EntityAliases;
-import org.hibernate.loader.plan2.build.internal.spaces.CollectionQuerySpaceImpl;
 import org.hibernate.loader.plan2.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan2.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan2.exec.spi.EntityReferenceAliases;

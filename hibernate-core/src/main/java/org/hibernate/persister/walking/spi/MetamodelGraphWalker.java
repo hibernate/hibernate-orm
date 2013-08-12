@@ -50,7 +50,7 @@ import org.hibernate.type.Type;
  * calls out to the strategy the strategy then decides the semantics (literally, the meaning).
  * <p/>
  * The visitor will, however, stop if it sees a "duplicate" AssociationKey.  In such a case, the walker would call
- * {@link AssociationVisitationStrategy#foundCircularAssociationKey} and stop walking any further down that graph any
+ * {@link AssociationVisitationStrategy#foundCircularAssociation} and stop walking any further down that graph any
  * further.
  *
  * @author Steve Ebersole
@@ -152,17 +152,21 @@ public class MetamodelGraphWalker {
 		final PropertyPath subPath = currentPropertyPath.append( attributeDefinition.getName() );
 		log.debug( "Visiting attribute path : " + subPath.getFullPath() );
 
+
 		if ( attributeDefinition.getType().isAssociationType() ) {
-			final AssociationKey associationKey = ( (AssociationAttributeDefinition) attributeDefinition ).getAssociationKey();
+			final AssociationAttributeDefinition associationAttributeDefinition =
+					(AssociationAttributeDefinition) attributeDefinition;
+			final AssociationKey associationKey = associationAttributeDefinition.getAssociationKey();
 			if ( isDuplicateAssociationKey( associationKey ) ) {
 				log.debug( "Property path deemed to be circular : " + subPath.getFullPath() );
-				strategy.foundCircularAssociationKey( associationKey, attributeDefinition );
+				strategy.foundCircularAssociation( associationAttributeDefinition );
 				// EARLY EXIT!!!
 				return;
 			}
 		}
 
-		final boolean continueWalk = strategy.startingAttribute( attributeDefinition );
+
+		boolean continueWalk = strategy.startingAttribute( attributeDefinition );
 		if ( continueWalk ) {
 			final PropertyPath old = currentPropertyPath;
 			currentPropertyPath = subPath;

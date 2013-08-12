@@ -48,7 +48,7 @@ public class EntityReturnReader implements ReturnReader {
 		this.aliases = aliases;
 	}
 
-	private EntityReferenceProcessingState getIdentifierResolutionContext(ResultSetProcessingContext context) {
+	public EntityReferenceProcessingState getIdentifierResolutionContext(ResultSetProcessingContext context) {
 		final EntityReferenceProcessingState entityReferenceProcessingState = context.getProcessingState( entityReturn );
 
 		if ( entityReferenceProcessingState == null ) {

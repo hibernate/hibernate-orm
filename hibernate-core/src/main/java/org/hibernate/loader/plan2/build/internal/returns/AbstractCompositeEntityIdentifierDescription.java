@@ -23,20 +23,25 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityIdentifierDescription;
+import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
-import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
+import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.FetchSource;
+import org.hibernate.loader.plan2.spi.Join;
+import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public abstract class AbstractCompositeEntityIdentifierDescription
 		extends AbstractCompositeFetch
-		implements EntityIdentifierDescription, FetchSource, ExpandingEntityIdentifierDescription {
+		implements FetchSource, ExpandingEntityIdentifierDescription {
 
 	private final EntityReference entityReference;
 
@@ -57,6 +62,55 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 	@Override
 	public FetchSource getSource() {
 		// the source for this (as a Fetch) is the entity reference
-		return (FetchSource) entityReference.getIdentifierDescription();
+		return entityReference;
+	}
+
+	@Override
+	protected EntityFetch createEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			Join fetchedJoin,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		// we have a key-many-to-one
+		//
+		// IMPL NOTE: we pass ourselves as the ExpandingFetchSource to collect fetches and later build
+		// the IdentifierDescription
+
+		// if `this` is a fetch and its owner is "the same" (bi-directionality) as the attribute to be join fetched
+		// we should wrap our FetchSource as an EntityFetch.  That should solve everything except for the alias
+		// context lookups because of the different instances (because of wrapping).  So somehow the consumer of this
+		// needs to be able to unwrap it to do the alias lookup, and would have to know to do that.
+		//
+		//
+		// we are processing the EntityReference(Address) identifier.  we come across its key-many-to-one reference
+		// to Person.  Now, if EntityReference(Address) is an instance of EntityFetch(Address) there is a strong
+		// likelihood that we have a bi-directionality and need to handle that specially.
+		//
+		// how to best (a) find the bi-directionality and (b) represent that?
+
+		final FetchSource registeredFetchSource = loadPlanBuildingContext.registeredFetchSource(
+				attributeDefinition.getAssociationKey()
+		);
+		if ( isKeyManyToOneBidirectionalAttributeDefinition( attributeDefinition, loadPlanBuildingContext ) ) {
+			return new KeyManyToOneBidirectionalEntityFetchImpl(
+					this,
+					attributeDefinition,
+					fetchStrategy,
+					fetchedJoin,
+					registeredFetchSource.resolveEntityReference()
+			);
+		}
+		else {
+			return super.createEntityFetch( attributeDefinition, fetchStrategy, fetchedJoin, loadPlanBuildingContext );
+		}
+	}
+
+	private boolean isKeyManyToOneBidirectionalAttributeDefinition(
+			AssociationAttributeDefinition attributeDefinition,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		final FetchSource registeredFetchSource = loadPlanBuildingContext.registeredFetchSource(
+				attributeDefinition.getAssociationKey()
+		);
+		return registeredFetchSource != null && registeredFetchSource != getSource();
 	}
 }

@@ -42,8 +42,8 @@ public class Helper {
 
 	public String[] determineRhsColumnNames(EntityType entityType, SessionFactoryImplementor sessionFactory) {
 		final Joinable persister = entityType.getAssociatedJoinable( sessionFactory );
-		return entityType.isReferenceToPrimaryKey()
-				? persister.getKeyColumnNames()
-				: ( (PropertyMapping) persister ).toColumns( entityType.getRHSUniqueKeyPropertyName() );
+		return entityType.getRHSUniqueKeyPropertyName() == null ?
+				persister.getKeyColumnNames() :
+				( (PropertyMapping) persister ).toColumns( entityType.getRHSUniqueKeyPropertyName() );
 	}
 }

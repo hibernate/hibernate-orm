@@ -30,7 +30,7 @@ import java.io.PrintWriter;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.plan2.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan2.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.LoadPlan;
@@ -57,7 +57,7 @@ public class LoadPlanTreePrinter {
 		return toString( loadPlan, null );
 	}
 
-	private String toString(LoadPlan loadPlan, AliasResolutionContextImpl aliasResolutionContext) {
+	private String toString(LoadPlan loadPlan, AliasResolutionContext aliasResolutionContext) {
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		final PrintStream printStream = new PrintStream( byteArrayOutputStream );
 		final PrintWriter printWriter = new PrintWriter( printStream );
@@ -70,7 +70,7 @@ public class LoadPlanTreePrinter {
 		return new String( byteArrayOutputStream.toByteArray() );
 	}
 
-	public void logTree(LoadPlan loadPlan, AliasResolutionContextImpl aliasResolutionContext) {
+	public void logTree(LoadPlan loadPlan, AliasResolutionContext aliasResolutionContext) {
 		if ( ! log.isDebugEnabled() ) {
 			return;
 		}
@@ -88,7 +88,7 @@ public class LoadPlanTreePrinter {
 
 	private void logTree(
 			LoadPlan loadPlan,
-			AliasResolutionContextImpl aliasResolutionContext,
+			AliasResolutionContext aliasResolutionContext,
 			PrintWriter printWriter) {
 		printWriter.println( "LoadPlan(" + extractDetails( loadPlan ) + ")" );
 		printWriter.println( TreePrinterHelper.INSTANCE.generateNodePrefix( 1 ) + "Returns" );

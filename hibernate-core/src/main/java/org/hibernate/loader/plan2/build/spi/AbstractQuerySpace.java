@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan.spi.AbstractPlanNode;
+import org.hibernate.loader.plan2.spi.AbstractPlanNode;
 import org.hibernate.loader.plan2.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.loader.plan2.spi.QuerySpace;

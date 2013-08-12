@@ -80,25 +80,14 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 	}
 
 	@Override
+	public EntityReference getEntityReference() {
+		return entityReference;
+	}
+
+	@Override
 	public void hydrateIdentifier(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException {
 
 		final EntityReferenceProcessingState processingState = context.getProcessingState( entityReference );
-
-		// if the entity reference we are hydrating is a Return, it is possible that its EntityKey is
-		// supplied by the QueryParameter optional entity information
-		if ( context.shouldUseOptionalEntityInformation() ) {
-			if ( isReturn ) {
-				final EntityKey entityKey = ResultSetProcessorHelper.getOptionalObjectKey(
-						context.getQueryParameters(),
-						context.getSession()
-				);
-
-				if ( entityKey != null ) {
-					processingState.registerEntityKey( entityKey );
-					return;
-				}
-			}
-		}
 
 		// get any previously registered identifier hydrated-state
 		Object identifierHydratedForm = processingState.getIdentifierHydratedForm();
@@ -143,7 +132,6 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 
 	@Override
 	public void resolveEntityKey(ResultSet resultSet, ResultSetProcessingContextImpl context) {
-
 
 		final EntityReferenceProcessingState processingState = context.getProcessingState( entityReference );
 

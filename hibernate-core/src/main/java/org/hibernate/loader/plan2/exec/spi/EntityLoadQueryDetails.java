@@ -31,6 +31,9 @@ import java.util.List;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.LockOptions;
+import org.hibernate.Session;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan2.build.spi.LoadPlanTreePrinter;
@@ -41,11 +44,13 @@ import org.hibernate.loader.plan2.exec.internal.LoadQueryJoinAndFetchProcessor;
 import org.hibernate.loader.plan2.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan2.exec.process.internal.EntityReturnReader;
 import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessingContextImpl;
+import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessorHelper;
 import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessorImpl;
 import org.hibernate.loader.plan2.exec.process.spi.AbstractRowReader;
 import org.hibernate.loader.plan2.exec.process.spi.CollectionReferenceInitializer;
 import org.hibernate.loader.plan2.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan2.exec.process.spi.ReaderCollector;
+import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan2.exec.process.spi.RowReader;
 import org.hibernate.loader.plan2.exec.query.internal.SelectStatementBuilder;
@@ -54,11 +59,14 @@ import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.LoadPlan;
 import org.hibernate.loader.plan2.spi.QuerySpaces;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.ConditionFragment;
 import org.hibernate.sql.DisjunctionFragment;
 import org.hibernate.sql.InFragment;
+import org.hibernate.type.ComponentType;
+import org.hibernate.type.Type;
 
 /**
  * Handles interpreting a LoadPlan (for loading of an entity) by:<ul>
@@ -408,6 +416,47 @@ public class EntityLoadQueryDetails implements LoadQueryDetails {
 			this.collectionReferenceInitializers = collectionReferenceInitializers != null
 					? collectionReferenceInitializers
 					: Collections.<CollectionReferenceInitializer>emptyList();
+		}
+
+		@Override
+		public Object readRow(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException {
+			final ResultSetProcessingContext.EntityReferenceProcessingState processingState =
+					rootReturnReader.getIdentifierResolutionContext( context );
+			// if the entity reference we are hydrating is a Return, it is possible that its EntityKey is
+			// supplied by the QueryParameter optional entity information
+			if ( context.shouldUseOptionalEntityInformation() && context.getQueryParameters().getOptionalId() != null ) {
+				EntityKey entityKey = ResultSetProcessorHelper.getOptionalObjectKey(
+						context.getQueryParameters(),
+						context.getSession()
+				);
+				processingState.registerIdentifierHydratedForm( entityKey.getIdentifier() );
+				processingState.registerEntityKey( entityKey );
+				final EntityPersister entityPersister = processingState.getEntityReference().getEntityPersister();
+				if ( entityPersister.getIdentifierType().isComponentType()  ) {
+					final ComponentType identifierType = (ComponentType) entityPersister.getIdentifierType();
+					if ( !identifierType.isEmbedded() ) {
+						addKeyManyToOnesToSession(
+								context,
+								identifierType,
+								entityKey.getIdentifier()
+						);
+					}
+				}
+			}
+			return super.readRow( resultSet, context );
+		}
+
+		private void addKeyManyToOnesToSession(ResultSetProcessingContextImpl context, ComponentType componentType, Object component ) {
+			for ( int i = 0 ; i < componentType.getSubtypes().length ; i++ ) {
+				final Type subType = componentType.getSubtypes()[ i ];
+				final Object subValue = componentType.getPropertyValue( component, i, context.getSession() );
+				if ( subType.isEntityType() ) {
+					( (Session) context.getSession() ).buildLockRequest( LockOptions.NONE ).lock( subValue );
+				}
+				else if ( subType.isComponentType() ) {
+					addKeyManyToOnesToSession( context, (ComponentType) subType, subValue  );
+				}
+			}
 		}
 
 		@Override

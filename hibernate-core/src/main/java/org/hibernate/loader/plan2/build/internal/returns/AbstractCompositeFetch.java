@@ -37,7 +37,9 @@ import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityFetch;
+import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
+import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -52,6 +54,7 @@ import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public abstract class AbstractCompositeFetch implements CompositeFetch, ExpandingFetchSource {
 	private static final FetchStrategy FETCH_STRATEGY = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
@@ -76,6 +79,30 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 	@SuppressWarnings("UnusedParameters")
 	protected CompositeQuerySpace resolveCompositeQuerySpace(LoadPlanBuildingContext loadPlanBuildingContext) {
 		return compositeQuerySpace;
+	}
+
+	@Override
+	public EntityReference resolveEntityReference() {
+		return resolveFetchSourceEntityReference( this );
+	}
+
+	private static EntityReference resolveFetchSourceEntityReference(CompositeFetch fetch) {
+		final FetchSource fetchSource = fetch.getSource();
+
+		if ( EntityReference.class.isInstance( fetchSource ) ) {
+			return (EntityReference) fetchSource;
+		}
+		else if ( CompositeFetch.class.isInstance( fetchSource ) ) {
+			return resolveFetchSourceEntityReference( (CompositeFetch) fetchSource );
+		}
+		throw new IllegalStateException(
+				String.format(
+						"Cannot resolve FetchOwner [%s] of Fetch [%s (%s)] to an EntityReference",
+						fetchSource,
+						fetch,
+						fetch.getPropertyPath()
+				)
+		);
 	}
 
 	@Override
@@ -117,14 +144,23 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid(),
 				attributeDefinition.isNullable()
 		);
-		final EntityFetch fetch = new EntityFetchImpl(
+		final EntityFetch fetch = createEntityFetch( attributeDefinition, fetchStrategy, join, loadPlanBuildingContext );
+		addFetch( fetch );
+		return fetch;
+	}
+
+	protected EntityFetch createEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			Join fetchedJoin,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return new EntityFetchImpl(
 				this,
 				attributeDefinition,
 				fetchStrategy,
-				join
+				fetchedJoin
 		);
-		addFetch( fetch );
-		return fetch;
+
 	}
 
 	private void addFetch(Fetch fetch) {

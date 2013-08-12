@@ -26,7 +26,7 @@ package org.hibernate.loader.plan2.exec.spi;
 import org.hibernate.loader.EntityAliases;
 
 /**
- * Aggregates the alias/suffix information in relation to an {@link org.hibernate.loader.plan.spi.EntityReference}
+ * Aggregates the alias/suffix information in relation to an {@link org.hibernate.loader.plan2.spi.EntityReference}
  *
  * todo : add a contract (interface) that can be shared by entity and collection alias info objects as lhs/rhs of a join ?
  *

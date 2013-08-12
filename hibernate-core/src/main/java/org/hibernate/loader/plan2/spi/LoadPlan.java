@@ -31,17 +31,17 @@ import java.util.List;
  * Generally speaking there are 3 forms of load plans:<ul>
  *     <li>
  *         {@link org.hibernate.loader.plan2.spi.LoadPlan.Disposition#ENTITY_LOADER} - An entity load plan for
- *         handling get/load handling.  This form will typically have a single return (of type {@link org.hibernate.loader.plan.spi.EntityReturn})
+ *         handling get/load handling.  This form will typically have a single return (of type {@link org.hibernate.loader.plan2.spi.EntityReturn})
  *         defined by {@link #getReturns()}, possibly defining fetches.
  *     </li>
  *     <li>
  *         {@link org.hibernate.loader.plan2.spi.LoadPlan.Disposition#COLLECTION_INITIALIZER} - A collection initializer,
  *         used to load the contents of a collection.  This form will typically have a single return (of
- *         type {@link org.hibernate.loader.plan.spi.CollectionReturn}) defined by {@link #getReturns()}, possibly defining fetches
+ *         type {@link org.hibernate.loader.plan2.spi.CollectionReturn}) defined by {@link #getReturns()}, possibly defining fetches
  *     </li>
  *     <li>
  *         {@link org.hibernate.loader.plan2.spi.LoadPlan.Disposition#MIXED} - A query load plan which can contain
- *         multiple returns of mixed type (though all implementing {@link org.hibernate.loader.plan.spi.Return}).  Again, may possibly define fetches.
+ *         multiple returns of mixed type (though all implementing {@link org.hibernate.loader.plan2.spi.Return}).  Again, may possibly define fetches.
  *     </li>
  * </ul>
  * <p/>
@@ -64,15 +64,15 @@ public interface LoadPlan {
 	/**
 	 * Get the returns indicated by this LoadPlan.<ul>
 	 *     <li>
-	 *         A {@link Disposition#ENTITY_LOADER} LoadPlan would have just a single Return of type {@link org.hibernate.loader.plan.spi.EntityReturn}.
+	 *         A {@link Disposition#ENTITY_LOADER} LoadPlan would have just a single Return of type {@link org.hibernate.loader.plan2.spi.EntityReturn}.
 	 *     </li>
 	 *     <li>
 	 *         A {@link Disposition#COLLECTION_INITIALIZER} LoadPlan would have just a single Return of type
-	 *         {@link org.hibernate.loader.plan.spi.CollectionReturn}.
+	 *         {@link org.hibernate.loader.plan2.spi.CollectionReturn}.
 	 *     </li>
 	 *     <li>
-	 *         A {@link Disposition#MIXED} LoadPlan would contain a mix of {@link org.hibernate.loader.plan.spi.EntityReturn} and
-	 *         {@link org.hibernate.loader.plan.spi.ScalarReturn} elements, but no {@link org.hibernate.loader.plan.spi.CollectionReturn}.
+	 *         A {@link Disposition#MIXED} LoadPlan would contain a mix of {@link org.hibernate.loader.plan2.spi.EntityReturn} and
+	 *         {@link org.hibernate.loader.plan2.spi.ScalarReturn} elements, but no {@link org.hibernate.loader.plan2.spi.CollectionReturn}.
 	 *     </li>
 	 * </ul>
 	 *
@@ -122,17 +122,17 @@ public interface LoadPlan {
 	public static enum Disposition {
 		/**
 		 * This is an "entity loader" load plan, which describes a plan for loading one or more entity instances of
-		 * the same entity type.  There is a single return, which will be of type {@link org.hibernate.loader.plan.spi.EntityReturn}
+		 * the same entity type.  There is a single return, which will be of type {@link org.hibernate.loader.plan2.spi.EntityReturn}
 		 */
 		ENTITY_LOADER,
 		/**
 		 * This is a "collection initializer" load plan, which describes a plan for loading one or more entity instances of
-		 * the same collection type.  There is a single return, which will be of type {@link org.hibernate.loader.plan.spi.CollectionReturn}
+		 * the same collection type.  There is a single return, which will be of type {@link org.hibernate.loader.plan2.spi.CollectionReturn}
 		 */
 		COLLECTION_INITIALIZER,
 		/**
-		 * We have a mixed load plan, which will have one or more returns of {@link org.hibernate.loader.plan.spi.EntityReturn} and {@link org.hibernate.loader.plan.spi.ScalarReturn}
-		 * (NOT {@link org.hibernate.loader.plan.spi.CollectionReturn}).
+		 * We have a mixed load plan, which will have one or more returns of {@link org.hibernate.loader.plan2.spi.EntityReturn} and {@link org.hibernate.loader.plan2.spi.ScalarReturn}
+		 * (NOT {@link org.hibernate.loader.plan2.spi.CollectionReturn}).
 		 */
 		MIXED
 	}

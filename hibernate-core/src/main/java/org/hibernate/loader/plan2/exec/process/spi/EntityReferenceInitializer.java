@@ -27,11 +27,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessingContextImpl;
+import org.hibernate.loader.plan2.spi.EntityReference;
 
 /**
  * @author Steve Ebersole
  */
 public interface EntityReferenceInitializer {
+	EntityReference getEntityReference();
+
 	void hydrateIdentifier(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException;
 
 	void resolveEntityKey(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException;

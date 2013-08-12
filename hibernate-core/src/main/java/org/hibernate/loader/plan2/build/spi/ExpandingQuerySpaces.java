@@ -23,7 +23,7 @@
  */
 package org.hibernate.loader.plan2.build.spi;
 
-import org.hibernate.loader.plan2.build.internal.spaces.CollectionQuerySpaceImpl;
+import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -37,5 +37,5 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 
 	public EntityQuerySpace makeEntityQuerySpace(String uid, EntityPersister entityPersister);
 
-	public CollectionQuerySpaceImpl makeCollectionQuerySpace(String uid, CollectionPersister collectionPersister);
+	public CollectionQuerySpace makeCollectionQuerySpace(String uid, CollectionPersister collectionPersister);
 }

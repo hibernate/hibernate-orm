@@ -88,7 +88,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	 * non-query (HQL, criteria, etc) contexts.
 	 * <p/>
 	 * See the notes on
-	 * {@link org.hibernate.loader.plan.exec.spi.AliasResolutionContext#getSourceAlias} for discussion of
+	 * {@link org.hibernate.loader.plan2.exec.spi.AliasResolutionContext#getSourceAlias} for discussion of
 	 * "source aliases".  They are not implemented here yet.
 	 *
 	 * @param sessionFactory The session factory

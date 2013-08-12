@@ -44,7 +44,6 @@ import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan.spi.CollectionFetch;
 import org.hibernate.loader.plan.spi.CollectionReference;
 import org.hibernate.loader.plan.spi.CollectionReturn;
-import org.hibernate.loader.plan.spi.CompositeElementGraph;
 import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.CopyContext;
 import org.hibernate.loader.plan.spi.EntityFetch;
@@ -67,7 +66,6 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -427,8 +425,9 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	}
 
 	@Override
-	public void foundCircularAssociationKey(AssociationKey associationKey, AttributeDefinition attributeDefinition) {
+	public void foundCircularAssociation(AssociationAttributeDefinition attributeDefinition) {
 		// todo : use this information to create the BiDirectionalEntityFetch instances
+		final AssociationKey associationKey = attributeDefinition.getAssociationKey();
 		final FetchOwner fetchOwner = fetchedAssociationKeyOwnerMap.get( associationKey );
 		if ( fetchOwner == null ) {
 			throw new IllegalStateException(

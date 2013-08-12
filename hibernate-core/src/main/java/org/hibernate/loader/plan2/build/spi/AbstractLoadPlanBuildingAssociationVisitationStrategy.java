@@ -75,7 +75,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.loader.plan.spi.build.LoadPlanBuilderStrategy
+ * @see org.hibernate.loader.plan2.build.spi.LoadPlanBuildingAssociationVisitationStrategy
  * @see org.hibernate.persister.walking.spi.AssociationVisitationStrategy
  */
 public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
@@ -126,13 +126,13 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( FetchStackAware.class.isInstance( last ) ) {
 			( (FetchStackAware) last ).poppedFromStack();
 		}
+
 		return last;
 	}
 
 	private ExpandingFetchSource currentSource() {
 		return fetchSourceStack.peekFirst();
 	}
-
 
 	// top-level AssociationVisitationStrategy hooks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -162,6 +162,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	protected boolean supportsRootEntityReturns() {
 		return true;
 	}
+
+	// Entities  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public void startingEntity(EntityDefinition entityDefinition) {
@@ -552,7 +554,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	public void associationKeyRegistered(AssociationKey associationKey) {
-		// todo : use this information to maintain a map of AssociationKey->FetchOwner mappings (associationKey + current fetchOwner stack entry)
+		// todo : use this information to maintain a map of AssociationKey->FetchSource mappings (associationKey + current FetchSource stack entry)
 		//		that mapping can then be used in #foundCircularAssociationKey to build the proper BiDirectionalEntityFetch
 		//		based on the mapped owner
 		log.tracef(
@@ -562,6 +564,32 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				currentSource()
 		);
 		fetchedAssociationKeySourceMap.put( associationKey, currentSource() );
+	}
+
+	@Override
+	public FetchSource registeredFetchSource(AssociationKey associationKey) {
+		return fetchedAssociationKeySourceMap.get( associationKey );
+	}
+
+	@Override
+	public void foundCircularAssociation(AssociationAttributeDefinition attributeDefinition) {
+		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
+		if ( fetchStrategy.getStyle() != FetchStyle.JOIN ) {
+			return; // nothing to do
+		}
+
+		// go ahead and build the bidirectional fetch
+		if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
+			currentSource().buildEntityFetch(
+					attributeDefinition,
+					fetchStrategy,
+					this
+			);
+		}
+		else {
+			// Collection
+			currentSource().buildCollectionFetch( attributeDefinition, fetchStrategy, this );
+		}
 	}
 
 //	@Override
@@ -580,7 +608,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 //		final FetchSource currentFetchSource = currentSource();
 //		( (ExpandingFetchSource) currentFetchSource ).addCircularFetch( new CircularFetch(  ))
 //
-//		currentFetchOwner().addFetch( new CircularFetch( currentSource(), fetchOwner, attributeDefinition ) );
+//		currentFetchOwner().addFetch( new CircularFetch( currentSource(), fetchSource, attributeDefinition ) );
 //	}
 //
 //	public static class CircularFetch implements EntityFetch, EntityReference {
@@ -658,7 +686,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 //		}
 //
 //		@Override
-//		public Fetch makeCopy(CopyContext copyContext, FetchOwner fetchOwnerCopy) {
+//		public Fetch makeCopy(CopyContext copyContext, FetchOwner fetchSourceCopy) {
 //			// todo : will need this implemented
 //			return null;
 //		}
@@ -696,7 +724,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		//		2) (because the fetch cannot be a JOIN...) do not push it to the stack
 		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
 
-//		final FetchOwner fetchOwner = currentFetchOwner();
+//		final FetchOwner fetchSource = currentFetchOwner();
 //		fetchOwner.validateFetchPlan( fetchStrategy, attributeDefinition );
 //
 //		fetchOwner.buildAnyFetch(
@@ -745,7 +773,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy, this );
 			pushToCollectionStack( fetch );
 		}
-
 		return true;
 	}
 

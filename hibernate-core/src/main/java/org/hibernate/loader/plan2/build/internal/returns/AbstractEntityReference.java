@@ -116,6 +116,11 @@ public abstract class AbstractEntityReference implements EntityReference, Expand
 		);
 	}
 
+	@Override
+	public EntityReference resolveEntityReference() {
+		return this;
+	}
+
 	protected EntityQuerySpace getEntityQuerySpace() {
 		return entityQuerySpace;
 	}

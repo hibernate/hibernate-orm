@@ -140,7 +140,7 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 				collectionRowKey,
 				collectionReference.getCollectionPersister()
 		);
-		// todo : try org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext.getOwnerProcessingState() ??
+		// todo : try org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingContext.getOwnerProcessingState() ??
 		//			-- specifically to return its ResultSetProcessingContext.EntityReferenceProcessingState#getEntityInstance()
 		if ( collectionOwner == null ) {
 			//TODO: This is assertion is disabled because there is a bug that means the

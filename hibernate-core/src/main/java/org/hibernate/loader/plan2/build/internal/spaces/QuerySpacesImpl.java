@@ -33,10 +33,10 @@ import org.jboss.logging.Logger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
+import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpaceUidNotRegisteredException;
-import org.hibernate.loader.plan2.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -105,7 +105,7 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 	}
 
 	@Override
-	public CollectionQuerySpaceImpl makeCollectionQuerySpace(String uid, CollectionPersister collectionPersister) {
+	public CollectionQuerySpace makeCollectionQuerySpace(String uid, CollectionPersister collectionPersister) {
 		if ( querySpaceByUid.containsKey( uid ) ) {
 			throw new IllegalStateException( "Encountered duplicate QuerySpace uid : " + uid );
 		}

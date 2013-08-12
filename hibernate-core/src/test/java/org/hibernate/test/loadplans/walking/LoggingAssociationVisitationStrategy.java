@@ -24,6 +24,7 @@
 package org.hibernate.test.loadplans.walking;
 
 import org.hibernate.annotations.common.util.StringHelper;
+import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;
@@ -32,7 +33,6 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
@@ -246,15 +246,19 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 	}
 
 	@Override
-	public void foundCircularAssociationKey(
-			AssociationKey associationKey,
-			AttributeDefinition attributeDefinition) {
+	public FetchSource registeredFetchSource(AssociationKey associationKey) {
+		return null;
+	}
+
+	@Override
+	public void foundCircularAssociation(
+			AssociationAttributeDefinition attributeDefinition) {
 		System.out.println(
 				String.format(
 						"%s Handling circular association attribute (%s) : %s",
 						StringHelper.repeat( ">>", depth + 1 ),
 						attributeDefinition.toString(),
-						associationKey.toString()
+						attributeDefinition.getAssociationKey().toString()
 				)
 		);
 	}

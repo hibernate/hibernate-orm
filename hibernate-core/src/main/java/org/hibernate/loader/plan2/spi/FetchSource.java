@@ -53,7 +53,22 @@ public interface FetchSource {
 	 */
 	public Fetch[] getFetches();
 
-
+	/**
+	 * Resolve the "current" {@link EntityReference}, or null if none.
+	 *
+	 * If this object is an {@link EntityReference}, then this object is returned.
+	 *
+	 * If this object is a {@link CompositeFetch}, then the nearest {@link EntityReference}
+	 * will be resolved from its source, if possible.
+	 *
+	 * If no EntityReference can be resolved, null is return.
+	 *
+	 *  @return the "current" EntityReference or null if none.
+	 *  otherwise, if this object is also a {@link Fetch}, then
+	 * .
+	 * @see org.hibernate.loader.plan2.spi.Fetch#getSource().
+	 * 	 */
+	public EntityReference resolveEntityReference();
 
 	// Stuff I can hopefully remove ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

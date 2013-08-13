@@ -115,7 +115,7 @@ public class AggregationFunction<T>
         	        Expression argExpr = argExprs.get(0);
         	        if (argExpr instanceof Root<?>) {
         	            Root<?> root = (Root<?>)argExpr;
-        	            if (root.getModel().getIdType() != null) {
+        	            if (!root.getModel().hasSingleIdAttribute()) {
         	                buffer.append('*');
         	                return;
         	            }

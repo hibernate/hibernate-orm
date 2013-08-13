@@ -28,6 +28,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -166,6 +167,19 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 		List<Widget> widgets = em.createQuery( query ).getResultList( );
 		Assert.assertEquals( 4, widgets.size() );
 
+		em.getTransaction().commit();
+		em.close();
+	}
+	@Test
+	public void testCountIdClassAttributes(){
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+		Root<Widget> path = cq.from(Widget.class);
+		Expression<Long> countSelection = cb.count(path);
+		cq.select(countSelection);
+		Long count = em.createQuery(cq).getSingleResult();
 		em.getTransaction().commit();
 		em.close();
 	}

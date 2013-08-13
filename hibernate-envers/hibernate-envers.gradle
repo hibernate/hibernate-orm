@@ -61,12 +61,15 @@ jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Envers'
         
-        instruction 'Import-Package',
+        instructionFirst 'Import-Package',
             // TODO: Shouldn't have to explicitly list the JPA packages, but
             // the plugin generates them with [1.0,2) versions.
             'javax.persistence;version="2.1.0"',
             'javax.persistence.criteria;version="2.1.0"',
             'javax.persistence.metamodel;version="2.1.0"',
-            'javax.persistence.spi;version="2.1.0"'
+            'javax.persistence.spi;version="2.1.0"',
+            // optionals
+            'javax.naming;resolution:=optional',
+            'org.apache.tools.ant;resolution:=optional'
     }
 }

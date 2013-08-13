@@ -44,107 +44,104 @@ import org.junit.Test;
 @RequiresDialect( Oracle9iDialect.class )
 public class SynonymValidationTest extends BaseCoreFunctionalTestCase {
 	
-	// TODO: The QA database matrix does not currently have sufficient permissions to be able to create synonyms.
-	// Until resolved, disable.
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class<?>[] { TestEntity.class };
+	}
 	
-//	@Override
-//	protected Class<?>[] getAnnotatedClasses() {
-//		return new Class<?>[] { TestEntity.class };
-//	}
-//	
 	@Test
 	public void testSynonymValidation() {
-//		Session s = openSession();
-//		s.getTransaction().begin();
-//		s.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
-//		s.getTransaction().commit();
-//		s.close();
-//		
-//		Configuration cfg = new Configuration();
-//		cfg.addAnnotatedClass( TestEntityWithSynonym.class );
-//		cfg.setProperty( AvailableSettings.ENABLE_SYNONYMS, "true" );
-//		
-//		SchemaValidator schemaValidator = new SchemaValidator( cfg );
-//		schemaValidator.validate();
-//		
-//		s = openSession();
-//		s.getTransaction().begin();
-//		s.createSQLQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
-//		s.getTransaction().commit();
-//		s.close();
+		Session s = openSession();
+		s.getTransaction().begin();
+		s.createSQLQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
+		
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( TestEntityWithSynonym.class );
+		cfg.setProperty( AvailableSettings.ENABLE_SYNONYMS, "true" );
+		
+		SchemaValidator schemaValidator = new SchemaValidator( cfg );
+		schemaValidator.validate();
+		
+		s = openSession();
+		s.getTransaction().begin();
+		s.createSQLQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
+		s.getTransaction().commit();
+		s.close();
 	}
-//	
-//	@Entity
-//	@Table(name = "test_entity")
-//	private static class TestEntity {
-//	    @Id
-//	    @GeneratedValue
-//	    private Long id;
-//	    
-//	    @Column(nullable = false)
-//	    private String key;
-//	    
-//	    private String value;
-//
-//	    public Long getId() {
-//	        return id;
-//	    }
-//
-//	    public void setId(Long id) {
-//	        this.id = id;
-//	    }
-//
-//	    public String getKey() {
-//	        return key;
-//	    }
-//
-//	    public void setKey(String key) {
-//	        this.key = key;
-//	    }
-//
-//	    public String getValue() {
-//	        return value;
-//	    }
-//
-//	    public void setValue(String value) {
-//	        this.value = value;
-//	    }
-//	}
-//	
-//	@Entity
-//	@Table(name = "test_synonym")
-//	private static class TestEntityWithSynonym {
-//	    @Id
-//	    @GeneratedValue
-//	    private Long id;
-//	    
-//	    @Column(nullable = false)
-//	    private String key;
-//	    
-//	    private String value;
-//
-//	    public Long getId() {
-//	        return id;
-//	    }
-//
-//	    public void setId(Long id) {
-//	        this.id = id;
-//	    }
-//
-//	    public String getKey() {
-//	        return key;
-//	    }
-//
-//	    public void setKey(String key) {
-//	        this.key = key;
-//	    }
-//
-//	    public String getValue() {
-//	        return value;
-//	    }
-//
-//	    public void setValue(String value) {
-//	        this.value = value;
-//	    }
-//	}
+	
+	@Entity
+	@Table(name = "test_entity")
+	private static class TestEntity {
+	    @Id
+	    @GeneratedValue
+	    private Long id;
+	    
+	    @Column(nullable = false)
+	    private String key;
+	    
+	    private String value;
+
+	    public Long getId() {
+	        return id;
+	    }
+
+	    public void setId(Long id) {
+	        this.id = id;
+	    }
+
+	    public String getKey() {
+	        return key;
+	    }
+
+	    public void setKey(String key) {
+	        this.key = key;
+	    }
+
+	    public String getValue() {
+	        return value;
+	    }
+
+	    public void setValue(String value) {
+	        this.value = value;
+	    }
+	}
+	
+	@Entity
+	@Table(name = "test_synonym")
+	private static class TestEntityWithSynonym {
+	    @Id
+	    @GeneratedValue
+	    private Long id;
+	    
+	    @Column(nullable = false)
+	    private String key;
+	    
+	    private String value;
+
+	    public Long getId() {
+	        return id;
+	    }
+
+	    public void setId(Long id) {
+	        this.id = id;
+	    }
+
+	    public String getKey() {
+	        return key;
+	    }
+
+	    public void setKey(String key) {
+	        this.key = key;
+	    }
+
+	    public String getValue() {
+	        return value;
+	    }
+
+	    public void setValue(String value) {
+	        this.value = value;
+	    }
+	}
 }

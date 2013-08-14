@@ -41,16 +41,18 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+
 /**
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7757" )
-public class TupleSupportTest extends BaseUnitTestCase {
+public class TupleSupportTest extends BaseCoreFunctionalTestCase {
 	@Entity( name = "TheEntity" )
 	public static class TheEntity {
 		@Id
@@ -73,27 +75,38 @@ public class TupleSupportTest extends BaseUnitTestCase {
 		}
 	}
 
-	private SessionFactory sessionFactory;
-
-	@Before
-	public void buildSessionFactory() {
-		Configuration cfg = new Configuration()
-				.addAnnotatedClass( TheEntity.class );
-		cfg.getProperties().put( AvailableSettings.DIALECT, NoTupleSupportDialect.class.getName() );
-		cfg.getProperties().put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		sessionFactory = cfg.buildSessionFactory();
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{TheEntity.class, TheComposite.class};
 	}
 
-	@After
-	public void releaseSessionFactory() {
-		sessionFactory.close();
+	@Override
+	protected void initialize() {
+		super.initialize();
+		getTestConfiguration().getProperties().put(  AvailableSettings.DIALECT, NoTupleSupportDialect.class.getName());
 	}
+
+//	private SessionFactory sessionFactory;
+//
+//	@Before
+//	public void buildSessionFactory() {
+//		Configuration cfg = new Configuration()
+//				.addAnnotatedClass( TheEntity.class );
+//		cfg.getProperties().put( AvailableSettings.DIALECT, NoTupleSupportDialect.class.getName() );
+//		cfg.getProperties().put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+//		sessionFactory = cfg.buildSessionFactory();
+//	}
+//
+//	@After
+//	public void releaseSessionFactory() {
+//		sessionFactory.close();
+//	}
 
 	@Test
 	public void testImplicitTupleNotEquals() {
 		final String hql = "from TheEntity e where e.compositeValue <> :p1";
-		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryPlanCache()
-				.getHQLQueryPlan( hql, false, Collections.<String, Filter>emptyMap() );
+		HQLQueryPlan queryPlan = sessionFactory().getQueryPlanCache()
+				.getHQLQueryPlan( hql, false, Collections.<String,Filter>emptyMap() );
 
 		assertEquals( 1, queryPlan.getSqlStrings().length );
 		System.out.println( " SQL : " + queryPlan.getSqlStrings()[0] );
@@ -103,8 +116,8 @@ public class TupleSupportTest extends BaseUnitTestCase {
 	@Test
 	public void testImplicitTupleNotInList() {
 		final String hql = "from TheEntity e where e.compositeValue not in (:p1,:p2)";
-		HQLQueryPlan queryPlan = ( (SessionFactoryImplementor) sessionFactory ).getQueryPlanCache()
-				.getHQLQueryPlan( hql, false, Collections.<String, Filter>emptyMap() );
+		HQLQueryPlan queryPlan = sessionFactory().getQueryPlanCache()
+				.getHQLQueryPlan( hql, false, Collections.<String,Filter>emptyMap() );
 
 		assertEquals( 1, queryPlan.getSqlStrings().length );
 		System.out.println( " SQL : " + queryPlan.getSqlStrings()[0] );

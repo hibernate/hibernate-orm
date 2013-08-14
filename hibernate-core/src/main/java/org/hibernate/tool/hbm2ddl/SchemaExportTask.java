@@ -38,15 +38,12 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.MatchingTask;
 import org.apache.tools.ant.types.FileSet;
+
 import org.hibernate.HibernateException;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.metamodel.MetadataBuilder;
-import org.hibernate.metamodel.MetadataSources;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 
 /**
  * An Ant task for <tt>SchemaExport</tt>.
@@ -170,7 +167,7 @@ public class SchemaExportTask extends MatchingTask {
 	@Override
     public void execute() throws BuildException {
 		try {
-			getSchemaExport( getMetadata() ).execute(!quiet, !text, drop, create);
+			getSchemaExport( getConfiguration() ).execute(!quiet, !text, drop, create);
 		}
 		catch (HibernateException e) {
 			throw new BuildException("Schema text failed: " + e.getMessage(), e);
@@ -208,43 +205,41 @@ public class SchemaExportTask extends MatchingTask {
 		return ArrayHelper.toStringArray(files);
 	}
 
-	private MetadataImplementor getMetadata() throws Exception {
-		final StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder();
+	private Configuration getConfiguration() throws Exception {
+		Configuration cfg = new Configuration();
+		if (namingStrategy!=null) {
+			cfg.setNamingStrategy(
+					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
+				);
+		}
 		if (configurationFile != null) {
-			registryBuilder.configure( configurationFile.getAbsolutePath() );
+			cfg.configure( configurationFile );
 		}
-		if (propertiesFile == null) {
-			registryBuilder.applySettings( getProject().getProperties() );
-		}
-		else {
-			Properties properties = new Properties();
-			properties.load( new FileInputStream(propertiesFile) );
-			registryBuilder.applySettings( properties );
-		}
-		final StandardServiceRegistry serviceRegistry = registryBuilder.build();
-		final MetadataSources sources = new MetadataSources( serviceRegistry );
 
 		String[] files = getFiles();
 		for (int i = 0; i < files.length; i++) {
 			String filename = files[i];
 			if ( filename.endsWith(".jar") ) {
-				sources.addJar( new File(filename) );
+				cfg.addJar( new File(filename) );
 			}
 			else {
-				sources.addFile(filename);
+				cfg.addFile(filename);
 			}
 		}
-		final MetadataBuilder metadataBuilder = sources.getMetadataBuilder( serviceRegistry );
-		if (namingStrategy!=null) {
-			metadataBuilder.with(
-					(NamingStrategy) ReflectHelper.classForName(namingStrategy).newInstance()
-				);
-		}
-		return (MetadataImplementor) metadataBuilder.build();
+		return cfg;
 	}
 
-	private SchemaExport getSchemaExport(MetadataImplementor metadata) throws HibernateException, IOException {
-		return new SchemaExport(metadata)
+	private SchemaExport getSchemaExport(Configuration cfg) throws HibernateException, IOException {
+		Properties properties = new Properties();
+		properties.putAll( cfg.getProperties() );
+		if (propertiesFile == null) {
+			properties.putAll( getProject().getProperties() );
+		}
+		else {
+			properties.load( new FileInputStream(propertiesFile) );
+		}
+		cfg.setProperties(properties);
+		return new SchemaExport(cfg)
 				.setHaltOnError(haltOnError)
 				.setOutputFile( outputFile.getPath() )
 				.setDelimiter(delimiter);

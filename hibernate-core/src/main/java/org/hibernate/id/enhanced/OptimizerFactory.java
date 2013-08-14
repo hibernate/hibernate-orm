@@ -27,6 +27,7 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -76,7 +77,7 @@ public class OptimizerFactory {
 		}
 		else {
 			try {
-				optimizerClass = classLoaderService.classForName( type );
+				optimizerClass = ReflectHelper.classForName( type, classLoaderService );
 			}
 			catch( Throwable ignore ) {
 				LOG.unableToLocateCustomOptimizerClass( type );

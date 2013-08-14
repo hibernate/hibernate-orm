@@ -27,6 +27,8 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.StaleObjectStateException;
@@ -48,10 +50,9 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.persister.entity.Lockable;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
 
 /**
  * An SQL dialect compatible with HSQLDB (HyperSQL).
@@ -83,6 +84,17 @@ public class HSQLDialect extends Dialect {
 	 */
 	public HSQLDialect() {
 		super();
+
+		try {
+			final Class props = ReflectHelper.classForName( "org.hsqldb.persist.HsqlDatabaseProperties" );
+			final String versionString = (String) props.getDeclaredField( "THIS_VERSION" ).get( null );
+
+			hsqldbVersion = Integer.parseInt( versionString.substring( 0, 1 ) ) * 10;
+			hsqldbVersion += Integer.parseInt( versionString.substring( 2, 3 ) );
+		}
+		catch ( Throwable e ) {
+			// must be a very old version
+		}
 
 		registerColumnType( Types.BIGINT, "bigint" );
 		registerColumnType( Types.BINARY, "binary($l)" );
@@ -211,22 +223,6 @@ public class HSQLDialect extends Dialect {
 		registerFunction( "concat", new VarArgsSQLFunction( StandardBasicTypes.STRING, "(", "||", ")" ) );
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-	}
-	
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		super.injectServices( serviceRegistry );
-
-		try {
-			final Class props = classLoaderService.classForName( "org.hsqldb.persist.HsqlDatabaseProperties" );
-			final String versionString = (String) props.getDeclaredField( "THIS_VERSION" ).get( null );
-
-			hsqldbVersion = Integer.parseInt( versionString.substring( 0, 1 ) ) * 10;
-			hsqldbVersion += Integer.parseInt( versionString.substring( 2, 3 ) );
-		}
-		catch ( Throwable e ) {
-			// must be a very old version
-		}
 	}
 
 	@Override

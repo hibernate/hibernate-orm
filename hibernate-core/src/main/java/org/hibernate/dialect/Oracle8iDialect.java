@@ -43,7 +43,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
@@ -60,8 +59,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 @SuppressWarnings("deprecation")
 public class Oracle8iDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
-	
-	private OracleTypesHelper oracleTypesHelper;
 
 	/**
 	 * Constructs a Oracle8iDialect
@@ -75,12 +72,6 @@ public class Oracle8iDialect extends Dialect {
 		registerReverseHibernateTypeMappings();
 		registerFunctions();
 		registerDefaultProperties();
-	}
-	
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		super.injectServices( serviceRegistry );
-		oracleTypesHelper = new OracleTypesHelper( serviceRegistry );
 	}
 
 	protected void registerCharacterTypeMappings() {
@@ -505,7 +496,7 @@ public class Oracle8iDialect extends Dialect {
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {
 		//	register the type of the out param - an Oracle specific type
-		statement.registerOutParameter( col, oracleTypesHelper.getOracleCursorTypeSqlType() );
+		statement.registerOutParameter( col, OracleTypesHelper.INSTANCE.getOracleCursorTypeSqlType() );
 		col++;
 		return col;
 	}

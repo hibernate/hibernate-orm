@@ -33,11 +33,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -49,9 +48,9 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.logging.Logger;
 
 /**
  * A commandline tool to update a database schema. May also be called from inside an application.
@@ -77,12 +76,10 @@ public class SchemaUpdate {
 	private String outputFile = null;
 	private String delimiter;
 
-	@Deprecated
 	public SchemaUpdate(Configuration cfg) throws HibernateException {
 		this( cfg, cfg.getProperties() );
 	}
 
-	@Deprecated
 	public SchemaUpdate(Configuration configuration, Properties properties) throws HibernateException {
 		this.configuration = configuration;
 		this.dialect = Dialect.getDialect( properties );
@@ -109,7 +106,7 @@ public class SchemaUpdate {
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 	}
 
-	public static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
+	private static StandardServiceRegistryImpl createServiceRegistry(Properties properties) {
 		Environment.verifyProperties( properties );
 		ConfigurationHelper.resolvePlaceHolders( properties );
 		return (StandardServiceRegistryImpl) new StandardServiceRegistryBuilder().applySettings( properties ).build();
@@ -117,7 +114,9 @@ public class SchemaUpdate {
 
 	public static void main(String[] args) {
 		try {
-			Configuration cfg = new Configuration();
+			final Configuration cfg = new Configuration();
+			final StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 			boolean script = true;
 			// If true then execute db updates, otherwise just generate and display updates
@@ -140,7 +139,7 @@ public class SchemaUpdate {
 					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
 						cfg.setNamingStrategy(
-								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) ).newInstance()
+								( NamingStrategy ) classLoaderService.classForName( args[i].substring( 9 ) ).newInstance()
 						);
 					}
 				}
@@ -157,7 +156,6 @@ public class SchemaUpdate {
 				cfg.setProperties( props );
 			}
 
-			StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
 				new SchemaUpdate( serviceRegistry, cfg ).execute( script, doUpdate );
 			}

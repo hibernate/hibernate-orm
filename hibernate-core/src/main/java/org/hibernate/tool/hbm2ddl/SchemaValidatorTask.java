@@ -175,7 +175,7 @@ public class SchemaValidatorTask extends MatchingTask {
 			properties.load( new FileInputStream(propertiesFile) );
 		}
 		cfg.setProperties(properties);
-		return new SchemaValidator( SchemaValidator.createServiceRegistry( properties ), cfg );
+		return new SchemaValidator(cfg);
 	}
 
 	public void setNamingStrategy(String namingStrategy) {

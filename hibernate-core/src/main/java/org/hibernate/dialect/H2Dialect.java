@@ -26,6 +26,8 @@ package org.hibernate.dialect;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.JDBCException;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.cfg.AvailableSettings;
@@ -40,9 +42,8 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.StandardBasicTypes;
-import org.jboss.logging.Logger;
 
 /**
  * A dialect compatible with the H2 database.
@@ -55,13 +56,35 @@ public class H2Dialect extends Dialect {
 			H2Dialect.class.getName()
 	);
 
-	private String querySequenceString;
+	private final String querySequenceString;
 
 	/**
 	 * Constructs a H2Dialect
 	 */
 	public H2Dialect() {
 		super();
+
+		String querySequenceString = "select sequence_name from information_schema.sequences";
+		try {
+			// HHH-2300
+			final Class h2ConstantsClass = ReflectHelper.classForName( "org.h2.engine.Constants" );
+			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
+			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
+			final int buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
+			if ( buildId < 32 ) {
+				querySequenceString = "select name from information_schema.sequences";
+			}
+			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
+				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
+			}
+		}
+		catch ( Exception e ) {
+			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
+			// not using the correct classloader
+			LOG.undeterminedH2Version();
+		}
+
+		this.querySequenceString = querySequenceString;
 
 		registerColumnType( Types.BOOLEAN, "boolean" );
 		registerColumnType( Types.BIGINT, "bigint" );
@@ -175,33 +198,6 @@ public class H2Dialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
-	}
-	
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		super.injectServices( serviceRegistry );
-		
-		String querySequenceString = "select sequence_name from information_schema.sequences";
-		try {
-			// HHH-2300
-			final Class h2ConstantsClass = classLoaderService.classForName( "org.h2.engine.Constants" );
-			final int majorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MAJOR" ).get( null );
-			final int minorVersion = (Integer) h2ConstantsClass.getDeclaredField( "VERSION_MINOR" ).get( null );
-			final int buildId = (Integer) h2ConstantsClass.getDeclaredField( "BUILD_ID" ).get( null );
-			if ( buildId < 32 ) {
-				querySequenceString = "select name from information_schema.sequences";
-			}
-			if ( ! ( majorVersion > 1 || minorVersion > 2 || buildId >= 139 ) ) {
-				LOG.unsupportedMultiTableBulkHqlJpaql( majorVersion, minorVersion, buildId );
-			}
-		}
-		catch ( Exception e ) {
-			// probably H2 not in the classpath, though in certain app server environments it might just mean we are
-			// not using the correct classloader
-			LOG.undeterminedH2Version();
-		}
-
-		this.querySequenceString = querySequenceString;
 	}
 
 	@Override

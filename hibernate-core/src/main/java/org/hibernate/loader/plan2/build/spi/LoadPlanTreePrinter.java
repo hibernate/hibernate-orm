@@ -84,8 +84,6 @@ public class LoadPlanTreePrinter {
 		printWriter.flush();
 		printStream.flush();
 		log.debug( new String( byteArrayOutputStream.toByteArray() ) );
-
-//		log.debug( toString( loadPlan, aliasResolutionContext ) );
 	}
 
 	private void logTree(

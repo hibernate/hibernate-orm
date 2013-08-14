@@ -69,7 +69,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 
 	private Map<String,EntityReferenceAliases> entityReferenceAliasesMap;
 	private Map<String,CollectionReferenceAliases> collectionReferenceAliasesMap;
-	private Map<String, String> querySpaceUidToSqlTableAliasMap;
+	private Map<String,String> querySpaceUidToSqlTableAliasMap;
 
 	private Map<String,String> compositeQuerySpaceUidToSqlTableAliasMap;
 
@@ -129,11 +129,11 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	}
 
 	public CollectionReferenceAliases generateCollectionReferenceAliases(String uid, CollectionPersister persister) {
+		final String manyToManyTableAlias = persister.isManyToMany()? createTableAlias( persister.getRole() ) : null;
+		final String tableAlias = createTableAlias( persister.getRole() );
 		final CollectionReferenceAliasesImpl aliases = new CollectionReferenceAliasesImpl(
-				createTableAlias( persister.getRole() ),
-				persister.isManyToMany()
-						? createTableAlias( persister.getRole() )
-						: null,
+				tableAlias,
+				manyToManyTableAlias,
 				createCollectionAliases( persister ),
 				createCollectionElementAliases( persister )
 		);
@@ -212,7 +212,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 			collectionReferenceAliasesMap = new HashMap<String, CollectionReferenceAliases>();
 		}
 		collectionReferenceAliasesMap.put( querySpaceUid, collectionReferenceAliases );
-		registerSqlTableAliasMapping( querySpaceUid, collectionReferenceAliases.getElementTableAlias() );
+		registerSqlTableAliasMapping( querySpaceUid, collectionReferenceAliases.getCollectionTableAlias() );
 	}
 
 	@Override

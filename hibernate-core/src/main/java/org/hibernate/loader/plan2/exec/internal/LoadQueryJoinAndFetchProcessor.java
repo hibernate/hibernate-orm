@@ -68,7 +68,7 @@ import org.hibernate.sql.JoinType;
  * @author Steve Ebersole
  */
 public class LoadQueryJoinAndFetchProcessor {
-	private static final Logger log = CoreLogging.logger( LoadQueryJoinAndFetchProcessor.class );
+	private static final Logger LOG = CoreLogging.logger( LoadQueryJoinAndFetchProcessor.class );
 
 	private final AliasResolutionContextImpl aliasResolutionContext;
 	private final QueryBuildingParameters buildingParameters;
@@ -91,6 +91,7 @@ public class LoadQueryJoinAndFetchProcessor {
 	}
 
 	public void processQuerySpaceJoins(QuerySpace querySpace, SelectStatementBuilder selectStatementBuilder) {
+		LOG.debug( "processing queryspace " + querySpace.getUid() );
 		final JoinFragment joinFragment = factory.getDialect().createOuterJoinFragment();
 		processQuerySpaceJoins( querySpace, joinFragment );
 
@@ -127,7 +128,16 @@ public class LoadQueryJoinAndFetchProcessor {
 		else if ( EntityQuerySpace.class.isInstance( join.getRightHandSide() ) ) {
 			// do not render the entity join for a one-to-many association, since the collection join
 			// already joins to the associated entity table (see doc in renderCollectionJoin()).
-			if ( join.getLeftHandSide().getDisposition() != QuerySpace.Disposition.COLLECTION ||
+			if ( join.getLeftHandSide().getDisposition() == QuerySpace.Disposition.COLLECTION &&
+					 CollectionQuerySpace.class.cast( join.getLeftHandSide() ).getCollectionPersister().isManyToMany() ) {
+				final CollectionQuerySpace leftHandSide = (CollectionQuerySpace) join.getLeftHandSide();
+				final CollectionReferenceAliases aliases = aliasResolutionContext.resolveCollectionReferenceAliases(
+						leftHandSide.getUid()
+				);
+
+				renderManyToManyJoin(aliases, leftHandSide,  join, joinFragment );
+			}
+			else if ( join.getLeftHandSide().getDisposition() != QuerySpace.Disposition.COLLECTION ||
 					! CollectionQuerySpace.class.cast( join.getLeftHandSide() ).getCollectionPersister().isOneToMany() ) {
 				renderEntityJoin( join, joinFragment );
 			}
@@ -371,34 +381,34 @@ public class LoadQueryJoinAndFetchProcessor {
 		);
 	}
 
-//	private void renderManyToManyJoin(
-//			CollectionReferenceAliases aliases,
-//			CollectionQuerySpace rightHandSide,
+	private void renderManyToManyJoin(
+			CollectionReferenceAliases aliases,
+			CollectionQuerySpace rightHandSide,
 //			String[] aliasedLhsColumnNames,
-//			Join join,
-//			JoinFragment joinFragment) {
-//		final CollectionPersister persister = rightHandSide.getCollectionPersister();
-//		final QueryableCollection queryableCollection = (QueryableCollection) persister;
-//
-//		// for many-to-many we have 3 table aliases.  By way of example, consider a normal m-n: User<->Role
-//		// where User is the FetchOwner and Role (User.roles) is the Fetch.  We'd have:
-//		//		1) the owner's table : user - in terms of rendering the joins (not the fetch select fragments), the
-//		// 			lhs table alias is only needed to qualify the lhs join columns, but we already have the qualified
-//		// 			columns here (aliasedLhsColumnNames)
-//		//final String ownerTableAlias = ...;
-//		//		2) the m-n table : user_role
-//		final String collectionTableAlias = aliases.getCollectionTableAlias();
-//		//		3) the element table : role
-//		final String elementTableAlias = aliases.getElementTableAlias();
-//
-//		// somewhere, one of these being empty is causing trouble...
-//		if ( StringHelper.isEmpty( collectionTableAlias ) ) {
-//			throw new IllegalStateException( "Collection table alias cannot be empty" );
-//		}
-//		if ( StringHelper.isEmpty( elementTableAlias ) ) {
-//			throw new IllegalStateException( "Collection element (many-to-many) table alias cannot be empty" );
-//		}
-//
+			Join join,
+			JoinFragment joinFragment) {
+		final CollectionPersister persister = rightHandSide.getCollectionPersister();
+		final QueryableCollection queryableCollection = (QueryableCollection) persister;
+
+		// for many-to-many we have 3 table aliases.  By way of example, consider a normal m-n: User<->Role
+		// where User is the FetchOwner and Role (User.roles) is the Fetch.  We'd have:
+		//		1) the owner's table : user - in terms of rendering the joins (not the fetch select fragments), the
+		// 			lhs table alias is only needed to qualify the lhs join columns, but we already have the qualified
+		// 			columns here (aliasedLhsColumnNames)
+		//final String ownerTableAlias = ...;
+		//		2) the m-n table : user_role
+		final String collectionTableAlias = aliases.getCollectionTableAlias();
+		//		3) the element table : role
+		final String elementTableAlias = aliases.getElementTableAlias();
+
+		// somewhere, one of these being empty is causing trouble...
+		if ( StringHelper.isEmpty( collectionTableAlias ) ) {
+			throw new IllegalStateException( "Collection table alias cannot be empty" );
+		}
+		if ( StringHelper.isEmpty( elementTableAlias ) ) {
+			throw new IllegalStateException( "Collection element (many-to-many) table alias cannot be empty" );
+		}
+
 //
 //		{
 //			// add join fragments from the owner table -> collection table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -420,45 +430,45 @@ public class LoadQueryJoinAndFetchProcessor {
 //					queryableCollection.whereJoinFragment( collectionTableAlias, false, true )
 //			);
 //		}
-//
-//		{
-//			// add join fragments from the collection table -> element entity table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//			final String additionalJoinConditions = resolveAdditionalJoinCondition(
-//					elementTableAlias,
-//					join.getAnyAdditionalJoinConditions( elementTableAlias ),
-//					queryableCollection
-//			);
-//
-//			final String manyToManyFilter = persister.getManyToManyFilterFragment(
-//					collectionTableAlias,
-//					buildingParameters.getQueryInfluencers().getEnabledFilters()
-//			);
-//
-//			final String condition;
-//			if ( StringHelper.isEmpty( manyToManyFilter ) ) {
-//				condition = additionalJoinConditions;
-//			}
-//			else if ( StringHelper.isEmpty( additionalJoinConditions ) ) {
-//				condition = manyToManyFilter;
-//			}
-//			else {
-//				condition = additionalJoinConditions + " and " + manyToManyFilter;
-//			}
-//
-//			final OuterJoinLoadable elementPersister = (OuterJoinLoadable) queryableCollection.getElementPersister();
-//
-//			addJoins(
-//					joinFragment,
-//					elementPersister,
-//					JoinType.LEFT_OUTER_JOIN,
-//					elementTableAlias,
-//					elementPersister.getIdentifierColumnNames(),
-//					StringHelper.qualify( collectionTableAlias, queryableCollection.getElementColumnNames() ),
-//					condition
-//			);
-//		}
-//	}
-//
+
+		{
+			// add join fragments from the collection table -> element entity table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			final String additionalJoinConditions = resolveAdditionalJoinCondition(
+					elementTableAlias,
+					join.getAnyAdditionalJoinConditions( elementTableAlias ),
+					queryableCollection
+			);
+
+			final String manyToManyFilter = persister.getManyToManyFilterFragment(
+					collectionTableAlias,
+					buildingParameters.getQueryInfluencers().getEnabledFilters()
+			);
+
+			final String condition;
+			if ( StringHelper.isEmpty( manyToManyFilter ) ) {
+				condition = additionalJoinConditions;
+			}
+			else if ( StringHelper.isEmpty( additionalJoinConditions ) ) {
+				condition = manyToManyFilter;
+			}
+			else {
+				condition = additionalJoinConditions + " and " + manyToManyFilter;
+			}
+
+			final OuterJoinLoadable elementPersister = (OuterJoinLoadable) queryableCollection.getElementPersister();
+
+			addJoins(
+					joinFragment,
+					elementPersister,
+					JoinType.LEFT_OUTER_JOIN,
+					elementTableAlias,
+					elementPersister.getIdentifierColumnNames(),
+					StringHelper.qualify( collectionTableAlias, queryableCollection.getElementColumnNames() ),
+					condition
+			);
+		}
+	}
+
 //	private void renderOneToManyJoin(
 //			CollectionReferenceAliases aliases,
 //			CollectionQuerySpace rightHandSide,
@@ -699,8 +709,9 @@ public class LoadQueryJoinAndFetchProcessor {
 			selectStatementBuilder.appendSelectClauseFragment(
 					joinableCollection.selectFragment(
 							(Joinable) queryableCollection.getElementPersister(),
-							ownerTableAlias,
+							elementTableAlias,
 							collectionTableAlias,
+
 							aliases.getEntityElementColumnAliases().getSuffix(),
 							aliases.getCollectionColumnAliases().getSuffix(),
 							true
@@ -731,7 +742,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			final EntityReferenceAliases entityReferenceAliases = new EntityReferenceAliases() {
 				@Override
 				public String getTableAlias() {
-					return aliases.getElementTableAlias();
+					return aliases.getCollectionTableAlias();
 				}
 
 				@Override

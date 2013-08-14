@@ -34,6 +34,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan2.exec.process.internal.HydratedEntityRegistration;
 import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessingContextImpl;
 import org.hibernate.loader.spi.AfterLoadAction;
@@ -58,7 +59,7 @@ public abstract class AbstractRowReader implements RowReader {
 		final List<CollectionReferenceInitializer> arrayReferenceInitializers = getArrayReferenceInitializers();
 		final List<CollectionReferenceInitializer> collectionReferenceInitializers = getCollectionReferenceInitializers();
 
-		final boolean hasEntityReferenceInitializers = entityReferenceInitializers != null && entityReferenceInitializers.size() > 0;
+		final boolean hasEntityReferenceInitializers = CollectionHelper.isNotEmpty( entityReferenceInitializers );
 
 		if ( hasEntityReferenceInitializers ) {
 			// 	1) allow entity references to resolve identifiers (in 2 steps)

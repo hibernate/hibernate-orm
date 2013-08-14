@@ -84,8 +84,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private Map<EntityPersister,Set<EntityKey>> subselectLoadableEntityKeyMap;
 	private List<HydratedEntityRegistration> hydratedEntityRegistrationList;
 
-	private final LockModeResolver lockModeResolverDelegate;
-
 	/**
 	 * Builds a ResultSetProcessingContextImpl
 	 *
@@ -132,16 +130,6 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 				}
 			}
 		}
-		this.lockModeResolverDelegate = new LockModeResolver() {
-			@Override
-			public LockMode resolveLockMode(EntityReference entityReference) {
-				if ( queryParameters.getLockOptions() != null && queryParameters.getLockOptions()
-						.getLockMode() != null ) {
-					return queryParameters.getLockOptions().getLockMode();
-				}
-				return LockMode.READ;
-			}
-		};
 	}
 
 	@Override
@@ -175,8 +163,11 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 
 	@Override
 	public LockMode resolveLockMode(EntityReference entityReference) {
-		final LockMode lockMode = lockModeResolverDelegate.resolveLockMode( entityReference );
-		return LockMode.NONE == lockMode ? LockMode.NONE : lockMode;
+		if ( queryParameters.getLockOptions() != null && queryParameters.getLockOptions()
+				.getLockMode() != null ) {
+			return queryParameters.getLockOptions().getLockMode();
+		}
+		return LockMode.READ;
 	}
 
 	private Map<EntityReference,EntityReferenceProcessingState> identifierResolutionContextMap;

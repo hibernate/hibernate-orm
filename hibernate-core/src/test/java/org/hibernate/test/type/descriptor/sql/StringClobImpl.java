@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.sql;
+package org.hibernate.test.type.descriptor.sql;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;

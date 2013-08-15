@@ -21,10 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.test.type.descriptor.java;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
+
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.junit.Before;
 import org.junit.Test;

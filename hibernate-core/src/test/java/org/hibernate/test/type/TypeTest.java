@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type;
+package org.hibernate.test.type;
 import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -45,6 +45,39 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.BigIntegerType;
+import org.hibernate.type.BinaryType;
+import org.hibernate.type.BooleanType;
+import org.hibernate.type.ByteType;
+import org.hibernate.type.CalendarDateType;
+import org.hibernate.type.CalendarType;
+import org.hibernate.type.CharArrayType;
+import org.hibernate.type.CharacterArrayType;
+import org.hibernate.type.CharacterType;
+import org.hibernate.type.ClassType;
+import org.hibernate.type.CurrencyType;
+import org.hibernate.type.DateType;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.FloatType;
+import org.hibernate.type.ImageType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LocaleType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.MaterializedBlobType;
+import org.hibernate.type.MaterializedClobType;
+import org.hibernate.type.NumericBooleanType;
+import org.hibernate.type.SerializableType;
+import org.hibernate.type.ShortType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.TextType;
+import org.hibernate.type.TimeType;
+import org.hibernate.type.TimeZoneType;
+import org.hibernate.type.TimestampType;
+import org.hibernate.type.TrueFalseType;
+import org.hibernate.type.YesNoType;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertFalse;

@@ -21,24 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.type.descriptor.java;
+package org.hibernate.test.type.descriptor.java;
+import java.math.BigInteger;
 
+import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class StringDescriptorTest extends AbstractDescriptorTest<String> {
-	final String original = "abc";
-	final String copy = new String( original.toCharArray() );
-	final String different = "xyz";
+public class BigIntegerDescriptorTest extends AbstractDescriptorTest<BigInteger> {
+	final BigInteger original = BigInteger.valueOf( 100 );
+	final BigInteger copy = BigInteger.valueOf( 100 );
+	final BigInteger different = BigInteger.valueOf( 999 );
 
-	public StringDescriptorTest() {
-		super( StringTypeDescriptor.INSTANCE );
+	public BigIntegerDescriptorTest() {
+		super( BigIntegerTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	protected Data<String> getTestData() {
-		return new Data<String>( original, copy, different );
+	protected Data<BigInteger> getTestData() {
+		return new Data<BigInteger>( original, copy, different );
 	}
 
 	@Override

@@ -47,6 +47,7 @@ import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -154,8 +155,9 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 				case 9:
 					return new SQLServer2005Dialect();
 				case 10:
-				case 11:
 					return new SQLServer2008Dialect();
+				case 11:
+					return new SQLServer2012Dialect();
 				default:
 					LOG.unknownSqlServerVersion( majorVersion );
 			}

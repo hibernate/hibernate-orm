@@ -4311,11 +4311,11 @@ public class FooBarTest extends LegacyTestCase {
 				}
 		);
 		s.refresh(foo);
-		assertTrue( foo.getLong().longValue() == -3l );
-		assertTrue( s.getCurrentLockMode(foo)==LockMode.READ );
+		assertEquals( Long.valueOf( -3l ), foo.getLong() );
+		assertEquals( LockMode.READ, s.getCurrentLockMode(foo) );
 		s.refresh(foo, LockMode.UPGRADE);
 		if ( getDialect().supportsOuterJoinForUpdate() ) {
-			assertTrue( s.getCurrentLockMode(foo)==LockMode.UPGRADE );
+			assertEquals( LockMode.UPGRADE, s.getCurrentLockMode(foo) );
 		}
 		s.delete(foo);
 		s.getTransaction().commit();
@@ -4329,7 +4329,7 @@ public class FooBarTest extends LegacyTestCase {
 		FooProxy foo = new Foo();
 		s.save(foo);
 		assertTrue( "autoflush create", s.createQuery( "from Foo foo" ).list().size()==1 );
-		foo.setChar( new Character('X') );
+		foo.setChar( 'X' );
 		assertTrue( "autoflush update", s.createQuery( "from Foo foo where foo.char='X'" ).list().size()==1 );
 		txn.commit();
 		s.close();

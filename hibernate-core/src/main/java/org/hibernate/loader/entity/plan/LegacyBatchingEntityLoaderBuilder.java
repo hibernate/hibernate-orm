@@ -127,7 +127,7 @@ public class LegacyBatchingEntityLoaderBuilder extends AbstractBatchingEntityLoa
 					return getObjectFromList( results, id, session );
 				}
 			}
-			return ( loaders[batchSizes.length-1] ).load( id, optionalObject, session );
+			return ( loaders[batchSizes.length-1] ).load( id, optionalObject, session, lockOptions );
 		}
 	}
 

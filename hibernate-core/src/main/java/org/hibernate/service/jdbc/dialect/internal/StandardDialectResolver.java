@@ -50,6 +50,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
@@ -137,8 +138,9 @@ public class StandardDialectResolver extends AbstractDialectResolver {
                 case 9:
                     return new SQLServer2005Dialect();
                 case 10:
-                case 11:
                     return new SQLServer2008Dialect();
+                case 11:
+                	return new SQLServer2012Dialect();
                 default:
                     LOG.unknownSqlServerVersion(databaseMajorVersion);
 			}

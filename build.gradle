@@ -51,7 +51,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.1.12.Final'
+    version = '4.0-SNAPSHOT'
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -269,11 +269,11 @@ subprojects { subProject ->
 
         uploadArchives {
             repositories.mavenDeployer {
-                name = 'jbossDeployer'
+                name = 'HSDeployer'
                 configuration = configurations.deployerJars
                 pom.project pomConfig
-                repository(id: "jboss-releases-repository", url: "https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/")
-                snapshotRepository(id: "jboss-snapshots-repository", url: "https://repository.jboss.org/nexus/content/repositories/snapshots")
+                repository(id: "hs-releases-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository")
+                snapshotRepository(id: "hs-snapshots-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository")
             }
         }
 

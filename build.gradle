@@ -92,8 +92,10 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
+
     version = rootProject.hibernateTargetVersion
     ext.exportPackageVersion = rootProject.osgiExportVersion
+
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -417,6 +419,7 @@ subprojects { subProject ->
 			}
 		}
 
+<<<<<<< HEAD
 		repositories {
 			maven {
 				if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
@@ -430,6 +433,17 @@ subprojects { subProject ->
 			}
 		}
 	}
+=======
+        uploadArchives {
+            repositories.mavenDeployer {
+                name = 'HSDeployer'
+                configuration = configurations.deployerJars
+                pom.project pomConfig
+                repository(id: "hs-releases-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository")
+                snapshotRepository(id: "hs-snapshots-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository")
+            }
+        }
+>>>>>>> Rebased to Hibernate 4.1 branch
 
 	model {
 		tasks.generatePomFileForMavenJavaPublication {

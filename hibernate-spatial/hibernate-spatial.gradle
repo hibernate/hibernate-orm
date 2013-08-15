@@ -20,13 +20,14 @@
  */
 
 apply plugin: 'java'
+apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
 dependencies {
     compile( project( ':hibernate-core' ) )
-    compile( [group: 'com.vividsolutions', name: 'jts', version: '1.12'] ) {
+    compile( [group: 'com.vividsolutions', name: 'jts', version: '1.13'] ) {
         transitive = false
     }
-    compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.3'] )
+    compile( [group: 'org.postgis', name: 'postgis-jdbc', version: '1.5.2'] )
     compile( [group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'] )
 
 

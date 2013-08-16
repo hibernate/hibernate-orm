@@ -2479,8 +2479,8 @@ public class FooBarTest extends LegacyTestCase {
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
-		assertEquals( 0, ( (Long) s.createQuery( "select count(*) from Bar" ).iterate().next() ).longValue() );
-		assertTrue( s.createQuery( "select count(*) from Bar b" ).iterate().next().equals( new Long(0) ) );
+		assertEquals( 0l, s.createQuery( "select count(*) from Bar" ).iterate().next() );
+		assertEquals( 0l, s.createQuery( "select count(*) from Bar b" ).iterate().next() );
 		assertFalse( s.createQuery( "from Glarch g" ).iterate().hasNext() );
 
 		Baz baz = new Baz();
@@ -2583,7 +2583,7 @@ public class FooBarTest extends LegacyTestCase {
 		baz.setTopGlarchez( new TreeMap() );
 		GlarchProxy g = new Glarch();
 		s.save(g);
-		baz.getTopGlarchez().put( new Character('G'), g );
+		baz.getTopGlarchez().put( 'G', g );
 		HashMap map = new HashMap();
 		map.put(bar, g);
 		map.put(bar2, g);
@@ -2633,9 +2633,9 @@ public class FooBarTest extends LegacyTestCase {
 		);
 		Glarch g2 = new Glarch();
 		s.save(g2);
-		g = (GlarchProxy) baz.getTopGlarchez().get( new Character('G') );
-		baz.getTopGlarchez().put( new Character('H'), g );
-		baz.getTopGlarchez().put( new Character('G'), g2 );
+		g = (GlarchProxy) baz.getTopGlarchez().get( 'G' );
+		baz.getTopGlarchez().put( 'H', g );
+		baz.getTopGlarchez().put( 'G', g2 );
 		txn.commit();
 		s.close();
 
@@ -2662,8 +2662,8 @@ public class FooBarTest extends LegacyTestCase {
 		baz = (Baz) s3.load(Baz.class, baz.getCode());
 		assertEquals( 3, ((Long) s3.createQuery( "select count(*) from Bar" ).iterate().next()).longValue() );
 		s3.delete(baz);
-		s3.delete( baz.getTopGlarchez().get( Character.valueOf('G') ) );
-		s3.delete( baz.getTopGlarchez().get( Character.valueOf('H') ) );
+		s3.delete( baz.getTopGlarchez().get( 'G' ) );
+		s3.delete( baz.getTopGlarchez().get( 'H' ) );
 		int rows = s3.doReturningWork(
 				new AbstractReturningWork<Integer>() {
 					@Override
@@ -4312,10 +4312,10 @@ public class FooBarTest extends LegacyTestCase {
 		);
 		s.refresh(foo);
 		assertEquals( Long.valueOf( -3l ), foo.getLong() );
-		assertEquals( LockMode.READ, s.getCurrentLockMode(foo) );
+		assertEquals( LockMode.READ, s.getCurrentLockMode( foo ) );
 		s.refresh(foo, LockMode.UPGRADE);
 		if ( getDialect().supportsOuterJoinForUpdate() ) {
-			assertEquals( LockMode.UPGRADE, s.getCurrentLockMode(foo) );
+			assertEquals( LockMode.UPGRADE, s.getCurrentLockMode( foo ) );
 		}
 		s.delete(foo);
 		s.getTransaction().commit();

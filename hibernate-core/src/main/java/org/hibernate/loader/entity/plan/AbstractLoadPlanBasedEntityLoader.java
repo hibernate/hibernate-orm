@@ -231,10 +231,11 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 		}
 		persistenceContext.beforeLoad();
 		try {
-			List results;
+			List results = null;
 			final String sql = loadQueryDetails.getSqlStatement();
+			 SqlStatementWrapper wrapper = null;
 			try {
-				final SqlStatementWrapper wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
+				wrapper = executeQueryStatement( sql, queryParameters, false, afterLoadActions, session );
 				results = loadQueryDetails.getResultSetProcessor().extractResults(
 						wrapper.getResultSet(),
 						session,
@@ -252,6 +253,12 @@ public abstract class AbstractLoadPlanBasedEntityLoader implements UniqueEntityL
 				);
 			}
 			finally {
+				if ( wrapper != null ) {
+					session.getTransactionCoordinator().getJdbcCoordinator().release(
+							wrapper.getResultSet(),
+							wrapper.getStatement()
+					);
+				}
 				persistenceContext.afterLoad();
 			}
 			persistenceContext.initializeNonLazyCollections();

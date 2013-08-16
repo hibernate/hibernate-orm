@@ -319,17 +319,15 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 								+ ")");
 		}
 		StringBuffer buffer;
-		if (negate) {
-			buffer = new StringBuffer("CASE WHEN SDO_RELATE(");
-		} else {
-			buffer = new StringBuffer("SDO_RELATE(");
+		buffer = new StringBuffer( "CASE SDO_RELATE(" ).append( arg1 )
+				.append( "," )
+				.append( arg2 )
+				.append( ",'mask=" + mask + "') " );
+		if ( !negate ) {
+			buffer.append( " WHEN 'TRUE' THEN 1 ELSE 0 END" );
 		}
-
-
-		buffer.append(arg1);
-		buffer.append(",").append(arg2).append(",'mask=" + mask + "') ");
-		if (negate) {
-			buffer.append(" = 'TRUE' THEN 'FALSE' ELSE 'TRUE' END");
+		else {
+			buffer.append( " WHEN 'TRUE' THEN 0 ELSE 1 END" );
 		}
 		return buffer.toString();
 	}
@@ -419,9 +417,9 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 
-		String sql = (isOGCStrict() ? (getOGCSpatialRelateSQL(columnName, "?",
-				spatialRelation) + " = 1") : (getNativeSpatialRelateSQL(
-				columnName, "?", spatialRelation) + "= 'TRUE'"));
+		String sql = ( isOGCStrict() ?
+				getOGCSpatialRelateSQL(columnName,"?",spatialRelation) :
+				( getNativeSpatialRelateSQL( columnName, "?", spatialRelation ) ) + " = 1" );
 		sql += " and " + columnName + " is not null";
 		return sql;
 	}

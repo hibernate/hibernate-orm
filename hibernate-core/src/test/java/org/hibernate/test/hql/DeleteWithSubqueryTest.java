@@ -37,7 +37,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-public class DeleteWhereMemberOfTest extends BaseCoreFunctionalTestCase {
+public class DeleteWithSubqueryTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -45,7 +45,9 @@ public class DeleteWhereMemberOfTest extends BaseCoreFunctionalTestCase {
 				Attrset.class,
 				Attrvalue.class,
 				Employee.class,
-				Employeegroup.class
+				Employeegroup.class,
+				Panel.class,
+				TrtPanel.class
 		};
 	}
 
@@ -62,5 +64,17 @@ public class DeleteWhereMemberOfTest extends BaseCoreFunctionalTestCase {
 		s.createQuery( qry ).executeUpdate();
 		s.getTransaction().commit();
 		s.close();
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-8447" )
+	public void testDeleteMultipleWhereIns() {
+		Session s = openSession();
+		s.getTransaction().begin();
+        s.createQuery("DELETE FROM Panel panelEntity WHERE " +
+		        " panelEntity.clientId IN ( SELECT trtPanel.clientId FROM TrtPanel trtPanel ) " +
+		        " AND panelEntity.deltaStamp NOT IN ( SELECT trtPanel.deltaStamp FROM TrtPanel trtPanel )").executeUpdate();
+        s.getTransaction().commit();
+        s.close();
 	}
 }

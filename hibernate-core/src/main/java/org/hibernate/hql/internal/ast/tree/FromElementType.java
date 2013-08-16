@@ -356,10 +356,6 @@ class FromElementType {
             return propertyMapping.toColumns(tableAlias, path);
         }
 
-		if (fromElement.getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SELECT) {
-            return propertyMapping.toColumns(tableAlias, path);
-        }
-
 		if (fromElement.getWalker().isSubQuery()) {
             // for a subquery, the alias to use depends on a few things (we
             // already know this is not an overall SELECT):
@@ -380,6 +376,10 @@ class FromElementType {
 				}
                 return propertyMapping.toColumns(extractTableName(), path);
 			}
+            return propertyMapping.toColumns(tableAlias, path);
+        }
+
+		if (fromElement.getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.SELECT) {
             return propertyMapping.toColumns(tableAlias, path);
         }
 

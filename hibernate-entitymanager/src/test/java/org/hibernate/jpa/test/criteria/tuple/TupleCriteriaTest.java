@@ -37,13 +37,16 @@ import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
+
 	@Test
 	public void testArray() {
 		EntityManager em = entityManagerFactory().createEntityManager();
@@ -110,6 +113,62 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		assertEquals( tupleArray[1], resultElementTuple.get( 1 ) );
 		assertEquals( resultElementTuple.get( agePath ), resultElementTuple.get( 1 ) );
 		assertEquals( resultElementTuple.get( agePath ), resultElementTuple.get( "age" ) );
+		em.getTransaction().commit();
+		em.close();
+
+		em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete Customer" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testInvalidTupleIndexAccess() {
+		EntityManager em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		Customer c1 = new Customer();
+		c1.setId( "c1" );
+		c1.setAge( 18 );
+		c1.setName( "Bob" );
+		em.persist( c1 );
+		em.getTransaction().commit();
+		em.close();
+
+		// the actual assertion block
+		em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		final CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+		Root<Customer> customerRoot = criteria.from( Customer.class );
+		criteria.multiselect( customerRoot.get( Customer_.name ), customerRoot.get( Customer_.age ) );
+		List<Tuple> results = em.createQuery( criteria ).getResultList();
+		assertEquals( 1, results.size() );
+		Tuple tuple = results.get( 0 );
+		try {
+			tuple.get( 99 );
+			fail( "99 is invalid index" );
+		}
+		catch (IllegalArgumentException expected) {
+		}
+
+		try {
+			tuple.get( 99, String.class );
+			fail( "99 is invalid index" );
+		}
+		catch (IllegalArgumentException expected) {
+		}
+
+		tuple.get( 0, String.class );
+		tuple.get( 1, Integer.class );
+
+		try {
+			tuple.get( 0, java.util.Date.class );
+			fail( "Date is invalid type" );
+		}
+		catch (IllegalArgumentException expected) {
+		}
+
 		em.getTransaction().commit();
 		em.close();
 

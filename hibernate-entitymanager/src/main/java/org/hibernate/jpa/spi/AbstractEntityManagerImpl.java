@@ -499,7 +499,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 			@Override
 			public <X> X get(int i, Class<X> type) {
-				return (X) get( i );
+				final Object result = get( i );
+				if ( result != null && ! type.isInstance( result ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Requested tuple value [index=%s, realType=%s] cannot be assigned to requested type [%s]",
+									i,
+									result.getClass().getName(),
+									type.getName()
+							)
+					);
+				}
+				return ( X ) result;
 			}
 
 			@Override
@@ -661,7 +672,18 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			public <X> X get(int i, Class<X> type) {
-				return ( X ) get( i );
+				final Object result = get( i );
+				if ( result != null && ! type.isInstance( result ) ) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Requested tuple value [index=%s, realType=%s] cannot be assigned to requested type [%s]",
+									i,
+									result.getClass().getName(),
+									type.getName()
+							)
+					);
+				}
+				return ( X ) result;
 			}
 
 			public Object[] toArray() {

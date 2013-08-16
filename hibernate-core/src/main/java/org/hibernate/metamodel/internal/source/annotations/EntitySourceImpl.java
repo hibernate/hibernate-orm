@@ -33,12 +33,14 @@ import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.metamodel.internal.source.annotations.attribute.AssociationAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.PrimaryKeyJoinColumn;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
@@ -69,6 +71,8 @@ public class EntitySourceImpl implements EntitySource {
 	private final String jpaEntityName;
 	private final FilterSource[] filterSources;
 	private final TableSpecificationSource primaryTable;
+	private final EntityBindingContext bindingContext;
+	private final ClassLoaderService classLoaderService;
 
 	public EntitySourceImpl(EntityClass entityClass) {
 		this.entityClass = entityClass;
@@ -80,6 +84,9 @@ public class EntitySourceImpl implements EntitySource {
 		else {
 			this.jpaEntityName = StringHelper.unqualify( entityClass.getName() );
 		}
+		
+		this.bindingContext = entityClass.getLocalBindingContext();
+		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
 
 		addImports();
 		this.filterSources = buildFilterSources();
@@ -99,7 +106,7 @@ public class EntitySourceImpl implements EntitySource {
 					entityClass.getClassInfo(),
 					JPADotNames.TABLE
 			);
-			return new TableSourceImpl( tableAnnotation );
+			return new TableSourceImpl( tableAnnotation, bindingContext );
 		}
 	}
 
@@ -113,7 +120,7 @@ public class EntitySourceImpl implements EntitySource {
 		if ( filtersAnnotation != null ) {
 			AnnotationInstance[] annotationInstances = filtersAnnotation.value().asNestedArray();
 			for ( AnnotationInstance filterAnnotation : annotationInstances ) {
-				FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+				FilterSource filterSource = new FilterSourceImpl( filterAnnotation, bindingContext );
 				filterSourceList.add( filterSource );
 			}
 
@@ -124,7 +131,7 @@ public class EntitySourceImpl implements EntitySource {
 				ClassInfo.class
 		);
 		if ( filterAnnotation != null ) {
-			FilterSource filterSource = new FilterSourceImpl( filterAnnotation );
+			FilterSource filterSource = new FilterSourceImpl( filterAnnotation, bindingContext );
 			filterSourceList.add( filterSource );
 		}
 		if ( filterSourceList.isEmpty() ) {
@@ -308,7 +315,7 @@ public class EntitySourceImpl implements EntitySource {
 	@Override
 	public Iterable<ConstraintSource> getConstraints() {
 		Set<ConstraintSource> constraintSources = new HashSet<ConstraintSource>();
-
+		
 		// primary table
 		if ( entityClass.hostsAnnotation( JPADotNames.TABLE ) ) {
 			AnnotationInstance table = JandexHelper.getSingleAnnotation(
@@ -325,7 +332,7 @@ public class EntitySourceImpl implements EntitySource {
 					entityClass.getClassInfo(),
 					JPADotNames.SECONDARY_TABLE
 			);
-			String tableName = JandexHelper.getValue( secondaryTable, "name", String.class );
+			String tableName = JandexHelper.getValue( secondaryTable, "name", String.class, classLoaderService );
 			addUniqueConstraints( constraintSources, secondaryTable, tableName );
 			addIndexConstraints( constraintSources, secondaryTable, tableName );
 
@@ -340,9 +347,10 @@ public class EntitySourceImpl implements EntitySource {
 				for ( AnnotationInstance secondaryTable : JandexHelper.getValue(
 						secondaryTables,
 						"value",
-						AnnotationInstance[].class
+						AnnotationInstance[].class,
+						classLoaderService
 				) ) {
-					String tableName = JandexHelper.getValue( secondaryTable, "name", String.class );
+					String tableName = JandexHelper.getValue( secondaryTable, "name", String.class, classLoaderService );
 					addUniqueConstraints( constraintSources, secondaryTable, tableName );
 					addIndexConstraints( constraintSources, secondaryTable, tableName );
 				}
@@ -353,7 +361,7 @@ public class EntitySourceImpl implements EntitySource {
 			List<AnnotationInstance> collectionTables = JandexHelper.getAnnotations( 
 					entityClass.getClassInfo(), JPADotNames.COLLECTION_TABLE );
 			for (AnnotationInstance collectionTable : collectionTables) {
-				String tableName = JandexHelper.getValue( collectionTable, "name", String.class );
+				String tableName = JandexHelper.getValue( collectionTable, "name", String.class, classLoaderService );
 				addUniqueConstraints( constraintSources, collectionTable, tableName );
 				addIndexConstraints( constraintSources, collectionTable, tableName );
 			}
@@ -364,7 +372,7 @@ public class EntitySourceImpl implements EntitySource {
 			List<AnnotationInstance> joinTables = JandexHelper.getAnnotations( 
 					entityClass.getClassInfo(), JPADotNames.JOIN_TABLE );
 			for (AnnotationInstance joinTable : joinTables) {
-				String tableName = JandexHelper.getValue( joinTable, "name", String.class );
+				String tableName = JandexHelper.getValue( joinTable, "name", String.class, classLoaderService );
 				addUniqueConstraints( constraintSources, joinTable, tableName );
 				addIndexConstraints( constraintSources, joinTable, tableName );
 			}
@@ -375,7 +383,7 @@ public class EntitySourceImpl implements EntitySource {
 			List<AnnotationInstance> tableGenerators = JandexHelper.getAnnotations( 
 					entityClass.getClassInfo(), JPADotNames.TABLE_GENERATOR );
 			for (AnnotationInstance tableGenerator : tableGenerators) {
-				String tableName = JandexHelper.getValue( tableGenerator, "table", String.class );
+				String tableName = JandexHelper.getValue( tableGenerator, "table", String.class, classLoaderService );
 				addUniqueConstraints( constraintSources, tableGenerator, tableName );
 				addIndexConstraints( constraintSources, tableGenerator, tableName );
 			}
@@ -415,7 +423,8 @@ public class EntitySourceImpl implements EntitySource {
 				AnnotationInstance[] tableAnnotations = JandexHelper.getValue(
 						secondaryTables,
 						"value",
-						AnnotationInstance[].class
+						AnnotationInstance[].class,
+						classLoaderService
 				);
 				for ( AnnotationInstance secondaryTable : tableAnnotations ) {
 					secondaryTableSources.add( createSecondaryTableSource( secondaryTable, true ) );
@@ -536,7 +545,7 @@ public class EntitySourceImpl implements EntitySource {
 			AnnotationInstance tableAnnotation,
 			boolean isPrimaryKeyJoinColumn) {
 		final List<? extends Column> keys = collectSecondaryTableKeys( tableAnnotation, isPrimaryKeyJoinColumn );
-		return new SecondaryTableSourceImpl( new TableSourceImpl( tableAnnotation ), keys );
+		return new SecondaryTableSourceImpl( new TableSourceImpl( tableAnnotation, bindingContext ), keys );
 	}
 
 	private List<? extends Column> collectSecondaryTableKeys(
@@ -545,7 +554,8 @@ public class EntitySourceImpl implements EntitySource {
 		final AnnotationInstance[] joinColumnAnnotations = JandexHelper.getValue(
 				tableAnnotation,
 				isPrimaryKeyJoinColumn ? "pkJoinColumns" : "joinColumns",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		);
 
 		if ( joinColumnAnnotations == null ) {

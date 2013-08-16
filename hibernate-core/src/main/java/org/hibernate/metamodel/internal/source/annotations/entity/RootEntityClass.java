@@ -28,16 +28,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AccessType;
 import javax.persistence.DiscriminatorType;
 
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -54,6 +50,12 @@ import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotName
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.InheritanceType;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
+
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 
 /**
  * Represents an root entity configured via annotations/orm-xml.
@@ -322,7 +324,8 @@ public class RootEntityClass extends EntityClass {
 
 		Class<?> type = String.class; // string is the discriminator default
 		if ( discriminatorFormulaAnnotation != null ) {
-			String expression = JandexHelper.getValue( discriminatorFormulaAnnotation, "value", String.class );
+			String expression = JandexHelper.getValue( discriminatorFormulaAnnotation, "value", String.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			discriminatorFormula = new FormulaValue( null, expression );
 		}
 		discriminatorColumnValues = new Column( null ); //(stliu) give null here, will populate values below
@@ -330,7 +333,8 @@ public class RootEntityClass extends EntityClass {
 		if ( discriminatorColumnAnnotation != null ) {
 			DiscriminatorType discriminatorType = JandexHelper.getEnumValue( 
 					discriminatorColumnAnnotation,
-					"discriminatorType", DiscriminatorType.class );
+					"discriminatorType", DiscriminatorType.class,
+					getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			switch ( discriminatorType ) {
 				case STRING: {
 					type = String.class;
@@ -353,21 +357,24 @@ public class RootEntityClass extends EntityClass {
 					JandexHelper.getValue(
 							discriminatorColumnAnnotation,
 							"name",
-							String.class
+							String.class,
+							getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
 					)
 			);
 			discriminatorColumnValues.setLength(
 					JandexHelper.getValue(
 							discriminatorColumnAnnotation,
 							"length",
-							Integer.class
+							Integer.class,
+							getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
 					)
 			);
 			discriminatorColumnValues.setColumnDefinition(
 					JandexHelper.getValue(
 							discriminatorColumnAnnotation,
 							"columnDefinition",
-							String.class
+							String.class,
+							getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class )
 					)
 			);
 		}

@@ -28,10 +28,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -39,9 +38,9 @@ import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.logging.Logger;
 
 /**
  * A commandline tool to update a database schema. May also be called from
@@ -84,7 +83,9 @@ public class SchemaValidator {
 
 	public static void main(String[] args) {
 		try {
-			Configuration cfg = new Configuration();
+			final Configuration cfg = new Configuration();
+			final StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 			String propFile = null;
 
@@ -98,7 +99,7 @@ public class SchemaValidator {
 					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
 						cfg.setNamingStrategy(
-								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) ).newInstance()
+								( NamingStrategy ) classLoaderService.classForName( args[i].substring( 9 ) ).newInstance()
 						);
 					}
 				}
@@ -115,7 +116,6 @@ public class SchemaValidator {
 				cfg.setProperties( props );
 			}
 
-			StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
 				new SchemaValidator( serviceRegistry, cfg ).validate();
 			}

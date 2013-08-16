@@ -35,6 +35,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.ObjectNameNormalizer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
@@ -99,7 +100,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	private String query;
 	private String update;
 
-	public void configure(Type type, Properties params, Dialect dialect) {
+	public void configure(Type type, Properties params, Dialect dialect, ClassLoaderService classLoaderService) {
 		identifierType = type;
 
 		ObjectNameNormalizer normalizer = ( ObjectNameNormalizer ) params.get( IDENTIFIER_NORMALIZER );

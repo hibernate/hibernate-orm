@@ -23,25 +23,23 @@
  */
 package org.hibernate.metamodel.internal.source.annotations.entity;
 
-import com.fasterxml.classmate.MemberResolver;
-import com.fasterxml.classmate.TypeResolver;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.IndexView;
-
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.jaxb.spi.Origin;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.metamodel.internal.source.annotations.AnnotationBindingContext;
-import org.hibernate.metamodel.internal.source.annotations.IdentifierGeneratorSourceContainer;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.binding.IdentifierGeneratorDefinition;
 import org.hibernate.metamodel.spi.domain.Type;
-import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.LocalBindingContext;
 import org.hibernate.metamodel.spi.source.MappingDefaults;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.service.ServiceRegistry;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.IndexView;
+
+import com.fasterxml.classmate.MemberResolver;
+import com.fasterxml.classmate.TypeResolver;
 
 /**
  * Annotation version of a local binding context.

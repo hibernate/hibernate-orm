@@ -26,12 +26,12 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.FetchProfileSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -39,9 +39,11 @@ import org.hibernate.metamodel.spi.source.FetchProfileSource;
 public class FetchProfileSourceImpl implements FetchProfileSource {
 	private final String name;
 	private final List<AssociationOverrideSource> associationOverrideSources;
+	private final ClassLoaderService classLoaderService;
 
-	public FetchProfileSourceImpl(AnnotationInstance fetchProfileAnnotation) {
-		this.name = JandexHelper.getValue( fetchProfileAnnotation, "name", String.class );
+	public FetchProfileSourceImpl(AnnotationInstance fetchProfileAnnotation, AnnotationBindingContext bindingContext) {
+		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+		this.name = JandexHelper.getValue( fetchProfileAnnotation, "name", String.class, classLoaderService );
 		this.associationOverrideSources = buildAssociationOverrideSources( fetchProfileAnnotation );
 	}
 
@@ -55,12 +57,13 @@ public class FetchProfileSourceImpl implements FetchProfileSource {
 		return associationOverrideSources;
 	}
 
-	private static List<AssociationOverrideSource> buildAssociationOverrideSources(AnnotationInstance fetchProfileAnnotation) {
+	private List<AssociationOverrideSource> buildAssociationOverrideSources(AnnotationInstance fetchProfileAnnotation) {
 		final List<AssociationOverrideSource> associationOverrideSources = new ArrayList<AssociationOverrideSource>();
 		AnnotationInstance[] overrideAnnotations = JandexHelper.getValue(
 				fetchProfileAnnotation,
 				"fetchOverrides",
-				AnnotationInstance[].class
+				AnnotationInstance[].class,
+				classLoaderService
 		);
 		for ( AnnotationInstance overrideAnnotation : overrideAnnotations ) {
 			associationOverrideSources.add( new AssociationOverrideSourceImpl( overrideAnnotation ) );
@@ -68,15 +71,15 @@ public class FetchProfileSourceImpl implements FetchProfileSource {
 		return associationOverrideSources;
 	}
 
-	private static class AssociationOverrideSourceImpl implements AssociationOverrideSource {
+	private class AssociationOverrideSourceImpl implements AssociationOverrideSource {
 		private final String entityName;
 		private final String attributeName;
 		private final String fetchMode;
 
 		private AssociationOverrideSourceImpl(AnnotationInstance overrideAnnotation) {
-			this.entityName = JandexHelper.getValue( overrideAnnotation, "entity", String.class );
-			this.attributeName = JandexHelper.getValue( overrideAnnotation, "association", String.class );
-			FetchMode fetchMode = JandexHelper.getEnumValue( overrideAnnotation, "mode", FetchMode.class );
+			this.entityName = JandexHelper.getValue( overrideAnnotation, "entity", String.class, classLoaderService );
+			this.attributeName = JandexHelper.getValue( overrideAnnotation, "association", String.class, classLoaderService );
+			FetchMode fetchMode = JandexHelper.getEnumValue( overrideAnnotation, "mode", FetchMode.class, classLoaderService );
 			if ( !fetchMode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
 				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
 			}

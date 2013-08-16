@@ -40,10 +40,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -58,13 +58,12 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
+import org.jboss.logging.Logger;
 
 /**
  * Commandline tool to export table schema to the database. This class may also be called from inside an application.
@@ -101,6 +100,8 @@ public class SchemaExport {
 	private final String[] dropSQL;
 	private final String[] createSQL;
 	private final String importFiles;
+	
+	private final ClassLoaderService classLoaderService;
 
 	private final List<Exception> exceptions = new ArrayList<Exception>();
 
@@ -118,6 +119,8 @@ public class SchemaExport {
 		this.sqlStatementLogger = serviceRegistry.getService( JdbcServices.class ).getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 		this.sqlExceptionHelper = serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper();
+		
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 		this.importFiles = ConfigurationHelper.getString(
 				AvailableSettings.HBM2DDL_IMPORT_FILES,
@@ -144,6 +147,8 @@ public class SchemaExport {
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.formatter = ( sqlStatementLogger.isFormat() ? FormatStyle.DDL : FormatStyle.NONE ).getFormatter();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
+		
+		this.classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 		final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 
@@ -222,6 +227,8 @@ public class SchemaExport {
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
 		this.formatter = FormatStyle.DDL.getFormatter();
 		this.sqlExceptionHelper = new SqlExceptionHelper();
+		
+		this.classLoaderService = new ClassLoaderServiceImpl();
 
 		this.importFiles = ConfigurationHelper.getString(
 				AvailableSettings.HBM2DDL_IMPORT_FILES,
@@ -247,6 +254,8 @@ public class SchemaExport {
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
 		this.formatter = FormatStyle.DDL.getFormatter();
 		this.sqlExceptionHelper = new SqlExceptionHelper();
+		
+		this.classLoaderService = new ClassLoaderServiceImpl();
 
 		this.importFiles = ConfigurationHelper.getString(
 				AvailableSettings.HBM2DDL_IMPORT_FILES,
@@ -269,6 +278,7 @@ public class SchemaExport {
 		this.importFiles = "";
 		this.sqlStatementLogger = new SqlStatementLogger( false, true );
 		this.sqlExceptionHelper = new SqlExceptionHelper();
+		this.classLoaderService = new ClassLoaderServiceImpl();
 		this.formatter = FormatStyle.DDL.getFormatter();
 	}
 
@@ -396,8 +406,13 @@ public class SchemaExport {
 		for ( String currentFile : importFiles.split( "," ) ) {
 			try {
 				final String resourceName = currentFile.trim();
-				InputStream stream = ConfigHelper.getResourceAsStream( resourceName );
-				importFileReaders.add( new NamedReader( resourceName, stream ) );
+				InputStream stream = classLoaderService.locateResourceStream( resourceName );
+				if ( stream != null ) {
+					importFileReaders.add( new NamedReader( resourceName, stream ) );
+				}
+				else {
+					LOG.debugf( "Import file not found: %s", currentFile );
+				}
 			}
 			catch ( HibernateException e ) {
 				LOG.debugf( "Import file not found: %s", currentFile );
@@ -566,7 +581,9 @@ public class SchemaExport {
 
 	public static void main(String[] args) {
 		try {
-			Configuration cfg = new Configuration();
+			final Configuration cfg = new Configuration();
+			final StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
 
 			boolean script = true;
 			boolean drop = false;
@@ -616,7 +633,7 @@ public class SchemaExport {
 					}
 					else if ( args[i].startsWith( "--naming=" ) ) {
 						cfg.setNamingStrategy(
-								( NamingStrategy ) ReflectHelper.classForName( args[i].substring( 9 ) )
+								( NamingStrategy ) classLoaderService.classForName( args[i].substring( 9 ) )
 										.newInstance()
 						);
 					}
@@ -644,7 +661,6 @@ public class SchemaExport {
 				cfg.setProperty( AvailableSettings.HBM2DDL_IMPORT_FILES, importFile );
 			}
 
-			StandardServiceRegistryImpl serviceRegistry = createServiceRegistry( cfg.getProperties() );
 			try {
 				SchemaExport se = new SchemaExport( serviceRegistry, cfg )
 						.setHaltOnError( halt )

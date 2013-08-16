@@ -26,10 +26,10 @@ package org.hibernate.metamodel.internal.source.annotations;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
@@ -37,6 +37,7 @@ import org.hibernate.metamodel.spi.relational.Value;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.ManyToManyPluralAttributeElementSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Hardy Ferentschik
@@ -49,10 +50,13 @@ public class ManyToManyPluralAttributeElementSourceImpl
 
 	private final List<RelationalValueSource> relationalValueSources
 			= new ArrayList<RelationalValueSource>();
+	
+	private final EntityBindingContext bindingContext;
 
 	public ManyToManyPluralAttributeElementSourceImpl(
 			PluralAttributeSourceImpl pluralAttributeSource,
-			String relativePath) {
+			String relativePath,
+			EntityBindingContext bindingContext) {
 		super( pluralAttributeSource, relativePath );
 		if ( pluralAttributeSource.getMappedBy() != null ) {
 			throw new AssertionFailure( "pluralAttributeSource.getMappedBy() must be null." );
@@ -60,6 +64,7 @@ public class ManyToManyPluralAttributeElementSourceImpl
 		for ( Column column : pluralAttributeSource.pluralAssociationAttribute().getInverseJoinColumnValues() ) {
 			relationalValueSources.add( new ColumnSourceImpl( column ) );
 		}
+		this.bindingContext = bindingContext;
 	}
 
 	@Override
@@ -143,7 +148,8 @@ public class ManyToManyPluralAttributeElementSourceImpl
 			);
 
 			if ( joinTableAnnotation != null ) {
-				return JandexHelper.getValue( joinTableAnnotation, "name", String.class );
+				return JandexHelper.getValue( joinTableAnnotation, "name", String.class,
+						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 			}
 
 			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...

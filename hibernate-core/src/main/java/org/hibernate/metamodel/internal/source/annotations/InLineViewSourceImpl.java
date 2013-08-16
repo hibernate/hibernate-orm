@@ -23,12 +23,12 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import org.jboss.jandex.AnnotationInstance;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityClass;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.InLineViewSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -68,7 +68,8 @@ public class InLineViewSourceImpl implements InLineViewSource {
 		);
 
 		return new InlineViewInfo(
-				JandexHelper.getValue( subselectAnnotation, "value", String.class ),
+				JandexHelper.getValue( subselectAnnotation, "value", String.class,
+						entityClass.getLocalBindingContext().getServiceRegistry().getService( ClassLoaderService.class ) ),
 				entityClass.getEntityName()
 		);
 	}

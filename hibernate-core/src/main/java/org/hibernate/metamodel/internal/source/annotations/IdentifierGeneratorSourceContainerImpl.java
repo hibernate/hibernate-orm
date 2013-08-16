@@ -28,18 +28,25 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>
  */
 public abstract class IdentifierGeneratorSourceContainerImpl implements IdentifierGeneratorSourceContainer {
+	
+	private final ClassLoaderService classLoaderService;
+	
+	public IdentifierGeneratorSourceContainerImpl(AnnotationBindingContext bindingContext) {
+		this.classLoaderService = bindingContext.getServiceRegistry().getService( ClassLoaderService.class );
+	}
+	
 	private Collection<AnnotationInstance> resolveOrEmpty(DotName name) {
 		Collection<AnnotationInstance> generatorSources = getAnnotations( name );
 		return generatorSources == null ? Collections.<AnnotationInstance>emptyList() : generatorSources;
@@ -82,7 +89,7 @@ public abstract class IdentifierGeneratorSourceContainerImpl implements Identifi
 					for ( AnnotationInstance generatorsAnnotation : resolveOrEmpty( HibernateDotNames.GENERIC_GENERATORS ) ) {
 						Collections.addAll(
 								annotations,
-								JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class )
+								JandexHelper.getValue( generatorsAnnotation, "value", AnnotationInstance[].class, classLoaderService )
 						);
 					}
 					return annotations;

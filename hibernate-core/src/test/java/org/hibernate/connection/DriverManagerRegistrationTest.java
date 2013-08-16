@@ -23,6 +23,9 @@
  */
 package org.hibernate.connection;
 
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -32,15 +35,10 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.junit.AfterClass;
-import org.junit.Test;
-
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.junit.AfterClass;
+import org.junit.Test;
 
 /**
  * This test illustrates the problem with calling {@link ClassLoader#loadClass(String)} rather than
@@ -92,7 +90,7 @@ public class DriverManagerRegistrationTest extends BaseUnitTestCase {
 	}
 
 	private static ClassLoader determineClassLoader() {
-		ClassLoader cl = ClassLoaderHelper.getContextClassLoader();
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		if ( cl == null ) {
 			cl = DriverManagerRegistrationTest.class.getClassLoader();
 		}

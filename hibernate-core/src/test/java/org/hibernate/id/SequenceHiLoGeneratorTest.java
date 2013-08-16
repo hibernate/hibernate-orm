@@ -35,6 +35,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.testing.env.TestingDatabaseInfo;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
@@ -88,7 +89,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		Dialect dialect = TestingDatabaseInfo.DIALECT;
 
 		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, dialect );
+		generator.configure( StandardBasicTypes.LONG, properties, dialect, new ClassLoaderServiceImpl() );
 
 		cfg = TestingDatabaseInfo.buildBaseConfiguration().setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAuxiliaryDatabaseObject( new SimpleAuxiliaryDatabaseObject( generator.sqlCreateStrings( dialect )[0],

@@ -28,13 +28,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
@@ -50,6 +47,10 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * A delegate that handles literals and constants for HqlSqlWalker, performing the token replacement functions and
@@ -115,7 +116,8 @@ public class LiteralProcessor implements HqlSqlTokenTypes {
             setSQLValue(node, text, discrim); // the class discriminator value
 		}
 		else {
-			Object value = ReflectHelper.getConstantValue( text );
+			Object value = ReflectHelper.getConstantValue( text,
+					walker.getSessionFactoryHelper().getFactory().getServiceRegistry().getService( ClassLoaderService.class ) );
             if (value == null) throw new InvalidPathException("Invalid path: '" + text + "'");
             setConstantValue(node, text, value);
 		}

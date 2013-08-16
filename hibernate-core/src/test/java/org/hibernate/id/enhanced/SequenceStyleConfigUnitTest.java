@@ -23,11 +23,14 @@
  */
 package org.hibernate.id.enhanced;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.util.Properties;
 
-import org.junit.Test;
-
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.ObjectNameNormalizer;
@@ -35,9 +38,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.StandardBasicTypes;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Tests that SequenceStyleGenerator configures itself as expected in various scenarios
@@ -45,12 +46,13 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
+	private final ClassLoaderService classLoaderService = new ClassLoaderServiceImpl();
+	
 	private void assertClassAssignability(Class expected, Class actual) {
 		if ( ! expected.isAssignableFrom( actual ) ) {
 			fail( "Actual type [" + actual.getName() + "] is not assignable to expected type [" + expected.getName() + "]" );
 		}
 	}
-
 
 	/**
 	 * Test all params defaulted with a dialect supporting sequences
@@ -60,7 +62,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		Dialect dialect = new SequenceDialect();
 		Properties props = buildGeneratorPropertiesBase();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
@@ -92,7 +94,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		Dialect dialect = new TableDialect();
 		Properties props = buildGeneratorPropertiesBase();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
@@ -112,7 +114,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		// for dialects which do not support pooled sequences, we default to pooled+table
 		Dialect dialect = new SequenceDialect();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -120,7 +122,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		// for dialects which do support pooled sequences, we default to pooled+sequence
 		dialect = new PooledSequenceDialect();
 		generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -137,7 +139,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 		Dialect dialect = new TableDialect();
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -152,7 +154,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
 		assertEquals( SequenceStyleGenerator.DEF_SEQUENCE_NAME, generator.getDatabaseStructure().getName() );
@@ -171,7 +173,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( NoopOptimizer.class, generator.getOptimizer().getClass() );
 		assertEquals( 1, generator.getOptimizer().getIncrementSize() );
@@ -182,7 +184,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.HILO.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
 		assertEquals( 20, generator.getOptimizer().getIncrementSize() );
@@ -193,7 +195,7 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.POOLED.getExternalName() );
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		// because the dialect reports to not support pooled seqyences, the expectation is that we will
 		// use a table for the backing structure...
 		assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
@@ -209,13 +211,13 @@ public class SequenceStyleConfigUnitTest extends BaseUnitTestCase {
 		Properties props = buildGeneratorPropertiesBase();
 		props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 		SequenceStyleGenerator generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 
 		props.setProperty( Environment.PREFER_POOLED_VALUES_LO, "true" );
 		generator = new SequenceStyleGenerator();
-		generator.configure( StandardBasicTypes.LONG, props, dialect );
+		generator.configure( StandardBasicTypes.LONG, props, dialect, classLoaderService );
 		assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 		assertClassAssignability( PooledLoOptimizer.class, generator.getOptimizer().getClass() );
 	}

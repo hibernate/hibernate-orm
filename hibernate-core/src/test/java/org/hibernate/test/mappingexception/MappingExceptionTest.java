@@ -17,7 +17,8 @@ import java.net.URL;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.Hibernate;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jaxb.spi.SourceType;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.spi.source.InvalidMappingException;
@@ -33,6 +34,8 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 public class MappingExceptionTest extends BaseUnitTestCase {
+	private final ClassLoaderService classLoaderService = new ClassLoaderServiceImpl();
+	
 	@Test
 	public void testNotFound() throws MappingException, MalformedURLException {
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
@@ -147,7 +150,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		String resourceName = "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml";
 		File file = File.createTempFile( "TempInvalidMapping", ".hbm.xml" );
 		file.deleteOnExit();
-		copy( ConfigHelper.getConfigStream( resourceName ), file );
+		copy( classLoaderService.locateResourceStream( resourceName ), file );
 
 		MetadataSources sources = new MetadataSources( new StandardServiceRegistryBuilder().build() );
 		try {
@@ -207,7 +210,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 
 
 		try {
-			sources.addInputStream( ConfigHelper.getResourceAsStream( resourceName ) );
+			sources.addInputStream( classLoaderService.locateResourceStream( resourceName ) );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
@@ -239,7 +242,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		}
 
 		try {
-			sources.addURL( ConfigHelper.findAsResource( resourceName ) );
+			sources.addURL( classLoaderService.locateResource( resourceName ) );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {

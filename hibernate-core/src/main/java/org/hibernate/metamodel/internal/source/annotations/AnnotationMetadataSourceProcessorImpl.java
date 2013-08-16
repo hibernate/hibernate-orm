@@ -24,17 +24,10 @@
 package org.hibernate.metamodel.internal.source.annotations;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.IndexView;
-
-import org.hibernate.AssertionFailure;
-import org.hibernate.metamodel.MetadataSources;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.metamodel.internal.MetadataImpl;
 import org.hibernate.metamodel.internal.source.annotations.global.FetchProfileProcessor;
 import org.hibernate.metamodel.internal.source.annotations.global.IdGeneratorProcessor;
@@ -43,15 +36,15 @@ import org.hibernate.metamodel.internal.source.annotations.global.SqlResultSetPr
 import org.hibernate.metamodel.internal.source.annotations.global.TableProcessor;
 import org.hibernate.metamodel.internal.source.annotations.util.EntityHierarchyBuilder;
 import org.hibernate.metamodel.internal.source.annotations.util.HibernateDotNames;
-import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.internal.source.annotations.xml.PseudoJpaDotNames;
-import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.metamodel.spi.MetadataSourceProcessor;
 import org.hibernate.metamodel.spi.source.EntityHierarchy;
 import org.hibernate.metamodel.spi.source.FilterDefinitionSource;
 import org.hibernate.metamodel.spi.source.IdentifierGeneratorSource;
 import org.hibernate.metamodel.spi.source.TypeDescriptorSource;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.IndexView;
 
 /**
  * Main class responsible to creating and binding the Hibernate meta-model from annotations.
@@ -84,10 +77,11 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
 				bindingContext.getIndex(),
 				HibernateDotNames.TYPE_DEF,
-				HibernateDotNames.TYPE_DEFS
+				HibernateDotNames.TYPE_DEFS,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance typeDef : annotations ) {
-			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef ) );
+			typeDescriptorSources.add( new TypeDescriptorSourceImpl( typeDef, bindingContext ) );
 		}
 		return typeDescriptorSources;
 	}
@@ -98,10 +92,11 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 		Collection<AnnotationInstance> annotations = JandexHelper.getAnnotations(
 				bindingContext.getIndex(),
 				HibernateDotNames.FILTER_DEF,
-				HibernateDotNames.FILTER_DEFS
+				HibernateDotNames.FILTER_DEFS,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class )
 		);
 		for ( AnnotationInstance filterDef : annotations ) {
-			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef ) );
+			filterDefinitionSources.add( new FilterDefinitionSourceImpl( filterDef, bindingContext ) );
 		}
 		return filterDefinitionSources;
 	}

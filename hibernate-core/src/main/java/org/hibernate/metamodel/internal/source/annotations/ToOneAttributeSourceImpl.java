@@ -29,8 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.metamodel.internal.Binder;
@@ -38,6 +37,7 @@ import org.hibernate.metamodel.internal.source.annotations.attribute.Association
 import org.hibernate.metamodel.internal.source.annotations.attribute.Column;
 import org.hibernate.metamodel.internal.source.annotations.attribute.MappedAttribute;
 import org.hibernate.metamodel.internal.source.annotations.attribute.SingularAssociationAttribute;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.binding.AttributeBinding;
@@ -48,20 +48,24 @@ import org.hibernate.metamodel.spi.source.AttributeSourceResolutionContext;
 import org.hibernate.metamodel.spi.source.ForeignKeyContributingSource;
 import org.hibernate.metamodel.spi.source.RelationalValueSource;
 import org.hibernate.metamodel.spi.source.ToOneAttributeSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Hardy Ferentschik
  * @author Gail Badner
  */
 public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl implements ToOneAttributeSource {
-	private List<RelationalValueSource> relationalValueSources;
-	private String containingTableName;
+	private final List<RelationalValueSource> relationalValueSources;
+	private final String containingTableName;
+	private final EntityBindingContext bindingContext;
 
-	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute, String relativePath) {
+	public ToOneAttributeSourceImpl(SingularAssociationAttribute associationAttribute, String relativePath,
+			EntityBindingContext bindingContext) {
 		super( associationAttribute, relativePath );
 		if ( associationAttribute.getMappedBy() != null ) {
 			throw new IllegalArgumentException( "associationAttribute.getMappedBy() must be null" );
 		}
+		this.bindingContext = bindingContext;
 		// Need to initialize relationalValueSources before determining logicalJoinTableName.
 		this.relationalValueSources = resolveRelationalValueSources( associationAttribute );
 		// Need to initialize logicalJoinTableName before determining nature.
@@ -173,7 +177,7 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		return containingTableName;
 	}
 
-	private static List<RelationalValueSource> resolveRelationalValueSources(AssociationAttribute associationAttribute) {
+	private List<RelationalValueSource> resolveRelationalValueSources(AssociationAttribute associationAttribute) {
 		final List<RelationalValueSource> valueSources;
 		final List<Column> joinColumns;
 		if ( associationAttribute.getJoinTableAnnotation() == null ) {
@@ -200,15 +204,16 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 		return valueSources;
 	}
 
-	private static String getDefaultLogicalJoinTableName(AssociationAttribute associationAttribute) {
+	private String getDefaultLogicalJoinTableName(AssociationAttribute associationAttribute) {
 		if ( associationAttribute.getJoinTableAnnotation() == null ) {
 			return null;
 		}
-		return JandexHelper.getValue( associationAttribute.getJoinTableAnnotation(), "name", String.class );
+		return JandexHelper.getValue( associationAttribute.getJoinTableAnnotation(), "name", String.class,
+				bindingContext.getServiceRegistry().getService( ClassLoaderService.class ));
 	}
 
 
-	private static String resolveContainingTableName(
+	private String resolveContainingTableName(
 			AssociationAttribute associationAttribute,
 			List<RelationalValueSource> relationalValueSources) {
 		if ( relationalValueSources.isEmpty() ) {
@@ -296,7 +301,8 @@ public class ToOneAttributeSourceImpl extends AbstractToOneAttributeSourceImpl i
 			);
 
 			if ( joinTableAnnotation != null ) {
-				return JandexHelper.getValue( joinTableAnnotation, "name", String.class );
+				return JandexHelper.getValue( joinTableAnnotation, "name", String.class,
+						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 			}
 
 			// todo : this ties into the discussion about naming strategies.  This would be part of a logical naming strategy...

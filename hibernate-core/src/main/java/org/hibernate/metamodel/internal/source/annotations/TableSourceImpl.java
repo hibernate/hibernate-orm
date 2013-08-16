@@ -23,10 +23,11 @@
  */
 package org.hibernate.metamodel.internal.source.annotations;
 
-import org.jboss.jandex.AnnotationInstance;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JandexHelper;
 import org.hibernate.metamodel.spi.source.TableSource;
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Steve Ebersole
@@ -34,8 +35,10 @@ import org.hibernate.metamodel.spi.source.TableSource;
  */
 class TableSourceImpl implements TableSource {
 	private final TableInfo tableInfo;
+	private final EntityBindingContext bindingContext;
 
-	TableSourceImpl(AnnotationInstance tableAnnotation) {
+	TableSourceImpl(AnnotationInstance tableAnnotation, EntityBindingContext bindingContext) {
+		this.bindingContext = bindingContext;
 		this.tableInfo = createTableInfo( tableAnnotation );
 	}
 
@@ -92,7 +95,8 @@ class TableSourceImpl implements TableSource {
 
 		final String explicitTableName = tableAnnotation == null
 				? null
-				: JandexHelper.getValue( tableAnnotation, "name", String.class );
+				: JandexHelper.getValue( tableAnnotation, "name", String.class,
+						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 
 		return new TableInfo( schemaName, catalogName, explicitTableName );
 	}
@@ -100,13 +104,15 @@ class TableSourceImpl implements TableSource {
 	private String determineSchemaName(AnnotationInstance tableAnnotation) {
 		return tableAnnotation == null
 				? null
-				: JandexHelper.getValue( tableAnnotation, "schema", String.class );
+				: JandexHelper.getValue( tableAnnotation, "schema", String.class,
+						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 	}
 
 	private String determineCatalogName(AnnotationInstance tableAnnotation) {
 		return tableAnnotation == null
 				? null
-				: JandexHelper.getValue( tableAnnotation, "catalog", String.class );
+				: JandexHelper.getValue( tableAnnotation, "catalog", String.class,
+						bindingContext.getServiceRegistry().getService( ClassLoaderService.class ) );
 	}
 
 	private static class TableInfo {

@@ -26,6 +26,7 @@ package org.hibernate.id;
 import java.util.Properties;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.Type;
 
@@ -44,6 +45,6 @@ public interface Configurable {
 	 *
 	 * @param params param values, keyed by parameter name
 	 */
-	public void configure(Type type, Properties params, Dialect d) throws MappingException;
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) throws MappingException;
 
 }

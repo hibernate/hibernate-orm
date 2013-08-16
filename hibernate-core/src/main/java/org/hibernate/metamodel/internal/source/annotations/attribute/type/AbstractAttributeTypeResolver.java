@@ -124,4 +124,8 @@ public abstract class AbstractAttributeTypeResolver implements AttributeTypeReso
 				dotName
 		);
 	}
+	
+	protected EntityBindingContext getContext() {
+		return context;
+	}
 }

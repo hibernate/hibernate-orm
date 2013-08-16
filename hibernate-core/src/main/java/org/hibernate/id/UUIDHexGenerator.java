@@ -27,6 +27,7 @@ import java.util.Properties;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
@@ -63,7 +64,7 @@ public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configura
 	/**
 	 * {@inheritDoc}
 	 */
-	public void configure(Type type, Properties params, Dialect d) {
+	public void configure(Type type, Properties params, Dialect d, ClassLoaderService classLoaderService) {
 		sep = ConfigurationHelper.getString( "separator", params, "" );
 	}
 

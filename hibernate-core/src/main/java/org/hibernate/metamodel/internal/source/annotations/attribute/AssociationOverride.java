@@ -26,6 +26,7 @@ package org.hibernate.metamodel.internal.source.annotations.attribute;
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
 
+import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
 import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
 
 /**
@@ -33,8 +34,9 @@ import org.hibernate.metamodel.internal.source.annotations.util.JPADotNames;
  */
 public class AssociationOverride extends AbstractOverrideDefinition {
 
-	public AssociationOverride(String prefix, AnnotationInstance attributeOverrideAnnotation) {
-		super( prefix, attributeOverrideAnnotation );
+	public AssociationOverride(String prefix, AnnotationInstance attributeOverrideAnnotation,
+			EntityBindingContext bindingContext) {
+		super( prefix, attributeOverrideAnnotation, bindingContext );
 	}
 
 	@Override

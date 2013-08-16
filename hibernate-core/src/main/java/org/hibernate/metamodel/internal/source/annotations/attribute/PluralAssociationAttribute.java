@@ -30,22 +30,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
-import javax.persistence.FetchType;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
+import javax.persistence.FetchType;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SortType;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.AttributeTypeResolver;
-import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.EnumeratedTypeResolver;
+import org.hibernate.metamodel.internal.source.annotations.attribute.type.HibernateTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.attribute.type.TemporalTypeResolver;
 import org.hibernate.metamodel.internal.source.annotations.entity.EntityBindingContext;
@@ -57,6 +55,9 @@ import org.hibernate.metamodel.spi.binding.Caching;
 import org.hibernate.metamodel.spi.binding.CustomSQL;
 import org.hibernate.metamodel.spi.source.MappingException;
 import org.hibernate.metamodel.spi.source.PluralAttributeSource;
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * Represents an collection (collection, list, set, map) association attribute.
@@ -217,8 +218,10 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.FOREIGN_KEY
 		);
 		if ( foreignKey != null ) {
-			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class );
-			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class );
+			explicitForeignKeyName = JandexHelper.getValue( foreignKey, "name", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
+			String temp = JandexHelper.getValue( foreignKey, "inverseName", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			inverseForeignKeyName = StringHelper.isNotEmpty( temp ) ? temp : null;
 		}
 		else {
@@ -259,10 +262,12 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 		else if ( sortComparatorAnnotation != null ) {
 			this.sorted = true;
-			this.comparatorName = JandexHelper.getValue( sortComparatorAnnotation, "value", String.class );
+			this.comparatorName = JandexHelper.getValue( sortComparatorAnnotation, "value", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 		else if ( sortAnnotation != null ) {
-			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class );
+			final SortType sortType = JandexHelper.getEnumValue( sortAnnotation, "type", SortType.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			switch ( sortType ){
 
 				case NATURAL:
@@ -270,7 +275,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 					this.comparatorName = "natural";
 					break;
 				case COMPARATOR:
-					String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class );
+					String comparatorName = JandexHelper.getValue( sortAnnotation, "comparator", String.class,
+							getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 					if ( StringHelper.isEmpty( comparatorName ) ) {
 						throw new MappingException(
 								"Comparator class must be provided when using SortType.COMPARATOR on property: " + getRole(),
@@ -383,7 +389,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				HibernateDotNames.ON_DELETE
 		);
 		if ( onDeleteAnnotation != null ) {
-			return JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class );
+			return JandexHelper.getEnumValue( onDeleteAnnotation, "action", OnDeleteAction.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 		return null;
 	}
@@ -403,7 +410,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				annotations(), HibernateDotNames.LOADER
 		);
 		if ( customLoaderAnnotation != null ) {
-			loader = JandexHelper.getValue( customLoaderAnnotation, "namedQuery", String.class );
+			loader = JandexHelper.getValue( customLoaderAnnotation, "namedQuery", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 		return loader;
 	}
@@ -414,14 +422,16 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 				annotations(), HibernateDotNames.PERSISTER
 		);
 		if ( persisterAnnotation != null ) {
-			entityPersisterClass = JandexHelper.getValue( persisterAnnotation, "impl", String.class );
+			entityPersisterClass = JandexHelper.getValue( persisterAnnotation, "impl", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 		return entityPersisterClass;
 	}
 
 	@Override
 	protected boolean determineIsLazy(AnnotationInstance associationAnnotation) {
-		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class );
+		FetchType fetchType = JandexHelper.getEnumValue( associationAnnotation, "fetch", FetchType.class,
+				getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		boolean lazy = fetchType == FetchType.LAZY;
 		final AnnotationInstance lazyCollectionAnnotationInstance = JandexHelper.getSingleAnnotation(
 				annotations(),
@@ -431,7 +441,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			lazyOption = JandexHelper.getEnumValue(
 					lazyCollectionAnnotationInstance,
 					"value",
-					LazyCollectionOption.class
+					LazyCollectionOption.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class )
 			);
 			lazy = !( lazyOption == LazyCollectionOption.FALSE );
 
@@ -458,7 +469,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 
 		AnnotationInstance whereAnnotation = JandexHelper.getSingleAnnotation( annotations(), HibernateDotNames.WHERE );
 		if ( whereAnnotation != null ) {
-			where = JandexHelper.getValue( whereAnnotation, "clause", String.class );
+			where = JandexHelper.getValue( whereAnnotation, "clause", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 
 		return where;
@@ -486,7 +498,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 		}
 
 		if ( hibernateOrderByAnnotation != null ) {
-			orderBy = JandexHelper.getValue( hibernateOrderByAnnotation, "clause", String.class );
+			orderBy = JandexHelper.getValue( hibernateOrderByAnnotation, "clause", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 		}
 
 		if ( jpaOrderByAnnotation != null ) {
@@ -494,7 +507,8 @@ public class PluralAssociationAttribute extends AssociationAttribute {
 			// If the ordering element is not specified for an entity association, ordering by the primary key of the
 			// associated entity is assumed
 			// The binder will need to take this into account and generate the right property names
-			orderBy = JandexHelper.getValue( jpaOrderByAnnotation, "value", String.class );
+			orderBy = JandexHelper.getValue( jpaOrderByAnnotation, "value", String.class,
+					getContext().getServiceRegistry().getService( ClassLoaderService.class ) );
 			if ( orderBy == null ) {
 				orderBy = isBasicCollection() ?  "$element$ asc" :"id asc" ;
 			}

@@ -44,6 +44,7 @@ import org.hibernate.spatial.jts.Circle;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 
 //TODO -- requires cleanup and must be made package local
@@ -62,10 +63,11 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	/**
 	 * Creates instance
 	 *
-	 * @param javaDescriptor javadescriptor to use
+	 * @param javaDescriptor the {@code JavaTypeDescriptor} to use
+	 * @param sqlTypeDescriptor the {@code SqlTypeDescriptor} to use
 	 */
-	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor) {
-		super( javaDescriptor, SDOGeometryTypeDescriptor.INSTANCE );
+	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlTypeDescriptor ) {
+		super( javaDescriptor, sqlTypeDescriptor );
 	}
 
 	@Override

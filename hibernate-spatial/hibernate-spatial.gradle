@@ -22,8 +22,6 @@
 apply plugin: 'java'
 apply plugin: 'hibernate-matrix-testing'
 
-//apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
-
 dependencies {
     compile(project(':hibernate-core'))
     compile([group: 'postgresql', name: 'postgresql', version: '8.4-701.jdbc4'])
@@ -33,6 +31,7 @@ dependencies {
     compile(libraries.dom4j) {
         transitive = false
     }
+
 
 
     testCompile(libraries.junit)

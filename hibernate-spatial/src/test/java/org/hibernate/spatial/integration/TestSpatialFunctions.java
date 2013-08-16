@@ -34,9 +34,12 @@ import org.hibernate.Transaction;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.dialect.h2geodb.GeoDBDialect;
+import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
+import org.hibernate.testing.SkipForDialect;
 
 import static java.lang.String.format;
 
@@ -494,16 +497,18 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
-	@Test
+	@Test @SkipForDialect( value = GeoDBDialect.class)
 	public void test_intersection_on_jts()throws SQLException {
 		intersection( JTS );
 	}
 
-	@Test
+	@Test @SkipForDialect( value = GeoDBDialect.class)
 	public void test_intersection_on_geolatte()throws SQLException {
 		intersection( GEOLATTE);
 	}
 
+	//skipped for GeoDBDialect because GeoDB throws exceptions in case the intersection is empty.
+	// (Error message is "Empty Points cannot be represented in WKB")
 	public void intersection(String pckg) throws SQLException {
 		if ( !isSupportedByDialect( SpatialFunction.intersection ) ) {
 			return;
@@ -601,7 +606,15 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 				"org.hibernate.spatial.integration.%s.GeomEntity where dwithin(geom, :filter, :distance) = true " +
 				"and srid(geom) = 4326", pckg);
 		Map<String, Object> params = createQueryParams( "filter", expectationsFactory.getTestPoint() );
-		params.put( "distance", 30.0 );
+		if ( getDialect() instanceof OracleSpatial10gDialect ) {
+			//because this uses the weird syntax and conventions of SDO_WITHIN_DISTANCE which returns a string (really)
+			// we use a different boolean expression guaranteed to be true, and we set the third parameter to key/value string
+			hql = "SELECT id, issimple(geom) from org.hibernate.spatial.integration.GeomEntity where dwithin(geom, :filter, :distance) = true and srid(geom) = 4326";
+			params.put( "distance", "distance = 30" );
+		}
+		else {
+			params.put( "distance", 30.0 );
+		}
 		retrieveHQLResultsAndCompare( dbexpected, hql, params, pckg );
 	}
 

@@ -22,13 +22,10 @@
 package org.hibernate.spatial.dialect.oracle;
 
 import java.sql.Array;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.hibernate.spatial.helper.FinderException;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -37,7 +34,6 @@ import org.hibernate.spatial.helper.FinderException;
 
 class SDOGeometry {
 
-	private static final SQLTypeFactory TYPE_FACTORY = new OracleJDBCTypeFactory();
 	private static final String SQL_TYPE_NAME = "MDSYS.SDO_GEOMETRY";
 	private SDOGType gtype;
 	private int srid;
@@ -102,33 +98,6 @@ class SDOGeometry {
 		return sdoCollection;
 	}
 
-	public static SDOGeometry load(Struct struct) {
-
-		Object[] data;
-		try {
-			data = struct.getAttributes();
-		}
-		catch ( SQLException e ) {
-			throw new RuntimeException( e );
-		}
-
-		final SDOGeometry geom = new SDOGeometry();
-		geom.setGType( SDOGType.parse( data[0] ) );
-		geom.setSRID( data[1] );
-		if ( data[2] != null ) {
-			geom.setPoint( new SDOPoint( (Struct) data[2] ) );
-		}
-		geom.setInfo( new ElemInfo( (Array) data[3] ) );
-		geom.setOrdinates( new Ordinates( (Array) data[4] ) );
-
-		return geom;
-	}
-
-	public static Struct store(SDOGeometry geom, Connection conn)
-			throws SQLException, FinderException {
-		return TYPE_FACTORY.createStruct( geom, conn );
-	}
-
 	private static void shiftOrdinateOffset(ElemInfo elemInfo, int offset) {
 		for ( int i = 0; i < elemInfo.getSize(); i++ ) {
 			final int newOffset = elemInfo.getOrdinatesOffset( i ) + offset;
@@ -171,6 +140,28 @@ class SDOGeometry {
 		}
 	}
 
+	public static SDOGeometry load(Struct struct) {
+
+		Object[] data;
+		try {
+			data = struct.getAttributes();
+		}
+		catch ( SQLException e ) {
+			throw new RuntimeException( e );
+		}
+
+		final SDOGeometry geom = new SDOGeometry();
+		geom.setGType( SDOGType.parse( data[0] ) );
+		geom.setSRID( data[1] );
+		if ( data[2] != null ) {
+			geom.setPoint( new SDOPoint( (Struct) data[2] ) );
+		}
+		geom.setInfo( new ElemInfo( (Array) data[3] ) );
+		geom.setOrdinates( new Ordinates( (Array) data[4] ) );
+
+		return geom;
+	}
+
 	public ElemInfo getInfo() {
 		return info;
 	}
@@ -207,21 +198,21 @@ class SDOGeometry {
 		return srid;
 	}
 
+	public void setSRID(int srid) {
+		this.srid = srid;
+	}
+
 	private void setSRID(Object datum) {
 		if ( datum == null ) {
 			this.srid = 0;
 			return;
 		}
 		try {
-			this.srid = new Integer( ( (Number) datum ).intValue() );
+			this.srid = ( (Number) datum ).intValue();
 		}
 		catch ( Exception e ) {
 			throw new RuntimeException( e );
 		}
-	}
-
-	public void setSRID(int srid) {
-		this.srid = srid;
 	}
 
 	public boolean isLRSGeometry() {

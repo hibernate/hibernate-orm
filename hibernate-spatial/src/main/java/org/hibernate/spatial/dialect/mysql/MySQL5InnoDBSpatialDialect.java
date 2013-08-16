@@ -17,14 +17,14 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * @author Karel Maesen, Geovise BVBA
  *
  */
-public class MySQL5SpatialInnoDBDialect extends MySQL5InnoDBDialect implements SpatialDialect {
+public class MySQL5InnoDBSpatialDialect extends MySQL5InnoDBDialect implements SpatialDialect {
 
 	private MySQLSpatialDialect dialectDelegate = new MySQLSpatialDialect();
 
 	/**
 	 * Constructs an instance
 	 */
-	public MySQL5SpatialInnoDBDialect() {
+	public MySQL5InnoDBSpatialDialect() {
 		super();
 		registerColumnType(
 				MySQLGeometryTypeDescriptor.INSTANCE.getSqlType(),

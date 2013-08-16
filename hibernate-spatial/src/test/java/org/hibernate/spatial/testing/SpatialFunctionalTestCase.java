@@ -49,7 +49,6 @@ import static org.junit.Assert.fail;
  */
 public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
 
-
 	protected static String JTS = "jts";
 	protected static String GEOLATTE = "geolatte";
 

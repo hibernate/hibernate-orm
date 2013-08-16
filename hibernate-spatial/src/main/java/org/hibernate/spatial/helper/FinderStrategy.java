@@ -20,6 +20,8 @@
  */
 package org.hibernate.spatial.helper;
 
+import java.io.Serializable;
+
 /**
  * A <code>FinderStrategy</code> is used to find a specific feature. It is
  * useful in cases where reflection is used to determine some property of a
@@ -30,7 +32,7 @@ package org.hibernate.spatial.helper;
  *
  * @author Karel Maesen
  */
-public interface FinderStrategy<T, S> {
+public interface FinderStrategy<T, S> extends Serializable {
 
 	/**
 	 * Find a feature or property of a subject

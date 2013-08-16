@@ -39,12 +39,12 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.ejb.HibernateEntityManagerFactory;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
@@ -306,8 +306,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		HashMap properties = new HashMap();
 		properties.put( AvailableSettings.JTA_DATASOURCE, null );
 		Properties p = new Properties();
-		p.load( serviceRegistry().getService( ClassLoaderService.class ).locateResourceStream(
-				"/overridenpar.properties" ) );
+		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
 		properties.putAll( p );
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		EntityManager em = emf.createEntityManager();

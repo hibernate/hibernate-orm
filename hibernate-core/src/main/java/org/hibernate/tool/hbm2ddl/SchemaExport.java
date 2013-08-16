@@ -690,5 +690,13 @@ public class SchemaExport {
 	public List getExceptions() {
 		return exceptions;
 	}
+	
+	public String[] getCreateSqlScripts() {
+		return createSQL;
+	}
+	
+	public String[] getDropSqlScripts() {
+		return dropSQL;
+	}
 
 }

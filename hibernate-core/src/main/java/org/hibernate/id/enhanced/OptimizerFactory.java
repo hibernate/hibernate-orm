@@ -27,7 +27,6 @@ import java.lang.reflect.Constructor;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.jboss.logging.Logger;
 
 /**
@@ -68,7 +67,8 @@ public class OptimizerFactory {
 	 * @deprecated Use {@link #buildOptimizer(String, Class, int, long)} instead
 	 */
 	@Deprecated
-	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize, ClassLoaderService classLoaderService) {
+	public static Optimizer buildOptimizer(String type, Class returnClass, int incrementSize,
+			ClassLoaderService classLoaderService) {
 		final Class<? extends Optimizer> optimizerClass;
 
 		final StandardOptimizerDescriptor standardDescriptor = StandardOptimizerDescriptor.fromExternalName( type );
@@ -77,7 +77,7 @@ public class OptimizerFactory {
 		}
 		else {
 			try {
-				optimizerClass = ReflectHelper.classForName( type, classLoaderService );
+				optimizerClass = classLoaderService.classForName( type );
 			}
 			catch( Throwable ignore ) {
 				LOG.unableToLocateCustomOptimizerClass( type );

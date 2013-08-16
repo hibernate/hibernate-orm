@@ -50,7 +50,6 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.type.Type;
@@ -135,14 +134,11 @@ public class DefaultIdentifierGeneratorFactory implements MutableIdentifierGener
 		Class generatorClass = generatorStrategyToClassNameMap.get( strategy );
 		try {
 			if ( generatorClass == null ) {
-				generatorClass = ReflectHelper.classForName( strategy, classLoaderService );
+				generatorClass = classLoaderService.classForName( strategy );
 				register( strategy, generatorClass );
 			}
 		}
 		catch ( ClassLoadingException e ) {
-			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
-		}
-		catch ( ClassNotFoundException e ) {
 			throw new MappingException( String.format( "Could not interpret id generator strategy [%s]", strategy ) );
 		}
 		return generatorClass;

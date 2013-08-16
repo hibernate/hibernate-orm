@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -113,6 +114,7 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNameStartsWithNonCharacterTruncation() {
 		Column column = table0.createColumn( "1" );
 		String expectedSuffix = getExpectedSuffix( column, null );
@@ -136,6 +138,7 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@FailureExpectedWithNewMetamodel
 	public void testNameIncludingNonCharacter() {
 		// create dialect with a large enough max alias length so there is no trucation.
 		final Dialect dialect = createDialect( 10 );

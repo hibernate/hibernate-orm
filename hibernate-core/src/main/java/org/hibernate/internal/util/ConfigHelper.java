@@ -130,6 +130,11 @@ public final class ConfigHelper {
 
 	private ConfigHelper() {}
 
+	/**
+	 * TODO: Kept only for legacy ORM 4 callers.  Remove in ORM 5.
+	 * @deprecated Replace with direct use of {@link ClassLoaderService}.
+	 */
+	@Deprecated
 	public static InputStream getResourceAsStream(String resource) {
 		String stripped = resource.startsWith("/") ?
 				resource.substring(1) : resource;
@@ -151,7 +156,11 @@ public final class ConfigHelper {
 		return stream;
 	}
 
-
+	/**
+	 * TODO: Kept only for legacy ORM 4 callers.  Remove in ORM 5.
+	 * @deprecated Replace with direct use of {@link ClassLoaderService}.
+	 */
+	@Deprecated
 	public static InputStream getUserResourceAsStream(String resource) {
 		boolean hasLeadingSlash = resource.startsWith( "/" );
 		String stripped = hasLeadingSlash ? resource.substring(1) : resource;

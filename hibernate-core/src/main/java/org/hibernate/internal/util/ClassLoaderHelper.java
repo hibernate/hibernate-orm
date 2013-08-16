@@ -20,15 +20,18 @@
  */
 package org.hibernate.internal.util;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+
 /**
  * This exists purely to allow custom ClassLoaders to be injected and used
  * prior to ServiceRegistry and ClassLoadingService existence.  This should be
  * replaced in Hibernate 5.
  * 
- * TODO: Delete after HHH-6184.
+ * @deprecated Replace with direct use of {@link ClassLoaderService}.
  * 
  * @author Brett Meyer
  */
+@Deprecated
 public class ClassLoaderHelper {
 	
 	public static ClassLoader overridenClassLoader = null;

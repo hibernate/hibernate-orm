@@ -24,11 +24,13 @@
 package org.hibernate.test.schemaupdate;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 
 /**
  * @author Gail Badner
  */
+@FailureExpectedWithNewMetamodel(message = "Needs updated to remove Configuration uses.")
 public class SchemaExportSuppliedConnectionTest extends SchemaExportTest {
 
 	@Override

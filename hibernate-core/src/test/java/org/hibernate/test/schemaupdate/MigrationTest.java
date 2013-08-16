@@ -30,6 +30,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -44,6 +45,7 @@ import org.junit.Test;
  * @author Max Rydahl Andersen
  * @author Brett Meyer
  */
+@FailureExpectedWithNewMetamodel(message = "Needs updated to remove Configuration uses.")
 public class MigrationTest extends BaseUnitTestCase {
 	private ServiceRegistry serviceRegistry;
 

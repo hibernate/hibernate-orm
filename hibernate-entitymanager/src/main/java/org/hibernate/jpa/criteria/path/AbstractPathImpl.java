@@ -95,12 +95,17 @@ public abstract class AbstractPathImpl<X>
 	protected abstract boolean canBeDereferenced();
 
 	protected final RuntimeException illegalDereference() {
-		String message = "Illegal attempt to dereference path source";
-		PathSource<?> source = getPathSource();
-		if ( source != null ) {
-			message += " [" + getPathSource().getPathIdentifier() + "]";
-		}
-		return new IllegalArgumentException(message);
+		return new IllegalStateException(
+				String.format(
+						"Illegal attempt to dereference path source [%s] of basic type",
+						getPathIdentifier()
+				)
+		);
+//		String message = "Illegal attempt to dereference path source [";
+//		if ( source != null ) {
+//			message += " [" + getPathIdentifier() + "]";
+//		}
+//		return new IllegalArgumentException(message);
 	}
 
 	protected final RuntimeException unknownAttribute(String attributeName) {

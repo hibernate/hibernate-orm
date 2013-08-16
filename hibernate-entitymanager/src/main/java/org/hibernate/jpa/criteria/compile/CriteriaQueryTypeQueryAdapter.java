@@ -258,7 +258,7 @@ public class CriteriaQueryTypeQueryAdapter<X> implements TypedQuery<X>, Hibernat
 	// unsupported stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public int executeUpdate() {
-		throw new IllegalArgumentException( "Criteria queries do not support update queries" );
+		throw new IllegalStateException( "Typed criteria queries do not support executeUpdate" );
 	}
 
 	public TypedQuery<X> setParameter(int i, Object o) {

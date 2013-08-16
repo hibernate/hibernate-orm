@@ -26,6 +26,7 @@ package org.hibernate.jpa.test.criteria.paths;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.junit.After;
@@ -34,10 +35,12 @@ import org.junit.Test;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Order;
+import org.hibernate.jpa.test.metamodel.Order_;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * @author Michael Rudolf
@@ -88,6 +91,27 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
 			CriteriaQuery<Order> criteria = criteriaBuilder.createQuery( Order.class );
 			Root<Order> orderRoot = criteria.from( Order.class );
 			orderRoot.get( "nonExistingAttribute" );
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	public void testIllegalDereference() {
+		EntityManager em = getOrCreateEntityManager();
+		try {
+			CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+			CriteriaQuery<Order> criteria = criteriaBuilder.createQuery( Order.class );
+			Root<Order> orderRoot = criteria.from( Order.class );
+			Path simplePath = orderRoot.get( "totalPrice" );
+			// this should cause an ISE...
+			try {
+				simplePath.get( "yabbadabbado" );
+				fail( "Attempt to dereference basic path should throw IllegalStateException" );
+			}
+			catch (IllegalStateException expected) {
+			}
 		}
 		finally {
 			em.close();

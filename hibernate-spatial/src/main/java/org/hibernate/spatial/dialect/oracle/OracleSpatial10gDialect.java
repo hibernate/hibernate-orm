@@ -20,18 +20,6 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
-import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
-import org.hibernate.dialect.Oracle10gDialect;
-import org.hibernate.dialect.function.StandardSQLFunction;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.spatial.*;
-import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
-import org.hibernate.spatial.helper.PropertyFileReader;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -40,6 +28,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.function.StandardSQLFunction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.spatial.GeometrySqlTypeDescriptor;
+import org.hibernate.spatial.GeometryType;
+import org.hibernate.spatial.Log;
+import org.hibernate.spatial.LogFactory;
+import org.hibernate.spatial.SpatialAnalysis;
+import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.SpatialRelation;
+import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
+import org.hibernate.spatial.helper.PropertyFileReader;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * Spatial Dialect for Oracle10g databases.
@@ -238,6 +245,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		//other common functions
 		registerFunction("transform", new StandardSQLFunction("SDO_CS.TRANSFORM",
 				GeometryType.INSTANCE));
+		registerFunction("dwithin", new StandardSQLFunction("SDO_WITHIN_DISTANCE" , new SDOBooleanType()));
 
 		// Oracle specific Aggregate functions
 		registerFunction("centroid", new SpatialAggregationFunction("extent",
@@ -434,7 +442,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	}
 
 	public String getDWithinSQL(String columnName) {
-		throw new UnsupportedOperationException("No DWithin in this dialect");
+		return "SDO_WITHIN_DISTANCE (" + columnName + ",?, ?) = 'TRUE' ";
 	}
 
 	public String getHavingSridSQL(String columnName) {

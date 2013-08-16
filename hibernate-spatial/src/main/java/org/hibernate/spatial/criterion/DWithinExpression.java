@@ -22,6 +22,7 @@
 package org.hibernate.spatial.criterion;
 
 import com.vividsolutions.jts.geom.Geometry;
+
 import org.hibernate.Criteria;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -30,6 +31,7 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -58,9 +60,14 @@ public class DWithinExpression implements Criterion {
 
 
 	public TypedValue[] getTypedValues(Criteria criteria, CriteriaQuery criteriaQuery) throws HibernateException {
+		SpatialDialect spatialDialect = ExpressionUtil.getSpatialDialect(criteriaQuery, SpatialFunction.dwithin);
+		TypedValue typedDistanceValue = new TypedValue( StandardBasicTypes.DOUBLE, Double.valueOf( distance ), EntityMode.POJO );
+		if (spatialDialect instanceof OracleSpatial10gDialect) {
+			typedDistanceValue = new TypedValue(StandardBasicTypes.STRING, "distance=" + distance, EntityMode.POJO);
+		}
 		return new TypedValue[]{
 				criteriaQuery.getTypedValue(criteria, propertyName, geometry),
-				new TypedValue(StandardBasicTypes.DOUBLE, Double.valueOf(distance), EntityMode.POJO)
+				typedDistanceValue
 		};
 	}
 }

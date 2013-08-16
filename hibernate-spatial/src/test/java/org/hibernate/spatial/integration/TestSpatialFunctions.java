@@ -21,21 +21,23 @@
 
 package org.hibernate.spatial.integration;
 
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.vividsolutions.jts.geom.Geometry;
+import org.junit.Test;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
-import org.junit.Test;
-
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -342,7 +344,14 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		);
 		String hql = "SELECT id, dwithin(geom, :filter, :distance) from org.hibernate.spatial.integration.GeomEntity where dwithin(geom, :filter, :distance) = true and srid(geom) = 4326";
 		Map<String, Object> params = createQueryParams("filter", expectationsFactory.getTestPoint());
-		params.put("distance", 30.0);
+		if (getDialect() instanceof OracleSpatial10gDialect) {
+			//because this uses the weird syntax and conventions of SDO_WITHIN_DISTANCE which returns a string (really)
+			// we use a different boolean expression guaranteed to be true, and we set the third parameter to key/value string
+			hql = "SELECT id, issimple(geom) from org.hibernate.spatial.integration.GeomEntity where dwithin(geom, :filter, :distance) = true and srid(geom) = 4326";
+			params.put("distance", "distance = 30");
+		} else {
+			params.put("distance", 30.0);
+		}
 		retrieveHQLResultsAndCompare(dbexpected, hql, params);
 	}
 

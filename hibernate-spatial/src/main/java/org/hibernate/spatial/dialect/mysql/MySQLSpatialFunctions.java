@@ -165,6 +165,10 @@ class MySQLSpatialFunctions implements Iterable<Map.Entry<String, StandardSQLFun
 //		);
 	}
 
+	public void put(String name, StandardSQLFunction function ) {
+		this.functionsToRegister.put( name, function );
+	}
+
 	@Override
 	public Iterator<Map.Entry<String, StandardSQLFunction>> iterator() {
 		return functionsToRegister.entrySet().iterator();

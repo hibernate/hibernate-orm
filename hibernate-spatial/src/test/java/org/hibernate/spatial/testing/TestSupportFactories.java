@@ -23,6 +23,7 @@ package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
+import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
@@ -44,7 +45,6 @@ public class TestSupportFactories {
 	private TestSupportFactories() {
 	}
 
-
 	public TestSupport getTestSupportFactory(Dialect dialect) throws InstantiationException, IllegalAccessException {
 		if ( dialect == null ) {
 			throw new IllegalArgumentException( "Dialect argument is required." );
@@ -63,9 +63,6 @@ public class TestSupportFactories {
 		return this.getClass().getClassLoader();
 	}
 
-	//TODO -- find a better way to initialize and inject the TestSupport class.
-	//This whole class can probably be made obsolete.
-
 	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
 		String canonicalName = dialect.getClass().getCanonicalName();
 		if ( "org.hibernate.spatial.dialect.postgis.PostgisDialect".equals( canonicalName ) ) {
@@ -78,9 +75,12 @@ public class TestSupportFactories {
 			return SQLServerTestSupport.class;
 		}
 		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.mysql.MySQLSpatialInnoDBDialect".equals( canonicalName ) ||
-				"org.hibernate.spatial.dialect.mysql.MySQL5SpatialInnoDBDialect".equals( canonicalName ) ) {
+				"org.hibernate.spatial.dialect.mysql.MySQL5InnoDBSpatialDialect".equals( canonicalName ) ) {
 			return MySQLTestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatial56Dialect".equals( canonicalName ) ||
+				"org.hibernate.spatial.dialect.mysql.MySQL56InnoDBSpatialDialect".equals( canonicalName ) ) {
+			return MySQL56TestSupport.class;
 		}
 		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ) {
 			return OracleSDOTestSupport.class;

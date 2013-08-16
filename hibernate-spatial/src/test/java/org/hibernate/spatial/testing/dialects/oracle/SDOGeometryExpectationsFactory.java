@@ -37,7 +37,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor( JTSGeometryJavaTypeDescriptor.INSTANCE );
+	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor( JTSGeometryJavaTypeDescriptor.INSTANCE, null );
 
 	public SDOGeometryExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		super( dataSourceUtils );
@@ -69,7 +69,10 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
-		throw new UnsupportedOperationException();
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, 1 from GEOMTEST T where MDSYS.SDO_WITHIN_DISTANCE(t.GEOM, SDO_GEOMETRY(? , 4326), 'distance = " + distance + "') = 'TRUE' and t.GEOM.SDO_SRID = 4326",
+				geom.toText()
+		);
 	}
 
 	@Override

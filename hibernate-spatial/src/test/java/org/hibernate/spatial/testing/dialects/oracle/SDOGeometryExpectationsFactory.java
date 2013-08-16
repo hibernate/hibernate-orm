@@ -23,6 +23,7 @@ package org.hibernate.spatial.testing.dialects.oracle;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
+
 import org.hibernate.spatial.dialect.oracle.SDOGeometryValueExtractor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
@@ -67,7 +68,10 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 
 	@Override
 	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
-		throw new UnsupportedOperationException();
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, 1 from GEOMTEST T where MDSYS.SDO_WITHIN_DISTANCE(t.GEOM, SDO_GEOMETRY(? , 4326), 'distance = " + distance + "') = 'TRUE' and t.GEOM.SDO_SRID = 4326",
+				geom.toText()
+		);
 	}
 
 	@Override

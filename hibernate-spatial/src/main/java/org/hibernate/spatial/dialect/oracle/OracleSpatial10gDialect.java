@@ -36,6 +36,7 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.spatial.GeometryType;
+import org.hibernate.spatial.HibernateSpatialConfiguration;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialAnalysis;
@@ -157,8 +158,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 	public OracleSpatial10gDialect() {
 		super();
-		// initialise features to default
-		features.put(OGC_STRICT, new Boolean(true));
+
 
 		// read configuration information from
 		// classpath
@@ -522,8 +522,8 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		return getOGCSpatialAnalysisSQL(args, spatialAnalysis);
 	}
 
-	boolean isOGCStrict() {
-		return ((Boolean) this.features.get(OGC_STRICT)).booleanValue();
+	public boolean isOGCStrict() {
+		return HibernateSpatialConfiguration.isOgcStrictMode();
 	}
 
 
@@ -585,6 +585,8 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	}
 
 	public boolean supports(SpatialFunction function) {
+		//exception for crosses -- not supported when not OGC_STRICT
+		if (!isOGCStrict() && SpatialFunction.crosses.equals(function) ) return false;
 		return (getFunctions().get(function.toString()) != null);
 	}
 

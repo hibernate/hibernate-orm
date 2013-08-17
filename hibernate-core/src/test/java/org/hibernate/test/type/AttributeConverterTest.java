@@ -40,6 +40,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import org.junit.Test;
@@ -70,7 +71,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		assertNotNull( type );
 		assertTyping( BasicType.class, type );
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+		assertSame( ClobTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
@@ -90,7 +91,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertNotNull( type );
 			assertTyping( BasicType.class, type );
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+			assertSame( ClobTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
 

@@ -67,7 +67,7 @@ public class StatsTest extends BaseUnitTestCase {
 	@SuppressWarnings( {"UnusedAssignment"})
 	public void testCollectionFetchVsLoad() throws Exception {
 		SessionFactory sf = buildBaseConfiguration()
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create" )
+				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
 
 		Session s = sf.openSession();
@@ -109,7 +109,7 @@ public class StatsTest extends BaseUnitTestCase {
 
 		// open a new SF
 		sf.close();
-		Configuration cfg = buildBaseConfiguration();
+		Configuration cfg = buildBaseConfiguration().setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.buildMappings();
 		Collection coll = cfg.getCollectionMapping(Continent.class.getName() + ".countries");
 		coll.setFetchMode(FetchMode.JOIN);
@@ -135,7 +135,7 @@ public class StatsTest extends BaseUnitTestCase {
 
 		// open yet another SF
 		sf.close();
-		cfg = buildBaseConfiguration();
+		cfg = buildBaseConfiguration().setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.buildMappings();
 		coll = cfg.getCollectionMapping( Continent.class.getName() + ".countries" );
 		coll.setFetchMode(FetchMode.SELECT);
@@ -168,7 +168,7 @@ public class StatsTest extends BaseUnitTestCase {
 	@Test
 	public void testQueryStatGathering() {
 		SessionFactory sf = buildBaseConfiguration()
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create" )
+				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.buildSessionFactory();
 
 		Session s = sf.openSession();

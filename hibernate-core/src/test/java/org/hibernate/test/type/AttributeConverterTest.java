@@ -45,6 +45,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
@@ -54,8 +55,10 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
 /**
  * Tests the principle of adding "AttributeConverter" to the mix of {@link org.hibernate.type.Type} resolution
@@ -78,6 +81,23 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+	}
+
+	@Test
+	public void testNonAutoApplyHandling() {
+		Configuration cfg = new Configuration();
+		cfg.addAttributeConverter( NotAutoAppliedConverter.class, false );
+		cfg.addAnnotatedClass( Tester.class );
+		cfg.buildMappings();
+
+		PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
+		Property nameProp = tester.getProperty( "name" );
+		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+		Type type = nameValue.getType();
+		assertNotNull( type );
+		if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			fail( "AttributeConverter with autoApply=false was auto applied" );
+		}
 	}
 
 	@Test
@@ -306,6 +326,19 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 
 	// Converter declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Converter(autoApply = false)
+	public static class NotAutoAppliedConverter implements AttributeConverter<String,String> {
+		@Override
+		public String convertToDatabaseColumn(String attribute) {
+			throw new IllegalStateException( "AttributeConverter should not have been applied/called" );
+		}
+
+		@Override
+		public String convertToEntityAttribute(String dbData) {
+			throw new IllegalStateException( "AttributeConverter should not have been applied/called" );
+		}
+	}
 
 	@Converter( autoApply = true )
 	public static class StringClobConverter implements AttributeConverter<String,Clob> {

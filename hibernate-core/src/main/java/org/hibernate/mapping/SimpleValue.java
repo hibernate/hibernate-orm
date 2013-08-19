@@ -49,6 +49,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterSqlTypeDescriptorAdapter;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
@@ -393,23 +394,12 @@ public class SimpleValue implements KeyValue {
 	 *     </li>
 	 * </ul>
 	 *
-	 * For the JavaTypeDescriptor portion we simply resolve the "entity attribute representation" part of
-	 // the AttributeConverter to resolve the corresponding descriptor.  For the SqlTypeDescriptor portion we use the
-	 // "database column representation" part of the AttributeConverter to resolve the "recommended" JDBC type-code
-	 // and use that type-code to resolve the SqlTypeDescriptor to use.
-	 *
-	 *
-	 * <p/>
-	 *
-	 * <p/>
-	 * <p/>
+	 * @return The built AttributeConverter -> Type adapter
 	 *
 	 * @todo : ultimately I want to see attributeConverterJavaType and attributeConverterJdbcTypeCode specify-able separately
 	 * then we can "play them against each other" in terms of determining proper typing
 	 *
 	 * @todo : see if we already have previously built a custom on-the-fly BasicType for this AttributeConverter; see note below about caching
-	 *
-	 * @return The built AttributeConverter -> Type adapter
 	 */
 	@SuppressWarnings("unchecked")
 	private Type buildAttributeConverterTypeAdapter() {
@@ -445,28 +435,10 @@ public class SimpleValue implements KeyValue {
 				intermediateJavaTypeDescriptor
 		);
 
+		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
 		final String name = "BasicType adapter for AttributeConverter<" + entityAttributeJavaType + "," + databaseColumnJavaType + ">";
-		final Type type = new AbstractSingleColumnStandardBasicType( sqlTypeDescriptorAdapter, entityAttributeJavaTypeDescriptor ) {
-			@Override
-			public String getName() {
-				return name;
-			}
-		};
-		log.debug( "Created : " + name );
-
-		// todo : cache the BasicType we just created in case that AttributeConverter is applied multiple times.
-
-		return type;
-	}
-
-	private Class extractType(TypeVariable typeVariable) {
-		java.lang.reflect.Type[] boundTypes = typeVariable.getBounds();
-		if ( boundTypes == null || boundTypes.length != 1 ) {
-			return null;
-		}
-
-		return (Class) boundTypes[0];
+		return new AttributeConverterTypeAdapter( sqlTypeDescriptorAdapter, entityAttributeJavaTypeDescriptor, name );
 	}
 
 	public boolean isTypeSpecified() {

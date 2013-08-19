@@ -31,6 +31,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
@@ -38,6 +39,7 @@ import java.util.Properties;
 import org.jboss.logging.Logger;
 
 import org.hibernate.FetchMode;
+import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -50,13 +52,17 @@ import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.sql.BasicBinder;
 import org.hibernate.type.descriptor.sql.BasicExtractor;
 import org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappings;
@@ -395,13 +401,16 @@ public class SimpleValue implements KeyValue {
 		final JavaTypeDescriptor javaTypeDescriptor = JavaTypeDescriptorRegistry.INSTANCE.getDescriptor( databaseColumnJavaType );
 		final SqlTypeDescriptor sqlTypeDescriptor = SqlTypeDescriptorRegistry.INSTANCE.getDescriptor( jdbcTypeCode );
 		// the adapter here injects the AttributeConverter calls into the binding/extraction process...
+        AttributeConverter converter = jpaAttributeConverterDefinition.getAttributeConverter();
+        final JavaTypeDescriptor javaTypeDescriptorAdapter = new AttributeConverterJavaTypeDescriptorAdapter(
+                converter, databaseColumnJavaType, javaTypeDescriptor
+        );
 		final SqlTypeDescriptor sqlTypeDescriptorAdapter = new AttributeConverterSqlTypeDescriptorAdapter(
-				jpaAttributeConverterDefinition.getAttributeConverter(),
-				sqlTypeDescriptor
+				converter, sqlTypeDescriptor
 		);
 
 		final String name = "BasicType adapter for AttributeConverter<" + entityAttributeJavaType + "," + databaseColumnJavaType + ">";
-		type = new AbstractSingleColumnStandardBasicType( sqlTypeDescriptorAdapter, javaTypeDescriptor ) {
+		type = new AbstractSingleColumnStandardBasicType( sqlTypeDescriptorAdapter, javaTypeDescriptorAdapter ) {
 			@Override
 			public String getName() {
 				return name;
@@ -460,6 +469,89 @@ public class SimpleValue implements KeyValue {
 	public void setJpaAttributeConverterDefinition(AttributeConverterDefinition jpaAttributeConverterDefinition) {
 		this.jpaAttributeConverterDefinition = jpaAttributeConverterDefinition;
 	}
+
+    public static class AttributeConverterJavaTypeDescriptorAdapter implements JavaTypeDescriptor {
+        private final AttributeConverter converter;
+        private final Class databaseJavaType;
+        private final JavaTypeDescriptor delegate;
+        private final Comparator comparator;
+
+        public AttributeConverterJavaTypeDescriptorAdapter(AttributeConverter converter, Class databaseJavaType,
+                                                           JavaTypeDescriptor delegate) {
+            this.converter = converter;
+            this.databaseJavaType = databaseJavaType;
+            this.delegate = delegate;
+            this.comparator = Comparable.class.isAssignableFrom( this.databaseJavaType )
+                    ? ComparableComparator.INSTANCE
+                    : null;
+        }
+
+        @Override
+        public Class getJavaTypeClass() {
+            return this.databaseJavaType;
+        }
+
+        @Override
+        public MutabilityPlan getMutabilityPlan() {
+            return ImmutableMutabilityPlan.INSTANCE;
+        }
+
+        @Override
+        public Comparator getComparator() {
+            return this.comparator;
+        }
+
+        @Override
+        public int extractHashCode(Object value) {
+            return value.hashCode();
+        }
+
+        @Override
+        public boolean areEqual(Object one, Object another) {
+            return EqualsHelper.equals( one, another );
+        }
+
+        @Override
+        public String extractLoggableRepresentation(Object value) {
+            return (value == null) ? "null" : value.toString();
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public String toString(Object value) {
+            return delegate.toString( converter.convertToDatabaseColumn( value ) );
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object fromString(String string) {
+            return converter.convertToEntityAttribute( delegate.fromString( string ) );
+        }
+
+        @Override
+        public Object wrap(Object value, WrapperOptions options) {
+            return value;
+        }
+
+        @Override
+        public Object unwrap(Object value, Class type, WrapperOptions options) {
+            if ( value == null ) {
+                return null;
+            }
+
+            if ( value.getClass().isAssignableFrom( type ) ) {
+                return value;
+            }
+
+            throw new HibernateException(
+                    "Unknown unwrap conversion requested: " + databaseJavaType.getName() + " to " + type.getName()
+            );
+        }
+
+        public JavaTypeDescriptor getDelegate() {
+            return this.delegate;
+        }
+    }
 
 	public static class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescriptor {
 		private final AttributeConverter converter;

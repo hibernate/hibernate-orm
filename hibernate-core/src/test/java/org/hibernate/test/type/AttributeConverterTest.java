@@ -76,7 +76,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		assertNotNull( type );
 		assertTyping( BasicType.class, type );
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( ClobTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+        SimpleValue.AttributeConverterJavaTypeDescriptorAdapter adapter = assertTyping(
+                SimpleValue.AttributeConverterJavaTypeDescriptorAdapter.class, basicType.getJavaTypeDescriptor()
+        );
+		assertSame( ClobTypeDescriptor.INSTANCE, adapter.getDelegate() );
 		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
@@ -93,7 +96,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		assertNotNull( type );
 		assertTyping( BasicType.class, type );
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( JdbcTimestampTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+        SimpleValue.AttributeConverterJavaTypeDescriptorAdapter adapter = assertTyping(
+                SimpleValue.AttributeConverterJavaTypeDescriptorAdapter.class, basicType.getJavaTypeDescriptor()
+        );
+		assertSame( JdbcTimestampTypeDescriptor.INSTANCE, adapter.getDelegate() );
 		assertEquals( Types.TIMESTAMP, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
@@ -113,7 +119,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertNotNull( type );
 			assertTyping( BasicType.class, type );
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( ClobTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+            SimpleValue.AttributeConverterJavaTypeDescriptorAdapter adapter = assertTyping(
+                    SimpleValue.AttributeConverterJavaTypeDescriptorAdapter.class, basicType.getJavaTypeDescriptor()
+            );
+			assertSame( ClobTypeDescriptor.INSTANCE, adapter.getDelegate() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
 

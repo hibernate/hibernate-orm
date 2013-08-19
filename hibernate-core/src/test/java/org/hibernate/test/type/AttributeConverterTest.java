@@ -27,11 +27,15 @@ import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Converter;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.io.Serializable;
 import java.sql.Clob;
+import java.sql.Timestamp;
 import java.sql.Types;
 
 import org.hibernate.IrrelevantEntity;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
@@ -40,6 +44,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import org.junit.Test;
@@ -70,8 +76,31 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		assertNotNull( type );
 		assertTyping( BasicType.class, type );
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+        SimpleValue.AttributeConverterJavaTypeDescriptorAdapter adapter = assertTyping(
+                SimpleValue.AttributeConverterJavaTypeDescriptorAdapter.class, basicType.getJavaTypeDescriptor()
+        );
+		assertSame( ClobTypeDescriptor.INSTANCE, adapter.getDelegate() );
 		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+	}
+
+	@Test
+	public void testBasicTimestampOperation() {
+		Configuration cfg = new Configuration();
+		SimpleValue simpleValue = new SimpleValue( cfg.createMappings() );
+		simpleValue.setJpaAttributeConverterDefinition(
+				new AttributeConverterDefinition( new InstantConverter(), true )
+		);
+		simpleValue.setTypeUsingReflection( IrrelevantInstantEntity.class.getName(), "dateCreated" );
+
+		Type type = simpleValue.getType();
+		assertNotNull( type );
+		assertTyping( BasicType.class, type );
+		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+        SimpleValue.AttributeConverterJavaTypeDescriptorAdapter adapter = assertTyping(
+                SimpleValue.AttributeConverterJavaTypeDescriptorAdapter.class, basicType.getJavaTypeDescriptor()
+        );
+		assertSame( JdbcTimestampTypeDescriptor.INSTANCE, adapter.getDelegate() );
+		assertEquals( Types.TIMESTAMP, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
 	@Test
@@ -90,7 +119,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertNotNull( type );
 			assertTyping( BasicType.class, type );
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+            SimpleValue.AttributeConverterJavaTypeDescriptorAdapter adapter = assertTyping(
+                    SimpleValue.AttributeConverterJavaTypeDescriptorAdapter.class, basicType.getJavaTypeDescriptor()
+            );
+			assertSame( ClobTypeDescriptor.INSTANCE, adapter.getDelegate() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
 
@@ -141,6 +173,50 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		@Override
 		public String convertToEntityAttribute(Clob dbData) {
 			return null;
+		}
+	}
+
+	// This class is for mimicking an Instant from Java 8, which a converter might convert to a java.sql.Timestamp
+	public static class Instant implements Serializable {
+		private static final long serialVersionUID = 1L;
+	}
+
+	@Converter( autoApply = true )
+	public static class InstantConverter implements AttributeConverter<Instant, Timestamp> {
+
+		@Override
+		public Timestamp convertToDatabaseColumn(Instant attribute) {
+			return null;
+		}
+
+		@Override
+		public Instant convertToEntityAttribute(Timestamp dbData) {
+			return null;
+		}
+	}
+
+	@Entity
+	public class IrrelevantInstantEntity {
+		private Integer id;
+		private Instant dateCreated;
+
+		@Id
+		@GeneratedValue( generator = "increment" )
+		@GenericGenerator( name = "increment", strategy = "increment" )
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public Instant getDateCreated() {
+			return dateCreated;
+		}
+
+		public void setDateCreated(Instant dateCreated) {
+			this.dateCreated = dateCreated;
 		}
 	}
 }

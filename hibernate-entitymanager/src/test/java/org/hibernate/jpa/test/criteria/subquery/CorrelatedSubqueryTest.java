@@ -132,4 +132,9 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 	}
+
+	@Test
+	public void testVariousSubqueryJoinSemantics() {
+		// meant to assert semantics of #getJoins versus #getCorrelatedJoins
+	}
 }

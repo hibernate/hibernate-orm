@@ -284,7 +284,7 @@ public class EntityLoadQueryDetails implements LoadQueryDetails {
 		select.appendRestrictions(
 				rootQueryable.filterFragment(
 						entityReferenceAliases.getTableAlias(),
-						buildingParameters.getQueryInfluencers().getEnabledFilters()
+						Collections.emptyMap()
 				)
 		);
 		select.appendRestrictions(

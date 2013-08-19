@@ -440,7 +440,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			);
 
 			final String manyToManyFilter = persister.getManyToManyFilterFragment(
-					collectionTableAlias,
+					elementTableAlias,
 					buildingParameters.getQueryInfluencers().getEnabledFilters()
 			);
 

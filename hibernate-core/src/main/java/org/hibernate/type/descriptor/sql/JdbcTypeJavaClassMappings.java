@@ -41,9 +41,12 @@ import org.jboss.logging.Logger;
 import org.hibernate.mapping.Array;
 
 /**
- * Presents recommended {@literal JDCB typecode <-> Java Class} mappings.  Currently the recommendations
- * contained here come from the JDBC spec itself, as outlined at <a href="http://docs.oracle.com/javase/1.5.0/docs/guide/jdbc/getstart/mapping.html#1034737"/>
- * Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} contribute this information.
+ * Presents recommended {@literal JDCB typecode <-> Java Class} mappings.  Currently the mappings contained here come
+ * from the recommendations defined by the JDBC spec itself, as outlined at
+ * <a href="http://docs.oracle.com/javase/1.5.0/docs/guide/jdbc/getstart/mapping.html#1034737"/>.
+ * <p/>
+ * Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
+ * {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
  *
  * @author Steve Ebersole
  */

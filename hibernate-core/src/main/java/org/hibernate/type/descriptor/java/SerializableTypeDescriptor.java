@@ -101,32 +101,47 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 	public <X> X unwrap(T value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
-		} else if ( byte[].class.isAssignableFrom( type ) ) {
+		}
+		else if ( type.isInstance( value ) ) {
+			return (X) value;
+		}
+		else if ( byte[].class.isAssignableFrom( type ) ) {
 			return (X) toBytes( value );
-		} else if ( InputStream.class.isAssignableFrom( type ) ) {
+		}
+		else if ( InputStream.class.isAssignableFrom( type ) ) {
 			return (X) new ByteArrayInputStream( toBytes( value ) );
-		} else if ( BinaryStream.class.isAssignableFrom( type ) ) {
+		}
+		else if ( BinaryStream.class.isAssignableFrom( type ) ) {
 			return (X) new BinaryStreamImpl( toBytes( value ) );
-		} else if ( Blob.class.isAssignableFrom( type )) {
+		}
+		else if ( Blob.class.isAssignableFrom( type )) {
 			return (X) options.getLobCreator().createBlob( toBytes(value) );
 		}
 		
 		throw unknownUnwrap( type );
 	}
 
+	@SuppressWarnings("unchecked")
 	public <X> T wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
-		} else if ( byte[].class.isInstance( value ) ) {
+		}
+		else if ( byte[].class.isInstance( value ) ) {
 			return fromBytes( (byte[]) value );
-		} else if ( InputStream.class.isInstance( value ) ) {
+		}
+		else if ( InputStream.class.isInstance( value ) ) {
 			return fromBytes( DataHelper.extractBytes( (InputStream) value ) );
-		} else if ( Blob.class.isInstance( value )) {
+		}
+		else if ( Blob.class.isInstance( value )) {
 			try {
 				return fromBytes( DataHelper.extractBytes( ( (Blob) value ).getBinaryStream() ) );
-			} catch ( SQLException e ) {
+			}
+			catch ( SQLException e ) {
 				throw new HibernateException(e);
 			}
+		}
+		else if ( getJavaTypeClass().isInstance( value ) ) {
+			return (T) value;
 		}
 		throw unknownWrap( value.getClass() );
 	}

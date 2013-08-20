@@ -11,6 +11,7 @@ include 'hibernate-proxool'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 include 'hibernate-gradle-plugin'
+include 'enhance-maven-plugin'
 include 'documentation'
 include 'release'
 

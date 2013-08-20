@@ -73,6 +73,10 @@ ext {
             animal_sniffer: 'org.codehaus.mojo:animal-sniffer-ant-tasks:1.8',
             java16_signature: 'org.codehaus.mojo.signature:java16:1.0@signature',
 
+            //Maven plugin framework
+            maven_plugin: 'org.apache.maven:maven-plugin-api:3.0.5',
+            maven_plugin_tools: 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.2',
+
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
             // logging for testing

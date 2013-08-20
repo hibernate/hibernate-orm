@@ -296,8 +296,8 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
             assertTrue(e.getMessage().indexOf("Use of parameters in subqueries of INSERT INTO DML statements is not supported.") > -1);
         }
 
+        t.commit();
         t = s.beginTransaction();
-
 
 		s.createQuery( "delete Vehicle" ).executeUpdate();
 

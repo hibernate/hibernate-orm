@@ -187,7 +187,11 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 				try {
 					if ( ReflectHelper.isPublic( persistentClass, thisMethod ) ) {
 						if ( !thisMethod.getDeclaringClass().isInstance( target ) ) {
-							throw new ClassCastException( target.getClass().getName() );
+							throw new ClassCastException(
+									target.getClass().getName()
+									+ " incompatible with "
+									+ thisMethod.getDeclaringClass().getName()
+							);
 						}
 						returnValue = thisMethod.invoke( target, args );
 					}

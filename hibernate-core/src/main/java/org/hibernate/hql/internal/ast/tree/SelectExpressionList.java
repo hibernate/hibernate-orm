@@ -24,11 +24,12 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
-
-import antlr.collections.AST;
+import java.util.List;
 
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+
+import antlr.collections.AST;
 
 /**
  * Common behavior - a node that contains a list of select expressions.
@@ -36,6 +37,9 @@ import org.hibernate.hql.internal.ast.util.ASTPrinter;
  * @author josh
  */
 public abstract class SelectExpressionList extends HqlSqlWalkerNode {
+
+	private List<Integer> parameterPositions = new ArrayList<Integer>();
+	
 	/**
 	 * Returns an array of SelectExpressions gathered from the children of the given parent AST node.
 	 *
@@ -47,15 +51,38 @@ public abstract class SelectExpressionList extends HqlSqlWalkerNode {
 		AST firstChild = getFirstSelectExpression();
 		AST parent = this;
 		ArrayList list = new ArrayList( parent.getNumberOfChildren() );
+		int p = 0;
 		for ( AST n = firstChild; n != null; n = n.getNextSibling() ) {
 			if ( n instanceof SelectExpression ) {
 				list.add( n );
 			}
+			else if( n instanceof ParameterNode ) {
+				parameterPositions.add(p);
+			}
 			else {
 				throw new IllegalStateException( "Unexpected AST: " + n.getClass().getName() + " " + new ASTPrinter( SqlTokenTypes.class ).showAsString( n, "" ) );
 			}
+			p++;
 		}
 		return ( SelectExpression[] ) list.toArray( new SelectExpression[list.size()] );
+	}
+
+	/**
+	 * The total number of parameter projections of this expression.
+	 *
+	 * @return The number of parameters in this select clause.
+	 */
+	public int getTotalParameterCount() {
+		return parameterPositions.size();
+	}
+
+	/**
+	 * The position of parameters within the list of select expressions of this clause
+	 *
+	 * @return a list of positions representing the mapping from order of occurence to position
+	 */
+	public List<Integer> getParameterPositions() {
+		return parameterPositions;
 	}
 
 	/**

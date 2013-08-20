@@ -409,6 +409,7 @@ selectExpr
 	| collectionFunction			// elements() or indices()
 	| literal
 	| arithmeticExpr
+	| parameter
 	| query
 	;
 

@@ -36,12 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.ASTFactory;
-import antlr.RecognitionException;
-import antlr.SemanticException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
@@ -104,6 +98,12 @@ import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.usertype.UserVersionType;
+import org.jboss.logging.Logger;
+
+import antlr.ASTFactory;
+import antlr.RecognitionException;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Implements methods used by the HQL->SQL tree transform grammar (a.k.a. the second phase).
@@ -772,6 +772,20 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
                 fragmentNode.setNextSibling( originalFirstSelectExprNode );
                 // finally, prepend the id column name(s) to the insert-spec
                 insertStatement.getIntoClause().prependIdColumnSpec();
+			}
+		}
+
+		if ( sessionFactoryHelper.getFactory().getDialect().supportsParametersInInsertSelect() ) {
+			AST child = selectClause.getFirstChild();
+			int i = 0;
+			while(child != null) {
+				if(child instanceof ParameterNode) {
+					// infer the parameter type from the type listed in the INSERT INTO clause
+					((ParameterNode)child).setExpectedType(insertStatement.getIntoClause()
+							.getInsertionTypes()[selectClause.getParameterPositions().get(i)]);
+					i++;
+				}
+				child = child.getNextSibling();
 			}
 		}
 

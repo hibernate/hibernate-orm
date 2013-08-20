@@ -26,15 +26,16 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.QueryException;
+import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTAppender;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents the list of expressions in a SELECT clause.
@@ -139,6 +140,11 @@ public class SelectClause extends SelectExpressionList {
 		// changes the AST!!!
 		SelectExpression[] selectExpressions = collectSelectExpressions();
 
+        // we only support parameters in select in the case of INSERT...SELECT statements
+        if (getParameterPositions().size() > 0 && getWalker().getStatementType() != HqlSqlTokenTypes.INSERT) {
+            throw new QueryException("Parameters are only supported in SELECT clauses when used as part of a INSERT INTO DML statement");
+        }
+
 		for ( int i = 0; i < selectExpressions.length; i++ ) {
 			SelectExpression selectExpression = selectExpressions[i];
 
@@ -148,6 +154,17 @@ public class SelectClause extends SelectExpressionList {
 				scalarSelect = true;
 			}
 			else {
+				// we have no choice but to do this check here
+				// this is not very elegant but the "right way" would most likely involve a bigger rewrite so as to
+				// treat ParameterNodes in select clauses as SelectExpressions
+				boolean inSubquery = selectExpression instanceof QueryNode && ((QueryNode) selectExpression).getFromClause().getParentFromClause() != null;
+				if (getWalker().getStatementType() == HqlSqlTokenTypes.INSERT && inSubquery) {
+					// we do not support parameters for subqueries in INSERT...SELECT
+					if (((QueryNode) selectExpression).getSelectClause().getParameterPositions().size() > 0) {
+						throw new QueryException("Use of parameters in subqueries of INSERT INTO DML statements is not supported.");
+					}
+                }
+				
 				Type type = selectExpression.getDataType();
 				if ( type == null ) {
 					throw new IllegalStateException( "No data type for node: " + selectExpression.getClass().getName() + " "

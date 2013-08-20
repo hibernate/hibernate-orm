@@ -28,8 +28,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -37,6 +41,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 public final class StringHelper {
 
 	private static final int ALIAS_TRUNCATE_LENGTH = 10;
+	private static final String ALIAS_INTERPOLATE_PREFIX = "{";
+	private static final String ALIAS_INTERPOLATE_SUFFIX = "}";
+	private static final Pattern ALIAS_INTERPOLATE_PATTERN = Pattern.compile( "[{](\\w+)[}]" );
 	public static final String WHITESPACE = " \n\r\f\t";
 
 	private StringHelper() { /* static methods only - hide constructor */
@@ -534,6 +541,43 @@ public final class StringHelper {
 		return generateAliasRoot(description) +
 			Integer.toString(unique) +
 			'_';
+	}
+
+	/**
+	 * Inspect a string for potential interpolation matches (word characters contained within
+	 * curly braces).
+	 *
+	 * @param sql An un-interpolated SQL string.
+	 * @return The set of keys that can be interpolated in this SQL.
+	 */
+	public static Set<String> findInterpolationKeys( String sql ){
+		final Matcher matcher = ALIAS_INTERPOLATE_PATTERN.matcher( sql );
+		// slightly better estimate sizing than default
+		final Set<String> results = new HashSet<String>( 3 );
+		while( matcher.find() ){
+			results.add( matcher.group( 1 ) );
+		}
+		return results;
+	}
+
+	/**
+	 * Allows for a SQL string to be interpolated with a a given alias mapping. The prefix/postfix character
+	 * used to determine where interpolation should be performed are '{' and '}'. Eg. if the value of
+	 * <tt>alias</tt> is 'person', then this will look for instances of the string <tt>{person}</tt> in
+	 * the provided SQL and replace them with <tt>newValue</tt>.
+	 *
+	 * @param sql An un-interpolated SQL string potentially containing the alias that we want to convert.
+	 * @param alias The alias to replace
+	 * @param newValue Replacement value
+	 *
+	 * @return A string with the replaced values.
+	 */
+	public static String interpolateAlias(String sql, String alias, String newValue){
+		final String replaceToken = new StringBuilder( alias.length() + 2 )
+				.append( ALIAS_INTERPOLATE_PREFIX )
+				.append( alias )
+				.append( ALIAS_INTERPOLATE_SUFFIX ).toString();
+		return StringHelper.replace( sql, replaceToken, newValue );
 	}
 
 	/**

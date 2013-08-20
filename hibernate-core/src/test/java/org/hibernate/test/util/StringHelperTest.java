@@ -28,8 +28,11 @@ import org.junit.Test;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import java.util.Set;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -58,5 +61,25 @@ public class StringHelperTest extends BaseUnitTestCase {
 		assertNull( StringHelper.collapseQualifierBase( null, BASE_PACKAGE ) );
 		assertEquals( STRING_HELPER_NAME, StringHelper.collapseQualifierBase( STRING_HELPER_NAME, BASE_PACKAGE ) );
 		assertEquals( "o.h.internal.util.StringHelper", StringHelper.collapseQualifierBase( STRING_HELPER_FQN, BASE_PACKAGE ) );
+	}
+
+	@Test
+	public void testFindInterpolationKeys() {
+
+		Set<String> results = StringHelper.findInterpolationKeys( "{}" );
+		assertEquals( 0, results.size() );
+
+		results = StringHelper.findInterpolationKeys( "{person}.fname and {person}.lname" );
+		assertEquals( 1, results.size() );
+		assertTrue( results.contains( "person" ) );
+
+		results = StringHelper.findInterpolationKeys( "{person}.fname and {other_123}.fname" );
+		assertEquals( 2, results.size() );
+		assertTrue( results.contains( "person" ) );
+		assertTrue( results.contains( "other_123" ) );
+
+		// should ignore whitespace and non-word characters
+		results = StringHelper.findInterpolationKeys( "{'person'}{ other }{*}{person.fname}" );
+		assertEquals( 0, results.size() );
 	}
 }

@@ -645,6 +645,23 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		}
 		return getSQLAlias( criteria );
 	}
+
+	public String getSQLAlias( String alias ) {
+
+		final Criteria criteria = getAliasedCriteria( alias );
+		if( criteria != null ) {
+			return getSQLAlias( criteria );
+		}
+		else if( outerQueryTranslator != null ) {
+			// recurse up to find a match
+			return outerQueryTranslator.getSQLAlias( alias );
+		}
+		// no match found. Don't throw an exception to avoid being overly obtrusive
+		// to cases where no match was actually excepted (ie. we incorrectly found something
+		// to interpolate that should be left alone).
+		return null;
+	}
+
 	@Override
 	public String getPropertyName(String propertyName) {
 		if ( propertyName.indexOf( '.' ) > 0 ) {

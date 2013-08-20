@@ -451,7 +451,8 @@ public class Restrictions {
 
 	/**
 	 * Create a restriction expressed in SQL with JDBC parameters.  Any occurrences of <tt>{alias}</tt> will be
-	 * replaced by the table alias.
+	 * replaced by the table alias. Join tables can also use this syntax. For example: writing {myAlias} will be
+	 * replaced with the actual table alias for that join.
 	 *
 	 * @param sql The SQL restriction
 	 * @param values The parameter values

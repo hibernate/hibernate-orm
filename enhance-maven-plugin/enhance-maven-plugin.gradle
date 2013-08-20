@@ -1,0 +1,14 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile( libraries.maven_plugin )
+    compile( libraries.maven_plugin_tools )
+    compile( project(':hibernate-core') )
+    compile( libraries.jpa )
+    compile( libraries.javassist )
+}

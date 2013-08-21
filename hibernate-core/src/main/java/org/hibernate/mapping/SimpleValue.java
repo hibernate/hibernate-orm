@@ -437,8 +437,17 @@ public class SimpleValue implements KeyValue {
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 
-		final String name = "BasicType adapter for AttributeConverter<" + entityAttributeJavaType + "," + databaseColumnJavaType + ">";
-		return new AttributeConverterTypeAdapter( sqlTypeDescriptorAdapter, entityAttributeJavaTypeDescriptor, name );
+		final String name = String.format(
+				"BasicType adapter for AttributeConverter<%s,%s>",
+				entityAttributeJavaType.getSimpleName(),
+				databaseColumnJavaType.getSimpleName()
+		);
+		return new AttributeConverterTypeAdapter(
+				name,
+				jpaAttributeConverterDefinition.getAttributeConverter(),
+				sqlTypeDescriptorAdapter,
+				entityAttributeJavaTypeDescriptor
+		);
 	}
 
 	public boolean isTypeSpecified() {

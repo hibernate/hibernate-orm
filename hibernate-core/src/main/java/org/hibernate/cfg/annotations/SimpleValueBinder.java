@@ -306,23 +306,49 @@ public class SimpleValueBinder {
 	}
 
 	private void applyAttributeConverter(XProperty property) {
-		final boolean canBeConverted = ! property.isAnnotationPresent( Id.class )
-				&& ! isVersion
-				&& ! isAssociation()
-				&& ! property.isAnnotationPresent( Temporal.class )
-				&& ! property.isAnnotationPresent( Enumerated.class );
+		if ( attributeConverterDefinition != null ) {
+			return;
+		}
 
-		if ( canBeConverted ) {
-			// @Convert annotations take precedence
-			final Convert convertAnnotation = locateConvertAnnotation( property );
-			if ( convertAnnotation != null ) {
-				if ( ! convertAnnotation.disableConversion() ) {
-					attributeConverterDefinition = mappings.locateAttributeConverter( convertAnnotation.converter() );
-				}
-			}
-			else {
-				attributeConverterDefinition = locateAutoApplyAttributeConverter( property );
-			}
+		LOG.debugf( "Starting applyAttributeConverter [%s:%s]", persistentClassName, property.getName() );
+
+		if ( property.isAnnotationPresent( Id.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for Id attribute [%s]", property.getName() );
+			return;
+		}
+
+		if ( isVersion ) {
+			LOG.debugf( "Skipping AttributeConverter checks for version attribute [%s]", property.getName() );
+			return;
+		}
+
+		if ( property.isAnnotationPresent( Temporal.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for Temporal attribute [%s]", property.getName() );
+			return;
+		}
+
+		if ( property.isAnnotationPresent( Enumerated.class ) ) {
+			LOG.debugf( "Skipping AttributeConverter checks for Enumerated attribute [%s]", property.getName() );
+			return;
+		}
+
+		if ( isAssociation() ) {
+			LOG.debugf( "Skipping AttributeConverter checks for association attribute [%s]", property.getName() );
+			return;
+		}
+
+		// @Convert annotations take precedence if present
+		final Convert convertAnnotation = locateConvertAnnotation( property );
+		if ( convertAnnotation != null ) {
+			LOG.debugf(
+					"Applying located @Convert AttributeConverter [%s] to attribute [%]",
+					convertAnnotation.converter().getName(),
+					property.getName()
+			);
+			attributeConverterDefinition = mappings.locateAttributeConverter( convertAnnotation.converter() );
+		}
+		else {
+			attributeConverterDefinition = locateAutoApplyAttributeConverter( property );
 		}
 	}
 
@@ -347,10 +373,41 @@ public class SimpleValueBinder {
 
 	@SuppressWarnings("unchecked")
 	private Convert locateConvertAnnotation(XProperty property) {
-		// first look locally on the property for @Convert
-		Convert localConvertAnnotation = property.getAnnotation( Convert.class );
-		if ( localConvertAnnotation != null ) {
-			return localConvertAnnotation;
+		LOG.debugf(
+				"Attempting to locate Convert annotation for property [%s:%s]",
+				persistentClassName,
+				property.getName()
+		);
+
+		// first look locally on the property for @Convert/@Converts
+		{
+			Convert localConvertAnnotation = property.getAnnotation( Convert.class );
+			if ( localConvertAnnotation != null ) {
+				LOG.debugf(
+						"Found matching local @Convert annotation [disableConversion=%s]",
+						localConvertAnnotation.disableConversion()
+				);
+				return localConvertAnnotation.disableConversion()
+						? null
+						: localConvertAnnotation;
+			}
+		}
+
+		{
+			Converts localConvertsAnnotation = property.getAnnotation( Converts.class );
+			if ( localConvertsAnnotation != null ) {
+				for ( Convert localConvertAnnotation : localConvertsAnnotation.value() ) {
+					if ( isLocalMatch( localConvertAnnotation, property ) ) {
+						LOG.debugf(
+								"Found matching @Convert annotation as part local @Converts [disableConversion=%s]",
+								localConvertAnnotation.disableConversion()
+						);
+						return localConvertAnnotation.disableConversion()
+								? null
+								: localConvertAnnotation;
+					}
+				}
+			}
 		}
 
 		if ( persistentClassName == null ) {
@@ -376,10 +433,20 @@ public class SimpleValueBinder {
 			return null;
 		}
 
+		LOG.debugf(
+				"Attempting to locate any AttributeConverter defined via @Convert/@Converts on type-hierarchy [%s] to apply to attribute [%s]",
+				owner.getName(),
+				property.getName()
+		);
+
 		{
 			Convert convertAnnotation = owner.getAnnotation( Convert.class );
 			if ( convertAnnotation != null && isMatch( convertAnnotation, property ) ) {
-				return convertAnnotation;
+				LOG.debugf(
+						"Found matching @Convert annotation [disableConversion=%s]",
+						convertAnnotation.disableConversion()
+				);
+				return convertAnnotation.disableConversion() ? null : convertAnnotation;
 			}
 		}
 
@@ -388,7 +455,11 @@ public class SimpleValueBinder {
 			if ( convertsAnnotation != null ) {
 				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
 					if ( isMatch( convertAnnotation, property ) ) {
-						return convertAnnotation;
+						LOG.debugf(
+								"Found matching @Convert annotation as part @Converts [disableConversion=%s]",
+								convertAnnotation.disableConversion()
+						);
+						return convertAnnotation.disableConversion() ? null : convertAnnotation;
 					}
 				}
 			}
@@ -399,9 +470,20 @@ public class SimpleValueBinder {
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean isMatch(Convert convertAnnotation, XProperty property) {
+	private boolean isLocalMatch(Convert convertAnnotation, XProperty property) {
+		if ( StringHelper.isEmpty( convertAnnotation.attributeName() ) ) {
+			return isTypeMatch( convertAnnotation.converter(), property );
+		}
+
 		return property.getName().equals( convertAnnotation.attributeName() )
 				&& isTypeMatch( convertAnnotation.converter(), property );
+	}
+
+	@SuppressWarnings("unchecked")
+	private boolean isMatch(Convert convertAnnotation, XProperty property) {
+		return property.getName().equals( convertAnnotation.attributeName() );
+//		return property.getName().equals( convertAnnotation.attributeName() )
+//				&& isTypeMatch( convertAnnotation.converter(), property );
 	}
 
 	private boolean isTypeMatch(Class<? extends AttributeConverter> attributeConverterClass, XProperty property) {
@@ -577,7 +659,7 @@ public class SimpleValueBinder {
 	}
 
 	public void fillSimpleValue() {
-		LOG.debugf( "Setting SimpleValue typeName for %s", propertyName );
+		LOG.debugf( "Starting fillSimpleValue for %s", propertyName );
                 
 		if ( attributeConverterDefinition != null ) {
 			if ( ! BinderHelper.isEmptyAnnotationValue( explicitType ) ) {
@@ -590,6 +672,12 @@ public class SimpleValueBinder {
 						)
 				);
 			}
+			LOG.debugf(
+					"Applying JPA AttributeConverter [%s] to [%s:%s]",
+					attributeConverterDefinition,
+					persistentClassName,
+					propertyName
+			);
 			simpleValue.setJpaAttributeConverterDefinition( attributeConverterDefinition );
 		}
 		else {

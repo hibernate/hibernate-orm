@@ -23,6 +23,8 @@
  */
 package org.hibernate.type.descriptor.converter;
 
+import javax.persistence.AttributeConverter;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
@@ -30,19 +32,24 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
+ * Adapts the Hibernate Type contract to incorporate JPA AttributeConverter calls.
+ *
  * @author Steve Ebersole
  */
-public class AttributeConverterTypeAdapter extends AbstractSingleColumnStandardBasicType {
+public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStandardBasicType<T> {
 	private static final Logger log = Logger.getLogger( AttributeConverterTypeAdapter.class );
 
 	private final String name;
+	private final AttributeConverter<? extends T,?> attributeConverter;
 
 	public AttributeConverterTypeAdapter(
-			SqlTypeDescriptor sqlTypeDescriptor,
-			JavaTypeDescriptor javaTypeDescriptor,
-			String name) {
-		super( sqlTypeDescriptor, javaTypeDescriptor );
+			String name,
+			AttributeConverter<? extends T,?> attributeConverter,
+			SqlTypeDescriptor sqlTypeDescriptorAdapter,
+			JavaTypeDescriptor<T> entityAttributeJavaTypeDescriptor) {
+		super( sqlTypeDescriptorAdapter, entityAttributeJavaTypeDescriptor );
 		this.name = name;
+		this.attributeConverter = attributeConverter;
 
 		log.debug( "Created AttributeConverterTypeAdapter -> " + name );
 	}
@@ -50,5 +57,9 @@ public class AttributeConverterTypeAdapter extends AbstractSingleColumnStandardB
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	public AttributeConverter<? extends T,?> getAttributeConverter() {
+		return attributeConverter;
 	}
 }

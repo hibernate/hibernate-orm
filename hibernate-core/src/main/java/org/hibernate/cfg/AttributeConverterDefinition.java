@@ -121,4 +121,15 @@ public class AttributeConverterDefinition {
 
 		return (Class) boundTypes[0];
 	}
+
+	@Override
+	public String toString() {
+		return String.format(
+				"%s[converterClass=%s, domainType=%s, jdbcType=%s]",
+				this.getClass().getName(),
+				attributeConverter.getClass().getName(),
+				entityAttributeType.getName(),
+				databaseColumnType.getName()
+		);
+	}
 }

@@ -21,8 +21,22 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import com.vividsolutions.jts.algorithm.CGAlgorithms;
-import com.vividsolutions.jts.geom.*;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryCollection;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.geom.MultiLineString;
+import com.vividsolutions.jts.geom.MultiPoint;
+import com.vividsolutions.jts.geom.MultiPolygon;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
+
 import org.hibernate.HibernateException;
 import org.hibernate.spatial.helper.FinderException;
 import org.hibernate.spatial.jts.JTS;
@@ -31,16 +45,17 @@ import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
-
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/22/11
  */
 public class SDOGeometryValueBinder implements ValueBinder<Geometry> {
+
+	final private OracleJDBCTypeFactory typeFactory;
+
+	public SDOGeometryValueBinder(OracleJDBCTypeFactory typeFactory) {
+		this.typeFactory = typeFactory;
+	}
 
 	@Override
 	public void bind(PreparedStatement st, Geometry value, int index, WrapperOptions options) throws SQLException {
@@ -57,11 +72,15 @@ public class SDOGeometryValueBinder implements ValueBinder<Geometry> {
 		return JTS.getDefaultGeomFactory();
 	}
 
+	public Object store(SDOGeometry geom, Connection conn) throws SQLException, FinderException {
+		return typeFactory.createStruct(geom, conn);
+	}
+
 	private Object toNative(Geometry jtsGeom, Connection connection) {
 		SDOGeometry geom = convertJTSGeometry(jtsGeom);
 		if (geom != null)
 			try {
-				return SDOGeometry.store(geom, connection);
+				return store( geom, connection );
 			} catch (SQLException e) {
 				throw new HibernateException(
 						"Problem during conversion from JTS to SDOGeometry", e);

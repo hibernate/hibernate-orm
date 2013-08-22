@@ -21,10 +21,7 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
-import org.hibernate.spatial.helper.FinderException;
-
 import java.sql.Array;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Struct;
 import java.util.ArrayList;
@@ -37,7 +34,6 @@ import java.util.List;
 
 class SDOGeometry {
 
-	private final static SQLTypeFactory TYPE_FACTORY = new OracleJDBCTypeFactory();
 	private static final String SQL_TYPE_NAME = "MDSYS.SDO_GEOMETRY";
 
 	private SDOGType gtype;
@@ -169,11 +165,6 @@ class SDOGeometry {
 		geom.setOrdinates(new Ordinates((Array) data[4]));
 
 		return geom;
-	}
-
-	public static Struct store(SDOGeometry geom, Connection conn)
-			throws SQLException, FinderException {
-		return TYPE_FACTORY.createStruct(geom, conn);
 	}
 
 

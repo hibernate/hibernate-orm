@@ -20,9 +20,9 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
-import org.hibernate.spatial.helper.FinderStrategy;
-
 import java.sql.Connection;
+
+import org.hibernate.spatial.helper.FinderStrategy;
 
 /**
  * The <code>ConnectionFinder</code> returns an OracleConnection when given a
@@ -35,6 +35,7 @@ import java.sql.Connection;
  * a wrapper. Implementations of this interface attempt to retrieve the
  * <code>OracleConnection</code> from the wrapper in such cases.
  * </p>
+ * <p>Implementations should be thread-safe, and have a default (no-args) constructor.</p>
  *
  * @author Karel Maesen
  */

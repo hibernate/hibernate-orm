@@ -20,14 +20,8 @@
  */
 package org.hibernate.spatial.dialect.oracle;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
@@ -37,14 +31,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.spatial.GeometrySqlTypeDescriptor;
 import org.hibernate.spatial.GeometryType;
 import org.hibernate.spatial.HibernateSpatialConfiguration;
-import org.hibernate.spatial.Log;
-import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
-import org.hibernate.spatial.helper.PropertyFileReader;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
@@ -148,29 +139,18 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 	public final static String SHORT_NAME = "oraclespatial";
 
-	final static String CONNECTION_FINDER_PROPERTY = "CONNECTION-FINDER";
+	private final boolean  isOgcStrict;
 
-	private final static Log LOG = LogFactory.make();
-
-	private String OGC_STRICT = "OGC_STRICT";
-
-	private Map<String, Boolean> features = new HashMap<String, Boolean>();
+	private final ConnectionFinder connectionFinder;
 
 	public OracleSpatial10gDialect() {
-		this(null);
+		this(new HibernateSpatialConfiguration());
 	}
 		
-	public OracleSpatial10gDialect(Properties props) {
+	public OracleSpatial10gDialect(HibernateSpatialConfiguration config) {
 		super();
-
-
-		if (props != null) {
-			configure(props);
-		} else {
-			// read configuration information from 
-			// classpath
-			configure(readPropsFromDefaultLocation());
-		}
+		this.isOgcStrict = config.isOgcStrictMode();
+		this.connectionFinder = config.getConnectionFinder();
 
 		// register geometry type
 		registerColumnType(java.sql.Types.STRUCT, "MDSYS.SDO_GEOMETRY");
@@ -280,15 +260,15 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	@Override
 	public String getTypeName(int code, long length, int precision, int scale) throws HibernateException {
 		if (code == 3000) return "SDO_GEOMETRY";
-		return super.getTypeName(code, length, precision, scale);
+		return super.getTypeName( code, length, precision, scale );
 	}
 
 	@Override
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
 		if (sqlTypeDescriptor instanceof GeometrySqlTypeDescriptor) {
-			return SDOGeometryTypeDescriptor.INSTANCE;
+			return new SDOGeometryTypeDescriptor(new OracleJDBCTypeFactory(this.connectionFinder));
 		}
-		return super.remapSqlTypeDescriptor(sqlTypeDescriptor);
+		return super.remapSqlTypeDescriptor( sqlTypeDescriptor );
 	}
 
 	public String getNativeSpatialRelateSQL(String arg1, String arg2,
@@ -410,14 +390,11 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 	private StringBuffer wrapInSTGeometry(String geomColumn, StringBuffer toAdd) {
 		return toAdd.append("MDSYS.ST_GEOMETRY(").append(geomColumn)
-				.append(")");
+				.append( ")" );
 	}
 
 	public String getSpatialFilterExpression(String columnName) {
 		StringBuffer buffer = new StringBuffer("SDO_FILTER(");
-		// String pureColumnName =
-		// columnName.substring(columnName.lastIndexOf(".")+1);
-		// buffer.append("\"" + pureColumnName.toUpperCase() + "\"");
 		buffer.append(columnName);
 		buffer.append(",?) = 'TRUE' ");
 		return buffer.toString();
@@ -525,71 +502,29 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	}
 
 	private String getNativeSpatialAnalysisSQL(List args, int spatialAnalysis) {
-		return getOGCSpatialAnalysisSQL(args, spatialAnalysis);
+		return getOGCSpatialAnalysisSQL( args, spatialAnalysis );
 	}
 
+	/**
+	 * Reports whether this dialect is in OGC_STRICT mode or not.
+	 *
+	 * This method is for testing purposes.
+	 * @return true if in OGC_STRICT mode, false otherwise
+	 *
+	 */
 	public boolean isOGCStrict() {
-		return HibernateSpatialConfiguration.isOgcStrictMode();
+		return isOgcStrict;
 	}
 
 
-	void configure(Properties props) {
-		if (props != null) {
-			// checking for connectionfinder
-			String ccn = props.getProperty(CONNECTION_FINDER_PROPERTY);
-			if (ccn != null) {
-				try {
-					Class<?> clazz = Thread.currentThread()
-							.getContextClassLoader().loadClass(ccn);
-					ConnectionFinder cf = (ConnectionFinder) clazz
-							.newInstance();
-					OracleJDBCTypeFactory.setConnectionFinder(cf);
-					LOG.info("Setting ConnectionFinder to " + ccn);
-				} catch (ClassNotFoundException e) {
-					LOG.warn("Tried to set ConnectionFinder to " + ccn
-							+ ", but class not found.");
-				} catch (InstantiationException e) {
-					LOG.warn("Tried to set ConnectionFinder to " + ccn
-							+ ", but couldn't instantiate.");
-				} catch (IllegalAccessException e) {
-					LOG.warn("Tried to set ConnectionFinder to "
-							+ ccn
-							+ ", but got IllegalAcessException on instantiation.");
-				}
-			}
-		}
-	}
-
-	private Properties readPropsFromDefaultLocation() {
-		ClassLoader loader = Thread.currentThread().getContextClassLoader();
-		String propfileLoc = getClass().getCanonicalName() + ".properties";
-		URL propfile = loader.getResource(propfileLoc);
-		
-		if (propfile == null) {
-			return null;
-		}
-		
-		InputStream is = null;
-		LOG.info("properties file found: " + propfile);
-		
-		try {
-			loader.getResource(getClass().getCanonicalName());
-			is = propfile.openStream();
-			PropertyFileReader reader = new PropertyFileReader(is);
-			return reader.getProperties();
-		} catch (IOException e) {
-			LOG.warn("Problem reading properties file " + e);
-			return null;
-		} finally {
-			try {
-				is.close();
-			} catch (Exception e) {
-			}
-		}
-	}
-
-	public boolean isTwoPhaseFiltering() {
-		return false;
+	/**
+	 * Reports the ConnectionFinder used by this Dialect (or rather its associated TypeDescriptor).
+	 *
+	 * This method is mainly used for testing purposes.
+	 * @return the ConnectionFinder in use
+	 */
+	public ConnectionFinder getConnectionFinder(){
+		return connectionFinder;
 	}
 
 	public boolean supportsFiltering() {

@@ -51,6 +51,7 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import org.junit.Test;
 
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -105,7 +106,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		Configuration cfg = new Configuration();
 		cfg.addAttributeConverter( StringClobConverter.class, true );
 		cfg.addAnnotatedClass( Tester.class );
-		cfg.addAnnotatedClass( Tester2.class );
 		cfg.buildMappings();
 
 		{
@@ -119,6 +119,15 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
+	}
+
+	@Test
+	@FailureExpected( jiraKey = "HHH-8449" )
+	public void testBasicConverterDisableApplication() {
+		Configuration cfg = new Configuration();
+		cfg.addAttributeConverter( StringClobConverter.class, true );
+		cfg.addAnnotatedClass( Tester2.class );
+		cfg.buildMappings();
 
 		{
 			PersistentClass tester = cfg.getClassMapping( Tester2.class.getName() );

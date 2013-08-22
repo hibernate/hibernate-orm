@@ -353,11 +353,22 @@ public class SimpleValueBinder {
 	}
 
 	private AttributeConverterDefinition locateAutoApplyAttributeConverter(XProperty property) {
+		LOG.debugf(
+				"Attempting to locate auto-apply AttributeConverter for property [%s:%s]",
+				persistentClassName,
+				property.getName()
+		);
 		final Class propertyType = mappings.getReflectionManager().toClass( property.getType() );
 		for ( AttributeConverterDefinition attributeConverterDefinition : mappings.getAttributeConverters() ) {
 			if ( ! attributeConverterDefinition.isAutoApply() ) {
 				continue;
 			}
+			LOG.debugf(
+					"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
+					attributeConverterDefinition.toString(),
+					attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
+					propertyType.getSimpleName()
+			);
 			if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), propertyType ) ) {
 				return attributeConverterDefinition;
 			}

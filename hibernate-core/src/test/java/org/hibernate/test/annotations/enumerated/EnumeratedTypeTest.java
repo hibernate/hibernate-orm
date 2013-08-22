@@ -1,16 +1,28 @@
 package org.hibernate.test.annotations.enumerated;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.Serializable;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
+
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.test.annotations.enumerated.EntityEnum.Common;
+import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
+import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
+import org.hibernate.test.annotations.enumerated.EntityEnum.Trimmed;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.hibernate.test.annotations.enumerated.EntityEnum.*;
 
 /**
  * Test type definition for enum
@@ -326,6 +338,35 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-4699")
+	public void testTrimmedEnum() throws SQLException {
+		// use native SQL to insert, forcing whitespace to occur
+		final Session s = openSession();
+        final Connection connection = ((SessionImplementor)s).connection();
+        final Statement statement = connection.createStatement();
+        statement.execute("insert into EntityEnum (id, trimmed) values(1, '" + Trimmed.A.name() + "')");
+        statement.execute("insert into EntityEnum (id, trimmed) values(2, '" + Trimmed.B.name() + "')");
+
+        s.getTransaction().begin();
+
+        // ensure EnumType can do #fromName with the trimming
+        List<EntityEnum> resultList = s.createQuery("select e from EntityEnum e").list();
+        assertEquals( resultList.size(), 2 );
+        assertEquals( resultList.get(0).getTrimmed(), Trimmed.A );
+        assertEquals( resultList.get(1).getTrimmed(), Trimmed.B );
+
+        // ensure querying works
+        final Query query = s.createQuery("select e from EntityEnum e where e.trimmed=?");
+        query.setParameter( 0, Trimmed.A );
+        resultList = query.list();
+        assertEquals( resultList.size(), 1 );
+        assertEquals( resultList.get(0).getTrimmed(), Trimmed.A );
+
+        s.getTransaction().rollback();
+        s.close();
 	}
 
 	@Override

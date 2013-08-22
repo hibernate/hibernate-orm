@@ -64,30 +64,18 @@ public class BooleanAssertionPredicate
 		return assertedValue;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( expression, registry );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public String render(RenderingContext renderingContext) {
-		final String operator = isNegated() ? " <> " : " = ";
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		final String operator = isNegated ? " <> " : " = ";
 		final String assertionLiteral = assertedValue ? "true" : "false";
 
 		return ( (Renderable) expression ).render( renderingContext )
 				+ operator
 				+ assertionLiteral;
 	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
-	}
-
 }

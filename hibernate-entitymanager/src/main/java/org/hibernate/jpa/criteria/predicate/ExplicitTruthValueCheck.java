@@ -62,18 +62,16 @@ public class ExplicitTruthValueCheck
 		return truthValue;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getBooleanExpression(), registry );
 	}
 
-	public String render(RenderingContext renderingContext) {
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
 		return ( (Renderable) getBooleanExpression() ).render( renderingContext )
-				+ " = "
+				+ ( isNegated ? " <> " : " = " )
 				+ ( getTruthValue() == TruthValue.TRUE ? "true" : "false" );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }
 

@@ -59,25 +59,22 @@ public class NullnessPredicate
 		this.operand = operand;
 	}
 
+	@Override
 	public Expression<?> getOperand() {
 		return operand;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOperand(), registry );
 	}
 
-	public String render(RenderingContext renderingContext) {
-		return ( (Renderable) operand ).render( renderingContext ) + check();
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		return ( (Renderable) operand ).render( renderingContext ) + check( isNegated );
 	}
 
-	private String check() {
-		return isNegated()
-				? " is not null"
-				: " is null";
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
+	private String check(boolean negated) {
+		return negated ? " is not null" : " is null";
 	}
 }

@@ -124,8 +124,9 @@ public class LikePredicate extends AbstractSimplePredicate implements Serializab
 		Helper.possibleParameter( getPattern(), registry );
 	}
 
-	public String render(RenderingContext renderingContext) {
-		final String operator = isNegated() ? " not like " : " like ";
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		final String operator = isNegated ? " not like " : " like ";
 		StringBuilder buffer = new StringBuilder();
 		buffer.append( ( (Renderable) getMatchExpression() ).render( renderingContext ) )
 				.append( operator )
@@ -135,9 +136,5 @@ public class LikePredicate extends AbstractSimplePredicate implements Serializab
 					.append( ( (Renderable) getEscapeCharacter() ).render( renderingContext ) );
 		}
 		return buffer.toString();
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

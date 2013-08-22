@@ -114,7 +114,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( builder.not( builder.equal( orderRoot.get( "id" ), "order-1" ) ) );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 2 );
+		assertEquals( 2, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -135,7 +135,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( builder.not( builder.or( p1, p2 ) ) );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 1 );
+		assertEquals( 1, orders.size() );
 		Order order = orders.get( 0 );
 		assertEquals( "order-3", order.getId() );
 		em.getTransaction().commit();
@@ -159,7 +159,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( builder.not( builder.or( p1, p2, p3 ) ) );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 0 );
+		assertEquals( 0, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -180,7 +180,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		orderCriteria.where( builder.not( builder.and( p1, p2 ) ) );
 
 		List<Order> orders = em.createQuery( orderCriteria ).getResultList();
-		assertTrue( orders.size() == 3 );
+		assertEquals( 3, orders.size() );
 		em.getTransaction().commit();
 		em.close();
 	}

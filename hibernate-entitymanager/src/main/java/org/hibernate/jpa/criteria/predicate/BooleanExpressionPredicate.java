@@ -56,15 +56,13 @@ public class BooleanExpressionPredicate
 		return expression;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter(expression, registry);
 	}
 
-	public String render(RenderingContext renderingContext) {
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
 		return ( (Renderable) getExpression() ).render( renderingContext );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

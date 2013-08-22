@@ -46,9 +46,7 @@ public abstract class ExpressionImpl<T>
 		super( criteriaBuilder, javaType );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> Expression<X> as(Class<X> type) {
 		return type.equals( getJavaType() )
@@ -56,105 +54,79 @@ public abstract class ExpressionImpl<T>
 				: new CastFunction<X, T>( criteriaBuilder(), type, this );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Predicate isNull() {
 		return criteriaBuilder().isNull( this );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Predicate isNotNull() {
 		return criteriaBuilder().isNotNull( this );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
     public Predicate in(Object... values) {
 		return criteriaBuilder().in( this, values );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Predicate in(Expression<?>... values) {
 		return criteriaBuilder().in( this, values );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Predicate in(Collection<?> values) {
 		return criteriaBuilder().in( this, values.toArray() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Predicate in(Expression<Collection<?>> values) {
 		return criteriaBuilder().in( this, values );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<Long> asLong() {
 		resetJavaType( Long.class );
 		return (ExpressionImplementor<Long>) this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<Integer> asInteger() {
 		resetJavaType( Integer.class );
 		return (ExpressionImplementor<Integer>) this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<Float> asFloat() {
 		resetJavaType( Float.class );
 		return (ExpressionImplementor<Float>) this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<Double> asDouble() {
 		resetJavaType( Double.class );
 		return (ExpressionImplementor<Double>) this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<BigDecimal> asBigDecimal() {
 		resetJavaType( BigDecimal.class );
 		return (ExpressionImplementor<BigDecimal>) this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<BigInteger> asBigInteger() {
 		resetJavaType( BigInteger.class );
 		return (ExpressionImplementor<BigInteger>) this;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ExpressionImplementor<String> asString() {
 		resetJavaType( String.class );

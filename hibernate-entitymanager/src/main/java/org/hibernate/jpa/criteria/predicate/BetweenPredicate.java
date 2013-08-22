@@ -79,22 +79,20 @@ public class BetweenPredicate<Y>
 		return upperBound;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getExpression(), registry );
 		Helper.possibleParameter( getLowerBound(), registry );
 		Helper.possibleParameter( getUpperBound(), registry );
 	}
 
-	public String render(RenderingContext renderingContext) {
-		final String operator = isNegated() ? " not between " : " between ";
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		final String operator = isNegated ? " not between " : " between ";
 		return ( (Renderable) getExpression() ).render( renderingContext )
 				+ operator
 				+ ( (Renderable) getLowerBound() ).render( renderingContext )
 				+ " and "
 				+ ( (Renderable) getUpperBound() ).render( renderingContext );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

@@ -50,20 +50,19 @@ public class IsEmptyPredicate<C extends Collection>
 		this.collectionPath = collectionPath;
 	}
 
+	@Override
 	public PluralAttributePath<C> getOperand() {
 		return collectionPath;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do
 	}
 
-	public String render(RenderingContext renderingContext) {
-		final String operator = isNegated() ? " is not empty" : " is empty";
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		final String operator = isNegated ? " is not empty" : " is empty";
 		return getOperand().render( renderingContext ) + operator;
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

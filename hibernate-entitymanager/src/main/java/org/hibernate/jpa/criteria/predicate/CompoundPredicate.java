@@ -100,51 +100,43 @@ public class CompoundPredicate
 		this.expressions.addAll( expressions );
 	}
 
+	@Override
 	public BooleanOperator getOperator() {
 		return operator;
 	}
 
+	@Override
 	public List<Expression<Boolean>> getExpressions() {
 		return expressions;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		for ( Expression expression : getExpressions() ) {
 			Helper.possibleParameter( expression, registry );
 		}
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
-		if ( getExpressions().size() == 0 ) {
-			boolean implicitTrue = getOperator() == BooleanOperator.AND;
-			if ( isNegated() ) {
-				implicitTrue = !implicitTrue;
-			}
-			return implicitTrue
-					? "1=1" // true
-					: "0=1"; // false
-		}
-		if ( getExpressions().size() == 1 ) {
-			return ( (Renderable) getExpressions().get( 0 ) ).render( renderingContext );
-		}
-		final StringBuilder buffer = new StringBuilder();
-		String sep = "";
-		for ( Expression expression : getExpressions() ) {
-			buffer.append( sep )
-					.append( "( " )
-					.append( ( (Renderable) expression ).render( renderingContext ) )
-					.append( " )" );
-			sep = operatorTextWithSeparator();
-		}
-		return buffer.toString();
+		return render( isNegated(), renderingContext );
+	}
+
+	@Override
+	public boolean isJunction() {
+		return true;
+	}
+
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		return render( this, renderingContext );
 	}
 
 	private String operatorTextWithSeparator() {
-		return getOperator() == BooleanOperator.AND
-				? " and "
-				: " or ";
+		return operatorTextWithSeparator( this.getOperator() );
 	}
 
+	@Override
 	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}
@@ -156,21 +148,53 @@ public class CompoundPredicate
 	 */
 	@Override
 	public Predicate not() {
-		toggleOperator();
-		for ( Expression expr : this.getExpressions() ) {
-			if ( Predicate.class.isInstance( expr ) ) {
-				( (Predicate) expr ).not();
-			}
-		}
-		return this;
+		return new NegatedPredicateWrapper( this );
 	}
 
 	private void toggleOperator() {
-		if ( this.operator == BooleanOperator.AND ) {
-			this.operator = BooleanOperator.OR;
+		this.operator = reverseOperator( this.operator );
+	}
+
+	public static BooleanOperator reverseOperator(BooleanOperator operator) {
+		return operator == BooleanOperator.AND
+				? BooleanOperator.OR
+				: BooleanOperator.AND;
+	}
+
+	public static String render(PredicateImplementor predicate, RenderingContext renderingContext) {
+		if ( ! predicate.isJunction() ) {
+			throw new IllegalStateException( "CompoundPredicate.render should only be used to render junctions" );
 		}
-		else {
-			this.operator = BooleanOperator.AND;
+
+		// for junctions, the negation is already cooked into the expressions and operator; we just need to render
+		// them as is
+
+		if ( predicate.getExpressions().isEmpty() ) {
+			boolean implicitTrue = predicate.getOperator() == BooleanOperator.AND;
+			// AND is always true for empty; OR is always false
+			return implicitTrue ? "1=1" : "0=1";
 		}
+
+		// single valued junction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		if ( predicate.getExpressions().size() == 1 ) {
+			return ( (Renderable) predicate.getExpressions().get( 0 ) ).render( renderingContext );
+		}
+
+		final StringBuilder buffer = new StringBuilder();
+		String sep = "";
+		for ( Expression expression : predicate.getExpressions() ) {
+			buffer.append( sep )
+					.append( "( " )
+					.append( ( (Renderable) expression ).render( renderingContext ) )
+					.append( " )" );
+			sep = operatorTextWithSeparator( predicate.getOperator() );
+		}
+		return buffer.toString();
+	}
+
+	private static String operatorTextWithSeparator(BooleanOperator operator) {
+		return operator == BooleanOperator.AND
+				? " and "
+				: " or ";
 	}
 }

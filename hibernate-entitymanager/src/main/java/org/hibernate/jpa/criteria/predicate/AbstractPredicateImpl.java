@@ -39,7 +39,7 @@ import org.hibernate.jpa.criteria.expression.ExpressionImpl;
  */
 public abstract class AbstractPredicateImpl
 		extends ExpressionImpl<Boolean>
-		implements Predicate, Serializable {
+		implements PredicateImplementor, Serializable {
 	private boolean negated;
 
 	protected AbstractPredicateImpl(CriteriaBuilderImpl criteriaBuilder) {
@@ -51,8 +51,7 @@ public abstract class AbstractPredicateImpl
 	}
 
 	public Predicate not() {
-		negated = !negated;
-		return this;
+		return new NegatedPredicateWrapper( this );
 	}
 
 

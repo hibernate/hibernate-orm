@@ -130,6 +130,7 @@ public class InPredicate<T>
 		}
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public Expression<T> getExpression() {
 		return ( Expression<T> ) expression;
@@ -143,15 +144,18 @@ public class InPredicate<T>
 		return values;
 	}
 
+	@Override
 	public InPredicate<T> value(T value) {
 		return value( new LiteralExpression<T>( criteriaBuilder(), value ) );
 	}
 
+	@Override
 	public InPredicate<T> value(Expression<? extends T> value) {
 		values.add( value );
 		return this;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getExpressionInternal(), registry );
 		for ( Expression value : getValues() ) {
@@ -159,12 +163,12 @@ public class InPredicate<T>
 		}
 	}
 
-	public String render(RenderingContext renderingContext) {
-		StringBuilder buffer = new StringBuilder();
-
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		final StringBuilder buffer = new StringBuilder();
 		buffer.append( ( (Renderable) getExpression() ).render( renderingContext ) );
 
-		if ( isNegated() ) {
+		if ( isNegated ) {
 			buffer.append( " not" );
 		}
 		buffer.append( " in " );
@@ -187,9 +191,5 @@ public class InPredicate<T>
 			buffer.append( ')' );
 		}
 		return buffer.toString();
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

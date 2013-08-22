@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -23,45 +23,41 @@
  */
 package org.hibernate.jpa.criteria.predicate;
 
-import java.io.Serializable;
+import javax.persistence.criteria.Predicate;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
-import org.hibernate.jpa.criteria.ParameterRegistry;
+import org.hibernate.jpa.criteria.Renderable;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
 
 /**
- * Predicate used to assert a static boolean condition.
- *
  * @author Steve Ebersole
  */
-public class BooleanStaticAssertionPredicate
-		extends AbstractSimplePredicate
-		implements Serializable {
-	private final Boolean assertedValue;
+public interface PredicateImplementor extends Predicate, Renderable {
+	/**
+	 * Access to the CriteriaBuilder
+	 *
+	 * @return The CriteriaBuilder
+	 */
+	public CriteriaBuilderImpl criteriaBuilder();
 
-	public BooleanStaticAssertionPredicate(
-			CriteriaBuilderImpl criteriaBuilder,
-			Boolean assertedValue) {
-		super( criteriaBuilder );
-		this.assertedValue = assertedValue;
-	}
+	/**
+	 * Is this a conjunction or disjunction?
+	 *
+	 * @return {@code true} if this predicate is a junction (AND/OR); {@code false} otherwise
+	 */
+	public boolean isJunction();
 
-	public Boolean getAssertedValue() {
-		return assertedValue;
-	}
-
-	@Override
-	public void registerParameters(ParameterRegistry registry) {
-		// nada
-	}
-
-	@Override
-	public String render(boolean isNegated, RenderingContext renderingContext) {
-		boolean isTrue = getAssertedValue();
-		if ( isNegated ) {
-			isTrue = !isTrue;
-		}
-		return isTrue ? "1=1" : "0=1";
-	}
-
+	/**
+	 * Form of {@link Renderable#render} used when the predicate is wrapped in a negated wrapper.  Allows passing
+	 * down the negation flag.
+	 * <p/>
+	 * Note that this form is no-op in compound (junction) predicates.  The reason being that compound predicates
+	 * are more complex and the negation is applied during its creation.
+	 *
+	 * @param isNegated Should the predicate be negated.
+	 * @param renderingContext The context for rendering
+	 *
+	 * @return The rendered predicate fragment.
+	 */
+	public String render(boolean isNegated, RenderingContext renderingContext);
 }

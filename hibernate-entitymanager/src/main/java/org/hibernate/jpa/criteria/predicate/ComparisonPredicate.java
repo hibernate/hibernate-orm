@@ -97,19 +97,26 @@ public class ComparisonPredicate
 	}
 
 	public ComparisonOperator getComparisonOperator() {
-		return isNegated()
+		return getComparisonOperator( isNegated() );
+	}
+
+	public ComparisonOperator getComparisonOperator(boolean isNegated) {
+		return isNegated
 				? comparisonOperator.negated()
 				: comparisonOperator;
 	}
 
+	@Override
 	public Expression getLeftHandOperand() {
 		return leftHandSide;
 	}
 
+	@Override
 	public Expression getRightHandOperand() {
 		return rightHandSide;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getLeftHandOperand(), registry );
 		Helper.possibleParameter( getRightHandOperand(), registry );
@@ -174,13 +181,11 @@ public class ComparisonPredicate
 		public abstract String rendered();
 	}
 
-	public String render(RenderingContext renderingContext) {
-		return ( (Renderable) getLeftHandOperand() ).render( renderingContext )
-				+ getComparisonOperator().rendered()
-				+ ( (Renderable) getRightHandOperand() ).render( renderingContext );
-	}
 
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		return ( (Renderable) getLeftHandOperand() ).render( renderingContext )
+				+ getComparisonOperator( isNegated ).rendered()
+				+ ( (Renderable) getRightHandOperand() ).render( renderingContext );
 	}
 }

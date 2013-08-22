@@ -74,18 +74,16 @@ public class MemberOfPredicate<E, C extends Collection<E>>
 		return elementExpression;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getCollectionPath(), registry );
 		Helper.possibleParameter( getElementExpression(), registry );
 	}
 
-	public String render(RenderingContext renderingContext) {
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
 		return ( (Renderable) elementExpression ).render( renderingContext )
-				+ ( isNegated() ? " not" : "" ) + " member of "
+				+ ( isNegated ? " not" : "" ) + " member of "
 				+ getCollectionPath().render( renderingContext );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

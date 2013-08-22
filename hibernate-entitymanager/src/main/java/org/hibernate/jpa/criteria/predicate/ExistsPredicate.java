@@ -50,16 +50,14 @@ public class ExistsPredicate
 		return subquery;
 	}
 
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		// nothing to do here
 	}
 
-	public String render(RenderingContext renderingContext) {
-		return ( isNegated() ? "not " : "" ) + "exists "
+	@Override
+	public String render(boolean isNegated, RenderingContext renderingContext) {
+		return ( isNegated ? "not " : "" ) + "exists "
 				+ ( (Renderable) getSubquery() ).render( renderingContext );
-	}
-
-	public String renderProjection(RenderingContext renderingContext) {
-		return render( renderingContext );
 	}
 }

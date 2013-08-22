@@ -29,6 +29,7 @@ import java.util.List;
 import javax.persistence.criteria.Expression;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
+import org.hibernate.jpa.criteria.compile.RenderingContext;
 
 /**
  * TODO : javadoc
@@ -44,12 +45,29 @@ public abstract class AbstractSimplePredicate
 		super( criteriaBuilder );
 	}
 
+	@Override
+	public boolean isJunction() {
+		return false;
+	}
+
+	@Override
 	public BooleanOperator getOperator() {
 		return BooleanOperator.AND;
 	}
 
+	@Override
 	public final List<Expression<Boolean>> getExpressions() {
 		return NO_EXPRESSIONS;
+	}
+
+	@Override
+	public String render(RenderingContext renderingContext) {
+		return render( isNegated(), renderingContext );
+	}
+
+	@Override
+	public String renderProjection(RenderingContext renderingContext) {
+		return render( renderingContext );
 	}
 
 }

@@ -1,7 +1,7 @@
 package org.hibernate.spatial;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
+import org.hibernate.spatial.dialect.oracle.DefaultConnectionFinder;
 
 /**
  * A global configuration object that is is used by
@@ -12,39 +12,49 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class HibernateSpatialConfiguration {
 
+	final private static Log LOG = LogFactory.make();
+	private Boolean isOgcStrict = Boolean.TRUE;
+	private ConnectionFinder connectionFinder = new DefaultConnectionFinder();
 
-	final static protected Map<String, Object> config = new ConcurrentHashMap<String, Object>( 2 );
-	static private Log LOG = LogFactory.make();
-
-	static public void addToConfigMap(Map<String, Object> map) {
-		config.putAll( map );
+	/**
+	 * Holds the configuration for Hibernate Spatial dialects.
+	 */
+	public HibernateSpatialConfiguration() {
 	}
 
-	static public boolean isOgcStrictMode() {
-		Boolean mode = getAs( AvailableSettings.OGC_STRICT, Boolean.class );
-		return mode == null ? true : mode;
+	public HibernateSpatialConfiguration(Boolean ogcStrict, ConnectionFinder connectionFinder) {
+		if ( ogcStrict != null ) {
+			this.isOgcStrict = ogcStrict;
+			LOG.info( String.format( "Setting OGC_STRICT mode for Oracle Spatial dialect to %s.", ogcStrict ) );
+		}
+		if ( connectionFinder != null ) {
+			this.connectionFinder = connectionFinder;
+			LOG.info(
+					String.format(
+							"Using ConnectionFinder implementation:  %s (only relevant for Oracle Spatial dialect).",
+							connectionFinder.getClass().getCanonicalName()
+					)
+			);
+		}
 	}
 
-	static public <T> T getAs(String key, Class<T> returnClass) {
-		Object val = config.get( key );
-		if ( val == null ) {
-			return null;
-		}
-		if ( returnClass.isInstance( val ) ) {
-			return (T) val;
-		}
-		throw new RuntimeException(
-				String.format(
-						"Configuration error: unexpected type for feature %s (expected %s)",
-						key.toString(), returnClass.getName()
-				)
-		);
+	public Boolean isOgcStrictMode() {
+		return isOgcStrict;
+	}
+
+	public ConnectionFinder getConnectionFinder() {
+		return connectionFinder;
 	}
 
 	public static class AvailableSettings {
-
+		/**
+		 * Determines whether or nog to use the OracleSpatial10gDialect in OGC_STRICT mode or not (values: true or false)
+		 */
 		public static final String OGC_STRICT = "hibernate.spatial.ogc_strict";
-
+		/**
+		 * The canonical class name to use as Oracle ConnectionFinder implementation.
+		 */
+		public static final String CONNECTION_FINDER = "hibernate.spatial.connection_finder";
 	}
 
 

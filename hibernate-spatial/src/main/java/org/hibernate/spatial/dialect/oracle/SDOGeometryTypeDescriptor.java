@@ -21,12 +21,12 @@
 
 package org.hibernate.spatial.dialect.oracle;
 
+import java.sql.Types;
+
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import java.sql.Types;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -34,7 +34,11 @@ import java.sql.Types;
  */
 public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 
-	public static SDOGeometryTypeDescriptor INSTANCE = new SDOGeometryTypeDescriptor();
+	final private SDOGeometryValueBinder valueBinder;
+
+	public SDOGeometryTypeDescriptor(OracleJDBCTypeFactory typeFactory) {
+		this.valueBinder = new SDOGeometryValueBinder(typeFactory);
+	}
 
 	@Override
 	public int getSqlType() {
@@ -48,7 +52,7 @@ public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueBinder<X>) new SDOGeometryValueBinder();
+		return (ValueBinder<X>) valueBinder;
 	}
 
 	@Override

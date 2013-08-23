@@ -857,7 +857,8 @@ public abstract class AbstractCollectionPersister
 			for ( int i = 0 ; i < indexSpan ; i++ ) {
 				final RelationalValueBinding rb = indexRelationalValueBindings.get( i );
 				final Value value = rb.getValue();
-				indexColumnAliases[ i ] = value.getAlias( dialect, null );
+				indexColumnAliases[ i ] = value.getAlias( dialect,
+						collection.getContainer().seekEntityBinding().getPrimaryTable() );
 				if ( !rb.isDerived() ) {
 					indexColumnIsSettable[ i ] = true;
 					Column column = ( Column ) value;

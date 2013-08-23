@@ -23,18 +23,15 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
@@ -84,11 +81,9 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		final Dialect dialect = createDialect( 25 );
 
 		Column column = table0.createColumn( "1" );
-		assertEquals( "column" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "column" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`1`" );
-		assertEquals( "column" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "column" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 	}
 
@@ -97,19 +92,15 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		final Dialect dialect = createDialect( 25 );
 
 		Column column = table0.createColumn( "1abc" );
-		assertEquals( "column" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "column" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "1abc`" );
-		assertEquals( "column" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "column" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "_abc" );
-		assertEquals( "column" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "column" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`_abc`" );
-		assertEquals( "column" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "column" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 	}
 
@@ -144,42 +135,32 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		final Dialect dialect = createDialect( 10 );
 
 		Column column = table0.createColumn( "a1" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 		column = table0.createColumn( "`a1`" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "a1b" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`a1b`" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "a_b" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`a_b`" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "ab1" );
-		assertEquals( "ab" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "ab" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`ab1`" );
-		assertEquals( "ab" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "ab" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "a1b2" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`a1b2`" );
-		assertEquals( "a" + getExpectedSuffix( column, null ) , column.getAlias( dialect, null ) );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 	}
 
@@ -189,33 +170,16 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		final Dialect dialect = createDialect( 25 );
 
 		Column column = table0.createColumn( "abc" );
-		assertEquals( "abc" + getExpectedSuffix( null, null ) , column.getAlias( dialect, null ) );
-
-		column = table0.createColumn( "abc" );
-		assertEquals( "abc" + getExpectedSuffix( null, table1 ) , column.getAlias( dialect, table1 ) );
+		assertEquals( "abc" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 	}
 
 	@Test
-	public void testUseNameAsIsWithMaxLengthNoTableSuffix() {
+	public void testUseNameAsIsWithMaxLength() {
 		// create dialect with a large enough max alias length so there is no trucation.
 		final Dialect dialect = createDialect( 10 );
-		String name = "abcdefghij";
+		String name = "abcdef";
 		Column column = table0.createColumn( name );
-		assertEquals( dialect.getMaxAliasLength(), column.getColumnName().getText().length() );
-		assertEquals( name + getExpectedSuffix( null, null ) , column.getAlias( dialect, null ) );
-	}
-
-	@Test
-	public void testUseNameAsIsWithMaxLengthWithTableSuffix() {
-		// create dialect with a large enough max alias length so there is no trucation.
-		final Dialect dialect = createDialect( 10 );
-		String name = "abcdefghij";
-		assertEquals( dialect.getMaxAliasLength(), name.length() );
-		name = name.substring( 0, name.length() - getExpectedTableSuffix( table1 ).length() );
-		Column column = table0.createColumn( name );
-		String expectedAlias = name + getExpectedTableSuffix( table1 );
-		assertEquals( dialect.getMaxAliasLength(), expectedAlias.length() );
-		assertEquals( expectedAlias , column.getAlias( dialect, table1 ) );
+		assertEquals( name + getExpectedSuffix( column, table0 ) , column.getAlias( dialect, table0 ) );
 	}
 
 	@Test
@@ -225,9 +189,9 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 
 		String name = "`abc`";
 		Column column = table0.createColumn( name );
-		assertEquals( column.getColumnName().getText() + getExpectedSuffix( column, null ), column.getAlias(
+		assertEquals( column.getColumnName().getText() + getExpectedSuffix( column, table0 ), column.getAlias(
 				dialect,
-				null
+				table0
 		) );
 		assertEquals( column.getColumnName().getText() + getExpectedSuffix( column, table1 ), column.getAlias( dialect, table1 ) );
 	}
@@ -238,22 +202,20 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		final Dialect dialect = createDialect( 25 );
 
 		Column column = table0.createColumn( "RowId" );
-		assertEquals( "RowId" + getExpectedSuffix( column, null ), column.getAlias( dialect, null ) );
 		assertEquals( "RowId" + getExpectedSuffix( column, table1 ), column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`rowid`" );
-		assertEquals( "rowid" + getExpectedSuffix( column, null ), column.getAlias( dialect, null ) );
 		assertEquals( "rowid" + getExpectedSuffix( column, table1 ), column.getAlias( dialect, table1 ) );
 	}
 
 	@Test
 	public void testRowIdNameTruncation() {
 		Column column = table0.createColumn( "RowId" );
-		String expectedSuffix = getExpectedSuffix( column, null );
+		String expectedSuffix = getExpectedSuffix( column, table0 );
 		Dialect dialect = createDialect( column.getColumnName().getText().length() + expectedSuffix.length() - 1 );
 		String nameTruncated = "RowId".substring( 0, dialect.getMaxAliasLength() - expectedSuffix.length() );
 		assertTrue( nameTruncated.length() < "RowId".length() );
-		String alias = column.getAlias( dialect, null );
+		String alias = column.getAlias( dialect, table0 );
 		assertEquals( dialect.getMaxAliasLength(), alias.length() );
 		assertEquals( nameTruncated + expectedSuffix, alias );
 
@@ -269,7 +231,7 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 	@Test
 	public void testTruncatedName() {
 		Column column = table0.createColumn( "abcdefghijk" );
-		String expectedSuffix = getExpectedSuffix( column, null );
+		String expectedSuffix = getExpectedSuffix( column, table0 );
 		// Force max alias length to be less than the column name to that
 		// the name is not used as is (and the expected suffix will be used).
 		Dialect dialect = createDialect( column.getColumnName().getText().length() - 1 );
@@ -279,7 +241,7 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 						0,
 						dialect.getMaxAliasLength() - expectedSuffix.length()
 				);
-		String alias = column.getAlias( dialect, null );
+		String alias = column.getAlias( dialect, table0 );
 		assertEquals( dialect.getMaxAliasLength(), alias.length() );
 		assertEquals( nameTruncated + expectedSuffix, alias );
 
@@ -298,14 +260,14 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 	@Test
 	public void testTruncatedQuotedName() {
 		Column column = table0.createColumn( "`abcdefghijk`" );
-		String expectedSuffix = getExpectedSuffix( column, null );
+		String expectedSuffix = getExpectedSuffix( column, table0 );
 		Dialect dialect = createDialect( column.getColumnName().getText().length() + expectedSuffix.length() - 1 );
 		String nameTruncated =
 				column.getColumnName().getText().substring(
 						0,
 						dialect.getMaxAliasLength() - expectedSuffix.length()
 				);
-		String alias = column.getAlias( dialect, null );
+		String alias = column.getAlias( dialect, table0 );
 		assertEquals( dialect.getMaxAliasLength(), alias.length() );
 		assertEquals( nameTruncated + expectedSuffix, alias );
 
@@ -321,25 +283,6 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		assertEquals( nameTruncated + expectedSuffix, alias );
 	}
 
-	@Test
-	public void testMaxAliasLengthTooSmall() {
-		Column column = table0.createColumn( "a" );
-		try {
-			column.getAlias(
-					new Dialect() {
-						public int getMaxAliasLength() {
-							return 2;
-						}
-					},
-					table1
-			);
-			fail( "should have failed because max alias length cannot accommodate more than just the unique suffix");
-		}
-		catch (MappingException exception) {
-			// expected
-		}
-	}
-
 	private Dialect createDialect(final int maxAliasLength) {
 		return new Dialect() {
 			public int getMaxAliasLength() {
@@ -349,14 +292,6 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 	}
 
 	private String getExpectedSuffix(Column column, TableSpecification table) {
-		return getExpectedColumnSuffix( column ) + getExpectedTableSuffix( table );
-	}
-
-	private String getExpectedColumnSuffix(Column column) {
-		return column == null ? "" : String.valueOf( column.getPosition() ) + "_";
-	}
-
-	private String getExpectedTableSuffix(TableSpecification table) {
-		return table == null ? "" : String.valueOf( table.getTableNumber() ) + "_";
+		return String.valueOf( column.getPosition() ) + "_" + String.valueOf( table.getTableNumber() ) + "_" ;
 	}
 }

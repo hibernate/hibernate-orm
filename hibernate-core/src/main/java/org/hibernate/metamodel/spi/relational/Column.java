@@ -23,7 +23,6 @@
  */
 package org.hibernate.metamodel.spi.relational;
 
-import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.internal.util.StringHelper;
@@ -170,21 +169,19 @@ public class Column extends AbstractValue {
 		return getColumnName().getText();
 	}
 
-	// TODO: this is fairly complicated logic. It would be more straightforward
-	// to always include the column position and a table number in the unique
-	// suffix. That might cause unreadable aliases to be generated more often though...
 	@Override
 	public String getAlias(Dialect dialect, TableSpecification tableSpecification) {
+		if ( tableSpecification == null ) {
+			// see HHH-7547 -- protect against ambiguity
+			throw new IllegalArgumentException("To ensure uniqueness, tableSpecification must not be null");
+		}
+		
 		final int lastLetter = StringHelper.lastIndexOfLetter( columnName.getText() );
 		final String colPositionSuffix = String.valueOf( getPosition() ) + '_';
-		final String tableNumberSuffix =
-				tableSpecification == null ?
-						"" :
-						String.valueOf( tableSpecification.getTableNumber() ) + "_";
+		final String tableNumberSuffix = String.valueOf( tableSpecification.getTableNumber() ) + "_";
+		final String suffix = colPositionSuffix + tableNumberSuffix;
 
 		String alias;
-		String suffix = colPositionSuffix + tableNumberSuffix;
-		boolean useRawName = false;
 		if ( lastLetter == -1 ) {
 			alias = "column" ;
 		}
@@ -193,28 +190,12 @@ public class Column extends AbstractValue {
 		}
 		else {
 			alias = columnName.getText();
-			if (columnName.getText().length() + tableNumberSuffix.length() <= dialect.getMaxAliasLength() &&
-							! columnName.isQuoted() &&
-							! columnName.getText().toLowerCase().equals( "rowid" ) ) {
-				useRawName = true;
-				suffix = tableNumberSuffix;
-			}
 		}
 
-		if ( ! useRawName ) {
-			if ( suffix.length() >= dialect.getMaxAliasLength() ) {
-				throw new MappingException(
-						String.format( "Unique suffix [%s%s] length must be less than maximum [%d]",
-								colPositionSuffix,
-								tableNumberSuffix,
-								dialect.getMaxAliasLength()
-						)
-				);
-			}
-			if ( alias.length() + suffix.length() > dialect.getMaxAliasLength() ) {
-				alias = alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() );
-			}
+		if ( alias.length() + suffix.length() > dialect.getMaxAliasLength() ) {
+			alias = alias.substring( 0, dialect.getMaxAliasLength() - suffix.length() );
 		}
+		
 		return alias + suffix;
 	}
 

@@ -80,11 +80,6 @@ ext {
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
-            // logging for testing
-            jcl_api:        'commons-logging:commons-logging-api:99.0-does-not-exist',
-            jcl:            'commons-logging:commons-logging:99.0-does-not-exist',
-
-
             junit:           "junit:junit:${junitVersion}",
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",

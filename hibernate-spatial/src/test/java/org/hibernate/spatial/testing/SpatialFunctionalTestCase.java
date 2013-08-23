@@ -21,11 +21,18 @@
 
 package org.hibernate.spatial.testing;
 
+import java.sql.BatchUpdateException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
 import com.vividsolutions.jts.geom.Geometry;
+
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
@@ -33,12 +40,10 @@ import org.hibernate.spatial.integration.GeomEntity;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-import java.sql.BatchUpdateException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -46,10 +51,18 @@ import static org.junit.Assert.*;
  */
 public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
 
+	static private Dialect DIALECT;
+
 	protected TestData testData;
 	protected DataSourceUtils dataSourceUtils;
 	protected GeometryEquality geometryEquality;
 	protected AbstractExpectationsFactory expectationsFactory;
+
+
+	protected static Dialect getDialect() {
+		if (DIALECT == null) return BaseCoreFunctionalTestCase.getDialect();
+		return DIALECT;
+	}
 
 	/**
 	 * Inserts the test data via a direct route (JDBC).
@@ -119,6 +132,8 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 */
 	protected void afterSessionFactoryBuilt() {
 		dataSourceUtils.afterCreateSchema();
+		//because we configure OracleSpatialDialect when building the SesionFactory, we should update
+		DIALECT = sessionFactory().getDialect();
 	}
 
 	/**

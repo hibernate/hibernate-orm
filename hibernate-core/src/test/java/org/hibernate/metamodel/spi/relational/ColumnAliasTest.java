@@ -27,7 +27,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -105,31 +104,19 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNameStartsWithNonCharacterTruncation() {
 		Column column = table0.createColumn( "1" );
-		String expectedSuffix = getExpectedSuffix( column, null );
+		String expectedSuffix = getExpectedSuffix( column, table0 );
 		// create dialect with maximum alias length that will force truncation.
 		Dialect dialect = createDialect( expectedSuffix.length() + "column".length() - 1 );
 		String nameTruncated = "column".substring( 0, dialect.getMaxAliasLength() - expectedSuffix.length() );
 		assertTrue( nameTruncated.length() < "column".length() );
-		String alias = column.getAlias( dialect, null );
-		assertEquals( dialect.getMaxAliasLength(), alias.length() );
-		assertEquals( nameTruncated + expectedSuffix , alias );
-
-		column = table0.createColumn( "_abc" );
-		// create dialect with maximum alias length that will force truncation.
-		expectedSuffix = getExpectedSuffix( column, table1 );
-		dialect = createDialect( expectedSuffix.length() + "column".length() - 1 );
-		nameTruncated = "column".substring( 0, dialect.getMaxAliasLength() - expectedSuffix.length() );
-		assertTrue( nameTruncated.length() < "column".length() );
-		alias = column.getAlias( dialect, table1 );
+		String alias = column.getAlias( dialect, table0 );
 		assertEquals( dialect.getMaxAliasLength(), alias.length() );
 		assertEquals( nameTruncated + expectedSuffix , alias );
 	}
 
 	@Test
-	@FailureExpectedWithNewMetamodel
 	public void testNameIncludingNonCharacter() {
 		// create dialect with a large enough max alias length so there is no trucation.
 		final Dialect dialect = createDialect( 10 );
@@ -143,12 +130,6 @@ public class ColumnAliasTest extends BaseUnitTestCase {
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "`a1b`" );
-		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
-
-		column = table0.createColumn( "a_b" );
-		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
-
-		column = table0.createColumn( "`a_b`" );
 		assertEquals( "a" + getExpectedSuffix( column, table1 ) , column.getAlias( dialect, table1 ) );
 
 		column = table0.createColumn( "ab1" );

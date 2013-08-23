@@ -82,25 +82,24 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 		private final int relation;
 
 		private SpatialRelateFunction(final String name, final int relation) {
-			super(name, isOGCStrict() ? StandardBasicTypes.BOOLEAN
-					: new SDOBooleanType());
+			super(name, StandardBasicTypes.BOOLEAN);
 			this.relation = relation;
 		}
 
 		public String render(Type firstArgumentType, final List args,
 							 final SessionFactoryImplementor factory) {
 
-			if (args.size() < 2) {
+			if ( args.size() < 2 ) {
 				throw new QueryException(
-						"Spatial relate functions require at least two arguments");
+						"Spatial relate functions require at least two arguments"
+				);
 			}
 
-			String srf;
-			return isOGCStrict() ?
-					getOGCSpatialRelateSQL((String) args.get(0),
-							(String) args.get(1), this.relation) :
-					getNativeSpatialRelateSQL((String) args.get(0),
-							(String) args.get(1), this.relation);
+			return isOGCStrict() ? getOGCSpatialRelateSQL(
+					(String) args.get( 0 ),
+					(String) args.get( 1 ),
+					this.relation
+			) : getNativeSpatialRelateSQL( (String) args.get( 0 ), (String) args.get( 1 ), this.relation );
 		}
 
 	}
@@ -404,7 +403,7 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 
 		String sql = ( isOGCStrict() ?
 				getOGCSpatialRelateSQL(columnName,"?",spatialRelation) :
-				( getNativeSpatialRelateSQL( columnName, "?", spatialRelation ) ) + " = 1" );
+				 getNativeSpatialRelateSQL( columnName, "?", spatialRelation ) ) + " = 1";
 		sql += " and " + columnName + " is not null";
 		return sql;
 	}

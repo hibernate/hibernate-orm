@@ -606,4 +606,9 @@ public class Oracle8iDialect extends Dialect {
 
 		return sql;
 	}
+	
+	@Override
+	public int getMaxAliasLength() {
+		return 30;
+	}
 }

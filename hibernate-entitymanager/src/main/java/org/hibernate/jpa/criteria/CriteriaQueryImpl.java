@@ -125,8 +125,6 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 	public CriteriaQuery<T> multiselect(List<Selection<?>> selections) {
 		final Selection<? extends T> selection;
 
-		validateSelections( selections );
-
 		if ( Tuple.class.isAssignableFrom( getResultType() ) ) {
 			selection = ( Selection<? extends T> ) criteriaBuilder().tuple( selections );
 		}
@@ -157,20 +155,6 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 		}
 		applySelection( selection );
 		return this;
-	}
-
-	private void validateSelections(List<Selection<?>> selections) {
-		// handle the requirement that we validate that the incoming selections do not contain
-		// duplicate aliases.
-		final HashSet<String> aliases = new HashSet<String>( CollectionHelper.determineProperSizing( selections.size() ) );
-		for ( Selection<?> selection : selections ) {
-			if ( StringHelper.isNotEmpty( selection.getAlias() ) ) {
-				boolean added = aliases.add( selection.getAlias() );
-				if ( ! added ) {
-					throw new IllegalArgumentException( "Multi-select expressions defined duplicate alias : " + selection.getAlias() );
-				}
-			}
-		}
 	}
 
 

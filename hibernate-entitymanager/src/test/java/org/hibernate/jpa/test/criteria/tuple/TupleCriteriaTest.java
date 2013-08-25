@@ -26,6 +26,7 @@ package org.hibernate.jpa.test.criteria.tuple;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
+import javax.persistence.criteria.CompoundSelection;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
@@ -119,6 +120,47 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete Customer" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testIllegalArgumentExceptionBuildingTupleWithSameAliases() {
+		EntityManager em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		final CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery<Tuple> criteria = builder.createTupleQuery();
+		Root<Customer> customerRoot = criteria.from( Customer.class );
+		Path<String> namePath = customerRoot.get( Customer_.name );
+		namePath.alias( "age" );
+		Path<Integer> agePath = customerRoot.get( Customer_.age );
+		agePath.alias( "age" );
+		try {
+			criteria.multiselect( namePath, agePath );
+			fail( "Attempt to define multi-select with same aliases should have thrown IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException expected) {
+		}
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testIllegalArgumentExceptionBuildingSelectArrayWithSameAliases() {
+		EntityManager em = entityManagerFactory().createEntityManager();
+		em.getTransaction().begin();
+		final CriteriaBuilder builder = em.getCriteriaBuilder();
+		CriteriaQuery criteria = builder.createQuery();
+		Root<Customer> customerRoot = criteria.from( Customer.class );
+		Path<String> namePath = customerRoot.get( Customer_.name );
+		Path<Integer> agePath = customerRoot.get( Customer_.age );
+		try {
+			CompoundSelection<Object[]> c = builder.array( namePath.alias( "SAME" ), agePath.alias( "SAME" ) );
+			criteria.select( c );
+			fail( "Attempt to define multi-select with same aliases should have thrown IllegalArgumentException" );
+		}
+		catch (IllegalArgumentException expected) {
+		}
 		em.getTransaction().commit();
 		em.close();
 	}

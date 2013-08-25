@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +52,8 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.jpa.criteria.expression.CoalesceExpression;
@@ -148,31 +151,36 @@ public class CriteriaBuilderImpl implements CriteriaBuilder, Serializable {
 	// selections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Package-protected method to centralize checking of criteria query
-	 * multiselects as defined by the
+	 * Package-protected method to centralize checking of criteria query multi-selects as defined by the
 	 * {@link CriteriaQuery#multiselect(List)}  method.
 	 *
 	 * @param selections The selection varargs to check
 	 *
-	 * @throws IllegalArgumentException If, as per
-	 * {@link CriteriaQuery#multiselect(List)} documentation,
+	 * @throws IllegalArgumentException If the selection items are not valid per {@link CriteriaQuery#multiselect}
+	 * documentation.
 	 * <i>&quot;An argument to the multiselect method must not be a tuple-
      * or array-valued compound selection item.&quot;</i>
 	 */
 	void checkMultiselect(List<Selection<?>> selections) {
+		final HashSet<String> aliases = new HashSet<String>( CollectionHelper.determineProperSizing( selections.size() ) );
+
 		for ( Selection<?> selection : selections ) {
 			if ( selection.isCompoundSelection() ) {
 				if ( selection.getJavaType().isArray() ) {
 					throw new IllegalArgumentException(
-							"multiselect selections cannot contain " +
-									"compound array-valued elements"
+							"Selection items in a multi-select cannot contain compound array-valued elements"
 					);
 				}
 				if ( Tuple.class.isAssignableFrom( selection.getJavaType() ) ) {
 					throw new IllegalArgumentException(
-							"multiselect selections cannot contain " +
-									"compound tuple-valued elements"
+							"Selection items in a multi-select cannot contain compound tuple-valued elements"
 					);
+				}
+			}
+			if ( StringHelper.isNotEmpty( selection.getAlias() ) ) {
+				boolean added = aliases.add( selection.getAlias() );
+				if ( ! added ) {
+					throw new IllegalArgumentException( "Multi-select expressions defined duplicate alias : " + selection.getAlias() );
 				}
 			}
 		}

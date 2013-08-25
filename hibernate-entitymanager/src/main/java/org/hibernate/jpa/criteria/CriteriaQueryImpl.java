@@ -26,7 +26,7 @@ package org.hibernate.jpa.criteria;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -44,8 +44,6 @@ import javax.persistence.metamodel.EntityType;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.criteria.compile.CompilableCriteria;
 import org.hibernate.jpa.criteria.compile.CriteriaInterpretation;
@@ -333,11 +331,13 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			@SuppressWarnings("unchecked")
 			public Query buildCompiledQuery(HibernateEntityManagerImplementor entityManager, final InterpretedParameterMetadata parameterMetadata) {
 
+				final Map<String,Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );
+
 				QueryImpl jpaqlQuery = entityManager.createQuery(
 						jpaqlString,
 						getResultType(),
 						getSelection(),
-						new HibernateEntityManagerImplementor.Options() {
+						new HibernateEntityManagerImplementor.QueryOptions() {
 							@Override
 							public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
 								SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
@@ -348,12 +348,12 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 
 							@Override
 							public Map<String, Class> getNamedParameterExplicitTypes() {
-								return parameterMetadata.implicitParameterTypes();
+								return implicitParameterTypes;
 							}
 
 							@Override
 							public ResultMetadataValidator getResultMetadataValidator() {
-								return new HibernateEntityManagerImplementor.Options.ResultMetadataValidator() {
+								return new HibernateEntityManagerImplementor.QueryOptions.ResultMetadataValidator() {
 									@Override
 									public void validate(Type[] returnTypes) {
 										SelectionImplementor selection = (SelectionImplementor) queryStructure.getSelection();
@@ -377,7 +377,8 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 											}
 										}
 									}
-								};							}
+								};
+							}
 						}
 				);
 
@@ -388,9 +389,16 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 				return new CriteriaQueryTypeQueryAdapter(
 						entityManager,
 						jpaqlQuery,
-						parameterMetadata.explicitParameterMapping(),
-						parameterMetadata.explicitParameterNameMapping()
+						parameterMetadata.explicitParameterInfoMap()
 				);
+			}
+
+			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
+				final HashMap<String,Class> map = new HashMap<String, Class>();
+				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
+					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
+				}
+				return map;
 			}
 		};
 	}

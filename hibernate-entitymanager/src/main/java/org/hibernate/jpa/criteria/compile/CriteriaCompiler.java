@@ -56,10 +56,10 @@ public class CriteriaCompiler implements Serializable {
 	public Query compile(CompilableCriteria criteria) {
 		criteria.validate();
 
-		final Map<ParameterExpression<?>,String> explicitParameterMapping = new HashMap<ParameterExpression<?>,String>();
-		final Map<String,ParameterExpression<?>> explicitParameterNameMapping = new HashMap<String,ParameterExpression<?>>();
+		final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap =
+				new HashMap<ParameterExpression<?>, ExplicitParameterInfo<?>>();
+
 		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<ImplicitParameterBinding>();
-		final Map<String,Class> implicitParameterTypes = new HashMap<String, Class>();
 
 		RenderingContext renderingContext = new RenderingContext() {
 			private int aliasCount = 0;
@@ -73,22 +73,37 @@ public class CriteriaCompiler implements Serializable {
 				return "param" + explicitParameterCount++;
 			}
 
-			public String registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter) {
-				final String jpaqlParameterName;
-				if ( explicitParameterMapping.containsKey( criteriaQueryParameter ) ) {
-					jpaqlParameterName = explicitParameterMapping.get( criteriaQueryParameter );
+			@Override
+			@SuppressWarnings("unchecked")
+			public ExplicitParameterInfo registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter) {
+				ExplicitParameterInfo parameterInfo = explicitParameterInfoMap.get( criteriaQueryParameter );
+				if ( parameterInfo == null ) {
+					if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) ) {
+						parameterInfo = new ExplicitParameterInfo(
+								criteriaQueryParameter.getName(),
+								null,
+								criteriaQueryParameter.getJavaType()
+						);
+					}
+					else if ( criteriaQueryParameter.getPosition() != null ) {
+						parameterInfo = new ExplicitParameterInfo(
+								null,
+								criteriaQueryParameter.getPosition(),
+								criteriaQueryParameter.getJavaType()
+						);
+					}
+					else {
+						parameterInfo = new ExplicitParameterInfo(
+								generateParameterName(),
+								null,
+								criteriaQueryParameter.getJavaType()
+						);
+					}
+
+					explicitParameterInfoMap.put( criteriaQueryParameter, parameterInfo );
 				}
-				else {
-					jpaqlParameterName = generateParameterName();
-					explicitParameterMapping.put( criteriaQueryParameter, jpaqlParameterName );
-				}
-				if ( StringHelper.isNotEmpty( criteriaQueryParameter.getName() ) ) {
-					explicitParameterNameMapping.put(
-							criteriaQueryParameter.getName(),
-							criteriaQueryParameter
-					);
-				}
-				return jpaqlParameterName;
+
+				return parameterInfo;
 			}
 
 			public String registerLiteralParameterBinding(final Object literal, final Class javaType) {
@@ -108,7 +123,6 @@ public class CriteriaCompiler implements Serializable {
 				};
 
 				implicitParameterBindings.add( binding );
-				implicitParameterTypes.put( parameterName, javaType );
 				return parameterName;
 			}
 
@@ -129,23 +143,13 @@ public class CriteriaCompiler implements Serializable {
 				entityManager,
 				new InterpretedParameterMetadata() {
 					@Override
-					public Map<ParameterExpression<?>, String> explicitParameterMapping() {
-						return explicitParameterMapping;
-					}
-
-					@Override
-					public Map<String, ParameterExpression<?>> explicitParameterNameMapping() {
-						return explicitParameterNameMapping;
+					public Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap() {
+						return explicitParameterInfoMap;
 					}
 
 					@Override
 					public List<ImplicitParameterBinding> implicitParameterBindings() {
 						return implicitParameterBindings;
-					}
-
-					@Override
-					public Map<String, Class> implicitParameterTypes() {
-						return implicitParameterTypes;
 					}
 				}
 		);

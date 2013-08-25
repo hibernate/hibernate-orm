@@ -131,10 +131,12 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 */
 	public LockOptions getLockRequest(LockModeType lockModeType, Map<String, Object> properties);
 
-	public static interface Options {
+	public static interface QueryOptions {
 		public static interface ResultMetadataValidator {
 			public void validate(Type[] returnTypes);
 		}
+
+		public ResultMetadataValidator getResultMetadataValidator();
 
 		/**
 		 * Get the conversions for the individual tuples in the query results.
@@ -150,8 +152,6 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 		 * @return The
 		 */
 		public Map<String, Class> getNamedParameterExplicitTypes();
-
-		public ResultMetadataValidator getResultMetadataValidator();
 	}
 
 	/**
@@ -160,10 +160,10 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	 * @param jpaqlString The criteria query rendered as a JPA QL string
 	 * @param resultClass The result type (the type expected in the result list)
 	 * @param selection The selection(s)
-	 * @param options The options to use to build the query.
+	 * @param queryOptions The options to use to build the query.
 	 * @param <T> The query type
 	 *
 	 * @return The typed query
 	 */
-	public <T> QueryImpl<T> createQuery(String jpaqlString, Class<T> resultClass, Selection selection, Options options);
+	public <T> QueryImpl<T> createQuery(String jpaqlString, Class<T> resultClass, Selection selection, QueryOptions queryOptions);
 }

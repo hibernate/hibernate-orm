@@ -30,6 +30,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -123,11 +124,13 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 					HibernateEntityManagerImplementor entityManager,
 					final InterpretedParameterMetadata interpretedParameterMetadata) {
 
+				final Map<String,Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );
+
 				QueryImpl jpaqlQuery = entityManager.createQuery(
 						jpaqlString,
 						null,
 						null,
-						new HibernateEntityManagerImplementor.Options() {
+						new HibernateEntityManagerImplementor.QueryOptions() {
 							@Override
 							public List<ValueHandlerFactory.ValueHandler> getValueHandlers() {
 								return null;
@@ -135,7 +138,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 
 							@Override
 							public Map<String, Class> getNamedParameterExplicitTypes() {
-								return interpretedParameterMetadata.implicitParameterTypes();
+								return implicitParameterTypes;
 							}
 
 							@Override
@@ -150,6 +153,14 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 				}
 
 				return jpaqlQuery;
+			}
+
+			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
+				final HashMap<String,Class> map = new HashMap<String, Class>();
+				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
+					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
+				}
+				return map;
 			}
 		};
 	}

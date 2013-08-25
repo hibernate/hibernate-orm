@@ -83,12 +83,10 @@ import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
-import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
@@ -552,13 +550,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			String jpaqlString,
 			Class<T> resultClass,
 			Selection selection,
-			Options options) {
+			QueryOptions queryOptions) {
 		try {
 			org.hibernate.Query hqlQuery = internalGetSession().createQuery( jpaqlString );
 
-			if ( options.getValueHandlers() == null ) {
-				if ( options.getResultMetadataValidator() != null ) {
-					options.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
+			if ( queryOptions.getValueHandlers() == null ) {
+				if ( queryOptions.getResultMetadataValidator() != null ) {
+					queryOptions.getResultMetadataValidator().validate( hqlQuery.getReturnTypes() );
 				}
 			}
 
@@ -566,12 +564,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			List tupleElements = Tuple.class.equals( resultClass )
 					? ( ( CompoundSelectionImpl<Tuple> ) selection ).getCompoundSelectionItems()
 					: null;
-			if ( options.getValueHandlers() != null || tupleElements != null ) {
+			if ( queryOptions.getValueHandlers() != null || tupleElements != null ) {
 				hqlQuery.setResultTransformer(
-						new CriteriaQueryTransformer( options.getValueHandlers(), tupleElements )
+						new CriteriaQueryTransformer( queryOptions.getValueHandlers(), tupleElements )
 				);
 			}
-			return new QueryImpl<T>( hqlQuery, this, options.getNamedParameterExplicitTypes() );
+			return new QueryImpl<T>( hqlQuery, this, queryOptions.getNamedParameterExplicitTypes() );
 		}
 		catch ( HibernateException he ) {
 			throw convert( he );

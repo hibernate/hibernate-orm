@@ -24,6 +24,7 @@
 package org.hibernate.jpa.test.criteria;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
@@ -33,6 +34,8 @@ import javax.persistence.criteria.Root;
 import org.junit.Test;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -71,6 +74,26 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		query.getResultList();
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	@Test
+	public void testNamedParameterMetadata() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
+				.createQuery( MultiTypedBasicAttributesEntity.class );
+		Root<MultiTypedBasicAttributesEntity> rootEntity = criteria.from( MultiTypedBasicAttributesEntity.class );
+
+		criteria.where(
+				em.getCriteriaBuilder().equal(
+						rootEntity.get( MultiTypedBasicAttributesEntity_.id ),
+						em.getCriteriaBuilder().parameter( Long.class, "id" )
+				)
+		);
+
+		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
+		Parameter parameter = query.getParameter( "id" );
+		assertEquals( "id", parameter.getName() );
 	}
 
 	@Override

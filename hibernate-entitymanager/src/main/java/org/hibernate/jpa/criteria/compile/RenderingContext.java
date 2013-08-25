@@ -45,7 +45,7 @@ public interface RenderingContext {
 	 *
 	 * @return The JPA-QL parameter name
 	 */
-	public String registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter);
+	public ExplicitParameterInfo registerExplicitParameter(ParameterExpression<?> criteriaQueryParameter);
 
 	/**
 	 * Register a parameter that was not part of the criteria query (at least not as a parameter).

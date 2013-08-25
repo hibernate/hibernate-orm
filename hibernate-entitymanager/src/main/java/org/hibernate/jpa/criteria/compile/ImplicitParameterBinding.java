@@ -40,7 +40,7 @@ public interface ImplicitParameterBinding {
 
 	/**
 	 * Get the java type of the "thing" that led to the implicit parameter.  Used from
-	 * {@link org.hibernate.ejb.HibernateEntityManagerImplementor.Options#getNamedParameterExplicitTypes()}
+	 * {@link org.hibernate.jpa.spi.HibernateEntityManagerImplementor.QueryOptions#getNamedParameterExplicitTypes()}
 	 * in determining "guessed type" overriding.
 	 *
 	 * @return The java type

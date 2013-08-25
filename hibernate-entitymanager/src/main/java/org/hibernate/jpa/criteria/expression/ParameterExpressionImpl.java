@@ -28,6 +28,7 @@ import javax.persistence.criteria.ParameterExpression;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.ParameterRegistry;
+import org.hibernate.jpa.criteria.compile.ExplicitParameterInfo;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
 
 /**
@@ -85,8 +86,8 @@ public class ParameterExpressionImpl<T>
 	}
 
 	public String render(RenderingContext renderingContext) {
-		final String jpaqlParamName = renderingContext.registerExplicitParameter( this );
-		return ':' + jpaqlParamName;
+		final ExplicitParameterInfo parameterInfo = renderingContext.registerExplicitParameter( this );
+		return parameterInfo.render();
 	}
 
 	public String renderProjection(RenderingContext renderingContext) {

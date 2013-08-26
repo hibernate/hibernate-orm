@@ -73,6 +73,11 @@ public interface HibernateEntityManagerImplementor extends HibernateEntityManage
 	boolean isTransactionInProgress();
 
 	/**
+	 * Used to mark a transaction for rollback only (when that is the JPA spec defined behavior).
+	 */
+	public void markForRollbackOnly();
+
+	/**
 	 * Handles marking for rollback and other such operations that need to occur depending on the type of
 	 * exception being handled.
 	 *

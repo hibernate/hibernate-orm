@@ -491,7 +491,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( param ).bindValue( value );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -508,7 +509,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( param ).bindValue( value, temporalType );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -525,7 +527,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( param ).bindValue( value, temporalType );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -543,7 +546,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( name ).bindValue( value );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -560,7 +564,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( name ).bindValue( value, temporalType );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -577,7 +582,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( name ).bindValue( value, temporalType );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -594,7 +600,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( position ).bindValue( value );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -611,7 +618,8 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( position ).bindValue( value, temporalType );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );
@@ -628,13 +636,16 @@ public abstract class BaseQueryImpl implements Query {
 			findParameterRegistration( position ).bindValue( value, temporalType );
 		}
 		catch (ParameterStrategyException e) {
+			entityManager().markForRollbackOnly();
 			throw new IllegalArgumentException( "Invalid mix of named and positional parameters", e );
 		}
 		catch (NoSuchParameterException e) {
+			entityManager().markForRollbackOnly();
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (QueryParameterException e) {
-			throw new IllegalArgumentException( e );
+			entityManager().markForRollbackOnly();
+			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch (HibernateException he) {
 			throw entityManager.convert( he );

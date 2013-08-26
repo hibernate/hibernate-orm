@@ -1379,7 +1379,8 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
 	}
 
-	protected void markAsRollback() {
+	@Override
+	public void markForRollbackOnly() {
         LOG.debugf("Mark transaction for rollback");
 		if ( tx.isActive() ) {
 			tx.setRollbackOnly();
@@ -1511,7 +1512,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 
 		try {
-			markAsRollback();
+			markForRollbackOnly();
 		}
 		catch ( Exception ne ) {
 			//we do not want the subsequent exception to swallow the original one
@@ -1537,7 +1538,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			result = convert( ( HibernateException ) e );
 		}
 		else {
-			markAsRollback();
+			markForRollbackOnly();
 		}
 		return result;
 	}
@@ -1594,7 +1595,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		else if ( e instanceof TransientObjectException ) {
 			try {
-				markAsRollback();
+				markForRollbackOnly();
 			}
 			catch ( Exception ne ) {
 				//we do not want the subsequent exception to swallow the original one

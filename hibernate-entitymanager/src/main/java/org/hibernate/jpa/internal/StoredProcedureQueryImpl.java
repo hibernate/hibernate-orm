@@ -40,6 +40,7 @@ import java.util.List;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.jpa.spi.ParameterBind;
 import org.hibernate.jpa.spi.ParameterRegistration;
@@ -122,12 +123,23 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(int position, Class type, ParameterMode mode) {
 		entityManager().checkOpen( true );
-		registerParameter(
-				new ParameterRegistrationImpl(
-						this,
-						procedureCall.registerParameter( position, type, mode )
-				)
-		);
+
+		try {
+			registerParameter(
+					new ParameterRegistrationImpl(
+							this,
+							procedureCall.registerParameter( position, type, mode )
+					)
+			);
+		}
+		catch (HibernateException he) {
+			throw entityManager().convert( he );
+		}
+		catch (RuntimeException e) {
+			entityManager().markForRollbackOnly();
+			throw e;
+		}
+
 		return this;
 	}
 
@@ -135,12 +147,23 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	@SuppressWarnings("unchecked")
 	public StoredProcedureQuery registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
 		entityManager().checkOpen( true );
-		registerParameter(
-				new ParameterRegistrationImpl(
-						this,
-						procedureCall.registerParameter( parameterName, type, mode )
-				)
-		);
+
+		try {
+			registerParameter(
+					new ParameterRegistrationImpl(
+							this,
+							procedureCall.registerParameter( parameterName, type, mode )
+					)
+			);
+		}
+		catch (HibernateException he) {
+			throw entityManager().convert( he );
+		}
+		catch (RuntimeException e) {
+			entityManager().markForRollbackOnly();
+			throw e;
+		}
+
 		return this;
 	}
 
@@ -214,6 +237,13 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		catch (NoMoreReturnsException e) {
 			return false;
 		}
+		catch (HibernateException he) {
+			throw entityManager().convert( he );
+		}
+		catch (RuntimeException e) {
+			entityManager().markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	protected ProcedureOutputs outputs() {
@@ -241,6 +271,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public Object getOutputParameterValue(int position) {
+		// NOTE : according to spec (specifically), an exception thrown from this method should not mark for rollback.
 		try {
 			return outputs().getOutputParameterValue( position );
 		}
@@ -254,6 +285,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	@Override
 	public Object getOutputParameterValue(String parameterName) {
+		// NOTE : according to spec (specifically), an exception thrown from this method should not mark for rollback.
 		try {
 			return outputs().getOutputParameterValue( parameterName );
 		}
@@ -287,6 +319,13 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		catch (NoMoreReturnsException e) {
 			return -1;
 		}
+		catch (HibernateException he) {
+			throw entityManager().convert( he );
+		}
+		catch (RuntimeException e) {
+			entityManager().markForRollbackOnly();
+			throw e;
+		}
 	}
 
 	@Override
@@ -304,6 +343,13 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 			// Essentially here we'd have a case where there are no more results (ResultSets nor updateCount) but
 			// getResultList was called.
 			return null;
+		}
+		catch (HibernateException he) {
+			throw entityManager().convert( he );
+		}
+		catch (RuntimeException e) {
+			entityManager().markForRollbackOnly();
+			throw e;
 		}
 	}
 

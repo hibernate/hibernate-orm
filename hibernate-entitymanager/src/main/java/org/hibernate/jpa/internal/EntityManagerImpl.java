@@ -104,7 +104,7 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 	public void checkOpen(boolean markForRollbackIfClosed) {
 		if( ! isOpen() ) {
 			if ( markForRollbackIfClosed ) {
-				markAsRollback();
+				markForRollbackOnly();
 			}
 			throw new IllegalStateException( "EntityManager is closed" );
 		}

@@ -25,7 +25,6 @@ package org.hibernate.procedure.internal;
 
 import javax.persistence.ParameterMode;
 import javax.persistence.TemporalType;
-
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Calendar;
@@ -118,6 +117,10 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 
 		this.mode = mode;
 		this.type = type;
+
+		if ( mode == ParameterMode.REF_CURSOR ) {
+			return;
+		}
 
 		setHibernateType( hibernateType );
 	}
@@ -286,6 +289,10 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 	}
 
 	public int[] getSqlTypes() {
+		if ( mode == ParameterMode.REF_CURSOR ) {
+			// we could use the Types#REF_CURSOR added in Java 8, but that would require requiring Java 8...
+			throw new IllegalStateException( "REF_CURSOR parameters do not have a SQL/JDBC type" );
+		}
 		return sqlTypes;
 	}
 

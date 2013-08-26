@@ -398,9 +398,18 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 				.append( "(" );
 		String sep = "";
 		for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
-			for ( int i = 0; i < parameter.getSqlTypes().length; i++ ) {
+			if ( parameter == null ) {
+				throw new QueryException( "Registered stored procedure parameters had gaps" );
+			}
+			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
 				buffer.append( sep ).append( "?" );
 				sep = ",";
+			}
+			else {
+				for ( int i = 0; i < parameter.getSqlTypes().length; i++ ) {
+					buffer.append( sep ).append( "?" );
+					sep = ",";
+				}
 			}
 		}
 		buffer.append( ")}" );
@@ -413,13 +422,15 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 
 			// prepare parameters
 			int i = 1;
-			for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
-				if ( parameter == null ) {
-					throw new QueryException( "Registered stored procedure parameters had gaps" );
-				}
 
+			for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
 				parameter.prepare( statement, i );
-				i += parameter.getSqlTypes().length;
+				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
+					i++;
+				}
+				else {
+					i += parameter.getSqlTypes().length;
+				}
 			}
 
 			return new ProcedureOutputsImpl( this, statement );

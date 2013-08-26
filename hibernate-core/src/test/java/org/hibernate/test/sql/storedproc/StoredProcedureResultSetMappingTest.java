@@ -34,7 +34,6 @@ import javax.persistence.TemporalType;
 
 import java.util.Date;
 
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
@@ -142,7 +141,7 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 			session.beginTransaction();
 
 			ProcedureCall call = session.createStoredProcedureCall( "allEmployeeNames", "id-fname-lname" );
-			ProcedureOutputs outputs = call.getResult();
+			ProcedureOutputs outputs = call.getOutputs();
 			ResultSetOutput output = ExtraAssertions.assertTyping( ResultSetOutput.class, outputs.getCurrent() );
 			assertEquals( 3, output.getResultList().size() );
 

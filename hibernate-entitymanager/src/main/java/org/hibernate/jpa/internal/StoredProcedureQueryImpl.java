@@ -248,7 +248,7 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	protected ProcedureOutputs outputs() {
 		if ( procedureResult == null ) {
-			procedureResult = procedureCall.getResult();
+			procedureResult = procedureCall.getOutputs();
 		}
 		return procedureResult;
 	}

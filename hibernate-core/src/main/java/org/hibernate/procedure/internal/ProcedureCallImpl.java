@@ -370,7 +370,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 	}
 
 	@Override
-	public ProcedureOutputs getResult() {
+	public ProcedureOutputs getOutputs() {
 		if ( outputs == null ) {
 			outputs = buildOutputs();
 		}

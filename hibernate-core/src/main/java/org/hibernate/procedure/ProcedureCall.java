@@ -140,14 +140,14 @@ public interface ProcedureCall extends BasicQueryContract, SynchronizeableQuery 
 
 	/**
 	 * Retrieves access to outputs of this procedure call.  Can be called multiple times, returning the same
-	 * ProcedureResult instance each time.
+	 * ProcedureOutputs instance each time.
 	 * <p/>
-	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureResult
+	 * If the procedure call has not actually be executed yet, it will be executed and then the ProcedureOutputs
 	 * will be returned.
 	 *
-	 * @return The ProcedureResult representation
+	 * @return The ProcedureOutputs representation
 	 */
-	public ProcedureOutputs getResult();
+	public ProcedureOutputs getOutputs();
 
 	/**
 	 * Extract the disconnected representation of this call.  Used in HEM to allow redefining a named query

@@ -80,6 +80,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				entityQuerySpace,
 				// not sure this 'rhsColumnNames' bit is correct...
 				( (Queryable) indexPersister ).getKeyColumnNames(),
+				null,
 				required
 		);
 		internalGetJoins().add( join );
@@ -109,6 +110,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				"index",
 				compositeQuerySpace,
 				null,
+				null,
 				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
@@ -135,6 +137,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				"id",
 				entityQuerySpace,
 				( (Queryable) elementPersister ).getKeyColumnNames(),
+				null,
 				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
@@ -165,6 +168,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 				// collection persister maps its elements (through its PropertyMapping contract) as non-prefixed
 				"elements",
 				compositeQuerySpace,
+				null,
 				null,
 				canJoinsBeRequired()
 		);

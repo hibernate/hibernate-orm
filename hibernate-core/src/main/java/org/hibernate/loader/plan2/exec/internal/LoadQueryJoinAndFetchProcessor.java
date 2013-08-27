@@ -47,6 +47,7 @@ import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
+import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 import org.hibernate.loader.plan2.spi.QuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -55,6 +56,7 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.walking.internal.FetchStrategyHelper;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.AssociationType;
 
 /**
  * Helper for implementors of entity and collection based query building based on LoadPlans providing common
@@ -183,11 +185,12 @@ public class LoadQueryJoinAndFetchProcessor {
 
 		final String[] rhsColumnNames = join.resolveNonAliasedRightHandSideJoinConditionColumns();
 		final String rhsTableAlias = aliases.getTableAlias();
-
+		final AssociationType associationType = join instanceof JoinDefinedByMetadata ? ((JoinDefinedByMetadata)join).getJoinedAssociationPropertyType() : null;
 		final String additionalJoinConditions = resolveAdditionalJoinCondition(
 				rhsTableAlias,
 				join.getAnyAdditionalJoinConditions( rhsTableAlias ),
-				(Joinable) rightHandSide.getEntityPersister()
+				(Joinable) rightHandSide.getEntityPersister(),
+				associationType
 		);
 
 		final Joinable joinable = (Joinable) rightHandSide.getEntityPersister();
@@ -202,13 +205,15 @@ public class LoadQueryJoinAndFetchProcessor {
 		);
 	}
 
-	private String resolveAdditionalJoinCondition(String rhsTableAlias, String withClause, Joinable joinable) {
+	private String resolveAdditionalJoinCondition(String rhsTableAlias, String withClause, Joinable joinable, AssociationType associationType) {
 		// turns out that the call to AssociationType#getOnCondition in the initial code really just translates to
 		// calls to the Joinable.filterFragment() method where the Joinable is either the entity or
 		// collection persister
-		final String filter = joinable.filterFragment(
-				rhsTableAlias,
-				buildingParameters.getQueryInfluencers().getEnabledFilters()
+		final String filter = associationType!=null?
+				associationType.getOnCondition( rhsTableAlias, factory, buildingParameters.getQueryInfluencers().getEnabledFilters() ):
+				joinable.filterFragment(
+					rhsTableAlias,
+					buildingParameters.getQueryInfluencers().getEnabledFilters()
 		);
 
 		if ( StringHelper.isEmpty( withClause ) && StringHelper.isEmpty( filter ) ) {
@@ -432,11 +437,13 @@ public class LoadQueryJoinAndFetchProcessor {
 //		}
 
 		{
+			final AssociationType associationType = join instanceof JoinDefinedByMetadata ? ((JoinDefinedByMetadata)join).getJoinedAssociationPropertyType() : null;
 			// add join fragments from the collection table -> element entity table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			final String additionalJoinConditions = resolveAdditionalJoinCondition(
 					elementTableAlias,
 					join.getAnyAdditionalJoinConditions( elementTableAlias ),
-					queryableCollection
+					queryableCollection,
+					associationType
 			);
 
 			final String manyToManyFilter = persister.getManyToManyFilterFragment(

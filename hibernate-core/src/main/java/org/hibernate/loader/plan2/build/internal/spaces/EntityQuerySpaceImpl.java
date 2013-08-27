@@ -33,6 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -92,6 +93,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				compositionDefinition.getName(),
 				rhs,
 				null,
+				null,
 				required
 		);
 		internalGetJoins().add( join );
@@ -123,6 +125,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 						(EntityType) attribute.getType(),
 						sessionFactory()
 				),
+				(AssociationType) attribute.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -151,6 +154,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				attributeDefinition.getName(),
 				rhs,
 				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
+				(AssociationType) attributeDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -177,6 +181,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				this,
 				"id",
 				rhs,
+				null,
 				null,
 				canJoinsBeRequired()
 		);

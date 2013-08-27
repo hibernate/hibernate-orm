@@ -23,11 +23,10 @@
  */
 package org.hibernate.loader.plan2.build.internal.spaces;
 
-import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 import org.hibernate.loader.plan2.spi.QuerySpace;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.type.AssociationType;
 
 /**
  * @author Steve Ebersole
@@ -40,19 +39,21 @@ public class JoinImpl implements JoinDefinedByMetadata {
 
 	private final String[] rhsColumnNames;
 	private final boolean rightHandSideOptional;
+	private final AssociationType joinedAssociationPropertyType;
 
 	public JoinImpl(
 			QuerySpace leftHandSide,
 			String lhsPropertyName,
 			QuerySpace rightHandSide,
 			String[] rhsColumnNames,
+			AssociationType attributeType,
 			boolean rightHandSideOptional) {
 		this.leftHandSide = leftHandSide;
 		this.lhsPropertyName = lhsPropertyName;
 		this.rightHandSide = rightHandSide;
 		this.rhsColumnNames = rhsColumnNames;
 		this.rightHandSideOptional = rightHandSideOptional;
-
+		this.joinedAssociationPropertyType = attributeType;
 		if ( StringHelper.isEmpty( lhsPropertyName ) ) {
 			throw new IllegalArgumentException( "Incoming 'lhsPropertyName' parameter was empty" );
 		}
@@ -100,5 +101,10 @@ public class JoinImpl implements JoinDefinedByMetadata {
 	@Override
 	public String getJoinedAssociationPropertyName() {
 		return lhsPropertyName;
+	}
+
+	@Override
+	public AssociationType getJoinedAssociationPropertyType() {
+		return joinedAssociationPropertyType;
 	}
 }

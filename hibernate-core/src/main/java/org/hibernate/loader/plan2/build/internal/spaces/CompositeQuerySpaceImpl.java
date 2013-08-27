@@ -32,6 +32,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 
@@ -90,6 +91,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 				propertyPath,
 				rhs,
 				null,
+				null,
 				required
 		);
 		internalGetJoins().add( join );
@@ -123,6 +125,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 						(EntityType) attributeDefinition.getType(),
 						sessionFactory()
 				),
+				(EntityType) attributeDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -151,6 +154,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 				attributeDefinition.getName(),
 				rhs,
 				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
+				(AssociationType) attributeDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );

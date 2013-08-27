@@ -159,6 +159,10 @@ public final class CollectionHelper {
         return !isEmpty( map );
     }
 
+	public static boolean isEmpty(Object[] objects){
+		return objects == null || objects.length==0;
+	}
+
 	public static <X,Y> Map<X, Y> makeCopy(Map<X, Y> map) {
 		final Map<X,Y> copy = mapOfSize( map.size() + 1 );
 		copy.putAll( map );

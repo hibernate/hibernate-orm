@@ -296,7 +296,8 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			@Override
 			public String onPrepareStatement(String sql) {
 				assertNotNull( sql );
-				assertTrue( sql.toLowerCase().startsWith( expectedSQLs.poll().toLowerCase() ) );
+				String expectedSql = expectedSQLs.poll().toLowerCase();
+				assertTrue("sql:\n " + sql.toLowerCase() +"\n doesn't start with \n"+expectedSql+"\n", sql.toLowerCase().startsWith( expectedSql ) );
 				return sql;
 			}
 		};

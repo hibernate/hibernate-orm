@@ -33,8 +33,10 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan2.exec.process.spi.CollectionReferenceInitializer;
+import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan2.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan2.spi.CollectionReference;
+import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.pretty.MessageHelper;
 
 /**
@@ -153,7 +155,12 @@ public class CollectionReferenceInitializerImpl implements CollectionReferenceIn
 	}
 
 	protected Serializable findCollectionOwnerKey(ResultSetProcessingContextImpl context) {
-		return null;
+		ResultSetProcessingContext.EntityReferenceProcessingState ownerState = context.getOwnerProcessingState( (Fetch) collectionReference );
+
+		if(ownerState == null || ownerState.getEntityKey()==null){
+			return null;
+		}
+		return ownerState.getEntityKey().getIdentifier();
 	}
 
 	@Override

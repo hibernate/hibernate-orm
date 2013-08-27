@@ -23,6 +23,8 @@
  */
 package org.hibernate.loader.plan2.spi;
 
+import org.hibernate.type.AssociationType;
+
 /**
  * Specialization of a Join that is defined by the metadata.
  *
@@ -37,4 +39,5 @@ public interface JoinDefinedByMetadata extends Join {
 	 * @return The property name
 	 */
 	public String getJoinedAssociationPropertyName();
+	public AssociationType getJoinedAssociationPropertyType();
 }

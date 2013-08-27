@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.Template;
 
 /**
@@ -51,30 +52,28 @@ public class FilterHelper {
 	 * conditions are the values.
 	 *
 	 * @param filters The map of defined filters.
-	 * @param dialect The sql dialect
 	 * @param factory The session factory
 	 */
-	public FilterHelper(List filters, SessionFactoryImplementor factory) {
+	public FilterHelper(List<FilterConfiguration> filters, SessionFactoryImplementor factory) {
 		int filterCount = filters.size();
 		filterNames = new String[filterCount];
 		filterConditions = new String[filterCount];
 		filterAutoAliasFlags = new boolean[filterCount];
 		filterAliasTableMaps = new Map[filterCount];
-		Iterator iter = filters.iterator();
 		filterCount = 0;
-		while ( iter.hasNext() ) {
+		for ( final FilterConfiguration filter : filters ) {
 			filterAutoAliasFlags[filterCount] = false;
-			final FilterConfiguration filter = (FilterConfiguration) iter.next();
 			filterNames[filterCount] = filter.getName();
 			filterConditions[filterCount] = filter.getCondition();
-			filterAliasTableMaps[filterCount] = filter.getAliasTableMap(factory);
-			if ((filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass(filterAliasTableMaps[filterCount])) && filter.useAutoAliasInjection()){
+			filterAliasTableMaps[filterCount] = filter.getAliasTableMap( factory );
+			if ( (filterAliasTableMaps[filterCount].isEmpty() || isTableFromPersistentClass( filterAliasTableMaps[filterCount] )) && filter
+					.useAutoAliasInjection() ) {
 				filterConditions[filterCount] = Template.renderWhereStringTemplate(
 						filter.getCondition(),
 						FilterImpl.MARKER,
 						factory.getDialect(),
 						factory.getSqlFunctionRegistry()
-					);
+				);
 				filterAutoAliasFlags[filterCount] = true;
 			}
 			filterConditions[filterCount] = StringHelper.replace(
@@ -91,8 +90,8 @@ public class FilterHelper {
 	}
 
 	public boolean isAffectedBy(Map enabledFilters) {
-		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-			if ( enabledFilters.containsKey( filterNames[i] ) ) {
+		for ( String filterName : filterNames ) {
+			if ( enabledFilters.containsKey( filterName ) ) {
 				return true;
 			}
 		}
@@ -106,13 +105,14 @@ public class FilterHelper {
 	}
 
 	public void render(StringBuilder buffer, FilterAliasGenerator aliasGenerator, Map enabledFilters) {
-		if ( filterNames != null && filterNames.length > 0 ) {
-			for ( int i = 0, max = filterNames.length; i < max; i++ ) {
-				if ( enabledFilters.containsKey( filterNames[i] ) ) {
-					final String condition = filterConditions[i];
-					if ( StringHelper.isNotEmpty( condition ) ) {
-						buffer.append(" and " ).append(render(aliasGenerator, i));
-					}
+		if ( CollectionHelper.isEmpty( filterNames ) ) {
+			return;
+		}
+		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
+			if ( enabledFilters.containsKey( filterNames[i] ) ) {
+				final String condition = filterConditions[i];
+				if ( StringHelper.isNotEmpty( condition ) ) {
+					buffer.append( " and " ).append( render( aliasGenerator, i ) );
 				}
 			}
 		}

@@ -139,10 +139,11 @@ public class EntityManagerFactoryRegistry {
 		if (entityManagerFactorySet == null) {
 			throw new HibernateException( "registry does not contain entity manager factory: " + name);
 		}
-
-		if (entityManagerFactorySet.size() > 1) {
-			throw new HibernateException( "registry contains more than one (" + entityManagerFactorySet.size()+ ") entity manager factories: " + name);
+		synchronized (entityManagerFactorySet) {
+			if (entityManagerFactorySet.size() > 1) {
+				throw new HibernateException( "registry contains more than one (" + entityManagerFactorySet.size()+ ") entity manager factories: " + name);
+			}
+			return entityManagerFactorySet.iterator().next();
 		}
-		return entityManagerFactorySet.iterator().next();
 	}
 }

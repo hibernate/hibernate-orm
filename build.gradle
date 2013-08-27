@@ -83,6 +83,7 @@ subprojects { subProject ->
         apply plugin: 'java'
         apply plugin: 'maven-publish'
         apply plugin: 'maven-publish-auth'
+        apply plugin: 'maven' // temporary, still needed for install task until bug with publishToMavenLocal task is fixed
         apply plugin: 'osgi'
 
         apply from: "../utilities.gradle"

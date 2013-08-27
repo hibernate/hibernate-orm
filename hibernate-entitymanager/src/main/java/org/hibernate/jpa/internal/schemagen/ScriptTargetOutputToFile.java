@@ -63,8 +63,14 @@ public class ScriptTargetOutputToFile extends ScriptTargetOutputToWriter impleme
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	static Writer toFileWriter(File file) {
 		try {
-			// best effort, since this is very well not allowed in EE environments
-			file.createNewFile();
+			if ( ! file.exists() ) {
+				// best effort, since this is very likely not allowed in EE environments
+				log.debug( "Attempting to create non-existent script target file : " + file.getAbsolutePath() );
+				if ( file.getParentFile() != null ) {
+					file.getParentFile().mkdirs();
+				}
+				file.createNewFile();
+			}
 		}
 		catch (Exception e) {
 			log.debug( "Exception calling File#createNewFile : " + e.toString() );

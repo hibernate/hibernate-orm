@@ -27,12 +27,20 @@ import javax.persistence.PersistenceException;
 import java.io.IOException;
 import java.io.Writer;
 
+import org.hibernate.internal.util.StringHelper;
+
 /**
  * ScriptTargetOutput implementation for supplied Writer references
  *
  * @author Steve Ebersole
  */
 public class ScriptTargetOutputToWriter implements ScriptTargetOutput {
+	private static final String NEWLINE;
+	static {
+		final String systemNewLine = System.getProperty( "line.separator" );
+		NEWLINE = StringHelper.isNotEmpty( systemNewLine ) ? systemNewLine : "\n";
+	}
+
 	private final Writer writer;
 
 	/**
@@ -48,6 +56,7 @@ public class ScriptTargetOutputToWriter implements ScriptTargetOutput {
 	public void accept(String command) {
 		try {
 			writer.write( command );
+			writer.write( NEWLINE );
 			writer.flush();
 		}
 		catch (IOException e) {

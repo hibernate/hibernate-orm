@@ -26,6 +26,7 @@ package org.hibernate.tool.hbm2ddl;
 import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -36,10 +37,17 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.metamodel.spi.MetadataImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.extract.spi.DatabaseInformationBuilder;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.jboss.logging.Logger;
 
 /**
@@ -47,18 +55,41 @@ import org.jboss.logging.Logger;
  * inside an application.
  *
  * @author Christoph Sturm
+ * @author Brett Meyer
  */
 public class SchemaValidator {
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SchemaValidator.class.getName());
 
 	private ConnectionHelper connectionHelper;
-	private Configuration configuration;
 	private Dialect dialect;
+	
+	private MetadataImplementor metadata;
+	// TODO: eventually remove
+	private Configuration configuration;
 
+	public SchemaValidator(MetadataImplementor metadata, Connection connection) {
+		this.metadata = metadata;
+		ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
+		if ( connection != null ) {
+			this.connectionHelper = new SuppliedConnectionHelper( connection );
+		}
+		else {
+			this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(
+					serviceRegistry.getService( ConnectionProvider.class )
+			);
+		}
+	}
+	
+	public SchemaValidator(MetadataImplementor metadata) {
+		this( metadata, null );
+	}
+
+	@Deprecated
 	public SchemaValidator(Configuration cfg) throws HibernateException {
 		this( cfg, cfg.getProperties() );
 	}
 
+	@Deprecated
 	public SchemaValidator(Configuration cfg, Properties connectionProperties) throws HibernateException {
 		this.configuration = cfg;
 		dialect = Dialect.getDialect( connectionProperties );
@@ -68,6 +99,7 @@ public class SchemaValidator {
 		connectionHelper = new ManagedProviderConnectionHelper( props );
 	}
 
+	@Deprecated
 	public SchemaValidator(ServiceRegistry serviceRegistry, Configuration cfg ) throws HibernateException {
 		this.configuration = cfg;
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
@@ -136,24 +168,36 @@ public class SchemaValidator {
 
         LOG.runningSchemaValidator();
 
-		Connection connection = null;
-
 		try {
+			
+			connectionHelper.prepare( false );
+			Connection connection = connectionHelper.getConnection();
+			
+			if ( metadata != null ) {
+				final ServiceRegistry serviceRegistry = metadata.getServiceRegistry();
+				final Map settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
 
-			DatabaseMetadata meta;
-			try {
-                LOG.fetchingDatabaseMetadata();
-				connectionHelper.prepare( false );
-				connection = connectionHelper.getConnection();
-				meta = new DatabaseMetadata( connection, dialect, configuration, false );
+				final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcServices.class )
+						.getJdbcEnvironment();
+				final DatabaseInformation databaseInformation
+						= new DatabaseInformationBuilder( jdbcEnvironment, connection ).prepareAll().build();
+				final SchemaManagementTool schemaManagementTool = serviceRegistry.getService(
+						SchemaManagementTool.class );
+				schemaManagementTool.getSchemaValidator( settings ).doValidation(
+						metadata.getDatabase(), databaseInformation );
 			}
-			catch ( SQLException sqle ) {
-                LOG.unableToGetDatabaseMetadata(sqle);
-				throw sqle;
+			else {
+				DatabaseMetadata meta;
+				try {
+	                LOG.fetchingDatabaseMetadata();
+					meta = new DatabaseMetadata( connection, dialect, configuration, false );
+				}
+				catch ( SQLException sqle ) {
+	                LOG.unableToGetDatabaseMetadata(sqle);
+					throw sqle;
+				}
+				configuration.validateSchema( dialect, meta );
 			}
-
-			configuration.validateSchema( dialect, meta );
-
 		}
 		catch ( SQLException e ) {
             LOG.unableToCompleteSchemaValidation(e);

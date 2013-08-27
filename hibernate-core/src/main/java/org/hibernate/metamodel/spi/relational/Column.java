@@ -85,11 +85,27 @@ public class Column extends AbstractValue {
 	}
 
 	public String getSqlType() {
-		return sqlType;
+        return sqlType;
 	}
 
 	public void setSqlType(String sqlType) {
 		this.sqlType = sqlType;
+	}
+
+	// TODO: Solely used by schema tools.  Re-think this, getSqlType, and getJdbcDataType.  Clean-up and/or
+	// condense somehow?
+	public String getSqlTypeString(Dialect dialect) {
+		if ( sqlType != null ) {
+			return sqlType;
+		}
+		else {
+			return dialect.getTypeName(
+					getJdbcDataType().getTypeCode(),
+					size.getLength(),
+					size.getPrecision(),
+					size.getScale()
+			);
+		}
 	}
 
 	public String getReadFragment() {

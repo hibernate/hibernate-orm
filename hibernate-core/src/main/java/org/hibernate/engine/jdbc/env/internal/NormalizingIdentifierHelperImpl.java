@@ -95,7 +95,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	public String toMetaDataCatalogName(Identifier identifier) {
 		if ( identifier == null ) {
 			// todo : not sure if this is interpreted as <""> or <currentCatalog>
-			return jdbcEnvironment.getCurrentCatalog().getText();
+			return jdbcEnvironment.getCurrentCatalog() == null ? null : jdbcEnvironment.getCurrentCatalog().getText();
 		}
 
 		return toText( identifier );
@@ -124,7 +124,7 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 	public String toMetaDataSchemaName(Identifier identifier) {
 		if ( identifier == null ) {
 			// todo : not sure if this is interpreted as <""> or <currentSchema>
-			return jdbcEnvironment.getCurrentSchema().getText();
+			return jdbcEnvironment.getCurrentSchema() == null ? null : jdbcEnvironment.getCurrentSchema().getText();
 		}
 
 		return toText( identifier );
@@ -145,7 +145,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 
-		if ( catalogName.equals( jdbcEnvironment.getCurrentCatalog().getText() ) ) {
+		if ( jdbcEnvironment.getCurrentCatalog() == null
+				|| catalogName.equals( jdbcEnvironment.getCurrentCatalog().getText() ) ) {
 			return null;
 		}
 
@@ -197,7 +198,8 @@ public class NormalizingIdentifierHelperImpl implements IdentifierHelper {
 			return null;
 		}
 
-		if ( schemaName.equals( jdbcEnvironment.getCurrentSchema().getText() ) ) {
+		if ( jdbcEnvironment.getCurrentSchema() == null
+				|| schemaName.equals( jdbcEnvironment.getCurrentSchema().getText() ) ) {
 			return null;
 		}
 

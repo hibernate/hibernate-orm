@@ -28,22 +28,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 
 /**
- * Temporary implementation that works for H2.
+ * Default implementation
  *
  * @author Steve Ebersole
  */
-public class TemporarySchemaNameResolver implements SchemaNameResolver {
-	public static final TemporarySchemaNameResolver INSTANCE = new TemporarySchemaNameResolver();
+public class DefaultSchemaNameResolver implements SchemaNameResolver {
+	public static final DefaultSchemaNameResolver INSTANCE = new DefaultSchemaNameResolver();
 
 	@Override
-	public String resolveSchemaName(Connection connection) throws SQLException {
-		// the H2 variant...
+	public String resolveSchemaName(Connection connection, Dialect dialect) throws SQLException {
 		Statement statement = connection.createStatement();
 		try {
-			ResultSet resultSet = statement.executeQuery( "call schema()" );
+			ResultSet resultSet = statement.executeQuery( dialect.getCurrentSchemaCommand() );
 			try {
 				if ( ! resultSet.next() ) {
 					return null;

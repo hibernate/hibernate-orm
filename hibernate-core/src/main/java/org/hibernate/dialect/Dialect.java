@@ -2023,6 +2023,15 @@ public abstract class Dialect implements ConversionContext {
 	public String getDropSchemaCommand(String schemaName) {
 		return "drop schema " + schemaName;
 	}
+	
+	/**
+	 * Get the SQL command used to retrieve the current schema name
+	 * 
+	 * @return The current schema retrieval SQL
+	 */
+	public String getCurrentSchemaCommand() {
+		return null;
+	}
 
 	/**
 	 * Does this dialect support the <tt>ALTER TABLE</tt> syntax?

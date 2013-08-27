@@ -582,4 +582,9 @@ public class Oracle8iDialect extends Dialect {
 	public String getNotExpression( String expression ) {
 		return "not (" + expression + ")";
 	}
+	
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "select sys_context( 'userenv', 'current_schema' ) from dual";
+	}
 }

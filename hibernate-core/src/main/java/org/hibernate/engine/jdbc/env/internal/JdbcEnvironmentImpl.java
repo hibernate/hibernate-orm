@@ -53,6 +53,7 @@ import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -216,7 +217,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	private Identifier determineCurrentSchema(DatabaseMetaData dbmd) throws SQLException {
-		String currentSchemaName = locateSchemaNameResolver().resolveSchemaName( dbmd.getConnection() );
+		String currentSchemaName = locateSchemaNameResolver().resolveSchemaName( dbmd.getConnection(), dialect );
 		if ( currentSchemaName != null ) {
 			// intentionally using fromMetaDataObjectName rather than fromMetaDataSchemaName !!!
 			return identifierHelper.fromMetaDataObjectName( currentSchemaName );
@@ -235,7 +236,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		return serviceRegistry.getService( StrategySelector.class ).resolveDefaultableStrategy(
 				SchemaNameResolver.class,
 				setting,
-				TemporarySchemaNameResolver.INSTANCE
+				DefaultSchemaNameResolver.INSTANCE
 		);
 	}
 
@@ -300,5 +301,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public ServiceRegistry getServiceRegistry() {
+		return serviceRegistry;
 	}
 }

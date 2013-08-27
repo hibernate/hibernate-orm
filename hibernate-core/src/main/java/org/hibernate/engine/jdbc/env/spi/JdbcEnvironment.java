@@ -30,6 +30,7 @@ import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.service.Service;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Initial look at this concept we keep talking about with merging information from {@link java.sql.DatabaseMetaData}
@@ -118,4 +119,6 @@ public interface JdbcEnvironment extends Service {
 	 * @return The corresponding type info.
 	 */
 	public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode);
+	
+	public ServiceRegistry getServiceRegistry();
 }

@@ -30,7 +30,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.spi.relational.CheckConstraint;
 import org.hibernate.metamodel.spi.relational.Column;
-import org.hibernate.metamodel.spi.relational.Size;
 import org.hibernate.metamodel.spi.relational.Table;
 import org.hibernate.tool.schema.spi.Exporter;
 
@@ -81,13 +80,13 @@ public class StandardTableExporter implements Exporter<Table> {
 			if ( isPrimaryKeyIdentity && colName.equals( pkColName ) ) {
 				// to support dialects that have their own identity data type
 				if ( dialect.hasDataTypeInIdentityColumn() ) {
-					buf.append( getTypeString( col, dialect ) );
+					buf.append( col.getSqlTypeString( dialect ) );
 				}
 				buf.append( ' ' )
 						.append( dialect.getIdentityColumnString( col.getJdbcDataType().getTypeCode() ) );
 			}
 			else {
-				buf.append( getTypeString( col, dialect ) );
+				buf.append( col.getSqlTypeString( dialect ) );
 
 				String defaultValue = col.getDefaultValue();
 				if ( defaultValue != null ) {
@@ -163,26 +162,6 @@ public class StandardTableExporter implements Exporter<Table> {
 	protected String tableCreateString(boolean hasPrimaryKey) {
 		return hasPrimaryKey ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString();
 
-	}
-
-	private static String getTypeString(Column col, Dialect dialect) {
-		String typeString;
-		if ( col.getSqlType() != null ) {
-			typeString = col.getSqlType();
-		}
-		else {
-			Size size = col.getSize() == null ?
-					new Size( ) :
-					col.getSize();
-
-			typeString = dialect.getTypeName(
-					col.getJdbcDataType().getTypeCode(),
-					size.getLength(),
-					size.getPrecision(),
-					size.getScale()
-			);
-		}
-		return typeString;
 	}
 
 	@Override

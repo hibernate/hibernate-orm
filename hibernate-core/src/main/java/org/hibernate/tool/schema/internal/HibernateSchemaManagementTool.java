@@ -25,6 +25,11 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Map;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.tool.schema.spi.SchemaCreator;
 import org.hibernate.tool.schema.spi.SchemaDropper;
 import org.hibernate.tool.schema.spi.SchemaManagementTool;
@@ -36,7 +41,10 @@ import org.hibernate.tool.schema.spi.SchemaValidator;
  *
  * @author Steve Ebersole
  */
-public class HibernateSchemaManagementTool implements SchemaManagementTool {
+public class HibernateSchemaManagementTool implements SchemaManagementTool, ServiceRegistryAwareService {
+	
+	private ServiceRegistry serviceRegistry;
+	
 	@Override
 	public SchemaCreator getSchemaCreator(Map options) {
 		return new SchemaCreatorImpl();
@@ -54,6 +62,12 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool {
 
 	@Override
 	public SchemaValidator getSchemaValidator(Map options) {
-		return new SchemaValidatorImpl();
+		final Dialect dialect = serviceRegistry.getService( JdbcServices.class ).getDialect();
+		return new SchemaValidatorImpl(dialect);
+	}
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 }

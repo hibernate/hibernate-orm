@@ -23,6 +23,7 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.spi.relational.Column;
 import org.hibernate.metamodel.spi.relational.Database;
 import org.hibernate.metamodel.spi.relational.Schema;
@@ -40,6 +41,13 @@ import org.hibernate.tool.schema.spi.SchemaValidator;
  * @author Steve Ebersole
  */
 public class SchemaValidatorImpl implements SchemaValidator {
+	
+	private final Dialect dialect;
+	
+	public SchemaValidatorImpl(Dialect dialect) {
+		this.dialect = dialect;
+	}
+	
 	@Override
 	public void doValidation(Database database, DatabaseInformation databaseInformation) {
 		for ( Schema schema : database.getSchemas() ) {
@@ -96,7 +104,7 @@ public class SchemaValidatorImpl implements SchemaValidator {
 	protected void validateColumnType(Table table, Column column, ColumnInformation columnInformation) {
 		// this is the old Hibernate check...
 		final boolean typesMatch = column.getJdbcDataType().getTypeCode() == columnInformation.getTypeCode()
-				|| column.getSqlType().toLowerCase().startsWith( columnInformation.getTypeName().toLowerCase() );
+				|| column.getSqlTypeString(dialect).toLowerCase().startsWith( columnInformation.getTypeName().toLowerCase() );
 		if ( !typesMatch ) {
 			throw new SchemaManagementException(
 					String.format(

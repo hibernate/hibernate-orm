@@ -44,6 +44,7 @@ import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.metamodel.spi.relational.Identifier;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.Stoppable;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 
@@ -170,6 +171,11 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices {
 
 		@Override
 		public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
+			return null;
+		}
+		
+		@Override
+		public ServiceRegistry getServiceRegistry() {
 			return null;
 		}
 	}

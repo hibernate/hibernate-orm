@@ -26,6 +26,7 @@ package org.hibernate.tool.schema.extract.spi;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -125,6 +126,11 @@ public class DatabaseInformationBuilder {
 	}
 
 	private Iterable<SequenceInformation> extractSequences() {
+		if (!extractionContext.getJdbcEnvironment().getDialect().getClass().isAssignableFrom( H2Dialect.class )) {
+			// TODO: the temporary impl below is for H2 only
+			return null;
+		}
+		
 		// todo : temporary impl!!!
 		final TemporarySequenceInformationExtractor seqExtractor = new TemporarySequenceInformationExtractor();
 		try {

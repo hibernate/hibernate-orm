@@ -34,8 +34,11 @@ import java.util.StringTokenizer;
 
 import org.hibernate.JDBCException;
 import org.hibernate.TruthValue;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.internal.util.compare.EqualsHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.spi.relational.Identifier;
 import org.hibernate.metamodel.spi.relational.ObjectName;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
@@ -55,12 +58,21 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
  * @author Steve Ebersole
  */
 public class StandardJdbcDatabaseMetaDataExtractor implements SchemaMetaDataExtractor {
-	private static final String[] TABLE_TYPES = new String[] { "TABLE", "VIEW" };
+	private final String[] tableTypes;
 
 	private final ExtractionContext extractionContext;
 
 	public StandardJdbcDatabaseMetaDataExtractor(ExtractionContext extractionContext) {
 		this.extractionContext = extractionContext;
+		
+		ConfigurationService configService = extractionContext.getJdbcEnvironment().getServiceRegistry()
+				.getService( ConfigurationService.class );
+		if (ConfigurationHelper.getBoolean( AvailableSettings.ENABLE_SYNONYMS, configService.getSettings(), false ) ) {
+			tableTypes = new String[] { "TABLE", "VIEW", "SYNONYM" };
+		}
+		else {
+			tableTypes = new String[] { "TABLE", "VIEW" };
+		}
 	}
 
 	protected IdentifierHelper identifierHelper() {
@@ -78,7 +90,7 @@ public class StandardJdbcDatabaseMetaDataExtractor implements SchemaMetaDataExtr
 					catalogFilter,
 					schemaFilter,
 					null,
-					TABLE_TYPES
+					tableTypes
 			);
 
 			final List<TableInformation> results = new ArrayList<TableInformation>();

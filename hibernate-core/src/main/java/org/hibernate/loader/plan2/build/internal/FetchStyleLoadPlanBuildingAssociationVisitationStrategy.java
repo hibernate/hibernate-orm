@@ -32,17 +32,12 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.AbstractLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
-import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.LoadPlan;
 import org.hibernate.loader.plan2.spi.Return;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AssociationKey;
 
 /**
  * LoadPlanBuilderStrategy implementation used for building LoadPlans based on metamodel-defined fetching.  Built
@@ -57,8 +52,6 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	private final LoadQueryInfluencers loadQueryInfluencers;
 
 	private Return rootReturn;
-
-	private PropertyPath propertyPath = new PropertyPath( "" );
 
 	public FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 			SessionFactoryImplementor sessionFactory,
@@ -102,7 +95,7 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	protected FetchStrategy determineFetchStrategy(AssociationAttributeDefinition attributeDefinition) {
-		FetchStrategy fetchStrategy = attributeDefinition.determineFetchPlan( loadQueryInfluencers, propertyPath );
+		FetchStrategy fetchStrategy = attributeDefinition.determineFetchPlan( loadQueryInfluencers, currentPropertyPath );
 		if ( fetchStrategy.getTiming() == FetchTiming.IMMEDIATE && fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 			// see if we need to alter the join fetch to another form for any reason
 			fetchStrategy = adjustJoinFetchIfNeeded( attributeDefinition, fetchStrategy );

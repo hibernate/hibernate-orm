@@ -29,6 +29,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Steve Ebersole
  */
 public class PropertyPath {
+	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 	private final PropertyPath parent;
 	private final String property;
 	private final String fullPath;
@@ -40,7 +41,7 @@ public class PropertyPath {
 		// the _identifierMapper is a "hidden" property on entities with composite keys.
 		// concatenating it will prevent the path from correctly being used to look up
 		// various things such as criteria paths and fetch profile association paths
-		if ( "_identifierMapper".equals( property ) ) {
+		if ( IDENTIFIER_MAPPER_PROPERTY.equals( property ) ) {
 			this.fullPath = parent != null ? parent.getFullPath() : "";
 		}
 		else {

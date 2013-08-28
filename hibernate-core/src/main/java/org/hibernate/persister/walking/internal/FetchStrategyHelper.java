@@ -23,8 +23,6 @@
  */
 package org.hibernate.persister.walking.internal;
 
-import java.util.Iterator;
-
 import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;

@@ -29,7 +29,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface NonEncapsulatedEntityIdentifierDefinition extends EntityIdentifierDefinition, CompositionDefinition {
-	public Iterable<AttributeDefinition> getAttributes();
 
 	public Type getCompositeType();
 

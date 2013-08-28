@@ -515,7 +515,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				compositionDefinition.getName()
 		);
 	}
-
+	protected PropertyPath currentPropertyPath = new PropertyPath( "" );
 	@Override
 	public boolean startingAttribute(AttributeDefinition attributeDefinition) {
 		log.tracef(
@@ -529,7 +529,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final boolean isComponentType = attributeType.isComponentType();
 		final boolean isAssociationType = attributeType.isAssociationType();
 		final boolean isBasicType = ! ( isComponentType || isAssociationType );
-
+		currentPropertyPath = currentPropertyPath.append( attributeDefinition.getName() );
 		if ( isBasicType ) {
 			return true;
 		}
@@ -548,6 +548,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				StringHelper.repeat( "<<", fetchSourceStack.size() ),
 				attributeDefinition
 		);
+		currentPropertyPath = currentPropertyPath.getParent();
 	}
 
 	private Map<AssociationKey,FetchSource> fetchedAssociationKeySourceMap = new HashMap<AssociationKey, FetchSource>();

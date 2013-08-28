@@ -59,7 +59,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private final Set<String> enabledFetchProfileNames;
 
 	public LoadQueryInfluencers() {
-		this( null, Collections.<String, Filter>emptyMap(), Collections.<String>emptySet() );
+		this( null );
 	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {

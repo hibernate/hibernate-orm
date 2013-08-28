@@ -161,6 +161,7 @@ import org.hibernate.id.SequenceHiLoGenerator;
 import org.hibernate.id.TableHiLoGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Constraint;
@@ -926,7 +927,7 @@ public final class AnnotationBinder {
 			);
 			propertyHolder.setInIdClass( null );
 			inferredData = new PropertyPreloadedData(
-					propertyAccessor, "_identifierMapper", compositeClass
+					propertyAccessor, PropertyPath.IDENTIFIER_MAPPER_PROPERTY, compositeClass
 			);
 			Component mapper = fillComponent(
 					propertyHolder,
@@ -959,7 +960,7 @@ public final class AnnotationBinder {
 			}
 
 			Property property = new Property();
-			property.setName( "_identifierMapper" );
+			property.setName( PropertyPath.IDENTIFIER_MAPPER_PROPERTY );
 			property.setNodeName( "id" );
 			property.setUpdateable( false );
 			property.setInsertable( false );

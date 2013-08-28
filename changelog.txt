@@ -5,6 +5,24 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.5.Final (2013.08.28)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-4699] - String mapped ENUMs can't be loaded from CHARs only VARCHARS (fix is trivial)
+    * [HHH-5465] - HQL left join fetch of an element collection following a left join fetch of a one-to-one relationship causes NullPointerException
+    * [HHH-7216] - "java.lang.IllegalStateException: No supertype found" thrown on query with "COUNT" aggregate function
+    * [HHH-7915] - Inherited foreign keys which reference a non primary key column incorrectly reference the primary key column
+    * [HHH-8207] - Locale conversion is broken
+    * [HHH-8383] - ExceptionInInitializerError when changing System properties while Environment class is initialized
+    * [HHH-8439] - Envers OSGI Manifest: org.apache.tools.ant import should be optional
+    * [HHH-8441] - Hibernate is trying to add values to an Immutable List
+    * [HHH-8447] - HQL delete with multiple subqueries failing (incorrect alias used)
+
+** Improvement
+    * [HHH-5920] - in org.hibernate.mapping.PersistentClass some 2 performance issues can be fixed
+    * [HHH-8068] - Provide better error messages for missing constructors in HQL / JPQL Constructor queries
+
 Changes in version 4.2.4.Final (2013.08.07)
 ------------------------------------------------------------------------------------------------------------------------
 

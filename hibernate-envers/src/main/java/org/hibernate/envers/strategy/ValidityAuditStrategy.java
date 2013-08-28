@@ -215,11 +215,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 							}
 					);
 
-					if ( rowCount != 1 && ( !reuseEntityIdentifier || ( getRevisionType( enversService, data ) != RevisionType.ADD ) ) ) {
-						throw new RuntimeException(
-								"Cannot update previous revision for entity " + auditedEntityName + " and id " + id
-						);
-					}
+					// HHH-8456: support case when AUD data missing: rowCount may be zero in that case
 				}
 			});
 		}

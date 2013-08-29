@@ -23,6 +23,8 @@
  */
 package org.hibernate.jpa.test.criteria;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
@@ -31,11 +33,8 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
-import org.junit.Test;
-
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -105,25 +104,24 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 		// 		it causes a problem on Derby, which does not like the form "... where ? in (?,?)"
 		//		Derby wants one side or the other to be CAST (I assume so it can check typing).
 
-		// IMPL NOTE : currently this does not assert the format of the ultimate SQL.  We'll let the matrix runs
-		// verify that the generated SQL is valid for each DB
-
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		CriteriaQuery<MultiTypedBasicAttributesEntity> criteria = em.getCriteriaBuilder()
 				.createQuery( MultiTypedBasicAttributesEntity.class );
 		criteria.from( MultiTypedBasicAttributesEntity.class );
 
+		// Note: Use chars here -- MySQL restricts the types that can be used within cast to a really limited
+		// subset.  Char is one of the few.
 		criteria.where(
-				em.getCriteriaBuilder().in( em.getCriteriaBuilder().parameter( Long.class, "p1" ) )
-						.value( em.getCriteriaBuilder().parameter( Long.class, "p2" ) )
-						.value( em.getCriteriaBuilder().parameter( Long.class, "p3" ) )
+				em.getCriteriaBuilder().in( em.getCriteriaBuilder().parameter( Character.class, "p1" ) )
+						.value( em.getCriteriaBuilder().parameter( Character.class, "p2" ) )
+						.value( em.getCriteriaBuilder().parameter( Character.class, "p3" ) )
 		);
 
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( "p1", 1L );
-		query.setParameter( "p2", 2L );
-		query.setParameter( "p3", 3L );
+		query.setParameter( "p1", 'a' );
+		query.setParameter( "p2", 'b' );
+		query.setParameter( "p3", 'c' );
 		query.getResultList();
 
 		em.getTransaction().commit();

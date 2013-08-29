@@ -318,7 +318,13 @@ public class MySQLDialect extends Dialect {
 	public String getCastTypeName(int code) {
 		switch ( code ) {
 			case Types.INTEGER:
+			case Types.BIGINT:
+			case Types.SMALLINT:
 				return "signed";
+			case Types.FLOAT:
+			case Types.NUMERIC:
+			case Types.REAL:
+				return "decimal";
 			case Types.VARCHAR:
 				return "char";
 			case Types.VARBINARY:

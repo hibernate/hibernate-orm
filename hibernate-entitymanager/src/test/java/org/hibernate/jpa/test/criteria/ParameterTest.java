@@ -23,8 +23,6 @@
  */
 package org.hibernate.jpa.test.criteria;
 
-import static org.junit.Assert.assertEquals;
-
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
@@ -33,8 +31,11 @@ import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
+
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -110,18 +111,16 @@ public class ParameterTest extends BaseEntityManagerFunctionalTestCase {
 				.createQuery( MultiTypedBasicAttributesEntity.class );
 		criteria.from( MultiTypedBasicAttributesEntity.class );
 
-		// Note: Use chars here -- MySQL restricts the types that can be used within cast to a really limited
-		// subset.  Char is one of the few.
 		criteria.where(
-				em.getCriteriaBuilder().in( em.getCriteriaBuilder().parameter( Character.class, "p1" ) )
-						.value( em.getCriteriaBuilder().parameter( Character.class, "p2" ) )
-						.value( em.getCriteriaBuilder().parameter( Character.class, "p3" ) )
+				em.getCriteriaBuilder().in( em.getCriteriaBuilder().parameter( Long.class, "p1" ) )
+						.value( em.getCriteriaBuilder().parameter( Long.class, "p2" ) )
+						.value( em.getCriteriaBuilder().parameter( Long.class, "p3" ) )
 		);
 
 		TypedQuery<MultiTypedBasicAttributesEntity> query = em.createQuery( criteria );
-		query.setParameter( "p1", 'a' );
-		query.setParameter( "p2", 'b' );
-		query.setParameter( "p3", 'c' );
+		query.setParameter( "p1", 1L );
+		query.setParameter( "p2", 2L );
+		query.setParameter( "p3", 3L );
 		query.getResultList();
 
 		em.getTransaction().commit();

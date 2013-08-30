@@ -37,7 +37,7 @@ import org.hibernate.internal.util.StringHelper;
 public class ScriptTargetOutputToWriter implements ScriptTargetOutput {
 	private static final String NEWLINE;
 	static {
-		final String systemNewLine = System.getProperty( "line.separator" );
+		final String systemNewLine = System.lineSeparator();
 		NEWLINE = StringHelper.isNotEmpty( systemNewLine ) ? systemNewLine : "\n";
 	}
 

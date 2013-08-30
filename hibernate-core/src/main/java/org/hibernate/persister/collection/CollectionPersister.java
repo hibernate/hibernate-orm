@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.persister.collection;
+
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -57,87 +57,103 @@ import org.hibernate.type.Type;
  * <br>
  * May be considered an immutable view of the mapping object
  *
+ * @author Gavin King
  * @see QueryableCollection
  * @see org.hibernate.collection.spi.PersistentCollection
- * @author Gavin King
  */
 public interface CollectionPersister extends CollectionDefinition {
 	/**
 	 * Initialize the given collection with the given key
 	 */
 	public void initialize(Serializable key, SessionImplementor session) //TODO: add owner argument!!
-	throws HibernateException;
+			throws HibernateException;
+
 	/**
 	 * Is this collection role cacheable
 	 */
 	public boolean hasCache();
+
 	/**
 	 * Get the cache
 	 */
 	public CollectionRegionAccessStrategy getCacheAccessStrategy();
+
 	/**
 	 * Get the cache structure
 	 */
 	public CacheEntryStructure getCacheEntryStructure();
+
 	/**
 	 * Get the associated <tt>Type</tt>
 	 */
 	public CollectionType getCollectionType();
+
 	/**
 	 * Get the "key" type (the type of the foreign key)
 	 */
 	public Type getKeyType();
+
 	/**
 	 * Get the "index" type for a list or map (optional operation)
 	 */
 	public Type getIndexType();
+
 	/**
 	 * Get the "element" type
 	 */
 	public Type getElementType();
+
 	/**
 	 * Return the element class of an array, or null otherwise
 	 */
 	public Class getElementClass();
+
 	/**
 	 * Read the key from a row of the JDBC <tt>ResultSet</tt>
 	 */
 	public Object readKey(ResultSet rs, String[] keyAliases, SessionImplementor session)
-		throws HibernateException, SQLException;
+			throws HibernateException, SQLException;
+
 	/**
 	 * Read the element from a row of the JDBC <tt>ResultSet</tt>
 	 */
 	public Object readElement(
-		ResultSet rs,
-		Object owner,
-		String[] columnAliases,
-		SessionImplementor session)
-		throws HibernateException, SQLException;
+			ResultSet rs,
+			Object owner,
+			String[] columnAliases,
+			SessionImplementor session)
+			throws HibernateException, SQLException;
+
 	/**
 	 * Read the index from a row of the JDBC <tt>ResultSet</tt>
 	 */
 	public Object readIndex(ResultSet rs, String[] columnAliases, SessionImplementor session)
-		throws HibernateException, SQLException;
+			throws HibernateException, SQLException;
+
 	/**
 	 * Read the identifier from a row of the JDBC <tt>ResultSet</tt>
 	 */
 	public Object readIdentifier(
-		ResultSet rs,
-		String columnAlias,
-		SessionImplementor session)
-		throws HibernateException, SQLException;
+			ResultSet rs,
+			String columnAlias,
+			SessionImplementor session)
+			throws HibernateException, SQLException;
+
 	/**
 	 * Is this an array or primitive values?
 	 */
 	public boolean isPrimitiveArray();
+
 	/**
 	 * Is this an array?
 	 */
 	public boolean isArray();
+
 	/**
 	 * Is this a one-to-many association?
 	 */
 	public boolean isOneToMany();
+
 	/**
 	 * Is this a many-to-many association?  Note that this is mainly
 	 * a convenience feature as the single persister does not
@@ -152,54 +168,61 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * Is this an "indexed" collection? (list or map)
 	 */
 	public boolean hasIndex();
+
 	/**
 	 * Is this collection lazyily initialized?
 	 */
 	public boolean isLazy();
+
 	/**
 	 * Is this collection "inverse", so state changes are not
 	 * propogated to the database.
 	 */
 	public boolean isInverse();
+
 	/**
 	 * Completely remove the persistent state of the collection
 	 */
 	public void remove(Serializable id, SessionImplementor session)
-		throws HibernateException;
+			throws HibernateException;
+
 	/**
 	 * (Re)create the collection's persistent state
 	 */
 	public void recreate(
-		PersistentCollection collection,
-		Serializable key,
-		SessionImplementor session)
-		throws HibernateException;
+			PersistentCollection collection,
+			Serializable key,
+			SessionImplementor session)
+			throws HibernateException;
+
 	/**
 	 * Delete the persistent state of any elements that were removed from
 	 * the collection
 	 */
 	public void deleteRows(
-		PersistentCollection collection,
-		Serializable key,
-		SessionImplementor session)
-		throws HibernateException;
+			PersistentCollection collection,
+			Serializable key,
+			SessionImplementor session)
+			throws HibernateException;
+
 	/**
 	 * Update the persistent state of any elements that were modified
 	 */
 	public void updateRows(
-		PersistentCollection collection,
-		Serializable key,
-		SessionImplementor session)
-		throws HibernateException;
+			PersistentCollection collection,
+			Serializable key,
+			SessionImplementor session)
+			throws HibernateException;
+
 	/**
 	 * Insert the persistent state of any new collection elements
 	 */
 	public void insertRows(
-		PersistentCollection collection,
-		Serializable key,
-		SessionImplementor session)
-		throws HibernateException;
-	
+			PersistentCollection collection,
+			Serializable key,
+			SessionImplementor session)
+			throws HibernateException;
+
 	/**
 	 * Process queued operations within the PersistentCollection.
 	 */
@@ -208,28 +231,33 @@ public interface CollectionPersister extends CollectionDefinition {
 			Serializable key,
 			SessionImplementor session)
 			throws HibernateException;
-	
+
 	/**
 	 * Get the name of this collection role (the fully qualified class name,
 	 * extended by a "property path")
 	 */
 	public String getRole();
+
 	/**
 	 * Get the persister of the entity that "owns" this collection
 	 */
 	public EntityPersister getOwnerEntityPersister();
+
 	/**
 	 * Get the surrogate key generation strategy (optional operation)
 	 */
 	public IdentifierGenerator getIdentifierGenerator();
+
 	/**
 	 * Get the type of the surrogate key
 	 */
 	public Type getIdentifierType();
+
 	/**
 	 * Does this collection implement "orphan delete"?
 	 */
 	public boolean hasOrphanDelete();
+
 	/**
 	 * Is this an ordered collection? (An ordered collection is
 	 * ordered by the initialization operation, not by sorting
@@ -251,28 +279,28 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * foreign key constraint definition?
 	 */
 	public abstract boolean isCascadeDeleteEnabled();
-	
+
 	/**
-	 * Does this collection cause version increment of the 
+	 * Does this collection cause version increment of the
 	 * owning entity?
 	 */
 	public boolean isVersioned();
-	
+
 	/**
 	 * Can the elements of this collection change?
 	 */
 	public boolean isMutable();
-	
+
 	//public boolean isSubselectLoadable();
-	
+
 	public String getNodeName();
-	
+
 	public String getElementNodeName();
-	
+
 	public String getIndexNodeName();
 
 	public void postInstantiate() throws MappingException;
-	
+
 	public SessionFactoryImplementor getFactory();
 
 	public boolean isAffectedByEnabledFilters(SessionImplementor session);
@@ -282,6 +310,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * suffix.
 	 *
 	 * @param suffix The suffix to use in the key column alias generation.
+	 *
 	 * @return The key column aliases.
 	 */
 	public String[] getKeyColumnAliases(String suffix);
@@ -291,6 +320,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * suffix.
 	 *
 	 * @param suffix The suffix to use in the index column alias generation.
+	 *
 	 * @return The key column aliases, or null if not indexed.
 	 */
 	public String[] getIndexColumnAliases(String suffix);
@@ -300,6 +330,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * suffix.
 	 *
 	 * @param suffix The suffix to use in the element column alias generation.
+	 *
 	 * @return The key column aliases.
 	 */
 	public String[] getElementColumnAliases(String suffix);
@@ -309,14 +340,25 @@ public interface CollectionPersister extends CollectionDefinition {
 	 * suffix.
 	 *
 	 * @param suffix The suffix to use in the key column alias generation.
+	 *
 	 * @return The key column aliases.
 	 */
 	public String getIdentifierColumnAlias(String suffix);
-	
+
 	public boolean isExtraLazy();
+
 	public int getSize(Serializable key, SessionImplementor session);
+
 	public boolean indexExists(Serializable key, Object index, SessionImplementor session);
+
 	public boolean elementExists(Serializable key, Object element, SessionImplementor session);
+
 	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner);
+
 	public int getBatchSize();
+
+	/**
+	 * @return the Name of the Property, this collection is mapped by
+	 */
+	public String getMappedByProperty();
 }

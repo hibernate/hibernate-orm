@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -27,10 +27,11 @@ import java.util.LinkedHashSet;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.secure.spi.JaccIntegrator;
 
 /**
@@ -46,6 +47,7 @@ public class IntegratorServiceImpl implements IntegratorService {
 		// separate project/jars.
 		addIntegrator( new BeanValidationIntegrator() );
 		addIntegrator( new JaccIntegrator() );
+		addIntegrator( new CollectionCacheInvalidator() );
 
 		// register provided integrators
 		for ( Integrator integrator : providedIntegrators ) {

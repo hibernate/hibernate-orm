@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -105,11 +107,10 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
 
 /**
  * Base implementation of the <tt>QueryableCollection</tt> interface.
- * 
+ *
  * @author Gavin King
  * @see BasicCollectionPersister
  * @see OneToManyPersister
@@ -117,8 +118,10 @@ import org.jboss.logging.Logger;
 public abstract class AbstractCollectionPersister
 		implements CollectionMetadata, SQLLoadableCollection {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			AbstractCollectionPersister.class.getName() );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			AbstractCollectionPersister.class.getName()
+	);
 
 	// TODO: encapsulate the protected instance variables!
 
@@ -149,6 +152,7 @@ public abstract class AbstractCollectionPersister
 	private final String nodeName;
 	private final String elementNodeName;
 	private final String indexNodeName;
+	private String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
@@ -266,6 +270,7 @@ public abstract class AbstractCollectionPersister
 		queryLoaderName = collection.getLoaderName();
 		nodeName = collection.getNodeName();
 		isMutable = collection.isMutable();
+		mappedByProperty = collection.getMappedByProperty();
 
 		Table table = collection.getCollectionTable();
 		fetchMode = collection.getElement().getFetchMode();
@@ -280,7 +285,7 @@ public abstract class AbstractCollectionPersister
 				dialect,
 				factory.getSettings().getDefaultCatalogName(),
 				factory.getSettings().getDefaultSchemaName()
-				);
+		);
 
 		int spacesSize = 1 + collection.getSynchronizedTables().size();
 		spaces = new String[spacesSize];
@@ -316,7 +321,7 @@ public abstract class AbstractCollectionPersister
 		int k = 0;
 		while ( iter.hasNext() ) {
 			// NativeSQL: collect key column and auto-aliases
-			Column col = ( (Column) iter.next() );
+			Column col = ((Column) iter.next());
 			keyColumnNames[k] = col.getQuotedName( dialect );
 			keyColumnAliases[k] = col.getAlias( dialect, collection.getOwner().getRootTable() );
 			k++;
@@ -328,7 +333,7 @@ public abstract class AbstractCollectionPersister
 
 		String elemNode = collection.getElementNodeName();
 		if ( elementType.isEntityType() ) {
-			String entityName = ( (EntityType) elementType ).getAssociatedEntityName();
+			String entityName = ((EntityType) elementType).getAssociatedEntityName();
 			elementPersister = factory.getEntityPersister( entityName );
 			if ( elemNode == null ) {
 				elemNode = cfg.getClassMapping( entityName ).getNodeName();
@@ -421,7 +426,7 @@ public abstract class AbstractCollectionPersister
 			}
 			indexContainsFormula = hasFormula;
 			baseIndex = indexedCollection.isList() ?
-					( (List) indexedCollection ).getBaseIndex() : 0;
+					((List) indexedCollection).getBaseIndex() : 0;
 
 			indexNodeName = indexedCollection.getIndexNodeName();
 
@@ -456,7 +461,7 @@ public abstract class AbstractCollectionPersister
 					factory.getSettings().getDefaultCatalogName(),
 					factory.getSettings().getDefaultSchemaName(),
 					null
-					);
+			);
 		}
 		else {
 			identifierType = null;
@@ -532,7 +537,7 @@ public abstract class AbstractCollectionPersister
 		isInverse = collection.isInverse();
 
 		if ( collection.isArray() ) {
-			elementClass = ( (org.hibernate.mapping.Array) collection ).getElementClass();
+			elementClass = ((org.hibernate.mapping.Array) collection).getElementClass();
 		}
 		else {
 			// for non-arrays, we don't need to know the element class
@@ -547,13 +552,13 @@ public abstract class AbstractCollectionPersister
 					elementFormulaTemplates,
 					(CompositeType) elementType,
 					factory
-					);
+			);
 		}
 		else if ( !elementType.isEntityType() ) {
 			elementPropertyMapping = new ElementPropertyMapping(
 					elementColumnNames,
 					elementType
-					);
+			);
 		}
 		else {
 			if ( elementPersister instanceof PropertyMapping ) { // not all classpersisters implement PropertyMapping!
@@ -563,7 +568,7 @@ public abstract class AbstractCollectionPersister
 				elementPropertyMapping = new ElementPropertyMapping(
 						elementColumnNames,
 						elementType
-						);
+				);
 			}
 		}
 
@@ -582,16 +587,20 @@ public abstract class AbstractCollectionPersister
 		}
 
 		// Handle any filters applied to this collection
-		filterHelper = new FilterHelper( collection.getFilters(), factory);
+		filterHelper = new FilterHelper( collection.getFilters(), factory );
 
 		// Handle any filters applied to this collection for many-to-many
-		manyToManyFilterHelper = new FilterHelper( collection.getManyToManyFilters(), factory);
+		manyToManyFilterHelper = new FilterHelper( collection.getManyToManyFilters(), factory );
 		manyToManyWhereString = StringHelper.isNotEmpty( collection.getManyToManyWhere() ) ?
 				"( " + collection.getManyToManyWhere() + ")" :
 				null;
 		manyToManyWhereTemplate = manyToManyWhereString == null ?
 				null :
-				Template.renderWhereStringTemplate( manyToManyWhereString, factory.getDialect(), factory.getSqlFunctionRegistry() );
+				Template.renderWhereStringTemplate(
+						manyToManyWhereString,
+						factory.getDialect(),
+						factory.getSqlFunctionRegistry()
+				);
 
 		hasManyToManyOrder = collection.getManyToManyOrdering() != null;
 		if ( hasManyToManyOrder ) {
@@ -626,7 +635,7 @@ public abstract class AbstractCollectionPersister
 				formulaTemplates = formulaTemplates( reference, columnNames.length );
 			}
 
-			final SqlValueReference[] result = new SqlValueReference[ columnNames.length ];
+			final SqlValueReference[] result = new SqlValueReference[columnNames.length];
 			int i = 0;
 			for ( final String columnName : columnNames ) {
 				if ( columnName == null ) {
@@ -658,7 +667,7 @@ public abstract class AbstractCollectionPersister
 	private String[] formulaTemplates(String reference, int expectedSize) {
 		try {
 			final int propertyIndex = elementPersister.getEntityMetamodel().getPropertyIndex( reference );
-			return  ( (Queryable) elementPersister ).getSubclassPropertyFormulaTemplateClosure()[propertyIndex];
+			return ((Queryable) elementPersister).getSubclassPropertyFormulaTemplateClosure()[propertyIndex];
 		}
 		catch (Exception e) {
 			return new String[expectedSize];
@@ -674,10 +683,18 @@ public abstract class AbstractCollectionPersister
 	protected void logStaticSQL() {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Static SQL for collection: %s", getRole() );
-			if ( getSQLInsertRowString() != null ) LOG.debugf( " Row insert: %s", getSQLInsertRowString() );
-			if ( getSQLUpdateRowString() != null ) LOG.debugf( " Row update: %s", getSQLUpdateRowString() );
-			if ( getSQLDeleteRowString() != null ) LOG.debugf( " Row delete: %s", getSQLDeleteRowString() );
-			if ( getSQLDeleteString() != null ) LOG.debugf( " One-shot delete: %s", getSQLDeleteString() );
+			if ( getSQLInsertRowString() != null ) {
+				LOG.debugf( " Row insert: %s", getSQLInsertRowString() );
+			}
+			if ( getSQLUpdateRowString() != null ) {
+				LOG.debugf( " Row update: %s", getSQLUpdateRowString() );
+			}
+			if ( getSQLDeleteRowString() != null ) {
+				LOG.debugf( " Row delete: %s", getSQLDeleteRowString() );
+			}
+			if ( getSQLDeleteString() != null ) {
+				LOG.debugf( " One-shot delete: %s", getSQLDeleteString() );
+			}
 		}
 	}
 
@@ -733,7 +750,9 @@ public abstract class AbstractCollectionPersister
 		}
 	}
 
-	protected abstract CollectionInitializer createSubselectInitializer(SubselectFetch subselect, SessionImplementor session);
+	protected abstract CollectionInitializer createSubselectInitializer(
+			SubselectFetch subselect,
+			SessionImplementor session);
 
 	protected abstract CollectionInitializer createCollectionInitializer(LoadQueryInfluencers loadQueryInfluencers)
 			throws MappingException;
@@ -834,7 +853,7 @@ public abstract class AbstractCollectionPersister
 
 	protected Object decrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
-            index = (Integer)index - baseIndex;
+			index = (Integer) index - baseIndex;
 		}
 		return index;
 	}
@@ -887,7 +906,7 @@ public abstract class AbstractCollectionPersister
 
 	protected Object incrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
-            index = (Integer)index + baseIndex;
+			index = (Integer) index + baseIndex;
 		}
 		return index;
 	}
@@ -1128,8 +1147,10 @@ public abstract class AbstractCollectionPersister
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Deleting collection: %s",
-						MessageHelper.collectionInfoString( this, id, getFactory() ) );
+				LOG.debugf(
+						"Deleting collection: %s",
+						MessageHelper.collectionInfoString( this, id, getFactory() )
+				);
 			}
 
 			// Remove all the old entries
@@ -1146,7 +1167,7 @@ public abstract class AbstractCollectionPersister
 						removeBatchKey = new BasicBatchKey(
 								getRole() + "#REMOVE",
 								expectation
-								);
+						);
 					}
 					st = session.getTransactionCoordinator()
 							.getJdbcCoordinator()
@@ -1171,10 +1192,15 @@ public abstract class AbstractCollectionPersister
 								.addToBatch();
 					}
 					else {
-						expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+						expectation.verifyOutcome(
+								session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getResultSetReturn()
+										.executeUpdate( st ), st, -1
+						);
 					}
 				}
-				catch ( SQLException sqle ) {
+				catch (SQLException sqle) {
 					if ( useBatch ) {
 						session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 					}
@@ -1188,13 +1214,13 @@ public abstract class AbstractCollectionPersister
 
 				LOG.debug( "Done deleting collection" );
 			}
-			catch ( SQLException sqle ) {
+			catch (SQLException sqle) {
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not delete collection: " +
 								MessageHelper.collectionInfoString( this, id, getFactory() ),
 						getSQLDeleteString()
-						);
+				);
 			}
 
 		}
@@ -1209,8 +1235,10 @@ public abstract class AbstractCollectionPersister
 		if ( !isInverse && isRowInsertEnabled() ) {
 
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Inserting collection: %s",
-						MessageHelper.collectionInfoString( this, collection, id, session ) );
+				LOG.debugf(
+						"Inserting collection: %s",
+						MessageHelper.collectionInfoString( this, collection, id, session )
+				);
 			}
 
 			try {
@@ -1236,7 +1264,7 @@ public abstract class AbstractCollectionPersister
 									recreateBatchKey = new BasicBatchKey(
 											getRole() + "#RECREATE",
 											expectation
-											);
+									);
 								}
 								st = session.getTransactionCoordinator()
 										.getJdbcCoordinator()
@@ -1258,7 +1286,7 @@ public abstract class AbstractCollectionPersister
 								if ( hasIdentifier ) {
 									loc = writeIdentifier( st, collection.getIdentifier( entry, i ), loc, session );
 								}
-								if ( hasIndex /* && !indexIsFormula */) {
+								if ( hasIndex /* && !indexIsFormula */ ) {
 									loc = writeIndex( st, collection.getIndex( entry, i, this ), loc, session );
 								}
 								loc = writeElement( st, collection.getElement( entry ), loc, session );
@@ -1270,13 +1298,18 @@ public abstract class AbstractCollectionPersister
 											.addToBatch();
 								}
 								else {
-									expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+									expectation.verifyOutcome(
+											session.getTransactionCoordinator()
+													.getJdbcCoordinator()
+													.getResultSetReturn()
+													.executeUpdate( st ), st, -1
+									);
 								}
 
 								collection.afterRowInsert( this, entry, i );
 								count++;
 							}
-							catch ( SQLException sqle ) {
+							catch (SQLException sqle) {
 								if ( useBatch ) {
 									session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 								}
@@ -1299,13 +1332,13 @@ public abstract class AbstractCollectionPersister
 					LOG.debug( "Collection was empty" );
 				}
 			}
-			catch ( SQLException sqle ) {
+			catch (SQLException sqle) {
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not insert collection: " +
 								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLInsertRowString()
-						);
+				);
 			}
 		}
 	}
@@ -1322,8 +1355,10 @@ public abstract class AbstractCollectionPersister
 		if ( !isInverse && isRowDeleteEnabled() ) {
 
 			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( "Deleting rows of collection: %s",
-						MessageHelper.collectionInfoString( this, collection, id, session ) );
+				LOG.debugf(
+						"Deleting rows of collection: %s",
+						MessageHelper.collectionInfoString( this, collection, id, session )
+				);
 			}
 
 			boolean deleteByIndex = !isOneToMany() && hasIndex && !indexContainsFormula;
@@ -1345,7 +1380,7 @@ public abstract class AbstractCollectionPersister
 								deleteBatchKey = new BasicBatchKey(
 										getRole() + "#DELETE",
 										expectation
-										);
+								);
 							}
 							st = session.getTransactionCoordinator()
 									.getJdbcCoordinator()
@@ -1384,11 +1419,16 @@ public abstract class AbstractCollectionPersister
 										.addToBatch();
 							}
 							else {
-								expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								expectation.verifyOutcome(
+										session.getTransactionCoordinator()
+												.getJdbcCoordinator()
+												.getResultSetReturn()
+												.executeUpdate( st ), st, -1
+								);
 							}
 							count++;
 						}
-						catch ( SQLException sqle ) {
+						catch (SQLException sqle) {
 							if ( useBatch ) {
 								session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 							}
@@ -1407,13 +1447,13 @@ public abstract class AbstractCollectionPersister
 					LOG.debug( "No rows to delete" );
 				}
 			}
-			catch ( SQLException sqle ) {
+			catch (SQLException sqle) {
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not delete collection rows: " +
 								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLDeleteRowString()
-						);
+				);
 			}
 		}
 	}
@@ -1429,8 +1469,12 @@ public abstract class AbstractCollectionPersister
 
 		if ( !isInverse && isRowInsertEnabled() ) {
 
-			if ( LOG.isDebugEnabled() ) LOG.debugf( "Inserting rows of collection: %s",
-					MessageHelper.collectionInfoString( this, collection, id, session ) );
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Inserting rows of collection: %s",
+						MessageHelper.collectionInfoString( this, collection, id, session )
+				);
+			}
 
 			try {
 				// insert all the new entries
@@ -1453,7 +1497,7 @@ public abstract class AbstractCollectionPersister
 								insertBatchKey = new BasicBatchKey(
 										getRole() + "#INSERT",
 										expectation
-										);
+								);
 							}
 							if ( st == null ) {
 								st = session.getTransactionCoordinator()
@@ -1476,21 +1520,29 @@ public abstract class AbstractCollectionPersister
 							if ( hasIdentifier ) {
 								offset = writeIdentifier( st, collection.getIdentifier( entry, i ), offset, session );
 							}
-							if ( hasIndex /* && !indexIsFormula */) {
+							if ( hasIndex /* && !indexIsFormula */ ) {
 								offset = writeIndex( st, collection.getIndex( entry, i, this ), offset, session );
 							}
 							writeElement( st, collection.getElement( entry ), offset, session );
 
 							if ( useBatch ) {
-								session.getTransactionCoordinator().getJdbcCoordinator().getBatch( insertBatchKey ).addToBatch();
+								session.getTransactionCoordinator()
+										.getJdbcCoordinator()
+										.getBatch( insertBatchKey )
+										.addToBatch();
 							}
 							else {
-								expectation.verifyOutcome( session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( st ), st, -1 );
+								expectation.verifyOutcome(
+										session.getTransactionCoordinator()
+												.getJdbcCoordinator()
+												.getResultSetReturn()
+												.executeUpdate( st ), st, -1
+								);
 							}
 							collection.afterRowInsert( this, entry, i );
 							count++;
 						}
-						catch ( SQLException sqle ) {
+						catch (SQLException sqle) {
 							if ( useBatch ) {
 								session.getTransactionCoordinator().getJdbcCoordinator().abortBatch();
 							}
@@ -1506,13 +1558,13 @@ public abstract class AbstractCollectionPersister
 				}
 				LOG.debugf( "Done inserting rows: %s inserted", count );
 			}
-			catch ( SQLException sqle ) {
+			catch (SQLException sqle) {
 				throw sqlExceptionHelper.convert(
 						sqle,
 						"could not insert collection rows: " +
 								MessageHelper.collectionInfoString( this, collection, id, session ),
 						getSQLInsertRowString()
-						);
+				);
 			}
 
 		}
@@ -1553,7 +1605,7 @@ public abstract class AbstractCollectionPersister
 
 	public String getManyToManyFilterFragment(String alias, Map enabledFilters) {
 		StringBuilder buffer = new StringBuilder();
-		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator(alias), enabledFilters );
+		manyToManyFilterHelper.render( buffer, elementPersister.getFilterAliasGenerator( alias ), enabledFilters );
 
 		if ( manyToManyWhereString != null ) {
 			buffer.append( " and " )
@@ -1642,15 +1694,18 @@ public abstract class AbstractCollectionPersister
 
 	protected abstract int doUpdateRows(Serializable key, PersistentCollection collection, SessionImplementor session)
 			throws HibernateException;
-	
+
 	public void processQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
 			throws HibernateException {
 		if ( collection.hasQueuedOperations() ) {
 			doProcessQueuedOps( collection, key, session );
 		}
 	}
-	
-	protected abstract void doProcessQueuedOps(PersistentCollection collection, Serializable key, SessionImplementor session)
+
+	protected abstract void doProcessQueuedOps(
+			PersistentCollection collection,
+			Serializable key,
+			SessionImplementor session)
 			throws HibernateException;
 
 	public CollectionMetadata getCollectionMetadata() {
@@ -1668,7 +1723,7 @@ public abstract class AbstractCollectionPersister
 	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
 
 		StringBuilder sessionFilterFragment = new StringBuilder();
-		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( alias ), enabledFilters );
 
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
 	}
@@ -1745,7 +1800,7 @@ public abstract class AbstractCollectionPersister
 
 	public boolean isAffectedByEnabledFilters(SessionImplementor session) {
 		return filterHelper.isAffectedBy( session.getEnabledFilters() ) ||
-				( isManyToMany() && manyToManyFilterHelper.isAffectedBy( session.getEnabledFilters() ) );
+				(isManyToMany() && manyToManyFilterHelper.isAffectedBy( session.getEnabledFilters() ));
 	}
 
 	public boolean isSubselectLoadable() {
@@ -1782,8 +1837,9 @@ public abstract class AbstractCollectionPersister
 			initCollectionPropertyMap(
 					"id",
 					identifierType,
-					new String[] { identifierColumnAlias },
-					new String[] { identifierColumnName } );
+					new String[] {identifierColumnAlias},
+					new String[] {identifierColumnName}
+			);
 		}
 	}
 
@@ -1812,7 +1868,10 @@ public abstract class AbstractCollectionPersister
 					.prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
-				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getResultSetReturn()
+						.extract( st );
 				try {
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
 				}
@@ -1824,13 +1883,13 @@ public abstract class AbstractCollectionPersister
 				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve collection size: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
-					);
+			);
 		}
 	}
 
@@ -1842,7 +1901,12 @@ public abstract class AbstractCollectionPersister
 		return exists( key, element, getElementType(), sqlDetectRowByElementString, session );
 	}
 
-	private boolean exists(Serializable key, Object indexOrElement, Type indexOrElementType, String sql, SessionImplementor session) {
+	private boolean exists(
+			Serializable key,
+			Object indexOrElement,
+			Type indexOrElementType,
+			String sql,
+			SessionImplementor session) {
 		try {
 			PreparedStatement st = session.getTransactionCoordinator()
 					.getJdbcCoordinator()
@@ -1851,7 +1915,10 @@ public abstract class AbstractCollectionPersister
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
-				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getResultSetReturn()
+						.extract( st );
 				try {
 					return rs.next();
 				}
@@ -1859,20 +1926,20 @@ public abstract class AbstractCollectionPersister
 					session.getTransactionCoordinator().getJdbcCoordinator().release( rs, st );
 				}
 			}
-			catch ( TransientObjectException e ) {
+			catch (TransientObjectException e) {
 				return false;
 			}
 			finally {
 				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not check row existence: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
-					);
+			);
 		}
 	}
 
@@ -1885,7 +1952,10 @@ public abstract class AbstractCollectionPersister
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				getIndexType().nullSafeSet( st, incrementIndexByBase( index ), keyColumnNames.length + 1, session );
-				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = session.getTransactionCoordinator()
+						.getJdbcCoordinator()
+						.getResultSetReturn()
+						.extract( st );
 				try {
 					if ( rs.next() ) {
 						return getElementType().nullSafeGet( rs, elementColumnAliases, session, owner );
@@ -1902,13 +1972,13 @@ public abstract class AbstractCollectionPersister
 				session.getTransactionCoordinator().getJdbcCoordinator().release( st );
 			}
 		}
-		catch ( SQLException sqle ) {
+		catch (SQLException sqle) {
 			throw getFactory().getSQLExceptionHelper().convert(
 					sqle,
 					"could not read row: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
-					);
+			);
 		}
 	}
 
@@ -1923,7 +1993,7 @@ public abstract class AbstractCollectionPersister
 	/**
 	 * Intended for internal use only. In fact really only currently used from
 	 * test suite for assertion purposes.
-	 * 
+	 *
 	 * @return The default collection initializer for this persister/collection.
 	 */
 	public CollectionInitializer getInitializer() {
@@ -1932,6 +2002,11 @@ public abstract class AbstractCollectionPersister
 
 	public int getBatchSize() {
 		return batchSize;
+	}
+
+	@Override
+	public String getMappedByProperty() {
+		return mappedByProperty;
 	}
 
 	private class StandardOrderByAliasResolver implements OrderByAliasResolver {
@@ -1948,11 +2023,11 @@ public abstract class AbstractCollectionPersister
 				return rootAlias;
 			}
 			else {
-				return ( (Loadable) elementPersister ).getTableAliasForColumn( columnReference, rootAlias );
+				return ((Loadable) elementPersister).getTableAliasForColumn( columnReference, rootAlias );
 			}
 		}
 	}
-	
+
 	public abstract FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
 	// ColectionDefinition impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1964,7 +2039,7 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public CollectionIndexDefinition getIndexDefinition() {
-		if ( ! hasIndex() ) {
+		if ( !hasIndex() ) {
 			return null;
 		}
 
@@ -1984,12 +2059,12 @@ public abstract class AbstractCollectionPersister
 				if ( getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat composite collection index type as entity" );
 				}
-				return (EntityPersister) ( (AssociationType) getIndexType() ).getAssociatedJoinable( getFactory() );
+				return (EntityPersister) ((AssociationType) getIndexType()).getAssociatedJoinable( getFactory() );
 			}
 
 			@Override
 			public CompositionDefinition toCompositeDefinition() {
-				if ( ! getType().isComponentType() ) {
+				if ( !getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat entity collection index type as composite" );
 				}
 				// todo : implement
@@ -2022,7 +2097,7 @@ public abstract class AbstractCollectionPersister
 			@Override
 			public CompositeCollectionElementDefinition toCompositeElementDefinition() {
 
-				if ( ! getType().isComponentType() ) {
+				if ( !getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
 				}
 

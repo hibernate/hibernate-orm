@@ -346,9 +346,24 @@ public class SimpleValueBinder {
 					property.getName()
 			);
 			attributeConverterDefinition = mappings.locateAttributeConverter( convertAnnotation.converter() );
+			if ( attributeConverterDefinition == null ) {
+				attributeConverterDefinition = makeAttributeConverterDefinition( convertAnnotation );
+			}
 		}
 		else {
 			attributeConverterDefinition = locateAutoApplyAttributeConverter( property );
+		}
+	}
+
+	private AttributeConverterDefinition makeAttributeConverterDefinition(Convert convertAnnotation) {
+		try {
+			return new AttributeConverterDefinition(
+					(AttributeConverter) convertAnnotation.converter().newInstance(),
+					false
+			);
+		}
+		catch (Exception e) {
+			throw new AnnotationException( "Unable to create AttributeConverter instance", e );
 		}
 	}
 

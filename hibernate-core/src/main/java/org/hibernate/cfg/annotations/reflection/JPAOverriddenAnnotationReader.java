@@ -49,6 +49,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
+import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
@@ -247,6 +248,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( Cacheable.class, "cacheable" );
 		annotationToXml.put( Index.class, "index" );
 		annotationToXml.put( ForeignKey.class, "foreign-key" );
+		annotationToXml.put( Convert.class, "convert" );
 	}
 
 	private XMLContext xmlContext;
@@ -341,7 +343,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 
 	/*
 	 * The idea is to create annotation proxies for the xml configuration elements. Using this proxy annotations together
-	 * with the {@code JPAMetadataprovider} allows to handle xml configuration the same way as annotation configuration.
+	 * with the {@link JPAMetadataProvider} allows to handle xml configuration the same way as annotation configuration.
 	 */
 	private void initAnnotations() {
 		if ( annotations == null ) {

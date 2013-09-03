@@ -184,6 +184,61 @@ public class PaginationTest extends BaseCoreFunctionalTestCase {
 		cleanupTestData();
 	}
 
+	/**
+	 * HHH-6914: test a case when a query with ORDER BY clause having repeated column (same column disguised under
+	 * alias) is run with limit but no offset
+	 * 
+	 * @author piofin <piotr.findeisen@syncron.com>
+	 */
+	@Test
+	@RequiresDialectFeature(value = DialectChecks.SupportLimitCheck.class, comment = "Dialect does not support limit")
+	public void testLimitNoOffsetOrderByDuplicatedColumn() {
+		runWithSessionAndData(new Runnable() {
+			public void run() {
+				int count = session.createQuery("select dp.id as dpId from DataPoint dp order by dpId, dp.id")
+						.setMaxResults(5)
+						.list()
+						.size();
+				assertEquals("query should return some rows (i.e. it should not fail)", 5, count);
+			}
+		});
+	}
+
+	/**
+	 * HHH-6914: test a case when a query with ORDER BY clause having repeated column (same column disguised under
+	 * alias) is run with limit and offset
+	 * 
+	 * @author piofin <piotr.findeisen@syncron.com>
+	 */
+	@Test
+	@RequiresDialectFeature(value = DialectChecks.SupportLimitAndOffsetCheck.class, comment = "Dialect does not support limit+offset")
+	public void testLimitOffsetOrderByDuplicatedColumn() {
+		runWithSessionAndData(new Runnable() {
+			public void run() {
+				int count = session.createQuery("select dp.id as dpId from DataPoint dp order by dpId, dp.id")
+						.setFirstResult(1)
+						.setMaxResults(4)
+						.list()
+						.size();
+				assertEquals("query should return some rows (i.e. it should not fail)", 4, count);
+			}
+		});
+	}
+
+	private void runWithSessionAndData(Runnable testCode) {
+		prepareTestData();
+
+		session = openSession();
+		session.beginTransaction();
+
+		testCode.run();
+
+		session.getTransaction().commit();
+		session.close();
+
+		cleanupTestData();
+	}
+
 	private Query generateBaseHQLQuery(Session session) {
 		return session.createQuery( "select dp from DataPoint dp order by dp.sequence" );
 	}

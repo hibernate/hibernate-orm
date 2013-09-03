@@ -23,17 +23,13 @@
  */
 package org.hibernate.test.type.descriptor.java;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Locale;
-import java.util.StringTokenizer;
-
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
-
-import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
+import org.junit.Test;
 
 /**
  * Tests of the {@link LocaleTypeDescriptor} class.
@@ -54,17 +50,11 @@ public class LocaleTypeDescriptorTest extends BaseUnitTestCase {
 		assertEquals( toLocale( "de", "DE", "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "de_DE_ch123" ) );
 	}
 
-	public Locale toLocale(String lang, String region, String variant) {
-		final Locale.Builder builder = new Locale.Builder();
-		if ( StringHelper.isNotEmpty( lang ) ) {
-			builder.setLanguage( lang );
-		}
-		if ( StringHelper.isNotEmpty( region ) ) {
-			builder.setRegion( region );
-		}
-		if ( StringHelper.isNotEmpty( variant ) ) {
-			builder.setVariant( variant );
-		}
-		return builder.build();
+	private static Locale toLocale(String lang, String region, String variant) {
+		return new Locale(orEmpty(lang), orEmpty(region), orEmpty(variant));
+	}
+
+	private static String orEmpty(String s) {
+		return s != null ? s : "";
 	}
 }

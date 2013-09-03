@@ -131,28 +131,6 @@ public class SQLServer2005DialectTestCase extends BaseUnitTestCase {
 		);
 	}
 
-	@Test
-	@TestForIssue(jiraKey = "HHH-7370")
-	public void testGetLimitStringWithMaxOnly() {
-		final String query = "select product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
-				"from Product2 product2x0_ order by product2x0_.id";
-
-		assertEquals(
-				"select TOP(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
-						"from Product2 product2x0_ order by product2x0_.id",
-				dialect.buildLimitHandler( query, toRowSelection( 0, 1 ) ).getProcessedSql()
-		);
-
-		final String distinctQuery = "select distinct product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
-				"from Product2 product2x0_ order by product2x0_.id";
-
-		assertEquals(
-				"select distinct TOP(?) product2x0_.id as id0_, product2x0_.description as descript2_0_ " +
-						"from Product2 product2x0_ order by product2x0_.id",
-				dialect.buildLimitHandler( distinctQuery, toRowSelection( 0, 5 ) ).getProcessedSql()
-		);
-	}
-
 	private RowSelection toRowSelection(int firstRow, int maxRows) {
 		RowSelection selection = new RowSelection();
 		selection.setFirstRow( firstRow );

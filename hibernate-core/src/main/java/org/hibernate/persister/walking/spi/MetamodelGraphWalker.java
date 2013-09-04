@@ -291,6 +291,6 @@ public class MetamodelGraphWalker {
 	 *         false, otherwise.
 	 */
 	protected boolean isDuplicateAssociationKey(AssociationKey associationKey) {
-		return visitedAssociationKeys.contains( associationKey );
+		return visitedAssociationKeys.contains( associationKey ) || strategy.isDuplicateAssociationKey( associationKey );
 	}
 }

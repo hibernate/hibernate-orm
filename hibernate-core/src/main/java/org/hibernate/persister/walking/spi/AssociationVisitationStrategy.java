@@ -170,4 +170,6 @@ public interface AssociationVisitationStrategy {
 	public void associationKeyRegistered(AssociationKey associationKey);
 	public FetchSource registeredFetchSource(AssociationKey associationKey);
 	public void foundCircularAssociation(AssociationAttributeDefinition attributeDefinition);
+	public boolean isDuplicateAssociationKey(AssociationKey associationKey);
+
 }

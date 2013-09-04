@@ -263,4 +263,9 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 		);
 	}
 
+	@Override
+	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
 }

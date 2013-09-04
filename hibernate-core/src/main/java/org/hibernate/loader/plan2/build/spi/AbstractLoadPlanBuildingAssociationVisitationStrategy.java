@@ -554,6 +554,11 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	private Map<AssociationKey,FetchSource> fetchedAssociationKeySourceMap = new HashMap<AssociationKey, FetchSource>();
 
 	@Override
+	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
+		return fetchedAssociationKeySourceMap.containsKey( associationKey );
+	}
+
+	@Override
 	public void associationKeyRegistered(AssociationKey associationKey) {
 		// todo : use this information to maintain a map of AssociationKey->FetchSource mappings (associationKey + current FetchSource stack entry)
 		//		that mapping can then be used in #foundCircularAssociationKey to build the proper BiDirectionalEntityFetch

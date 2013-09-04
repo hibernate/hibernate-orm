@@ -417,6 +417,11 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	private Map<AssociationKey,FetchOwner> fetchedAssociationKeyOwnerMap = new HashMap<AssociationKey, FetchOwner>();
 
 	@Override
+	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {
+		return fetchedAssociationKeyOwnerMap.containsKey( associationKey );
+	}
+
+	@Override
 	public void associationKeyRegistered(AssociationKey associationKey) {
 		// todo : use this information to maintain a map of AssociationKey->FetchOwner mappings (associationKey + current fetchOwner stack entry)
 		//		that mapping can then be used in #foundCircularAssociationKey to build the proper BiDirectionalEntityFetch

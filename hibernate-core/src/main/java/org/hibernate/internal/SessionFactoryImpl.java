@@ -300,6 +300,7 @@ public final class SessionFactoryImpl
 				for ( Integrator integrator : integrators ) {
 					integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
 				}
+                integrators.clear();
 			}
 		}
 
@@ -736,6 +737,7 @@ public final class SessionFactoryImpl
 				for ( Integrator integrator : integrators ) {
 					integrator.disintegrate( SessionFactoryImpl.this, SessionFactoryImpl.this.serviceRegistry );
 				}
+                integrators.clear();
 			}
 		}
 

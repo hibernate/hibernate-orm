@@ -256,7 +256,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				);
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
-			joinColumn.setJoinAnnotation( ann, null );
+			joinColumn.setJoinAnnotation( ann, null, mappings );
 			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
 				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
 				joinColumn.setLogicalColumnName( propertyName + suffixForDefaultColumnName );
@@ -293,12 +293,13 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 
 	// TODO default name still useful in association table
-	public void setJoinAnnotation(JoinColumn annJoin, String defaultName) {
+	public void setJoinAnnotation(JoinColumn annJoin, String defaultName, Mappings mappings) {
 		if ( annJoin == null ) {
 			setImplicit( true );
 		}
 		else {
 			setImplicit( false );
+			final ObjectNameNormalizer nameNormalizer = mappings.getObjectNameNormalizer();
 			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.columnDefinition() ) ) setSqlType( annJoin.columnDefinition() );
 			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.name() ) ) setLogicalColumnName( annJoin.name() );
 			setNullable( annJoin.nullable() );
@@ -306,7 +307,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			setInsertable( annJoin.insertable() );
 			setUpdatable( annJoin.updatable() );
 			setReferencedColumn( annJoin.referencedColumnName() );
-			setSecondaryTableName( annJoin.table() );
+
+			final String tableName = !BinderHelper.isEmptyAnnotationValue( annJoin.table() )
+					? nameNormalizer.normalizeIdentifierQuoting( mappings.getNamingStrategy().tableName( annJoin.table() ) ) : "";
+			setSecondaryTableName( tableName );
 		}
 	}
 
@@ -675,7 +679,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				currentJoinColumn.setMappings( mappings );
 				currentJoinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 				currentJoinColumn.setMappedBy( mappedBy );
-				currentJoinColumn.setJoinAnnotation( annJoin, propertyName );
+				currentJoinColumn.setJoinAnnotation( annJoin, propertyName, mappings );
 				currentJoinColumn.setNullable( false ); //I break the spec, but it's for good
 				//done after the annotation to override it
 				currentJoinColumn.bind();

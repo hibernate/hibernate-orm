@@ -33,6 +33,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -52,6 +53,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	private static final Logger log = Logger.getLogger( ClassLoaderServiceImpl.class );
 
 	private final ClassLoader aggregatedClassLoader;
+    private final LinkedList<ServiceLoader> loaders = new LinkedList<ServiceLoader>();
 
 	/**
 	 * Constructs a ClassLoaderServiceImpl with standard set-up
@@ -318,14 +320,22 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract) {
-		final ServiceLoader<S> loader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
-		final LinkedHashSet<S> services = new LinkedHashSet<S>();
-		for ( S service : loader ) {
+        ServiceLoader<S> serviceLoader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
+        final LinkedHashSet<S> services = new LinkedHashSet<S>();
+		for ( S service : serviceLoader) {
 			services.add( service );
 		}
-
+        loaders.add(serviceLoader);
 		return services;
 	}
+
+    @Override
+    public void stop() {
+        while (!loaders.isEmpty()){
+            ServiceLoader loader = loaders.removeLast();
+            loader.reload();//clear service loader providers
+        }
+    }
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// completely temporary !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

@@ -35,7 +35,7 @@ public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
 
 	@Override
 	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original ) && EnversListener.class.isInstance( listener );
+		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
 	}
 
 	@Override

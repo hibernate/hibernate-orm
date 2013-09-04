@@ -45,4 +45,14 @@
 		<property name="description"/>
 	</class>
 
+	<class name="DataMetaPoint"
+		dynamic-update="true">
+		<!--rowid="rowid"--> <!-- remove this if not oracle -->
+		<id name="id">
+			<generator class="increment"/>
+		</id>
+        <property name="meta" />
+        <many-to-one name="dataPoint" class="DataPoint" />
+	</class>
+
 </hibernate-mapping>

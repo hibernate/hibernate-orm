@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="2.1" >
+    <package>org.hibernate.test.type</package>
+    <converter class="org.hibernate.test.type.StringClobConverter" auto-apply="true"/>
+</entity-mappings>

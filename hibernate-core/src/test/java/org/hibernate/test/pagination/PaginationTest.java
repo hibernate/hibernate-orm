@@ -24,7 +24,10 @@
 package org.hibernate.test.pagination;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.junit.Test;
 
@@ -33,12 +36,15 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -116,6 +122,42 @@ public class PaginationTest extends BaseCoreFunctionalTestCase {
 		session.getTransaction().commit();
 		session.close();
 		cleanupTestData();
+	}
+
+	/**
+	 * HHH-951: test that setting maxResults does not cause "ORA-00918: column ambiguously defined" on certain queries
+	 * 
+	 * @author Piotr Findeisen <piotr.findeisen@gmail.com>
+	 */
+	@Test
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportLimitCheck.class,
+			comment = "Dialect does not support limit"
+	)
+	public void testLimitWithExpreesionAndFetchJoin() {
+		session = openSession();
+		session.beginTransaction();
+
+		String hql = "SELECT b, 1 FROM DataMetaPoint b inner join fetch b.dataPoint dp";
+		session.createQuery(hql)
+				.setMaxResults(3)
+				// This should not fail
+				.list();
+
+		HQLQueryPlan queryPlan = new HQLQueryPlan(hql, false, Collections.EMPTY_MAP, sessionFactory());
+		String sqlQuery = queryPlan.getTranslators()[0]
+				.collectSqlStrings().get(0);
+
+		session.getTransaction().commit();
+		session.close();
+
+		Matcher matcher = Pattern.compile(
+				"(?is)\\b(?<column>\\w+\\.\\w+)\\s+as\\s+(?<alias>\\w+)\\b.*\\k<column>\\s+as\\s+\\k<alias>")
+				.matcher(sqlQuery);
+		if (matcher.find()) {
+			fail(format("Column %s mapped to alias %s twice in generated SQL: %s", matcher.group("column"),
+					matcher.group("alias"), sqlQuery));
+		}
 	}
 
 	@Test

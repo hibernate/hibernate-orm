@@ -196,7 +196,7 @@ public class SimpleValueBinder {
 			}
 			explicitType = type;
 		}
-		else if ( property.isAnnotationPresent( Lob.class ) ) {
+		else if ( !key && property.isAnnotationPresent( Lob.class ) ) {
 
 			if ( mappings.getReflectionManager().equals( returnedClassOrElement, java.sql.Clob.class ) ) {
 				type = isNationalized

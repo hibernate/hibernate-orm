@@ -1,13 +1,31 @@
 package org.hibernate.test.service;
 
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
 
-import javax.persistence.Entity;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
+
+import javax.persistence.Entity;
+
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Artem V. Navrotskiy
@@ -36,8 +54,77 @@ public class ClassLoaderServiceImplTest {
         Assert.assertSame("Should not return class loaded from the parent classloader of ClassLoaderServiceImpl",
 				objectClass, anotherClass);
     }
+    
+    /**
+     * HHH-8363 discovered multiple leaks within CLS.  Most notably, it wasn't getting GC'd due to holding
+     * references to ServiceLoaders.  Ensure that the addition of Stoppable functionality cleans up properly.
+     */
+    @Test
+    @TestForIssue(jiraKey = "HHH-8363")
+    public void testStoppableClassLoaderService() {
+    	final BootstrapServiceRegistryBuilder bootstrapBuilder = new BootstrapServiceRegistryBuilder();
+    	bootstrapBuilder.with( new TestClassLoader() );
+    	final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( bootstrapBuilder.build() ).build();
+    	final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+    	
+    	TestIntegrator testIntegrator1 = findTestIntegrator( classLoaderService );
+    	assertNotNull( testIntegrator1 );
+    	
+    	TestIntegrator testIntegrator2 = findTestIntegrator( classLoaderService );
+    	assertNotNull( testIntegrator2 );
+    	
+    	assertSame( testIntegrator1, testIntegrator2 );
+    	
+    	StandardServiceRegistryBuilder.destroy( serviceRegistry );
+    	
+    	testIntegrator2 = findTestIntegrator( classLoaderService );
+    	assertNotNull( testIntegrator2 );
+    	
+    	// destroy should have cleared the ServiceLoader caches, forcing the services to be re-created when called upon
+    	assertNotSame( testIntegrator1, testIntegrator2 );
+    }
+    
+    private TestIntegrator findTestIntegrator(ClassLoaderService classLoaderService) {
+    	final LinkedHashSet<Integrator> integrators = classLoaderService.loadJavaServices( Integrator.class );
+    	for (Integrator integrator : integrators) {
+    		if (integrator instanceof TestIntegrator) {
+    			return (TestIntegrator) integrator;
+    		}
+    	}
+    	return null;
+    }
 
     private static class TestClassLoader extends ClassLoader {
+    	
+    	/**
+    	 * testStoppableClassLoaderService() needs a custom JDK service implementation.  Rather than using a real one
+    	 * on the test classpath, force it in here.
+    	 */
+    	@Override
+        protected Enumeration<URL> findResources(String name) throws IOException {
+    		if (name.equals( "META-INF/services/org.hibernate.integrator.spi.Integrator" )) {
+    			final URL serviceUrl = ConfigHelper.findAsResource(
+    					"org/hibernate/test/service/org.hibernate.integrator.spi.Integrator" );
+    			return new Enumeration<URL>() {
+        			boolean hasMore = true;
+        			
+    				@Override
+    				public boolean hasMoreElements() {
+    					return hasMore;
+    				}
+
+    				@Override
+    				public URL nextElement() {
+    					hasMore = false;
+    					return serviceUrl;
+    				}
+    			};
+    		}
+    		else {
+    			return java.util.Collections.emptyEnumeration();
+    		}
+        }
+    	
         /**
          * Reloading class from binary file.
          *

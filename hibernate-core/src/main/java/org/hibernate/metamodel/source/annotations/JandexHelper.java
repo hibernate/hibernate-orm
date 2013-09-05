@@ -123,6 +123,45 @@ public class JandexHelper {
 			);
 		}
 	}
+	
+	// THIS IS FOR 4.3.x AND SHOULD BE CONSIDERED TEMPORARY.  HHH-8118 corrected CL use in JandexHelper by adding
+	// CLS as method arguments.  But that was done in the metamodel branch only before I knew that master added a few
+	// uses.  HHH-8316 needs it for 4.3.  DO NOT LET THIS GET MERGED INTO METAMODEL!
+	public static <T> T getValue(AnnotationInstance annotation, String element, Class<T> type,
+			ClassLoaderService classLoaderService) throws AssertionFailure {
+		if ( Class.class.equals( type ) ) {
+			throw new AssertionFailure(
+					"Annotation parameters of type Class should be retrieved as strings (fully qualified class names)"
+			);
+		}
+
+		if ( type.isPrimitive() ) {
+			type = PrimitiveWrapperHelper.getDescriptorByPrimitiveType( type ).getWrapperClass();
+		}
+
+		// try getting the untyped value from Jandex
+		AnnotationValue annotationValue = annotation.value( element );
+
+		try {
+			if ( annotationValue != null ) {
+				return explicitAnnotationParameter( annotationValue, type );
+			}
+			else {
+				return defaultAnnotationParameter( getDefaultValue( annotation, element, classLoaderService ), type );
+			}
+		}
+		catch ( ClassCastException e ) {
+			throw new AssertionFailure(
+					String.format(
+							"the annotation property %s of annotation %s is not of type %s",
+							element,
+							annotation.name(),
+							type.getName()
+					),
+					e
+			);
+		}
+	}
 
 	/**
 	 * Retrieves a jandex annotation element value, converting it to the supplied enumerated type.  If the value is
@@ -320,6 +359,39 @@ public class JandexHelper {
 			val = Index.class.getClassLoader().loadClass( name ).getMethod( element ).getDefaultValue();
 			DEFAULT_VALUES_BY_ELEMENT.put( fqElement, val );
 			return val == null ? null : val;
+		}
+		catch ( RuntimeException error ) {
+			throw error;
+		}
+		catch ( Exception error ) {
+			throw new AssertionFailure(
+					String.format( "The annotation %s does not define a parameter '%s'", name, element ),
+					error
+			);
+		}
+	}
+
+	// THIS IS FOR 4.3.x AND SHOULD BE CONSIDERED TEMPORARY.  HHH-8118 corrected CL use in JandexHelper by adding
+	// CLS as method arguments.  But that was done in the metamodel branch only before I knew that master added a few
+	// uses.  HHH-8316 needs it for 4.3.  DO NOT LET THIS GET MERGED INTO METAMODEL!
+	private static Object getDefaultValue(AnnotationInstance annotation, String element,
+			ClassLoaderService classLoaderService) {
+		String name = annotation.name().toString();
+		String fqElement = name + '.' + element;
+		Object val = DEFAULT_VALUES_BY_ELEMENT.get( fqElement );
+		if ( val != null ) {
+			return val;
+		}
+		try {
+			val = classLoaderService.classForName( name ).getMethod( element ).getDefaultValue();
+			if ( val != null ) {
+				// Annotation parameters of type Class are handled using Strings
+				if ( val instanceof Class ) {
+					val = ( ( Class ) val ).getName();
+				}
+			}
+			DEFAULT_VALUES_BY_ELEMENT.put( fqElement, val );
+			return val;
 		}
 		catch ( RuntimeException error ) {
 			throw error;

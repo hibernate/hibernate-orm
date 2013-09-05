@@ -391,7 +391,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				metadataSources.converterDescriptors.add(
 						new MetadataSources.ConverterDescriptor(
 								className,
-								JandexHelper.getValue( converterAnnotation, "autoApply", boolean.class )
+								JandexHelper.getValue( converterAnnotation, "autoApply", boolean.class,
+										bootstrapServiceRegistry.getService( ClassLoaderService.class ) )
 						)
 				);
 			}

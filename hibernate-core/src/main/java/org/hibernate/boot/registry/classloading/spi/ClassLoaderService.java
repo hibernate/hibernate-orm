@@ -29,13 +29,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.hibernate.service.Service;
+import org.hibernate.service.spi.Stoppable;
 
 /**
  * A service for interacting with class loaders.
  *
  * @author Steve Ebersole
  */
-public interface ClassLoaderService extends Service {
+public interface ClassLoaderService extends Service, Stoppable {
 	/**
 	 * Locate a class by name.
 	 *

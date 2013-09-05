@@ -510,14 +510,17 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	@Override
     protected void addColumnBinding(SimpleValue value) {
 		if ( StringHelper.isEmpty( mappedBy ) ) {
-			String unquotedLogColName = StringHelper.unquote( getLogicalColumnName() );
-			String unquotedRefColumn = StringHelper.unquote( getReferencedColumn() );
-			String logicalColumnName = getMappings().getNamingStrategy()
+			final ObjectNameNormalizer nameNormalizer = getMappings().getObjectNameNormalizer();
+			final String logicalColumnName = nameNormalizer.normalizeIdentifierQuoting( getLogicalColumnName() );
+			final String referencedColumn = nameNormalizer.normalizeIdentifierQuoting( getReferencedColumn() );
+			final String unquotedLogColName = StringHelper.unquote( logicalColumnName );
+			final String unquotedRefColumn = StringHelper.unquote( referencedColumn );
+			String logicalCollectionColumnName = getMappings().getNamingStrategy()
 					.logicalCollectionColumnName( unquotedLogColName, getPropertyName(), unquotedRefColumn );
-			if ( StringHelper.isQuoted( getLogicalColumnName() ) || StringHelper.isQuoted( getLogicalColumnName() ) ) {
-				logicalColumnName = StringHelper.quote( logicalColumnName );
+			if ( StringHelper.isQuoted( logicalColumnName ) || StringHelper.isQuoted( referencedColumn ) ) {
+				logicalCollectionColumnName = StringHelper.quote( logicalCollectionColumnName );
 			}
-			getMappings().addColumnBinding( logicalColumnName, getMappingColumn(), value.getTable() );
+			getMappings().addColumnBinding( logicalCollectionColumnName, getMappingColumn(), value.getTable() );
 		}
 	}
 

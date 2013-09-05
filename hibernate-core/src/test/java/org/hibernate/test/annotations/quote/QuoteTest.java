@@ -23,18 +23,20 @@
  */
 package org.hibernate.test.annotations.quote;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
  */
 public class QuoteTest extends BaseCoreFunctionalTestCase {
+	
 	@Test
 	public void testQuoteManytoMany() {
 		Session s = openSession();
@@ -53,13 +55,39 @@ public class QuoteTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
 		s.close();
 	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-8464")
+	public void testDoubleQuoteJoinColumn() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		User user = new User();
+		House house = new House();
+		user.setHouse( house );
+		s.persist( house );
+		s.persist( user );
+		s.getTransaction().commit();
+		s.clear();
+		
+		s = openSession();
+		s.getTransaction().begin();
+		user = (User) s.get( User.class, user.getId() );
+		assertNotNull( user );
+		assertNotNull( user.getHouse() );
+		// seems trivial, but if quoting normalization worked on the join column, these should all be the same
+		assertEquals( user.getHouse().getId(), user.getHouse1() );
+		assertEquals( user.getHouse().getId(), user.getHouse2() );
+		s.getTransaction().commit();
+		s.close();
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				User.class,
 				Role.class,
-				Phone.class
+				Phone.class,
+				House.class
 		};
 	}
 }

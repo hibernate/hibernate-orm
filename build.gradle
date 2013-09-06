@@ -323,22 +323,34 @@ subprojects { subProject ->
         // eclipseClasspath will not add sources to classpath unless the dirs actually exist.
         eclipseClasspath.dependsOn("generateSources")
 
+
+        // Animal Sniffer ~~~~~~~~~~~~~~~~~~
+        //      add animal sniffer Java API checking to the main compile tasks
+
+        // copy the resolved Animal Sniffer signature dependency artifact to a known location and name
         task copyJavaApiSignature(type: Copy) {
             from configurations.javaApiSignature
             into "$buildDir/javaApiSignature/"
             rename '.*signature', 'javaApi.signature'
         }
 
-        // checks that only types of the target Java version are used
-        task checkJavaApiSignature << {
-            ant.taskdef(name: 'animalSniffer', classname: 'org.codehaus.mojo.animal_sniffer.ant.CheckSignatureTask', classpath: configurations.animalSniffer.asPath)
-            ant.animalSniffer(signature: "$buildDir/javaApiSignature/javaApi.signature", classpath: configurations.compile.asPath + System.properties.'path.separator' + configurations.provided.asPath) {
-                path(path: "$buildDir/classes/main")
+        // prepare the Animal Sniffer signature copy every time (before) we compile
+        compileJava.dependsOn copyJavaApiSignature
+
+        // and then after compilation, run the Animal Sniffer tool
+        compileJava.doLast {
+            ant.taskdef(
+                    name: 'animalSniffer',
+                    classname: 'org.codehaus.mojo.animal_sniffer.ant.CheckSignatureTask',
+                    classpath: configurations.animalSniffer.asPath
+            )
+
+            ant.animalSniffer(
+                    signature: "$buildDir/javaApiSignature/javaApi.signature",
+                    classpath: sourceSets.main.compileClasspath.asPath) {
+                path( path: sourceSets.main.output.classesDir )
             }
         }
-        checkJavaApiSignature.dependsOn compileJava
-        checkJavaApiSignature.dependsOn copyJavaApiSignature
-        check.dependsOn checkJavaApiSignature
 
         // specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         task checkstylePublicSources(type: Checkstyle) {

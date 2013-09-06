@@ -45,6 +45,7 @@ import org.hibernate.jpa.test.Wallet;
 
 import org.hibernate.testing.TestForIssue;
 
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -589,13 +590,14 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		catch (IllegalArgumentException e) {
 			//success
 		}
-		em.getTransaction().commit();
+		assertTrue( "thrown IllegalArgumentException should of caused transaction to be marked for rollback only",
+				true == em.getTransaction().getRollbackOnly() );
+		em.getTransaction().rollback();		// HHH-8442 changed to rollback since thrown ISE causes
+											// transaction to be marked for rollback only.
+											// No need to remove entity since it was rolled back.
 
-		em.clear();
-
-		em.getTransaction().begin();
-		em.remove( em.find( Item.class, item.getName() ) );
-		em.getTransaction().commit();
+		assertNull( "entity should not of been saved to database since IllegalArgumentException should of" +
+				"caused transaction to be marked for rollback only", em.find(Item.class, item.getName()));
 		em.close();
 
 	}

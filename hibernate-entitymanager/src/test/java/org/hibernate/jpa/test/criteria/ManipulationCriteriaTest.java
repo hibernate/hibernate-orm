@@ -110,7 +110,8 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 			// expected
 		}
 
-		em.getTransaction().commit();
+		em.getTransaction().rollback();	// HHH-8442 changed to rollback since thrown ISE causes
+		                                // transaction to be marked for rollback only.
 		em.close();
 	}
 

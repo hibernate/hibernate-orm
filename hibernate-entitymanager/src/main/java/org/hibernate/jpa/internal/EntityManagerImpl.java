@@ -143,9 +143,6 @@ public class EntityManagerImpl extends AbstractEntityManagerImpl implements Sess
 			}
 			sessionBuilder.autoJoinTransactions( getTransactionType() != PersistenceUnitTransactionType.JTA );
 			session = sessionBuilder.openSession();
-			if ( persistenceContextType == PersistenceContextType.TRANSACTION ) {
-				( (SessionImplementor) session ).setAutoClear( true );
-			}
 		}
 		return session;
 	}

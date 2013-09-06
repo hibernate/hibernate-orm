@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -51,7 +52,9 @@ import org.jboss.logging.Logger;
 public class ClassLoaderServiceImpl implements ClassLoaderService {
 	private static final Logger log = Logger.getLogger( ClassLoaderServiceImpl.class );
 
-	private final ClassLoader aggregatedClassLoader;
+	private final AggregatedClassLoader aggregatedClassLoader;
+	
+	private final Map<Class, ServiceLoader> serviceLoaders = new HashMap<Class, ServiceLoader>();
 
 	/**
 	 * Constructs a ClassLoaderServiceImpl with standard set-up
@@ -318,14 +321,29 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public <S> LinkedHashSet<S> loadJavaServices(Class<S> serviceContract) {
-		final ServiceLoader<S> loader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
+		ServiceLoader<S> serviceLoader;
+		if ( serviceLoaders.containsKey( serviceContract ) ) {
+			serviceLoader = serviceLoaders.get( serviceContract );
+		}
+		else {
+			serviceLoader = ServiceLoader.load( serviceContract, aggregatedClassLoader );
+			serviceLoaders.put( serviceContract, serviceLoader );
+		}
+		
 		final LinkedHashSet<S> services = new LinkedHashSet<S>();
-		for ( S service : loader ) {
+		for ( S service : serviceLoader ) {
 			services.add( service );
 		}
-
 		return services;
 	}
+
+    @Override
+    public void stop() {
+		for (ServiceLoader serviceLoader : serviceLoaders.values()) {
+			serviceLoader.reload(); // clear service loader providers
+		}
+		serviceLoaders.clear();
+    }
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	// completely temporary !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

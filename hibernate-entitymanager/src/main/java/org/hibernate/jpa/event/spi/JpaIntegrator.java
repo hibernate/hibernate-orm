@@ -78,18 +78,7 @@ public class JpaIntegrator implements Integrator {
 	private CallbackProcessor callbackProcessor;
 	private CallbackRegistryImpl callbackRegistry;
 
-	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new DuplicationStrategy() {
-		@Override
-		public boolean areMatch(Object listener, Object original) {
-			return listener.getClass().equals( original.getClass() ) &&
-					HibernateEntityManagerEventListener.class.isInstance( original );
-		}
-
-		@Override
-		public Action getAction() {
-			return Action.KEEP_ORIGINAL;
-		}
-	};
+	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new JPADuplicationStrategy();
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
@@ -100,18 +89,7 @@ public class JpaIntegrator implements Integrator {
 		// first, register the JPA-specific persist cascade style
 		CascadeStyles.registerCascadeStyle(
 				"persist",
-				new CascadeStyles.BaseCascadeStyle() {
-					@Override
-					public boolean doCascade(CascadingAction action) {
-						return action == JpaPersistEventListener.PERSIST_SKIPLAZY
-								|| action == CascadingActions.PERSIST_ON_FLUSH;
-					}
-
-					@Override
-					public String toString() {
-						return "STYLE_PERSIST_SKIPLAZY";
-					}
-				}
+                new PersistCascadeStyle()
 		);
 
 
@@ -220,18 +198,7 @@ public class JpaIntegrator implements Integrator {
 		// first, register the JPA-specific persist cascade style
 		CascadeStyles.registerCascadeStyle(
 				"persist",
-				new CascadeStyles.BaseCascadeStyle() {
-					@Override
-					public boolean doCascade(CascadingAction action) {
-						return action == JpaPersistEventListener.PERSIST_SKIPLAZY
-								|| action == CascadingActions.PERSIST_ON_FLUSH;
-					}
-
-					@Override
-					public String toString() {
-						return "STYLE_PERSIST_SKIPLAZY";
-					}
-				}
+				new PersistCascadeStyle()
 		);
 
 		// then prepare listeners
@@ -314,6 +281,32 @@ public class JpaIntegrator implements Integrator {
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+        }
+    }
+
+    private static class PersistCascadeStyle extends CascadeStyles.BaseCascadeStyle {
+        @Override
+        public boolean doCascade(CascadingAction action) {
+            return action == JpaPersistEventListener.PERSIST_SKIPLAZY
+                    || action == CascadingActions.PERSIST_ON_FLUSH;
+        }
+
+        @Override
+        public String toString() {
+            return "STYLE_PERSIST_SKIPLAZY";
+        }
+    }
+
+    private static class JPADuplicationStrategy implements DuplicationStrategy {
+        @Override
+        public boolean areMatch(Object listener, Object original) {
+            return listener.getClass().equals( original.getClass() ) &&
+                    HibernateEntityManagerEventListener.class.isInstance( original );
+        }
+
+        @Override
+        public Action getAction() {
+            return Action.KEEP_ORIGINAL;
         }
     }
 }

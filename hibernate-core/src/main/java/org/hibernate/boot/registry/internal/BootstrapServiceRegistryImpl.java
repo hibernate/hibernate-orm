@@ -28,6 +28,7 @@ import java.util.LinkedHashSet;
 import org.hibernate.integrator.internal.IntegratorServiceImpl;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
@@ -35,10 +36,13 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.internal.StrategySelectorImpl;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.service.internal.AbstractServiceRegistryImpl;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
+import org.jboss.logging.Logger;
 
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
@@ -56,6 +60,12 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  */
 public class BootstrapServiceRegistryImpl
 		implements ServiceRegistryImplementor, BootstrapServiceRegistry, ServiceBinding.ServiceLifecycleOwner {
+
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			BootstrapServiceRegistryImpl.class.getName()
+	);
+	
 	private static final LinkedHashSet<Integrator> NO_INTEGRATORS = new LinkedHashSet<Integrator>();
 
 	private final ServiceBinding<ClassLoaderService> classLoaderServiceBinding;
@@ -170,6 +180,13 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public void destroy() {
+		destroy( classLoaderServiceBinding );
+		destroy( strategySelectorBinding );
+		destroy( integratorServiceBinding );
+	}
+	
+	private void destroy(ServiceBinding serviceBinding) {
+		serviceBinding.getLifecycleOwner().stopService( serviceBinding );
 	}
 
 	@Override
@@ -199,7 +216,15 @@ public class BootstrapServiceRegistryImpl
 
 	@Override
 	public <R extends Service> void stopService(ServiceBinding<R> binding) {
-		throw new ServiceException( "Boot-strap registry should only contain provided services" );
+		final Service service = binding.getService();
+		if ( Stoppable.class.isInstance( service ) ) {
+			try {
+				( (Stoppable) service ).stop();
+			}
+			catch ( Exception e ) {
+				LOG.unableToStopService( service.getClass(), e.toString() );
+			}
+		}
 	}
 
 }

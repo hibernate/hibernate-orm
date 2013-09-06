@@ -30,7 +30,7 @@ ext.hibernateTargetVersion = '4.3.0-SNAPSHOT'
 ext.javaLanguageLevel = "1.6"
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.6'
+    gradleVersion = '1.7'
 }
 
 

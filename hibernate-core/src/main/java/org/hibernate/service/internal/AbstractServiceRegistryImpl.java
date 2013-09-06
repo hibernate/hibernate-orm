@@ -278,8 +278,10 @@ public abstract class AbstractServiceRegistryImpl
 			serviceBindingList.clear();
 		}
 		serviceBindingMap.clear();
-		
-		parent.destroy();
+
+        if (parent!=null){
+    		parent.destroy();
+        }
 	}
 
 	@Override

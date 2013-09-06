@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import javax.persistence.JoinTable;
 
 import org.hibernate.AssertionFailure;
@@ -50,6 +51,33 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		super( path, parentPropertyHolder, clazzToProcess, mappings );
 		this.collection = collection;
 		setCurrentProperty( property );
+	}
+
+	@Override
+	protected String normalizeCompositePath(String attributeName) {
+		return attributeName;
+	}
+
+	@Override
+	protected String normalizeCompositePathForLogging(String attributeName) {
+		return collection.getRole() + '.' + attributeName;
+	}
+
+	@Override
+	public void startingProperty(XProperty property) {
+		// todo : implement
+	}
+
+	@Override
+	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
+		// todo : implement
+		return null;
+	}
+
+	@Override
+	protected AttributeConversionInfo locateAttributeConversionInfo(String path) {
+		// todo : implement
+		return null;
 	}
 
 	public String getClassName() {
@@ -99,5 +127,10 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
 		throw new AssertionFailure( "Add a <join> in a second pass" );
+	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "(" + collection.getRole() + ")";
 	}
 }

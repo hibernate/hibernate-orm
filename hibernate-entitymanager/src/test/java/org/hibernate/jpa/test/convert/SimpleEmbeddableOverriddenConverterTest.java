@@ -24,6 +24,8 @@
 package org.hibernate.jpa.test.convert;
 
 import javax.persistence.Convert;
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
@@ -38,6 +40,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
@@ -52,7 +55,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
  *
  * @author Steve Ebersole
  */
-public class SimpleOverriddenConverterTest extends BaseUnitTestCase {
+public class SimpleEmbeddableOverriddenConverterTest extends BaseUnitTestCase {
 	/**
 	 * Test outcome of annotations exclusively.
 	 */
@@ -61,39 +64,57 @@ public class SimpleOverriddenConverterTest extends BaseUnitTestCase {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override
 			public List<String> getManagedClassNames() {
-				return Arrays.asList( Super.class.getName(), Sub.class.getName() );
+				return Arrays.asList( Person.class.getName() );
 			}
 		};
 
 		final Map settings = new HashMap();
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+//		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();
 
 		final SessionFactoryImplementor sfi = emf.unwrap( SessionFactoryImplementor.class );
 		try {
-			final EntityPersister ep = sfi.getEntityPersister( Sub.class.getName() );
+			final EntityPersister ep = sfi.getEntityPersister( Person.class.getName() );
 
-			Type type = ep.getPropertyType( "it" );
-			assertTyping( StringType.class, type );
+			CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );
+			Type homeAddressCityType = findCompositeAttributeType( homeAddressType, "city" );
+			assertTyping( StringType.class, homeAddressCityType );
 		}
 		finally {
 			emf.close();
 		}
 	}
 
-	@MappedSuperclass
-	public static class Super {
+	public Type findCompositeAttributeType(CompositeType compositeType, String attributeName) {
+		int pos = 0;
+		for ( String name : compositeType.getPropertyNames() ) {
+			if ( name.equals( attributeName ) ) {
+				break;
+			}
+			pos++;
+		}
+
+		if ( pos >= compositeType.getPropertyNames().length ) {
+			throw new IllegalStateException( "Could not locate attribute index for [" + attributeName + "] in composite" );
+		}
+
+		return compositeType.getSubtypes()[pos];
+	}
+
+	@Embeddable
+	public static class Address {
+		public String street;
+		@Convert(converter = SillyStringConverter.class)
+		public String city;
+	}
+
+	@Entity( name="Person" )
+	public static class Person {
 		@Id
 		public Integer id;
-		@Convert(converter = SillyStringConverter.class)
-		public String it;
+		@Embedded
+		@Convert( attributeName = "city", disableConversion = true )
+		public Address homeAddress;
 	}
-
-	@Entity(name = "Sub")
-	@Convert( attributeName = "it", disableConversion = true )
-	public static class Sub extends Super {
-
-	}
-
 }

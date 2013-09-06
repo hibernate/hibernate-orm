@@ -1367,7 +1367,7 @@ public abstract class CollectionBinder {
 					column.setTable( collValue.getCollectionTable() );
 				}
 				elementBinder.setColumns( elementColumns );
-				elementBinder.setType( property, elementClass, collValue.getOwnerEntityName() );
+				elementBinder.setType( property, elementClass, collValue.getOwnerEntityName(), null );
 				elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 				elementBinder.setAccessType( accessType );
 				collValue.setElement( elementBinder.make() );

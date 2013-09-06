@@ -22,8 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-import java.util.HashMap;
-import java.util.Map;
+
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.AttributeOverride;
@@ -34,11 +33,17 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.MappedSuperclass;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -47,6 +52,8 @@ import org.hibernate.internal.util.StringHelper;
  * @author Emmanuel Bernard
  */
 public abstract class AbstractPropertyHolder implements PropertyHolder {
+	private static final Logger log = CoreLogging.logger( AbstractPropertyHolder.class );
+
 	protected AbstractPropertyHolder parent;
 	private Map<String, Column[]> holderColumnOverride;
 	private Map<String, Column[]> currentPropertyColumnOverride;
@@ -58,7 +65,6 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 	private Mappings mappings;
 	private Boolean isInIdClass;
 
-
 	AbstractPropertyHolder(
 			String path,
 			PropertyHolder parent,
@@ -68,6 +74,122 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		this.parent = (AbstractPropertyHolder) parent;
 		this.mappings = mappings;
 		buildHierarchyColumnOverride( clazzToProcess );
+	}
+
+	protected abstract String normalizeCompositePathForLogging(String attributeName);
+	protected abstract String normalizeCompositePath(String attributeName);
+
+	protected abstract AttributeConversionInfo locateAttributeConversionInfo(XProperty property);
+	protected abstract AttributeConversionInfo locateAttributeConversionInfo(String path);
+
+	@Override
+	public AttributeConverterDefinition resolveAttributeConverterDefinition(XProperty property) {
+		AttributeConversionInfo info = locateAttributeConversionInfo( property );
+		if ( info != null ) {
+			if ( info.isConversionDisabled() ) {
+				return null;
+			}
+			else {
+				try {
+					return makeAttributeConverterDefinition( info );
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(
+							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
+							e
+					);
+				}
+			}
+		}
+
+		// look for auto applied converters
+		// todo : hook in the orm.xml local entity work brett did
+		// for now, just look in global converters
+
+
+		log.debugf( "Attempting to locate auto-apply AttributeConverter for property [%s:%s]", path, property.getName() );
+
+		final Class propertyType = mappings.getReflectionManager().toClass( property.getType() );
+		for ( AttributeConverterDefinition attributeConverterDefinition : mappings.getAttributeConverters() ) {
+			if ( ! attributeConverterDefinition.isAutoApply() ) {
+				continue;
+			}
+			log.debugf(
+					"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
+					attributeConverterDefinition.toString(),
+					attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
+					propertyType.getSimpleName()
+			);
+			if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), propertyType ) ) {
+				return attributeConverterDefinition;
+			}
+		}
+
+		return null;
+	}
+
+	private AttributeConverterDefinition makeAttributeConverterDefinition(AttributeConversionInfo conversion) {
+		try {
+			return new AttributeConverterDefinition( conversion.getConverterClass().newInstance(), false );
+		}
+		catch (Exception e) {
+			throw new AnnotationException( "Unable to create AttributeConverter instance", e );
+		}
+	}
+
+	private boolean areTypeMatch(Class converterDefinedType, Class propertyType) {
+		if ( converterDefinedType == null ) {
+			throw new AnnotationException( "AttributeConverter defined java type cannot be null" );
+		}
+		if ( propertyType == null ) {
+			throw new AnnotationException( "Property defined java type cannot be null" );
+		}
+
+		return converterDefinedType.equals( propertyType )
+				|| arePrimitiveWrapperEquivalents( converterDefinedType, propertyType );
+	}
+
+	private boolean arePrimitiveWrapperEquivalents(Class converterDefinedType, Class propertyType) {
+		if ( converterDefinedType.isPrimitive() ) {
+			return getWrapperEquivalent( converterDefinedType ).equals( propertyType );
+		}
+		else if ( propertyType.isPrimitive() ) {
+			return getWrapperEquivalent( propertyType ).equals( converterDefinedType );
+		}
+		return false;
+	}
+
+	private static Class getWrapperEquivalent(Class primitive) {
+		if ( ! primitive.isPrimitive() ) {
+			throw new AssertionFailure( "Passed type for which to locate wrapper equivalent was not a primitive" );
+		}
+
+		if ( boolean.class.equals( primitive ) ) {
+			return Boolean.class;
+		}
+		else if ( char.class.equals( primitive ) ) {
+			return Character.class;
+		}
+		else if ( byte.class.equals( primitive ) ) {
+			return Byte.class;
+		}
+		else if ( short.class.equals( primitive ) ) {
+			return Short.class;
+		}
+		else if ( int.class.equals( primitive ) ) {
+			return Integer.class;
+		}
+		else if ( long.class.equals( primitive ) ) {
+			return Long.class;
+		}
+		else if ( float.class.equals( primitive ) ) {
+			return Float.class;
+		}
+		else if ( double.class.equals( primitive ) ) {
+			return Double.class;
+		}
+
+		throw new AssertionFailure( "Unexpected primitive type (VOID most likely) passed to getWrapperEquivalent" );
 	}
 
 	@Override

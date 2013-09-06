@@ -21,28 +21,38 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.test.annotations.join.namingstrategy;
 
-import org.hibernate.event.service.spi.DuplicationStrategy;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import java.io.Serializable;
 
 /**
- * Event listener duplication strategy for envers
- *
- * @author Steve Ebersole
+ * @author Sergey Vasilyev
  */
-public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
-	/**
-	 * Singleton access
-	 */
-	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
+@Entity
+public class SimpleCat implements Serializable {
+	private Integer id;
+	private String name;
 
-	@Override
-	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
+	@Id
+	@GeneratedValue
+	public Integer getId() {
+		return id;
 	}
 
-	@Override
-	public Action getAction() {
-		return Action.KEEP_ORIGINAL;
+	public String getName() {
+		return name;
 	}
+
+	public void setId(Integer integer) {
+		id = integer;
+	}
+
+	public void setName(String string) {
+		name = string;
+	}
+
+
 }

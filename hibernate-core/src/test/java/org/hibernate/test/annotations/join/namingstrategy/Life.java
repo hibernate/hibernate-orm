@@ -21,28 +21,34 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.test.annotations.join.namingstrategy;
 
-import org.hibernate.event.service.spi.DuplicationStrategy;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.SecondaryTable;
+import java.io.Serializable;
 
 /**
- * Event listener duplication strategy for envers
- *
- * @author Steve Ebersole
+ * @author Sergey Vasilyev
  */
-public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
-	/**
-	 * Singleton access
-	 */
-	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
+@Entity
+@SecondaryTable(name = "ExtendedLife")
+public class Life implements Serializable {
+	@Id
+	@GeneratedValue
+	public Integer id;
 
-	@Override
-	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
-	}
+	public int duration;
+	@Column(table = "ExtendedLife")
+	public String fullDescription;
 
-	@Override
-	public Action getAction() {
-		return Action.KEEP_ORIGINAL;
-	}
+	@ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@JoinColumn(name = "CAT_ID", table = "ExtendedLife")
+	public SimpleCat owner;
+
 }

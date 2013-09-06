@@ -21,28 +21,16 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.test.annotations.join.namingstrategy;
 
-import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.cfg.DefaultNamingStrategy;
 
 /**
- * Event listener duplication strategy for envers
- *
- * @author Steve Ebersole
+ * @author Sergey Vasilyev
  */
-public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
-	/**
-	 * Singleton access
-	 */
-	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
-
+public class TestNamingStrategy extends DefaultNamingStrategy {
 	@Override
-	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
-	}
-
-	@Override
-	public Action getAction() {
-		return Action.KEEP_ORIGINAL;
+	public String tableName(String tableName) {
+		return "TAB_" + tableName;
 	}
 }

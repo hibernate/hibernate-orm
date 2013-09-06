@@ -24,11 +24,19 @@
 package org.hibernate.cfg;
 import java.util.HashMap;
 import java.util.Map;
+import javax.persistence.Convert;
+import javax.persistence.Converts;
 import javax.persistence.JoinTable;
 
+import org.jboss.logging.Logger;
+
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.annotations.common.util.ReflectHelper;
 import org.hibernate.cfg.annotations.EntityBinder;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -41,6 +49,8 @@ import org.hibernate.mapping.Table;
  * @author Emmanuel Bernard
  */
 public class ClassPropertyHolder extends AbstractPropertyHolder {
+	private static final Logger log = CoreLogging.logger( ClassPropertyHolder.class );
+
 	private PersistentClass persistentClass;
 	private Map<String, Join> joins;
 	private transient Map<String, Join> joinsPerRealTableName;
@@ -202,4 +212,78 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	public boolean isOrWithinEmbeddedId() {
 		return false;
 	}
+
+//	@Override
+//	public AttributeConverterDefinition resolveAttributeConverter(String attributeName) {
+//
+//		// @Convert annotations take precedence if present
+//		final Convert convertAnnotation = locateConvertAnnotation( property );
+//		if ( convertAnnotation != null ) {
+//			log.debugf(
+//					"Applying located @Convert AttributeConverter [%s] to attribute [%]",
+//					convertAnnotation.converter().getName(),
+//					property.getName()
+//			);
+//			attributeConverterDefinition = getMappings().locateAttributeConverter( convertAnnotation.converter() );
+//		}
+//		else {
+//			attributeConverterDefinition = locateAutoApplyAttributeConverter( property );
+//		}
+//	}
+//
+//	@SuppressWarnings("unchecked")
+//	private Convert locateConvertAnnotation(XProperty property) {
+//		LOG.debugf(
+//				"Attempting to locate Convert annotation for property [%s:%s]",
+//				persistentClassName,
+//				property.getName()
+//		);
+//
+//		// first look locally on the property for @Convert/@Converts
+//		{
+//			Convert localConvertAnnotation = property.getAnnotation( Convert.class );
+//			if ( localConvertAnnotation != null ) {
+//				LOG.debugf(
+//						"Found matching local @Convert annotation [disableConversion=%s]",
+//						localConvertAnnotation.disableConversion()
+//				);
+//				return localConvertAnnotation.disableConversion()
+//						? null
+//						: localConvertAnnotation;
+//			}
+//		}
+//
+//		{
+//			Converts localConvertsAnnotation = property.getAnnotation( Converts.class );
+//			if ( localConvertsAnnotation != null ) {
+//				for ( Convert localConvertAnnotation : localConvertsAnnotation.value() ) {
+//					if ( isLocalMatch( localConvertAnnotation, property ) ) {
+//						LOG.debugf(
+//								"Found matching @Convert annotation as part local @Converts [disableConversion=%s]",
+//								localConvertAnnotation.disableConversion()
+//						);
+//						return localConvertAnnotation.disableConversion()
+//								? null
+//								: localConvertAnnotation;
+//					}
+//				}
+//			}
+//		}
+//
+//		if ( persistentClassName == null ) {
+//			LOG.debug( "Persistent Class name not known during attempt to locate @Convert annotations" );
+//			return null;
+//		}
+//
+//		final XClass owner;
+//		try {
+//			final Class ownerClass = ReflectHelper.classForName( persistentClassName );
+//			owner = mappings.getReflectionManager().classForName( persistentClassName, ownerClass  );
+//		}
+//		catch (ClassNotFoundException e) {
+//			throw new AnnotationException( "Unable to resolve Class reference during attempt to locate @Convert annotations" );
+//		}
+//
+//		return lookForEntityDefinedConvertAnnotation( property, owner );
+//	}
 }

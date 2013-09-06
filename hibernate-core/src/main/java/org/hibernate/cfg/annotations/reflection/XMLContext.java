@@ -26,23 +26,25 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
+import javax.persistence.AccessType;
+import javax.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.AccessType;
-import javax.persistence.AttributeConverter;
-
 import org.dom4j.Document;
 import org.dom4j.Element;
+
+import org.jboss.logging.Logger;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard
@@ -55,8 +57,6 @@ public class XMLContext implements Serializable {
 	private Map<String, Default> defaultsOverriding = new HashMap<String, Default>();
 	private List<Element> defaultElements = new ArrayList<Element>();
 	private List<String> defaultEntityListeners = new ArrayList<String>();
-	private Map<String, AttributeConverterDefinition> localAttributeConverterDefintions
-			= new HashMap<String, AttributeConverterDefinition>();
 	private boolean hasContext = false;
 
 	/**
@@ -111,7 +111,7 @@ public class XMLContext implements Serializable {
 		setAccess( unitElement, entityMappingDefault );
 		defaultElements.add( root );
 		
-		setLocalAttributeConverterDefintions( root.elements( "converter" ) );
+		setLocalAttributeConverterDefinitions( root.elements( "converter" ) );
 
 		List<Element> entities = root.elements( "entity" );
 		addClass( entities, packageName, entityMappingDefault, addedClasses );
@@ -193,22 +193,26 @@ public class XMLContext implements Serializable {
 		return localAddedClasses;
 	}
 	
-	private void setLocalAttributeConverterDefintions(List<Element> converterElements) {
-		for (Element converterElement : converterElements) {
+	@SuppressWarnings("unchecked")
+	private void setLocalAttributeConverterDefinitions(List<Element> converterElements) {
+		for ( Element converterElement : converterElements ) {
+			final String className = converterElement.attributeValue( "class" );
+			final String autoApplyAttribute = converterElement.attributeValue( "auto-apply" );
+			final boolean autoApply = autoApplyAttribute != null && Boolean.parseBoolean( autoApplyAttribute );
+
 			try {
-				final String className = converterElement.attributeValue( "class" );
 				final Class<? extends AttributeConverter> attributeConverterClass = ReflectHelper.classForName(
-						className );
-				final AttributeConverter attributeConverter = attributeConverterClass.newInstance();
-				final String autoApplyAttribute = converterElement.attributeValue( "auto-apply" );
-				final boolean autoApply = autoApplyAttribute != null
-						? Boolean.parseBoolean( autoApplyAttribute ) : false;
-				final AttributeConverterDefinition attrDef = new AttributeConverterDefinition(
-						attributeConverter, autoApply );
-				localAttributeConverterDefintions.put( className, attrDef );
+						className
+				);
+				attributeConverterDefinitions.add(
+						new AttributeConverterDefinition( attributeConverterClass.newInstance(), autoApply )
+				);
+			}
+			catch (ClassNotFoundException e) {
+				throw new AnnotationException( "Unable to locate specified AttributeConverter implementation class : " + className, e );
 			}
 			catch (Exception e) {
-				throw new AnnotationException( "Unable to process a converter -- check your xml configuration.", e );
+				throw new AnnotationException( "Unable to instantiate specified AttributeConverter implementation class : " + className, e );
 			}
 		}
 	}
@@ -244,6 +248,15 @@ public class XMLContext implements Serializable {
 
 	public boolean hasContext() {
 		return hasContext;
+	}
+
+	private List<AttributeConverterDefinition> attributeConverterDefinitions = new ArrayList<AttributeConverterDefinition>();
+
+	public void applyDiscoveredAttributeConverters(Configuration configuration) {
+		for ( AttributeConverterDefinition definition : attributeConverterDefinitions ) {
+			configuration.addAttributeConverter( definition );
+		}
+		attributeConverterDefinitions.clear();
 	}
 
 	public static class Default implements Serializable {
@@ -333,16 +346,5 @@ public class XMLContext implements Serializable {
 
 	public List<String> getDefaultEntityListeners() {
 		return defaultEntityListeners;
-	}
-	
-	/**
-	 * Supplies local converters defined in the parsed orm.xml (<converter .../>) for use with JPA attribute
-	 * conversion.  Defined here so that converters can be applied within the scope of the orm.xml mappings, rather
-	 * than globally.
-	 * 
-	 * @return Map<String, AttributeConverterDefinition> The local attribute converters
-	 */
-	public Map<String, AttributeConverterDefinition> getLocalAttributeConverterDefintions() {
-		return localAttributeConverterDefintions;
 	}
 }

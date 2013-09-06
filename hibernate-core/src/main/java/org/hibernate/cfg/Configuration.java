@@ -521,6 +521,7 @@ public class Configuration implements Serializable {
 					throw new AnnotationException( "Unable to load class defined in XML: " + className, e );
 				}
 			}
+			jpaMetadataProvider.getXMLContext().applyDiscoveredAttributeConverters( this );
 		}
 	}
 
@@ -2630,18 +2631,22 @@ public class Configuration implements Serializable {
 	 * by its "entity attribute" parameterized type?
 	 */
 	public void addAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
+		addAttributeConverter( new AttributeConverterDefinition( attributeConverter, autoApply ) );
+	}
+
+	public void addAttributeConverter(AttributeConverterDefinition definition) {
 		if ( attributeConverterDefinitionsByClass == null ) {
 			attributeConverterDefinitionsByClass = new ConcurrentHashMap<Class, AttributeConverterDefinition>();
 		}
 
-		final Object old = attributeConverterDefinitionsByClass.put(
-				attributeConverter.getClass(),
-				new AttributeConverterDefinition( attributeConverter, autoApply )
-		);
+		final Object old = attributeConverterDefinitionsByClass.put( definition.getAttributeConverter().getClass(), definition );
 
 		if ( old != null ) {
 			throw new AssertionFailure(
-					"AttributeConverter class [" + attributeConverter.getClass() + "] registered multiple times"
+					String.format(
+							"AttributeConverter class [%s] registered multiple times",
+							definition.getAttributeConverter().getClass()
+					)
 			);
 		}
 	}

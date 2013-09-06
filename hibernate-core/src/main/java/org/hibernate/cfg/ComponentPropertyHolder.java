@@ -249,12 +249,6 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 			return conversion;
 		}
 
-
-		Convert localConvert = property.getAnnotation( Convert.class );
-		if ( localConvert != null ) {
-			return new AttributeConversionInfo( localConvert, property );
-		}
-
 		return null;
 	}
 

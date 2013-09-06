@@ -76,7 +76,9 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 		Type type = simpleValue.getType();
 		assertNotNull( type );
-		assertTyping( BasicType.class, type );
+		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			fail( "AttributeConverter not applied" );
+		}
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
@@ -113,6 +115,9 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			Type type = nameValue.getType();
 			assertNotNull( type );
 			assertTyping( BasicType.class, type );
+			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter not applied" );
+			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
@@ -121,7 +126,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8462")
-	@FailureExpected(jiraKey = "HHH-8462")
 	public void testBasicOrmXmlConverterApplication() {
 		Configuration cfg = new Configuration();
 		cfg.addAnnotatedClass( Tester.class );
@@ -134,8 +138,10 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			assertTyping( BasicType.class, type );
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter not applied" );
+			}
+			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 		}
@@ -154,7 +160,9 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 			Type type = nameValue.getType();
 			assertNotNull( type );
-			assertTyping( BasicType.class, type );
+			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter applied (should not have been)" );
+			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );

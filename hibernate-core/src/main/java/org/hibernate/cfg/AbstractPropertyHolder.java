@@ -102,11 +102,6 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 			}
 		}
 
-		// look for auto applied converters
-		// todo : hook in the orm.xml local entity work brett did
-		// for now, just look in global converters
-
-
 		log.debugf( "Attempting to locate auto-apply AttributeConverter for property [%s:%s]", path, property.getName() );
 
 		final Class propertyType = mappings.getReflectionManager().toClass( property.getType() );

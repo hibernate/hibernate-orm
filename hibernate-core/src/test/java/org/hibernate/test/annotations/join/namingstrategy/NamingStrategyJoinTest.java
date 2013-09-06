@@ -21,28 +21,46 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.test.annotations.join.namingstrategy;
 
-import org.hibernate.event.service.spi.DuplicationStrategy;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
+import org.junit.Test;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
- * Event listener duplication strategy for envers
- *
- * @author Steve Ebersole
+ * @author Sergey Vasilyev
  */
-public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
-	/**
-	 * Singleton access
-	 */
-	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
-
+public class NamingStrategyJoinTest extends BaseCoreFunctionalTestCase {
 	@Override
-	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setNamingStrategy( new TestNamingStrategy() );
+	}
+
+
+	@Test
+	public void testJoinToSecondaryTable() throws Exception {
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		Life life = new Life();
+		life.duration = 15;
+		life.fullDescription = "Long long description";
+		s.persist( life );
+		tx.commit();
+		s.close();
+
 	}
 
 	@Override
-	public Action getAction() {
-		return Action.KEEP_ORIGINAL;
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Life.class,
+				SimpleCat.class
+		};
 	}
+
 }

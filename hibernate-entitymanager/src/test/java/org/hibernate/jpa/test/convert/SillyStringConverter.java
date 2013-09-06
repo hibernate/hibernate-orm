@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,28 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.event.spi;
+package org.hibernate.jpa.test.convert;
 
-import org.hibernate.event.service.spi.DuplicationStrategy;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
 /**
- * Event listener duplication strategy for envers
- *
  * @author Steve Ebersole
  */
-public class EnversListenerDuplicationStrategy implements DuplicationStrategy {
-	/**
-	 * Singleton access
-	 */
-	public static final EnversListenerDuplicationStrategy INSTANCE = new EnversListenerDuplicationStrategy();
-
+@Converter
+public class SillyStringConverter implements AttributeConverter<String,String> {
 	@Override
-	public boolean areMatch(Object listener, Object original) {
-		return listener.getClass().equals( original.getClass() ) && EnversListener.class.isInstance( listener );
+	public String convertToDatabaseColumn(String attribute) {
+		return attribute;
 	}
 
 	@Override
-	public Action getAction() {
-		return Action.KEEP_ORIGINAL;
+	public String convertToEntityAttribute(String dbData) {
+		return dbData;
 	}
 }

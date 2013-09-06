@@ -67,6 +67,8 @@ public interface PropertyHolder {
 
 	String getPath();
 
+//	public AttributeConverterDefinition resolveAttributeConverter(String attributeName);
+
 	/**
 	 * return null if the column is not overridden, or an array of column if true
 	 */

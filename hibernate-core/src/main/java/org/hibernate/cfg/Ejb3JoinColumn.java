@@ -256,6 +256,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 				);
 			}
 			Ejb3JoinColumn joinColumn = new Ejb3JoinColumn();
+			joinColumn.setMappings( mappings );
 			joinColumn.setJoinAnnotation( ann, null );
 			if ( StringHelper.isEmpty( joinColumn.getLogicalColumnName() )
 				&& ! StringHelper.isEmpty( suffixForDefaultColumnName ) ) {
@@ -265,7 +266,6 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			joinColumn.setPropertyHolder( propertyHolder );
 			joinColumn.setPropertyName( BinderHelper.getRelativePath( propertyHolder, propertyName ) );
 			joinColumn.setImplicit( false );
-			joinColumn.setMappings( mappings );
 			joinColumn.bind();
 			return joinColumn;
 		}
@@ -299,6 +299,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		}
 		else {
 			setImplicit( false );
+			final ObjectNameNormalizer nameNormalizer = getMappings().getObjectNameNormalizer();
 			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.columnDefinition() ) ) setSqlType( annJoin.columnDefinition() );
 			if ( !BinderHelper.isEmptyAnnotationValue( annJoin.name() ) ) setLogicalColumnName( annJoin.name() );
 			setNullable( annJoin.nullable() );
@@ -306,7 +307,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			setInsertable( annJoin.insertable() );
 			setUpdatable( annJoin.updatable() );
 			setReferencedColumn( annJoin.referencedColumnName() );
-			setSecondaryTableName( annJoin.table() );
+
+			final String tableName = !BinderHelper.isEmptyAnnotationValue( annJoin.table() )
+					? nameNormalizer.normalizeIdentifierQuoting( getMappings().getNamingStrategy().tableName( annJoin.table() ) ) : "";
+			setSecondaryTableName( tableName );
 		}
 	}
 
@@ -510,14 +514,17 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	@Override
     protected void addColumnBinding(SimpleValue value) {
 		if ( StringHelper.isEmpty( mappedBy ) ) {
-			String unquotedLogColName = StringHelper.unquote( getLogicalColumnName() );
-			String unquotedRefColumn = StringHelper.unquote( getReferencedColumn() );
-			String logicalColumnName = getMappings().getNamingStrategy()
+			final ObjectNameNormalizer nameNormalizer = getMappings().getObjectNameNormalizer();
+			final String logicalColumnName = nameNormalizer.normalizeIdentifierQuoting( getLogicalColumnName() );
+			final String referencedColumn = nameNormalizer.normalizeIdentifierQuoting( getReferencedColumn() );
+			final String unquotedLogColName = StringHelper.unquote( logicalColumnName );
+			final String unquotedRefColumn = StringHelper.unquote( referencedColumn );
+			String logicalCollectionColumnName = getMappings().getNamingStrategy()
 					.logicalCollectionColumnName( unquotedLogColName, getPropertyName(), unquotedRefColumn );
-			if ( StringHelper.isQuoted( getLogicalColumnName() ) || StringHelper.isQuoted( getLogicalColumnName() ) ) {
-				logicalColumnName = StringHelper.quote( logicalColumnName );
+			if ( StringHelper.isQuoted( logicalColumnName ) || StringHelper.isQuoted( referencedColumn ) ) {
+				logicalCollectionColumnName = StringHelper.quote( logicalCollectionColumnName );
 			}
-			getMappings().addColumnBinding( logicalColumnName, getMappingColumn(), value.getTable() );
+			getMappings().addColumnBinding( logicalCollectionColumnName, getMappingColumn(), value.getTable() );
 		}
 	}
 

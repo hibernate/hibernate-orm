@@ -88,7 +88,8 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 				User.class,
 				Role.class,
 				Phone.class,
-				Person.class
+				Person.class,
+				House.class
 		};
 	}
 }

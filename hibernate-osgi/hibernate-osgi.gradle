@@ -76,7 +76,7 @@ jar {
 		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
 		instruction 'Bundle-Description', 'Hibernate ORM OSGi'
 
-		instruction 'Import-Package',
+		instructionFirst 'Import-Package',
 			// TODO: Shouldn't have to explicitly list this, but the plugin
 			// generates it with a [1.0,2) version.
 			'javax.persistence;version="2.1.0"',
@@ -91,7 +91,7 @@ task copyBnd(type: Copy) {
 
 task runBnd(type: JavaExec){
 	main = "-jar"
-	args "$buildDir/osgi-lib/bnd/bnd.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
+	args "$buildDir/osgi-lib/bnd/bnd-2.1.0.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
 }
 
 task copyToLib(type: Copy) {

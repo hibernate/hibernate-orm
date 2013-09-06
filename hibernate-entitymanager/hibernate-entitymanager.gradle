@@ -47,7 +47,7 @@ jar {
         // <Import-Package>*</ImportPackage> will occur.  This is simply a
         // BND instruction -- the auto-discovery of imported packages still
         // occurs.
-        instruction 'Import-Package',
+        instructionFirst 'Import-Package',
             '!javax.enterprise*',
             'javax.enterprise.context.spi;resolution:=optional',
             'javax.enterprise.inject.spi;resolution:=optional',

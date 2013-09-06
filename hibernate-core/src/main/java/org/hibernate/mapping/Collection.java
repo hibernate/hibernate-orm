@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,13 +38,12 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.internal.util.collections.EmptyIterator;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
 
 /**
  * Mapping for a collection. Subclasses specialize to particular collection styles.
- * 
+ *
  * @author Gavin King
  */
 public abstract class Collection implements Fetchable, Value, Filterable {
@@ -145,10 +145,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			try {
 				setComparator( (Comparator) ReflectHelper.classForName( comparatorClassName ).newInstance() );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				throw new MappingException(
 						"Could not instantiate comparator class [" + comparatorClassName
-						+ "] for collection " + getRole()  
+								+ "] for collection " + getRole()
 				);
 			}
 		}
@@ -230,12 +230,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	/**
-	 * @deprecated Inject the owner into constructor.
-	 *
 	 * @param owner The owner
+	 *
+	 * @deprecated Inject the owner into constructor.
 	 */
 	@Deprecated
-    public void setOwner(PersistentClass owner) {
+	public void setOwner(PersistentClass owner) {
 		this.owner = owner;
 	}
 
@@ -300,36 +300,39 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	public void validate(Mapping mapping) throws MappingException {
-		if ( getKey().isCascadeDeleteEnabled() && ( !isInverse() || !isOneToMany() ) ) {
+		if ( getKey().isCascadeDeleteEnabled() && (!isInverse() || !isOneToMany()) ) {
 			throw new MappingException(
-				"only inverse one-to-many associations may use on-delete=\"cascade\": " 
-				+ getRole() );
+					"only inverse one-to-many associations may use on-delete=\"cascade\": "
+							+ getRole()
+			);
 		}
 		if ( !getKey().isValid( mapping ) ) {
 			throw new MappingException(
-				"collection foreign key mapping has wrong number of columns: "
-				+ getRole()
-				+ " type: "
-				+ getKey().getType().getName() );
+					"collection foreign key mapping has wrong number of columns: "
+							+ getRole()
+							+ " type: "
+							+ getKey().getType().getName()
+			);
 		}
 		if ( !getElement().isValid( mapping ) ) {
-			throw new MappingException( 
-				"collection element mapping has wrong number of columns: "
-				+ getRole()
-				+ " type: "
-				+ getElement().getType().getName() );
+			throw new MappingException(
+					"collection element mapping has wrong number of columns: "
+							+ getRole()
+							+ " type: "
+							+ getElement().getType().getName()
+			);
 		}
 
 		checkColumnDuplication();
-		
-		if ( elementNodeName!=null && elementNodeName.startsWith("@") ) {
-			throw new MappingException("element node must not be an attribute: " + elementNodeName );
+
+		if ( elementNodeName != null && elementNodeName.startsWith( "@" ) ) {
+			throw new MappingException( "element node must not be an attribute: " + elementNodeName );
 		}
-		if ( elementNodeName!=null && elementNodeName.equals(".") ) {
-			throw new MappingException("element node must not be the parent: " + elementNodeName );
+		if ( elementNodeName != null && elementNodeName.equals( "." ) ) {
+			throw new MappingException( "element node must not be the parent: " + elementNodeName );
 		}
-		if ( nodeName!=null && nodeName.indexOf('@')>-1 ) {
-			throw new MappingException("collection node must not be an attribute: " + elementNodeName );
+		if ( nodeName != null && nodeName.indexOf( '@' ) > -1 ) {
+			throw new MappingException( "collection node must not be an attribute: " + elementNodeName );
 		}
 	}
 
@@ -340,10 +343,12 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 			if ( !s.isFormula() ) {
 				Column col = (Column) s;
 				if ( !distinctColumns.add( col.getName() ) ) {
-					throw new MappingException( "Repeated column in mapping for collection: "
-						+ getRole()
-						+ " column: "
-						+ col.getName() );
+					throw new MappingException(
+							"Repeated column in mapping for collection: "
+									+ getRole()
+									+ " column: "
+									+ col.getName()
+					);
 				}
 			}
 		}
@@ -353,14 +358,18 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		HashSet cols = new HashSet();
 		checkColumnDuplication( cols, getKey().getColumnIterator() );
 		if ( isIndexed() ) {
-			checkColumnDuplication( cols, ( (IndexedCollection) this )
-				.getIndex()
-				.getColumnIterator() );
+			checkColumnDuplication(
+					cols, ((IndexedCollection) this)
+					.getIndex()
+					.getColumnIterator()
+			);
 		}
 		if ( isIdentified() ) {
-			checkColumnDuplication( cols, ( (IdentifierCollection) this )
-				.getIdentifier()
-				.getColumnIterator() );
+			checkColumnDuplication(
+					cols, ((IdentifierCollection) this)
+					.getIdentifier()
+					.getColumnIterator()
+			);
 		}
 		if ( !isOneToMany() ) {
 			checkColumnDuplication( cols, getElement().getColumnIterator() );
@@ -426,7 +435,9 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public void createAllKeys() throws MappingException {
 		createForeignKeys();
-		if ( !isInverse() ) createPrimaryKey();
+		if ( !isInverse() ) {
+			createPrimaryKey();
+		}
 	}
 
 	public String getCacheConcurrencyStrategy() {
@@ -447,7 +458,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public void setCacheRegionName(String cacheRegionName) {
 		this.cacheRegionName = cacheRegionName;
 	}
-
 
 
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
@@ -504,7 +514,10 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteCheckStyle;
 	}
 
-	public void setCustomSQLDeleteAll(String customSQLDeleteAll, boolean callable, ExecuteUpdateResultCheckStyle checkStyle) {
+	public void setCustomSQLDeleteAll(
+			String customSQLDeleteAll,
+			boolean callable,
+			ExecuteUpdateResultCheckStyle checkStyle) {
 		this.customSQLDeleteAll = customSQLDeleteAll;
 		this.customDeleteAllCallable = callable;
 		this.deleteAllCheckStyle = checkStyle;
@@ -522,15 +535,44 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		return deleteAllCheckStyle;
 	}
 
-	public void addFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
-		filters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
+	public void addFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			java.util.Map<String, String> aliasTableMap,
+			java.util.Map<String, String> aliasEntityMap) {
+		filters.add(
+				new FilterConfiguration(
+						name,
+						condition,
+						autoAliasInjection,
+						aliasTableMap,
+						aliasEntityMap,
+						null
+				)
+		);
 	}
+
 	public java.util.List getFilters() {
 		return filters;
 	}
 
-	public void addManyToManyFilter(String name, String condition, boolean autoAliasInjection, java.util.Map<String,String> aliasTableMap, java.util.Map<String,String> aliasEntityMap) {
-		manyToManyFilters.add(new FilterConfiguration(name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null));
+	public void addManyToManyFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			java.util.Map<String, String> aliasTableMap,
+			java.util.Map<String, String> aliasEntityMap) {
+		manyToManyFilters.add(
+				new FilterConfiguration(
+						name,
+						condition,
+						autoAliasInjection,
+						aliasTableMap,
+						aliasEntityMap,
+						null
+				)
+		);
 	}
 
 	public java.util.List getManyToManyFilters() {
@@ -538,7 +580,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return getClass().getName() + '(' + getRole() + ')';
 	}
 
@@ -616,7 +658,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	/**
 	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 *             See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
 	@Deprecated
 	public boolean isEmbedded() {
@@ -625,7 +667,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	/**
 	 * @deprecated To be removed in 5.  Removed as part of removing the notion of DOM entity-mode.
-	 * See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
+	 *             See Jira issue: <a href="https://hibernate.onjira.com/browse/HHH-7771">HHH-7771</a>
 	 */
 	@Deprecated
 	public void setEmbedded(boolean embedded) {
@@ -635,7 +677,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public boolean isSubselectLoadable() {
 		return subselectLoadable;
 	}
-	
+
 
 	public void setSubselectLoadable(boolean subqueryLoadable) {
 		this.subselectLoadable = subqueryLoadable;
@@ -656,15 +698,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	public void setExtraLazy(boolean extraLazy) {
 		this.extraLazy = extraLazy;
 	}
-	
+
 	public boolean hasOrder() {
-		return orderBy!=null || manyToManyOrderBy!=null;
+		return orderBy != null || manyToManyOrderBy != null;
 	}
 
 	public void setComparatorClassName(String comparatorClassName) {
-		this.comparatorClassName = comparatorClassName;		
+		this.comparatorClassName = comparatorClassName;
 	}
-	
+
 	public String getComparatorClassName() {
 		return comparatorClassName;
 	}

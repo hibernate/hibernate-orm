@@ -1,22 +1,25 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * JBoss, Home of Professional Open Source
- * Copyright 2011 Red Hat Inc. and/or its affiliates and other contributors
- * as indicated by the @authors tag. All rights reserved.
- * See the copyright.txt in the distribution for a
- * full listing of individual contributors.
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * indicated by the @author tags or express copyright attribution
+ * statements applied by the authors.  All third-party contributions are
+ * distributed under license by Red Hat Inc.
  *
- * This copyrighted material is made available to anyone wishing to use,
- * modify, copy, or redistribute it subject to the terms and conditions
- * of the GNU Lesser General Public License, v. 2.1.
- * This program is distributed in the hope that it will be useful, but WITHOUT A
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details.
- * You should have received a copy of the GNU Lesser General Public License,
- * v.2.1 along with this distribution; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA  02110-1301, USA.
+ * This copyrighted material is made available to anyone wishing to use, modify,
+ * copy, or redistribute it subject to the terms and conditions of the GNU
+ * Lesser General Public License, as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+ * or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License
+ * for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this distribution; if not, write to:
+ * Free Software Foundation, Inc.
+ * 51 Franklin Street, Fifth Floor
+ * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.cfg.persister;
 
@@ -92,12 +95,13 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 	public static class NoopEntityPersister implements EntityPersister {
 
-		public NoopEntityPersister(org.hibernate.mapping.PersistentClass persistentClass,
-								   org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
-								   NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
-								   SessionFactoryImplementor sf,
-								   Mapping mapping) {
-			throw new GoofyException(NoopEntityPersister.class);
+		public NoopEntityPersister(
+				org.hibernate.mapping.PersistentClass persistentClass,
+				org.hibernate.cache.spi.access.EntityRegionAccessStrategy strategy,
+				NaturalIdRegionAccessStrategy naturalIdRegionAccessStrategy,
+				SessionFactoryImplementor sf,
+				Mapping mapping) {
+			throw new GoofyException( NoopEntityPersister.class );
 		}
 
 		@Override
@@ -201,7 +205,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public int[] findDirty(Object[] currentState, Object[] previousState, Object owner, SessionImplementor session) {
+		public int[] findDirty(
+				Object[] currentState,
+				Object[] previousState,
+				Object owner,
+				SessionImplementor session) {
 			return new int[0];
 		}
 
@@ -256,7 +264,8 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Serializable loadEntityIdByNaturalId(Object[] naturalIdValues, LockOptions lockOptions,
+		public Serializable loadEntityIdByNaturalId(
+				Object[] naturalIdValues, LockOptions lockOptions,
 				SessionImplementor session) {
 			return null;
 		}
@@ -277,16 +286,30 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public Object load(Serializable id, Object optionalObject, LockOptions lockOptions, SessionImplementor session) {
+		public Object load(
+				Serializable id,
+				Object optionalObject,
+				LockOptions lockOptions,
+				SessionImplementor session) {
 			return null;
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, LockMode lockMode, SessionImplementor session) {
+		public void lock(
+				Serializable id,
+				Object version,
+				Object object,
+				LockMode lockMode,
+				SessionImplementor session) {
 		}
 
 		@Override
-		public void lock(Serializable id, Object version, Object object, LockOptions lockOptions, SessionImplementor session) {
+		public void lock(
+				Serializable id,
+				Object version,
+				Object object,
+				LockOptions lockOptions,
+				SessionImplementor session) {
 		}
 
 		@Override
@@ -303,7 +326,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void update(Serializable id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SessionImplementor session) {
+		public void update(
+				Serializable id,
+				Object[] fields,
+				int[] dirtyFields,
+				boolean hasDirtyCollection,
+				Object[] oldFields,
+				Object oldVersion,
+				Object object,
+				Object rowId,
+				SessionImplementor session) {
 		}
 
 		@Override
@@ -390,7 +422,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		public EntityRegionAccessStrategy getCacheAccessStrategy() {
 			return null;
 		}
-		
+
 		@Override
 		public boolean hasNaturalIdCache() {
 			return false;
@@ -491,11 +523,19 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void processInsertGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
+		public void processInsertGeneratedProperties(
+				Serializable id,
+				Object entity,
+				Object[] state,
+				SessionImplementor session) {
 		}
 
 		@Override
-		public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
+		public void processUpdateGeneratedProperties(
+				Serializable id,
+				Object entity,
+				Object[] state,
+				SessionImplementor session) {
 		}
 
 		@Override
@@ -571,7 +611,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion, SessionImplementor session) {
+		public void resetIdentifier(
+				Object entity,
+				Serializable currentId,
+				Object currentVersion,
+				SessionImplementor session) {
 		}
 
 		@Override
@@ -603,11 +647,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 	public static class NoopCollectionPersister implements CollectionPersister {
 
-		public NoopCollectionPersister(org.hibernate.mapping.Collection collection,
-									   org.hibernate.cache.spi.access.CollectionRegionAccessStrategy strategy,
-									   org.hibernate.cfg.Configuration configuration,
-									   SessionFactoryImplementor sf) {
-			throw new GoofyException(NoopCollectionPersister.class);
+		public NoopCollectionPersister(
+				org.hibernate.mapping.Collection collection,
+				org.hibernate.cache.spi.access.CollectionRegionAccessStrategy strategy,
+				org.hibernate.cfg.Configuration configuration,
+				SessionFactoryImplementor sf) {
+			throw new GoofyException( NoopCollectionPersister.class );
 		}
 
 		public void initialize(Serializable key, SessionImplementor session) throws HibernateException {

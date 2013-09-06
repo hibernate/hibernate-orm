@@ -53,6 +53,7 @@ public class EnversIntegrator implements Integrator {
 	 * should happen or not.  Default is true
 	 */
 	public static final String AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
+    private AuditConfiguration enversConfiguration;
 
 	@Override
 	public void integrate(
@@ -72,7 +73,7 @@ public class EnversIntegrator implements Integrator {
 		final EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor(
+        enversConfiguration = AuditConfiguration.getFor(
 				configuration,
 				serviceRegistry.getService(
 						ClassLoaderService.class
@@ -112,7 +113,7 @@ public class EnversIntegrator implements Integrator {
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		// nothing to do afaik
+        enversConfiguration.destroy();
 	}
 
 	/**

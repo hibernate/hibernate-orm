@@ -52,7 +52,7 @@ import org.jboss.logging.Logger;
 public class ClassLoaderServiceImpl implements ClassLoaderService {
 	private static final Logger log = Logger.getLogger( ClassLoaderServiceImpl.class );
 
-	private final AggregatedClassLoader aggregatedClassLoader;
+	private AggregatedClassLoader aggregatedClassLoader;
 	
 	private final Map<Class, ServiceLoader> serviceLoaders = new HashMap<Class, ServiceLoader>();
 
@@ -172,7 +172,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 	}
 
 	private static class AggregatedClassLoader extends ClassLoader {
-		private final ClassLoader[] individualClassLoaders;
+		private ClassLoader[] individualClassLoaders;
 
 		private AggregatedClassLoader(final LinkedHashSet<ClassLoader> orderedClassLoaderSet) {
 			super( null );
@@ -227,7 +227,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 			throw new ClassNotFoundException( "Could not load requested class : " + name );
 		}
-	}
+
+        public void destroy() {
+            individualClassLoaders = null;
+        }
+    }
 
 	@Override
 	@SuppressWarnings( {"unchecked"})
@@ -343,6 +347,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			serviceLoader.reload(); // clear service loader providers
 		}
 		serviceLoaders.clear();
+        if (aggregatedClassLoader!=null){
+            aggregatedClassLoader.destroy();
+            aggregatedClassLoader = null;
+        }
     }
 
 	// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

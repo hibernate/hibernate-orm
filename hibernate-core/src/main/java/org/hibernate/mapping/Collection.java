@@ -72,6 +72,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String referencedPropertyName;
 	private String nodeName;
 	private String elementNodeName;
+	private String mappedByProperty;
 	private boolean sorted;
 	private Comparator comparator;
 	private String comparatorClassName;
@@ -666,5 +667,13 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	
 	public String getComparatorClassName() {
 		return comparatorClassName;
+	}
+
+	public String getMappedByProperty() {
+		return mappedByProperty;
+	}
+
+	public void setMappedByProperty(String mappedByProperty) {
+		this.mappedByProperty = mappedByProperty;
 	}
 }

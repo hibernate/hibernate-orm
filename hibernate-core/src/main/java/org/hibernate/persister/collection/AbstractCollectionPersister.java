@@ -149,6 +149,7 @@ public abstract class AbstractCollectionPersister
 	private final String nodeName;
 	private final String elementNodeName;
 	private final String indexNodeName;
+	private String mappedByProperty;
 
 	protected final boolean indexContainsFormula;
 	protected final boolean elementIsPureFormula;
@@ -266,6 +267,7 @@ public abstract class AbstractCollectionPersister
 		queryLoaderName = collection.getLoaderName();
 		nodeName = collection.getNodeName();
 		isMutable = collection.isMutable();
+		mappedByProperty = collection.getMappedByProperty();
 
 		Table table = collection.getCollectionTable();
 		fetchMode = collection.getElement().getFetchMode();

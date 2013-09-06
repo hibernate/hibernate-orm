@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
@@ -46,6 +47,7 @@ public class IntegratorServiceImpl implements IntegratorService {
 		// separate project/jars.
 		addIntegrator( new BeanValidationIntegrator() );
 		addIntegrator( new JaccIntegrator() );
+		addIntegrator( new CollectionCacheInvalidator() );
 
 		// register provided integrators
 		for ( Integrator integrator : providedIntegrators ) {

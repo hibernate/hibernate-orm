@@ -1,9 +1,8 @@
 package org.hibernate.test.service;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,7 +10,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
-import java.util.NoSuchElementException;
 
 import javax.persistence.Entity;
 
@@ -21,7 +19,6 @@ import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -58,6 +55,8 @@ public class ClassLoaderServiceImplTest {
     /**
      * HHH-8363 discovered multiple leaks within CLS.  Most notably, it wasn't getting GC'd due to holding
      * references to ServiceLoaders.  Ensure that the addition of Stoppable functionality cleans up properly.
+     * 
+     * TODO: Is there a way to test that the ServiceLoader was actually reset?
      */
     @Test
     @TestForIssue(jiraKey = "HHH-8363")
@@ -77,11 +76,9 @@ public class ClassLoaderServiceImplTest {
     	
     	StandardServiceRegistryBuilder.destroy( serviceRegistry );
     	
+    	// Should return null -- aggregratedClassLoader blown away.
     	testIntegrator2 = findTestIntegrator( classLoaderService );
-    	assertNotNull( testIntegrator2 );
-    	
-    	// destroy should have cleared the ServiceLoader caches, forcing the services to be re-created when called upon
-    	assertNotSame( testIntegrator1, testIntegrator2 );
+    	assertNull( testIntegrator2 );
     }
     
     private TestIntegrator findTestIntegrator(ClassLoaderService classLoaderService) {

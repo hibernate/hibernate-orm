@@ -34,18 +34,18 @@ public class TestIntegrator implements Integrator {
 	@Override
 	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		System.out.println("foo");
+		
 	}
 
 	@Override
 	public void integrate(MetadataImplementor metadata, SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		System.out.println("foo");
+		
 	}
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		System.out.println("foo");
+		
 	}
 
 }

@@ -26,8 +26,8 @@ package org.hibernate.boot.registry.internal;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.service.Service;
 import org.hibernate.service.internal.AbstractServiceRegistryImpl;
@@ -35,6 +35,7 @@ import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Standard Hibernate implementation of the standard service registry.
@@ -89,4 +90,11 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 		}
 	}
 
+	@Override
+	public void destroy() {
+		super.destroy();
+		if ( getParentServiceRegistry() != null ) {
+			( (ServiceRegistryImplementor) getParentServiceRegistry() ).destroy();
+		}
+	}
 }

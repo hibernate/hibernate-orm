@@ -21,98 +21,103 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.bytecode.enhance.plugins
- 
-import org.hibernate.bytecode.enhance.spi.Enhancer
-import org.hibernate.bytecode.enhance.spi.EnhancementContext
+package org.hibernate.tooling.gradle
+
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtField
-import javax.persistence.Transient
-import javax.persistence.Entity
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import org.gradle.api.DefaultTask
-import org.gradle.api.plugins.Convention 
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.TaskAction
+import org.hibernate.bytecode.enhance.spi.EnhancementContext
+import org.hibernate.bytecode.enhance.spi.Enhancer
+
+import javax.persistence.Entity
+import javax.persistence.Transient
 
 /**
-* Plugin to enhance Entities using the context(s) to determine
-* which to apply.
-* @author Jeremy Whiting
-*/
-public class EnhanceTask extends DefaultTask implements EnhancementContext {
+ * Gradle Task to apply Hibernate's bytecode Enhancer
+ *
+ * @author Jeremy Whiting
+ */
+public class EnhancerTask extends DefaultTask implements EnhancementContext {
 
     private ClassLoader overridden
 
-    public EnhanceTask() {
+    public EnhancerTask() {
         super()
-        setDescription('Enhances Entity classes for efficient association referencing.')
+        setDescription( 'Enhances Entity classes for efficient association referencing.' )
     }
-   
+
     @TaskAction
-    def enhance () {
-        logger.info( 'enhance task started')
-        ext.pool = new ClassPool(false)
-        ext.enhancer = new Enhancer(this)
-        FileTree tree = project.fileTree(dir: project.sourceSets.main.output.classesDir)
+    def enhance() {
+        logger.info( 'enhance task started' )
+        ext.pool = new ClassPool( false )
+        ext.enhancer = new Enhancer( this )
+        FileTree tree = project.fileTree( dir: project.sourceSets.main.output.classesDir )
         tree.include '**/*.class'
-        tree.each(
-        { File file ->
+        tree.each( { File file ->
             final byte[] enhancedBytecode;
             InputStream is = null;
             CtClass clas = null;
             try {
-                is = new FileInputStream(file.toString())
-                clas =ext.pool.makeClass(is)
-                if (!clas.hasAnnotation(Entity.class)){
-                    logger.debug("Class $file not an annotated Entity class. skipping...")
-                } else {
-                     enhancedBytecode = ext.enhancer.enhance( clas.getName(), clas.toBytecode() );
+                is = new FileInputStream( file.toString() )
+                clas = ext.pool.makeClass( is )
+                // Enhancer already does this check to see if it should enhance, why are we doing it again here?
+                if ( !clas.hasAnnotation( Entity.class ) ) {
+                    logger.debug( "Class $file not an annotated Entity class. skipping..." )
+                }
+                else {
+                    enhancedBytecode = ext.enhancer.enhance( clas.getName(), clas.toBytecode() );
                 }
             }
             catch (Exception e) {
                 logger.error( "Unable to enhance class [${file.toString()}]", e )
                 return
-            } finally {
-                try {
-                   if (null != is) is.close();
-                } finally{}
             }
-            if (null != enhancedBytecode){
+            finally {
+                try {
+                    if ( null != is ) {
+                        is.close()
+                    };
+                }
+                finally {}
+            }
+            if ( null != enhancedBytecode ) {
                 if ( file.delete() ) {
-                    if ( ! file.createNewFile() ) {
-                       logger.error( "Unable to recreate class file [" + clas.getName() + "]")
+                    if ( !file.createNewFile() ) {
+                        logger.error( "Unable to recreate class file [" + clas.getName() + "]" )
                     }
                 }
                 else {
-                   logger.error( "Unable to delete class file [" + clas.getName() + "]")
+                    logger.error( "Unable to delete class file [" + clas.getName() + "]" )
                 }
                 FileOutputStream outputStream = new FileOutputStream( file, false )
                 try {
-                   outputStream.write( enhancedBytecode )
-                   outputStream.flush()
+                    outputStream.write( enhancedBytecode )
+                    outputStream.flush()
                 }
                 finally {
-                   try {
-                      if (outputStream != null) outputStream.close()
-                      clas.detach()//release memory
-                   }
-                   catch ( IOException ignore) {
-                   }
+                    try {
+                        if ( outputStream != null ) {
+                            outputStream.close()
+                        }
+                        clas.detach()//release memory
+                    }
+                    catch (IOException ignore) {
+                    }
                 }
-             } 
-         }) 
-         logger.info( 'enhance task finished')
+            }
+        } )
+        logger.info( 'enhance task finished' )
     }
-    
+
     public ClassLoader getLoadingClassLoader() {
         if ( null == this.overridden ) {
-          return getClass().getClassLoader();
+            return getClass().getClassLoader();
         }
         else {
-          return this.overridden;
+            return this.overridden;
         }
     }
 
@@ -130,11 +135,12 @@ public class EnhanceTask extends DefaultTask implements EnhancementContext {
 
     public boolean isLazyLoadable(CtField field) {
         return true;
-    } 
-  
+    }
+
     public boolean isCompositeClass(CtClass classDescriptor) {
         return false;
-      }
+    }
+
     public boolean doDirtyCheckingInline(CtClass classDescriptor) {
         return false;
     }

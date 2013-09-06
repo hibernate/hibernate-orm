@@ -55,7 +55,7 @@ import org.apache.maven.plugins.annotations.Parameter;
  * @author Jeremy Whiting
  */
 @Mojo(name = "enhance")
-public class MavenEnhancePlugin extends AbstractMojo {
+public class HibernateEnhancementMojo extends AbstractMojo {
 
 	/**
 	 * The contexts to use during enhancement.

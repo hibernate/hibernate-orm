@@ -142,7 +142,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-8449" )
 	public void testBasicConverterDisableApplication() {
 		Configuration cfg = new Configuration();
 		cfg.addAttributeConverter( StringClobConverter.class, true );

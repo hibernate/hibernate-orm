@@ -278,7 +278,7 @@ public class MapBinder extends CollectionBinder {
 						elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
 					}
 					else {
-						elementBinder.setType( property, elementClass, this.collection.getOwnerEntityName() );
+						elementBinder.setType( property, elementClass, this.collection.getOwnerEntityName(), null );
 					}
 					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 					elementBinder.setAccessType( accessType );

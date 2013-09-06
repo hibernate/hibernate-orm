@@ -176,17 +176,23 @@ public class PropertyBinder {
 
 	private Property makePropertyAndValue() {
 		validateBind();
+
 		LOG.debugf( "MetadataSourceProcessor property %s with lazy=%s", name, lazy );
-		String containerClassName = holder == null ?
-				null :
-				holder.getClassName();
+		final String containerClassName = holder.getClassName();
+		holder.startingProperty( property );
+
 		simpleValueBinder = new SimpleValueBinder();
 		simpleValueBinder.setMappings( mappings );
 		simpleValueBinder.setPropertyName( name );
 		simpleValueBinder.setReturnedClassName( returnedClassName );
 		simpleValueBinder.setColumns( columns );
 		simpleValueBinder.setPersistentClassName( containerClassName );
-		simpleValueBinder.setType( property, returnedClass, containerClassName );
+		simpleValueBinder.setType(
+				property,
+				returnedClass,
+				containerClassName,
+				holder.resolveAttributeConverterDefinition( property )
+		);
 		simpleValueBinder.setMappings( mappings );
 		simpleValueBinder.setReferencedEntityName( referencedEntityName );
 		simpleValueBinder.setAccessType( accessType );

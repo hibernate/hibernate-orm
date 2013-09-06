@@ -135,6 +135,8 @@ import org.hibernate.annotations.Tuplizers;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.annotations.Where;
+import org.hibernate.annotations.common.reflection.ClassLoaderDelegate;
+import org.hibernate.annotations.common.reflection.ClassLoadingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
@@ -291,6 +293,10 @@ public final class AnnotationBinder {
 		XPackage pckg;
 		try {
 			pckg = mappings.getReflectionManager().packageForName( packageName );
+		}
+		catch (ClassLoadingException e) {
+			LOG.packageNotFound( packageName );
+			return;
 		}
 		catch ( ClassNotFoundException cnf ) {
 			LOG.packageNotFound( packageName );
@@ -2415,9 +2421,17 @@ public final class AnnotationBinder {
 		String subpath = BinderHelper.getPath( propertyHolder, inferredData );
 		LOG.tracev( "Binding component with path: {0}", subpath );
 		PropertyHolder subHolder = PropertyHolderBuilder.buildPropertyHolder(
-				comp, subpath,
-				inferredData, propertyHolder, mappings
+				comp,
+				subpath,
+				inferredData,
+				propertyHolder,
+				mappings
 		);
+
+
+		// propertyHolder here is the owner of the component property.  Tell it we are about to start the component...
+
+		propertyHolder.startingProperty( inferredData.getProperty() );
 
 		final XClass xClassProcessed = inferredData.getPropertyClass();
 		List<PropertyData> classElements = new ArrayList<PropertyData>();
@@ -2599,7 +2613,7 @@ public final class AnnotationBinder {
 			value.setColumns( columns );
 			value.setPersistentClassName( persistentClassName );
 			value.setMappings( mappings );
-			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName );
+			value.setType( inferredData.getProperty(), inferredData.getClassOrElement(), persistentClassName, null );
 			value.setAccessType( propertyAccessor );
 			id = value.make();
 		}

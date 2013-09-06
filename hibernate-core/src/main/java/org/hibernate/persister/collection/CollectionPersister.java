@@ -319,4 +319,9 @@ public interface CollectionPersister extends CollectionDefinition {
 	public boolean elementExists(Serializable key, Object element, SessionImplementor session);
 	public Object getElementByIndex(Serializable key, Object index, SessionImplementor session, Object owner);
 	public int getBatchSize();
+
+	/**
+	 * @return the Name of the Property, this collection is mapped by
+	 */
+	public String getMappedByProperty();
 }

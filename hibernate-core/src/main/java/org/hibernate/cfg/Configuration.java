@@ -3129,7 +3129,7 @@ public class Configuration implements Serializable {
 				final String existingLogicalName = ( String ) physicalToLogical.put( physicalName, logicalName );
 				if ( existingLogicalName != null && ! existingLogicalName.equals( logicalName ) ) {
 					throw new DuplicateMappingException(
-							" Table [" + tableName + "] contains phyical column name [" + physicalName
+							" Table [" + tableName + "] contains physical column name [" + physicalName
 									+ "] represented by different logical column names: [" + existingLogicalName
 									+ "], [" + logicalName + "]",
 							"column-binding",

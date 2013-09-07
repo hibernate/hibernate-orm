@@ -33,6 +33,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
+import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
@@ -120,6 +121,25 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return buildEntityFetch( attributeDefinition, fetchStrategy, null, loadPlanBuildingContext );
+	}
+
+	@Override
+	public BidirectionalEntityFetch buildBidirectionalEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			EntityReference entityReference,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
+		return (BidirectionalEntityFetch) buildEntityFetch(
+				attributeDefinition, fetchStrategy, entityReference, loadPlanBuildingContext
+		);
+	}
+
+	private EntityFetch buildEntityFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy,
+			EntityReference targetEntityReference,
+			LoadPlanBuildingContext loadPlanBuildingContext) {
 		final EntityType fetchedType = (EntityType) attributeDefinition.getType();
 		final EntityPersister fetchedPersister = loadPlanBuildingContext.getSessionFactory().getEntityPersister(
 				fetchedType.getAssociatedEntityName()
@@ -144,23 +164,15 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid(),
 				attributeDefinition.isNullable()
 		);
-		final EntityFetch fetch = createEntityFetch( attributeDefinition, fetchStrategy, join, loadPlanBuildingContext );
+		final EntityFetch fetch;
+		if ( targetEntityReference == null ) {
+			fetch = new EntityFetchImpl( this, attributeDefinition, fetchStrategy, join );
+		}
+		else {
+			fetch = new BidirectionalEntityFetchImpl( this, attributeDefinition, fetchStrategy, join, targetEntityReference );
+		}
 		addFetch( fetch );
 		return fetch;
-	}
-
-	protected EntityFetch createEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			Join fetchedJoin,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return new EntityFetchImpl(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				fetchedJoin
-		);
-
 	}
 
 	private void addFetch(Fetch fetch) {

@@ -31,7 +31,7 @@ import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 
 /**
- * Represents a key-many-to-one fetch that is bi-directionally join fetched.
+ * Represents an entity fetch that is bi-directionally join fetched.
  * <p/>
  * For example, consider an Order entity whose primary key is partially made up of the Customer entity to which
  * it is associated.  When we join fetch Customer -> Order(s) and then Order -> Customer we have a bi-directional
@@ -39,10 +39,10 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
  *
  * @author Steve Ebersole
  */
-public class KeyManyToOneBidirectionalEntityFetchImpl extends EntityFetchImpl implements BidirectionalEntityFetch {
+public class BidirectionalEntityFetchImpl extends EntityFetchImpl implements BidirectionalEntityFetch {
 	private final EntityReference targetEntityReference;
 
-	public KeyManyToOneBidirectionalEntityFetchImpl(
+	public BidirectionalEntityFetchImpl(
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy,

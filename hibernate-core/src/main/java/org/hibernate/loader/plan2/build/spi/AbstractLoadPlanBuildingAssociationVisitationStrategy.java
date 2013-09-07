@@ -586,11 +586,22 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 		// go ahead and build the bidirectional fetch
 		if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
-			currentSource().buildEntityFetch(
-					attributeDefinition,
-					fetchStrategy,
-					this
-			);
+			final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference().getEntityPersister();
+			final AssociationKey currentEntityReferenceAssociationKey =
+					new AssociationKey( currentEntityPersister.getTableName(), currentEntityPersister.getKeyColumnNames() );
+			final Joinable fetchSourceEntityPersister =
+					(Joinable) registeredFetchSource( attributeDefinition.getAssociationKey() ).resolveEntityReference().getEntityPersister();
+			final AssociationKey fetchSourceEntityReferenceAssociationKey =
+					new AssociationKey( fetchSourceEntityPersister.getTableName(), fetchSourceEntityPersister.getKeyColumnNames() );
+			if ( ! attributeDefinition.getAssociationKey().equals( currentEntityReferenceAssociationKey ) &&
+					! attributeDefinition.getAssociationKey().equals( fetchSourceEntityReferenceAssociationKey ) ) {
+				currentSource().buildBidirectionalEntityFetch(
+						attributeDefinition,
+						fetchStrategy,
+						fetchedAssociationKeySourceMap.get( attributeDefinition.getAssociationKey() ).resolveEntityReference(),
+						this
+				);
+			}
 		}
 		else {
 			// Collection

@@ -24,6 +24,7 @@
 package org.hibernate.type.descriptor.converter;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.PersistenceException;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -87,7 +88,17 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 			@Override
 			@SuppressWarnings("unchecked")
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				realBinder.bind( st, converter.convertToDatabaseColumn( value ), index, options );
+				final Object convertedValue;
+				try {
+					convertedValue = converter.convertToDatabaseColumn( value );
+				}
+				catch (PersistenceException pe) {
+					throw pe;
+				}
+				catch (RuntimeException re) {
+					throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+				}
+				realBinder.bind( st, convertedValue, index, options );
 			}
 		};
 	}
@@ -100,21 +111,31 @@ public class AttributeConverterSqlTypeDescriptorAdapter implements SqlTypeDescri
 		final ValueExtractor realExtractor = delegate.getExtractor( intermediateJavaTypeDescriptor );
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			@SuppressWarnings("unchecked")
 			protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-				return (X) converter.convertToEntityAttribute( realExtractor.extract( rs, name, options ) );
+				return doConversion( realExtractor.extract( rs, name, options ) );
 			}
 
 			@Override
-			@SuppressWarnings("unchecked")
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return (X) converter.convertToEntityAttribute( realExtractor.extract( statement, index, options ) );
+				return doConversion( realExtractor.extract( statement, index, options ) );
 			}
 
 			@Override
-			@SuppressWarnings("unchecked")
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return (X) converter.convertToEntityAttribute( realExtractor.extract( statement, new String[] {name}, options ) );
+				return doConversion( realExtractor.extract( statement, new String[] {name}, options ) );
+			}
+
+			@SuppressWarnings("unchecked")
+			private X doConversion(Object extractedValue) {
+				try {
+					return (X) converter.convertToEntityAttribute( extractedValue );
+				}
+				catch (PersistenceException pe) {
+					throw pe;
+				}
+				catch (RuntimeException re) {
+					throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+				}
 			}
 		};
 	}

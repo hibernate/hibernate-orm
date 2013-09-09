@@ -1,5 +1,6 @@
 configurations {
 	osgiRuntime
+	osgiRuntimeBnd
 }
 
 sourceSets {
@@ -33,28 +34,24 @@ dependencies {
 	testRuntime( "org.apache.felix:org.apache.felix.main:4.0.3" )
 	testRuntime( "org.jboss.logmanager:jboss-logmanager:1.4.1.Final" )
 	
-	// Local copies of all jars needed fur the OSGi runtime.
-	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" )
-	osgiRuntime( libraries.jpa )
-	osgiRuntime( "javax.enterprise:cdi-api:1.1-PFD" )
-	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" )
-	osgiRuntime( libraries.jta )
-	osgiRuntime( "commons-collections:commons-collections:3.2.1" )
-	osgiRuntime( "commons-pool:commons-pool:1.6" )
-	osgiRuntime( "commons-dbcp:commons-dbcp:1.4" )
-	osgiRuntime( "commons-lang:commons-lang:2.6" )
-	osgiRuntime( "net.sourceforge.serp:serp:1.14.1" )
-	osgiRuntime( "com.h2database:h2:1.3.170" )
-	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" )
-	osgiRuntime( libraries.javassist )
-	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.jsr303-api-1.0.0:2.2.0" )
-	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.ant:1.8.2_2" )
-	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" )
-	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" )
-	osgiRuntime( libraries.commons_annotations )
-	osgiRuntime( libraries.jandex )
-	osgiRuntime( libraries.classmate )
-	osgiRuntime( libraries.logging )
+	// Local copies of all jars needed fur the OSGi runtime.  Ignore the transitive dependencies.
+	// ORDER DEPENDENT!!!
+	osgiRuntime( "org.jboss.arquillian.osgi:arquillian-osgi-bundle:1.0.3.Final" ) { transitive = false }
+	osgiRuntime( libraries.jpa ) { transitive = false }
+	osgiRuntime( "org.jboss.spec.javax.interceptor:jboss-interceptors-api_1.2_spec:1.0.0.Alpha1" ) { transitive = false }
+	osgiRuntime( libraries.jta ) { transitive = false }
+	osgiRuntime( "com.h2database:h2:1.3.170" ) { transitive = false }
+	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.antlr:2.7.7_5" ) { transitive = false }
+	osgiRuntime( libraries.javassist ) { transitive = false }
+	osgiRuntime( "org.apache.servicemix.specs:org.apache.servicemix.specs.stax-api-1.2:2.2.0" ) { transitive = false }
+	osgiRuntime( "org.apache.servicemix.bundles:org.apache.servicemix.bundles.dom4j:1.6.1_5" ) { transitive = false }
+	osgiRuntime( libraries.commons_annotations ) { transitive = false }
+	osgiRuntime( libraries.classmate ) { transitive = false }
+	osgiRuntime( libraries.logging ) { transitive = false }
+	// needed for BND
+	osgiRuntimeBnd( libraries.jandex ) { transitive = false }
+	osgiRuntimeBnd( "javax.enterprise:cdi-api:1.1" ) { transitive = false }
+	osgiRuntimeBnd( "javax.el:el-api:2.2" ) { transitive = false }
 	
 	testClientBundleCompile( project( ':hibernate-core' ) )
 	testClientBundleCompile( project( ':hibernate-entitymanager' ) )
@@ -85,18 +82,49 @@ jar {
 }
 
 task copyBnd(type: Copy) {
-	into "$buildDir/osgi-lib/bnd"
 	from "src/test/resources/bnd"
+	into "$buildDir/osgi-lib/bnd"
 }
 
 task runBnd(type: JavaExec){
 	main = "-jar"
-	args "$buildDir/osgi-lib/bnd/bnd-2.1.0.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd", "$buildDir/osgi-lib/bnd/serp.bnd"
+	args "$buildDir/osgi-lib/bnd/bnd-2.1.0.jar", "$buildDir/osgi-lib/bnd/cdi-api.bnd", "$buildDir/osgi-lib/bnd/el-api.bnd", "$buildDir/osgi-lib/bnd/jandex.bnd"
 }
 
 task copyToLib(type: Copy) {
-	into "$buildDir/osgi-lib"
 	from configurations.osgiRuntime
+	from configurations.osgiRuntimeBnd
+	into "$buildDir/osgi-lib"
+}
+
+task felixProperties << {
+	copy {
+		from "src/test/resources/felix-framework.properties-ORIGINAL"
+		into "$buildDir/osgi-lib"
+		rename { String fileName ->
+			fileName.replace("-ORIGINAL", "")
+		}
+	}
+	
+	propertiesFile = file("$buildDir/osgi-lib/felix-framework.properties")
+	
+	// append jars wrapped using BND
+	FileTree tree = fileTree(dir: "$buildDir/osgi-lib/bnd")
+	tree.exclude "*bnd*"
+	tree.each {File file ->
+		propertiesFile << " \\\nfile:target/osgi-lib/bnd/" + file.name
+	}
+	
+	// append all jars in osgiRuntime configuration
+	configurations.osgiRuntime.each { File file ->
+		propertiesFile << " \\\nfile:target/osgi-lib/" + file.name
+	}
+	
+	// append ORM jars
+	// TODO: Is there a better, dynamic way of doing this?
+	propertiesFile << " \\\nfile:../hibernate-core/target/libs/hibernate-core-" + hibernateTargetVersion + ".jar"
+	propertiesFile << " \\\nfile:../hibernate-entitymanager/target/libs/hibernate-entitymanager-" + hibernateTargetVersion + ".jar"
+	propertiesFile << " \\\nfile:target/libs/hibernate-osgi-" + hibernateTargetVersion + ".jar"
 }
 
 task testClientBundleJar(type: Jar) {
@@ -117,6 +145,7 @@ task testClientBundleJar(type: Jar) {
 
 runBnd.dependsOn copyToLib
 runBnd.dependsOn copyBnd
-test.dependsOn runBnd
+felixProperties.dependsOn runBnd
+test.dependsOn felixProperties
 test.dependsOn testClientBundleJar
 test.dependsOn jar

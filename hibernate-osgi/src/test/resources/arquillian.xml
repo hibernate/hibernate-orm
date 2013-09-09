@@ -4,7 +4,7 @@
 
 	<container qualifier="jboss" default="true">
 		<configuration>
-			<property name="frameworkProperties">src/test/resources/felix-framework.properties</property>
+			<property name="frameworkProperties">target/osgi-lib/felix-framework.properties</property>
 		</configuration>
 	</container>
 </arquillian>

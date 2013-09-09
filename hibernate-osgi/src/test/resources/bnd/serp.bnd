@@ -1,5 +1,0 @@
- Bundle-SymbolicName: serp
- Bundle-Version: 1.14.1
-
- Include-Resource: @../serp-1.14.1.jar
--exportcontents: *

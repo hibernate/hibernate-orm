@@ -368,26 +368,59 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	public void addNamedQuery(String name, Query query) {
 		validateNotClosed();
 
-		if ( StoredProcedureQueryImpl.class.isInstance( query ) ) {
-			final ProcedureCall procedureCall = ( (StoredProcedureQueryImpl) query ).getHibernateProcedureCall();
-			sessionFactory.getNamedQueryRepository().registerNamedProcedureCallMemento( name, procedureCall.extractMemento( query.getHints() ) );
-		}
-		else if ( ! HibernateQuery.class.isInstance( query ) ) {
-			throw new PersistenceException( "Cannot use query non-Hibernate EntityManager query as basis for named query" );
-		}
-		else {
-			// create and register the proper NamedQueryDefinition...
-			final org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
-			if ( org.hibernate.SQLQuery.class.isInstance( hibernateQuery ) ) {
-				sessionFactory.registerNamedSQLQueryDefinition(
-						name,
-						extractSqlQueryDefinition( (org.hibernate.SQLQuery) hibernateQuery, name )
-				);
-			}
-			else {
-				sessionFactory.registerNamedQueryDefinition( name, extractHqlQueryDefinition( hibernateQuery, name ) );
+		// NOTE : we use Query#unwrap here (rather than direct type checking) to account for possibly wrapped
+		// query implementations
+
+		// first, handle StoredProcedureQuery
+		try {
+			final StoredProcedureQueryImpl unwrapped = query.unwrap( StoredProcedureQueryImpl.class );
+			if ( unwrapped != null ) {
+				addNamedStoredProcedureQuery( name, unwrapped );
+				return;
 			}
 		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a StoredProcedureQueryImpl
+		}
+
+		// then try as a native-SQL or JPQL query
+		try {
+			final HibernateQuery unwrapped = query.unwrap( HibernateQuery.class );
+			if ( unwrapped != null ) {
+				// create and register the proper NamedQueryDefinition...
+				final org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
+				if ( org.hibernate.SQLQuery.class.isInstance( hibernateQuery ) ) {
+					sessionFactory.registerNamedSQLQueryDefinition(
+							name,
+							extractSqlQueryDefinition( (org.hibernate.SQLQuery) hibernateQuery, name )
+					);
+				}
+				else {
+					sessionFactory.registerNamedQueryDefinition( name, extractHqlQueryDefinition( hibernateQuery, name ) );
+				}
+				return;
+			}
+		}
+		catch ( PersistenceException ignore ) {
+			// this means 'query' is not a native-SQL or JPQL query
+		}
+
+
+		// if we get here, we are unsure how to properly unwrap the incoming query to extract the needed information
+		throw new PersistenceException(
+				String.format(
+						"Unsure how to how to properly unwrap given Query [%s] as basis for named query",
+						query
+				)
+		);
+	}
+
+	private void addNamedStoredProcedureQuery(String name, StoredProcedureQueryImpl query) {
+		final ProcedureCall procedureCall = query.getHibernateProcedureCall();
+		sessionFactory.getNamedQueryRepository().registerNamedProcedureCallMemento(
+				name,
+				procedureCall.extractMemento( query.getHints() )
+		);
 	}
 
 	private NamedSQLQueryDefinition extractSqlQueryDefinition(org.hibernate.SQLQuery nativeSqlQuery, String name) {

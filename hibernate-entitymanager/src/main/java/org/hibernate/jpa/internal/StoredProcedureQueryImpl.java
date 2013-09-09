@@ -385,7 +385,10 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		else if ( ProcedureOutputs.class.isAssignableFrom( cls ) ) {
 			return (T) outputs();
 		}
-		else if ( BaseQueryImpl.class.isAssignableFrom( cls ) ) {
+		else if ( StoredProcedureQueryImpl.class.isAssignableFrom( cls ) ) {
+			return (T) this;
+		}
+		else if ( StoredProcedureQuery.class.equals( cls ) ) {
 			return (T) this;
 		}
 

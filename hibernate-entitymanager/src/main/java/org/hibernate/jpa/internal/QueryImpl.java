@@ -41,6 +41,7 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.ParameterMode;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
@@ -444,19 +445,21 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		if ( org.hibernate.Query.class.isAssignableFrom( tClass ) ) {
 			return (T) query;
 		}
-		else {
-			try {
-				return (T) this;
-			}
-			catch ( ClassCastException cce ) {
-				PersistenceException pe = new PersistenceException(
-						"Unsupported unwrap target type [" + tClass.getName() + "]"
-				);
-				//It's probably against the spec to not mark the tx for rollback but it will be easier for people
-				//getEntityManager().handlePersistenceException( pe );
-				throw pe;
-			}
+		if ( QueryImpl.class.isAssignableFrom( tClass ) ) {
+			return (T) this;
 		}
+		if ( HibernateQuery.class.isAssignableFrom( tClass ) ) {
+			return (T) this;
+		}
+
+		throw new PersistenceException(
+				String.format(
+						"Unsure how to unwrap %s impl [%s] as requested type [%s]",
+						Query.class.getSimpleName(),
+						this.getClass().getName(),
+						tClass.getName()
+				)
+		);
 	}
 
 	@Override

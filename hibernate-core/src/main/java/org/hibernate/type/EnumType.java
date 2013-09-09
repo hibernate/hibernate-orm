@@ -168,7 +168,10 @@ public class EnumType implements EnhancedUserType, DynamicParameterizedType,Logg
 						enumClass.getName(),
 						e.getMessage()
 				);
-				treatAsOrdinal();
+				// Originally, this was simply treatAsOrdinal().  But, for DBs that do not implement the above, enums
+				// were treated as ordinal even when the *.hbm.xml explicitly define the type sqlCode.  By default,
+				// this is essentially the same anyway, since sqlType is defaulted to Integer.
+				resolveEnumValueMapper( sqlType );
 			}
 		}
 	}

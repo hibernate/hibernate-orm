@@ -140,7 +140,7 @@ public class CollectionCacheInvalidator implements Integrator,
 					if ( id != null && !id.equals( oldId ) ) {
 						evict( id, collectionPersister, session );
 						if ( oldId != null ) {
-							evict( id, collectionPersister, session );
+							evict( oldId, collectionPersister, session );
 						}
 					}
 				}

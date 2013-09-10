@@ -23,6 +23,7 @@ buildscript {
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
+        classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0-SNAPSHOT'
     }
 }
 

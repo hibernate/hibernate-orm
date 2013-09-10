@@ -1,8 +1,11 @@
 apply plugin: 'antlr'
 apply plugin: 'hibernate-matrix-testing'
 
-apply plugin: org.hibernate.build.gradle.inject.InjectionPlugin
+apply plugin: 'version-injection'
 
+versionInjection {
+    into( 'org.hibernate.Version', 'getVersionString' )
+}
 
 dependencies {
     compile( libraries.jta )
@@ -46,12 +49,10 @@ def pomDescription() {
     return 'The core O/RM functionality as provided by Hibernate'
 }
 
-manifest.mainAttributes(
-        'Main-Class': 'org.hibernate.Version'
-)
-
 jar {
     manifest {
+        mainAttributes( 'Main-Class': 'org.hibernate.Version' )
+
         instruction 'Bundle-Description', 'Hibernate ORM Core'
 
         instructionFirst 'Import-Package',

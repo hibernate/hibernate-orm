@@ -48,7 +48,9 @@ public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements 
 	public NegatedPredicateWrapper(PredicateImplementor predicate) {
 		super( predicate.criteriaBuilder(), Boolean.class );
 		this.predicate = predicate;
-		this.negatedOperator = CompoundPredicate.reverseOperator( predicate.getOperator() );
+		this.negatedOperator = predicate.isJunction()
+				? CompoundPredicate.reverseOperator( predicate.getOperator() )
+				: predicate.getOperator();
 		this.negatedExpressions = negateCompoundExpressions( predicate.getExpressions(), predicate.criteriaBuilder() );
 	}
 

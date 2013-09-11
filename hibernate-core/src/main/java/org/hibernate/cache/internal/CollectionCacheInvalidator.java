@@ -35,12 +35,12 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.event.spi.PostDeleteEvent;
+import org.hibernate.event.spi.PostDeleteEventListener;
 import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
-import org.hibernate.event.spi.PreDeleteEvent;
-import org.hibernate.event.spi.PreDeleteEventListener;
-import org.hibernate.event.spi.PreUpdateEvent;
-import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.event.spi.PostUpdateEvent;
+import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -54,8 +54,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  */
 public class CollectionCacheInvalidator implements Integrator,
 												   PostInsertEventListener,
-												   PreDeleteEventListener,
-												   PreUpdateEventListener {
+												   PostDeleteEventListener,
+												   PostUpdateEventListener {
 	private static final Logger LOG = Logger.getLogger( CollectionCacheInvalidator.class.getName() );
 
 	@Override
@@ -63,7 +63,7 @@ public class CollectionCacheInvalidator implements Integrator,
 			Configuration configuration,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		integrate( serviceRegistry );
+		integrate( serviceRegistry, sessionFactory );
 	}
 
 	@Override
@@ -71,7 +71,7 @@ public class CollectionCacheInvalidator implements Integrator,
 			MetadataImplementor metadata,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
-		integrate( serviceRegistry );
+		integrate( serviceRegistry, sessionFactory );
 	}
 
 	@Override
@@ -90,22 +90,28 @@ public class CollectionCacheInvalidator implements Integrator,
 	}
 
 	@Override
-	public boolean onPreDelete(PreDeleteEvent event) {
+	public void onPostDelete(PostDeleteEvent event) {
 		evictCache( event.getEntity(), event.getPersister(), event.getSession(), null );
-		return false;
 	}
 
 	@Override
-	public boolean onPreUpdate(PreUpdateEvent event) {
+	public void onPostUpdate(PostUpdateEvent event) {
 		evictCache( event.getEntity(), event.getPersister(), event.getSession(), event.getOldState() );
-		return false;
 	}
 
-	private void integrate(SessionFactoryServiceRegistry serviceRegistry) {
+	private void integrate(SessionFactoryServiceRegistry serviceRegistry, SessionFactoryImplementor sessionFactory) {
+		if ( !sessionFactory.getSettings().isAutoEvictCollectionCache() ) {
+			// feature is disabled
+			return;
+		}
+		if ( !sessionFactory.getSettings().isSecondLevelCacheEnabled() ) {
+			// Nothing to do, if caching is disabled
+			return;
+		}
 		EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		eventListenerRegistry.appendListeners( EventType.POST_INSERT, this );
-		eventListenerRegistry.appendListeners( EventType.PRE_DELETE, this );
-		eventListenerRegistry.appendListeners( EventType.PRE_UPDATE, this );
+		eventListenerRegistry.appendListeners( EventType.POST_DELETE, this );
+		eventListenerRegistry.appendListeners( EventType.POST_UPDATE, this );
 	}
 
 	private void evictCache(Object entity, EntityPersister persister, EventSource session, Object[] oldState) {

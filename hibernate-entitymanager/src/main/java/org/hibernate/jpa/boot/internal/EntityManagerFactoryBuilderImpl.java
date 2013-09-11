@@ -889,6 +889,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( validationFactory != null ) {
 			BeanValidationIntegrator.validateFactory( validationFactory );
 			serviceRegistryBuilder.applySetting( AvailableSettings.VALIDATION_FACTORY, validationFactory );
+			configurationValues.put( AvailableSettings.VALIDATION_FACTORY, this.validatorFactory );
 		}
 
 		// flush before completion validation

@@ -50,11 +50,13 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
@@ -416,8 +418,12 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			return;
 		}
 
-		// otherwise we need to flush
-		getEntityManager().flush();
+		// otherwise we need to flush.  the query itself is not required to execute in a transaction; if there is
+		// no transaction, the flush would throw a TransactionRequiredException which would potentially break existing
+		// apps, so we only do the flush if a transaction is in progress.
+		if ( getEntityManager().isTransactionInProgress() ) {
+			getEntityManager().flush();
+		}
 	}
 
 	@Override

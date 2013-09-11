@@ -49,6 +49,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
@@ -382,6 +383,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public List<X> getResultList() {
 		getEntityManager().checkOpen( true );
+		beforeQuery();
 		try {
 			return query.list();
 		}
@@ -396,10 +398,33 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		}
 	}
 
+	/**
+	 * For JPA native SQL queries, we may need to perform a flush before executing the query.
+	 */
+	private void beforeQuery() {
+		final org.hibernate.Query query = getHibernateQuery();
+		if ( ! SQLQuery.class.isInstance( query ) ) {
+			// this need only exists for native SQL queries, not JPQL or Criteria queries (both of which do
+			// partial auto flushing already).
+			return;
+		}
+
+		final SQLQuery sqlQuery = (SQLQuery) query;
+		if ( sqlQuery.getSynchronizedQuerySpaces() != null && ! sqlQuery.getSynchronizedQuerySpaces().isEmpty() ) {
+			// The application defined query spaces on the Hibernate native SQLQuery which means the query will already
+			// perform a partial flush according to the defined query spaces, no need to do a full flush.
+			return;
+		}
+
+		// otherwise we need to flush
+		getEntityManager().flush();
+	}
+
 	@Override
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public X getSingleResult() {
 		getEntityManager().checkOpen( true );
+		beforeQuery();
 		try {
 			final List<X> result = query.list();
 

@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
@@ -38,10 +39,15 @@ import javax.persistence.Tuple;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.Wallet;
+import org.hibernate.stat.Statistics;
+
+import junit.framework.Assert;
 
 import org.hibernate.testing.TestForIssue;
 
@@ -56,6 +62,22 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class QueryTest extends BaseEntityManagerFunctionalTestCase {
+	@Override
+	public Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Item.class,
+				Distributor.class,
+				Wallet.class
+		};
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-7192" )
 	public void testTypedManipulationQueryError() {
@@ -300,8 +322,13 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		assertTrue( em.contains( item ) );
 		em.getTransaction().commit();
 
+		Statistics stats = em.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getStatistics();
+		stats.clear();
+		assertEquals( 0, stats.getFlushCount() );
+
 		em.getTransaction().begin();
 		item = (Item) em.createNativeQuery( "select * from Item", Item.class ).getSingleResult();
+		assertEquals( 1, stats.getFlushCount() );
 		assertNotNull( item );
 		assertEquals( "Micro$oft mouse", item.getDescr() );
 		em.remove( item );
@@ -590,14 +617,18 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		catch (IllegalArgumentException e) {
 			//success
 		}
-		assertTrue( "thrown IllegalArgumentException should of caused transaction to be marked for rollback only",
-				true == em.getTransaction().getRollbackOnly() );
+		assertTrue(
+				"thrown IllegalArgumentException should of caused transaction to be marked for rollback only",
+				true == em.getTransaction().getRollbackOnly()
+		);
 		em.getTransaction().rollback();		// HHH-8442 changed to rollback since thrown ISE causes
 											// transaction to be marked for rollback only.
 											// No need to remove entity since it was rolled back.
 
-		assertNull( "entity should not of been saved to database since IllegalArgumentException should of" +
-				"caused transaction to be marked for rollback only", em.find(Item.class, item.getName()));
+		assertNull(
+				"entity should not of been saved to database since IllegalArgumentException should of" +
+						"caused transaction to be marked for rollback only", em.find( Item.class, item.getName() )
+		);
 		em.close();
 
 	}
@@ -651,14 +682,5 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 
 		em.close();
-	}
-
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[]{
-				Item.class,
-				Distributor.class,
-				Wallet.class
-		};
 	}
 }

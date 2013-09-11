@@ -51,8 +51,7 @@ import org.hibernate.jpa.graph.internal.EntityGraphImpl;
  */
 public class EntityManagerImpl extends AbstractEntityManagerImpl implements SessionOwner {
 
-    public static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
-                                                                          EntityManagerImpl.class.getName());
+    public static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( EntityManagerImpl.class.getName() );
 
 	protected Session session;
 	protected boolean open;

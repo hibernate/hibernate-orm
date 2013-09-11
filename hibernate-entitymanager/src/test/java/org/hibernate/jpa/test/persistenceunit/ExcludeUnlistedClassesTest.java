@@ -20,25 +20,39 @@
  */
 package org.hibernate.jpa.test.persistenceunit;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
+import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
+ * HHH-8364 discusses the use of <exclude-unlisted-classes> within Java SE environments.  It was intended for Java EE
+ * only, but was probably supported in Java SE/Hibernate for user friendliness.  If we are going to supports its use
+ * like that, the following should happen:
+ * 
+ * Omitted == do scan
+ * <exclude-unlisted-classes /> == don't scan
+ * <exclude-unlisted-classes>false</exclude-unlisted-classes> == do scan
+ * <exclude-unlisted-classes>true</exclude-unlisted-classes> == don't scan
+ * 
+ * This is true for both JPA 1 & 2.  The "false" default in the JPA 1.0 XSD was a bug.
+ * 
+ * Note that we're ignoring the XSD "true" default if the element is omitted.  Due to the negation semantics, I thought
+ * it made more sense from a user standpoint.
+ * 
  * @author Brett Meyer
  */
 @TestForIssue(jiraKey = "HHH-8364")
@@ -47,32 +61,31 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 	@Test
 	public void testExcludeUnlistedClasses() {
 		// see src/test/resources/org/hibernate/jpa/test/persistenceunit/persistence.xml
-		doTest( "ExcludeUnlistedClassesTest1", true );
-		doTest( "ExcludeUnlistedClassesTest2", false );
-		doTest( "ExcludeUnlistedClassesTest3", true );
-		doTest( "ExcludeUnlistedClassesTest4", false );
+		
+		final Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( AvailableSettings.RESOURCES_CLASSLOADER, new TestClassLoader() );
+		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.locatePersistenceUnits(
+				properties );
+		
+		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest1", false );
+		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest2", true );
+		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest3", false );
+		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest4", true );
 	}
 	
-	private void doTest(String persistenceUnitName, boolean shouldScan) {
-		final Map<String, Object> properties = new HashMap<String, Object>();
-		properties.put( AvailableSettings.APP_CLASSLOADER, new TestClassLoader() );
-		final HibernatePersistenceProvider provider = new HibernatePersistenceProvider();
-		final EntityManagerFactory emf = provider.createEntityManagerFactory( persistenceUnitName, properties );
-		assertNotNull( emf.getMetamodel().entity( DataPoint.class ) );
-		if (shouldScan) {
-			assertNull( emf.getMetamodel().entity( UnlistedDataPoint.class ) );
+	private void doTest(List<ParsedPersistenceXmlDescriptor> parsedDescriptors,
+			final String persistenceUnitName, final boolean shouldExclude) {
+		for (final ParsedPersistenceXmlDescriptor descriptor : parsedDescriptors) {
+			if (descriptor.getName().equals( persistenceUnitName )) {
+				assertEquals(descriptor.isExcludeUnlistedClasses(), shouldExclude);
+				return;
+			}
 		}
-		else {
-			assertNotNull( emf.getMetamodel().entity( UnlistedDataPoint.class ) );
-		}
+		fail("Could not find the persistence unit: " + persistenceUnitName);
 	}
 
     private static class TestClassLoader extends ClassLoader {
     	
-    	/**
-    	 * testStoppableClassLoaderService() needs a custom JDK service implementation.  Rather than using a real one
-    	 * on the test classpath, force it in here.
-    	 */
     	@Override
         protected Enumeration<URL> findResources(String name) throws IOException {
     		if (name.equals( "META-INF/persistence.xml" )) {

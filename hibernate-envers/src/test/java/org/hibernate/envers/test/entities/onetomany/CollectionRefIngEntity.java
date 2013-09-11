@@ -55,9 +55,9 @@ public class CollectionRefIngEntity implements Serializable {
         this.reference = reference;
     }
 
-    public CollectionRefIngEntity(String data, CollectionRefEdEntity reference) {
-        this.data = data;
-        this.reference = reference;
+	public CollectionRefIngEntity(Integer id, String data) {
+		this.id = id;
+		this.data = data;
     }
 
     public Integer getId() {

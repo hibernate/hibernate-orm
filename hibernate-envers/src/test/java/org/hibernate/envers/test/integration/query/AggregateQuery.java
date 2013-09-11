@@ -30,7 +30,6 @@ import javax.persistence.EntityManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import org.hibernate.ejb.Ejb3Configuration;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -130,7 +129,8 @@ public class AggregateQuery extends BaseEnversJPAFunctionalTestCase {
 				.add( AuditEntity.id().between( 2, 3 ) )
 				.getResultList();
 		Assert.assertTrue(
-				TestTools.checkList( list,
+				TestTools.checkCollection(
+						list,
 						new IntTestEntity( 10, 2 ), new IntTestEntity( 8, 3 ), new IntTestEntity( 52, 2 )
 				)
 		);

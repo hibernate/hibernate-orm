@@ -136,7 +136,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 		auditStrategy.addEntityAtRevisionRestriction(
 				globalCfg, qb, rootParameters, REFERENCED_ENTITY_ALIAS + "." + revisionPropertyPath,
 				REFERENCED_ENTITY_ALIAS + "." + verEntCfg.getRevisionEndFieldName(), false, referencedIdData, revisionPropertyPath,
-				originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR, inclusive
+				originalIdPropertyName, REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR, true
 		);
 		// (with ee association at revision :revision)
 		// --> based on auditStrategy (see above)

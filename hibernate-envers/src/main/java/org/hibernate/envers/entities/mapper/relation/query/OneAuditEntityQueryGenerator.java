@@ -72,7 +72,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		final QueryBuilder validQuery = commonPart.deepCopy();
 		final QueryBuilder removedQuery = commonPart.deepCopy();
 		createValidDataRestrictions(
-				globalCfg, auditStrategy, referencedIdData, validQuery, validQuery.getRootParameters(), true
+				globalCfg, auditStrategy, referencedIdData, validQuery, validQuery.getRootParameters()
 		);
 		createValidAndRemovedDataRestrictions( globalCfg, auditStrategy, referencedIdData, removedQuery );
 
@@ -97,8 +97,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 	 * Creates query restrictions used to retrieve only actual data.
 	 */
 	private void createValidDataRestrictions(GlobalConfiguration globalCfg, AuditStrategy auditStrategy,
-											 MiddleIdData referencedIdData, QueryBuilder qb, Parameters rootParameters,
-											 boolean inclusive) {
+											 MiddleIdData referencedIdData, QueryBuilder qb, Parameters rootParameters) {
 		final String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 		// (selecting e entities at revision :revision)
 		// --> based on auditStrategy (see above)
@@ -106,7 +105,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 				globalCfg, qb, rootParameters, revisionPropertyPath,
 				verEntCfg.getRevisionEndFieldName(), true, referencedIdData, revisionPropertyPath,
 				verEntCfg.getOriginalIdPropName(), REFERENCED_ENTITY_ALIAS, REFERENCED_ENTITY_ALIAS_DEF_AUD_STR,
-				inclusive
+				true
 		);
 		// e.revision_type != DEL
 		rootParameters.addWhereWithNamedParam( getRevisionTypePath(), false, "!=", DEL_REVISION_TYPE_PARAMETER );
@@ -121,7 +120,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		final Parameters valid = disjoint.addSubParameters( "and" ); // Restrictions to match all valid rows.
 		final Parameters removed = disjoint.addSubParameters( "and" ); // Restrictions to match all rows deleted at exactly given revision.
 		// Excluding current revision, because we need to match data valid at the previous one.
-		createValidDataRestrictions( globalCfg, auditStrategy, referencedIdData, remQb, valid, false );
+		createValidDataRestrictions( globalCfg, auditStrategy, referencedIdData, remQb, valid );
 		// e.revision = :revision
 		removed.addWhereWithNamedParam( verEntCfg.getRevisionNumberPath(), false, "=", REVISION_PARAMETER );
 		// e.revision_type = DEL

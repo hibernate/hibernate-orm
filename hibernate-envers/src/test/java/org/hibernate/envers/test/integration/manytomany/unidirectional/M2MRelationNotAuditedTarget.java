@@ -36,7 +36,7 @@ import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.UnversionedStrTestEntity;
 import org.hibernate.envers.test.entities.manytomany.unidirectional.M2MTargetNotAuditedEntity;
 
-import static org.hibernate.envers.test.tools.TestTools.checkList;
+import static org.hibernate.envers.test.tools.TestTools.checkCollection;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -145,10 +145,10 @@ public class M2MRelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase
 		M2MTargetNotAuditedEntity rev3 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae1_id, 3);
 		M2MTargetNotAuditedEntity rev4 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae1_id, 4);
 
-		assertTrue(checkList(rev1.getReferences()));
-		assertTrue(checkList(rev2.getReferences(), uste1));
-		assertTrue(checkList(rev3.getReferences(), uste1));
-		assertTrue(checkList(rev4.getReferences(), uste1, uste2));
+		assertTrue( checkCollection( rev1.getReferences() ));
+		assertTrue( checkCollection( rev2.getReferences(), uste1 ));
+		assertTrue( checkCollection( rev3.getReferences(), uste1 ));
+		assertTrue( checkCollection( rev4.getReferences(), uste1, uste2 ));
 	}
 
 	@Test
@@ -161,9 +161,9 @@ public class M2MRelationNotAuditedTarget extends BaseEnversJPAFunctionalTestCase
 		M2MTargetNotAuditedEntity rev3 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae2_id, 3);
 		M2MTargetNotAuditedEntity rev4 = getAuditReader().find(M2MTargetNotAuditedEntity.class, tnae2_id, 4);
 
-		assertTrue(checkList(rev1.getReferences(), uste1, uste2));
-		assertTrue(checkList(rev2.getReferences(), uste2));
-		assertTrue(checkList(rev3.getReferences()));
-		assertTrue(checkList(rev4.getReferences(), uste1));
+		assertTrue( checkCollection( rev1.getReferences(), uste1, uste2 ));
+		assertTrue( checkCollection( rev2.getReferences(), uste2 ));
+		assertTrue( checkCollection( rev3.getReferences() ));
+		assertTrue( checkCollection( rev4.getReferences(), uste1 ));
 	}
 }

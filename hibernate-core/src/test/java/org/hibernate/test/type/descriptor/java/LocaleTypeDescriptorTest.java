@@ -23,17 +23,14 @@
  */
 package org.hibernate.test.type.descriptor.java;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Locale;
-import java.util.StringTokenizer;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
+import org.junit.Test;
 
 /**
  * Tests of the {@link LocaleTypeDescriptor} class.

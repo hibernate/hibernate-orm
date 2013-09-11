@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Descriptor for {@link Locale} handling.
- *
+ * 
  * @author Steve Ebersole
  */
 public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
@@ -59,22 +59,52 @@ public class LocaleTypeDescriptor extends AbstractTypeDescriptor<Locale> {
 	}
 
 	public Locale fromString(String string) {
-		// TODO : Ultimately switch to Locale.Builder for this.  However, Locale.Builder is Java 7
+		// TODO : Ultimately switch to Locale.Builder for this. However, Locale.Builder is Java 7
 
-		final StringTokenizer tokens = new StringTokenizer( string, "_" );
-		final String language = tokens.hasMoreTokens() && string.charAt(0) != '_' ? tokens.nextToken() : "";
-		final String country = tokens.hasMoreTokens() && string.charAt(string.indexOf(language) + language.length() + 1) != '_' ? tokens.nextToken() : "";
-
-		// Need to account for allowable '_' within the variant.  The underscore within the variant delimits "subtags".
-		// Technically the reference spec (IETF BCP 47) also allows dash ("-") as a variant subtag delimiter.
-		// Note that this code block supports both approaches...
-		String variant = "";
-		String sep = "";
-		while ( tokens.hasMoreTokens() ) {
-			variant += sep + tokens.nextToken();
-			sep = "_";
+		if ( string == null || string.isEmpty() ) {
+			return null;
 		}
-		return new Locale( language, country, variant );
+
+		int found = 0, position = 0;
+		char[] chars = string.toCharArray();
+
+		for ( int i = 0; i < chars.length; i++ ) {
+			// We just look for separators
+			if ( chars[i] == '_' ) {
+				switch ( found ) {
+				case 0:
+					// On the first separator we know that we have at least a language
+					string = new String( chars, position, i - position );
+					position = i + 1;
+					break;
+				case 1:
+					// On the second separator we have to check whether there are more chars available for variant
+					if ( chars.length > i + 1 ) {
+						// There is a variant so add it to the constructor
+						return new Locale( string, new String( chars, position, i - position ), new String( chars,
+								i + 1, chars.length - i - 1 ) );
+					}
+					else {
+						// No variant given, we just have language and country
+						return new Locale( string, new String( chars, position, i - position ), "" );
+					}
+				}
+
+				found++;
+			}
+		}
+
+		switch ( found ) {
+		case 0:
+			// No separator found, there is only a language
+			return new Locale( string );
+		case 1:
+			// Only one separator found, there is a language and a country
+			return new Locale( string, new String( chars, position, chars.length - position ) );
+		}
+
+		// Should never happen
+		return null;
 	}
 
 	@SuppressWarnings({ "unchecked" })

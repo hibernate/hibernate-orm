@@ -409,8 +409,6 @@ subprojects { subProject ->
         findbugsMain.exclude '**/*_$logger*'
         findbugsMain.exclude '**/org/hibernate/internal/jaxb/**'
 
-
-        buildDashboard.dependsOn check
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

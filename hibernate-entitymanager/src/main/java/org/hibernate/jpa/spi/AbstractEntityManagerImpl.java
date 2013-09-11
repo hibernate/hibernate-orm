@@ -730,7 +730,12 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		checkOpen();
-		return (TypedQuery<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
+		try {
+			return (TypedQuery<T>) criteriaCompiler().compile( (CompilableCriteria) criteriaQuery );
+		}
+		catch ( RuntimeException e ) {
+			throw convert( e );
+		}
 	}
 
 	@Override
@@ -1280,6 +1285,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public CriteriaBuilder getCriteriaBuilder() {
+
 		checkOpen();
 		return getEntityManagerFactory().getCriteriaBuilder();
 	}

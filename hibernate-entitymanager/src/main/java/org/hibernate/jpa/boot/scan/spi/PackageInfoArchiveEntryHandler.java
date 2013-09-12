@@ -28,8 +28,6 @@ import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
 import org.hibernate.jpa.boot.internal.PackageDescriptorImpl;
 import org.hibernate.jpa.boot.spi.PackageDescriptor;
 
-import static java.io.File.separatorChar;
-
 /**
  * Defines handling and filtering for package-info file entries within an archive
  *
@@ -68,7 +66,7 @@ public class PackageInfoArchiveEntryHandler extends AbstractJavaArtifactArchiveE
 	protected PackageDescriptor toPackageDescriptor(ArchiveEntry entry) {
 		final String packageInfoFilePath = entry.getNameWithinArchive();
 		final String packageName = packageInfoFilePath.substring( 0, packageInfoFilePath.lastIndexOf( '/' ) )
-				.replace( separatorChar, '.' );
+				.replace( '/', '.' );
 
 		return new PackageDescriptorImpl( packageName, entry.getStreamAccess() );
 	}

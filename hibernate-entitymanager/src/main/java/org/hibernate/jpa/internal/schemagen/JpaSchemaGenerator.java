@@ -682,6 +682,8 @@ public class JpaSchemaGenerator {
 
 		@Override
 		public void releaseConnection(Connection connection) throws SQLException {
+			// NOTE : reset auto-commit, but *do not* close the Connection.  The application handed us this connection
+
 			if ( ! wasInitiallyAutoCommit ) {
 				try {
 					if ( jdbcConnection.getAutoCommit() ) {
@@ -763,6 +765,7 @@ public class JpaSchemaGenerator {
 				);
 			}
 
+			// Reset auto-commit
 			if ( ! wasInitiallyAutoCommit ) {
 				try {
 					if ( jdbcConnection.getAutoCommit() ) {
@@ -773,6 +776,9 @@ public class JpaSchemaGenerator {
 					log.info( "Was unable to reset JDBC connection to no longer be in auto-commit mode" );
 				}
 			}
+
+			// Release the connection
+			connectionProvider.closeConnection( jdbcConnection );
 		}
 
 		@Override

@@ -1234,7 +1234,7 @@ public class Configuration implements Serializable {
 						String constraintString = uniqueKey.sqlCreateString( dialect, mapping, tableCatalog, tableSchema );
 						if ( constraintString != null && !constraintString.isEmpty() )
 							if ( constraintMethod.equals( UniqueConstraintSchemaUpdateStrategy.DROP_RECREATE_QUIETLY ) ) {
-								String constraintDropString = uniqueKey.sqlDropString( dialect, tableCatalog, tableCatalog );
+								String constraintDropString = uniqueKey.sqlDropString( dialect, tableCatalog, tableSchema );
 								scripts.add( new SchemaUpdateScript( constraintDropString, true) );
 							}
 							scripts.add( new SchemaUpdateScript( constraintString, true) );

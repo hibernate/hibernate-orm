@@ -42,8 +42,7 @@ ext {
             antlr:          'antlr:antlr:2.7.7',
 
             // Annotations
-            commons_annotations:
-                            'org.hibernate.common:hibernate-commons-annotations:4.0.3.Final@jar',
+            commons_annotations: 'org.hibernate.common:hibernate-commons-annotations:4.0.4.Final',
             jandex:         'org.jboss:jandex:1.1.0.Alpha1',
             classmate:      'com.fasterxml:classmate:0.8.0',
 

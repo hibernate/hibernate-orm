@@ -2,6 +2,10 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
 
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.7'
+}
+
 allprojects {
     repositories {
         mavenCentral()
@@ -27,13 +31,8 @@ buildscript {
     }
 }
 
-ext.hibernateTargetVersion = '4.3.0-SNAPSHOT'
+ext.hibernateTargetVersion = '4.3.0.Beta4'
 ext.javaLanguageLevel = "1.6"
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.7'
-}
-
 
 idea {
     project {

@@ -5,6 +5,149 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.0.Beta4 (2013.05.29)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/13652
+
+** Sub-task
+    * [HHH-8112] - Document OSGi capabilities
+
+** Technical task
+    * [HHH-8448] - Convert annotations for composites not properly applied
+    * [HHH-8449] - AttributeConverter application not disabled properly via local Convert annotation
+    * [HHH-8462] - Handle <converter/> elements in orm.xml
+
+** Bug
+    * [HHH-3078] - Problem with multiple classloaders and cglib proxy enhancement, e.g. in the usual tomcat configuration
+    * [HHH-4141] - Typo in tutorial docs
+    * [HHH-4261] - @Any mapping fails during configuration: "@Any requires an explicit @JoinColumn(s)"
+    * [HHH-4294] - Generated SQL includes a column named "null" when referencing a map entry by key and using @LazyCollection(LazyCollectionOption.EXTRA)
+    * [HHH-4699] - String mapped ENUMs can't be loaded from CHARs only VARCHARS (fix is trivial)
+    * [HHH-6935] - HibernateException in mysql Found: bit, expected: boolean
+    * [HHH-7002] - SchemaExport ERROR when using in-memory database (H2) - drop constraint issue HHH000389
+    * [HHH-7116] - Ordered Criteria query that joins with an ordered mapped collection results in incorrect overall ordering
+    * [HHH-7216] - "java.lang.IllegalStateException: No supertype found" thrown on query with "COUNT" aggregate function
+    * [HHH-7915] - Inherited foreign keys which reference a non primary key column incorrectly reference the primary key column
+    * [HHH-7959] - Hibernate/Infinispan 2nd Level Caches set to JBoss7 transaction-mode=NONE stop functioning after an explicit eviction
+    * [HHH-8055] - Typo in docs? 16.3. Associations and joins
+    * [HHH-8106] - Broken org.hibernate.tool.enhance.EnhancementTask
+    * [HHH-8111] - AttributeConverter doesn't override built-in type mappings
+    * [HHH-8153] - Criteria on Enum mapping defined in hbm.xml fails.
+    * [HHH-8193] - MSSQL: The stream value is not the specified length. The specified length was 7, the actual length is 0.
+    * [HHH-8210] - JdbcCoordinatorImpl logs excessive HHH000387 warnings when used with some connection pools
+    * [HHH-8255] - Clean up compile and optional dependencies from OSGi manifests
+    * [HHH-8275] - union-subclass generates bad alter table for unique constraint
+    * [HHH-8280] - Validity audit strategy leads to database corruption when entity identifiers are reused
+    * [HHH-8283] - JdbcSQLException with CompositeCustomType and java.util.Date
+    * [HHH-8297] - Typo in error message: "contains phyical column name"
+    * [HHH-8301] - SQLServer2005LimitHandler skips column alias generation
+    * [HHH-8302] - C3P0 initialPoolSize non longer initialized with minPoolSize
+    * [HHH-8312] - named parameters binding are not correct when used within subquery
+    * [HHH-8316] - CNFE: javax.persistence.Converter
+    * [HHH-8318] - "delete" with "member of" query fails
+    * [HHH-8335] - Hibernate OSGi not included in build's /lib
+    * [HHH-8349] - DialectFactory cannot determine "hibernate.dialect" for PostgresPlus 9.2 (EnterpriseDB)
+    * [HHH-8362] - Wrong add contraint unique statement for informix
+    * [HHH-8363] - ClassLoaderServiceImpl should be defined as Stoppable
+    * [HHH-8371] - The method org.hibernate.internal.util.StringHelper.lastIndexOfLetter does not consider the character '_'
+    * [HHH-8373] - NullPointerException in QueryImpl#extractParameterInfo
+    * [HHH-8383] - ExceptionInInitializerError when changing System properties while Environment class is initialized
+    * [HHH-8385] - Check whether EMF is closed (throwing ISE if so) when indicated methods are called
+    * [HHH-8386] - Commit transaction on connection used to export schema (JPA)
+    * [HHH-8390] - Foreign key reference generated before unique constraint exists
+    * [HHH-8395] - JPA StoredProcedureQuery#getUpdateCount should prefer return -1 rather than throw exceptions
+    * [HHH-8397] - MultiLineImportFileTest failing on some platforms
+    * [HHH-8398] - JPA TCK incorrectly assuming partial column results (into entity returns) are valid for StoredProcedureQuery
+    * [HHH-8400] - Positional parameters defined on NamedStoredProcedureQuery not applied
+    * [HHH-8406] - Make EntityManagerFactoryRegistry.getNamedEntityManagerFactory thread safe
+    * [HHH-8407] - Missing synchronization in DriverManagerConnectionProviderImpl#stop
+    * [HHH-8411] - StoredProcedureQuery : getResultList and hasMoreResults() mot implemented properly
+    * [HHH-8414] - hibernate-osgi tests intermittently failing
+    * [HHH-8415] - Throw exception types expected by JPA spec wrt StoredProcedureQuery
+    * [HHH-8419] - Tie javax.persistence.Parameter instance to javax.persistence.Query instance
+    * [HHH-8420] - Correct test-only failures occurring in matrix CI
+    * [HHH-8422] - hibernate-matrix-testing not picking up hibernate.properties
+    * [HHH-8427] - Typo in documentation - Basic Mapping
+    * [HHH-8428] - ProviderMBeanRegistration.locateSessionFactory() NPE
+    * [HHH-8439] - Envers OSGI Manifest: org.apache.tools.ant import should be optional
+    * [HHH-8441] - Hibernate is trying to add values to an Immutable List
+    * [HHH-8442] - certain EntityManager operations (e.g. StoredProcedureQuery.execute()) should rollback the TX for certain exceptions
+    * [HHH-8444] - Fix criteriaapi failures from JPA 2.1 TCK
+    * [HHH-8447] - HQL delete with multiple subqueries failing (incorrect alias used)
+    * [HHH-8452] - Better parameter handling for JPA criteria queries
+    * [HHH-8454] - Criteria queries sometimes lead to SQL like "... where ? in (?,?)"
+    * [HHH-8464] - Using JPA2 specific quoting character (double quote) for JoinColumn results in DuplicateMappingException.
+    * [HHH-8465] - EnversListenerDuplicationStrategy areMatch method using listener.getClass().equals( original )  instead of listener.getClass().equals( original.getClass() )
+    * [HHH-8467] - Compiling should trigger animal-sniffer execution
+    * [HHH-8468] - @JoinColumn(table = "...") doesn't use NamingStrategy
+    * [HHH-8469] - Application of JPA 2.1 AttributeConverters
+    * [HHH-8472] - @Lob annotation applies to both key and value of Map
+    * [HHH-8477] - Use javax.persistence.Query#unwrap to implement addNamedQuery, rather than direct type checking
+    * [HHH-8480] - JPA Predicate#not() on a simple predicate should leave the operator as AND, not mutate it to OR
+    * [HHH-8486] - javax.persistence.Tuple#get(String,Class) impl does not validate type
+    * [HHH-8492] - Make the ValidatorFactory available via EntityManagerFactory.getProperties()
+    * [HHH-8496] - TableCatalog and TableSchema arguments mistaken in DB update-script.
+
+** Improvement
+    * [HHH-3047] - Increase max alias length for Oracle dialects from 10 to 30
+    * [HHH-5920] - in org.hibernate.mapping.PersistentClass some 2 performance issues can be fixed
+    * [HHH-8068] - Provide better error messages for missing constructors in HQL / JPQL Constructor queries
+    * [HHH-8117] - Add package export versions in OSGi manifests
+    * [HHH-8284] - Have JPA schema generation include work done by Integrators
+    * [HHH-8319] - ConstraintViolationException not showing constraint name for MySQL
+    * [HHH-8378] - hibernate-osgi cleanup on bundle stop
+    * [HHH-8409] - Improve usage of ConcurrentMaps by using putIfAbsent in StatefulPersistenceContext
+    * [HHH-8410] - NaturalIdXrefDelegate could miss some cached entries from naturalIdResolutionCacheMap
+    * [HHH-8424] - Skip collection element/map key AnyTypes in JPA metamodel
+    * [HHH-8426] - Add defaultScrollMode to Dialect
+    * [HHH-8459] - Improved handling of JPA schema-generation target files
+    * [HHH-8461] - Add PropertyHolder#resolveAttributeConverter method
+    * [HHH-8470] - Automated maintenance of hibernate-osgi test config
+    * [HHH-8491] - improve LocaleTypeDescriptor#fromString
+
+** New Feature
+    * [HHH-2692] - Allow select clause to specify parameters within an "insert to"
+    * [HHH-2736] - support for native/SQL query hints in HQL/Criteria (Oracle SELECT hints for example)
+    * [HHH-3452] - Statistics for Criteria Queries
+    * [HHH-7527] - OSGi hibernate-orm
+    * [HHH-7807] - Deleting Revision Entity (on delete cascade)
+    * [HHH-8174] - Link to current version of entity
+    * [HHH-8306] - Gradle task for bytecode enhancement
+    * [HHH-8331] - Create PostgreSQL9Dialect
+    * [HHH-8337] - Add Maven plugin for bytecode enhancement.
+    * [HHH-8440] - Support sequences with a new SQLServer2012Dialect
+    * [HHH-8493] - Implement ConstructorResults handling
+
+** Patch
+    * [HHH-8408] - Test helpers for hi/lo id generations lack synchronization
+
+** Remove Feature
+    * [HHH-8357] - remove dom4j proxy support
+
+** Task
+    * [HHH-7996] - OSGi Unit Testing
+    * [HHH-8265] - Investigate proxy package imports in OSGi client bundles
+    * [HHH-8288] - Upgrade to Javassist 3.18
+    * [HHH-8309] - Create hibernate-orm subprojects for maven and gradle plugins
+    * [HHH-8336] - Upgrade c3p0 dependency
+    * [HHH-8358] - Upgrade infinispan to 5.3.0.Final
+    * [HHH-8364] - change the "exclude-unlisted-classes" behavior in Java SE environments
+    * [HHH-8388] - pull in final jpa-api 2.1
+    * [HHH-8399] - Upgrade to Javassist 3.18.1-Beta1
+    * [HHH-8405] - Track down tests that leak SessionFactories
+    * [HHH-8413] - Rename ProcedureResults -> ProcedureOutputs
+    * [HHH-8416] - JPA TCK challenge for StoredProcedureQuery#hasMoreResults assertion
+    * [HHH-8421] - JPA 2.1 TCK inaccurate assumptions about binding Date/Calendar parameter values
+    * [HHH-8450] - Predicate#not now required to return new instance
+    * [HHH-8463] - Upgrade to Javassist 3.18.1-GA
+    * [HHH-8474] - Upgrade to Gradle 1.7
+    * [HHH-8485] - Apply newly extracted version-injection plugin
+    * [HHH-8487] - Auto-flush on JPA native SQL query
+    * [HHH-8490] - Remove buildDashboard dependency on check
+    * [HHH-8499] - Prepare for 4.3 Beta4 release
+
+
+
 Changes in version 4.3.0.Beta3 (2013.05.29)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/13451

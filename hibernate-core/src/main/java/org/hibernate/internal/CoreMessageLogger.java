@@ -60,10 +60,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 import org.jboss.logging.BasicLogger;
-import org.jboss.logging.Cause;
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.jboss.logging.annotations.Cause;
+import org.jboss.logging.annotations.LogMessage;
+import org.jboss.logging.annotations.Message;
+import org.jboss.logging.annotations.MessageLogger;
 
 /**
  * The jboss-logging {@link MessageLogger} for the hibernate-core module.  It reserves message ids ranging from

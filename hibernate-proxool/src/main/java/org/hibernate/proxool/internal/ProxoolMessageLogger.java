@@ -23,9 +23,9 @@
  */
 package org.hibernate.proxool.internal;
 
-import org.jboss.logging.LogMessage;
-import org.jboss.logging.Message;
-import org.jboss.logging.MessageLogger;
+import org.jboss.logging.annotations.LogMessage;
+import org.jboss.logging.annotations.Message;
+import org.jboss.logging.annotations.MessageLogger;
 
 import org.hibernate.internal.CoreMessageLogger;
 

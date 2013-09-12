@@ -52,6 +52,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
 
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -87,7 +88,7 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 		public Employee() {
 		}
 
-		public Employee(int id, String firstName, String lastName) {
+		public Employee(Integer id, String firstName, String lastName) {
 			this.id = id;
 			this.firstName = firstName;
 			this.lastName = lastName;
@@ -142,8 +143,9 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 
 			ProcedureCall call = session.createStoredProcedureCall( "allEmployeeNames", "id-fname-lname" );
 			ProcedureOutputs outputs = call.getOutputs();
-			ResultSetOutput output = ExtraAssertions.assertTyping( ResultSetOutput.class, outputs.getCurrent() );
+			ResultSetOutput output = assertTyping( ResultSetOutput.class, outputs.getCurrent() );
 			assertEquals( 3, output.getResultList().size() );
+			assertTyping( Employee.class, output.getResultList().get( 0 ) );
 
 			session.getTransaction().commit();
 			session.close();

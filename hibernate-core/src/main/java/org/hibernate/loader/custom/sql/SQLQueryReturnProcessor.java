@@ -37,6 +37,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryNonScalarReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
@@ -53,6 +54,7 @@ import org.hibernate.loader.GeneratedCollectionAliases;
 import org.hibernate.loader.custom.CollectionFetchReturn;
 import org.hibernate.loader.custom.CollectionReturn;
 import org.hibernate.loader.custom.ColumnCollectionAliases;
+import org.hibernate.loader.custom.ConstructorReturn;
 import org.hibernate.loader.custom.EntityFetchReturn;
 import org.hibernate.loader.custom.FetchReturn;
 import org.hibernate.loader.custom.NonScalarReturn;
@@ -353,6 +355,20 @@ public class SQLQueryReturnProcessor {
 				customReturns.add( customReturn );
 				customReturnsByAlias.put( alias, customReturn );
 			}
+			else if ( NativeSQLQueryConstructorReturn.class.isInstance( queryReturn ) ) {
+				final NativeSQLQueryConstructorReturn constructorReturn = (NativeSQLQueryConstructorReturn) queryReturn;
+				final ScalarReturn[] scalars = new ScalarReturn[ constructorReturn.getColumnReturns().length ];
+				int i = 0;
+				for ( NativeSQLQueryScalarReturn scalarReturn : constructorReturn.getColumnReturns() ) {
+					scalars[i++] = new ScalarReturn( scalarReturn.getType(), scalarReturn.getColumnAlias() );
+				}
+				customReturns.add( new ConstructorReturn( constructorReturn.getTargetClass(), scalars ) );
+			}
+			else {
+				throw new IllegalStateException(
+						"Unrecognized NativeSQLQueryReturn concrete type : " + queryReturn
+				);
+			}
 		}
 		return customReturns;
 	}
@@ -381,11 +397,23 @@ public class SQLQueryReturnProcessor {
 			processRootReturn( ( NativeSQLQueryRootReturn ) rtn );
 		}
 		else if ( rtn instanceof NativeSQLQueryCollectionReturn ) {
-			processCollectionReturn( ( NativeSQLQueryCollectionReturn ) rtn );
+			processCollectionReturn( (NativeSQLQueryCollectionReturn) rtn );
 		}
-		else {
+		else if ( NativeSQLQueryJoinReturn.class.isInstance( rtn ) ) {
 			processJoinReturn( ( NativeSQLQueryJoinReturn ) rtn );
 		}
+		else if ( NativeSQLQueryConstructorReturn.class.isInstance(  rtn ) ) {
+			processConstructorReturn( (NativeSQLQueryConstructorReturn) rtn );
+		}
+		else {
+			throw new IllegalStateException(
+					"Unrecognized NativeSQLQueryReturn concrete type encountered : " + rtn
+			);
+		}
+	}
+
+	private void processConstructorReturn(NativeSQLQueryConstructorReturn rtn) {
+		//To change body of created methods use File | Settings | File Templates.
 	}
 
 	private void processScalarReturn(NativeSQLQueryScalarReturn typeReturn) {

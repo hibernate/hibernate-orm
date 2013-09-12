@@ -40,22 +40,13 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.engine.spi.Mapping;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.mapping.AuxiliaryDatabaseObject;
-import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.procedure.ProcedureOutputs;
-import org.hibernate.result.ResultSetOutput;
 
 import org.junit.Test;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.ExtraAssertions;
 
 import static org.junit.Assert.assertEquals;
 
@@ -92,7 +83,7 @@ public class StoredProcedureResultSetMappingTest extends BaseEntityManagerFuncti
 		public Employee() {
 		}
 
-		public Employee(int id, String firstName, String lastName) {
+		public Employee(Integer id, String firstName, String lastName) {
 			this.id = id;
 			this.firstName = firstName;
 			this.lastName = lastName;

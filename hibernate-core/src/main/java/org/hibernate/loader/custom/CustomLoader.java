@@ -24,6 +24,8 @@
 package org.hibernate.loader.custom;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -138,6 +140,25 @@ public class CustomLoader extends Loader {
 				);
 				includeInResultRowList.add( true );
 				hasScalars = true;
+			}
+			else if ( ConstructorReturn.class.isInstance( rtn ) ) {
+				final ConstructorReturn constructorReturn = (ConstructorReturn) rtn;
+				resultTypes.add( null ); // this bit makes me nervous
+				includeInResultRowList.add( true );
+				hasScalars = true;
+
+				ScalarResultColumnProcessor[] scalarProcessors = new ScalarResultColumnProcessor[ constructorReturn.getScalars().length ];
+				int i = 0;
+				for ( ScalarReturn scalarReturn : constructorReturn.getScalars() ) {
+					scalarProcessors[i++] = new ScalarResultColumnProcessor(
+							StringHelper.unquote( scalarReturn.getColumnAlias(), factory.getDialect() ),
+							scalarReturn.getType()
+					);
+				}
+
+				resultColumnProcessors.add(
+						new ConstructorResultColumnProcessor( constructorReturn.getTargetClass(), scalarProcessors )
+				);
 			}
 			else if ( rtn instanceof RootReturn ) {
 				RootReturn rootRtn = ( RootReturn ) rtn;
@@ -599,6 +620,90 @@ public class CustomLoader extends Loader {
 			types.add( type );
 			aliases.add( alias );
 		}
+	}
+
+	public class ConstructorResultColumnProcessor implements ResultColumnProcessor {
+		private final Class targetClass;
+		private final ScalarResultColumnProcessor[] scalarProcessors;
+
+		private Constructor constructor;
+
+		public ConstructorResultColumnProcessor(Class targetClass, ScalarResultColumnProcessor[] scalarProcessors) {
+			this.targetClass = targetClass;
+			this.scalarProcessors = scalarProcessors;
+		}
+
+		@Override
+		public Object extract(Object[] data, ResultSet resultSet, SessionImplementor session)
+				throws SQLException, HibernateException {
+			if ( constructor == null ) {
+				throw new IllegalStateException( "Constructor to call was null" );
+			}
+
+			final Object[] args = new Object[ scalarProcessors.length ];
+			for ( int i = 0; i < scalarProcessors.length; i++ ) {
+				args[i] = scalarProcessors[i].extract( data, resultSet, session );
+			}
+
+			try {
+				return constructor.newInstance( args );
+			}
+			catch (InvocationTargetException e) {
+				throw new HibernateException(
+						String.format( "Unable to call %s constructor", constructor.getDeclaringClass() ),
+						e
+				);
+			}
+			catch (Exception e) {
+				throw new HibernateException(
+						String.format( "Unable to call %s constructor", constructor.getDeclaringClass() ),
+						e
+				);
+			}
+		}
+
+		@Override
+		public void performDiscovery(Metadata metadata, List<Type> types, List<String> aliases) throws SQLException {
+			final List<Type> localTypes = new ArrayList<Type>();
+			for ( ScalarResultColumnProcessor scalar : scalarProcessors ) {
+				scalar.performDiscovery( metadata, localTypes, aliases );
+			}
+
+			types.addAll( localTypes );
+
+			constructor = resolveConstructor( targetClass, localTypes );
+		}
+
+	}
+
+	private static Constructor resolveConstructor(Class targetClass, List<Type> types) {
+		for ( Constructor constructor : targetClass.getConstructors() ) {
+			final Class[] argumentTypes = constructor.getParameterTypes();
+			if ( argumentTypes.length != types.size() ) {
+				continue;
+			}
+
+			boolean allMatched = true;
+			for ( int i = 0; i < argumentTypes.length; i++ ) {
+				if ( ! areAssignmentCompatible( argumentTypes[i], types.get( i ).getReturnedClass() ) ) {
+					allMatched = false;
+					break;
+				}
+			}
+			if ( !allMatched ) {
+				continue;
+			}
+
+			return constructor;
+		}
+
+		throw new IllegalArgumentException( "Could not locate appropriate constructor on class : " + targetClass.getName() );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static boolean areAssignmentCompatible(Class argumentType, Class typeReturnedClass) {
+		// todo : add handling for primitive/wrapper equivalents
+		return argumentType.isAssignableFrom( typeReturnedClass );
 	}
 
 	@Override

@@ -29,6 +29,7 @@ import org.hibernate.criterion.MatchMode;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.query.criteria.internal.BetweenAuditExpression;
+import org.hibernate.envers.query.criteria.internal.IlikeAuditExpression;
 import org.hibernate.envers.query.criteria.internal.InAuditExpression;
 import org.hibernate.envers.query.criteria.internal.NotNullAuditExpression;
 import org.hibernate.envers.query.criteria.internal.NullAuditExpression;
@@ -90,6 +91,20 @@ public class AuditProperty<T> implements AuditProjection {
 	public AuditCriterion like(String value, MatchMode matchMode) {
 		return new SimpleAuditExpression( propertyNameGetter, matchMode.toMatchString( value ), " like " );
 	}
+
+    /**
+     *  Apply an "ilike" constraint
+     */
+    public AuditCriterion ilike(T value) {
+        return new IlikeAuditExpression(propertyNameGetter, value.toString());
+    }
+
+    /**
+     *  Apply an "ilike" constraint
+     */
+    public AuditCriterion ilike(String value, MatchMode matchMode) {
+        return new IlikeAuditExpression( propertyNameGetter, matchMode.toMatchString( value ));
+    }
 
 	/**
 	 * Apply a "greater than" constraint

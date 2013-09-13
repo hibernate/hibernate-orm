@@ -1,7 +1,6 @@
 package org.hibernate.spatial;
 
 import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
-import org.hibernate.spatial.dialect.oracle.DefaultConnectionFinder;
 
 /**
  * A global configuration object that is is used by
@@ -14,7 +13,7 @@ public class HibernateSpatialConfiguration {
 
 	final private static Log LOG = LogFactory.make();
 	private Boolean isOgcStrict = Boolean.TRUE;
-	private ConnectionFinder connectionFinder = new DefaultConnectionFinder();
+	private ConnectionFinder connectionFinder = null;
 
 	/**
 	 * Holds the configuration for Hibernate Spatial dialects.

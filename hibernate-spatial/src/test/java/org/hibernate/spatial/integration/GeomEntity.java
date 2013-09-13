@@ -21,21 +21,22 @@
 
 package org.hibernate.spatial.integration;
 
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.ParseException;
-import org.hibernate.annotations.Type;
-import org.hibernate.spatial.testing.EWKTReader;
-import org.hibernate.spatial.testing.TestDataElement;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.io.ParseException;
+
+import org.hibernate.annotations.Type;
+import org.hibernate.spatial.testing.EWKTReader;
+import org.hibernate.spatial.testing.TestDataElement;
 
 /**
  * Test class used in unit testing.
  */
 @Entity
-@Table(name="geomtest")
+@Table(name="GEOMTEST")
 public class GeomEntity {
 
 

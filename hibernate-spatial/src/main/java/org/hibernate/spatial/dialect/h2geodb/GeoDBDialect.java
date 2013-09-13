@@ -35,50 +35,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  */
 public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 
-	/*
-			 Contents of GeoDB's spatial registration script (geodb.sql):
-
-		  CREATE ALIAS AddGeometryColumn for "geodb.GeoDB.AddGeometryColumn"
-		  CREATE ALIAS CreateSpatialIndex for "geodb.GeoDB.CreateSpatialIndex"
-		  CREATE ALIAS DropGeometryColumn for "geodb.GeoDB.DropGeometryColumn"
-		  CREATE ALIAS DropGeometryColumns for "geodb.GeoDB.DropGeometryColumns"
-		  CREATE ALIAS DropSpatialIndex for "geodb.GeoDB.DropSpatialIndex"
-		  CREATE ALIAS EnvelopeAsText for "geodb.GeoDB.EnvelopeAsText"
-		  CREATE ALIAS GeometryType for "geodb.GeoDB.GeometryType"
-		  CREATE ALIAS ST_Area FOR "geodb.GeoDB.ST_Area"
-		  CREATE ALIAS ST_AsEWKB FOR "geodb.GeoDB.ST_AsEWKB"
-		  CREATE ALIAS ST_AsEWKT FOR "geodb.GeoDB.ST_AsEWKT"
-		  CREATE ALIAS ST_AsHexEWKB FOR "geodb.GeoDB.ST_AsHexEWKB"
-		  CREATE ALIAS ST_AsText FOR "geodb.GeoDB.ST_AsText"
-		  CREATE ALIAS ST_BBOX FOR "geodb.GeoDB.ST_BBox"
-		  CREATE ALIAS ST_Buffer FOR "geodb.GeoDB.ST_Buffer"
-		  CREATE ALIAS ST_Centroid FOR "geodb.GeoDB.ST_Centroid"
-		  CREATE ALIAS ST_Crosses FOR "geodb.GeoDB.ST_Crosses"
-		  CREATE ALIAS ST_Contains FOR "geodb.GeoDB.ST_Contains"
-		  CREATE ALIAS ST_DWithin FOR "geodb.GeoDB.ST_DWithin"
-		  CREATE ALIAS ST_Disjoint FOR "geodb.GeoDB.ST_Disjoint"
-		  CREATE ALIAS ST_Distance FOR "geodb.GeoDB.ST_Distance"
-		  CREATE ALIAS ST_Envelope FOR "geodb.GeoDB.ST_Envelope"
-		  CREATE ALIAS ST_Equals FOR "geodb.GeoDB.ST_Equals"
-		  CREATE ALIAS ST_GeoHash FOR "geodb.GeoDB.ST_GeoHash"
-		  CREATE ALIAS ST_GeomFromEWKB FOR "geodb.GeoDB.ST_GeomFromEWKB"
-		  CREATE ALIAS ST_GeomFromEWKT FOR "geodb.GeoDB.ST_GeomFromEWKT"
-		  CREATE ALIAS ST_GeomFromText FOR "geodb.GeoDB.ST_GeomFromText"
-		  CREATE ALIAS ST_GeomFromWKB FOR "geodb.GeoDB.ST_GeomFromWKB"
-		  CREATE ALIAS ST_Intersects FOR "geodb.GeoDB.ST_Intersects"
-		  CREATE ALIAS ST_IsEmpty FOR "geodb.GeoDB.ST_IsEmpty"
-		  CREATE ALIAS ST_IsSimple FOR "geodb.GeoDB.ST_IsSimple"
-		  CREATE ALIAS ST_IsValid FOR "geodb.GeoDB.ST_IsValid"
-		  CREATE ALIAS ST_MakePoint FOR "geodb.GeoDB.ST_MakePoint"
-		  CREATE ALIAS ST_MakeBox2D FOR "geodb.GeoDB.ST_MakeBox2D"
-		  CREATE ALIAS ST_Overlaps FOR "geodb.GeoDB.ST_Overlaps"
-		  CREATE ALIAS ST_SRID FOR "geodb.GeoDB.ST_SRID"
-		  CREATE ALIAS ST_SetSRID FOR "geodb.GeoDB.ST_SetSRID"
-		  CREATE ALIAS ST_Simplify FOR "geodb.GeoDB.ST_Simplify"
-		  CREATE ALIAS ST_Touches FOR "geodb.GeoDB.ST_Touches"
-		  CREATE ALIAS ST_Within FOR "geodb.GeoDB.ST_Within"
-		  CREATE ALIAS Version FOR "geodb.GeoDB.Version"
-		  */
 
 	/**
 	 * Constructor. Registers OGC simple feature functions (see
@@ -95,9 +51,8 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 		registerColumnType(java.sql.Types.ARRAY, "BLOB");
 
 		// Register functions that operate on spatial types
-// NOT YET AVAILABLE IN GEODB
-//		registerFunction("dimension", new StandardSQLFunction("dimension",
-//				Hibernate.INTEGER));
+		registerFunction("dimension", new StandardSQLFunction("ST_Dimension",
+				StandardBasicTypes.INTEGER));
 		registerFunction("geometrytype", new StandardSQLFunction(
 				"GeometryType", StandardBasicTypes.STRING));
 		registerFunction("srid", new StandardSQLFunction("ST_SRID",
@@ -112,9 +67,8 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 				StandardBasicTypes.BOOLEAN));
 		registerFunction("issimple", new StandardSQLFunction("ST_IsSimple",
 				StandardBasicTypes.BOOLEAN));
-// NOT YET AVAILABLE IN GEODB
-//		registerFunction("boundary", new StandardSQLFunction("boundary",
-//				new CustomType(GeoDBGeometryUserType.class, null)));
+		registerFunction("boundary", new StandardSQLFunction("ST_Boundary",
+				GeometryType.INSTANCE));
 
 		// Register functions for spatial relation constructs
 		registerFunction("overlaps", new StandardSQLFunction("ST_Overlaps",
@@ -133,32 +87,24 @@ public class GeoDBDialect extends H2Dialect implements SpatialDialect {
 				StandardBasicTypes.BOOLEAN));
 		registerFunction("within", new StandardSQLFunction("ST_Within",
 				StandardBasicTypes.BOOLEAN));
-// NOT YET AVAILABLE IN GEODB
-//		registerFunction("relate", new StandardSQLFunction("relate",
-//				Hibernate.BOOLEAN));
-
+		registerFunction("relate", new StandardSQLFunction("ST_Relate",
+				StandardBasicTypes.BOOLEAN));
 		// register the spatial analysis functions
 		registerFunction("distance", new StandardSQLFunction("ST_Distance",
 				StandardBasicTypes.DOUBLE));
 		registerFunction("buffer", new StandardSQLFunction("ST_Buffer",
 				GeometryType.INSTANCE));
-// NOT YET AVAILABLE IN GEODB
-//		registerFunction("convexhull", new StandardSQLFunction("convexhull",
-//				new CustomType(GeoDBGeometryUserType.class, null)));
-//		registerFunction("difference", new StandardSQLFunction("difference",
-//				new CustomType(GeoDBGeometryUserType.class, null)));
-//		registerFunction("intersection", new StandardSQLFunction(
-//				"intersection", new CustomType(GeoDBGeometryUserType.class, null)));
-//		registerFunction("symdifference",
-//				new StandardSQLFunction("symdifference", new CustomType(
-//						GeoDBGeometryUserType.class, null)));
-//		registerFunction("geomunion", new StandardSQLFunction("geomunion",
-//				new CustomType(GeoDBGeometryUserType.class, null)));
+		registerFunction("convexhull", new StandardSQLFunction("ST_ConvexHull",
+				GeometryType.INSTANCE));
+		registerFunction("difference", new StandardSQLFunction("ST_Difference",
+				GeometryType.INSTANCE));
+		registerFunction("intersection", new StandardSQLFunction("ST_Intersection",
+				GeometryType.INSTANCE));
+		registerFunction("symdifference", new StandardSQLFunction("ST_SymDifference",
+				GeometryType.INSTANCE));
+		registerFunction("geomunion", new StandardSQLFunction("ST_Union",
+				GeometryType.INSTANCE));
 
-		//register Spatial Aggregate funciton
-// NOT YET AVAILABLE IN GEODB
-//		registerFunction("extent", new StandardSQLFunction("extent",
-//				new CustomType(GeoDBGeometryUserType.class, null)));
 
 		registerFunction("dwithin", new StandardSQLFunction("ST_DWithin",
 				StandardBasicTypes.BOOLEAN));

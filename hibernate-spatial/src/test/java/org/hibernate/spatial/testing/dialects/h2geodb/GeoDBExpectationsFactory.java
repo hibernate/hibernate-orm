@@ -78,8 +78,7 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeBoundaryStatement() {
-		throw new UnsupportedOperationException(
-				"Method ST_Bounday() is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatement("select id, ST_Boundary(geom) from GEOMTEST");
 	}
 
 	/*
@@ -119,8 +118,10 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
-		throw new UnsupportedOperationException(
-				"Method ST_ConvexHull() is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, ST_ConvexHull(ST_Union(t.geom, ST_GeomFromText(?, 4326))) from GeomTest t where ST_SRID(t.geom) = 4326",
+				geom.toText()
+		);
 	}
 
 	/*
@@ -159,8 +160,7 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeDimensionSQL() {
-		throw new UnsupportedOperationException(
-				"Method ST_Dimension() is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatement("select id, ST_Dimension(geom) from GEOMTEST");
 	}
 
 	/*
@@ -250,8 +250,10 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
-		throw new UnsupportedOperationException(
-				"Method ST_GeomUnion() is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, ST_Union(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_SRID(t.geom) = 4326",
+				geom.toText()
+		);
 	}
 
 	/*
@@ -275,8 +277,10 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
 	@Override
 	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
-		throw new UnsupportedOperationException(
-				"Method ST_Intersection() is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, ST_Intersection(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_SRID(t.geom) = 4326",
+				geom.toText()
+		);
 	}
 
 	/*
@@ -347,8 +351,8 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeRelateStatement(Geometry geom,
 															 String matrix) {
-		throw new UnsupportedOperationException(
-				"Method ST_Relate() is not implemented in the current version of GeoDB.");
+		String sql = "select t.id, ST_Relate(t.geom, ST_GeomFromText(?, 4326), '" + matrix + "' ) from GEOMTEST t where ST_Relate(t.geom, ST_GeomFromText(?, 4326), '" + matrix + "') = 'true' and ST_SRID(t.geom) = 4326";
+			return createNativeSQLStatementAllWKTParams(sql, geom.toText());
 	}
 
 	@Override
@@ -383,8 +387,10 @@ public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 	@Override
 	protected NativeSQLStatement createNativeSymDifferenceStatement(
 			Geometry geom) {
-		throw new UnsupportedOperationException(
-				"Method ST_SymDifference() is not implemented in the current version of GeoDB.");
+		return createNativeSQLStatementAllWKTParams(
+				"select t.id, ST_SymDifference(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_SRID(t.geom) = 4326",
+				geom.toText()
+		);
 	}
 
 	/*

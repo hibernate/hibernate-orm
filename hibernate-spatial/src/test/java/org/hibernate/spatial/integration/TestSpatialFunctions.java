@@ -34,10 +34,12 @@ import org.hibernate.Transaction;
 import org.hibernate.spatial.Log;
 import org.hibernate.spatial.LogFactory;
 import org.hibernate.spatial.SpatialFunction;
+import org.hibernate.spatial.dialect.h2geodb.GeoDBDialect;
 import org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.testing.Skip;
+import org.hibernate.testing.SkipForDialect;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -288,7 +290,9 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	}
 
-	@Test
+	//skipped for GeoDBDialect because GeoDB throws exceptions in case the intersection is empty.
+	// (Error message is "Empty Points cannot be represented in WKB")
+	@Test @SkipForDialect( value = GeoDBDialect.class)
 	public void intersection() throws SQLException {
 		if (!isSupportedByDialect(SpatialFunction.intersection)) {
 			return;

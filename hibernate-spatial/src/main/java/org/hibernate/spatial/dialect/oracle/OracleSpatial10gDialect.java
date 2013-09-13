@@ -149,7 +149,8 @@ public class OracleSpatial10gDialect extends Oracle10gDialect implements
 	public OracleSpatial10gDialect(HibernateSpatialConfiguration config) {
 		super();
 		this.isOgcStrict = config.isOgcStrictMode();
-		this.connectionFinder = config.getConnectionFinder();
+		ConnectionFinder finder = config.getConnectionFinder();
+		this.connectionFinder = finder == null ? new DefaultConnectionFinder() : finder;
 
 		// register geometry type
 		registerColumnType(java.sql.Types.STRUCT, "MDSYS.SDO_GEOMETRY");

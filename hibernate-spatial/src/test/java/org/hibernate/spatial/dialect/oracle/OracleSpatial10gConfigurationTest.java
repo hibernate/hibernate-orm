@@ -11,9 +11,13 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.service.internal.StandardServiceRegistryImpl;
 import org.hibernate.spatial.HibernateSpatialConfiguration;
+import org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
-public class OracleSpatial10gConfigurationTest {
+@RequiresDialect(SqlServer2008SpatialDialect.class)
+public class OracleSpatial10gConfigurationTest extends BaseCoreFunctionalTestCase{
 
 
 	private Configuration addToConfiguration(Configuration cfg, Boolean ogcStrict, String connFinderClassName) {

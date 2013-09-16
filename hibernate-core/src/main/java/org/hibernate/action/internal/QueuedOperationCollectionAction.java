@@ -48,27 +48,16 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 	 * @param session The session
 	 */
 	public QueuedOperationCollectionAction(
-				final PersistentCollection collection,
-				final CollectionPersister persister,
-				final Serializable id,
-				final SessionImplementor session) {
+			final PersistentCollection collection,
+			final CollectionPersister persister,
+			final Serializable id,
+			final SessionImplementor session) {
 		super( persister, collection, id, session );
 	}
 
 	@Override
 	public void execute() throws HibernateException {
-		final Serializable id = getKey();
-		final SessionImplementor session = getSession();
-		final CollectionPersister persister = getPersister();
-		final PersistentCollection collection = getCollection();
-
-		persister.processQueuedOps( collection, id, session );
+		getPersister().processQueuedOps( getCollection(), getKey(), getSession() );
 	}
 }
-
-
-
-
-
-
 

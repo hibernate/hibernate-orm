@@ -38,22 +38,28 @@ import java.util.Set;
 import org.hibernate.action.spi.Executable;
 
 /**
- * Encapsulates state relating to each executable list. Lazily sorts the list and caches the sorted state. Lazily
- * calculates the spaces affected by the actions in the list, and caches this too.
- * 
+ * Specialized encapsulating of the state pertaining to each Executable list.
+ * <p/>
+ * Lazily sorts the list and caches the sorted state.
+ * <p/>
+ * Lazily calculates the querySpaces affected by the actions in the list, and caches this too.
+ *
+ * @author Steve Ebersole
  * @author Anton Marsden
- * @param <E>
+ *
+ * @param <E> Intersection type describing Executable implementations
  */
 @SuppressWarnings("rawtypes")
 public class ExecutableList<E extends Executable & Comparable & Serializable> implements Serializable, Iterable<E>, Externalizable {
 
+	public static final int INIT_QUEUE_LIST_SIZE = 5;
+
 	/**
 	 * Provides a sorting interface for ExecutableList.
 	 * 
-	 * @author Anton Marsden
 	 * @param <E>
 	 */
-	public interface Sorter<E extends Executable> {
+	public static interface Sorter<E extends Executable> {
 
 		/**
 		 * Sorts the list.
@@ -61,13 +67,12 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		void sort(List<E> l);
 	}
 
-	private final ExecutableList.Sorter<E> sorter;
-
 	private final ArrayList<E> executables;
 
+	private final Sorter<E> sorter;
 	private boolean sorted;
 
-	private transient Set<Serializable> spaces;
+	private transient Set<Serializable> querySpaces;
 
 	/**
 	 * Creates a new ExecutableList.
@@ -79,16 +84,16 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	/**
 	 * Creates a new ExecutableList using the specified Sorter.
 	 * 
-	 * @param sorter
+	 * @param sorter The Sorter to use; may be {@code null}
 	 */
 	public ExecutableList(ExecutableList.Sorter<E> sorter) {
-		this( 10, sorter ); // use the standard ArrayList initialCapacity
+		this( INIT_QUEUE_LIST_SIZE, sorter );
 	}
 
 	/**
 	 * Creates a new ExecutableList with the specified initialCapacity.
 	 * 
-	 * @param initialCapacity
+	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 */
 	ExecutableList(int initialCapacity) {
 		this( initialCapacity, null );
@@ -96,16 +101,16 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 
 	/**
 	 * Creates a new ExecutableList with the specified initialCapacity and Sorter.
-	 * 
-	 * @param initialCapacity
-	 * @param sorter
+	 *
+	 * @param initialCapacity The initial capacity for instantiating the internal List
+	 * @param sorter The Sorter to use; may be {@code null}
 	 */
 	ExecutableList(int initialCapacity, ExecutableList.Sorter<E> sorter) {
 		this.sorter = sorter;
 		this.executables = new ArrayList<E>( initialCapacity );
-		// a non-null spaces value would add to the spaces as the list is added to,
+		// a non-null querySpaces value would add to the querySpaces as the list is added to,
 		// but we would like this data to be lazily initialized.
-		this.spaces = null;
+		this.querySpaces = null;
 		this.sorted = true;
 	}
 
@@ -117,20 +122,22 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Removes the entry at position idx in the list.
+	 * Removes the entry at position index in the list.
 	 * 
-	 * @param idx
+	 * @param index The index of the element to remove
+	 *
 	 * @return the entry that was removed
 	 */
-	public E remove(int idx) {
-
-		if ( idx < executables.size() - 1 ) {
+	public E remove(int index) {
+		if ( index < executables.size() - 1 ) {
 			sorted = false;
 		}
-		E e = executables.remove( idx );
-		// clear the spaces cache if the removed Executable had property spaces
+
+		final E e = executables.remove( index );
+
+		// clear the querySpaces cache if the removed Executable had property querySpaces
 		if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
-			spaces = null;
+			querySpaces = null;
 		}
 		return e;
 	}
@@ -139,24 +146,23 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * Clears the list of executions.
 	 */
 	public void clear() {
-		// Note: another option here is to replace the list with a new one
 		executables.clear();
-		spaces = null;
+		querySpaces = null;
 		sorted = true;
 	}
 
 	/**
 	 * Removes the last n entries from the list.
 	 * 
-	 * @param n
+	 * @param n The number of elements to remove.
 	 */
 	public void removeLastN(int n) {
 		if ( n > 0 ) {
 			int size = executables.size();
 			for ( Executable e : executables.subList( size - n, size ) ) {
 				if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
-					// spaces could now be incorrect
-					spaces = null;
+					// querySpaces could now be incorrect
+					querySpaces = null;
 					break;
 				}
 			}
@@ -165,23 +171,21 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Lazily constructs the spaces affected by the actions in the list.
+	 * Lazily constructs the querySpaces affected by the actions in the list.
 	 * 
-	 * @return the spaces affected by the actions in this list
+	 * @return the querySpaces affected by the actions in this list
 	 */
-	public Set<Serializable> getPropertySpaces() {
-		if ( spaces == null ) {
-			spaces = new HashSet<Serializable>();
+	public Set<Serializable> getQuerySpaces() {
+		if ( querySpaces == null ) {
+			querySpaces = new HashSet<Serializable>();
 			for ( E e : executables ) {
 				Serializable[] propertySpaces = e.getPropertySpaces();
-				if ( spaces != null && propertySpaces != null ) {
-					for ( Serializable s : propertySpaces ) {
-						spaces.add( s );
-					}
+				if ( querySpaces != null && propertySpaces != null ) {
+					Collections.addAll( querySpaces, propertySpaces );
 				}
 			}
 		}
-		return spaces;
+		return querySpaces;
 	}
 
 	/**
@@ -196,11 +200,9 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 			// no longer sorted
 			sorted = false;
 			Serializable[] propertySpaces = o.getPropertySpaces();
-			// we can cheaply keep spaces in sync once they are cached
-			if ( spaces != null && propertySpaces != null ) {
-				for ( Serializable s : propertySpaces ) {
-					spaces.add( s );
-				}
+			// we can cheaply keep querySpaces in sync once they are cached
+			if ( querySpaces != null && propertySpaces != null ) {
+				Collections.addAll( querySpaces, propertySpaces );
 			}
 		}
 		return added;
@@ -214,6 +216,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 		if ( sorted ) {
 			return;
 		}
+
 		if ( sorter != null ) {
 			sorter.sort( executables );
 		}
@@ -231,11 +234,12 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * @param idx
-	 * @return the element at index idx
+	 * @param index The index of the element to retrieve
+	 *
+	 * @return The element at specified index
 	 */
-	public E get(int idx) {
-		return executables.get( idx );
+	public E get(int index) {
+		return executables.get( index );
 	}
 
 	/**
@@ -251,7 +255,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	/**
 	 * Serializes the list out to oos.
 	 * 
-	 * @param oos 
+	 * @param oos The stream to which to serialize our state
 	 */
 	@Override
 	public void writeExternal(ObjectOutput oos) throws IOException {
@@ -262,15 +266,15 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Deserializes the list into this object from in.
+	 * De-serializes the list into this object from in.
 	 * 
-	 * @param in
+	 * @param in The stream from which to read our serial state
 	 */
-	@SuppressWarnings("unchecked")
 	@Override
+	@SuppressWarnings("unchecked")
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		sorted = false;
-		spaces = null;
+		querySpaces = null;
 		int size = in.readInt();
 		executables.ensureCapacity( size );
 		if ( size > 0 ) {
@@ -282,9 +286,9 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Re-attaches the executables to the session after deserialization.
+	 * Re-attaches the Executable elements to the session after deserialization.
 	 * 
-	 * @param session
+	 * @param session The session to which to attach the Executable elements
 	 */
 	public void afterDeserialize(SessionImplementor session) {
 		for ( E e : executables ) {

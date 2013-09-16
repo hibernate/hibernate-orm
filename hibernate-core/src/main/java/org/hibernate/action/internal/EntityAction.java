@@ -177,6 +177,7 @@ public abstract class EntityAction
 	 *
 	 * @param session The session being deserialized
 	 */
+	@Override
 	public void afterDeserialize(SessionImplementor session) {
 		if ( this.session != null || this.persister != null ) {
 			throw new IllegalStateException( "already attached to a session." );

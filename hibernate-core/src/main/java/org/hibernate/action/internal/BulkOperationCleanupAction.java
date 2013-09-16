@@ -261,4 +261,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			naturalIdCacheAccessStrategy.unlockRegion( cacheLock );
 		}
 	}
+
+	@Override
+	public void afterDeserialize(SessionImplementor session) {
+		// nop
+	}
 }

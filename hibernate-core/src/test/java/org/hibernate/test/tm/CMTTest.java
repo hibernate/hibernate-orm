@@ -99,7 +99,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		s.persist( "Item", bar );
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount());
-		assertEquals(3, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount()); // Twice preinvalidate & one invalidate
+		assertEquals(2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount()); // One preinvalidate & one invalidate
 		assertEquals(0, sessionFactory().getStatistics().getUpdateTimestampsCacheMissCount());
 
 		sessionFactory().getCache().evictEntityRegion( "Item" );
@@ -147,7 +147,7 @@ public class CMTTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheHitCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getQueryCacheMissCount() );
 		assertEquals( 0, sessionFactory().getStatistics().getUpdateTimestampsCacheHitCount() );
-		assertEquals( 3, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
+		assertEquals( 2, sessionFactory().getStatistics().getUpdateTimestampsCachePutCount() );
 
 		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
 		s = openSession();

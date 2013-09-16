@@ -32,8 +32,7 @@ import org.hibernate.type.CompositeType;
  * @author Steve Ebersole
  */
 public class CompositionBasedCompositionAttribute
-		extends AbstractCompositionAttribute
-		implements CompositionDefinition {
+		extends AbstractCompositionAttribute {
 	public CompositionBasedCompositionAttribute(
 			CompositionDefinition source,
 			SessionFactoryImplementor sessionFactory,

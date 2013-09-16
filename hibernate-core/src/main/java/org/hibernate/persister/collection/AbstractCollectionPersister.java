@@ -1831,12 +1831,12 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw getSQLExceptionHelper().convert(
 					sqle,
 					"could not retrieve collection size: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
-					);
+			);
 		}
 	}
 
@@ -1873,12 +1873,12 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw getSQLExceptionHelper().convert(
 					sqle,
 					"could not check row existence: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
-					);
+			);
 		}
 	}
 
@@ -1909,12 +1909,12 @@ public abstract class AbstractCollectionPersister
 			}
 		}
 		catch ( SQLException sqle ) {
-			throw getFactory().getSQLExceptionHelper().convert(
+			throw getSQLExceptionHelper().convert(
 					sqle,
 					"could not read row: " +
 							MessageHelper.collectionInfoString( this, key, getFactory() ),
 					sqlSelectSizeString
-					);
+			);
 		}
 	}
 
@@ -2002,8 +2002,38 @@ public abstract class AbstractCollectionPersister
 				if ( ! getType().isComponentType() ) {
 					throw new IllegalStateException( "Cannot treat entity collection index type as composite" );
 				}
-				// todo : implement
-				throw new NotYetImplementedException();
+				return new CompositeCollectionElementDefinition() {
+					@Override
+					public String getName() {
+						return "index";
+					}
+
+					@Override
+					public CompositeType getType() {
+						return (CompositeType) getIndexType();
+					}
+
+					@Override
+					public boolean isNullable() {
+						return false;
+					}
+
+					@Override
+					public AttributeSource getSource() {
+						// TODO: what if this is a collection w/in an encapsulated composition attribute?
+						// should return the encapsulated composition attribute instead???
+						return getOwnerEntityPersister();
+					}
+
+					@Override
+					public Iterable<AttributeDefinition> getAttributes() {
+						return CompositionSingularSubAttributesHelper.getCompositeCollectionIndexSubAttributes( this );
+					}
+					@Override
+					public CollectionDefinition getCollectionDefinition() {
+						return AbstractCollectionPersister.this;
+					}
+				};
 			}
 		};
 	}

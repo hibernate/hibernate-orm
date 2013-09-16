@@ -156,9 +156,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 							}
 
 							final CompositeType cType = getType();
-							final boolean nullable = cType.getPropertyNullability() == null
-									? true
-									: cType.getPropertyNullability()[ subAttributeNumber ];
+							final boolean nullable = cType.getPropertyNullability() == null || cType.getPropertyNullability()[subAttributeNumber];
 
 							return new CompositeBasedAssociationAttribute(
 									AbstractCompositionAttribute.this,
@@ -203,9 +201,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 						}
 						else {
 							final CompositeType cType = getType();
-							final boolean nullable = cType.getPropertyNullability() == null
-									? true
-									: cType.getPropertyNullability()[ subAttributeNumber ];
+							final boolean nullable = cType.getPropertyNullability() == null || cType.getPropertyNullability()[subAttributeNumber];
 
 							return new CompositeBasedBasicAttribute(
 									AbstractCompositionAttribute.this,

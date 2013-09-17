@@ -1536,6 +1536,8 @@ public final class SessionFactoryImpl
 	}
 
 	static class SessionBuilderImpl implements SessionBuilderImplementor {
+		private static final Logger log = CoreLogging.logger( SessionBuilderImpl.class );
+
 		private final SessionFactoryImpl sessionFactory;
 		private SessionOwner sessionOwner;
 		private Interceptor interceptor;
@@ -1568,6 +1570,7 @@ public final class SessionFactoryImpl
 
 		@Override
 		public Session openSession() {
+			log.tracef( "Opening Hibernate Session.  tenant=%s, owner=%s", tenantIdentifier, sessionOwner );
 			return new SessionImpl(
 					connection,
 					sessionFactory,

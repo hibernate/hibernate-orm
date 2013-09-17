@@ -24,11 +24,17 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan2.spi.EntityFetch;
+import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan2.spi.EntityReference;
-import org.hibernate.loader.plan2.spi.Join;
+import org.hibernate.loader.plan2.spi.Fetch;
+import org.hibernate.loader.plan2.spi.FetchSource;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.type.EntityType;
 
 /**
  * Represents an entity fetch that is bi-directionally join fetched.
@@ -39,20 +45,86 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
  *
  * @author Steve Ebersole
  */
-public class BidirectionalEntityFetchImpl extends EntityFetchImpl implements BidirectionalEntityFetch {
+public class BidirectionalEntityFetchImpl implements BidirectionalEntityFetch, EntityFetch {
+	private final ExpandingFetchSource fetchSource;
+	private final AssociationAttributeDefinition fetchedAttribute;
+	private final FetchStrategy fetchStrategy;
 	private final EntityReference targetEntityReference;
+	private final PropertyPath propertyPath;
 
 	public BidirectionalEntityFetchImpl(
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy,
-			Join fetchedJoin,
 			EntityReference targetEntityReference) {
-		super( fetchSource, fetchedAttribute, fetchStrategy, fetchedJoin );
+		this.fetchSource = fetchSource;
+		this.fetchedAttribute = fetchedAttribute;
+		this.fetchStrategy = fetchStrategy;
 		this.targetEntityReference = targetEntityReference;
+		this.propertyPath = fetchSource.getPropertyPath().append( fetchedAttribute.getName() );
 	}
 
 	public EntityReference getTargetEntityReference() {
 		return targetEntityReference;
+	}
+
+	@Override
+	public FetchSource getSource() {
+		return fetchSource;
+	}
+
+	@Override
+	public PropertyPath getPropertyPath() {
+		return propertyPath;
+	}
+
+	@Override
+	public FetchStrategy getFetchStrategy() {
+		return fetchStrategy;
+	}
+
+	@Override
+	public EntityType getFetchedType() {
+		return (EntityType) fetchedAttribute.getType();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return fetchedAttribute.isNullable();
+	}
+
+	@Override
+	public String getAdditionalJoinConditions() {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public String[] toSqlSelectFragments(String alias) {
+		return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
+	}
+
+	@Override
+	public String getQuerySpaceUid() {
+		return targetEntityReference.getQuerySpaceUid();
+	}
+
+	@Override
+	public Fetch[] getFetches() {
+		return FetchSource.NO_FETCHES;
+	}
+
+	@Override
+	public EntityReference resolveEntityReference() {
+		return this;
+	}
+
+	@Override
+	public EntityPersister getEntityPersister() {
+		return targetEntityReference.getEntityPersister();
+	}
+
+	@Override
+	public EntityIdentifierDescription getIdentifierDescription() {
+		return targetEntityReference.getIdentifierDescription();
 	}
 }

@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
+import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
@@ -152,6 +153,9 @@ public class ReturnGraphTreePrinter {
 	}
 
 	private void writeEntityReferenceFetches(EntityReference entityReference, int depth, PrintWriter printWriter) {
+		if ( BidirectionalEntityFetch.class.isInstance( entityReference ) ) {
+			return;
+		}
 		if ( entityReference.getIdentifierDescription().hasFetches() ) {
 			printWriter.println( TreePrinterHelper.INSTANCE.generateNodePrefix( depth ) + "(entity id) " );
 			writeFetches( ( (FetchSource) entityReference.getIdentifierDescription() ).getFetches(), depth+1, printWriter );

@@ -158,18 +158,18 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) resolveCompositeQuerySpace(
 				loadPlanBuildingContext
 		);
-		final Join join = leftHandSide.addEntityJoin(
-				attributeDefinition,
-				fetchedPersister,
-				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid(),
-				attributeDefinition.isNullable()
-		);
 		final EntityFetch fetch;
 		if ( targetEntityReference == null ) {
+			final Join join = leftHandSide.addEntityJoin(
+					attributeDefinition,
+					fetchedPersister,
+					loadPlanBuildingContext.getQuerySpaces().generateImplicitUid(),
+					attributeDefinition.isNullable()
+			);
 			fetch = new EntityFetchImpl( this, attributeDefinition, fetchStrategy, join );
 		}
 		else {
-			fetch = new BidirectionalEntityFetchImpl( this, attributeDefinition, fetchStrategy, join, targetEntityReference );
+			fetch = new BidirectionalEntityFetchImpl( this, attributeDefinition, fetchStrategy, targetEntityReference );
 		}
 		addFetch( fetch );
 		return fetch;

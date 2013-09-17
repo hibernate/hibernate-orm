@@ -29,8 +29,10 @@ import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
+import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.SqlResultSetMapping;
+import javax.persistence.SqlResultSetMappings;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -52,22 +54,54 @@ import static org.junit.Assert.assertEquals;
  */
 public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity( name = "Person" )
-	@SqlResultSetMapping(
-			name = "person-id-and-name",
-			classes = {
-					@ConstructorResult(
-							targetClass = Person.class,
-							columns = {
-									@ColumnResult( name = "id" ),
-									@ColumnResult( name = "p_name" )
+	@SqlResultSetMappings(
+			value = {
+					@SqlResultSetMapping(
+							name = "person-id-and-name",
+							classes = {
+									@ConstructorResult(
+											targetClass = Person.class,
+											columns = {
+													@ColumnResult( name = "id" ),
+													@ColumnResult( name = "p_name" )
+											}
+									)
+							}
+					),
+					@SqlResultSetMapping(
+							name = "person-id-and-name2",
+							classes = {
+									@ConstructorResult(
+											targetClass = Person.class,
+											columns = {
+													@ColumnResult( name = "id" ),
+													@ColumnResult( name = "p_name" )
+											}
+									),
+									@ConstructorResult(
+											targetClass = Person.class,
+											columns = {
+													@ColumnResult( name = "id2" ),
+													@ColumnResult( name = "p_name2" )
+											}
+									)
 							}
 					)
 			}
 	)
-	@NamedNativeQuery(
-			name = "person-id-and-name",
-			query = "select p.id, p.p_name from person p order by p.p_name",
-			resultSetMapping = "person-id-and-name"
+	@NamedNativeQueries(
+			value = {
+				@NamedNativeQuery(
+						name = "person-id-and-name",
+						query = "select p.id, p.p_name from person p order by p.p_name",
+						resultSetMapping = "person-id-and-name"
+				),
+				@NamedNativeQuery(
+						name = "person-id-and-name2",
+						query = "select p.id, p.p_name, p.id as id2, p.p_name as p_name2 from person p order by p.p_name",
+						resultSetMapping = "person-id-and-name2"
+				)
+			}
 	)
 	public static class Person {
 		@Id
@@ -114,6 +148,33 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 		).getResultList();
 		assertEquals( 1, results.size() );
 		assertTyping( Person.class, results.get( 0 ) );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete from Person" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+
+	@Test
+	public void testMultipleConstructorResultNativeQuery() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( new Person( 1, "John", new Date() ) );
+		em.getTransaction().commit();
+		em.close();
+
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		List results = em.createNamedQuery( "person-id-and-name2" ).getResultList();
+		assertEquals( 1, results.size() );
+		Object[] result = assertTyping( Object[].class, results.get( 0 ) );
+		assertEquals( 2, result.length );
+		assertTyping( Person.class, result[0] );
+		assertTyping( Person.class, result[1] );
 		em.getTransaction().commit();
 		em.close();
 

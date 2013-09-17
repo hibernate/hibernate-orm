@@ -45,6 +45,7 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
 
 /**
  * No idea.
@@ -141,50 +142,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 
 		return converterDefinedType.equals( propertyType )
-				|| arePrimitiveWrapperEquivalents( converterDefinedType, propertyType );
-	}
-
-	private boolean arePrimitiveWrapperEquivalents(Class converterDefinedType, Class propertyType) {
-		if ( converterDefinedType.isPrimitive() ) {
-			return getWrapperEquivalent( converterDefinedType ).equals( propertyType );
-		}
-		else if ( propertyType.isPrimitive() ) {
-			return getWrapperEquivalent( propertyType ).equals( converterDefinedType );
-		}
-		return false;
-	}
-
-	private static Class getWrapperEquivalent(Class primitive) {
-		if ( ! primitive.isPrimitive() ) {
-			throw new AssertionFailure( "Passed type for which to locate wrapper equivalent was not a primitive" );
-		}
-
-		if ( boolean.class.equals( primitive ) ) {
-			return Boolean.class;
-		}
-		else if ( char.class.equals( primitive ) ) {
-			return Character.class;
-		}
-		else if ( byte.class.equals( primitive ) ) {
-			return Byte.class;
-		}
-		else if ( short.class.equals( primitive ) ) {
-			return Short.class;
-		}
-		else if ( int.class.equals( primitive ) ) {
-			return Integer.class;
-		}
-		else if ( long.class.equals( primitive ) ) {
-			return Long.class;
-		}
-		else if ( float.class.equals( primitive ) ) {
-			return Float.class;
-		}
-		else if ( double.class.equals( primitive ) ) {
-			return Double.class;
-		}
-
-		throw new AssertionFailure( "Unexpected primitive type (VOID most likely) passed to getWrapperEquivalent" );
+				|| PrimitiveWrapperHelper.arePrimitiveWrapperEquivalents( converterDefinedType, propertyType );
 	}
 
 	@Override

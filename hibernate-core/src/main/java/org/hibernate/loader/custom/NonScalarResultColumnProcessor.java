@@ -23,25 +23,36 @@
  */
 package org.hibernate.loader.custom;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.type.Type;
+
 /**
- * A return representing a {@link javax.persistence.ConstructorResult}
+ * Represents non-scalar returns within the custom query.  Most of the heavy lifting for non-scalar results
+ * is done within Loader itself.
  *
  * @author Steve Ebersole
  */
-public class ConstructorReturn implements Return {
-	private final Class targetClass;
-	private final ScalarReturn[] scalars;
+public class NonScalarResultColumnProcessor implements ResultColumnProcessor {
+	private final int position;
 
-	public ConstructorReturn(Class targetClass, ScalarReturn[] scalars) {
-		this.targetClass = targetClass;
-		this.scalars = scalars;
+	public NonScalarResultColumnProcessor(int position) {
+		this.position = position;
 	}
 
-	public Class getTargetClass() {
-		return targetClass;
+	@Override
+	public void performDiscovery(JdbcResultMetadata metadata, List<Type> types, List<String> aliases) {
+		// nothing to discover for non-scalar results
 	}
 
-	public ScalarReturn[] getScalars() {
-		return scalars;
+	@Override
+	public Object extract(Object[] data, ResultSet resultSet, SessionImplementor session)
+			throws SQLException, HibernateException {
+		return data[ position ];
 	}
+
 }

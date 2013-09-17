@@ -28,7 +28,7 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.loader.EntityAliases;
 
 /**
- * Spefically a fetch return that refers to a collection association.
+ * Specifically a fetch return that refers to a collection association.
  *
  * @author Steve Ebersole
  */

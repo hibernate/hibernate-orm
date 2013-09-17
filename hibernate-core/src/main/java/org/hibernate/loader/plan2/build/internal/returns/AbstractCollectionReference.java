@@ -29,6 +29,7 @@ import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
+import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;

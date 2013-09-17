@@ -31,6 +31,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -261,6 +262,15 @@ public class MetamodelGraphWalker {
 			visitAttributes( elementDefinition.toCompositeElementDefinition() );
 		}
 		else if ( elementDefinition.getType().isEntityType() ) {
+			if ( ! collectionDefinition.getCollectionPersister().isOneToMany() ) {
+				final QueryableCollection queryableCollection = (QueryableCollection) collectionDefinition.getCollectionPersister();
+				addAssociationKey(
+						new AssociationKey(
+								queryableCollection.getTableName(),
+								queryableCollection.getElementColumnNames()
+						)
+				);
+			}
 			visitEntityDefinition( elementDefinition.toEntityDefinition() );
 		}
 

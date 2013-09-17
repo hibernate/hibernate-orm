@@ -584,28 +584,32 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			return; // nothing to do
 		}
 
+		final AssociationKey associationKey = attributeDefinition.getAssociationKey();
+
 		// go ahead and build the bidirectional fetch
 		if ( attributeDefinition.getAssociationNature() == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
 			final Joinable currentEntityPersister = (Joinable) currentSource().resolveEntityReference().getEntityPersister();
 			final AssociationKey currentEntityReferenceAssociationKey =
 					new AssociationKey( currentEntityPersister.getTableName(), currentEntityPersister.getKeyColumnNames() );
-			final Joinable fetchSourceEntityPersister =
-					(Joinable) registeredFetchSource( attributeDefinition.getAssociationKey() ).resolveEntityReference().getEntityPersister();
-			final AssociationKey fetchSourceEntityReferenceAssociationKey =
-					new AssociationKey( fetchSourceEntityPersister.getTableName(), fetchSourceEntityPersister.getKeyColumnNames() );
-			if ( ! attributeDefinition.getAssociationKey().equals( currentEntityReferenceAssociationKey ) &&
-					! attributeDefinition.getAssociationKey().equals( fetchSourceEntityReferenceAssociationKey ) ) {
+			// if associationKey is equal to currentEntityReferenceAssociationKey
+			// that means that the current EntityPersister has a single primary key attribute
+			// (i.e., derived attribute) which is mapped by attributeDefinition.
+			// This is not a bidirectional association.
+			// TODO: AFAICT, to avoid an overflow, the associated entity must already be loaded into the session, or
+			// it must be loaded when the ID for the dependent entity is resolved. Is there some other way to
+			// deal with this???
+			if ( ! associationKey.equals( currentEntityReferenceAssociationKey ) ) {
 				currentSource().buildBidirectionalEntityFetch(
 						attributeDefinition,
 						fetchStrategy,
-						fetchedAssociationKeySourceMap.get( attributeDefinition.getAssociationKey() ).resolveEntityReference(),
+						registeredFetchSource( associationKey ).resolveEntityReference(),
 						this
 				);
 			}
 		}
 		else {
 			// Collection
-			currentSource().buildCollectionFetch( attributeDefinition, fetchStrategy, this );
+			//currentSource().buildCollectionFetch( attributeDefinition, fetchStrategy, this );
 		}
 	}
 

@@ -45,6 +45,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.Mocks;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -128,6 +129,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "HSQL Database Engine", HSQLDialect.class, resolver );
 		testDetermination( "H2", H2Dialect.class, resolver );
 		testDetermination( "MySQL", MySQLDialect.class, resolver );
+		testDetermination( "MySQL", 5, 0, MySQL5Dialect.class, resolver );
 		testDetermination( "PostgreSQL", PostgreSQL81Dialect.class, resolver );
 		testDetermination( "PostgreSQL", 8, 2, PostgreSQL82Dialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 4, DerbyDialect.class, resolver );

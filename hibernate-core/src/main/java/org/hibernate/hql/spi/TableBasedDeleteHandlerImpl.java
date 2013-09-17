@@ -83,6 +83,7 @@ public class TableBasedDeleteHandlerImpl
 		deletes = new ArrayList<String>();
 		
 		// If many-to-many, delete the FK row in the collection table.
+		// This partially overlaps with DeleteExecutor, but it instead uses the temp table in the idSubselect.
 		for ( Type type : targetedPersister.getPropertyTypes() ) {
 			if ( type.isCollectionType() ) {
 				CollectionType cType = (CollectionType) type;

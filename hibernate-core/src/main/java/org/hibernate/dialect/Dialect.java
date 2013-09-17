@@ -2403,4 +2403,14 @@ public abstract class Dialect implements ConversionContext {
 	public String getNotExpression( String expression ) {
 		return "not " + expression;
 	}
+	
+	/**
+	 * Does this dialect support tuples in subqueries?  Ex:
+	 * delete from Table1 where (col1, col2) in (select col1, col2 from Table2)
+	 * 
+	 * @return boolean
+	 */
+	public boolean supportsTuplesInSubqueries() {
+		return true;
+	}
 }

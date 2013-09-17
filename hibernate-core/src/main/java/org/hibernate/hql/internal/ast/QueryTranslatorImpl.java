@@ -30,12 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.ANTLRException;
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -50,6 +44,7 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
+import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableDeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.MultiTableUpdateExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
@@ -71,6 +66,12 @@ import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
+
+import antlr.ANTLRException;
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
 
 /**
  * A QueryTranslator that uses an Antlr-based parser.
@@ -531,7 +532,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				return new MultiTableDeleteExecutor( walker );
 			}
 			else {
-				return new BasicExecutor( walker, persister );
+				return new DeleteExecutor( walker, persister );
 			}
 		}
 		else if ( walker.getStatementType() == HqlSqlTokenTypes.UPDATE ) {

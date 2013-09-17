@@ -37,6 +37,7 @@ import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.Ingres10Dialect;
 import org.hibernate.dialect.Ingres9Dialect;
 import org.hibernate.dialect.IngresDialect;
+import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
 import org.hibernate.dialect.Oracle8iDialect;
@@ -88,6 +89,12 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( "MySQL".equals( databaseName ) ) {
+			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			
+			if (majorVersion >= 5 ) {
+				return new MySQL5Dialect();
+			}
+			
 			return new MySQLDialect();
 		}
 

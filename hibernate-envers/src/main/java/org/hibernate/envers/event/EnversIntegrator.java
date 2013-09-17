@@ -46,6 +46,7 @@ public class EnversIntegrator implements Integrator {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, EnversIntegrator.class.getName() );
 
 	public static final String AUTO_REGISTER = "hibernate.listeners.envers.autoRegister";
+    private AuditConfiguration enversConfiguration;
 
 	@Override
 	public void integrate(
@@ -61,7 +62,7 @@ public class EnversIntegrator implements Integrator {
 		EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 		listenerRegistry.addDuplicationStrategy( EnversListenerDuplicationStrategy.INSTANCE );
 
-		final AuditConfiguration enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
+		enversConfiguration = AuditConfiguration.getFor( configuration, serviceRegistry.getService( ClassLoaderService.class ) );
 
         if (enversConfiguration.getEntCfg().hasAuditedEntities()) {
 		    listenerRegistry.appendListeners( EventType.POST_DELETE, new EnversPostDeleteEventListenerImpl( enversConfiguration ) );
@@ -75,7 +76,7 @@ public class EnversIntegrator implements Integrator {
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		// nothing to do afaik
+		enversConfiguration.destroy();
 	}
 
 	/**

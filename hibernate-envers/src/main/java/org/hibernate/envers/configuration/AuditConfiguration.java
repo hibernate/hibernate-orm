@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.configuration;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.WeakHashMap;
@@ -57,7 +58,7 @@ public class AuditConfiguration {
 	private final RevisionInfoQueryCreator revisionInfoQueryCreator;
 	private final RevisionInfoNumberReader revisionInfoNumberReader;
 	private final ModifiedEntityNamesReader modifiedEntityNamesReader;
-	private final ClassLoaderService classLoaderService;
+	private ClassLoaderService classLoaderService;
 
 	public AuditEntitiesConfiguration getAuditEntCfg() {
 		return auditEntCfg;
@@ -182,4 +183,13 @@ public class AuditConfiguration {
 
 		return verCfg;
 	}
+
+    public void destroy() {
+        for (Map.Entry<Configuration, AuditConfiguration> c: new HashSet<Map.Entry<Configuration, AuditConfiguration>>(cfgs.entrySet())){
+            if (c.getValue() == this){//this is nasty cleanup fix, whole static CFGS should be reworked
+            	cfgs.remove(c.getKey());
+            }
+        }
+        classLoaderService = null;
+    }
 }

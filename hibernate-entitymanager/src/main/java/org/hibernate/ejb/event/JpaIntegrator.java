@@ -57,18 +57,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * @author Steve Ebersole
  */
 public class JpaIntegrator implements Integrator {
-	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new DuplicationStrategy() {
-		@Override
-		public boolean areMatch(Object listener, Object original) {
-			return listener.getClass().equals( original.getClass() ) &&
-					HibernateEntityManagerEventListener.class.isInstance( original );
-		}
-
-		@Override
-		public Action getAction() {
-			return Action.KEEP_ORIGINAL;
-		}
-	};
+	private static final DuplicationStrategy JPA_DUPLICATION_STRATEGY = new JPADuplicationStrategy();
 
 	private static final DuplicationStrategy JACC_DUPLICATION_STRATEGY = new DuplicationStrategy() {
 		@Override
@@ -258,6 +247,19 @@ public class JpaIntegrator implements Integrator {
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
+        }
+    }
+
+    private static class JPADuplicationStrategy implements DuplicationStrategy {
+        @Override
+        public boolean areMatch(Object listener, Object original) {
+            return listener.getClass().equals( original.getClass() ) &&
+                    HibernateEntityManagerEventListener.class.isInstance( original );
+        }
+
+        @Override
+        public Action getAction() {
+            return Action.KEEP_ORIGINAL;
         }
     }
 }

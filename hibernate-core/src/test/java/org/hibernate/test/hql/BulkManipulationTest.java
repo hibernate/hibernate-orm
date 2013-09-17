@@ -30,7 +30,9 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.AssertionFailedError;
 
@@ -1358,7 +1360,18 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		
 		s.flush();
 		
+		Zoo zoo = new Zoo();
+		Map directors = new HashMap();
+		directors.put( brett.getId().toString(), brett );
+		zoo.setDirectors( directors );
+		s.save( zoo );
+		
+		s.flush();
+		
 		try {
+			// non-multitable
+			s.createQuery( "delete from Zoo" ).executeUpdate();
+			// multitable (joined subclass)
 			s.createQuery( "delete from Human" ).executeUpdate();
 		}
 		catch (ConstraintViolationException cve) {

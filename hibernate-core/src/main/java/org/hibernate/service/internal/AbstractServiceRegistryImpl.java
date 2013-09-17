@@ -87,9 +87,6 @@ public abstract class AbstractServiceRegistryImpl
 	protected <R extends Service> void createServiceBinding(ServiceInitiator<R> initiator) {
 		final ServiceBinding serviceBinding = new ServiceBinding( this, initiator );
 		serviceBindingMap.put( initiator.getServiceInitiated(), serviceBinding );
-		synchronized ( serviceBindingList ) {
-			serviceBindingList.add( serviceBinding );
-		}
 	}
 
 	protected <R extends Service> void createServiceBinding(ProvidedService<R> providedService) {
@@ -278,10 +275,6 @@ public abstract class AbstractServiceRegistryImpl
 			serviceBindingList.clear();
 		}
 		serviceBindingMap.clear();
-
-        if (parent!=null){
-    		parent.destroy();
-        }
 	}
 
 	@Override

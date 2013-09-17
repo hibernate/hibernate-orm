@@ -252,11 +252,11 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
     @Override
     public void stop() {
-		for (ServiceLoader serviceLoader : serviceLoaders.values()) {
+		for ( ServiceLoader serviceLoader : serviceLoaders.values() ) {
 			serviceLoader.reload(); // clear service loader providers
 		}
 		serviceLoaders.clear();
-        if (aggregatedClassLoader!=null){
+		if ( aggregatedClassLoader != null ) {
             aggregatedClassLoader.destroy();
             aggregatedClassLoader = null;
         }

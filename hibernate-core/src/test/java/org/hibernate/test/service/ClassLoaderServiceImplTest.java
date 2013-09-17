@@ -1,7 +1,7 @@
 package org.hibernate.test.service;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import java.io.ByteArrayOutputStream;
@@ -55,6 +55,8 @@ public class ClassLoaderServiceImplTest {
     /**
      * HHH-8363 discovered multiple leaks within CLS.  Most notably, it wasn't getting GC'd due to holding
      * references to ServiceLoaders.  Ensure that the addition of Stoppable functionality cleans up properly.
+     * 
+     * TODO: Is there a way to test that the ServiceLoader was actually reset?
      */
     @Test
     @TestForIssue(jiraKey = "HHH-8363")
@@ -74,11 +76,9 @@ public class ClassLoaderServiceImplTest {
     	
     	ServiceRegistryBuilder.destroy( serviceRegistry );
     	
+    	// Should return null -- aggregratedClassLoader blown away.
     	testIntegrator2 = findTestIntegrator( classLoaderService );
-    	assertNotNull( testIntegrator2 );
-    	
-    	// destroy should have cleared the ServiceLoader caches, forcing the services to be re-created when called upon
-    	assertNotSame( testIntegrator1, testIntegrator2 );
+    	assertNull( testIntegrator2 );
     }
     
     private TestIntegrator findTestIntegrator(ClassLoaderService classLoaderService) {

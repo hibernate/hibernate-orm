@@ -33,6 +33,7 @@ import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceInitiator;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Hibernate implementation of the standard service registry.
@@ -73,6 +74,14 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		if ( Configurable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Configurable) serviceBinding.getService() ).configure( configurationValues );
+		}
+	}
+
+	@Override
+	public void destroy() {
+		super.destroy();
+		if ( getParentServiceRegistry() != null ) {
+			( (ServiceRegistryImplementor) getParentServiceRegistry() ).destroy();
 		}
 	}
 

@@ -76,7 +76,9 @@ public class EnversIntegrator implements Integrator {
 
 	@Override
 	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
-		enversConfiguration.destroy();
+		if ( enversConfiguration != null ) {
+			enversConfiguration.destroy();
+		}
 	}
 
 	/**

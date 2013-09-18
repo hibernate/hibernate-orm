@@ -12,12 +12,14 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.test.annotations.enumerated.EntityEnum.Common;
 import org.hibernate.test.annotations.enumerated.EntityEnum.FirstLetter;
 import org.hibernate.test.annotations.enumerated.EntityEnum.LastNumber;
 import org.hibernate.test.annotations.enumerated.EntityEnum.Trimmed;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.EnumType;
@@ -342,7 +344,9 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-4699")
-	public void testTrimmedEnum() throws SQLException {
+	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-8516",
+			comment = "HHH-4699 was specifically for using a CHAR, but Oracle does not handle the 2nd query correctly without VARCHAR. ")
+	public void testTrimmedEnumChar() throws SQLException {
 		// use native SQL to insert, forcing whitespace to occur
 		final Session s = openSession();
         final Connection connection = ((SessionImplementor)s).connection();

@@ -35,6 +35,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 
 /**
  * Utilities used to implement procedure call support.
@@ -129,7 +130,7 @@ public class Util {
 		for ( String resultSetMappingName : resultSetMappingNames ) {
 			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
 			if ( mapping == null ) {
-				throw new MappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
+				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}
 
 			context.addQueryReturns( mapping.getQueryReturns() );

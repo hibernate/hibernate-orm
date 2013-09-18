@@ -123,6 +123,7 @@ import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
+import org.hibernate.procedure.UnknownSqlResultSetMappingException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.transform.BasicTransformerAdapter;
@@ -944,10 +945,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
 		try {
-			return new StoredProcedureQueryImpl(
-					internalGetSession().createStoredProcedureCall( procedureName, resultSetMappings ),
-					this
-			);
+			try {
+				return new StoredProcedureQueryImpl(
+						internalGetSession().createStoredProcedureCall( procedureName, resultSetMappings ),
+						this
+				);
+			}
+			catch (UnknownSqlResultSetMappingException unknownResultSetMapping) {
+				throw new IllegalArgumentException( unknownResultSetMapping.getMessage(), unknownResultSetMapping );
+			}
 		}
 		catch ( RuntimeException e ) {
 			throw convert( e );

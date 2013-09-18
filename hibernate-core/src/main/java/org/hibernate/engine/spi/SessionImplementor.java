@@ -35,6 +35,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cache.spi.CacheKey;
@@ -389,4 +390,22 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * should never be null.
 	 */
 	public LoadQueryInfluencers getLoadQueryInfluencers();
+
+	/**
+	 * Used from EntityManager
+	 *
+	 * @param namedQueryDefinition The named query definition
+	 *
+	 * @return The basic HQL/JPQL query (without saved settings applied)
+	 */
+	Query createQuery(NamedQueryDefinition namedQueryDefinition);
+
+	/**
+	 * Used from EntityManager
+	 *
+	 * @param namedQueryDefinition The named query definition
+	 *
+	 * @return The basic SQL query (without saved settings applied)
+	 */
+	SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition);
 }

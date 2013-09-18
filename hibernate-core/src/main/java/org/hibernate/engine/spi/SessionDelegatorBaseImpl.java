@@ -378,6 +378,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 		return sessionImplementor.getLoadQueryInfluencers();
 	}
 
+	@Override
+	public Query createQuery(NamedQueryDefinition namedQueryDefinition) {
+		return sessionImplementor.createQuery( namedQueryDefinition );
+	}
+
+	@Override
+	public SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition) {
+		return sessionImplementor.createSQLQuery( namedQueryDefinition );
+	}
+
 	// Delegates to Session
 
 	@Override

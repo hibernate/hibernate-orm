@@ -24,6 +24,7 @@
 package org.hibernate.jpa.spi;
 
 import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
@@ -118,12 +119,18 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 	@SuppressWarnings({ "unchecked" })
 	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
 		checkOpen( true );
-		if (! getEntityManager().isTransactionInProgress()) {
-			throw new TransactionRequiredException( "no transaction is in progress" );
+
+		// todo : technically this check should be on execution of the query, not here : HHH-8521
+		if ( lockModeType != LockModeType.NONE ) {
+			if (! getEntityManager().isTransactionInProgress()) {
+				throw new TransactionRequiredException( "no transaction is in progress" );
+			}
 		}
+
 		if ( ! canApplyAliasSpecificLockModeHints() ) {
 			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
 		}
+
 		this.jpaLockMode = lockModeType;
 		internalApplyLockMode( lockModeType );
 		return this;

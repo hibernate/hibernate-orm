@@ -86,14 +86,18 @@ import org.hibernate.StaleStateException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.lock.LockingStrategyException;
 import org.hibernate.dialect.lock.OptimisticEntityLockException;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryConstructorReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
+import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -763,93 +767,178 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 	@Override
 	public Query createNamedQuery(String name) {
+		return buildQueryFromName( name, null );
+	}
+
+	private QueryImpl buildQueryFromName(String name, Class resultType) {
 		checkOpen();
-		try {
-			org.hibernate.Query namedQuery = internalGetSession().getNamedQuery( name );
-			try {
-				return new QueryImpl( namedQuery, this );
-			}
-			catch ( RuntimeException e ) {
-				throw convert( e );
+
+		// we can't just call Session#getNamedQuery because we need to apply stored setting at the JPA Query
+		// level too
+
+		final SessionFactoryImplementor sfi = entityManagerFactory.getSessionFactory();
+
+		// first try as hql/jpql query
+		{
+			final NamedQueryDefinition namedQueryDefinition = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+			if ( namedQueryDefinition != null ) {
+				return createNamedJpqlQuery( namedQueryDefinition, resultType );
 			}
 		}
-		catch ( MappingException e ) {
-			throw convert(new IllegalArgumentException( "Named query not found: " + name ));
+
+		// then as a native (SQL) query
+		{
+			final NamedSQLQueryDefinition namedQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
+			if ( namedQueryDefinition != null ) {
+				return createNamedSqlQuery( namedQueryDefinition, resultType );
+			}
+		}
+
+		throw convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
+	}
+
+	protected QueryImpl createNamedJpqlQuery(NamedQueryDefinition namedQueryDefinition, Class resultType) {
+		final org.hibernate.Query hibQuery = ( (SessionImplementor) internalGetSession() ).createQuery( namedQueryDefinition );
+		if ( resultType != null ) {
+			resultClassChecking( resultType, hibQuery );
+		}
+
+		return wrapAsJpaQuery( namedQueryDefinition, hibQuery );
+	}
+
+	protected QueryImpl wrapAsJpaQuery(NamedQueryDefinition namedQueryDefinition, org.hibernate.Query hibQuery) {
+		try {
+			final QueryImpl jpaQuery = new QueryImpl( hibQuery, this );
+			applySavedSettings( namedQueryDefinition, jpaQuery );
+			return jpaQuery;
+		}
+		catch ( RuntimeException e ) {
+			throw convert( e );
+		}
+	}
+
+	protected void applySavedSettings(NamedQueryDefinition namedQueryDefinition, QueryImpl jpaQuery) {
+		if ( namedQueryDefinition.isCacheable() ) {
+			jpaQuery.setHint( QueryHints.HINT_CACHEABLE, true );
+			if ( namedQueryDefinition.getCacheRegion() != null ) {
+				jpaQuery.setHint( QueryHints.HINT_CACHE_REGION, namedQueryDefinition.getCacheRegion() );
+			}
+		}
+
+		if ( namedQueryDefinition.getCacheMode() != null ) {
+			jpaQuery.setHint( QueryHints.HINT_CACHE_MODE, namedQueryDefinition.getCacheMode() );
+		}
+
+		if ( namedQueryDefinition.isReadOnly() ) {
+			jpaQuery.setHint( QueryHints.HINT_READONLY, true );
+		}
+
+		if ( namedQueryDefinition.getTimeout() != null ) {
+			jpaQuery.setHint( QueryHints.SPEC_HINT_TIMEOUT, namedQueryDefinition.getTimeout() * 1000 );
+		}
+
+		if ( namedQueryDefinition.getFetchSize() != null ) {
+			jpaQuery.setHint( QueryHints.HINT_FETCH_SIZE, namedQueryDefinition.getFetchSize() );
+		}
+
+		if ( namedQueryDefinition.getComment() != null ) {
+			jpaQuery.setHint( QueryHints.HINT_COMMENT, namedQueryDefinition.getComment() );
+		}
+
+		if ( namedQueryDefinition.getFirstResult() != null ) {
+			jpaQuery.setFirstResult( namedQueryDefinition.getFirstResult() );
+		}
+
+		if ( namedQueryDefinition.getMaxResults() != null ) {
+			jpaQuery.setMaxResults( namedQueryDefinition.getMaxResults() );
+		}
+
+		if ( namedQueryDefinition.getLockOptions() != null ) {
+			if ( namedQueryDefinition.getLockOptions().getLockMode() != null ) {
+				jpaQuery.setLockMode(
+						LockModeTypeHelper.getLockModeType( namedQueryDefinition.getLockOptions().getLockMode() )
+				);
+			}
+		}
+
+		if ( namedQueryDefinition.getFlushMode() != null ) {
+			if ( namedQueryDefinition.getFlushMode() == FlushMode.COMMIT ) {
+				jpaQuery.setFlushMode( FlushModeType.COMMIT );
+			}
+			else {
+				jpaQuery.setFlushMode( FlushModeType.AUTO );
+			}
+		}
+	}
+
+	protected QueryImpl createNamedSqlQuery(NamedSQLQueryDefinition namedQueryDefinition, Class resultType) {
+		if ( resultType != null ) {
+			resultClassChecking( resultType, namedQueryDefinition );
+		}
+		return wrapAsJpaQuery(
+				namedQueryDefinition,
+				( (SessionImplementor) internalGetSession() ).createSQLQuery( namedQueryDefinition )
+		);
+	}
+
+	protected void resultClassChecking(Class resultType, NamedSQLQueryDefinition namedQueryDefinition) {
+		final SessionFactoryImplementor sfi = entityManagerFactory.getSessionFactory();
+
+		final NativeSQLQueryReturn[] queryReturns;
+		if ( namedQueryDefinition.getQueryReturns() != null ) {
+			queryReturns = namedQueryDefinition.getQueryReturns();
+		}
+		else if ( namedQueryDefinition.getResultSetRef() != null ) {
+			final ResultSetMappingDefinition rsMapping = sfi.getResultSetMapping( namedQueryDefinition.getResultSetRef() );
+			queryReturns = rsMapping.getQueryReturns();
+		}
+		else {
+			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
+		}
+
+		if ( queryReturns.length > 1 ) {
+			throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+		}
+
+		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
+
+		if ( nativeSQLQueryReturn instanceof NativeSQLQueryRootReturn ) {
+			final Class<?> actualReturnedClass;
+			final String entityClassName = ( (NativeSQLQueryRootReturn) nativeSQLQueryReturn ).getReturnEntityName();
+			try {
+				actualReturnedClass = sfi.getServiceRegistry().getService( ClassLoaderService.class ).classForName( entityClassName );
+			}
+			catch ( ClassLoadingException e ) {
+				throw new AssertionFailure(
+						"Unable to load class [" + entityClassName + "] declared on named native query [" +
+								namedQueryDefinition.getName() + "]"
+				);
+			}
+			if ( !resultType.isAssignableFrom( actualReturnedClass ) ) {
+				throw buildIncompatibleException( resultType, actualReturnedClass );
+			}
+		}
+		else if ( nativeSQLQueryReturn instanceof NativeSQLQueryConstructorReturn ) {
+			final NativeSQLQueryConstructorReturn ctorRtn = (NativeSQLQueryConstructorReturn) nativeSQLQueryReturn;
+			if ( !resultType.isAssignableFrom( ctorRtn.getTargetClass() ) ) {
+				throw buildIncompatibleException( resultType, ctorRtn.getTargetClass() );
+			}
+		}
+		else {
+			//TODO support other NativeSQLQueryReturn type. For now let it go.
 		}
 	}
 
 	@Override
 	public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
-		checkOpen();
-		try {
-			/*
-			 * Get the named query.
-			 * If the named query is a SQL query, get the expected returned type from the query definition
-			 * or its associated result set mapping
-			 * If the named query is a HQL query, use getReturnType()
-			 */
-			org.hibernate.Query namedQuery = internalGetSession().getNamedQuery( name );
-			//TODO clean this up to avoid downcasting
-			final SessionFactoryImplementor factoryImplementor = entityManagerFactory.getSessionFactory();
-			final NamedSQLQueryDefinition queryDefinition = factoryImplementor.getNamedSQLQuery( name );
-			try {
-				if ( queryDefinition != null ) {
-					Class<?> actualReturnedClass;
-
-					final NativeSQLQueryReturn[] queryReturns;
-					if ( queryDefinition.getQueryReturns() != null ) {
-						queryReturns = queryDefinition.getQueryReturns();
-					}
-					else if ( queryDefinition.getResultSetRef() != null ) {
-						final ResultSetMappingDefinition rsMapping = factoryImplementor.getResultSetMapping(
-								queryDefinition.getResultSetRef()
-						);
-						queryReturns = rsMapping.getQueryReturns();
-					}
-					else {
-						throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
-					}
-					if ( queryReturns.length > 1 ) {
-						throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
-					}
-					final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
-					if ( nativeSQLQueryReturn instanceof NativeSQLQueryRootReturn ) {
-						final String entityClassName = ( ( NativeSQLQueryRootReturn ) nativeSQLQueryReturn ).getReturnEntityName();
-						try {
-							actualReturnedClass = ReflectHelper.classForName( entityClassName, AbstractEntityManagerImpl.class );
-						}
-						catch ( ClassNotFoundException e ) {
-							throw new AssertionFailure( "Unable to instantiate class declared on named native query: " + name + " " + entityClassName );
-						}
-						if ( !resultClass.isAssignableFrom( actualReturnedClass ) ) {
-							throw buildIncompatibleException( resultClass, actualReturnedClass );
-						}
-					}
-					else {
-						//TODO support other NativeSQLQueryReturn type. For now let it go.
-					}
-				}
-				else {
-					resultClassChecking( resultClass, namedQuery );
-				}
-				return new QueryImpl<T>( namedQuery, this );
-			}
-			catch ( RuntimeException e ) {
-				throw convert( e );
-			}
-		}
-		catch ( MappingException e ) {
-			throw convert(new IllegalArgumentException( "Named query not found: " + name ));
-		}
+		return buildQueryFromName( name, resultClass );
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
 		return new IllegalArgumentException(
-							"Type specified for TypedQuery [" +
-									resultClass.getName() +
-									"] is incompatible with query return type [" +
-									actualResultClass + "]"
-					);
+				"Type specified for TypedQuery [" + resultClass.getName() +
+						"] is incompatible with query return type [" + actualResultClass + "]"
+		);
 	}
 
 	@Override

@@ -24,6 +24,8 @@
 package org.hibernate.jpa.test.query;
 
 import javax.persistence.EntityManager;
+import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.Query;
 
 import org.hibernate.CacheMode;
@@ -31,6 +33,8 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.ejb.HibernateQuery;
 import org.hibernate.ejb.QueryHints;
+import org.hibernate.engine.spi.NamedQueryDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
@@ -70,6 +74,60 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void testLockModeHandling() {
+		final String name = "lock-mode-handling";
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Query q = em.createQuery( "from Item" );
+		assertEquals( LockModeType.NONE, q.getLockMode() );
+		q.setLockMode( LockModeType.OPTIMISTIC );
+		assertEquals( LockModeType.OPTIMISTIC, q.getLockMode() );
+		em.getEntityManagerFactory().addNamedQuery( name, q );
+
+		// first, lets check the underlying stored query def
+		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		NamedQueryDefinition def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		assertEquals( LockMode.OPTIMISTIC, def.getLockOptions().getLockMode() );
+
+		// then lets create a query by name and check its setting
+		q = em.createNamedQuery( name );
+		assertEquals( LockMode.OPTIMISTIC, q.unwrap( org.hibernate.Query.class ).getLockOptions().getLockMode() );
+		assertEquals( LockModeType.OPTIMISTIC, q.getLockMode() );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	public void testFlushModeHandling() {
+		final String name = "flush-mode-handling";
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Query q = em.createQuery( "from Item" );
+		assertEquals( FlushModeType.AUTO, q.getFlushMode() );
+		q.setFlushMode( FlushModeType.COMMIT );
+		assertEquals( FlushModeType.COMMIT, q.getFlushMode() );
+		em.getEntityManagerFactory().addNamedQuery( name, q );
+
+		// first, lets check the underlying stored query def
+		SessionFactoryImplementor sfi = entityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		NamedQueryDefinition def = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		assertEquals( FlushMode.COMMIT, def.getFlushMode() );
+
+		// then lets create a query by name and check its setting
+		q = em.createNamedQuery( name );
+		assertEquals( FlushMode.COMMIT, q.unwrap( org.hibernate.Query.class ).getFlushMode() );
+		assertEquals( FlushModeType.COMMIT, q.getFlushMode() );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
 	public void testConfigValueHandling() {
 		final String name = "itemJpaQueryWithLockModeAndHints";
 		EntityManager em = getOrCreateEntityManager();
@@ -78,7 +136,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		// assert the state of the query config settings based on the initial named query
 		assertNull( hibernateQuery.getFirstResult() );
 		assertNull( hibernateQuery.getMaxResults() );
-		assertEquals( FlushMode.MANUAL, hibernateQuery.getFlushMode() ); // todo : we need to fix this to stick to AUTO/COMMIT when used from JPA
+		assertEquals( FlushMode.AUTO, hibernateQuery.getFlushMode() );
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
 		assertEquals( (Integer) 3, hibernateQuery.getTimeout() ); // jpa timeout is in milliseconds, whereas Hibernate's is in seconds
@@ -91,7 +149,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		// assert the state of the query config settings based on the initial named query
 		assertNull( hibernateQuery.getFirstResult() );
 		assertNull( hibernateQuery.getMaxResults() );
-		assertEquals( FlushMode.MANUAL, hibernateQuery.getFlushMode() );
+		assertEquals( FlushMode.AUTO, hibernateQuery.getFlushMode() );
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
 		assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
@@ -104,7 +162,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		// assert the state of the query config settings based on the initial named query
 		assertNull( hibernateQuery.getFirstResult() );
 		assertNull( hibernateQuery.getMaxResults() );
-		assertEquals( FlushMode.MANUAL, hibernateQuery.getFlushMode() );
+		assertEquals( FlushMode.AUTO, hibernateQuery.getFlushMode() );
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
 		assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
@@ -117,7 +175,7 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		// assert the state of the query config settings based on the initial named query
 		assertEquals( (Integer) 51, hibernateQuery.getFirstResult() );
 		assertNull( hibernateQuery.getMaxResults() );
-		assertEquals( FlushMode.MANUAL, hibernateQuery.getFlushMode() );
+		assertEquals( FlushMode.AUTO, hibernateQuery.getFlushMode() );
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
 		assertEquals( (Integer) 10, hibernateQuery.getTimeout() );

@@ -134,35 +134,49 @@ public abstract class AbstractSessionImpl
 	}
 
 	@Override
+	public Query createQuery(NamedQueryDefinition namedQueryDefinition) {
+		String queryString = namedQueryDefinition.getQueryString();
+		final Query query = new QueryImpl(
+				queryString,
+				namedQueryDefinition.getFlushMode(),
+				this,
+				getHQLQueryPlan( queryString, false ).getParameterMetadata()
+		);
+		query.setComment( "named HQL query " + namedQueryDefinition.getName() );
+		if ( namedQueryDefinition.getLockOptions() != null ) {
+			query.setLockOptions( namedQueryDefinition.getLockOptions() );
+		}
+
+		return query;
+	}
+
+	@Override
+	public SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition) {
+		final ParameterMetadata parameterMetadata = factory.getQueryPlanCache().getSQLParameterMetadata( namedQueryDefinition.getQueryString() );
+		final SQLQuery query = new SQLQueryImpl(
+				namedQueryDefinition,
+				this,
+				parameterMetadata
+		);
+		query.setComment( "named native SQL query " + namedQueryDefinition.getName() );
+		return query;
+	}
+
+	@Override
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		NamedQueryDefinition nqd = factory.getNamedQuery( queryName );
 		final Query query;
 		if ( nqd != null ) {
-			String queryString = nqd.getQueryString();
-			query = new QueryImpl(
-					queryString,
-			        nqd.getFlushMode(),
-			        this,
-			        getHQLQueryPlan( queryString, false ).getParameterMetadata()
-			);
-			query.setComment( "named HQL query " + queryName );
-			if ( nqd.getLockOptions() != null ) {
-				query.setLockOptions( nqd.getLockOptions() );
-			}
+			query = createQuery( nqd );
 		}
 		else {
 			NamedSQLQueryDefinition nsqlqd = factory.getNamedSQLQuery( queryName );
 			if ( nsqlqd==null ) {
 				throw new MappingException( "Named query not known: " + queryName );
 			}
-			ParameterMetadata parameterMetadata = factory.getQueryPlanCache().getSQLParameterMetadata( nsqlqd.getQueryString() );
-			query = new SQLQueryImpl(
-					nsqlqd,
-			        this,
-					parameterMetadata
-			);
-			query.setComment( "named native SQL query " + queryName );
+
+			query = createSQLQuery( nsqlqd );
 			nqd = nsqlqd;
 		}
 		initQuery( query, nqd );

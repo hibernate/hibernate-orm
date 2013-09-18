@@ -54,7 +54,12 @@ public class CriteriaCompiler implements Serializable {
 	}
 
 	public Query compile(CompilableCriteria criteria) {
-		criteria.validate();
+		try {
+			criteria.validate();
+		}
+		catch (IllegalStateException ise) {
+			throw new IllegalArgumentException( "Error occurred validating the Criteria", ise );
+		}
 
 		final Map<ParameterExpression<?>, ExplicitParameterInfo<?>> explicitParameterInfoMap =
 				new HashMap<ParameterExpression<?>, ExplicitParameterInfo<?>>();

@@ -262,6 +262,13 @@
             <entry><para><literal>true</literal> or <literal>false</literal></para></entry>
             <entry>Forces Hibernate to store data in the second-level cache in a more human-readable format.</entry>
           </row>
+          <row>
+            <entry>hibernate.cache.auto_evict_collection_cache</entry>
+            <entry><para><literal>true</literal> or <literal>false</literal> (default: false)</para></entry>
+            <entry>Enables the automatic eviction of a bi-directional association's collection cache when an element 
+            in the ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany 
+            side.</entry>
+          </row>
             <row>
                 <entry>hibernate.cache.use_reference_entries</entry>
                 <entry><para><literal>true</literal> or <literal>false</literal></para></entry>

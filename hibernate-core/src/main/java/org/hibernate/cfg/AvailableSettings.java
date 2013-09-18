@@ -326,7 +326,8 @@ public interface AvailableSettings {
 	 */
 	public static final String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
 	/**
-	 * Enables the eviction of the OneToMany-Site-Cache of a bi-directional association, when the ManyToOne site changes
+	 * Enables the automatic eviction of a bi-directional association's collection cache when an element in the
+	 * ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany side.
 	 */
 	public static final String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
 	/**

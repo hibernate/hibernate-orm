@@ -321,7 +321,7 @@ public interface CollectionPersister extends CollectionDefinition {
 	public int getBatchSize();
 
 	/**
-	 * @return the Name of the Property, this collection is mapped by
+	 * @return the name of the property this collection is mapped by
 	 */
 	public String getMappedByProperty();
 }

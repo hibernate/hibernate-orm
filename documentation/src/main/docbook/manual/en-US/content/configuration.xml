@@ -722,6 +722,16 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
           </row>
 
           <row>
+            <entry><literal>hibernate.cache.auto_evict_collection_cache</literal></entry>
+
+            <entry>Enables the automatic eviction of a bi-directional association's collection cache when an element 
+            in the ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany 
+            side. <para> <emphasis
+            role="strong">e.g.</emphasis> <literal>true|false</literal> (default: false)
+            </para></entry>
+          </row>
+
+          <row>
             <entry><literal>hibernate.cache.default_cache_concurrency_strategy</literal></entry>
 
             <entry>Setting used to give the name of the default

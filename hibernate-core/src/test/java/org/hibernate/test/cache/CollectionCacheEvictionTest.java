@@ -43,7 +43,7 @@ import static org.junit.Assert.fail;
 public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {User.class, Company.class};
+		return new Class[] { User.class, Company.class };
 	}
 
 	@Override
@@ -100,7 +100,6 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-
 		s = openSession();
 		s.beginTransaction();
 
@@ -125,7 +124,6 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-
 		s = openSession();
 		s.beginTransaction();
 
@@ -134,7 +132,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		try {
 			assertEquals( 0, company.getUsers().size() );
 		}
-		catch (ObjectNotFoundException e) {
+		catch ( ObjectNotFoundException e ) {
 			fail( "Cached element not found" );
 		}
 		s.close();
@@ -158,7 +156,6 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 
-
 		s = openSession();
 		s.beginTransaction();
 
@@ -171,7 +168,7 @@ public class CollectionCacheEvictionTest extends BaseCoreFunctionalTestCase {
 		try {
 			assertEquals( 0, company1.getUsers().size() );
 		}
-		catch (ObjectNotFoundException e) {
+		catch ( ObjectNotFoundException e ) {
 			fail( "Cached element not found" );
 		}
 

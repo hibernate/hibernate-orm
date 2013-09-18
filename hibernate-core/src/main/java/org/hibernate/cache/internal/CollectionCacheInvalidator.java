@@ -30,6 +30,7 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.spi.CacheKey;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -48,35 +49,32 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 /**
- * @author Andreas Berger (latest modification by $Author$)
- * @version $Id$
- * @created 30.08.13 - 01:54
+ * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
+ * managing both sides of the association (ie, the ManyToOne collection is changed w/o properly managing the OneToMany).
+ * 
+ * For this functionality to be used, {@link AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be enabled.  For
+ * performance reasons, it's disabled by default.
+ * 
+ * @author Andreas Berger
  */
-public class CollectionCacheInvalidator implements Integrator,
-												   PostInsertEventListener,
-												   PostDeleteEventListener,
-												   PostUpdateEventListener {
+public class CollectionCacheInvalidator implements Integrator, PostInsertEventListener, PostDeleteEventListener,
+		PostUpdateEventListener {
 	private static final Logger LOG = Logger.getLogger( CollectionCacheInvalidator.class.getName() );
 
 	@Override
-	public void integrate(
-			Configuration configuration,
-			SessionFactoryImplementor sessionFactory,
+	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
 		integrate( serviceRegistry, sessionFactory );
 	}
 
 	@Override
-	public void integrate(
-			MetadataImplementor metadata,
-			SessionFactoryImplementor sessionFactory,
+	public void integrate(MetadataImplementor metadata, SessionFactoryImplementor sessionFactory,
 			SessionFactoryServiceRegistry serviceRegistry) {
 		integrate( serviceRegistry, sessionFactory );
 	}
 
 	@Override
-	public void disintegrate(
-			SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+	public void disintegrate(SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
 	}
 
 	@Override
@@ -134,7 +132,8 @@ public class CollectionCacheInvalidator implements Integrator,
 					int i = persister.getEntityMetamodel().getPropertyIndex( mappedBy );
 					Serializable oldId = null;
 					if ( oldState != null ) {
-						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the old one
+						// in case of updating an entity we perhaps have to decache 2 entity collections, this is the
+						// old one
 						oldId = session.getIdentifier( oldState[i] );
 					}
 					Object ref = persister.getPropertyValue( entity, i );
@@ -156,8 +155,8 @@ public class CollectionCacheInvalidator implements Integrator,
 				}
 			}
 		}
-		catch (Exception e) {
-			//don't let decaching influence other logic
+		catch ( Exception e ) {
+			// don't let decaching influence other logic
 			LOG.error( "", e );
 		}
 	}

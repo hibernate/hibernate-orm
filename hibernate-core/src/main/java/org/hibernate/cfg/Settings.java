@@ -62,6 +62,7 @@ public final class Settings {
 	private boolean queryCacheEnabled;
 	private boolean structuredCacheEntriesEnabled;
 	private boolean secondLevelCacheEnabled;
+	private boolean autoEvictCollectionCache;
 	private String cacheRegionPrefix;
 	private boolean minimalPutsEnabled;
 	private boolean commentsEnabled;
@@ -517,5 +518,13 @@ public final class Settings {
 
 	public void setJtaTrackByThread(boolean jtaTrackByThread) {
 		this.jtaTrackByThread = jtaTrackByThread;
+	}
+
+	public boolean isAutoEvictCollectionCache() {
+		return autoEvictCollectionCache;
+	}
+
+	public void setAutoEvictCollectionCache(boolean autoEvictCollectionCache) {
+		this.autoEvictCollectionCache = autoEvictCollectionCache;
 	}
 }

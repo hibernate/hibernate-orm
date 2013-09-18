@@ -30,6 +30,7 @@ import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.AssociationType;
@@ -105,7 +106,9 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Compo
 			EntityPersister persister,
 			String querySpaceUid,
 			boolean optional) {
-		final boolean required = canJoinsBeRequired() && !optional;
+		// TODO: Queryable.isMultiTable() may be more broad than it needs to be...
+		final boolean isMultiTable = Queryable.class.cast( persister ).isMultiTable();
+		final boolean required = canJoinsBeRequired() && !isMultiTable && !optional;
 
 		final EntityQuerySpaceImpl rhs = new EntityQuerySpaceImpl(
 				persister,

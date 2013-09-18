@@ -120,13 +120,6 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
 		checkOpen( true );
 
-		// todo : technically this check should be on execution of the query, not here : HHH-8521
-		if ( lockModeType != LockModeType.NONE ) {
-			if (! getEntityManager().isTransactionInProgress()) {
-				throw new TransactionRequiredException( "no transaction is in progress" );
-			}
-		}
-
 		if ( ! canApplyAliasSpecificLockModeHints() ) {
 			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
 		}
@@ -205,5 +198,13 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 	@SuppressWarnings("unchecked")
 	public AbstractQueryImpl<X> setFlushMode(FlushModeType jpaFlushMode) {
 		return (AbstractQueryImpl<X>) super.setFlushMode( jpaFlushMode );
+	}
+	
+	protected void checkTransaction() {
+		if ( jpaLockMode != LockModeType.NONE ) {
+			if (! getEntityManager().isTransactionInProgress()) {
+				throw new TransactionRequiredException( "no transaction is in progress" );
+			}
+		}
 	}
 }

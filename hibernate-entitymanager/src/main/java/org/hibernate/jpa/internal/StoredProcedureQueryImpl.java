@@ -247,6 +247,11 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	}
 
 	protected ProcedureOutputs outputs() {
+
+		if (! entityManager().isTransactionInProgress()) {
+			throw new TransactionRequiredException( "no transaction is in progress" );
+		}
+		
 		if ( procedureResult == null ) {
 			procedureResult = procedureCall.getOutputs();
 		}

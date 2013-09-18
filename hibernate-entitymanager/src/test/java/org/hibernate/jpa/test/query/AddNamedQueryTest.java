@@ -131,6 +131,8 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	public void testConfigValueHandling() {
 		final String name = "itemJpaQueryWithLockModeAndHints";
 		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
 		Query query = em.createNamedQuery( name );
 		org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
 		// assert the state of the query config settings based on the initial named query
@@ -179,5 +181,8 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( CacheMode.IGNORE, hibernateQuery.getCacheMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, hibernateQuery.getLockOptions().getLockMode() );
 		assertEquals( (Integer) 10, hibernateQuery.getTimeout() );
+
+		em.getTransaction().commit();
+		em.close();
 	}
 }

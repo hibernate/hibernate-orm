@@ -855,8 +855,12 @@ public abstract class AbstractQueryImpl implements Query {
 		Iterator iter = vals.iterator();
 		int i = 0;
 		while ( iter.hasNext() ) {
-			String alias = ( isJpaPositionalParam ? 'x' + name : name ) + i++ + '_';
-			namedParamsCopy.put( alias, new TypedValue( type, iter.next() ) );
+			// Variable 'name' can represent a number or contain digit at the end. Surrounding it with
+			// characters to avoid ambiguous definition after concatenating value of 'i' counter.
+			String alias = ( isJpaPositionalParam ? 'x' + name : name ) + '_' + i++ + '_';
+			if ( namedParamsCopy.put( alias, new TypedValue( type, iter.next() ) ) != null ) {
+				throw new HibernateException( "Repeated usage of alias '" + alias + "' while expanding list parameter." );
+			}
 			list.append( ParserHelper.HQL_VARIABLE_PREFIX ).append( alias );
 			if ( iter.hasNext() ) {
 				list.append( ", " );

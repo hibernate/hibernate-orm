@@ -441,6 +441,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public List<X> getResultList() {
 		getEntityManager().checkOpen( true );
+		checkTransaction();
 		beforeQuery();
 		try {
 			return query.list();
@@ -486,6 +487,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	public X getSingleResult() {
 		getEntityManager().checkOpen( true );
+		checkTransaction();
 		beforeQuery();
 		try {
 			final List<X> result = query.list();

@@ -37,6 +37,9 @@ import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.ParameterMisuseException;
+import org.hibernate.type.CalendarDateType;
+import org.hibernate.type.CalendarTimeType;
+import org.hibernate.type.CalendarType;
 import org.hibernate.type.DateType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;
@@ -223,10 +226,37 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 			throw new NotYetImplementedException( "Support for REF_CURSOR parameters not yet supported" );
 		}
 
+		// initially set up the Type we will use for binding as the explicit type.
+		Type typeToUse = hibernateType;
+		int[] sqlTypesToUse = sqlTypes;
+
+		// however, for Calendar binding with an explicit TemporalType we may need to adjust this...
+		if ( bind.getExplicitTemporalType() != null ) {
+			if ( Calendar.class.isInstance( bind.getValue() ) ) {
+				switch ( bind.getExplicitTemporalType() ) {
+					case TIMESTAMP: {
+						typeToUse = CalendarType.INSTANCE;
+						sqlTypesToUse = typeToUse.sqlTypes( session().getFactory() );
+						break;
+					}
+					case DATE: {
+						typeToUse = CalendarDateType.INSTANCE;
+						sqlTypesToUse = typeToUse.sqlTypes( session().getFactory() );
+						break;
+					}
+					case TIME: {
+						typeToUse = CalendarTimeType.INSTANCE;
+						sqlTypesToUse = typeToUse.sqlTypes( session().getFactory() );
+						break;
+					}
+				}
+			}
+		}
+
 		this.startIndex = startIndex;
 		if ( mode == ParameterMode.IN || mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
 			if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
-				if ( sqlTypes.length > 1 ) {
+				if ( sqlTypesToUse.length > 1 ) {
 					// there is more than one column involved; see if the Hibernate Type can handle
 					// multi-param extraction...
 					final boolean canHandleMultiParamExtraction =
@@ -239,8 +269,8 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 						);
 					}
 				}
-				for ( int i = 0; i < sqlTypes.length; i++ ) {
-					statement.registerOutParameter( startIndex + i, sqlTypes[i] );
+				for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
+					statement.registerOutParameter( startIndex + i, sqlTypesToUse[i] );
 				}
 			}
 
@@ -259,16 +289,6 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 					);
 				}
 				else {
-					final Type typeToUse;
-					if ( bind.getExplicitTemporalType() != null && bind.getExplicitTemporalType() == TemporalType.TIMESTAMP ) {
-						typeToUse = hibernateType;
-					}
-					else if ( bind.getExplicitTemporalType() != null && bind.getExplicitTemporalType() == TemporalType.DATE ) {
-						typeToUse = DateType.INSTANCE;
-					}
-					else {
-						typeToUse = hibernateType;
-					}
 					typeToUse.nullSafeSet( statement, bind.getValue(), startIndex, session() );
 				}
 			}

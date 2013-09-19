@@ -231,7 +231,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 		int[] sqlTypesToUse = sqlTypes;
 
 		// however, for Calendar binding with an explicit TemporalType we may need to adjust this...
-		if ( bind.getExplicitTemporalType() != null ) {
+		if ( bind != null && bind.getExplicitTemporalType() != null ) {
 			if ( Calendar.class.isInstance( bind.getValue() ) ) {
 				switch ( bind.getExplicitTemporalType() ) {
 					case TIMESTAMP: {

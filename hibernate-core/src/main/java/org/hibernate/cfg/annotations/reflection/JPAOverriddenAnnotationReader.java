@@ -49,6 +49,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.Convert;
 import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
@@ -249,6 +250,7 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( Index.class, "index" );
 		annotationToXml.put( ForeignKey.class, "foreign-key" );
 		annotationToXml.put( Convert.class, "convert" );
+		annotationToXml.put( ConstructorResult.class, "constructor-result" );
 	}
 
 	private XMLContext xmlContext;
@@ -1902,77 +1904,167 @@ public class JPAOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	public static List<SqlResultSetMapping> buildSqlResultsetMappings(Element element, XMLContext.Default defaults) {
+		final List<SqlResultSetMapping> builtResultSetMappings = new ArrayList<SqlResultSetMapping>();
 		if ( element == null ) {
-			return new ArrayList<SqlResultSetMapping>();
+			return builtResultSetMappings;
 		}
-		List resultsetElementList = element.elements( "sql-result-set-mapping" );
-		List<SqlResultSetMapping> resultsets = new ArrayList<SqlResultSetMapping>();
-		Iterator it = resultsetElementList.listIterator();
-		while ( it.hasNext() ) {
-			Element subelement = (Element) it.next();
-			AnnotationDescriptor ann = new AnnotationDescriptor( SqlResultSetMapping.class );
-			copyStringAttribute( ann, subelement, "name", true );
-			List<Element> elements = subelement.elements( "entity-result" );
-			List<EntityResult> entityResults = new ArrayList<EntityResult>( elements.size() );
-			for ( Element entityResult : elements ) {
-				AnnotationDescriptor entityResultDescriptor = new AnnotationDescriptor( EntityResult.class );
-				String clazzName = entityResult.attributeValue( "entity-class" );
-				if ( clazzName == null ) {
-					throw new AnnotationException( "<entity-result> without entity-class. " + SCHEMA_VALIDATION );
-				}
-				Class clazz;
-				try {
-					clazz = ReflectHelper.classForName(
-							XMLContext.buildSafeClassName( clazzName, defaults ),
-							JPAOverriddenAnnotationReader.class
-					);
-				}
-				catch ( ClassNotFoundException e ) {
-					throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
-				}
-				entityResultDescriptor.setValue( "entityClass", clazz );
-				copyStringAttribute( entityResultDescriptor, entityResult, "discriminator-column", false );
-				List<FieldResult> fieldResults = new ArrayList<FieldResult>();
-				for ( Element fieldResult : (List<Element>) entityResult.elements( "field-result" ) ) {
-					AnnotationDescriptor fieldResultDescriptor = new AnnotationDescriptor( FieldResult.class );
-					copyStringAttribute( fieldResultDescriptor, fieldResult, "name", true );
-					copyStringAttribute( fieldResultDescriptor, fieldResult, "column", true );
-					fieldResults.add( (FieldResult) AnnotationFactory.create( fieldResultDescriptor ) );
-				}
-				entityResultDescriptor.setValue(
-						"fields", fieldResults.toArray( new FieldResult[fieldResults.size()] )
-				);
-				entityResults.add( (EntityResult) AnnotationFactory.create( entityResultDescriptor ) );
-			}
-			ann.setValue( "entities", entityResults.toArray( new EntityResult[entityResults.size()] ) );
 
-			elements = subelement.elements( "column-result" );
-			List<ColumnResult> columnResults = new ArrayList<ColumnResult>( elements.size() );
-			for ( Element columnResult : elements ) {
-				AnnotationDescriptor columnResultDescriptor = new AnnotationDescriptor( ColumnResult.class );
-				copyStringAttribute( columnResultDescriptor, columnResult, "name", true );
-				columnResults.add( (ColumnResult) AnnotationFactory.create( columnResultDescriptor ) );
-			}
-			ann.setValue( "columns", columnResults.toArray( new ColumnResult[columnResults.size()] ) );
-			//FIXME there is never such a result-class, get rid of it?
-			String clazzName = subelement.attributeValue( "result-class" );
-			if ( StringHelper.isNotEmpty( clazzName ) ) {
-				Class clazz;
-				try {
-					clazz = ReflectHelper.classForName(
-							XMLContext.buildSafeClassName( clazzName, defaults ),
-							JPAOverriddenAnnotationReader.class
-					);
+		// iterate over each <sql-result-set-mapping/> element
+		for ( Object resultSetMappingElementObject : element.elements( "sql-result-set-mapping" ) ) {
+			final Element resultSetMappingElement = (Element) resultSetMappingElementObject;
+
+			final AnnotationDescriptor resultSetMappingAnnotation = new AnnotationDescriptor( SqlResultSetMapping.class );
+			copyStringAttribute( resultSetMappingAnnotation, resultSetMappingElement, "name", true );
+
+			// iterate over the <sql-result-set-mapping/> sub-elements, which should include:
+			//		* <entity-result/>
+			//		* <column-result/>
+			//		* <constructor-result/>
+
+			List<EntityResult> entityResultAnnotations = null;
+			List<ColumnResult> columnResultAnnotations = null;
+			List<ConstructorResult> constructorResultAnnotations = null;
+
+			for ( Object resultElementObject : resultSetMappingElement.elements() ) {
+				final Element resultElement = (Element) resultElementObject;
+
+				if ( "entity-result".equals( resultElement.getName() ) ) {
+					if ( entityResultAnnotations == null ) {
+						entityResultAnnotations = new ArrayList<EntityResult>();
+					}
+					// process the <entity-result/>
+					entityResultAnnotations.add( buildEntityResult( resultElement, defaults ) );
 				}
-				catch ( ClassNotFoundException e ) {
-					throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+				else if ( "column-result".equals( resultElement.getName() ) ) {
+					if ( columnResultAnnotations == null ) {
+						columnResultAnnotations = new ArrayList<ColumnResult>();
+					}
+					columnResultAnnotations.add( buildColumnResult( resultElement, defaults ) );
 				}
-				ann.setValue( "resultClass", clazz );
+				else if ( "constructor-result".equals( resultElement.getName() ) ) {
+					if ( constructorResultAnnotations == null ) {
+						constructorResultAnnotations = new ArrayList<ConstructorResult>();
+					}
+					constructorResultAnnotations.add( buildConstructorResult( resultElement, defaults ) );
+				}
+				else {
+					// most likely the <result-class/> this code used to handle.  I have left the code here,
+					// but commented it out for now.  I'll just log a warning for now.
+					LOG.debug( "Encountered unrecognized sql-result-set-mapping sub-element : " + resultElement.getName() );
+
+//					String clazzName = subelement.attributeValue( "result-class" );
+//					if ( StringHelper.isNotEmpty( clazzName ) ) {
+//						Class clazz;
+//						try {
+//							clazz = ReflectHelper.classForName(
+//									XMLContext.buildSafeClassName( clazzName, defaults ),
+//									JPAOverriddenAnnotationReader.class
+//							);
+//						}
+//						catch ( ClassNotFoundException e ) {
+//							throw new AnnotationException( "Unable to find entity-class: " + clazzName, e );
+//						}
+//						ann.setValue( "resultClass", clazz );
+//					}
+				}
 			}
-			copyStringAttribute( ann, subelement, "result-set-mapping", false );
-			resultsets.add( (SqlResultSetMapping) AnnotationFactory.create( ann ) );
+
+			if ( entityResultAnnotations != null && !entityResultAnnotations.isEmpty() ) {
+				resultSetMappingAnnotation.setValue(
+						"entities",
+						entityResultAnnotations.toArray( new EntityResult[entityResultAnnotations.size()] )
+				);
+			}
+			if ( columnResultAnnotations != null && !columnResultAnnotations.isEmpty() ) {
+				resultSetMappingAnnotation.setValue(
+						"columns",
+						columnResultAnnotations.toArray( new ColumnResult[columnResultAnnotations.size()] )
+				);
+			}
+			if ( constructorResultAnnotations != null && !constructorResultAnnotations.isEmpty() ) {
+				resultSetMappingAnnotation.setValue(
+						"classes",
+						constructorResultAnnotations.toArray( new ConstructorResult[constructorResultAnnotations.size()] )
+				);
+			}
+
+
+			// this was part of the old code too, but could never figure out what it is supposed to do...
+			// copyStringAttribute( ann, subelement, "result-set-mapping", false );
+
+			builtResultSetMappings.add( (SqlResultSetMapping) AnnotationFactory.create( resultSetMappingAnnotation ) );
 		}
-		return resultsets;
+
+		return builtResultSetMappings;
+	}
+
+	private static EntityResult buildEntityResult(Element entityResultElement, XMLContext.Default defaults) {
+		final AnnotationDescriptor entityResultDescriptor = new AnnotationDescriptor( EntityResult.class );
+
+		final Class entityClass = resolveClassReference( entityResultElement.attributeValue( "entity-class" ), defaults );
+		entityResultDescriptor.setValue( "entityClass", entityClass );
+
+		copyStringAttribute( entityResultDescriptor, entityResultElement, "discriminator-column", false );
+
+		// process the <field-result/> sub-elements
+		List<FieldResult> fieldResultAnnotations = new ArrayList<FieldResult>();
+		for ( Element fieldResult : (List<Element>) entityResultElement.elements( "field-result" ) ) {
+			AnnotationDescriptor fieldResultDescriptor = new AnnotationDescriptor( FieldResult.class );
+			copyStringAttribute( fieldResultDescriptor, fieldResult, "name", true );
+			copyStringAttribute( fieldResultDescriptor, fieldResult, "column", true );
+			fieldResultAnnotations.add( (FieldResult) AnnotationFactory.create( fieldResultDescriptor ) );
+		}
+		entityResultDescriptor.setValue(
+				"fields", fieldResultAnnotations.toArray( new FieldResult[fieldResultAnnotations.size()] )
+		);
+		return AnnotationFactory.create( entityResultDescriptor );
+	}
+
+	private static Class resolveClassReference(String className, XMLContext.Default defaults) {
+		if ( className == null ) {
+			throw new AnnotationException( "<entity-result> without entity-class. " + SCHEMA_VALIDATION );
+		}
+		try {
+			return ReflectHelper.classForName(
+					XMLContext.buildSafeClassName( className, defaults ),
+					JPAOverriddenAnnotationReader.class
+			);
+		}
+		catch ( ClassNotFoundException e ) {
+			throw new AnnotationException( "Unable to find specified class: " + className, e );
+		}
+	}
+
+	private static ColumnResult buildColumnResult(Element columnResultElement, XMLContext.Default defaults) {
+//		AnnotationDescriptor columnResultDescriptor = new AnnotationDescriptor( ColumnResult.class );
+//		copyStringAttribute( columnResultDescriptor, columnResultElement, "name", true );
+//		return AnnotationFactory.create( columnResultDescriptor );
+
+		AnnotationDescriptor columnResultDescriptor = new AnnotationDescriptor( ColumnResult.class );
+		copyStringAttribute( columnResultDescriptor, columnResultElement, "name", true );
+		final String columnTypeName = columnResultElement.attributeValue( "class" );
+		if ( StringHelper.isNotEmpty( columnTypeName ) ) {
+			columnResultDescriptor.setValue( "type", resolveClassReference( columnTypeName, defaults ) );
+		}
+		return AnnotationFactory.create( columnResultDescriptor );
+	}
+
+	private static ConstructorResult buildConstructorResult(Element constructorResultElement, XMLContext.Default defaults) {
+		AnnotationDescriptor constructorResultDescriptor = new AnnotationDescriptor( ConstructorResult.class );
+
+		final Class entityClass = resolveClassReference( constructorResultElement.attributeValue( "target-class" ), defaults );
+		constructorResultDescriptor.setValue( "targetClass", entityClass );
+
+		List<ColumnResult> columnResultAnnotations = new ArrayList<ColumnResult>();
+		for ( Element columnResultElement : (List<Element>) constructorResultElement.elements( "column" ) ) {
+			columnResultAnnotations.add( buildColumnResult( columnResultElement, defaults ) );
+		}
+		constructorResultDescriptor.setValue(
+				"columns",
+				columnResultAnnotations.toArray( new ColumnResult[ columnResultAnnotations.size() ] )
+		);
+
+		return AnnotationFactory.create( constructorResultDescriptor );
 	}
 
 	private void addSqlResultsetMappingIfNeeded(SqlResultSetMapping annotation, List<SqlResultSetMapping> resultsets) {

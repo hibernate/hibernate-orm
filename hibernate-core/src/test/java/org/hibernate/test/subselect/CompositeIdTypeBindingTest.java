@@ -31,6 +31,7 @@ import junit.framework.Assert;
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
@@ -42,7 +43,8 @@ import org.junit.Test;
  */
 @SkipForDialects({
 		@SkipForDialect(value = H2Dialect.class, comment = "H2 doesn't support this sql syntax"),
-		@SkipForDialect(value = SQLServerDialect.class, comment = "mssql doesn't support multiple columns in the 'where' clause of a 'where in' query")})
+		@SkipForDialect(value = SQLServerDialect.class, comment = "mssql doesn't support multiple columns in the 'where' clause of a 'where in' query"),
+		@SkipForDialect(value = SybaseDialect.class, comment = "sybase doesn't support multiple columns in the 'where' clause of a 'where in' query")})
 @TestForIssue( jiraKey = "HHH-8312")
 public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 	@Override

@@ -141,25 +141,33 @@ public class JdbcDateTypeDescriptor extends AbstractTypeDescriptor<Date> {
 	}
 	@Override
 	public <X> Date wrap(X value, WrapperOptions options) {
+		java.sql.Date date = null;
+		
 		if ( value == null ) {
 			return null;
 		}
-		if ( Date.class.isInstance( value ) ) {
-			return (Date) value;
+		if ( java.sql.Date.class.isInstance( value ) ) {
+			date = (java.sql.Date) value;
 		}
 
 		if ( Long.class.isInstance( value ) ) {
-			return new java.sql.Date( ( (Long) value ).longValue() );
+			date = new java.sql.Date( ( (Long) value ).longValue() );
 		}
 
 		if ( Calendar.class.isInstance( value ) ) {
-			return new java.sql.Date( ( (Calendar) value ).getTimeInMillis() );
+			date = new java.sql.Date( ( (Calendar) value ).getTimeInMillis() );
 		}
 
-		if ( java.util.Date.class.isInstance( value ) ) {
-			return new java.sql.Date( ( (java.util.Date) value ).getTime() );
+		if ( Date.class.isInstance( value ) ) {
+			date = new java.sql.Date( ( (java.util.Date) value ).getTime() );
 		}
 
-		throw unknownWrap( value.getClass() );
+		if ( date == null ) {
+			throw unknownWrap( value.getClass() );
+		}
+		
+		// Some JDBC drivers (*ahem* Oracle 12c) are incorrect and, even though rs#getDate is used, return the Date
+		// without the time stripped.  For extra safety, ensure here.
+		return new java.sql.Date(date.getYear(), date.getMonth(), date.getDate());
 	}
 }

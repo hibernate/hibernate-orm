@@ -106,28 +106,38 @@ public class CalendarDateTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 	}
 
 	public <X> Calendar wrap(X value, WrapperOptions options) {
+		Calendar cal = null;
 		if ( value == null ) {
 			return null;
 		}
 		if ( Calendar.class.isInstance( value ) ) {
-			return (Calendar) value;
+			cal = (Calendar) value;
 		}
 
 		if ( ! Date.class.isInstance( value ) ) {
 			throw unknownWrap( value.getClass() );
 		}
-
-		Calendar cal = new GregorianCalendar();
-		if ( Environment.jvmHasTimestampBug() ) {
-			final long milliseconds = ( (Date) value ).getTime();
-			final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
-					? ( (java.sql.Timestamp) value ).getNanos()
-					: 0;
-			cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
+		
+		if ( cal == null ) {
+			cal = new GregorianCalendar();
+			if ( Environment.jvmHasTimestampBug() ) {
+				final long milliseconds = ( (Date) value ).getTime();
+				final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
+						? ( (java.sql.Timestamp) value ).getNanos()
+						: 0;
+				cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
+			}
+			else {
+				cal.setTime( (Date) value );
+			}
 		}
-		else {
-			cal.setTime( (Date) value );
-		}
+		
+		// Some JDBC drivers (*ahem* Oracle 12c) are incorrect and, even though rs#getDate is used, return the Date
+		// without the time stripped.  For extra safety, ensure here.
+		cal.set( Calendar.HOUR, 0 );
+		cal.set( Calendar.MINUTE, 0 );
+		cal.set( Calendar.SECOND, 0 );
+		
 		return cal;
 	}
 }

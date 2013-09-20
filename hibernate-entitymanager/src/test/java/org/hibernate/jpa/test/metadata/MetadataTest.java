@@ -31,6 +31,7 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.MappedSuperclassType;
 import javax.persistence.metamodel.PluralAttribute;
@@ -63,6 +64,40 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertNotNull( emf.getMetamodel() );
 		final EntityType<Fridge> entityType = emf.getMetamodel().entity( Fridge.class );
 		assertNotNull( entityType );
+	}
+
+	@Test
+	public void testInvalidAttributeCausesIllegalArgumentException() {
+		// should not matter the exact subclass of ManagedType since this is implemented on the base class but
+		// check each anyway..
+
+		// entity
+		checkNonExistentAttributeAccess( entityManagerFactory().getMetamodel().entity( Fridge.class ) );
+
+		// embeddable
+		checkNonExistentAttributeAccess( entityManagerFactory().getMetamodel().embeddable( Address.class ) );
+	}
+
+	private void checkNonExistentAttributeAccess(ManagedType managedType) {
+		final String NAME = "NO_SUCH_ATTRIBUTE";
+		try {
+			managedType.getAttribute( NAME );
+			fail( "Lookup of non-existent attribute (getAttribute) should have caused IAE : " + managedType );
+		}
+		catch (IllegalArgumentException expected) {
+		}
+		try {
+			managedType.getSingularAttribute( NAME );
+			fail( "Lookup of non-existent attribute (getSingularAttribute) should have caused IAE : " + managedType );
+		}
+		catch (IllegalArgumentException expected) {
+		}
+		try {
+			managedType.getCollection( NAME );
+			fail( "Lookup of non-existent attribute (getCollection) should have caused IAE : " + managedType );
+		}
+		catch (IllegalArgumentException expected) {
+		}
 	}
 
 	@Test

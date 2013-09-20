@@ -23,11 +23,6 @@
  */
 package org.hibernate.jpa.internal.metamodel;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Bindable;
 import javax.persistence.metamodel.CollectionAttribute;
@@ -37,6 +32,11 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.annotations.common.AssertionFailure;
 
@@ -74,6 +74,8 @@ public abstract class AbstractManagedType<X>
 			throw new IllegalStateException( "Type has been locked" );
 		}
 		return new Builder<X>() {
+			@Override
+			@SuppressWarnings("unchecked")
 			public void addAttribute(Attribute<X,?> attribute) {
 				declaredAttributes.put( attribute.getName(), attribute );
 				final Bindable.BindableType bindableType = ( ( Bindable ) attribute ).getBindableType();
@@ -103,9 +105,7 @@ public abstract class AbstractManagedType<X>
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<Attribute<? super X, ?>> getAttributes() {
 		HashSet attributes = new HashSet<Attribute<X, ?>>( declaredAttributes.values() );
@@ -115,28 +115,23 @@ public abstract class AbstractManagedType<X>
 		return attributes;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<Attribute<X, ?>> getDeclaredAttributes() {
 		return new HashSet<Attribute<X, ?>>( declaredAttributes.values() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Attribute<? super X, ?> getAttribute(String name) {
 		Attribute<? super X, ?> attribute = declaredAttributes.get( name );
 		if ( attribute == null && getSupertype() != null ) {
 			attribute = getSupertype().getAttribute( name );
 		}
+		checkNotNull( "Attribute ", attribute, name );
 		return attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Attribute<X, ?> getDeclaredAttribute(String name) {
 		Attribute<X, ?> attr = declaredAttributes.get( name );
 		checkNotNull( "Attribute ", attr, name );
@@ -144,14 +139,20 @@ public abstract class AbstractManagedType<X>
 	}
 
 	private void checkNotNull(String attributeType, Attribute<?,?> attribute, String name) {
+
 		if ( attribute == null ) {
-			throw new IllegalArgumentException( attributeType + " named " + name + " is not present" );
+			throw new IllegalArgumentException(
+					String.format(
+							"Unable to locate %s with the the given name [%s] on this ManagedType [%s]",
+							attributeType,
+							name,
+							getTypeName()
+					)
+			);
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<SingularAttribute<? super X, ?>> getSingularAttributes() {
 		HashSet attributes = new HashSet<SingularAttribute<X, ?>>( declaredSingularAttributes.values() );
@@ -161,37 +162,30 @@ public abstract class AbstractManagedType<X>
 		return attributes;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<SingularAttribute<X, ?>> getDeclaredSingularAttributes() {
 		return new HashSet<SingularAttribute<X, ?>>( declaredSingularAttributes.values() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public SingularAttribute<? super X, ?> getSingularAttribute(String name) {
 		SingularAttribute<? super X, ?> attribute = declaredSingularAttributes.get( name );
 		if ( attribute == null && getSupertype() != null ) {
 			attribute = getSupertype().getSingularAttribute( name );
 		}
+		checkNotNull( "SingularAttribute ", attribute, name );
 		return attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public SingularAttribute<X, ?> getDeclaredSingularAttribute(String name) {
 		final SingularAttribute<X, ?> attr = declaredSingularAttributes.get( name );
 		checkNotNull( "SingularAttribute ", attr, name );
 		return attr;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<? super X, Y> getSingularAttribute(String name, Class<Y> type) {
 		SingularAttribute<? super X, ?> attribute = declaredSingularAttributes.get( name );
@@ -202,9 +196,7 @@ public abstract class AbstractManagedType<X>
 		return ( SingularAttribute<? super X, Y> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings( "unchecked")
 	public <Y> SingularAttribute<X, Y> getDeclaredSingularAttribute(String name, Class<Y> javaType) {
 		final SingularAttribute<X, ?> attr = declaredSingularAttributes.get( name );
@@ -261,9 +253,7 @@ public abstract class AbstractManagedType<X>
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public Set<PluralAttribute<? super X, ?, ?>> getPluralAttributes() {
 		HashSet attributes = new HashSet<PluralAttribute<? super X, ?, ?>>( declaredPluralAttributes.values() );
@@ -273,16 +263,12 @@ public abstract class AbstractManagedType<X>
 		return attributes;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Set<PluralAttribute<X, ?, ?>> getDeclaredPluralAttributes() {
 		return new HashSet<PluralAttribute<X,?,?>>( declaredPluralAttributes.values() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public CollectionAttribute<? super X, ?> getCollection(String name) {
 		PluralAttribute<? super X, ?, ?> attribute = getPluralAttribute( name );
@@ -304,9 +290,7 @@ public abstract class AbstractManagedType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings( "unchecked")
 	public CollectionAttribute<X, ?> getDeclaredCollection(String name) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
@@ -314,9 +298,7 @@ public abstract class AbstractManagedType<X>
 		return ( CollectionAttribute<X, ?> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public SetAttribute<? super X, ?> getSet(String name) {
 		PluralAttribute<? super X, ?, ?> attribute = getPluralAttribute( name );
@@ -334,9 +316,7 @@ public abstract class AbstractManagedType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings( "unchecked")
 	public SetAttribute<X, ?> getDeclaredSet(String name) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
@@ -344,9 +324,7 @@ public abstract class AbstractManagedType<X>
 		return ( SetAttribute<X, ?> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public ListAttribute<? super X, ?> getList(String name) {
 		PluralAttribute<? super X, ?, ?> attribute = getPluralAttribute( name );
@@ -364,18 +342,15 @@ public abstract class AbstractManagedType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public ListAttribute<X, ?> getDeclaredList(String name) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		basicListCheck( attribute, name );
 		return ( ListAttribute<X, ?> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public MapAttribute<? super X, ?, ?> getMap(String name) {
 		PluralAttribute<? super X, ?, ?> attribute = getPluralAttribute( name );
@@ -393,18 +368,15 @@ public abstract class AbstractManagedType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public MapAttribute<X, ?, ?> getDeclaredMap(String name) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		basicMapCheck( attribute, name );
 		return ( MapAttribute<X,?,?> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <E> CollectionAttribute<? super X, E> getCollection(String name, Class<E> elementType) {
 		PluralAttribute<? super X, ?, ?> attribute = declaredPluralAttributes.get( name );
@@ -415,9 +387,8 @@ public abstract class AbstractManagedType<X>
 		return ( CollectionAttribute<? super X, E> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public <E> CollectionAttribute<X, E> getDeclaredCollection(String name, Class<E> elementType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkCollectionElementType( attribute, name, elementType );
@@ -445,9 +416,7 @@ public abstract class AbstractManagedType<X>
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <E> SetAttribute<? super X, E> getSet(String name, Class<E> elementType) {
 		PluralAttribute<? super X, ?, ?> attribute = declaredPluralAttributes.get( name );
@@ -462,18 +431,15 @@ public abstract class AbstractManagedType<X>
 		checkTypeForPluralAttributes( "SetAttribute", attribute, name, elementType, PluralAttribute.CollectionType.SET );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public <E> SetAttribute<X, E> getDeclaredSet(String name, Class<E> elementType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkSetElementType( attribute, name, elementType );
 		return ( SetAttribute<X, E> ) attribute;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <E> ListAttribute<? super X, E> getList(String name, Class<E> elementType) {
 		PluralAttribute<? super X, ?, ?> attribute = declaredPluralAttributes.get( name );
@@ -488,15 +454,15 @@ public abstract class AbstractManagedType<X>
 		checkTypeForPluralAttributes( "ListAttribute", attribute, name, elementType, PluralAttribute.CollectionType.LIST );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
 	public <E> ListAttribute<X, E> getDeclaredList(String name, Class<E> elementType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkListElementType( attribute, name, elementType );
 		return ( ListAttribute<X, E> ) attribute;
 	}
 
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <K, V> MapAttribute<? super X, K, V> getMap(String name, Class<K> keyType, Class<V> valueType) {
 		PluralAttribute<? super X, ?, ?> attribute = getPluralAttribute( name );
@@ -519,6 +485,8 @@ public abstract class AbstractManagedType<X>
 		}
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
 	public <K, V> MapAttribute<X, K, V> getDeclaredMap(String name, Class<K> keyType, Class<V> valueType) {
 		final PluralAttribute<X,?,?> attribute = declaredPluralAttributes.get( name );
 		checkMapValueType( attribute, name, valueType );

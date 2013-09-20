@@ -108,4 +108,13 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
             "as the entity (type=%s, id=%s) does not exist", id = 15013 )
     void ignoringEntityNotFound( String entityName, String identifier);
 
+	@LogMessage( level = WARN )
+	@Message(
+			value = "DEPRECATION - attempt to refer to JPA positional parameter [?%1$s] using String name [\"%1$s\"] " +
+					"rather than int position [%1$s] (generally in Query#setParameter, Query#getParameter or " +
+					"Query#getParameterValue calls).  Hibernate previously allowed such usage, but it is considered " +
+					"deprecated.",
+			id = 15014
+	)
+	void deprecatedJpaPositionalParameterAccess(Integer jpaPositionalParameter);
 }

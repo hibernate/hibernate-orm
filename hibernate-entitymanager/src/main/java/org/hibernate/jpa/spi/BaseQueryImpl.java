@@ -429,20 +429,49 @@ public abstract class BaseQueryImpl implements Query {
 
 	@SuppressWarnings("unchecked")
 	protected <X> ParameterRegistration<X> findParameterRegistration(String parameterName) {
-		return (ParameterRegistration<X>) getParameter( parameterName );
+		final Integer jpaPositionalParameter = toNumberOrNull( parameterName );
+
+		if ( parameterRegistrations != null ) {
+			for ( ParameterRegistration<?> param : parameterRegistrations ) {
+				if ( parameterName.equals( param.getName() ) ) {
+					return (ParameterRegistration<X>) param;
+				}
+
+				// legacy allowance of the application to access the parameter using the position as a String
+				if ( param.isJpaPositionalParameter() && jpaPositionalParameter != null ) {
+					if ( jpaPositionalParameter.equals( param.getPosition() ) ) {
+						LOG.deprecatedJpaPositionalParameterAccess( jpaPositionalParameter );
+					}
+					return (ParameterRegistration<X>) param;
+				}
+			}
+		}
+		throw new IllegalArgumentException( "Parameter with that name [" + parameterName + "] did not exist" );
+	}
+
+	private Integer toNumberOrNull(String parameterName) {
+		try {
+			return Integer.valueOf( parameterName );
+		}
+		catch (NumberFormatException e) {
+			return null;
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	protected <X> ParameterRegistration<X> findParameterRegistration(int parameterPosition) {
-		if ( isJpaPositionalParameter( parameterPosition ) ) {
-			return findParameterRegistration( Integer.toString( parameterPosition ) );
+		if ( parameterRegistrations != null ) {
+			for ( ParameterRegistration<?> param : parameterRegistrations ) {
+				if ( param.getPosition() == null ) {
+					continue;
+				}
+				if ( parameterPosition == param.getPosition() ) {
+					return (ParameterRegistration<X>) param;
+				}
+			}
 		}
-		else {
-			return (ParameterRegistration<X>) getParameter( parameterPosition );
-		}
+		throw new IllegalArgumentException( "Parameter with that position [" + parameterPosition + "] did not exist" );
 	}
-
-	protected abstract boolean isJpaPositionalParameter(int position);
 
 	protected static class ParameterBindImpl<T> implements ParameterBind<T> {
 		private final T value;
@@ -664,21 +693,14 @@ public abstract class BaseQueryImpl implements Query {
 	@Override
 	public Parameter<?> getParameter(String name) {
 		checkOpen( false );
-		if ( parameterRegistrations != null ) {
-			for ( ParameterRegistration<?> param : parameterRegistrations ) {
-				if ( name.equals( param.getName() ) ) {
-					return param;
-				}
-			}
-		}
-		throw new IllegalArgumentException( "Parameter with that name [" + name + "] did not exist" );
+		return findParameterRegistration( name );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Parameter<T> getParameter(String name, Class<T> type) {
 		checkOpen( false );
-		Parameter param = getParameter( name );
+		Parameter param = findParameterRegistration( name );
 
 		if ( param.getParameterType() != null ) {
 			// we were able to determine the expected type during analysis, so validate it here
@@ -698,21 +720,8 @@ public abstract class BaseQueryImpl implements Query {
 
 	@Override
 	public Parameter<?> getParameter(int position) {
-		if ( isJpaPositionalParameter( position ) ) {
-			return getParameter( Integer.toString( position ) );
-		}
 		checkOpen( false );
-		if ( parameterRegistrations != null ) {
-			for ( ParameterRegistration<?> param : parameterRegistrations ) {
-				if ( param.getPosition() == null ) {
-					continue;
-				}
-				if ( position == param.getPosition() ) {
-					return param;
-				}
-			}
-		}
-		throw new IllegalArgumentException( "Parameter with that position [" + position + "] did not exist" );
+		return findParameterRegistration( position );
 	}
 
 	@Override
@@ -720,7 +729,7 @@ public abstract class BaseQueryImpl implements Query {
 	public <T> Parameter<T> getParameter(int position, Class<T> type) {
 		checkOpen( false );
 
-		Parameter param = getParameter( position );
+		Parameter param = findParameterRegistration( position );
 
 		if ( param.getParameterType() != null ) {
 			// we were able to determine the expected type during analysis, so validate it here

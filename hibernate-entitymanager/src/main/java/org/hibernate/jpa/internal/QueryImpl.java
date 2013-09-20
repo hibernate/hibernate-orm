@@ -23,10 +23,13 @@
  */
 package org.hibernate.jpa.internal;
 
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
-
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.ParameterMode;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,27 +39,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.ParameterMode;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.StoredProcedureQuery;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import org.jboss.logging.Logger;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.SQLQuery;
-import org.hibernate.Session;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
@@ -69,7 +63,10 @@ import org.hibernate.jpa.spi.ParameterBind;
 import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
-import org.jboss.logging.Logger;
+
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -83,7 +80,6 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
     public static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class, QueryImpl.class.getName());
 
 	private org.hibernate.Query query;
-	private Set<Integer> jpaPositionalIndices;
 
 	public QueryImpl(org.hibernate.Query query, AbstractEntityManagerImpl em) {
 		this( query, em, Collections.<String, Class>emptyMap() );
@@ -104,6 +100,8 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			throw new IllegalStateException( "Unknown query type for parameter extraction" );
 		}
 
+		boolean hadJpaPositionalParameters = false;
+
 		final ParameterMetadata parameterMetadata = org.hibernate.internal.AbstractQueryImpl.class.cast( query ).getParameterMetadata();
 
 		// extract named params
@@ -118,24 +116,30 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			else if ( descriptor.getExpectedType() != null ) {
 				javaType = descriptor.getExpectedType().getReturnedClass();
 			}
-			registerParameter( new ParameterRegistrationImpl( this, query, name, javaType ) );
+
 			if ( descriptor.isJpaStyle() ) {
-				if ( jpaPositionalIndices == null ) {
-					jpaPositionalIndices = new HashSet<Integer>();
-				}
-				jpaPositionalIndices.add( Integer.valueOf( name ) );
+				hadJpaPositionalParameters = true;
+				final Integer position = Integer.valueOf( name );
+				registerParameter( new JpaPositionalParameterRegistrationImpl( this, query, position, javaType ) );
+			}
+			else {
+				registerParameter( new ParameterRegistrationImpl( this, query, name, javaType ) );
 			}
 		}
 
-		// extract positional parameters
+		if ( hadJpaPositionalParameters ) {
+			if ( parameterMetadata.getOrdinalParameterCount() > 0 ) {
+				throw new IllegalArgumentException(
+						"Cannot mix JPA positional parameters and native Hibernate positional/ordinal parameters"
+				);
+			}
+		}
+
+		// extract Hibernate native positional parameters
 		for ( int i = 0, max = parameterMetadata.getOrdinalParameterCount(); i < max; i++ ) {
 			final OrdinalParameterDescriptor descriptor = parameterMetadata.getOrdinalParameterDescriptor( i + 1 );
 			Class javaType = descriptor.getExpectedType() == null ? null : descriptor.getExpectedType().getReturnedClass();
 			registerParameter( new ParameterRegistrationImpl( this, query, i+1, javaType ) );
-			Integer position = descriptor.getOrdinalPosition();
-            if ( jpaPositionalIndices != null && jpaPositionalIndices.contains(position) ) {
-				LOG.parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(position);
-			}
 		}
 	}
 
@@ -162,7 +166,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 
 		private ParameterBind<T> bind;
 
-		private ParameterRegistrationImpl(
+		protected ParameterRegistrationImpl(
 				Query jpaQuery,
 				org.hibernate.Query nativeQuery,
 				String name,
@@ -174,7 +178,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			this.position = null;
 		}
 
-		private ParameterRegistrationImpl(
+		protected ParameterRegistrationImpl(
 				Query jpaQuery,
 				org.hibernate.Query nativeQuery,
 				Integer position,
@@ -184,6 +188,11 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 			this.position = position;
 			this.javaType = javaType;
 			this.name = null;
+		}
+
+		@Override
+		public boolean isJpaPositionalParameter() {
+			return false;
 		}
 
 		@Override
@@ -301,6 +310,39 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		@Override
 		public ParameterBind<T> getBind() {
 			return bind;
+		}
+	}
+
+	/**
+	 * Specialized handling for JPA "positional parameters".
+	 *
+	 * @param <T> The parameter type type.
+	 */
+	public static class JpaPositionalParameterRegistrationImpl<T> extends ParameterRegistrationImpl<T> {
+		final Integer position;
+
+		protected JpaPositionalParameterRegistrationImpl(
+				Query jpaQuery,
+				org.hibernate.Query nativeQuery,
+				Integer position,
+				Class<T> javaType) {
+			super( jpaQuery, nativeQuery, position.toString(), javaType );
+			this.position = position;
+		}
+
+		@Override
+		public String getName() {
+			return null;
+		}
+
+		@Override
+		public Integer getPosition() {
+			return position;
+		}
+
+		@Override
+		public boolean isJpaPositionalParameter() {
+			return true;
 		}
 	}
 
@@ -463,11 +505,6 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		catch (HibernateException he) {
 			throw getEntityManager().convert( he );
 		}
-	}
-
-	@Override
-	protected boolean isJpaPositionalParameter(int position) {
-		return jpaPositionalIndices != null && jpaPositionalIndices.contains( position );
 	}
 
 	@Override

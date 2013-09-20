@@ -450,11 +450,6 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 	// parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	@Override
-	protected boolean isJpaPositionalParameter(int position) {
-		return false;
-	}
-
 	public ProcedureCall getHibernateProcedureCall() {
 		return procedureCall;
 	}
@@ -485,6 +480,11 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 		@Override
 		public Class<T> getParameterType() {
 			return nativeParamRegistration.getType();
+		}
+
+		@Override
+		public boolean isJpaPositionalParameter() {
+			return getPosition() != null;
 		}
 
 		@Override

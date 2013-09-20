@@ -188,6 +188,21 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void testJpaPositionalParameters() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Query query = em.createQuery( "from Item item where item.name =?1 or item.descr = ?1" );
+		Parameter p1 = query.getParameter( 1 );
+		Assert.assertNotNull( p1 );
+		Assert.assertNotNull( p1.getPosition() );
+		Assert.assertNull( p1.getName() );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
 	public void testParameterList() throws Exception {
 		final Item item = new Item( "Mouse", "Micro$oft mouse" );
 		final Item item2 = new Item( "Computer", "Dell computer" );
@@ -225,6 +240,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		params = new ArrayList();
 		params.add( item.getName() );
 		params.add( item2.getName() );
+		// deprecated usage of positional parameter by String
 		q.setParameter( "1", params );
 		result = q.getResultList();
 		assertNotNull( result );
@@ -277,6 +293,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		params = new ArrayList();
 		params.add( item.getName() );
 		params.add( item2.getName() );
+		// deprecated usage of positional parameter by String
 		q.setParameter( "1", params );
 		result = q.getResultList();
 		assertNotNull( result );
@@ -424,6 +441,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 		// next using jpa-style positional parameter, but as a name (which is how Hibernate core treats these
 		query = em.createQuery( "select w from Wallet w where w.brand = ?1" );
+		// deprecated usage of positional parameter by String
 		query.setParameter( "1", "Lacoste" );
 		w = (Wallet) query.getSingleResult();
 		assertNotNull( w );

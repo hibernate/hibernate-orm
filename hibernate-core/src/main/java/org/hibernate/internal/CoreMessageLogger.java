@@ -612,9 +612,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Package not found or wo package-info.java: %s", id = 194)
 	void packageNotFound(String packageName);
 
-	@LogMessage(level = WARN)
-	@Message(value = "Parameter position [%s] occurred as both JPA and Hibernate positional parameter", id = 195)
-	void parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(Integer position);
+//	@LogMessage(level = WARN)
+//	@Message(value = "Parameter position [%s] occurred as both JPA and Hibernate positional parameter", id = 195)
+//	void parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(Integer position);
 
 	@LogMessage(level = ERROR)
 	@Message(value = "Error parsing XML (%s) : %s", id = 196)

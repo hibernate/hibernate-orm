@@ -124,7 +124,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		return null;
 	}
 
-	private AttributeConverterDefinition makeAttributeConverterDefinition(AttributeConversionInfo conversion) {
+	protected AttributeConverterDefinition makeAttributeConverterDefinition(AttributeConversionInfo conversion) {
 		try {
 			return new AttributeConverterDefinition( conversion.getConverterClass().newInstance(), false );
 		}
@@ -133,7 +133,7 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 	}
 
-	private boolean areTypeMatch(Class converterDefinedType, Class propertyType) {
+	protected boolean areTypeMatch(Class converterDefinedType, Class propertyType) {
 		if ( converterDefinedType == null ) {
 			throw new AnnotationException( "AttributeConverter defined java type cannot be null" );
 		}

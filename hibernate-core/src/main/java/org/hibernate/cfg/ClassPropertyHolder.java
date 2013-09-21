@@ -29,13 +29,10 @@ import javax.persistence.JoinTable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.annotations.EntityBinder;
-import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
@@ -47,6 +44,7 @@ import org.hibernate.mapping.Table;
 
 /**
  * @author Emmanuel Bernard
+
  */
 public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private PersistentClass persistentClass;

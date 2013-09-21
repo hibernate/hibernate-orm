@@ -72,7 +72,7 @@ public final class PropertyHolderBuilder {
 	/**
 	 * buid a property holder on top of a collection
 	 */
-	public static PropertyHolder buildPropertyHolder(
+	public static CollectionPropertyHolder buildPropertyHolder(
 			Collection collection,
 			String path,
 			XClass clazzToProcess,

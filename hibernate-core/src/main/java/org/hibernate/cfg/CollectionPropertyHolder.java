@@ -23,11 +23,29 @@
  */
 package org.hibernate.cfg;
 
+import javax.persistence.Convert;
+import javax.persistence.Converts;
+import javax.persistence.Enumerated;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.MapKeyClass;
+import javax.persistence.MapKeyEnumerated;
+import javax.persistence.MapKeyTemporal;
+import javax.persistence.OneToMany;
+import javax.persistence.Temporal;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.CollectionType;
+import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
@@ -37,9 +55,19 @@ import org.hibernate.mapping.Table;
 
 /**
  * @author Emmanuel Bernard
+ * @author Steve Ebersole
  */
 public class CollectionPropertyHolder extends AbstractPropertyHolder {
-	Collection collection;
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( CollectionPropertyHolder.class );
+
+	private final Collection collection;
+
+	// assume true, the constructor will opt out where appropriate
+	private boolean canElementBeConverted = true;
+	private boolean canKeyBeConverted = true;
+
+	private Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap;
+	private Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap;
 
 	public CollectionPropertyHolder(
 			Collection collection,
@@ -51,6 +79,102 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		super( path, parentPropertyHolder, clazzToProcess, mappings );
 		this.collection = collection;
 		setCurrentProperty( property );
+
+		this.elementAttributeConversionInfoMap = new HashMap<String, AttributeConversionInfo>();
+		this.keyAttributeConversionInfoMap = new HashMap<String, AttributeConversionInfo>();
+	}
+
+	private void buildAttributeConversionInfoMaps(
+			XProperty collectionProperty,
+			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
+			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
+		if ( collectionProperty == null ) {
+			// not sure this is valid condition
+			return;
+		}
+
+		{
+			final Convert convertAnnotation = collectionProperty.getAnnotation( Convert.class );
+			if ( convertAnnotation != null ) {
+				applyLocalConvert( convertAnnotation, collectionProperty, elementAttributeConversionInfoMap, keyAttributeConversionInfoMap );
+			}
+		}
+
+		{
+			final Converts convertsAnnotation = collectionProperty.getAnnotation( Converts.class );
+			if ( convertsAnnotation != null ) {
+				for ( Convert convertAnnotation : convertsAnnotation.value() ) {
+					applyLocalConvert(
+							convertAnnotation,
+							collectionProperty,
+							elementAttributeConversionInfoMap,
+							keyAttributeConversionInfoMap
+					);
+				}
+			}
+		}
+	}
+
+	private void applyLocalConvert(
+			Convert convertAnnotation,
+			XProperty collectionProperty,
+			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
+			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
+
+		// IMPL NOTE : the rules here are quite more lenient than what JPA says.  For example, JPA says
+		// that @Convert on a Map always needs to specify attributeName of key/value (or prefixed with
+		// key./value. for embedded paths).  However, we try to see if conversion of either is disabled
+		// for whatever reason.  For example, if the Map is annotated with @Enumerated the elements cannot
+		// be converted so any @Convert likely meant the key, so we apply it to the key
+
+		final AttributeConversionInfo info = new AttributeConversionInfo( convertAnnotation, collectionProperty );
+		if ( collection.isMap() ) {
+			boolean specCompliant = StringHelper.isNotEmpty( info.getAttributeName() )
+					&& ( info.getAttributeName().startsWith( "key" )
+					|| info.getAttributeName().startsWith( "value" ) );
+			if ( !specCompliant ) {
+				log.nonCompliantMapConversion( collection.getRole() );
+			}
+		}
+
+		if ( StringHelper.isEmpty( info.getAttributeName() ) ) {
+			if ( canElementBeConverted && canKeyBeConverted ) {
+				throw new IllegalStateException(
+						"@Convert placed on Map attribute [" + collection.getRole()
+								+ "] must define attributeName of 'key' or 'value'"
+				);
+			}
+			else if ( canKeyBeConverted ) {
+				keyAttributeConversionInfoMap.put( "", info );
+			}
+			else if ( canElementBeConverted ) {
+				elementAttributeConversionInfoMap.put( "", info );
+			}
+			// if neither, we should not be here...
+		}
+		else {
+			if ( canElementBeConverted && canKeyBeConverted ) {
+				// specified attributeName needs to have 'key.' or 'value.' prefix
+				if ( info.getAttributeName().startsWith( "key." ) ) {
+					keyAttributeConversionInfoMap.put(
+							info.getAttributeName().substring( 4 ),
+							info
+					);
+				}
+				else if ( info.getAttributeName().startsWith( "value." ) ) {
+					elementAttributeConversionInfoMap.put(
+							info.getAttributeName().substring( 6 ),
+							info
+					);
+				}
+				else {
+					throw new IllegalStateException(
+							"@Convert placed on Map attribute [" + collection.getRole()
+									+ "] must define attributeName of 'key' or 'value'"
+					);
+				}
+			}
+		}
 	}
 
 	@Override
@@ -65,12 +189,69 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public void startingProperty(XProperty property) {
-		// todo : implement
+		if ( property == null ) {
+			return;
+		}
+
+		// todo : implement (and make sure it gets called - for handling collections of composites)
+	}
+
+	public AttributeConverterDefinition resolveElementAttributeConverterDefinition(XClass elementXClass) {
+		AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
+		if ( info != null ) {
+			if ( info.isConversionDisabled() ) {
+				return null;
+			}
+			else {
+				try {
+					return makeAttributeConverterDefinition( info );
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(
+							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
+							e
+					);
+				}
+			}
+		}
+
+		log.debugf(
+				"Attempting to locate auto-apply AttributeConverter for collection element [%s]",
+				collection.getRole()
+		);
+
+		final Class elementClass = getMappings().getReflectionManager().toClass( elementXClass );
+		for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
+			if ( ! attributeConverterDefinition.isAutoApply() ) {
+				continue;
+			}
+			log.debugf(
+					"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
+					attributeConverterDefinition.toString(),
+					attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
+					elementClass.getSimpleName()
+			);
+			if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
+				return attributeConverterDefinition;
+			}
+		}
+
+		return null;
 	}
 
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
-		// todo : implement
+		if ( canElementBeConverted && canKeyBeConverted ) {
+			// need to decide whether 'property' refers to key/element
+			// todo : this may not work for 'basic collections' since there is no XProperty for the element
+		}
+		else if ( canKeyBeConverted ) {
+
+		}
+		else {
+			return null;
+		}
+
 		return null;
 	}
 
@@ -132,5 +313,63 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	@Override
 	public String toString() {
 		return super.toString() + "(" + collection.getRole() + ")";
+	}
+
+	boolean prepared;
+
+	public void prepare(XProperty collectionProperty) {
+		// fugly
+		if ( prepared ) {
+			return;
+		}
+
+		if ( collectionProperty == null ) {
+			return;
+		}
+
+		prepared = true;
+
+		if ( collection.isMap() ) {
+			if ( collectionProperty.isAnnotationPresent( MapKeyEnumerated.class ) ) {
+				canKeyBeConverted = false;
+			}
+			else if ( collectionProperty.isAnnotationPresent( MapKeyTemporal.class ) ) {
+				canKeyBeConverted = false;
+			}
+			else if ( collectionProperty.isAnnotationPresent( MapKeyClass.class ) ) {
+				canKeyBeConverted = false;
+			}
+			else if ( collectionProperty.isAnnotationPresent( MapKeyType.class ) ) {
+				canKeyBeConverted = false;
+			}
+		}
+		else {
+			canKeyBeConverted = false;
+		}
+
+		if ( collectionProperty.isAnnotationPresent( ManyToAny.class ) ) {
+			canElementBeConverted = false;
+		}
+		else if ( collectionProperty.isAnnotationPresent( OneToMany.class ) ) {
+			canElementBeConverted = false;
+		}
+		else if ( collectionProperty.isAnnotationPresent( ManyToMany.class ) ) {
+			canElementBeConverted = false;
+		}
+		else if ( collectionProperty.isAnnotationPresent( Enumerated.class ) ) {
+			canElementBeConverted = false;
+		}
+		else if ( collectionProperty.isAnnotationPresent( Temporal.class ) ) {
+			canElementBeConverted = false;
+		}
+		else if ( collectionProperty.isAnnotationPresent( CollectionType.class ) ) {
+			canElementBeConverted = false;
+		}
+
+		// Is it valid to reference a collection attribute in a @Convert attached to the owner (entity) by path?
+		// if so we should pass in 'clazzToProcess' also
+		if ( canKeyBeConverted || canElementBeConverted ) {
+			buildAttributeConversionInfoMaps( collectionProperty, elementAttributeConversionInfoMap, keyAttributeConversionInfoMap );
+		}
 	}
 }

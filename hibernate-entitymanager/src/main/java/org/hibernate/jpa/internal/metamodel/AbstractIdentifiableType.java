@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jpa.internal.metamodel;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,6 +46,7 @@ public abstract class AbstractIdentifiableType<X>
 		extends AbstractManagedType<X>
 		implements IdentifiableType<X>, Serializable {
 
+	private final boolean hasIdClass;
 	private final boolean hasIdentifierProperty;
 	private final boolean isVersioned;
 
@@ -56,169 +58,157 @@ public abstract class AbstractIdentifiableType<X>
 			Class<X> javaType,
 			String typeName,
 			AbstractIdentifiableType<? super X> superType,
+			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned) {
 		super( javaType, typeName, superType );
+		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		isVersioned = versioned;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	public AbstractIdentifiableType<? super X> getSupertype() {
-		return ( AbstractIdentifiableType<? super X> ) super.getSupertype();
+	public boolean hasIdClass() {
+		return hasIdClass;
 	}
 
-	/**
-	 * Indicates if a non-null super type is required to provide the
-	 * identifier attribute(s) if this object does not have a declared
-	 * identifier.
-	 * .
-	 * @return true, if a non-null super type is required to provide
-	 * the identifier attribute(s) if this object does not have a
-	 * declared identifier; false, otherwise.
-	 */
-	protected abstract boolean requiresSupertypeForNonDeclaredIdentifier();
-
-	protected AbstractIdentifiableType<? super X> requireSupertype() {
-		if ( getSupertype() == null ) {
-			throw new IllegalStateException( "No supertype found" );
-		}
-		return getSupertype();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean hasSingleIdAttribute() {
-		return hasIdentifierProperty;
+		return !hasIdClass && hasIdentifierProperty;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public AbstractIdentifiableType<? super X> getSupertype() {
+		// overridden simply to perform the cast
+		return (AbstractIdentifiableType<? super X>) super.getSupertype();
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<? super X, Y> getId(Class<Y> javaType) {
-		final SingularAttribute<? super X, Y> id_;
+		ensureNoIdClass();
+		SingularAttributeImpl id = locateIdAttribute();
 		if ( id != null ) {
-			checkSimpleId();
-			id_ = ( SingularAttribute<? super X, Y> ) id;
-			if ( javaType != id.getJavaType() ) {
-				throw new IllegalArgumentException( "Id attribute was not of specified type : " + javaType.getName() );
-			}
+			checkType( id, javaType );
+		}
+		return ( SingularAttribute<? super X, Y> ) id;
+	}
+
+	private void ensureNoIdClass() {
+		if ( hasIdClass ) {
+			throw new IllegalArgumentException(
+					"Illegal call to IdentifiableType#getId for class [" + getTypeName() + "] defined with @IdClass"
+			);
+		}
+	}
+
+	private SingularAttributeImpl locateIdAttribute() {
+		if ( id != null ) {
+			return id;
 		}
 		else {
-			//yuk yuk bad me
-			if ( ! requiresSupertypeForNonDeclaredIdentifier()) {
-				final AbstractIdentifiableType<? super X> supertype = getSupertype();
-				if (supertype != null) {
-					id_ = supertype.getId( javaType );
-				}
-				else {
-					id_ = null;
+			if ( getSupertype() != null ) {
+				SingularAttributeImpl id = getSupertype().internalGetId();
+				if ( id != null ) {
+					return id;
 				}
 			}
-			else {
-				id_ = requireSupertype().getId( javaType );
+		}
+
+		return null;
+	}
+
+	protected SingularAttributeImpl internalGetId() {
+		if ( id != null ) {
+			return id;
+		}
+		else {
+			if ( getSupertype() != null ) {
+				return getSupertype().internalGetId();
 			}
 		}
-		return id_;
+
+		return null;
 	}
 
-	/**
-	 * Centralized check to ensure the id for this hierarchy is a simple one (i.e., does not use
-	 * an id-class).
-	 *
-	 * @see #checkIdClass()
-	 */
-	protected void checkSimpleId() {
-		if ( ! hasIdentifierProperty ) {
-			throw new IllegalStateException( "This class uses an @IdClass" );
+	@SuppressWarnings("unchecked")
+	private void checkType(SingularAttributeImpl attribute, Class javaType) {
+		if ( ! javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Attribute [%s#%s : %s] not castable to requested type [%s]",
+							getTypeName(),
+							attribute.getName(),
+							attribute.getType().getJavaType().getName(),
+							javaType.getName()
+					)
+			);
 		}
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<X, Y> getDeclaredId(Class<Y> javaType) {
-		checkDeclaredId();
-		checkSimpleId();
-		if ( javaType != id.getJavaType() ) {
-			throw new IllegalArgumentException( "Id attribute was not of specified type : " + javaType.getName() );
+		ensureNoIdClass();
+		if ( id == null ) {
+			throw new IllegalArgumentException( "The id attribute is not declared on this type [" + getTypeName() + "]" );
 		}
+		checkType( id, javaType );
 		return (SingularAttribute<X, Y>) id;
 	}
 
-	/**
-	 * Centralized check to ensure the id is actually declared on the class mapped here, as opposed to a
-	 * super class.
-	 */
-	protected void checkDeclaredId() {
-		if ( id == null ) {
-			throw new IllegalArgumentException( "The id attribute is not declared on this type" );
-		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type<?> getIdType() {
-		if ( id != null ) {
-			checkSimpleId();
-			return id.getType();
-		}
-		else {
-			return requireSupertype().getIdType();
-		}
-	}
-
-	private boolean hasIdClassAttributesDefined() {
-		return idClassAttributes != null ||
-				( getSupertype() != null && getSupertype().hasIdClassAttributesDefined() );
+		SingularAttributeImpl id = locateIdAttribute();
+		return id == null ? null : id.getType();
 	}
 
 	/**
-	 * {@inheritDoc}
-	 */
-	public Set<SingularAttribute<? super X, ?>> getIdClassAttributes() {
-		if ( idClassAttributes != null ) {
-			checkIdClass();
-		}
-		else {
-			// Java does not allow casting requireSupertype().getIdClassAttributes()
-			// to Set<SingularAttribute<? super X, ?>> because the
-			// superclass X is a different Java type from this X
-			// (i.e, getSupertype().getJavaType() != getJavaType()).
-			// It will, however, allow a Set<SingularAttribute<? super X, ?>>
-			// to be initialized with requireSupertype().getIdClassAttributes(),
-			// since getSupertype().getJavaType() is a superclass of getJavaType()
-			if ( requiresSupertypeForNonDeclaredIdentifier() ) {
-				idClassAttributes = new HashSet<SingularAttribute<? super X, ?>>( requireSupertype().getIdClassAttributes() );
-			}
-			else if ( getSupertype() != null && hasIdClassAttributesDefined() ) {
-				idClassAttributes = new HashSet<SingularAttribute<? super X, ?>>( getSupertype().getIdClassAttributes() );
-			}
-		}
-		return idClassAttributes;
-	}
-
-	/**
-	 * Centralized check to ensure the id for this hierarchy uses an id-class.
+	 * A form of {@link #getIdClassAttributes} which prefers to return {@code null} rather than throw exceptions
 	 *
-	 * @see #checkSimpleId()
+	 * @return IdClass attributes or {@code null}
 	 */
-	private void checkIdClass() {
-		if ( hasIdentifierProperty ) {
-			throw new IllegalArgumentException( "This class does not use @IdClass" );
+	public Set<SingularAttribute<? super X, ?>> getIdClassAttributesSafely() {
+		if ( !hasIdClass ) {
+			return null;
+		}
+		final Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
+		internalCollectIdClassAttributes( attributes );
+
+		if ( attributes.isEmpty() ) {
+			return null;
+		}
+
+		return attributes;
+	}
+
+	@Override
+	public Set<SingularAttribute<? super X, ?>> getIdClassAttributes() {
+		if ( !hasIdClass ) {
+			throw new IllegalArgumentException( "This class [" + getJavaType() + "] does not define an IdClass" );
+		}
+
+		final Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
+		internalCollectIdClassAttributes( attributes );
+
+		if ( attributes.isEmpty() ) {
+			throw new IllegalArgumentException( "Unable to locate IdClass attributes [" + getJavaType() + "]" );
+		}
+
+		return attributes;
+	}
+
+	@SuppressWarnings("unchecked")
+	private void internalCollectIdClassAttributes(Set attributes) {
+		if ( idClassAttributes != null ) {
+			attributes.addAll( idClassAttributes );
+		}
+		else if ( getSupertype() != null ) {
+			getSupertype().internalCollectIdClassAttributes( attributes );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean hasVersionAttribute() {
 		return isVersioned;
 	}
@@ -227,38 +217,66 @@ public abstract class AbstractIdentifiableType<X>
 		return isVersioned && version != null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<? super X, Y> getVersion(Class<Y> javaType) {
+		// todo : is return null allowed?
 		if ( ! hasVersionAttribute() ) {
 			return null;
 		}
-		final SingularAttribute<? super X, Y> version_;
+
+		SingularAttributeImpl version = locateVersionAttribute();
 		if ( version != null ) {
-			version_ = ( SingularAttribute<? super X, Y> ) version;
-			if ( javaType != version.getJavaType() ) {
-				throw new IllegalArgumentException( "Version attribute was not of specified type : " + javaType.getName() );
-			}
+			checkType( version, javaType );
 		}
-		else {
-			version_ = requireSupertype().getVersion( javaType );
-		}
-		return version_;
+		return ( SingularAttribute<? super X, Y> ) version;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	private SingularAttributeImpl locateVersionAttribute() {
+		if ( version != null ) {
+			return version;
+		}
+		else {
+			if ( getSupertype() != null ) {
+				SingularAttributeImpl version = getSupertype().internalGetVersion();
+				if ( version != null ) {
+					return version;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	protected SingularAttributeImpl internalGetVersion() {
+		if ( version != null ) {
+			return version;
+		}
+		else {
+			if ( getSupertype() != null ) {
+				return getSupertype().internalGetVersion();
+			}
+		}
+
+		return null;
+	}
+
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularAttribute<X, Y> getDeclaredVersion(Class<Y> javaType) {
 		checkDeclaredVersion();
-		if ( javaType != version.getJavaType() ) {
-			throw new IllegalArgumentException( "Version attribute was not of specified type : " + javaType.getName() );
-		}
+		checkType( version, javaType );
 		return ( SingularAttribute<X, Y> ) version;
 	}
+
+	private void checkDeclaredVersion() {
+		if ( version == null || ( getSupertype() != null && getSupertype().hasVersionAttribute() )) {
+			throw new IllegalArgumentException(
+					"The version attribute is not declared by this type [" + getJavaType() + "]"
+			);
+		}
+	}
+
 
 	/**
 	 * For used to retrieve the declared version when populating the static metamodel.
@@ -268,16 +286,6 @@ public abstract class AbstractIdentifiableType<X>
 	public SingularAttribute<X, ?> getDeclaredVersion() {
 		checkDeclaredVersion();
 		return version;
-	}
-
-	/**
-	 * Centralized check to ensure the version (if one) is actually declared on the class mapped here, as opposed to a
-	 * super class.
-	 */
-	protected void checkDeclaredVersion() {
-		if ( version == null || ( getSupertype() != null && getSupertype().hasVersionAttribute() )) {
-			throw new IllegalArgumentException( "The version attribute is not declared on this type" );
-		}
 	}
 
 	public Builder<X> getBuilder() {

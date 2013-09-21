@@ -393,8 +393,8 @@ class MetadataContext {
 			}
 
 			// handle id-class mappings specially
-			if ( ! entityType.hasSingleIdAttribute() ) {
-				final Set<SingularAttribute<? super X, ?>> attributes = entityType.getIdClassAttributes();
+			if ( entityType.hasIdClass() ) {
+				final Set<SingularAttribute<? super X, ?>> attributes = entityType.getIdClassAttributesSafely();
 				if ( attributes != null ) {
 					for ( SingularAttribute<? super X, ?> attribute : attributes ) {
 						registerAttribute( metamodelClass, attribute );

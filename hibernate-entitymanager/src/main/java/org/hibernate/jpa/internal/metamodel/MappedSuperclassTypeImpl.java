@@ -36,15 +36,18 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 			Class<X> javaType,
 			MappedSuperclass mappedSuperclass,
 			AbstractIdentifiableType<? super X> superType) {
-		super( javaType, null, superType, mappedSuperclass.hasIdentifierProperty(), mappedSuperclass.isVersioned() );
-	}
-
-	public PersistenceType getPersistenceType() {
-		return PersistenceType.MAPPED_SUPERCLASS;
+		super(
+				javaType,
+				null,
+				superType,
+				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
+				mappedSuperclass.hasIdentifierProperty(),
+				mappedSuperclass.isVersioned()
+		);
 	}
 
 	@Override
-	protected boolean requiresSupertypeForNonDeclaredIdentifier() {
-		return false;
+	public PersistenceType getPersistenceType() {
+		return PersistenceType.MAPPED_SUPERCLASS;
 	}
 }

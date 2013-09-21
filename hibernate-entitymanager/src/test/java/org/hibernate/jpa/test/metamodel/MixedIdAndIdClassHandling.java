@@ -39,6 +39,7 @@ import org.hibernate.testing.TestForIssue;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -64,10 +65,12 @@ public class MixedIdAndIdClassHandling extends BaseEntityManagerFunctionalTestCa
 		catch (IllegalArgumentException expected) {
 		}
 
+		assertNotNull( entityType.getSupertype().getIdClassAttributes() );
+		assertEquals( 1, entityType.getSupertype().getIdClassAttributes().size() );
+
 		assertFalse( entityType.hasSingleIdAttribute() );
 
-		// this is questionable...
-		//assertEquals( String.class, entityType.getIdType().getJavaType() );
+		assertEquals( String.class, entityType.getIdType().getJavaType() );
 	}
 
 	@MappedSuperclass

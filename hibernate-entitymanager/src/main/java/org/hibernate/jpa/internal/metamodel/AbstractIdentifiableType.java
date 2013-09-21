@@ -31,6 +31,9 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
+import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.mapping.Component;
+
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
  * identifiable types as entities or mapped-superclasses.  Basically things to which an
@@ -46,13 +49,13 @@ public abstract class AbstractIdentifiableType<X>
 		extends AbstractManagedType<X>
 		implements IdentifiableType<X>, Serializable {
 
-	private final boolean hasIdClass;
 	private final boolean hasIdentifierProperty;
-	private final boolean isVersioned;
-
+	private final boolean hasIdClass;
 	private SingularAttributeImpl<X, ?> id;
-	private SingularAttributeImpl<X, ?> version;
 	private Set<SingularAttribute<? super X,?>> idClassAttributes;
+
+	private final boolean isVersioned;
+	private SingularAttributeImpl<X, ?> version;
 
 	public AbstractIdentifiableType(
 			Class<X> javaType,
@@ -64,7 +67,7 @@ public abstract class AbstractIdentifiableType<X>
 		super( javaType, typeName, superType );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
-		isVersioned = versioned;
+		this.isVersioned = versioned;
 	}
 
 	public boolean hasIdClass() {
@@ -73,7 +76,7 @@ public abstract class AbstractIdentifiableType<X>
 
 	@Override
 	public boolean hasSingleIdAttribute() {
-		return !hasIdClass && hasIdentifierProperty;
+		return !hasIdClass() && hasIdentifierProperty;
 	}
 
 	@Override
@@ -95,7 +98,7 @@ public abstract class AbstractIdentifiableType<X>
 	}
 
 	private void ensureNoIdClass() {
-		if ( hasIdClass ) {
+		if ( hasIdClass() ) {
 			throw new IllegalArgumentException(
 					"Illegal call to IdentifiableType#getId for class [" + getTypeName() + "] defined with @IdClass"
 			);
@@ -158,9 +161,21 @@ public abstract class AbstractIdentifiableType<X>
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Type<?> getIdType() {
-		SingularAttributeImpl id = locateIdAttribute();
-		return id == null ? null : id.getType();
+		final SingularAttributeImpl id = locateIdAttribute();
+		if ( id != null ) {
+			return id.getType();
+		}
+
+		Set<SingularAttribute<? super X, ?>> idClassAttributes = getIdClassAttributesSafely();
+		if ( idClassAttributes != null ) {
+			if ( idClassAttributes.size() == 1 ) {
+				return idClassAttributes.iterator().next().getType();
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -169,7 +184,7 @@ public abstract class AbstractIdentifiableType<X>
 	 * @return IdClass attributes or {@code null}
 	 */
 	public Set<SingularAttribute<? super X, ?>> getIdClassAttributesSafely() {
-		if ( !hasIdClass ) {
+		if ( !hasIdClass() ) {
 			return null;
 		}
 		final Set<SingularAttribute<? super X, ?>> attributes = new HashSet<SingularAttribute<? super X, ?>>();
@@ -184,7 +199,7 @@ public abstract class AbstractIdentifiableType<X>
 
 	@Override
 	public Set<SingularAttribute<? super X, ?>> getIdClassAttributes() {
-		if ( !hasIdClass ) {
+		if ( !hasIdClass() ) {
 			throw new IllegalArgumentException( "This class [" + getJavaType() + "] does not define an IdClass" );
 		}
 

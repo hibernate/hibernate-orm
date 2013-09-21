@@ -945,12 +945,11 @@ public final class AnnotationBinder {
 			persistentClass.setIdentifierMapper( mapper );
 
 			//If id definition is on a mapped superclass, update the mapping
-			final org.hibernate.mapping.MappedSuperclass superclass =
-					BinderHelper.getMappedSuperclassOrNull(
-							inferredData.getDeclaringClass(),
-							inheritanceStatePerClass,
-							mappings
-					);
+			final org.hibernate.mapping.MappedSuperclass superclass = BinderHelper.getMappedSuperclassOrNull(
+					classWithIdClass,
+					inheritanceStatePerClass,
+					mappings
+			);
 			if ( superclass != null ) {
 				superclass.setDeclaredIdentifierMapper( mapper );
 			}

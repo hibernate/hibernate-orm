@@ -38,7 +38,7 @@ public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> imp
 			AbstractIdentifiableType<? super X> superType) {
 		super(
 				javaType,
-				null,
+				javaType.getName(),
 				superType,
 				mappedSuperclass.getDeclaredIdentifierMapper() != null || ( superType != null && superType.hasIdClass() ),
 				mappedSuperclass.hasIdentifierProperty(),

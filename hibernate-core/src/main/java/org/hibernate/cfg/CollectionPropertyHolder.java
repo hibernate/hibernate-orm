@@ -220,22 +220,53 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 				collection.getRole()
 		);
 
-		final Class elementClass = getMappings().getReflectionManager().toClass( elementXClass );
-		for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
-			if ( ! attributeConverterDefinition.isAutoApply() ) {
-				continue;
-			}
-			log.debugf(
-					"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
-					attributeConverterDefinition.toString(),
-					attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
-					elementClass.getSimpleName()
-			);
-			if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
-				return attributeConverterDefinition;
+		final Class elementClass = determineElementClass( elementXClass );
+		if ( elementClass != null ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
+				if ( ! attributeConverterDefinition.isAutoApply() ) {
+					continue;
+				}
+				log.debugf(
+						"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
+						attributeConverterDefinition.toString(),
+						attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
+						elementClass.getSimpleName()
+				);
+				if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
+					return attributeConverterDefinition;
+				}
 			}
 		}
 
+		return null;
+	}
+
+	private Class determineElementClass(XClass elementXClass) {
+		if ( elementXClass != null ) {
+			try {
+				return getMappings().getReflectionManager().toClass( elementXClass );
+			}
+			catch (Exception e) {
+				log.debugf(
+						"Unable to resolve XClass [%s] to Class for collection elements [%s]",
+						elementXClass.getName(),
+						collection.getRole()
+				);
+			}
+		}
+
+		if ( collection.getElement() != null ) {
+			if ( collection.getElement().getType() != null ) {
+				return collection.getElement().getType().getReturnedClass();
+			}
+		}
+
+		// currently this is called from paths where the element type really should be known,
+		// so log the fact that we could not resolve the collection element info
+		log.debugf(
+				"Unable to resolve element information for collection [%s]",
+				collection.getRole()
+		);
 		return null;
 	}
 

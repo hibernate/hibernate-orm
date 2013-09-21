@@ -1274,6 +1274,15 @@ public abstract class CollectionBinder {
 			if ( BinderHelper.PRIMITIVE_NAMES.contains( collType.getName() ) ) {
 				classType = AnnotatedClassType.NONE;
 				elementClass = null;
+
+				holder = PropertyHolderBuilder.buildPropertyHolder(
+						collValue,
+						collValue.getRole(),
+						null,
+						property,
+						parentPropertyHolder,
+						mappings
+				);
 			}
 			else {
 				elementClass = collType;

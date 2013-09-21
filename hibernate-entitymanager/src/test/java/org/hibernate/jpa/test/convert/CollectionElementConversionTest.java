@@ -109,7 +109,7 @@ public class CollectionElementConversionTest extends BaseUnitTestCase {
 		@CollectionTable(
 				name = "cust_color",
 				joinColumns = @JoinColumn(name = "cust_fk", nullable = false),
-				uniqueConstraints =  @UniqueConstraint(columnNames = { "customer_fk", "color" })
+				uniqueConstraints =  @UniqueConstraint(columnNames = { "cust_fk", "color" })
 		)
 		@Column(name = "color", nullable = false)
 		private Set<ColorType> colors = new HashSet<ColorType>();

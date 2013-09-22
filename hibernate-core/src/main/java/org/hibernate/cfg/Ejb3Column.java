@@ -55,7 +55,7 @@ public class Ejb3Column {
 	private Column mappingColumn;
 	private boolean insertable = true;
 	private boolean updatable = true;
-	private String secondaryTableName;
+	private String explicitTableName;
 	protected Map<String, Join> joins;
 	protected PropertyHolder propertyHolder;
 	private Mappings mappings;
@@ -111,8 +111,37 @@ public class Ejb3Column {
 		return formulaString;
 	}
 
+	/**
+	 * Deprecated as this is badly named for its use.
+	 *
+	 * @deprecated Use {@link #getExplicitTableName} instead
+	 */
+	@Deprecated
 	public String getSecondaryTableName() {
-		return secondaryTableName;
+		return explicitTableName;
+	}
+
+	public String getExplicitTableName() {
+		return explicitTableName;
+	}
+
+	/**
+	 * Deprecated as this is badly named for its use.
+	 *
+	 * @deprecated Use {@link #setExplicitTableName} instead
+	 */
+	@Deprecated
+	public void setSecondaryTableName(String explicitTableName) {
+		setExplicitTableName( explicitTableName );
+	}
+
+	public void setExplicitTableName(String explicitTableName) {
+		if ( "``".equals( explicitTableName ) ) {
+			this.explicitTableName = "";
+		}
+		else {
+			this.explicitTableName = explicitTableName;
+		}
 	}
 
 	public void setFormula(String formula) {
@@ -337,7 +366,10 @@ public class Ejb3Column {
 	 * @throws AnnotationException missing secondary table
 	 */
 	public Table getTable() {
-		if ( table != null ) return table; //association table
+		if ( table != null ){
+			return table;
+		}
+
 		if ( isSecondary() ) {
 			return getJoin().getTable();
 		}
@@ -348,21 +380,19 @@ public class Ejb3Column {
 
 	public boolean isSecondary() {
 		if ( propertyHolder == null ) {
-			throw new AssertionFailure( "Should not call getTable() on column wo persistent class defined" );
+			throw new AssertionFailure( "Should not call getTable() on column w/o persistent class defined" );
 		}
-		if ( StringHelper.isNotEmpty( secondaryTableName ) ) {
-			return true;
-		}
-		// else {
-		return false;
+
+		return StringHelper.isNotEmpty( explicitTableName )
+				&& !propertyHolder.getTable().getName().equals( explicitTableName );
 	}
 
 	public Join getJoin() {
-		Join join = joins.get( secondaryTableName );
+		Join join = joins.get( explicitTableName );
 		if ( join == null ) {
 			throw new AnnotationException(
 					"Cannot find the expected secondary table: no "
-							+ secondaryTableName + " available for " + propertyHolder.getClassName()
+							+ explicitTableName + " available for " + propertyHolder.getClassName()
 			);
 		}
 		else {
@@ -372,15 +402,6 @@ public class Ejb3Column {
 
 	public void forceNotNull() {
 		mappingColumn.setNullable( false );
-	}
-
-	public void setSecondaryTableName(String secondaryTableName) {
-		if ( "``".equals( secondaryTableName ) ) {
-			this.secondaryTableName = "";
-		}
-		else {
-			this.secondaryTableName = secondaryTableName;
-		}
 	}
 
 	public static Ejb3Column[] buildColumnFromAnnotation(
@@ -472,7 +493,7 @@ public class Ejb3Column {
 					column.setUnique( col.unique() );
 					column.setInsertable( col.insertable() );
 					column.setUpdatable( col.updatable() );
-					column.setSecondaryTableName( tableName );
+					column.setExplicitTableName( tableName );
 					column.setPropertyHolder( propertyHolder );
 					column.setJoins( secondaryTables );
 					column.setMappings( mappings );

@@ -122,7 +122,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 		setUnique( unique );
 		setInsertable( insertable );
 		setUpdatable( updatable );
-		setSecondaryTableName( secondaryTable );
+		setExplicitTableName( secondaryTable );
 		setPropertyHolder( propertyHolder );
 		setJoins( joins );
 		setMappings( mappings );
@@ -310,7 +310,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 			final String tableName = !BinderHelper.isEmptyAnnotationValue( annJoin.table() )
 					? nameNormalizer.normalizeIdentifierQuoting( getMappings().getNamingStrategy().tableName( annJoin.table() ) ) : "";
-			setSecondaryTableName( tableName );
+			setExplicitTableName( tableName );
 		}
 	}
 

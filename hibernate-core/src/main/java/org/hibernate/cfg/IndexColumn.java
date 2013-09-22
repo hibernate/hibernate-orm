@@ -62,7 +62,7 @@ public class IndexColumn extends Ejb3Column {
 		setUnique( unique );
 		setInsertable( insertable );
 		setUpdatable( updatable );
-		setSecondaryTableName( secondaryTableName );
+		setExplicitTableName( secondaryTableName );
 		setPropertyHolder( propertyHolder );
 		setJoins( joins );
 		setMappings( mappings );

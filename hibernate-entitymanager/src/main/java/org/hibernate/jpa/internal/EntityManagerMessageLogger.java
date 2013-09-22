@@ -117,4 +117,11 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 			id = 15014
 	)
 	void deprecatedJpaPositionalParameterAccess(Integer jpaPositionalParameter);
+
+	@LogMessage( level = INFO )
+	@Message(
+			id = 15015,
+			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
+	)
+	void unusedMappedSuperclass(String name);
 }

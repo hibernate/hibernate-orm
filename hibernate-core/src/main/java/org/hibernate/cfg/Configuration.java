@@ -405,6 +405,17 @@ public class Configuration implements Serializable {
 	}
 
 	/**
+	 * Get a copy of all known MappedSuperclasses
+	 * <p/>
+	 * EXPERIMENTAL Consider this API as PRIVATE
+	 *
+	 * @return Set of all known MappedSuperclasses
+	 */
+	public java.util.Set<MappedSuperclass> getMappedSuperclassMappingsCopy() {
+		return new HashSet<MappedSuperclass>( mappedSuperClasses.values() );
+	}
+
+	/**
 	 * Get the mapping for a particular entity
 	 *
 	 * @param entityName An entity name.

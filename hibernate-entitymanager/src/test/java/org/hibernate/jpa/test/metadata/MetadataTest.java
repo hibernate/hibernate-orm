@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.test.metadata;
 
+import java.util.Collections;
 import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Attribute;
@@ -45,6 +46,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.MappedSuperclass;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -108,7 +110,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		cfg.addAnnotatedClass( WithGenericCollection.class );
 		cfg.buildMappings();
 		SessionFactoryImplementor sfi = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry() );
-		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), sfi, true );
+		MetamodelImpl.buildMetamodel( cfg.getClassMappings(), Collections.<MappedSuperclass>emptySet(), sfi, true );
 		sfi.close();
 	}
 

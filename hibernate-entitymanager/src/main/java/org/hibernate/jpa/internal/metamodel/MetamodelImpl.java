@@ -21,17 +21,26 @@
  */
 package org.hibernate.jpa.internal.metamodel;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
-
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MappedSuperclassType;
+import javax.persistence.metamodel.Metamodel;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.metamodel.*;
+
+import org.jboss.logging.Logger;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.internal.HEMLogging;
+import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 
 /**
  * Hibernate implementation of the JPA {@link Metamodel} contract.
@@ -40,6 +49,8 @@ import javax.persistence.metamodel.*;
  * @author Emmanuel Bernard
  */
 public class MetamodelImpl implements Metamodel, Serializable {
+	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
+
 	private final Map<Class<?>,EntityTypeImpl<?>> entities;
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
 	private final Map<Class<?>, MappedSuperclassType<?>> mappedSuperclassTypeMap;
@@ -53,13 +64,13 @@ public class MetamodelImpl implements Metamodel, Serializable {
    	 * @param sessionFactory The Hibernate session factory.
    	 * @return The built metamodel
 	 * 
-	 * @deprecated use {@link #buildMetamodel(java.util.Iterator,org.hibernate.engine.spi.SessionFactoryImplementor,boolean)} instead
+	 * @deprecated use {@link #buildMetamodel(Iterator,Set,SessionFactoryImplementor,boolean)} instead
    	 */
 	@Deprecated
    	public static MetamodelImpl buildMetamodel(
    			Iterator<PersistentClass> persistentClasses,
    			SessionFactoryImplementor sessionFactory) {
-        return buildMetamodel(persistentClasses, sessionFactory, false);
+        return buildMetamodel( persistentClasses, Collections.<MappedSuperclass>emptySet(), sessionFactory, false );
    	}
 
 	/**
@@ -67,21 +78,35 @@ public class MetamodelImpl implements Metamodel, Serializable {
 	 * {@link PersistentClass} models as well as the Hibernate {@link org.hibernate.SessionFactory}.
 	 *
 	 * @param persistentClasses Iterator over the Hibernate (config-time) metamodel
+	 * @param mappedSuperclasses All known MappedSuperclasses
 	 * @param sessionFactory The Hibernate session factory.
      * @param ignoreUnsupported ignore unsupported/unknown annotations (like @Any)
+	 *
 	 * @return The built metamodel
 	 */
 	public static MetamodelImpl buildMetamodel(
 			Iterator<PersistentClass> persistentClasses,
+			Set<MappedSuperclass> mappedSuperclasses,
 			SessionFactoryImplementor sessionFactory,
             boolean ignoreUnsupported) {
-		MetadataContext context = new MetadataContext( sessionFactory, ignoreUnsupported );
+		MetadataContext context = new MetadataContext( sessionFactory, mappedSuperclasses, ignoreUnsupported );
 		while ( persistentClasses.hasNext() ) {
 			PersistentClass pc = persistentClasses.next();
 			locateOrBuildEntityType( pc, context );
 		}
+		handleUnusedMappedSuperclasses( context );
 		context.wrapUp();
 		return new MetamodelImpl( context.getEntityTypeMap(), context.getEmbeddableTypeMap(), context.getMappedSuperclassTypeMap(), context.getEntityTypesByEntityName() );
+	}
+
+	private static void handleUnusedMappedSuperclasses(MetadataContext context) {
+		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
+		if ( !unusedMappedSuperclasses.isEmpty() ) {
+			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
+				log.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
+				locateOrBuildMappedsuperclassType( mappedSuperclass, context );
+			}
+		}
 	}
 
 	private static EntityTypeImpl<?> locateOrBuildEntityType(PersistentClass persistentClass, MetadataContext context) {

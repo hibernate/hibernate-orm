@@ -141,14 +141,14 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		this.discardOnClose = settings.isReleaseResourcesOnCloseEnabled();
 		this.sessionInterceptorClass = settings.getSessionInterceptorClass();
 
-		final Iterator<PersistentClass> classes = cfg.getClassMappings();
 		final JpaMetaModelPopulationSetting jpaMetaModelPopulationSetting = determineJpaMetaModelPopulationSetting( cfg );
 		if ( JpaMetaModelPopulationSetting.DISABLED == jpaMetaModelPopulationSetting ) {
 			this.metamodel = null;
 		}
 		else {
 			this.metamodel = MetamodelImpl.buildMetamodel(
-					classes,
+					cfg.getClassMappings(),
+					cfg.getMappedSuperclassMappingsCopy(),
 					sessionFactory,
 					JpaMetaModelPopulationSetting.IGNORE_UNSUPPORTED == jpaMetaModelPopulationSetting
 			);

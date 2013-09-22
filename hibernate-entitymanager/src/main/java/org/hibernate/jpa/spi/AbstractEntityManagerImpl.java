@@ -1295,9 +1295,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public LockModeType getLockMode(Object entity) {
 		checkOpen();
 
+		if ( !isTransactionInProgress() ) {
+			throw new TransactionRequiredException( "Call to EntityManager#getLockMode should occur within transaction according to spec" );
+		}
+
 		if ( !contains( entity ) ) {
 			throw convert (new IllegalArgumentException( "entity not in the persistence context" ) );
 		}
+
 		return getLockModeType( internalGetSession().getCurrentLockMode( entity ) );
 	}
 

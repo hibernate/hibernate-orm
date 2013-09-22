@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,7 +81,6 @@ import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
 import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.service.ServiceRegistry;
@@ -295,20 +293,35 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	}
 
 	public EntityManager createEntityManager() {
-		return createEntityManager( Collections.EMPTY_MAP );
+		return internalCreateEntityManager( SynchronizationType.SYNCHRONIZED, Collections.EMPTY_MAP );
 	}
 
 	@Override
 	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
-		return createEntityManager( synchronizationType, Collections.EMPTY_MAP );
+		errorIfResourceLocalDueToExplicitSynchronizationType();
+		return internalCreateEntityManager( synchronizationType, Collections.EMPTY_MAP );
+	}
+
+	private void errorIfResourceLocalDueToExplicitSynchronizationType() {
+		if ( transactionType == PersistenceUnitTransactionType.RESOURCE_LOCAL ) {
+			throw new IllegalStateException(
+					"Illegal attempt to specify a SynchronizationType when building an EntityManager from a " +
+							"EntityManagerFactory defined as RESOURCE_LOCAL "
+			);
+		}
 	}
 
 	public EntityManager createEntityManager(Map map) {
-		return createEntityManager( SynchronizationType.SYNCHRONIZED, map );
+		return internalCreateEntityManager( SynchronizationType.SYNCHRONIZED, map );
 	}
 
 	@Override
 	public EntityManager createEntityManager(SynchronizationType synchronizationType, Map map) {
+		errorIfResourceLocalDueToExplicitSynchronizationType();
+		return internalCreateEntityManager( synchronizationType, map );
+	}
+
+	private EntityManager internalCreateEntityManager(SynchronizationType synchronizationType, Map map) {
 		validateNotClosed();
 
 		//TODO support discardOnClose, persistencecontexttype?, interceptor,

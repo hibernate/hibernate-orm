@@ -1,1 +1,3 @@
 org.hibernate.jpa.HibernatePersistenceProvider
+# The deprecated provider, logs warnings when used.
+org.hibernate.ejb.HibernatePersistence

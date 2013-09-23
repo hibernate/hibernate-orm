@@ -124,4 +124,11 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
 	)
 	void unusedMappedSuperclass(String name);
+
+	@LogMessage( level = WARN )
+	@Message(
+			id = 15016,
+			value = "Encountered a deprecated javax.persistence.spi.PersistenceProvider [%s]; use [%s] instead."
+	)
+	void deprecatedPersistenceProvider(String deprecated, String replacement);
 }

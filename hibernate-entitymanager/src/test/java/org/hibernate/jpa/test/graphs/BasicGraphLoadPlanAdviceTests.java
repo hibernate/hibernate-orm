@@ -42,9 +42,13 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.spi.LoadPlanAdvisor;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.hibernate.jpa.graph.internal.advisor.AdviceStyle;
+
+import org.hibernate.testing.Skip;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
@@ -97,6 +101,7 @@ public class BasicGraphLoadPlanAdviceTests extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
+	@Ignore
 	public void testBasicSubgraphBuilding() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph<Entity1> graphRoot = em.createEntityGraph( Entity1.class );

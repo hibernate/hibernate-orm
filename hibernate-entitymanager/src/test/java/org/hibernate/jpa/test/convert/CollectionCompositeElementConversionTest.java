@@ -27,6 +27,7 @@ import javax.persistence.AttributeConverter;
 import javax.persistence.CollectionTable;
 import javax.persistence.Converter;
 import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -36,8 +37,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -54,13 +57,13 @@ import static org.junit.Assert.assertEquals;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-8529" )
-public class MapKeyConversionTest extends BaseUnitTestCase {
+public class CollectionCompositeElementConversionTest extends BaseUnitTestCase {
 	@Test
 	public void testElementCollectionConversion() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override
 			public List<String> getManagedClassNames() {
-				return Arrays.asList( Customer.class.getName(), ColorTypeConverter.class.getName() );
+				return Arrays.asList( Disguise.class.getName(), ColorTypeConverter.class.getName() );
 			}
 		};
 
@@ -71,22 +74,22 @@ public class MapKeyConversionTest extends BaseUnitTestCase {
 		try {
 			EntityManager em = emf.createEntityManager();
 			em.getTransaction().begin();
-			Customer customer = new Customer( 1 );
-			customer.colors.put( ColorType.BLUE, "favorite" );
-			em.persist( customer );
+			Disguise disguise = new Disguise( 1 );
+			disguise.traits.add( new Traits( ColorType.BLUE, ColorType.RED ) );
+			em.persist( disguise );
 			em.getTransaction().commit();
 			em.close();
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
-			assertEquals( 1, em.find( Customer.class, 1 ).colors.size() );
+			assertEquals( 1, em.find( Disguise.class, 1 ).traits.size() );
 			em.getTransaction().commit();
 			em.close();
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
-			customer = em.find( Customer.class, 1 );
-			em.remove( customer );
+			disguise = em.find( Disguise.class, 1 );
+			em.remove( disguise );
 			em.getTransaction().commit();
 			em.close();
 		}
@@ -95,26 +98,43 @@ public class MapKeyConversionTest extends BaseUnitTestCase {
 		}
 	}
 
-	@Entity( name = "Customer" )
-	@Table( name = "CUST" )
-	public static class Customer {
+	@Entity( name = "Disguise" )
+	@Table( name = "DISGUISE" )
+	public static class Disguise {
 		@Id
 		private Integer id;
 
 		@ElementCollection(fetch = FetchType.EAGER)
-		@CollectionTable( name = "cust_color", joinColumns = @JoinColumn( name = "cust_fk" ) )
-		private Map<ColorType, String> colors = new HashMap<ColorType, String>();
+		@CollectionTable(
+				name = "DISGUISE_TRAIT",
+				joinColumns = @JoinColumn(name = "DISGUISE_FK", nullable = false)
+		)
+		private Set<Traits> traits = new HashSet<Traits>();
 
-		public Customer() {
+		public Disguise() {
 		}
 
-		public Customer(Integer id) {
+		public Disguise(Integer id) {
 			this.id = id;
 		}
 	}
 
+	@Embeddable
+	public static class Traits {
+		public ColorType eyeColor;
+		public ColorType hairColor;
 
-	// an enum-like class (converters are technically not allowed to apply to enums)
+		public Traits() {
+		}
+
+		public Traits(
+				ColorType eyeColor,
+				ColorType hairColor) {
+			this.eyeColor = eyeColor;
+			this.hairColor = hairColor;
+		}
+	}
+
 	public static class ColorType {
 		public static ColorType BLUE = new ColorType( "blue" );
 		public static ColorType RED = new ColorType( "red" );

@@ -47,6 +47,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
@@ -196,80 +197,6 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		// todo : implement (and make sure it gets called - for handling collections of composites)
 	}
 
-	public AttributeConverterDefinition resolveElementAttributeConverterDefinition(XClass elementXClass) {
-		AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
-		if ( info != null ) {
-			if ( info.isConversionDisabled() ) {
-				return null;
-			}
-			else {
-				try {
-					return makeAttributeConverterDefinition( info );
-				}
-				catch (Exception e) {
-					throw new IllegalStateException(
-							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
-							e
-					);
-				}
-			}
-		}
-
-		log.debugf(
-				"Attempting to locate auto-apply AttributeConverter for collection element [%s]",
-				collection.getRole()
-		);
-
-		final Class elementClass = determineElementClass( elementXClass );
-		if ( elementClass != null ) {
-			for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
-				if ( ! attributeConverterDefinition.isAutoApply() ) {
-					continue;
-				}
-				log.debugf(
-						"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
-						attributeConverterDefinition.toString(),
-						attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
-						elementClass.getSimpleName()
-				);
-				if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
-					return attributeConverterDefinition;
-				}
-			}
-		}
-
-		return null;
-	}
-
-	private Class determineElementClass(XClass elementXClass) {
-		if ( elementXClass != null ) {
-			try {
-				return getMappings().getReflectionManager().toClass( elementXClass );
-			}
-			catch (Exception e) {
-				log.debugf(
-						"Unable to resolve XClass [%s] to Class for collection elements [%s]",
-						elementXClass.getName(),
-						collection.getRole()
-				);
-			}
-		}
-
-		if ( collection.getElement() != null ) {
-			if ( collection.getElement().getType() != null ) {
-				return collection.getElement().getType().getReturnedClass();
-			}
-		}
-
-		// currently this is called from paths where the element type really should be known,
-		// so log the fact that we could not resolve the collection element info
-		log.debugf(
-				"Unable to resolve element information for collection [%s]",
-				collection.getRole()
-		);
-		return null;
-	}
-
 	@Override
 	protected AttributeConversionInfo locateAttributeConversionInfo(XProperty property) {
 		if ( canElementBeConverted && canKeyBeConverted ) {
@@ -402,5 +329,154 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 		if ( canKeyBeConverted || canElementBeConverted ) {
 			buildAttributeConversionInfoMaps( collectionProperty, elementAttributeConversionInfoMap, keyAttributeConversionInfoMap );
 		}
+	}
+
+	public AttributeConverterDefinition resolveElementAttributeConverterDefinition(XClass elementXClass) {
+		AttributeConversionInfo info = locateAttributeConversionInfo( "element" );
+		if ( info != null ) {
+			if ( info.isConversionDisabled() ) {
+				return null;
+			}
+			else {
+				try {
+					return makeAttributeConverterDefinition( info );
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(
+							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
+							e
+					);
+				}
+			}
+		}
+
+		log.debugf(
+				"Attempting to locate auto-apply AttributeConverter for collection element [%s]",
+				collection.getRole()
+		);
+
+		final Class elementClass = determineElementClass( elementXClass );
+		if ( elementClass != null ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
+				if ( ! attributeConverterDefinition.isAutoApply() ) {
+					continue;
+				}
+				log.debugf(
+						"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
+						attributeConverterDefinition.toString(),
+						attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
+						elementClass.getSimpleName()
+				);
+				if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
+					return attributeConverterDefinition;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private Class determineElementClass(XClass elementXClass) {
+		if ( elementXClass != null ) {
+			try {
+				return getMappings().getReflectionManager().toClass( elementXClass );
+			}
+			catch (Exception e) {
+				log.debugf(
+						"Unable to resolve XClass [%s] to Class for collection elements [%s]",
+						elementXClass.getName(),
+						collection.getRole()
+				);
+			}
+		}
+
+		if ( collection.getElement() != null ) {
+			if ( collection.getElement().getType() != null ) {
+				return collection.getElement().getType().getReturnedClass();
+			}
+		}
+
+		// currently this is called from paths where the element type really should be known,
+		// so log the fact that we could not resolve the collection element info
+		log.debugf(
+				"Unable to resolve element information for collection [%s]",
+				collection.getRole()
+		);
+		return null;
+	}
+
+	public AttributeConverterDefinition keyElementAttributeConverterDefinition(XClass keyXClass) {
+		AttributeConversionInfo info = locateAttributeConversionInfo( "key" );
+		if ( info != null ) {
+			if ( info.isConversionDisabled() ) {
+				return null;
+			}
+			else {
+				try {
+					return makeAttributeConverterDefinition( info );
+				}
+				catch (Exception e) {
+					throw new IllegalStateException(
+							String.format( "Unable to instantiate AttributeConverter [%s", info.getConverterClass().getName() ),
+							e
+					);
+				}
+			}
+		}
+
+		log.debugf(
+				"Attempting to locate auto-apply AttributeConverter for collection key [%s]",
+				collection.getRole()
+		);
+
+		final Class elementClass = determineKeyClass( keyXClass );
+		if ( elementClass != null ) {
+			for ( AttributeConverterDefinition attributeConverterDefinition : getMappings().getAttributeConverters() ) {
+				if ( ! attributeConverterDefinition.isAutoApply() ) {
+					continue;
+				}
+				log.debugf(
+						"Checking auto-apply AttributeConverter [%s] type [%s] for match [%s]",
+						attributeConverterDefinition.toString(),
+						attributeConverterDefinition.getEntityAttributeType().getSimpleName(),
+						elementClass.getSimpleName()
+				);
+				if ( areTypeMatch( attributeConverterDefinition.getEntityAttributeType(), elementClass ) ) {
+					return attributeConverterDefinition;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private Class determineKeyClass(XClass keyXClass) {
+		if ( keyXClass != null ) {
+			try {
+				return getMappings().getReflectionManager().toClass( keyXClass );
+			}
+			catch (Exception e) {
+				log.debugf(
+						"Unable to resolve XClass [%s] to Class for collection key [%s]",
+						keyXClass.getName(),
+						collection.getRole()
+				);
+			}
+		}
+
+		final IndexedCollection indexedCollection = (IndexedCollection) collection;
+		if ( indexedCollection.getIndex() != null ) {
+			if ( indexedCollection.getIndex().getType() != null ) {
+				return indexedCollection.getIndex().getType().getReturnedClass();
+			}
+		}
+
+		// currently this is called from paths where the element type really should be known,
+		// so log the fact that we could not resolve the collection element info
+		log.debugf(
+				"Unable to resolve key information for collection [%s]",
+				collection.getRole()
+		);
+		return null;
 	}
 }

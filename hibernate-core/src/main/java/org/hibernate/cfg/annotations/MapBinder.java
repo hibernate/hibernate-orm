@@ -41,6 +41,7 @@ import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotatedClassType;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.BinderHelper;
+import org.hibernate.cfg.CollectionPropertyHolder;
 import org.hibernate.cfg.CollectionSecondPass;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
@@ -176,28 +177,20 @@ public class MapBinder extends CollectionBinder {
 				//does not make sense for a map key element.setIgnoreNotFound( ignoreNotFound );
 			}
 			else {
-				XClass elementClass;
+				XClass keyXClass;
 				AnnotatedClassType classType;
-				PropertyHolder holder = null;
 				if ( BinderHelper.PRIMITIVE_NAMES.contains( mapKeyType ) ) {
 					classType = AnnotatedClassType.NONE;
-					elementClass = null;
+					keyXClass = null;
 				}
 				else {
 					try {
-						elementClass = mappings.getReflectionManager().classForName( mapKeyType, MapBinder.class );
+						keyXClass = mappings.getReflectionManager().classForName( mapKeyType, MapBinder.class );
 					}
 					catch (ClassNotFoundException e) {
 						throw new AnnotationException( "Unable to find class: " + mapKeyType, e );
 					}
-					classType = mappings.getClassType( elementClass );
-
-					holder = PropertyHolderBuilder.buildPropertyHolder(
-							mapValue,
-							StringHelper.qualify( mapValue.getRole(), "mapkey" ),
-							elementClass,
-							property, propertyHolder, mappings
-					);
+					classType = mappings.getClassType( keyXClass );
 					//force in case of attribute override
 					boolean attributeOverride = property.isAnnotationPresent( AttributeOverride.class )
 							|| property.isAnnotationPresent( AttributeOverrides.class );
@@ -206,12 +199,29 @@ public class MapBinder extends CollectionBinder {
 					}
 				}
 
+				CollectionPropertyHolder holder = PropertyHolderBuilder.buildPropertyHolder(
+						mapValue,
+						StringHelper.qualify( mapValue.getRole(), "mapkey" ),
+						keyXClass,
+						property,
+						propertyHolder,
+						mappings
+				);
+
+
+				// 'propertyHolder' is the PropertyHolder for the owner of the collection
+				// 'holder' is the CollectionPropertyHolder.
+				// 'property' is the collection XProperty
+				propertyHolder.startingProperty( property );
+				holder.prepare( property );
+
 				PersistentClass owner = mapValue.getOwner();
 				AccessType accessType;
 				// FIXME support @Access for collection of elements
 				// String accessType = access != null ? access.value() : null;
 				if ( owner.getIdentifierProperty() != null ) {
-					accessType = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" ) ? AccessType.PROPERTY
+					accessType = owner.getIdentifierProperty().getPropertyAccessorName().equals( "property" )
+							? AccessType.PROPERTY
 							: AccessType.FIELD;
 				}
 				else if ( owner.getIdentifierMapper() != null && owner.getIdentifierMapper().getPropertySpan() > 0 ) {
@@ -228,18 +238,25 @@ public class MapBinder extends CollectionBinder {
 
 					PropertyData inferredData;
 					if ( isHibernateExtensionMapping() ) {
-						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "index", elementClass );
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "index", keyXClass );
 					}
 					else {
 						//"key" is the JPA 2 prefix for map keys
-						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "key", elementClass );
+						inferredData = new PropertyPreloadedData( AccessType.PROPERTY, "key", keyXClass );
 					}
 
 					//TODO be smart with isNullable
 					Component component = AnnotationBinder.fillComponent(
-							holder, inferredData, accessType, true,
-							entityBinder, false, false,
-							true, mappings, inheritanceStatePerClass
+							holder,
+							inferredData,
+							accessType,
+							true,
+							entityBinder,
+							false,
+							false,
+							true,
+							mappings,
+							inheritanceStatePerClass
 					);
 					mapValue.setIndex( component );
 				}
@@ -271,14 +288,17 @@ public class MapBinder extends CollectionBinder {
 					//the algorithm generally does not apply for map key anyway
 					elementBinder.setKey(true);
 					MapKeyType mapKeyTypeAnnotation = property.getAnnotation( MapKeyType.class );
-					if ( mapKeyTypeAnnotation != null && !BinderHelper.isEmptyAnnotationValue(
-							mapKeyTypeAnnotation.value()
-									.type()
-					) ) {
+					if ( mapKeyTypeAnnotation != null
+							&& !BinderHelper.isEmptyAnnotationValue( mapKeyTypeAnnotation.value() .type() ) ) {
 						elementBinder.setExplicitType( mapKeyTypeAnnotation.value() );
 					}
 					else {
-						elementBinder.setType( property, elementClass, this.collection.getOwnerEntityName(), null );
+						elementBinder.setType(
+								property,
+								keyXClass,
+								this.collection.getOwnerEntityName(),
+								holder.keyElementAttributeConverterDefinition( keyXClass )
+						);
 					}
 					elementBinder.setPersistentClassName( propertyHolder.getEntityName() );
 					elementBinder.setAccessType( accessType );

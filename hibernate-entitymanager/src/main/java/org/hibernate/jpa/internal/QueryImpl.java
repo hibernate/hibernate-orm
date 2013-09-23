@@ -94,6 +94,20 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		extractParameterInfo( namedParameterTypeRedefinitions );
 	}
 
+	@Override
+	protected boolean isNativeSqlQuery() {
+		return SQLQuery.class.isInstance( query );
+	}
+
+	@Override
+	protected boolean isSelectQuery() {
+		if ( isNativeSqlQuery() ) {
+			throw new IllegalStateException( "Cannot tell if native SQL query is SELECT query" );
+		}
+
+		return org.hibernate.internal.QueryImpl.class.cast( query ).isSelect();
+	}
+
 	@SuppressWarnings({ "unchecked", "RedundantCast" })
 	private void extractParameterInfo(Map<String,Class> namedParameterTypeRedefinition) {
 		if ( ! org.hibernate.internal.AbstractQueryImpl.class.isInstance( query ) ) {

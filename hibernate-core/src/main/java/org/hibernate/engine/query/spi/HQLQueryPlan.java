@@ -400,4 +400,8 @@ public class HQLQueryPlan implements Serializable {
 	public Class getDynamicInstantiationResultType() {
 		return translators[0].getDynamicInstantiationResultType();
 	}
+
+	public boolean isSelect() {
+		return !translators[0].isManipulationStatement();
+	}
 }

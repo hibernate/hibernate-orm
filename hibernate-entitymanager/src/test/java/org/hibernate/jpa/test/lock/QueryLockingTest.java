@@ -30,7 +30,8 @@ import javax.persistence.LockModeType;
 import org.junit.Test;
 
 import org.hibernate.LockMode;
-import org.hibernate.ejb.AvailableSettings;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.internal.SessionImpl;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
@@ -89,12 +91,18 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		QueryImpl query = em.createNativeQuery( "select * from lockable l" ).unwrap( QueryImpl.class );
 
 		org.hibernate.internal.SQLQueryImpl hibernateQuery = (org.hibernate.internal.SQLQueryImpl) query.getHibernateQuery();
-//		assertEquals( LockMode.NONE, hibernateQuery.getLockOptions().getLockMode() );
-//		assertNull( hibernateQuery.getLockOptions().getAliasSpecificLockMode( "l" ) );
-//		assertEquals( LockMode.NONE, hibernateQuery.getLockOptions().getEffectiveLockMode( "l" ) );
 
+		// the spec disallows calling setLockMode in a native SQL query
+		try {
+			query.setLockMode( LockModeType.READ );
+			fail( "Should have failed" );
+		}
+		catch (IllegalStateException expected) {
+		}
+
+		// however, we should be able to set it using hints
+		query.setHint( QueryHints.HINT_NATIVE_LOCKMODE, LockModeType.READ );
 		// NOTE : LockModeType.READ should map to LockMode.OPTIMISTIC
-		query.setLockMode( LockModeType.READ );
 		assertEquals( LockMode.OPTIMISTIC, hibernateQuery.getLockOptions().getLockMode() );
 		assertNull( hibernateQuery.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.OPTIMISTIC, hibernateQuery.getLockOptions().getEffectiveLockMode( "l" ) );

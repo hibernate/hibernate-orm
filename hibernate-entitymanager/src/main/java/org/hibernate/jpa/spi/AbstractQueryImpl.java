@@ -120,6 +120,14 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 	public TypedQuery<X> setLockMode(javax.persistence.LockModeType lockModeType) {
 		checkOpen( true );
 
+		if ( isNativeSqlQuery() ) {
+			throw new IllegalStateException( "Illegal attempt to set lock mode on a native SQL query" );
+		}
+
+		if ( ! isSelectQuery() ) {
+			throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
+		}
+
 		// todo : technically this check should be on execution of the query, not here : HHH-8521
 		if ( lockModeType != LockModeType.NONE ) {
 			if (! getEntityManager().isTransactionInProgress()) {
@@ -135,8 +143,6 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 		internalApplyLockMode( lockModeType );
 		return this;
 	}
-
-	protected abstract void internalApplyLockMode(javax.persistence.LockModeType lockModeType);
 
 	@Override
 	public javax.persistence.LockModeType getLockMode() {

@@ -403,6 +403,16 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 	}
 
 	@Override
+	protected boolean isNativeSqlQuery() {
+		return false;
+	}
+
+	@Override
+	protected boolean isSelectQuery() {
+		return false;
+	}
+
+	@Override
 	public Query setLockMode(LockModeType lockMode) {
 		throw new IllegalStateException( "javax.persistence.Query.setLockMode not valid on javax.persistence.StoredProcedureQuery" );
 	}
@@ -414,6 +424,12 @@ public class StoredProcedureQueryImpl extends BaseQueryImpl implements StoredPro
 
 
 	// unsupported hints/calls ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+	@Override
+	protected void internalApplyLockMode(LockModeType lockModeType) {
+		throw new IllegalStateException( "Specifying LockMode not valid on javax.persistence.StoredProcedureQuery" );
+	}
 
 	@Override
 	protected void applyFirstResult(int firstResult) {

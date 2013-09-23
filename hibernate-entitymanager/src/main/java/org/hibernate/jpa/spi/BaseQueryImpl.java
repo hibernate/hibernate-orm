@@ -26,6 +26,7 @@ package org.hibernate.jpa.spi;
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
@@ -59,6 +60,7 @@ import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
 import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
 import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
@@ -330,6 +332,31 @@ public abstract class BaseQueryImpl implements Query {
 						CacheModeHelper.interpretCacheMode( storeMode, retrieveMode )
 				);
 			}
+			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
+				if ( !isNativeSqlQuery() ) {
+					throw new IllegalStateException(
+							"Illegal attempt to set lock mode on non-native query via hint; use Query#setLockMode instead"
+					);
+				}
+				if ( LockMode.class.isInstance( value ) ) {
+					internalApplyLockMode( LockModeTypeHelper.getLockModeType( (LockMode) value ) );
+				}
+				else if ( LockModeType.class.isInstance( value ) ) {
+					internalApplyLockMode( (LockModeType) value );
+				}
+				else {
+					throw new IllegalArgumentException(
+							String.format(
+									"Native lock-mode hint [%s] must specify %s or %s.  Encountered type : %s",
+									HINT_NATIVE_LOCKMODE,
+									LockMode.class.getName(),
+									LockModeType.class.getName(),
+									value.getClass().getName()
+							)
+					);
+				}
+				applied = true;
+			}
 			else if ( hintName.startsWith( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE ) ) {
 				if ( canApplyAliasSpecificLockModeHints() ) {
 					// extract the alias
@@ -369,6 +396,21 @@ public abstract class BaseQueryImpl implements Query {
 		return this;
 	}
 
+	/**
+	 * Is the query represented here a native SQL query?
+	 *
+	 * @return {@code true} if it is a native SQL query; {@code false} otherwise
+	 */
+	protected abstract boolean isNativeSqlQuery();
+
+	/**
+	 * Is the query represented here a SELECT query?
+	 *
+	 * @return {@code true} if the query is a SELECT; {@code false} otherwise.
+	 */
+	protected abstract boolean isSelectQuery();
+
+	protected abstract void internalApplyLockMode(javax.persistence.LockModeType lockModeType);
 
 	// FlushMode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

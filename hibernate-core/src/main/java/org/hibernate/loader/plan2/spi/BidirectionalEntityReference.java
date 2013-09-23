@@ -38,7 +38,7 @@ package org.hibernate.loader.plan2.spi;
  *
  * @author Steve Ebersole
  */
-public interface BidirectionalEntityFetch {
+public interface BidirectionalEntityReference extends EntityReference {
 	/**
 	 * Get the targeted EntityReference
 	 *

@@ -21,21 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan2.build.internal.returns;
+package org.hibernate.loader.plan2.build.spi;
 
-import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
+import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class SimpleEntityIdentifierDescriptionImpl implements EntityIdentifierDescription {
-	@Override
-	public boolean hasFetches() {
-		return false;
-	}
-
-	@Override
-	public boolean hasBidirectionalEntityReferences() {
-		return false;
-	}
+public interface ExpandingCompositeQuerySpace extends CompositeQuerySpace, ExpandingQuerySpace {
 }

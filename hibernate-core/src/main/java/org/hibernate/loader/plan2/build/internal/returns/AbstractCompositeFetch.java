@@ -23,63 +23,40 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
-import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
-import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
-import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
-import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.loader.plan2.spi.Join;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public abstract class AbstractCompositeFetch implements CompositeFetch, ExpandingFetchSource {
+public abstract class AbstractCompositeFetch extends AbstractExpandingFetchSource implements CompositeFetch {
 	private static final FetchStrategy FETCH_STRATEGY = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	private final CompositeType compositeType;
-	private final CompositeQuerySpace compositeQuerySpace;
-	private final PropertyPath propertyPath;
 	private final boolean allowCollectionFetches;
-
-	private List<Fetch> fetches;
 
 	protected AbstractCompositeFetch(
 			CompositeType compositeType,
-			CompositeQuerySpace compositeQuerySpace,
-			boolean allowCollectionFetches, PropertyPath propertyPath) {
+			ExpandingCompositeQuerySpace compositeQuerySpace,
+			boolean allowCollectionFetches,
+			PropertyPath propertyPath) {
+		super( compositeQuerySpace, propertyPath );
 		this.compositeType = compositeType;
-		this.compositeQuerySpace = compositeQuerySpace;
 		this.allowCollectionFetches = allowCollectionFetches;
-		this.propertyPath = propertyPath;
-	}
-
-	@SuppressWarnings("UnusedParameters")
-	protected CompositeQuerySpace resolveCompositeQuerySpace(LoadPlanBuildingContext loadPlanBuildingContext) {
-		return compositeQuerySpace;
 	}
 
 	@Override
@@ -107,100 +84,20 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 	}
 
 	@Override
-	public String getQuerySpaceUid() {
-		return compositeQuerySpace.getUid();
-	}
-
-	@Override
 	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition) {
 		// anything to do here?
 	}
 
-	@Override
-	public EntityFetch buildEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return buildEntityFetch( attributeDefinition, fetchStrategy, null, loadPlanBuildingContext );
-	}
-
-	@Override
-	public BidirectionalEntityFetch buildBidirectionalEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			EntityReference entityReference,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		return (BidirectionalEntityFetch) buildEntityFetch(
-				attributeDefinition, fetchStrategy, entityReference, loadPlanBuildingContext
-		);
-	}
-
-	private EntityFetch buildEntityFetch(
-			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			EntityReference targetEntityReference,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		final EntityType fetchedType = (EntityType) attributeDefinition.getType();
-		final EntityPersister fetchedPersister = loadPlanBuildingContext.getSessionFactory().getEntityPersister(
-				fetchedType.getAssociatedEntityName()
-		);
-
-		if ( fetchedPersister == null ) {
-			throw new WalkingException(
-					String.format(
-							"Unable to locate EntityPersister [%s] for fetch [%s]",
-							fetchedType.getAssociatedEntityName(),
-							attributeDefinition.getName()
-					)
-			);
-		}
-
-		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) resolveCompositeQuerySpace(
-				loadPlanBuildingContext
-		);
-		final EntityFetch fetch;
-		if ( targetEntityReference == null ) {
-			final Join join = leftHandSide.addEntityJoin(
-					attributeDefinition,
-					fetchedPersister,
-					loadPlanBuildingContext.getQuerySpaces().generateImplicitUid(),
-					attributeDefinition.isNullable()
-			);
-			fetch = new EntityFetchImpl( this, attributeDefinition, fetchStrategy, join );
-		}
-		else {
-			fetch = new BidirectionalEntityFetchImpl( this, attributeDefinition, fetchStrategy, targetEntityReference );
-		}
-		addFetch( fetch );
-		return fetch;
-	}
-
-	private void addFetch(Fetch fetch) {
-		if ( fetches == null ) {
-			fetches = new ArrayList<Fetch>();
-		}
-		fetches.add( fetch );
-	}
-
-	@Override
-	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
-		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) resolveCompositeQuerySpace( loadPlanBuildingContext );
-		final Join join = leftHandSide.addCompositeJoin(
-				attributeDefinition,
-				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid()
-		);
-
-		final NestedCompositeFetchImpl fetch = new NestedCompositeFetchImpl(
+	protected CompositeFetch createCompositeFetch(
+			CompositeType compositeType,
+			ExpandingCompositeQuerySpace compositeQuerySpace) {
+		return new NestedCompositeFetchImpl(
 				this,
-				attributeDefinition.getType(),
-				(CompositeQuerySpace) join.getRightHandSide(),
+				compositeType,
+				compositeQuerySpace,
 				allowCollectionFetches,
 				getPropertyPath()
 		);
-		addFetch( fetch );
-		return fetch;
 	}
 
 	@Override
@@ -212,50 +109,11 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 			throw new WalkingException(
 					String.format(
 							"This composite path [%s] does not allow collection fetches (composite id or composite collection index/element",
-							propertyPath.getFullPath()
+							getPropertyPath().getFullPath()
 					)
 			);
 		}
-
-		// general question here wrt Joins and collection fetches...  do we create multiple Joins for many-to-many,
-		// for example, or do we allow the Collection QuerySpace to handle that?
-
-		final CollectionType fetchedType = (CollectionType) attributeDefinition.getType();
-		final CollectionPersister fetchedPersister = loadPlanBuildingContext.getSessionFactory().getCollectionPersister(
-				fetchedType.getRole()
-		);
-
-		if ( fetchedPersister == null ) {
-			throw new WalkingException(
-					String.format(
-							"Unable to locate CollectionPersister [%s] for fetch [%s]",
-							fetchedType.getRole(),
-							attributeDefinition.getName()
-					)
-			);
-		}
-		final ExpandingQuerySpace leftHandSide = (ExpandingQuerySpace) loadPlanBuildingContext.getQuerySpaces().getQuerySpaceByUid(
-				getQuerySpaceUid()
-		);
-		final Join join = leftHandSide.addCollectionJoin(
-				attributeDefinition,
-				fetchedPersister,
-				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid()
-		);
-		final CollectionFetch fetch = new CollectionFetchImpl(
-				this,
-				attributeDefinition,
-				fetchStrategy,
-				join,
-				loadPlanBuildingContext
-		);
-		addFetch( fetch );
-		return fetch;
-	}
-
-	@Override
-	public PropertyPath getPropertyPath() {
-		return propertyPath;
+		return super.buildCollectionFetch( attributeDefinition, fetchStrategy, loadPlanBuildingContext );
 	}
 
 	@Override
@@ -277,12 +135,6 @@ public abstract class AbstractCompositeFetch implements CompositeFetch, Expandin
 	public String getAdditionalJoinConditions() {
 		return null;
 	}
-
-	@Override
-	public Fetch[] getFetches() {
-		return (fetches == null) ? NO_FETCHES : fetches.toArray( new Fetch[fetches.size()] );
-	}
-
 
 	// this is being removed to be more ogm/search friendly
 	@Override

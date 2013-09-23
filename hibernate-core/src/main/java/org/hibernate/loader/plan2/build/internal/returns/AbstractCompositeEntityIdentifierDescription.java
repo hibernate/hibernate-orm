@@ -23,16 +23,11 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityIdentifierDescription;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
-import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.loader.plan2.spi.Join;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
@@ -47,7 +42,7 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 
 	protected AbstractCompositeEntityIdentifierDescription(
 			EntityReference entityReference,
-			CompositeQuerySpace compositeQuerySpace,
+			ExpandingCompositeQuerySpace compositeQuerySpace,
 			CompositeType identifierType,
 			PropertyPath propertyPath) {
 		super( identifierType, compositeQuerySpace, false, propertyPath );
@@ -57,6 +52,11 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 	@Override
 	public boolean hasFetches() {
 		return getFetches().length > 0;
+	}
+
+	@Override
+	public boolean hasBidirectionalEntityReferences() {
+		return getBidirectionalEntityReferences().length > 0;
 	}
 
 	@Override

@@ -23,10 +23,10 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.type.CompositeType;
@@ -45,7 +45,7 @@ public class CollectionFetchableElementCompositeGraph
 	public CollectionFetchableElementCompositeGraph(CollectionReference collectionReference, Join compositeJoin) {
 		super(
 				(CompositeType) compositeJoin.getRightHandSide().getPropertyMapping().getType(),
-				(CompositeQuerySpace) compositeJoin.getRightHandSide(),
+				(ExpandingCompositeQuerySpace) compositeJoin.getRightHandSide(),
 				false,
 				// these property paths are just informational...
 				collectionReference.getPropertyPath().append( "<element>" )

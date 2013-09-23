@@ -24,6 +24,7 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.EntityQuerySpace;
@@ -41,7 +42,7 @@ public class CollectionFetchableIndexEntityGraph extends AbstractEntityReference
 			CollectionReference collectionReference,
 			Join entityJoin) {
 		super(
-				(EntityQuerySpace) entityJoin.getRightHandSide(),
+				(ExpandingEntityQuerySpace) entityJoin.getRightHandSide(),
 				collectionReference.getPropertyPath().append( "<index>" )
 		);
 
@@ -52,11 +53,6 @@ public class CollectionFetchableIndexEntityGraph extends AbstractEntityReference
 	@Override
 	public CollectionReference getCollectionReference() {
 		return collectionReference;
-	}
-
-	@Override
-	protected EntityQuerySpace getEntityQuerySpace() {
-		return entityQuerySpace;
 	}
 
 	@Override

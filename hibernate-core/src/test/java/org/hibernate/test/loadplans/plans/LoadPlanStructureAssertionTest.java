@@ -26,7 +26,7 @@ package org.hibernate.test.loadplans.plans;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.collectionelement.Boy;
 import org.hibernate.test.annotations.collectionelement.Matrix;
@@ -226,18 +226,19 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 					FetchSource.class,
 					cardFieldElementGraph.getIdentifierDescription()
 			);
-			assertEquals( 2, cardFieldElementGraphIdAsFetchSource.getFetches().length );
+			assertEquals( 1, cardFieldElementGraphIdAsFetchSource.getFetches().length );
+			assertEquals( 1, cardFieldElementGraphIdAsFetchSource.getBidirectionalEntityReferences().length );
 
-			BidirectionalEntityFetch circularCardFetch = assertTyping(
-					BidirectionalEntityFetch.class,
-					cardFieldElementGraphIdAsFetchSource.getFetches()[0]
+			BidirectionalEntityReference circularCardFetch = assertTyping(
+					BidirectionalEntityReference.class,
+					cardFieldElementGraphIdAsFetchSource.getBidirectionalEntityReferences()[0]
 			);
 			assertSame( circularCardFetch.getTargetEntityReference(), cardReturn );
 
 			// the fetch above is to the other key-many-to-one for CardField.primaryKey composite: key
 			EntityFetch keyFetch = assertTyping(
 					EntityFetch.class,
-					cardFieldElementGraphIdAsFetchSource.getFetches()[1]
+					cardFieldElementGraphIdAsFetchSource.getFetches()[0]
 			);
 			assertEquals( Key.class.getName(), keyFetch.getEntityPersister().getEntityName() );
 		}

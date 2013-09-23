@@ -24,7 +24,7 @@
 package org.hibernate.loader.plan2.build.spi;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
@@ -54,7 +54,7 @@ public interface ExpandingFetchSource extends FetchSource {
 			FetchStrategy fetchStrategy,
 			LoadPlanBuildingContext loadPlanBuildingContext);
 
-	public BidirectionalEntityFetch buildBidirectionalEntityFetch(
+	public BidirectionalEntityReference buildBidirectionalEntityReference(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			EntityReference targetEntityReference,

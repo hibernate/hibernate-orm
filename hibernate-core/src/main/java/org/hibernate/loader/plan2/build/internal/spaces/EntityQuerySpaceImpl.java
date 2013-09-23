@@ -26,13 +26,11 @@ package org.hibernate.loader.plan2.build.internal.spaces;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan2.build.spi.AbstractQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
-import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.type.AssociationType;
@@ -43,7 +41,7 @@ import org.hibernate.type.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class EntityQuerySpaceImpl extends AbstractQuerySpace implements ExpandingEntityQuerySpace, EntityQuerySpace {
+public class EntityQuerySpaceImpl extends AbstractQuerySpace implements ExpandingEntityQuerySpace {
 	private final EntityPersister persister;
 
 	public EntityQuerySpaceImpl(

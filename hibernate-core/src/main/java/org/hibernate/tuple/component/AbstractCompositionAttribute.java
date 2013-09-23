@@ -35,7 +35,6 @@ import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AssociationType;
@@ -54,14 +53,18 @@ import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
  */
 public abstract class AbstractCompositionAttribute extends AbstractNonIdentifierAttribute implements
 																						   CompositionDefinition {
+	private final int columnStartPosition;
+
 	protected AbstractCompositionAttribute(
 			AttributeSource source,
 			SessionFactoryImplementor sessionFactory,
-			int attributeNumber,
+			int entityBasedAttributeNumber,
 			String attributeName,
 			CompositeType attributeType,
+			int columnStartPosition,
 			BaselineAttributeInformation baselineInfo) {
-		super( source, sessionFactory, attributeNumber, attributeName, attributeType, baselineInfo );
+		super( source, sessionFactory, entityBasedAttributeNumber, attributeName, attributeType, baselineInfo );
+		this.columnStartPosition = columnStartPosition;
 	}
 
 	@Override
@@ -77,7 +80,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 				return new Iterator<AttributeDefinition>() {
 					private final int numberOfAttributes = getType().getSubtypes().length;
 					private int currentSubAttributeNumber = 0;
-					private int currentColumnPosition = 0;
+					private int currentColumnPosition = columnStartPosition;
 
 					@Override
 					public boolean hasNext() {
@@ -106,13 +109,13 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 										JoinHelper.getLHSTableName(
 												aType,
 												attributeNumber(),
-												(OuterJoinLoadable) getSource()
+												(OuterJoinLoadable) locateOwningPersister()
 										),
 										JoinHelper.getLHSColumnNames(
 												aType,
 												attributeNumber(),
-												0,
-												(OuterJoinLoadable) getSource(),
+												columnPosition,
+												(OuterJoinLoadable) locateOwningPersister(),
 												sessionFactory()
 										)
 								);
@@ -129,24 +132,15 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 								else {
 									final OuterJoinLoadable entityPersister = (OuterJoinLoadable) locateOwningPersister();
 									lhsTableName = getLHSTableName( aType, attributeNumber(), entityPersister );
-									lhsColumnNames = getLHSColumnNames( aType, attributeNumber(), entityPersister, sessionFactory() );
+									lhsColumnNames = getLHSColumnNames(
+											aType,
+											attributeNumber(),
+											columnPosition,
+											entityPersister,
+											sessionFactory()
+									);
 								}
 								associationKey = new AssociationKey( lhsTableName, lhsColumnNames );
-
-//								associationKey = new AssociationKey(
-//										getLHSTableName(
-//												aType,
-//												attributeNumber(),
-//												(OuterJoinLoadable) locateOwningPersister()
-//										),
-//										getLHSColumnNames(
-//												aType,
-//												attributeNumber(),
-//												columnPosition,
-//												(OuterJoinLoadable) locateOwningPersister(),
-//												sessionFactory()
-//										)
-//								);
 							}
 							else {
 								associationKey = new AssociationKey(
@@ -156,12 +150,14 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 							}
 
 							final CompositeType cType = getType();
-							final boolean nullable = cType.getPropertyNullability() == null || cType.getPropertyNullability()[subAttributeNumber];
+							final boolean nullable =
+									cType.getPropertyNullability() == null ||
+											cType.getPropertyNullability()[subAttributeNumber];
 
 							return new CompositeBasedAssociationAttribute(
 									AbstractCompositionAttribute.this,
 									sessionFactory(),
-									subAttributeNumber,
+									attributeNumber(),
 									name,
 									(AssociationType) type,
 									new BaselineAttributeInformation.Builder()
@@ -175,7 +171,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 											.setCascadeStyle( getType().getCascadeStyle( subAttributeNumber ) )
 											.setFetchMode( getType().getFetchMode( subAttributeNumber ) )
 											.createInformation(),
-									AbstractCompositionAttribute.this.attributeNumber(),
+									subAttributeNumber,
 									associationKey
 							);
 						}
@@ -183,9 +179,10 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 							return new CompositionBasedCompositionAttribute(
 									AbstractCompositionAttribute.this,
 									sessionFactory(),
-									subAttributeNumber,
+									attributeNumber(),
 									name,
 									(CompositeType) type,
+									columnPosition,
 									new BaselineAttributeInformation.Builder()
 											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
 											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
@@ -233,14 +230,7 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 		};
 	}
 
-	public EntityPersister locateOwningPersister() {
-		if ( EntityDefinition.class.isInstance( getSource() ) ) {
-			return ( (EntityDefinition) getSource() ).getEntityPersister();
-		}
-		else {
-			return ( (AbstractCompositionAttribute) getSource() ).locateOwningPersister();
-		}
-	}
+	protected abstract EntityPersister locateOwningPersister();
 
 	@Override
 	protected String loggableMetadata() {

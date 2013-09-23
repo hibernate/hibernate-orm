@@ -24,8 +24,8 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.type.CompositeType;
 
@@ -38,7 +38,7 @@ public class CompositeFetchImpl extends AbstractCompositeFetch implements Compos
 	protected CompositeFetchImpl(
 			FetchSource source,
 			CompositeType compositeType,
-			CompositeQuerySpace compositeQuerySpace,
+			ExpandingCompositeQuerySpace compositeQuerySpace,
 			boolean allowCollectionFetches,
 			PropertyPath propertyPath) {
 		super( compositeType, compositeQuerySpace, allowCollectionFetches, propertyPath );

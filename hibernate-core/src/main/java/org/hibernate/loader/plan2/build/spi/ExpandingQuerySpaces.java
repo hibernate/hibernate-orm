@@ -24,7 +24,6 @@
 package org.hibernate.loader.plan2.build.spi;
 
 import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
-import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,7 +34,7 @@ import org.hibernate.persister.entity.EntityPersister;
 public interface ExpandingQuerySpaces extends QuerySpaces {
 	public String generateImplicitUid();
 
-	public EntityQuerySpace makeEntityQuerySpace(String uid, EntityPersister entityPersister);
+	public ExpandingEntityQuerySpace makeEntityQuerySpace(String uid, EntityPersister entityPersister);
 
 	public CollectionQuerySpace makeCollectionQuerySpace(String uid, CollectionPersister collectionPersister);
 }

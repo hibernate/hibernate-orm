@@ -116,6 +116,10 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public void generateEntityDefinition() {
+		}
+
+		@Override
 		public void postInstantiate() throws MappingException {
 
 		}

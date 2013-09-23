@@ -144,6 +144,10 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public void generateEntityDefinition() {
+		}
+
+		@Override
 		public void postInstantiate() throws MappingException {
 
 		}

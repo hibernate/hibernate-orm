@@ -77,6 +77,10 @@ public class CustomPersister implements EntityPersister {
 		return Custom.class;
 	}
 
+	@Override
+	public void generateEntityDefinition() {
+	}
+
 	public void postInstantiate() throws MappingException {}
 
 	public String getEntityName() {

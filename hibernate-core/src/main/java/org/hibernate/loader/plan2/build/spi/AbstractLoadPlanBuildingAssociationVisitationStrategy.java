@@ -599,7 +599,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			// it must be loaded when the ID for the dependent entity is resolved. Is there some other way to
 			// deal with this???
 			if ( ! associationKey.equals( currentEntityReferenceAssociationKey ) ) {
-				currentSource().buildBidirectionalEntityFetch(
+				currentSource().buildBidirectionalEntityReference(
 						attributeDefinition,
 						fetchStrategy,
 						registeredFetchSource( associationKey ).resolveEntityReference(),

@@ -24,6 +24,7 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.EntityQuerySpace;
@@ -41,17 +42,12 @@ public class CollectionFetchableElementEntityGraph extends AbstractEntityReferen
 			CollectionReference collectionReference,
 			Join entityJoin) {
 		super(
-				(EntityQuerySpace) entityJoin.getRightHandSide(),
+				(ExpandingEntityQuerySpace) entityJoin.getRightHandSide(),
 				collectionReference.getPropertyPath().append( "<elements>" )
 		);
 
 		this.collectionReference = collectionReference;
 		this.entityQuerySpace = (EntityQuerySpace) entityJoin.getRightHandSide();
-	}
-
-	@Override
-	protected EntityQuerySpace getEntityQuerySpace() {
-		return entityQuerySpace;
 	}
 
 	@Override

@@ -45,7 +45,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.persister.walking.spi.EntityDefinition;
-import org.hibernate.sql.ordering.antlr.ColumnMapper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.Type;
@@ -71,7 +70,14 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	public static final String ENTITY_ID = "id";
 
 	/**
-	 * Finish the initialization of this object.
+	 * Generate the entity definition for this object. This must be done for all
+	 * entity persisters before calling {@link #postInstantiate()}.
+	 */
+	public void generateEntityDefinition();
+
+	/**
+	 * Finish the initialization of this object. {@link #generateEntityDefinition()}
+	 * must be called for all entity persisters before calling this method.
 	 * <p/>
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
 	 * after all entity persisters have been instantiated.

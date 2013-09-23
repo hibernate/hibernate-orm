@@ -39,7 +39,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan2.exec.process.internal.HydratedEntityRegistration;
 import org.hibernate.loader.plan2.exec.process.internal.ResultSetProcessingContextImpl;
-import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
@@ -129,7 +129,7 @@ public abstract class AbstractRowReader implements RowReader {
 		final EntityReference entityReference = entityReferenceInitializer.getEntityReference();
 		final EntityIdentifierDescription identifierDescription = entityReference.getIdentifierDescription();
 
-		if ( identifierDescription.hasFetches() ) {
+		if ( identifierDescription.hasFetches() || identifierDescription.hasBidirectionalEntityReferences() ) {
 			resolveEntityKey( resultSet, context, (FetchSource) identifierDescription, initializerByEntityReference );
 		}
 		entityReferenceInitializer.resolveEntityKey( resultSet, context );
@@ -140,27 +140,31 @@ public abstract class AbstractRowReader implements RowReader {
 			ResultSetProcessingContextImpl context,
 			FetchSource fetchSource,
 			Map<EntityReference,EntityReferenceInitializer> initializerByEntityReference) throws SQLException {
+		// Resolve any bidirectional entity references first.
+		for ( BidirectionalEntityReference bidirectionalEntityReference : fetchSource.getBidirectionalEntityReferences() ) {
+			final EntityReferenceInitializer targetEntityReferenceInitializer = initializerByEntityReference.get(
+					bidirectionalEntityReference.getTargetEntityReference()
+			);
+			resolveEntityKey(
+					resultSet,
+					context,
+					targetEntityReferenceInitializer,
+					initializerByEntityReference
+			);
+			targetEntityReferenceInitializer.hydrateEntityState( resultSet, context );
+		}
 		for ( Fetch fetch : fetchSource.getFetches() ) {
 			if ( EntityFetch.class.isInstance( fetch ) ) {
 				final EntityFetch entityFetch = (EntityFetch) fetch;
-				final EntityReferenceInitializer targetEntityReferenceInitializer;
-				if ( BidirectionalEntityFetch.class.isInstance( fetch ) ) {
-					final BidirectionalEntityFetch bidirectionalEntityFetch = (BidirectionalEntityFetch) fetch;
-					targetEntityReferenceInitializer = initializerByEntityReference.get(
-							bidirectionalEntityFetch.getTargetEntityReference()
-					);
-				}
-				else {
-					targetEntityReferenceInitializer = initializerByEntityReference.get( entityFetch );
-				}
-				if ( targetEntityReferenceInitializer != null ) {
+				final EntityReferenceInitializer  entityReferenceInitializer = initializerByEntityReference.get( entityFetch );
+				if ( entityReferenceInitializer != null ) {
 					resolveEntityKey(
 							resultSet,
 							context,
-							targetEntityReferenceInitializer,
+							entityReferenceInitializer,
 							initializerByEntityReference
 					);
-					targetEntityReferenceInitializer.hydrateEntityState( resultSet, context );
+					entityReferenceInitializer.hydrateEntityState( resultSet, context );
 				}
 			}
 			else if ( CompositeFetch.class.isInstance( fetch ) ) {

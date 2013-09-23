@@ -3792,8 +3792,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void doLateInit() {
-		generateEntityDefinition();
-
 		//insert/update/delete SQL
 		final int joinSpan = getTableSpan();
 		sqlDeleteStrings = new String[joinSpan];
@@ -3854,7 +3852,6 @@ public abstract class AbstractEntityPersister
 
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-//		generateEntityDefinition();
 
 		createLoaders();
 		createUniqueKeyLoaders();
@@ -5120,7 +5117,8 @@ public abstract class AbstractEntityPersister
 	private Iterable<AttributeDefinition> embeddedCompositeIdentifierAttributes;
 	private Iterable<AttributeDefinition> attributeDefinitions;
 
-	protected void generateEntityDefinition() {
+	@Override
+	public void generateEntityDefinition() {
 		prepareEntityIdentifierDefinition();
 		collectAttributeDefinitions();
 	}

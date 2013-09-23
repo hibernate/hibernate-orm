@@ -24,7 +24,7 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.type.CompositeType;
 
@@ -45,7 +45,7 @@ public class NonEncapsulatedEntityIdentifierDescription extends AbstractComposit
 	 */
 	public NonEncapsulatedEntityIdentifierDescription(
 			EntityReference entityReference,
-			CompositeQuerySpace compositeQuerySpace,
+			ExpandingCompositeQuerySpace compositeQuerySpace,
 			CompositeType compositeType,
 			PropertyPath propertyPath) {
 		super(

@@ -32,10 +32,6 @@ import org.hibernate.loader.PropertyPath;
  * @author Steve Ebersole
  */
 public interface FetchSource {
-	/**
-	 * Convenient constant for returning no fetches from {@link #getFetches()}
-	 */
-	public static final Fetch[] NO_FETCHES = new Fetch[0];
 
 	/**
 	 * Get the property path to this fetch owner
@@ -47,11 +43,18 @@ public interface FetchSource {
 	public String getQuerySpaceUid();
 
 	/**
-	 * Retrieve the fetches owned by this return.
+	 * Retrieve the fetches owned by this fetch source.
 	 *
 	 * @return The owned fetches.
 	 */
 	public Fetch[] getFetches();
+
+	/**
+	 * Retrieve the bidirectional entity references owned by this fetch source.
+	 *
+	 * @return The owned bidirectional entity references.
+	 */
+	public BidirectionalEntityReference[] getBidirectionalEntityReferences();
 
 	/**
 	 * Resolve the "current" {@link EntityReference}, or null if none.

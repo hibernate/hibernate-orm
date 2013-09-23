@@ -24,14 +24,13 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan2.spi.EntityFetch;
-import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.EntityType;
 
 /**
@@ -48,7 +47,7 @@ public class EntityFetchImpl extends AbstractEntityReference implements EntityFe
 			FetchStrategy fetchStrategy,
 			Join fetchedJoin) {
 		super(
-				(EntityQuerySpace) fetchedJoin.getRightHandSide(),
+				(ExpandingEntityQuerySpace) fetchedJoin.getRightHandSide(),
 				fetchSource.getPropertyPath().append( fetchedAttribute.getName() )
 		);
 

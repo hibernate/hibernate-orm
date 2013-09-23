@@ -23,18 +23,15 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
-import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
-import org.hibernate.loader.plan2.spi.EntityFetch;
+import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.type.EntityType;
 
 /**
  * Represents an entity fetch that is bi-directionally join fetched.
@@ -45,21 +42,14 @@ import org.hibernate.type.EntityType;
  *
  * @author Steve Ebersole
  */
-public class BidirectionalEntityFetchImpl implements BidirectionalEntityFetch, EntityFetch {
-	private final ExpandingFetchSource fetchSource;
-	private final AssociationAttributeDefinition fetchedAttribute;
-	private final FetchStrategy fetchStrategy;
+public class BidirectionalEntityReferenceImpl implements BidirectionalEntityReference {
 	private final EntityReference targetEntityReference;
 	private final PropertyPath propertyPath;
 
-	public BidirectionalEntityFetchImpl(
+	public BidirectionalEntityReferenceImpl(
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
-			FetchStrategy fetchStrategy,
 			EntityReference targetEntityReference) {
-		this.fetchSource = fetchSource;
-		this.fetchedAttribute = fetchedAttribute;
-		this.fetchStrategy = fetchStrategy;
 		this.targetEntityReference = targetEntityReference;
 		this.propertyPath = fetchSource.getPropertyPath().append( fetchedAttribute.getName() );
 	}
@@ -69,38 +59,8 @@ public class BidirectionalEntityFetchImpl implements BidirectionalEntityFetch, E
 	}
 
 	@Override
-	public FetchSource getSource() {
-		return fetchSource;
-	}
-
-	@Override
 	public PropertyPath getPropertyPath() {
 		return propertyPath;
-	}
-
-	@Override
-	public FetchStrategy getFetchStrategy() {
-		return fetchStrategy;
-	}
-
-	@Override
-	public EntityType getFetchedType() {
-		return (EntityType) fetchedAttribute.getType();
-	}
-
-	@Override
-	public boolean isNullable() {
-		return fetchedAttribute.isNullable();
-	}
-
-	@Override
-	public String getAdditionalJoinConditions() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public String[] toSqlSelectFragments(String alias) {
-		return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
@@ -110,7 +70,12 @@ public class BidirectionalEntityFetchImpl implements BidirectionalEntityFetch, E
 
 	@Override
 	public Fetch[] getFetches() {
-		return FetchSource.NO_FETCHES;
+		return targetEntityReference.getFetches();
+	}
+
+	@Override
+	public BidirectionalEntityReference[] getBidirectionalEntityReferences() {
+		return targetEntityReference.getBidirectionalEntityReferences();
 	}
 
 	@Override

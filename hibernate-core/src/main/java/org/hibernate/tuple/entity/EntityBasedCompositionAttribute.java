@@ -44,6 +44,11 @@ public class EntityBasedCompositionAttribute
 			String attributeName,
 			CompositeType attributeType,
 			BaselineAttributeInformation baselineInfo) {
-		super( source, factory, attributeNumber, attributeName, attributeType, baselineInfo );
+		super( source, factory, attributeNumber, attributeName, attributeType, 0, baselineInfo );
+	}
+
+	@Override
+	protected EntityPersister locateOwningPersister() {
+		return (EntityPersister) getSource();
 	}
 }

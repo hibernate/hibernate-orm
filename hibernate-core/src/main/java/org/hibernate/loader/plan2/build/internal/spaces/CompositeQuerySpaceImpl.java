@@ -25,8 +25,7 @@ package org.hibernate.loader.plan2.build.internal.spaces;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan2.build.spi.AbstractQuerySpace;
-import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
-import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -40,7 +39,7 @@ import org.hibernate.type.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements CompositeQuerySpace, ExpandingQuerySpace {
+public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements ExpandingCompositeQuerySpace {
 	private final CompositePropertyMapping compositeSubPropertyMapping;
 
 	public CompositeQuerySpaceImpl(

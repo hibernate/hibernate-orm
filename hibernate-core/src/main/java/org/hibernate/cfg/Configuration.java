@@ -53,6 +53,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MapsId;
@@ -2630,6 +2631,42 @@ public class Configuration implements Serializable {
 			);
 		}
 		addAttributeConverter( attributeConverter, autoApply );
+	}
+
+	/**
+	 * Adds the AttributeConverter Class to this Configuration.
+	 *
+	 * @param attributeConverterClass The AttributeConverter class.
+	 */
+	public void addAttributeConverter(Class<? extends AttributeConverter> attributeConverterClass) {
+		final AttributeConverter attributeConverter;
+		try {
+			attributeConverter = attributeConverterClass.newInstance();
+		}
+		catch (Exception e) {
+			throw new AnnotationException(
+					"Unable to instantiate AttributeConverter [" + attributeConverterClass.getName() + "]"
+			);
+		}
+
+		addAttributeConverter( attributeConverter );
+	}
+
+	/**
+	 * Adds the AttributeConverter instance to this Configuration.  This form is mainly intended for developers
+	 * to programatically add their own AttributeConverter instance.  HEM, instead, uses the
+	 * {@link #addAttributeConverter(Class, boolean)} form
+	 *
+	 * @param attributeConverter The AttributeConverter instance.
+	 */
+	public void addAttributeConverter(AttributeConverter attributeConverter) {
+		boolean autoApply = false;
+		Converter converterAnnotation = attributeConverter.getClass().getAnnotation( Converter.class );
+		if ( converterAnnotation != null ) {
+			autoApply = converterAnnotation.autoApply();
+		}
+
+		addAttributeConverter( new AttributeConverterDefinition( attributeConverter, autoApply ) );
 	}
 
 	/**

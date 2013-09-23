@@ -1102,7 +1102,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
 		if ( loadedAnnotatedClasses != null ) {
 			for ( Class cls : loadedAnnotatedClasses ) {
-				cfg.addAnnotatedClass( cls );
+				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
+					cfg.addAttributeConverter( (Class<? extends AttributeConverter>) cls );
+				}
+				else {
+					cfg.addAnnotatedClass( cls );
+				}
 			}
 		}
 

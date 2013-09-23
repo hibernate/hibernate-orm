@@ -446,6 +446,8 @@ public class SimpleValue implements KeyValue {
 				name,
 				attributeConverterDefinition.getAttributeConverter(),
 				sqlTypeDescriptorAdapter,
+				entityAttributeJavaType,
+				databaseColumnJavaType,
 				entityAttributeJavaTypeDescriptor
 		);
 	}

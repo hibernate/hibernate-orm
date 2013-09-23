@@ -228,10 +228,10 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	protected Type extractDataType(Node operand) {
 		Type type = null;
 		if ( operand instanceof SqlNode ) {
-			type = ( ( SqlNode ) operand ).getDataType();
+			type = ( (SqlNode) operand ).getDataType();
 		}
 		if ( type == null && operand instanceof ExpectedTypeAwareNode ) {
-			type = ( ( ExpectedTypeAwareNode ) operand ).getExpectedType();
+			type = ( (ExpectedTypeAwareNode) operand ).getExpectedType();
 		}
 		return type;
 	}

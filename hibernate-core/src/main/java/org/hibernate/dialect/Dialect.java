@@ -2681,4 +2681,14 @@ public abstract class Dialect implements ConversionContext {
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.SCROLL_INSENSITIVE;
 	}
+	
+	/**
+	 * Does this dialect support "where in" queries using multiple columns in the subselect?  Ex:
+	 * delete from Table1 where (col1, col2) in (select col1, col2 from Table2)
+	 * 
+	 * @return boolean
+	 */
+	public boolean supportsWhereInMultipleColumns() {
+		return true;
+	}
 }

@@ -369,7 +369,7 @@ joinPath
  * Uses a validating semantic predicate to make sure the text of the matched first IDENT is the TREAT keyword
  */
 castedJoinPath
-    : i:IDENT! OPEN! p:path AS! path! CLOSE! {i.getText().equals("treat") }?
+    : i:IDENT! OPEN! p:path AS! path! CLOSE! {i.getText().equalsIgnoreCase("treat") }?
     ;
 
 withClause

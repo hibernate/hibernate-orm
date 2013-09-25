@@ -51,7 +51,7 @@ subprojects { subProject ->
     defaultTasks 'build'
 
     group = 'org.hibernate'
-    version = '4.2.6-SNAPSHOT'
+    version = '4.2.6.Final'
     
     // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final"
     exportPackageVersion = version.replaceAll("-SNAPSHOT", "");

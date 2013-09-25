@@ -5,6 +5,33 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.6.Final (2013.09.25)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-1835] - mysql dialect doesn't contain standard deviation/std() function
+    * [HHH-8153] - Criteria on Enum mapping defined in hbm.xml fails.
+    * [HHH-8297] - Typo in error message: "contains phyical column name"
+    * [HHH-8363] - ClassLoaderServiceImpl should be defined as Stoppable
+    * [HHH-8432] - Wrong bindings of named parameters in IN clause
+    * [HHH-8464] - Using JPA2 specific quoting character (double quote) for JoinColumn results in DuplicateMappingException.
+    * [HHH-8465] - EnversListenerDuplicationStrategy areMatch method using listener.getClass().equals( original )  instead of listener.getClass().equals( original.getClass() )
+    * [HHH-8468] - @JoinColumn(table = "...") doesn't use NamingStrategy
+    * [HHH-8472] - @Lob annotation applies to both key and value of Map
+    * [HHH-8496] - TableCatalog and TableSchema arguments mistaken in DB update-script.
+    * [HHH-8500] - Interbase does not have a boolean type
+    * [HHH-8502] - EnversIntegrator#disintegrate needs to check config for null 
+    * [HHH-8516] - EnumeratedTypeTest.testTrimmedEnum fails on oracle databases
+    * [HHH-8517] - ResultSet#getDate includes time in oracle12c JDBC
+    * [HHH-8522] - CompositeIdTypeBindingTest.testCompositeTypeBinding fails on sybase157
+    * [HHH-8553] - hibernate-osgi needs to support alternative locations for hibernate.cfg.xml
+
+** Improvement
+    * [HHH-8476] - Bulk delete doesn't cascade delete on join table
+    * [HHH-8491] - improve LocaleTypeDescriptor#fromString
+    * [HHH-8503] - invoke determineDialect instead of constructDialect when hibernate.dialect is blank
+    * [HHH-8504] - resolve proper dialect for mysql5 when determine by connection metadata
+
 Changes in version 4.2.5.Final (2013.08.28)
 ------------------------------------------------------------------------------------------------------------------------
 

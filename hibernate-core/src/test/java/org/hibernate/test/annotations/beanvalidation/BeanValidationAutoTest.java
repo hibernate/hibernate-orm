@@ -30,6 +30,8 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
@@ -55,6 +57,12 @@ public class BeanValidationAutoTest extends BaseCoreFunctionalTestCase {
 		}
 		tx.rollback();
 		s.close();
+	}
+
+	@Override
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
 	}
 
 	@Override

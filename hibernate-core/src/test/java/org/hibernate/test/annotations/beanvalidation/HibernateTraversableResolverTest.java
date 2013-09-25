@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -210,7 +211,7 @@ public class HibernateTraversableResolverTest extends BaseCoreFunctionalTestCase
 	@Override
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
-		cfg.setProperty( "hibernate.validator.autoregister_listeners", "false" );
+		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
 	}
 
 	@Override

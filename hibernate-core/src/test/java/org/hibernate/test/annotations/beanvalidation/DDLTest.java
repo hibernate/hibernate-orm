@@ -25,6 +25,7 @@ package org.hibernate.test.annotations.beanvalidation;
 
 import org.junit.Test;
 
+import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -95,6 +96,12 @@ public class DDLTest extends BaseCoreFunctionalTestCase {
 		assertEquals(
 				"Validator annotations are applied on tuner as it is @NotNull", true, serialColumn.isNullable()
 		);
+	}
+
+	@Override
+	protected void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( "javax.persistence.validation.mode", "ddl" );
 	}
 
 	@Override

@@ -63,6 +63,11 @@ public class RemoveOrderingTest extends BaseCoreFunctionalTestCase {
 
 			session.delete( company );
 			session.delete( person );
+			session.flush();
+
+			session.persist( person );
+			session.flush();
+
 			session.getTransaction().commit();
 		}
 		catch (Exception e) {

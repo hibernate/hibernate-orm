@@ -196,9 +196,7 @@ public class JoinSequence {
 				condition = on;
 			}
 			if ( withClauseFragment != null ) {
-				if ( join.getAlias().equals( withClauseJoinAlias ) ) {
-					condition += " and " + withClauseFragment;
-				}
+				condition += " and " + withClauseFragment;
 			}
 			joinFragment.addJoin(
 			        join.getJoinable().getTableName(),

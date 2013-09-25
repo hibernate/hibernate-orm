@@ -22,19 +22,23 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.test.hql;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
-
 import org.hibernate.HibernateException;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.hql.internal.ast.InvalidWithClauseException;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * Implementation of WithClauseTest.
@@ -43,7 +47,7 @@ import static org.junit.Assert.fail;
  */
 public class WithClauseTest extends BaseCoreFunctionalTestCase {
 	public String[] getMappings() {
-		return new String[] { "hql/Animal.hbm.xml" };
+		return new String[] { "hql/Animal.hbm.xml", "hql/SimpleEntityWithAssociation.hbm.xml" };
 	}
 
 	@Test
@@ -82,14 +86,6 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 			// joins relating to the sublcass/superclass tables
 			s.createQuery( "from Human h inner join h.friends as f with f.bodyWeight < :someLimit" )
 					.setDouble( "someLimit", 1 )
-					.list();
-			fail( "failure expected" );
-		}
-		catch( InvalidWithClauseException expected ) {
-		}
-
-		try {
-			s.createQuery( "from Animal a inner join a.offspring o inner join o.mother as m inner join m.father as f with o.bodyWeight > 1" )
 					.list();
 			fail( "failure expected" );
 		}
@@ -143,6 +139,47 @@ public class WithClauseTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		data.cleanup();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-2772")
+	public void testWithJoinRHS() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		SimpleEntityWithAssociation entity1 = new SimpleEntityWithAssociation();
+		entity1.setName( "entity1" );
+		SimpleEntityWithAssociation entity2 = new SimpleEntityWithAssociation();
+		entity2.setName( "entity2" );
+		
+		SimpleAssociatedEntity associatedEntity1 = new SimpleAssociatedEntity();
+		associatedEntity1.setName( "associatedEntity1" );
+		SimpleAssociatedEntity associatedEntity2 = new SimpleAssociatedEntity();
+		associatedEntity2.setName( "associatedEntity2" );
+		
+		entity1.addAssociation( associatedEntity1 );
+		entity2.addAssociation( associatedEntity2 );
+		
+		s.persist( entity1 );
+		s.persist( entity2 );
+		
+		s.getTransaction().commit();
+		s.clear();
+		
+		s.beginTransaction();
+		
+		Query query = s.createQuery( "select a from SimpleEntityWithAssociation as e INNER JOIN e.associatedEntities as a WITH e.name=?" );
+		query.setParameter( 0, "entity1" );
+		List list = query.list();
+		assertEquals( list.size(), 1 );
+		
+		SimpleAssociatedEntity associatedEntity = (SimpleAssociatedEntity) query.list().get( 0 );
+		assertNotNull( associatedEntity );
+		assertEquals( associatedEntity.getName(), "associatedEntity1" );
+		assertEquals( associatedEntity.getOwner().getName(), "entity1" );
+		
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	private class TestData {

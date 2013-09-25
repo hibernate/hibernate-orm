@@ -50,7 +50,7 @@ import org.hibernate.type.AssociationType;
  * @see JoinFragment
  */
 public class JoinSequence {
-	private final SessionFactoryImplementor factory;
+    private final SessionFactoryImplementor factory;
 
 	private final StringBuilder conditions = new StringBuilder();
 	private final List<Join> joins = new ArrayList<Join>();
@@ -210,8 +210,9 @@ public class JoinSequence {
 
 			if ( withClauseFragment != null ) {
 				if ( join.getAlias().equals( withClauseJoinAlias ) ) {
-					condition += " and " + withClauseFragment;
+					// TODO: Do we need another warning here if there's already one on HqlSqlWalker#handleWithFragment?
 				}
+				condition += " and " + withClauseFragment;
 			}
 
 			joinFragment.addJoin(

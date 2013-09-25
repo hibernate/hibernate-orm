@@ -421,10 +421,8 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			else {
 				FromElement referencedFromElement = visitor.getReferencedFromElement();
 				if ( referencedFromElement != fromElement ) {
-					throw new InvalidWithClauseException(
-							"with-clause expressions did not reference from-clause element to which the with-clause was associated",
-							queryTranslatorImpl.getQueryString()
-					);
+					LOG.warn( "with-clause expressions do not reference the from-clause element to which the with-clause was associated.  The query may not work as expected..."
+							+ queryTranslatorImpl.getQueryString() );
 				}
 			}
 

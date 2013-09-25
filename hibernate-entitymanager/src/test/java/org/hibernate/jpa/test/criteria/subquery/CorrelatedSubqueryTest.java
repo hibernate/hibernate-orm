@@ -23,14 +23,17 @@
  */
 package org.hibernate.jpa.test.criteria.subquery;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Set;
+
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
-
-import org.junit.Test;
 
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
@@ -41,11 +44,14 @@ import org.hibernate.jpa.test.metamodel.LineItem_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
  */
 public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
+	
 	@Test
 	public void testBasicCorrelation() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
@@ -131,6 +137,22 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 
 		em.getTransaction().commit();
 		em.close();
+	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-8556")
+	public void testCorrelatedJoinsFromSubquery() {
+		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
+		CriteriaQuery<Customer> cquery = builder.createQuery(Customer.class);
+        Root<Customer> customer = cquery.from(Customer.class);
+        cquery.select(customer);
+        Subquery<Order> sq = cquery.subquery(Order.class);
+        Join<Customer, Order> sqo = sq.correlate(customer.join(Customer_.orders));
+        sq.select(sqo);
+        Set<Join<?, ?>> cJoins = sq.getCorrelatedJoins();
+        
+        // ensure the join is returned in #getCorrelatedJoins
+        assertEquals( cJoins.size(), 1);
 	}
 
 	@Test

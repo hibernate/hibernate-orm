@@ -172,6 +172,9 @@ public class QueryStructure<T> implements Serializable {
 		if ( correlationRoots != null ) {
 			correlatedJoins = new HashSet<Join<?,?>>();
 			for ( FromImplementor<?,?> correlationRoot : correlationRoots ) {
+				if (correlationRoot instanceof Join<?,?> && correlationRoot.isCorrelated()) {
+					correlatedJoins.add( (Join<?,?>) correlationRoot );
+				}
 				correlatedJoins.addAll( correlationRoot.getJoins() );
 			}
 		}

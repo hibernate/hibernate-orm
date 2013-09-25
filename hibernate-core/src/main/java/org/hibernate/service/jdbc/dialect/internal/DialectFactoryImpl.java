@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.classloading.spi.ClassLoaderService;
@@ -60,7 +61,7 @@ public class DialectFactoryImpl implements DialectFactory {
 	@Override
 	public Dialect buildDialect(Map configValues, Connection connection) throws HibernateException {
 		final String dialectName = (String) configValues.get( AvailableSettings.DIALECT );
-		if ( dialectName != null ) {
+		if ( StringHelper.isEmpty( dialectName ) ) {
 			return constructDialect( dialectName );
 		}
 		else {

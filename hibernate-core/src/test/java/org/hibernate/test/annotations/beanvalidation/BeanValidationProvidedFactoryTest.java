@@ -87,5 +87,6 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 		configuration.messageInterpolator( messageInterpolator );
 		ValidatorFactory vf = configuration.buildValidatorFactory();
 		cfg.getProperties().put( "javax.persistence.validation.factory", vf );
+		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
 	}
 }

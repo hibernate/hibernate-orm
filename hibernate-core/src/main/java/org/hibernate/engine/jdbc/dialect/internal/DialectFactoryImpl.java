@@ -60,7 +60,7 @@ public class DialectFactoryImpl implements DialectFactory {
 	@Override
 	public Dialect buildDialect(Map configValues, Connection connection) throws HibernateException {
 		final String dialectName = (String) configValues.get( AvailableSettings.DIALECT );
-		if ( StringHelper.isEmpty( dialectName ) ) {
+		if ( !StringHelper.isEmpty( dialectName ) ) {
 			return constructDialect( dialectName );
 		}
 		else {

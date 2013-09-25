@@ -185,10 +185,12 @@ public class AuditConfiguration {
 	}
 
 	public void destroy() {
-		for ( Map.Entry<Configuration, AuditConfiguration> c : new HashSet<Map.Entry<Configuration, AuditConfiguration>>(
-				cfgs.entrySet() ) ) {
-			if ( c.getValue() == this ) { // this is nasty cleanup fix, whole static CFGS should be reworked
-				cfgs.remove( c.getKey() );
+		synchronized ( AuditConfiguration.class ) {
+			for ( Map.Entry<Configuration, AuditConfiguration> c : new HashSet<Map.Entry<Configuration, AuditConfiguration>>(
+					cfgs.entrySet() ) ) {
+				if ( c.getValue() == this ) { // this is nasty cleanup fix, whole static CFGS should be reworked
+					cfgs.remove( c.getKey() );
+				}
 			}
 		}
 		classLoaderService = null;

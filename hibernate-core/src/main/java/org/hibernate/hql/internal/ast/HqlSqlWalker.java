@@ -400,16 +400,18 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			}
 		}
 
-        if (LOG.isDebugEnabled()) LOG.debugf("createFromJoinElement() : %s",
-                                             getASTPrinter().showAsString(fromElement, "-- join tree --"));
+        if ( LOG.isDebugEnabled() ) {
+			LOG.debug("createFromJoinElement() : " + getASTPrinter().showAsString(fromElement, "-- join tree --") );
+		}
 	}
 
 	private void handleWithFragment(FromElement fromElement, AST hqlWithNode) throws SemanticException {
 		try {
 			withClause( hqlWithNode );
 			AST hqlSqlWithNode = returnAST;
-            if (LOG.isDebugEnabled()) LOG.debugf("handleWithFragment() : %s",
-                                                 getASTPrinter().showAsString(hqlSqlWithNode, "-- with clause --"));
+            if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "handleWithFragment() : " + getASTPrinter().showAsString(hqlSqlWithNode, "-- with clause --") );
+			}
 			WithClauseVisitor visitor = new WithClauseVisitor( fromElement, queryTranslatorImpl );
 			NodeTraverser traverser = new NodeTraverser( visitor );
 			traverser.traverseDepthFirst( hqlSqlWithNode );
@@ -421,8 +423,11 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			else {
 				FromElement referencedFromElement = visitor.getReferencedFromElement();
 				if ( referencedFromElement != fromElement ) {
-					LOG.warn( "with-clause expressions do not reference the from-clause element to which the with-clause was associated.  The query may not work as expected..."
-							+ queryTranslatorImpl.getQueryString() );
+					LOG.warnf(
+							"with-clause expressions do not reference the from-clause element to which the " +
+									"with-clause was associated.  The query may not work as expected [%s]",
+							queryTranslatorImpl.getQueryString()
+					);
 				}
 			}
 

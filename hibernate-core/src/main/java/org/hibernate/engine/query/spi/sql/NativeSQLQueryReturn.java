@@ -33,4 +33,9 @@ package org.hibernate.engine.query.spi.sql;
  * @author Steve Ebersole
  */
 public interface NativeSQLQueryReturn {
+	public static interface TraceLogger {
+		public void writeLine(String traceLine);
+	}
+
+	public void traceLog(TraceLogger logger);
 }

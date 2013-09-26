@@ -79,4 +79,12 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 		result = 31 * result + ( columnAlias != null ? columnAlias.hashCode() : 0 );
 		return result;
 	}
+
+	@Override
+	public void traceLog(TraceLogger logger) {
+		logger.writeLine( "Scalar[" );
+		logger.writeLine( "    columnAlias=" + columnAlias + "," );
+		logger.writeLine( "    type=" + ( type == null ? "<unknown>" : type.getName() ) + "," );
+		logger.writeLine( "]" );
+	}
 }

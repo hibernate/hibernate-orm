@@ -27,6 +27,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 
 /**
@@ -74,4 +76,25 @@ public class ResultSetMappingDefinition implements Serializable {
 		return queryReturns.toArray( new NativeSQLQueryReturn[queryReturns.size()] );
 	}
 
+	public String traceLoggableFormat() {
+		final StringBuilder buffer = new StringBuilder()
+				.append( "ResultSetMappingDefinition[\n" )
+				.append( "    name=" ).append( name ).append( "\n" )
+				.append( "    returns=[\n" );
+
+		for ( NativeSQLQueryReturn rtn : queryReturns ) {
+			rtn.traceLog(
+					new NativeSQLQueryReturn.TraceLogger() {
+						@Override
+						public void writeLine(String traceLine) {
+							buffer.append( "        " + traceLine + "\n" );
+						}
+					}
+			);
+		}
+
+		buffer.append( "    ]\n" ).append( "]" );
+
+		return buffer.toString();
+	}
 }

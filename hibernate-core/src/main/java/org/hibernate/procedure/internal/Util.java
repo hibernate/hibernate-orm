@@ -26,6 +26,8 @@ package org.hibernate.procedure.internal;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -43,6 +45,8 @@ import org.hibernate.procedure.UnknownSqlResultSetMappingException;
  * @author Steve Ebersole
  */
 public class Util {
+	private static final Logger log = Logger.getLogger( Util.class );
+
 	private Util() {
 	}
 
@@ -128,10 +132,13 @@ public class Util {
 	 */
 	public static void resolveResultSetMappings(ResultSetMappingResolutionContext context, String... resultSetMappingNames) {
 		for ( String resultSetMappingName : resultSetMappingNames ) {
+			log.tracef( "Starting attempt resolve named result-set-mapping : %s", resultSetMappingName );
 			final ResultSetMappingDefinition mapping = context.findResultSetMapping( resultSetMappingName );
 			if ( mapping == null ) {
 				throw new UnknownSqlResultSetMappingException( "Unknown SqlResultSetMapping [" + resultSetMappingName + "]" );
 			}
+
+			log.tracef( "Found result-set-mapping : %s", mapping.traceLoggableFormat() );
 
 			context.addQueryReturns( mapping.getQueryReturns() );
 

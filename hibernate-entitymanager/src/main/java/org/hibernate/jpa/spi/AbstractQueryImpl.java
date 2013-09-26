@@ -139,7 +139,16 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 
 	@Override
 	public javax.persistence.LockModeType getLockMode() {
-		getEntityManager().checkOpen( false );
+		checkOpen( false );
+
+		if ( isNativeSqlQuery() ) {
+			throw new IllegalStateException( "Illegal attempt to set lock mode on a native SQL query" );
+		}
+
+		if ( ! isSelectQuery() ) {
+			throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
+		}
+
 		return jpaLockMode;
 	}
 

@@ -1624,7 +1624,11 @@ public class Configuration implements Serializable {
 				//column equals and hashcode is based on column name
 			}
 			catch ( MappingException e ) {
-				unboundNoLogical.add( new Column( column ) );
+				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.  In order
+				// to exhaustively report all of the unbound columns at once, w/o an NPE in
+				// Constraint#generateName's array sorting, simply create a fake Column.
+				columns[index] = new Column( column );
+				unboundNoLogical.add( columns[index] );
 			}
 		}
 		

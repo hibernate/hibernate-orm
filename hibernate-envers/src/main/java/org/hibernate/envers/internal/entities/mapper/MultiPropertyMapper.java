@@ -41,6 +41,7 @@ import org.hibernate.property.Getter;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	protected final Map<PropertyData, PropertyMapper> properties;
@@ -66,7 +67,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			return (CompositeMapperBuilder) properties.get( propertyData );
 		}
 
-		final ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper( propertyData, componentClass );
+		final ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(propertyData, componentClass);
 		addComposite( propertyData, componentMapperBuilder );
 
 		return componentMapperBuilder;
@@ -78,7 +79,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		propertyDatas.put( propertyData.getName(), propertyData );
 	}
 
-	private Object getAtIndexOrNull(Object[] array, int index) {
+	protected Object getAtIndexOrNull(Object[] array, int index) {
 		return array == null ? null : array[index];
 	}
 
@@ -223,4 +224,8 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 	public Map<PropertyData, PropertyMapper> getProperties() {
 		return properties;
 	}
+
+    public Map<String, PropertyData> getPropertyDatas() {
+        return propertyDatas;
+    }
 }

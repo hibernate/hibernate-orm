@@ -41,17 +41,24 @@ import org.hibernate.property.Setter;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Michal Skowronek (mskowr at o2 dot pl)
+ * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperBuilder {
 	private final PropertyData propertyData;
 	private final MultiPropertyMapper delegate;
 	private final Class componentClass;
 
-	public ComponentPropertyMapper(PropertyData propertyData, Class componentClass) {
-		this.propertyData = propertyData;
-		this.delegate = new MultiPropertyMapper();
-		this.componentClass = componentClass;
-	}
+    public ComponentPropertyMapper(PropertyData propertyData, Class componentClass) {
+        this.propertyData = propertyData;
+        //ŁŻ this could be done better
+        if (Map.class.equals(componentClass)) {
+            this.delegate = new MultiDynamicComponentMapper(propertyData);
+            this.componentClass = HashMap.class;
+        } else {
+            this.delegate = new MultiPropertyMapper();
+            this.componentClass = componentClass;
+        }
+    }
 
 	@Override
 	public void add(PropertyData propertyData) {
@@ -139,7 +146,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 		}
 
 		if ( allNullAndSingle ) {
-			// single property, but default value need not be null, so we'll set it to null anyway 
+			// single property, but default value need not be null, so we'll set it to null anyway
 			setter.set( obj, null, null );
 		}
 		else {

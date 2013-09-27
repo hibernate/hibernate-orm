@@ -3,17 +3,26 @@ package org.hibernate.test.annotations.uniqueconstraint;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.JDBCException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -21,6 +30,7 @@ import org.junit.Test;
 
 /**
  * @author Manuel Bernhardt <bernhardt.manuel@gmail.com>
+ * @author Brett Meyer
  */
 public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 	
@@ -28,9 +38,7 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
         return new Class[]{
                 Room.class,
                 Building.class,
-                House.class,
-                UniqueNoNameA.class,
-                UniqueNoNameB.class
+                House.class
         };
     }
 
@@ -69,7 +77,11 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-8026" )
 	public void testUnNamedConstraints() {
-		Iterator<org.hibernate.mapping.Table> iterator = configuration().getTableMappings();
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( UniqueNoNameA.class );
+		cfg.addAnnotatedClass( UniqueNoNameB.class );
+		cfg.buildMappings();
+		Iterator<org.hibernate.mapping.Table> iterator = cfg.getTableMappings();
 		org.hibernate.mapping.Table tableA = null;
 		org.hibernate.mapping.Table tableB = null;
 		while( iterator.hasNext() ) {
@@ -89,6 +101,22 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 		UniqueKey ukA = (UniqueKey) tableA.getUniqueKeyIterator().next();
 		UniqueKey ukB = (UniqueKey) tableB.getUniqueKeyIterator().next();
 		assertFalse( ukA.getName().equals( ukB.getName() ) );
+	}
+	
+	@Test
+	@TestForIssue( jiraKey = "HHH-8537" )
+	public void testNonExistentColumn() {
+		Configuration cfg = new Configuration();
+		cfg.addAnnotatedClass( UniqueColumnDoesNotExist.class );
+		try {
+			cfg.buildMappings();
+		}
+		catch (NullPointerException e) {
+			fail( "The @UniqueConstraint with a non-existent column name should have resulted in an AnnotationException" );
+		}
+		catch (AnnotationException e) {
+			// expected
+		}
 	}
 	
 	@Entity
@@ -111,6 +139,22 @@ public class UniqueConstraintTest extends BaseCoreFunctionalTestCase {
 		public long id;
 		
 		public String name;
+	}
+
+	@Entity
+	public static class UniqueColumnDoesNotExist {
+		@Id
+		public Integer id;
+
+		@ElementCollection(fetch = FetchType.EAGER)
+		@CollectionTable(
+				name = "tbl_strings",
+				joinColumns = @JoinColumn(name = "fk", nullable = false),
+				// the failure required at least 1 columnName to be correct -- all incorrect wouldn't reproduce
+				uniqueConstraints =  @UniqueConstraint(columnNames = { "fk", "doesnotexist" })
+		)
+		@Column(name = "string", nullable = false)
+		public Set<String> strings = new HashSet<String>();
 	}
     
 }

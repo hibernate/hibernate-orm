@@ -79,7 +79,7 @@ public abstract class ReflectionTools {
 		return getSetter( cls, propertyData.getBeanName(), propertyData.getAccessType() );
 	}
 
-	private static Setter getSetter(Class cls, String propertyName, String accessorType) {
+	public static Setter getSetter(Class cls, String propertyName, String accessorType) {
 		final Pair<Class, String> key = Pair.make( cls, propertyName );
 		Setter value = SETTER_CACHE.get( key );
 		if ( value == null ) {

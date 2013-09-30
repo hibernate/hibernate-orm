@@ -20,22 +20,18 @@ import static org.hibernate.envers.internal.tools.StringTools.getLastComponent;
 public class MapProxyTool {
 
     /**
-     * @author Lukasz Zuchowski (author at zuchos dot com)
-     *  Creates instance of map proxy class. This proxy class will be a java bean with properties from <code>propertyDatas</code>.
-     *  Instance will proxy calls to instance of the map passed as parameter.
-     * @param name Name of the class to construct (should be unique within class loader)
-     * @param map instance that will be proxied by java bean
-     * @param propertyDatas properties that should java bean declare
+     * @param className               Name of the class to construct (should be unique within class loader)
+     * @param map                instance that will be proxied by java bean
+     * @param propertyDatas      properties that should java bean declare
      * @param classLoaderService
      * @return new instance of proxy
+     * @author Lukasz Zuchowski (author at zuchos dot com)
+     * Creates instance of map proxy class. This proxy class will be a java bean with properties from <code>propertyDatas</code>.
+     * Instance will proxy calls to instance of the map passed as parameter.
      */
-    public static Object newInstanceOfBeanProxyForMap(String name, Map<String, Object> map, Set<PropertyData> propertyDatas, ClassLoaderService classLoaderService) {
-        Class aClass = loadClass(name, classLoaderService);
-        if (aClass == null) {
-            Map<String, Class<?>> properties = prepareProperties(propertyDatas);
-            aClass = generate(name, properties);
-        }
-        return createNewInstance(map, aClass);
+    public static Object newInstanceOfBeanProxyForMap(String className, Map<String, Object> map, Set<PropertyData> propertyDatas, ClassLoaderService classLoaderService) {
+        Map<String, Class<?>> properties = prepareProperties(propertyDatas);
+        return createNewInstance(map, classForName(className, properties, classLoaderService));
     }
 
     private static Object createNewInstance(Map<String, Object> map, Class aClass) {
@@ -64,6 +60,21 @@ public class MapProxyTool {
     }
 
     /**
+     * Generates/loads proxy class for given name with properties for map.
+     * @param className name of the class that will be generated/loaded
+     * @param properties list of properties that should be exposed via java bean
+     * @param classLoaderService
+     * @return proxy class that wraps map into java bean
+     */
+    public static Class classForName(String className, Map<String,Class<?>> properties, ClassLoaderService classLoaderService) {
+        Class aClass = loadClass(className, classLoaderService);
+        if (aClass == null) {
+            aClass = generate(className, properties);
+        }
+        return aClass;
+    }
+
+    /**
      * Protected for test only
      */
     protected static Class generate(String className, Map<String, Class<?>> properties) {
@@ -76,7 +87,6 @@ public class MapProxyTool {
             cc.addConstructor(generateConstructor(className, cc));
 
             for (Entry<String, Class<?>> entry : properties.entrySet()) {
-                cc.addField(new CtField(resolveCtClass(entry.getValue()), entry.getKey(), cc));
 
                 // add getter
                 cc.addMethod(generateGetter(cc, entry.getKey(), entry.getValue()));
@@ -103,9 +113,9 @@ public class MapProxyTool {
 
         String getterName = "get" + capitalizeFirst(fieldName);
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("public ").append(fieldClass.getName()).append(" ")
-                .append(getterName).append("(){").append("return (" + fieldClass.getName() + ")this.theMap.get(\"")
+                .append(getterName).append("(){").append("return (").append(fieldClass.getName()).append(")this.theMap.get(\"")
                 .append(fieldName).append("\")").append(";").append("}");
         return CtMethod.make(sb.toString(), declaringClass);
     }
@@ -115,7 +125,7 @@ public class MapProxyTool {
 
         String setterName = "set" + capitalizeFirst(fieldName);
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("public void ").append(setterName).append("(")
                 .append(fieldClass.getName()).append(" ").append(fieldName)
                 .append(")").append("{").append("this.theMap.put(\"").append(fieldName)

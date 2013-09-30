@@ -34,6 +34,7 @@ import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.MultiTenantConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.cursor.internal.RefCursorSupportInitiator;
+import org.hibernate.engine.jdbc.dialect.internal.DatabaseInfoDialectResolverInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DatabaseMetaDataDialectResolverInitiator;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryInitiator;
 import org.hibernate.engine.jdbc.internal.JdbcServicesInitiator;
@@ -71,6 +72,7 @@ public class StandardServiceInitiators {
 		serviceInitiators.add( ConnectionProviderInitiator.INSTANCE );
 		serviceInitiators.add( MultiTenantConnectionProviderInitiator.INSTANCE );
 		serviceInitiators.add( DatabaseMetaDataDialectResolverInitiator.INSTANCE );
+		serviceInitiators.add( DatabaseInfoDialectResolverInitiator.INSTANCE );
 		serviceInitiators.add( DialectFactoryInitiator.INSTANCE );
 		serviceInitiators.add( BatchBuilderInitiator.INSTANCE );
 		serviceInitiators.add( JdbcServicesInitiator.INSTANCE );

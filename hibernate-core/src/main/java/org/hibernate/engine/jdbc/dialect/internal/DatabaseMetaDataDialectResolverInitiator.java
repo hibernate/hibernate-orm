@@ -36,7 +36,7 @@ import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Initiator for the DatabaseInfoDialectResolver service
+ * Initiator for the DatabaseMetaDataDialectResolver service
  *
  * @author Steve Ebersole
  * @author Brett Meyer
@@ -54,15 +54,17 @@ public class DatabaseMetaDataDialectResolverInitiator implements StandardService
 
 	@Override
 	public DatabaseMetaDataDialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final DatabaseMetaDataDialectResolverSet resolver = new DatabaseMetaDataDialectResolverSet();
-		applyCustomResolvers( resolver, configurationValues, registry );
-		resolver.addResolver(
-				new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE ) );
-		return resolver;
+		final DatabaseMetaDataDialectResolverSet databaseMetaDataResolverSet = new DatabaseMetaDataDialectResolverSet();
+		final DatabaseInfoDialectResolverSet databaseInfoResolverSet = DatabaseInfoDialectResolverSet.INSTANCE;
+		applyCustomResolvers( databaseMetaDataResolverSet, databaseInfoResolverSet, configurationValues, registry );
+		databaseMetaDataResolverSet.addResolver(
+				new StandardDatabaseMetaDataDialectResolver( databaseInfoResolverSet ) );
+		return databaseMetaDataResolverSet;
 	}
 
 	private void applyCustomResolvers(
-			DatabaseMetaDataDialectResolverSet resolver,
+			DatabaseMetaDataDialectResolverSet databaseMetaDataResolverSet,
+			DatabaseInfoDialectResolverSet databaseInfoResolverSet,
 			Map configurationValues,
 			ServiceRegistryImplementor registry) {
 		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
@@ -73,11 +75,10 @@ public class DatabaseMetaDataDialectResolverInitiator implements StandardService
 				try {
 					final Object obj = classLoaderService.classForName( resolverImplName ).newInstance();
 					if (DatabaseMetaDataDialectResolver.class.isInstance( obj )) {
-						resolver.addResolver( (DatabaseMetaDataDialectResolver) obj );
+						databaseMetaDataResolverSet.addResolver( (DatabaseMetaDataDialectResolver) obj );
 					}
 					else if (DatabaseInfoDialectResolver.class.isInstance( obj )) {
-						resolver.addResolver(
-								new StandardDatabaseMetaDataDialectResolver( (DatabaseInfoDialectResolver) obj ) );
+						databaseInfoResolverSet.addResolver( (DatabaseInfoDialectResolver) obj );
 					}
 					else {
 						throw new ServiceException( "The custom resolver " + resolverImplName

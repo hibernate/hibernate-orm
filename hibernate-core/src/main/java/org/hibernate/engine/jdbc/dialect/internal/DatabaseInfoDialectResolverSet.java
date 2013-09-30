@@ -23,53 +23,27 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
-import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
 
 /**
- * Implements the DatabaseMetaDataDialectResolver as a chain, allowing multiple delegate DatabaseMetaDataDialectResolver
+ * Implements the DatabaseInfoDialectResolver as a chain, allowing multiple delegate DatabaseInfoDialectResolver
  * implementations to coordinate resolution
  *
  * @author Steve Ebersole
  */
-public class DatabaseMetaDataDialectResolverSet implements DatabaseMetaDataDialectResolver {
-	private List<DatabaseMetaDataDialectResolver> delegateResolvers;
-
-	/**
-	 * Constructs a DatabaseInfoDialectResolverSet
-	 */
-	public DatabaseMetaDataDialectResolverSet() {
-		this( new ArrayList<DatabaseMetaDataDialectResolver>() );
-	}
-
-	/**
-	 * Constructs a DatabaseInfoDialectResolverSet
-	 *
-	 * @param delegateResolvers The set of delegate resolvers
-	 */
-	public DatabaseMetaDataDialectResolverSet(List<DatabaseMetaDataDialectResolver> delegateResolvers) {
-		this.delegateResolvers = delegateResolvers;
-	}
-
-	/**
-	 * Constructs a DatabaseInfoDialectResolverSet
-	 *
-	 * @param delegateResolvers The set of delegate resolvers
-	 */
-	@SuppressWarnings("UnusedDeclaration")
-	public DatabaseMetaDataDialectResolverSet(DatabaseMetaDataDialectResolver... delegateResolvers) {
-		this( Arrays.asList( delegateResolvers ) );
-	}
+public class DatabaseInfoDialectResolverSet implements DatabaseInfoDialectResolver {
+	public static DatabaseInfoDialectResolverSet INSTANCE = new DatabaseInfoDialectResolverSet();
+	
+	private List<DatabaseInfoDialectResolver> delegateResolvers = new ArrayList<DatabaseInfoDialectResolver>();
 
 	@Override
-	public Dialect resolve(DatabaseMetaData databaseMetaData) {
-		for ( DatabaseMetaDataDialectResolver resolver : delegateResolvers ) {
-			final Dialect dialect = resolver.resolve( databaseMetaData );
+	public Dialect resolve(DatabaseInfo databaseInfo) {
+		for ( DatabaseInfoDialectResolver resolver : delegateResolvers ) {
+			final Dialect dialect = resolver.resolve( databaseInfo );
 			if ( dialect != null ) {
 				return dialect;
 			}
@@ -83,7 +57,7 @@ public class DatabaseMetaDataDialectResolverSet implements DatabaseMetaDataDiale
 	 *
 	 * @param resolver The resolver to add.
 	 */
-	public void addResolver(DatabaseMetaDataDialectResolver resolver) {
+	public void addResolver(DatabaseInfoDialectResolver resolver) {
 		delegateResolvers.add( resolver );
 	}
 
@@ -94,7 +68,7 @@ public class DatabaseMetaDataDialectResolverSet implements DatabaseMetaDataDiale
 	 * @param resolver The resolver to add.
 	 */
 	@SuppressWarnings("UnusedDeclaration")
-	public void addResolverAtFirst(DatabaseMetaDataDialectResolver resolver) {
+	public void addResolverAtFirst(DatabaseInfoDialectResolver resolver) {
 		delegateResolvers.add( 0, resolver );
 	}
 }

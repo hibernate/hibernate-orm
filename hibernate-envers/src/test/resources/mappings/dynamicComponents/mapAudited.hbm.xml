@@ -9,6 +9,7 @@
         <dynamic-component name="customFields">
             <property name="prop1" type="integer"/>
             <property name="prop2" type="float"/>
+            <property name="prop4" type="boolean"/>
             <many-to-one name="prop3" class="org.hibernate.envers.test.integration.components.dynamic.SimpleEntity" column="SIMPLE_ID"/>
         </dynamic-component>
     </class>

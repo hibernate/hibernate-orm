@@ -78,6 +78,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         entity.getCustomFields().put("prop1", 13);
         entity.getCustomFields().put("prop2", 0.1f);
         entity.getCustomFields().put("prop3", simpleEntity);
+        entity.getCustomFields().put("prop4", true);
         session.save(entity);
         session.getTransaction().commit();
 
@@ -94,6 +95,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         session.getTransaction().begin();
         entity = (AuditedDynamicComponentEntity) session.get(AuditedDynamicComponentEntity.class, entity.getId());
         entity.getCustomFields().put("prop1", 2);
+        entity.getCustomFields().put("prop4", false);
         session.update(entity);
         session.getTransaction().commit();
 
@@ -135,6 +137,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         entity.getCustomFields().put("prop1", 13);
         entity.getCustomFields().put("prop2", 0.1f);
         entity.getCustomFields().put("prop3", new SimpleEntity(1L, "Very simple entity"));
+        entity.getCustomFields().put("prop4", true);
         AuditedDynamicComponentEntity ver2 = getAuditReader().find(
                 AuditedDynamicComponentEntity.class,
                 entity.getId(),
@@ -154,6 +157,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 
         // Revision 4
         entity.getCustomFields().put("prop1", 2);
+        entity.getCustomFields().put("prop4", false);
         AuditedDynamicComponentEntity ver4 = getAuditReader().find(
                 AuditedDynamicComponentEntity.class,
                 entity.getId(),
@@ -174,6 +178,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         entity.getCustomFields().put("prop1",null);
         entity.getCustomFields().put("prop2",null);
         entity.getCustomFields().put("prop3",null);
+        entity.getCustomFields().put("prop4",null);
         AuditedDynamicComponentEntity ver6 = getAuditReader().find(
                 AuditedDynamicComponentEntity.class,
                 entity.getId(),
@@ -183,12 +188,14 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
     }
 
 
-    //@Test
+    @Test
     public void testOfQueryOnDynamicComponent() {
         //given (and result of initData()
         AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity(1L, "static field value");
         entity.getCustomFields().put("prop1", 13);
         entity.getCustomFields().put("prop2", 0.1f);
+        entity.getCustomFields().put("prop3", new SimpleEntity(1L,"Very simple entity"));
+        entity.getCustomFields().put("prop4", true);
 
         //when
         List ver1 = getAuditReader().createQuery()

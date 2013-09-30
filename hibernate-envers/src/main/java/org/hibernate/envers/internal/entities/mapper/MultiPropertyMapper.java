@@ -67,7 +67,10 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 			return (CompositeMapperBuilder) properties.get( propertyData );
 		}
 
-		final ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(propertyData, componentClass);
+		final ComponentPropertyMapper componentMapperBuilder = new ComponentPropertyMapper(
+				propertyData,
+				componentClass
+		);
 		addComposite( propertyData, componentMapperBuilder );
 
 		return componentMapperBuilder;
@@ -225,7 +228,7 @@ public class MultiPropertyMapper implements ExtendedPropertyMapper {
 		return properties;
 	}
 
-    public Map<String, PropertyData> getPropertyDatas() {
-        return propertyDatas;
-    }
+	public Map<String, PropertyData> getPropertyDatas() {
+		return propertyDatas;
+	}
 }

@@ -2,13 +2,12 @@ package org.hibernate.envers.test.integration.components.dynamic;
 
 import java.util.Arrays;
 
+import junit.framework.Assert;
+import org.junit.Test;
+
 import org.hibernate.Session;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
-
-import org.junit.Test;
-import junit.framework.Assert;
-
 import org.hibernate.testing.TestForIssue;
 
 /**
@@ -18,7 +17,7 @@ import org.hibernate.testing.TestForIssue;
 public class NotAuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
-		return new String[] {"mappings/dynamicComponents/mapNotAudited.hbm.xml"};
+		return new String[] { "mappings/dynamicComponents/mapNotAudited.hbm.xml" };
 	}
 
 	@Test

@@ -1,5 +1,7 @@
 package org.hibernate.envers.internal.entities.mapper;
 
+import java.util.Map;
+
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.internal.entities.PropertyData;
@@ -7,96 +9,103 @@ import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.MapProxyTool;
 import org.hibernate.envers.internal.tools.StringTools;
 
-import java.util.Map;
-
 /**
  * Multi mapper for dynamic components (it knows that component is a map, not a class)
+ *
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
 public class MultiDynamicComponentMapper extends MultiPropertyMapper {
 
-    private PropertyData dynamicComponentData;
+	private PropertyData dynamicComponentData;
 
-    public MultiDynamicComponentMapper(PropertyData dynamicComponentData) {
-        this.dynamicComponentData = dynamicComponentData;
-    }
+	public MultiDynamicComponentMapper(PropertyData dynamicComponentData) {
+		this.dynamicComponentData = dynamicComponentData;
+	}
 
-    @Override
-    public boolean mapToMapFromEntity(
-            SessionImplementor session,
-            Map<String, Object> data,
-            Object newObj,
-            Object oldObj) {
-        boolean ret = false;
-        for (PropertyData propertyData : properties.keySet()) {
-            if (newObj == null && oldObj == null) {
-                return false;
-            }
-            Object newValue = newObj == null ? null : getValue(newObj, propertyData);
-            Object oldValue = oldObj == null ? null : getValue(oldObj, propertyData);
+	@Override
+	public boolean mapToMapFromEntity(
+			SessionImplementor session,
+			Map<String, Object> data,
+			Object newObj,
+			Object oldObj) {
+		boolean ret = false;
+		for ( PropertyData propertyData : properties.keySet() ) {
+			if ( newObj == null && oldObj == null ) {
+				return false;
+			}
+			Object newValue = newObj == null ? null : getValue( newObj, propertyData );
+			Object oldValue = oldObj == null ? null : getValue( oldObj, propertyData );
 
-            ret |= properties.get(propertyData).mapToMapFromEntity(session, data, newValue, oldValue);
-        }
+			ret |= properties.get( propertyData ).mapToMapFromEntity( session, data, newValue, oldValue );
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 
-    private Object getValue(Object newObj, PropertyData propertyData) {
-        return ((Map) newObj).get(propertyData.getBeanName());
-    }
+	private Object getValue(Object newObj, PropertyData propertyData) {
+		return ( (Map) newObj ).get( propertyData.getBeanName() );
+	}
 
-    @Override
-    public boolean map(
-            SessionImplementor session,
-            Map<String, Object> data,
-            String[] propertyNames,
-            Object[] newState,
-            Object[] oldState) {
-        boolean ret = false;
-        for (int i = 0; i < propertyNames.length; i++) {
-            final String propertyName = propertyNames[i];
-            Map<String, PropertyData> propertyDatas = getPropertyDatas();
-            if (propertyDatas.containsKey(propertyName)) {
-                final PropertyMapper propertyMapper = properties.get(propertyDatas.get(propertyName));
-                final Object newObj = getAtIndexOrNull(newState, i);
-                final Object oldObj = getAtIndexOrNull(oldState, i);
-                ret |= propertyMapper.mapToMapFromEntity(session, data, newObj, oldObj);
-                propertyMapper.mapModifiedFlagsToMapFromEntity(session, data, newObj, oldObj);
-            }
-        }
+	@Override
+	public boolean map(
+			SessionImplementor session,
+			Map<String, Object> data,
+			String[] propertyNames,
+			Object[] newState,
+			Object[] oldState) {
+		boolean ret = false;
+		for ( int i = 0; i < propertyNames.length; i++ ) {
+			final String propertyName = propertyNames[i];
+			Map<String, PropertyData> propertyDatas = getPropertyDatas();
+			if ( propertyDatas.containsKey( propertyName ) ) {
+				final PropertyMapper propertyMapper = properties.get( propertyDatas.get( propertyName ) );
+				final Object newObj = getAtIndexOrNull( newState, i );
+				final Object oldObj = getAtIndexOrNull( oldState, i );
+				ret |= propertyMapper.mapToMapFromEntity( session, data, newObj, oldObj );
+				propertyMapper.mapModifiedFlagsToMapFromEntity( session, data, newObj, oldObj );
+			}
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 
-    @Override
-    public void mapModifiedFlagsToMapFromEntity(
-            SessionImplementor session,
-            Map<String, Object> data,
-            Object newObj,
-            Object oldObj) {
-        for (PropertyData propertyData : properties.keySet()) {
-            if (newObj == null && oldObj == null) {
-                return;
-            }
-            Object newValue = newObj == null ? null : getValue(newObj, propertyData);
-            Object oldValue = oldObj == null ? null : getValue(oldObj, propertyData);
-            properties.get(propertyData).mapModifiedFlagsToMapFromEntity(session, data, newValue, oldValue);
-        }
-    }
+	@Override
+	public void mapModifiedFlagsToMapFromEntity(
+			SessionImplementor session,
+			Map<String, Object> data,
+			Object newObj,
+			Object oldObj) {
+		for ( PropertyData propertyData : properties.keySet() ) {
+			if ( newObj == null && oldObj == null ) {
+				return;
+			}
+			Object newValue = newObj == null ? null : getValue( newObj, propertyData );
+			Object oldValue = oldObj == null ? null : getValue( oldObj, propertyData );
+			properties.get( propertyData ).mapModifiedFlagsToMapFromEntity( session, data, newValue, oldValue );
+		}
+	}
 
-    @Override
-    public void mapToEntityFromMap(
-            AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
-            AuditReaderImplementor versionsReader, Number revision) {
-        Object mapProxy = MapProxyTool.newInstanceOfBeanProxyForMap(generateClassName(data, dynamicComponentData.getBeanName()), (Map) obj, properties.keySet(), verCfg.getClassLoaderService());
-        for (PropertyData propertyData : properties.keySet()) {
-            PropertyMapper mapper = properties.get(propertyData);
-            mapper.mapToEntityFromMap(verCfg, mapProxy, data, primaryKey, versionsReader, revision);
-        }
-    }
+	@Override
+	public void mapToEntityFromMap(
+			AuditConfiguration verCfg, Object obj, Map data, Object primaryKey,
+			AuditReaderImplementor versionsReader, Number revision) {
+		Object mapProxy = MapProxyTool.newInstanceOfBeanProxyForMap(
+				generateClassName(
+						data,
+						dynamicComponentData.getBeanName()
+				), (Map) obj, properties.keySet(), verCfg.getClassLoaderService()
+		);
+		for ( PropertyData propertyData : properties.keySet() ) {
+			PropertyMapper mapper = properties.get( propertyData );
+			mapper.mapToEntityFromMap( verCfg, mapProxy, data, primaryKey, versionsReader, revision );
+		}
+	}
 
-    private String generateClassName(Map data, String dynamicComponentPropertyName) {
-        return (data.get("$type$") + StringTools.capitalizeFirst(dynamicComponentPropertyName)).replaceAll("_", "");
-    }
+	private String generateClassName(Map data, String dynamicComponentPropertyName) {
+		return ( data.get( "$type$" ) + StringTools.capitalizeFirst( dynamicComponentPropertyName ) ).replaceAll(
+				"_",
+				""
+		);
+	}
 
 }

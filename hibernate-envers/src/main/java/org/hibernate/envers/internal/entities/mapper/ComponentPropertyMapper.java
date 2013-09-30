@@ -48,17 +48,18 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 	private final MultiPropertyMapper delegate;
 	private final Class componentClass;
 
-    public ComponentPropertyMapper(PropertyData propertyData, Class componentClass) {
-        this.propertyData = propertyData;
-        //ŁŻ this could be done better
-        if (Map.class.equals(componentClass)) {
-            this.delegate = new MultiDynamicComponentMapper(propertyData);
-            this.componentClass = HashMap.class;
-        } else {
-            this.delegate = new MultiPropertyMapper();
-            this.componentClass = componentClass;
-        }
-    }
+	public ComponentPropertyMapper(PropertyData propertyData, Class componentClass) {
+		this.propertyData = propertyData;
+		//ŁŻ this could be done better
+		if ( Map.class.equals( componentClass ) ) {
+			this.delegate = new MultiDynamicComponentMapper( propertyData );
+			this.componentClass = HashMap.class;
+		}
+		else {
+			this.delegate = new MultiPropertyMapper();
+			this.componentClass = componentClass;
+		}
+	}
 
 	@Override
 	public void add(PropertyData propertyData) {
@@ -139,7 +140,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 			if ( data.get(
 					property.getKey()
 							.getName()
-			) != null || !(property.getValue() instanceof SinglePropertyMapper) ) {
+			) != null || !( property.getValue() instanceof SinglePropertyMapper ) ) {
 				allNullAndSingle = false;
 				break;
 			}
@@ -156,7 +157,7 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 				setter.set( obj, subObj, null );
 				delegate.mapToEntityFromMap( verCfg, subObj, data, primaryKey, versionsReader, revision );
 			}
-			catch (Exception e) {
+			catch ( Exception e ) {
 				throw new AuditException( e );
 			}
 		}

@@ -23,12 +23,31 @@
  */
 package org.hibernate.envers.configuration.internal.metadata.reader;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.persistence.JoinColumn;
+import javax.persistence.MapKey;
+import javax.persistence.OneToMany;
+import javax.persistence.Version;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.cfg.AccessType;
-import org.hibernate.envers.*;
+import org.hibernate.envers.AuditJoinTable;
+import org.hibernate.envers.AuditMappedBy;
+import org.hibernate.envers.AuditOverride;
+import org.hibernate.envers.AuditOverrides;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.ModificationStore;
+import org.hibernate.envers.NotAudited;
+import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.configuration.internal.metadata.MetadataTools;
 import org.hibernate.envers.internal.tools.MappingTools;
@@ -37,13 +56,6 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
-
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKey;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
-import java.lang.annotation.Annotation;
-import java.util.*;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Tools.newHashSet;
@@ -107,18 +119,19 @@ public class AuditedPropertiesReader {
 		// First reading the access types for the persistent properties.
 		readPersistentPropertiesAccess();
 
-        if (persistentPropertiesSource instanceof DynamicComponentSource) {
-            addPropertiesFromDynamicComponent((DynamicComponentSource) persistentPropertiesSource);
-        } else {
-            // Retrieve classes and properties that are explicitly marked for auditing process by any superclass
-            // of currently mapped entity or itself.
-            final XClass clazz = persistentPropertiesSource.getXClass();
-            readAuditOverrides( clazz );
+		if ( persistentPropertiesSource instanceof DynamicComponentSource ) {
+			addPropertiesFromDynamicComponent( (DynamicComponentSource) persistentPropertiesSource );
+		}
+		else {
+			// Retrieve classes and properties that are explicitly marked for auditing process by any superclass
+			// of currently mapped entity or itself.
+			final XClass clazz = persistentPropertiesSource.getXClass();
+			readAuditOverrides( clazz );
 
-            // Adding all properties from the given class.
-            addPropertiesFromClass( clazz );
-        }
-    }
+			// Adding all properties from the given class.
+			addPropertiesFromClass( clazz );
+		}
+	}
 
 	/**
 	 * Recursively constructs sets of audited and not audited properties and classes which behavior has been overridden
@@ -139,7 +152,7 @@ public class AuditedPropertiesReader {
 				}
 			}
 		}
-        /* TODO: Code to remove with @Audited.auditParents - finish. */
+		/* TODO: Code to remove with @Audited.auditParents - finish. */
 		final List<AuditOverride> auditOverrides = computeAuditOverrides( clazz );
 		for ( AuditOverride auditOverride : auditOverrides ) {
 			if ( auditOverride.forClass() != void.class ) {
@@ -303,41 +316,52 @@ public class AuditedPropertiesReader {
 		return allClassAudited;
 	}
 
-    private void addPropertiesFromDynamicComponent(DynamicComponentSource dynamicComponentSource) {
-        Audited audited = computeAuditConfiguration(dynamicComponentSource.getXClass());
-        if(!fieldAccessedPersistentProperties.isEmpty()) {
-            //TODO ŁŻ hmm... for sure ?
-            throw new MappingException("Dynamic component cannot have field accessed persistent properties");
-        }
-        for (String property : propertyAccessedPersistentProperties) {
-            // If this is not a persistent property, with the same access type as currently checked,
-            // it's not audited as well.
-            // If the property was already defined by the subclass, is ignored by superclasses
-            String accessType = AccessType.PROPERTY.getType();
-            if (!auditedPropertiesHolder.contains(property)) {
-                final Value propertyValue = persistentPropertiesSource.getProperty(property).getValue();
-                if (propertyValue instanceof Component) {
-                    this.addFromComponentProperty(new DynamicProperty(dynamicComponentSource, property), accessType, (Component) propertyValue, audited);
-                } else {
-                    this.addFromNotComponentProperty(new DynamicProperty(dynamicComponentSource, property), accessType, audited);
-                }
-            } else if (propertiesGroupMapping.containsKey(property)) {
-                //todo ŁŻ - I'm not sure is that the case that we should handle for dynamic component.
-                // Retrieve embedded component name based on class field.
-                final String embeddedName = propertiesGroupMapping.get(property);
-                if (!auditedPropertiesHolder.contains(embeddedName)) {
-                    // Manage properties mapped within <properties> tag.
-                    final Value propertyValue = persistentPropertiesSource.getProperty(embeddedName).getValue();
-                    this.addFromPropertiesGroup(
-                            embeddedName,
-                            new DynamicProperty(dynamicComponentSource, property), accessType,
-                            (Component) propertyValue,
-                            audited
-                    );
-                }
-            }
-        }
-    }
+	private void addPropertiesFromDynamicComponent(DynamicComponentSource dynamicComponentSource) {
+		Audited audited = computeAuditConfiguration( dynamicComponentSource.getXClass() );
+		if ( !fieldAccessedPersistentProperties.isEmpty() ) {
+			//TODO ŁŻ hmm... for sure ?
+			throw new MappingException( "Dynamic component cannot have field accessed persistent properties" );
+		}
+		for ( String property : propertyAccessedPersistentProperties ) {
+			// If this is not a persistent property, with the same access type as currently checked,
+			// it's not audited as well.
+			// If the property was already defined by the subclass, is ignored by superclasses
+			String accessType = AccessType.PROPERTY.getType();
+			if ( !auditedPropertiesHolder.contains( property ) ) {
+				final Value propertyValue = persistentPropertiesSource.getProperty( property ).getValue();
+				if ( propertyValue instanceof Component ) {
+					this.addFromComponentProperty(
+							new DynamicProperty( dynamicComponentSource, property ),
+							accessType,
+							(Component) propertyValue,
+							audited
+					);
+				}
+				else {
+					this.addFromNotComponentProperty(
+							new DynamicProperty( dynamicComponentSource, property ),
+							accessType,
+							audited
+					);
+				}
+			}
+			else if ( propertiesGroupMapping.containsKey( property ) ) {
+				//todo ŁŻ - I'm not sure is that the case that we should handle for dynamic component.
+				// Retrieve embedded component name based on class field.
+				final String embeddedName = propertiesGroupMapping.get( property );
+				if ( !auditedPropertiesHolder.contains( embeddedName ) ) {
+					// Manage properties mapped within <properties> tag.
+					final Value propertyValue = persistentPropertiesSource.getProperty( embeddedName ).getValue();
+					this.addFromPropertiesGroup(
+							embeddedName,
+							new DynamicProperty( dynamicComponentSource, property ), accessType,
+							(Component) propertyValue,
+							audited
+					);
+				}
+			}
+		}
+	}
 
 	/**
 	 * Recursively adds all audited properties of entity class and its superclasses.
@@ -347,7 +371,7 @@ public class AuditedPropertiesReader {
 	private void addPropertiesFromClass(XClass clazz) {
 		final Audited allClassAudited = computeAuditConfiguration( clazz );
 
-        //look in the class
+		//look in the class
 		addFromProperties(
 				clazz.getDeclaredProperties( "field" ),
 				"field",
@@ -434,36 +458,37 @@ public class AuditedPropertiesReader {
 		}
 	}
 
-    private void addFromComponentProperty(
-            XProperty property,
-            String accessType,
-            Component propertyValue,
-            Audited allClassAudited) {
-        final ComponentAuditingData componentData = new ComponentAuditingData();
-        final boolean isAudited = fillPropertyData(property, componentData, accessType, allClassAudited);
+	private void addFromComponentProperty(
+			XProperty property,
+			String accessType,
+			Component propertyValue,
+			Audited allClassAudited) {
+		final ComponentAuditingData componentData = new ComponentAuditingData();
+		final boolean isAudited = fillPropertyData( property, componentData, accessType, allClassAudited );
 
-        final PersistentPropertiesSource componentPropertiesSource;
-        if (propertyValue.isDynamic()) {
-            componentPropertiesSource = new DynamicComponentSource(reflectionManager, propertyValue, property);
-        } else {
-            componentPropertiesSource = new ComponentPropertiesSource(reflectionManager, propertyValue);
-        }
+		final PersistentPropertiesSource componentPropertiesSource;
+		if ( propertyValue.isDynamic() ) {
+			componentPropertiesSource = new DynamicComponentSource( reflectionManager, propertyValue, property );
+		}
+		else {
+			componentPropertiesSource = new ComponentPropertiesSource( reflectionManager, propertyValue );
+		}
 
-        final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
-                ModificationStore.FULL,
-                componentPropertiesSource,
-                componentData,
-                globalCfg,
-                reflectionManager,
-                propertyNamePrefix + MappingTools.createComponentPrefix(property.getName())
-        );
-        audPropReader.read();
+		final ComponentAuditedPropertiesReader audPropReader = new ComponentAuditedPropertiesReader(
+				ModificationStore.FULL,
+				componentPropertiesSource,
+				componentData,
+				globalCfg,
+				reflectionManager,
+				propertyNamePrefix + MappingTools.createComponentPrefix( property.getName() )
+		);
+		audPropReader.read();
 
-        if (isAudited) {
-            // Now we know that the property is audited
-            auditedPropertiesHolder.addPropertyAuditingData(property.getName(), componentData);
-        }
-    }
+		if ( isAudited ) {
+			// Now we know that the property is audited
+			auditedPropertiesHolder.addPropertyAuditingData( property.getName(), componentData );
+		}
+	}
 
 	private void addFromNotComponentProperty(XProperty property, String accessType, Audited allClassAudited) {
 		final PropertyAuditingData propertyData = new PropertyAuditingData();
@@ -494,8 +519,8 @@ public class AuditedPropertiesReader {
 		// check if a property is declared as not audited to exclude it
 		// useful if a class is audited but some properties should be excluded
 		final NotAudited unVer = property.getAnnotation( NotAudited.class );
-		if ( (unVer != null
-				&& !overriddenAuditedProperties.contains( property ))
+		if ( ( unVer != null
+				&& !overriddenAuditedProperties.contains( property ) )
 				|| overriddenNotAuditedProperties.contains( property ) ) {
 			return false;
 		}
@@ -544,7 +569,7 @@ public class AuditedPropertiesReader {
 			XProperty property,
 			PropertyAuditingData propertyData, Audited allClassAudited) {
 		// Checking if this property is explicitly audited or if all properties are.
-		Audited aud = (property.isAnnotationPresent( Audited.class ))
+		Audited aud = ( property.isAnnotationPresent( Audited.class ) )
 				? property.getAnnotation( Audited.class )
 				: allClassAudited;
 		if ( aud == null
@@ -711,16 +736,16 @@ public class AuditedPropertiesReader {
 		private final XClass xclass;
 		private final Component component;
 
-        protected ComponentPropertiesSource(XClass xClazz, Component component) {
-            this.xclass = xClazz;
-            this.component = component;
-        }
+		protected ComponentPropertiesSource(XClass xClazz, Component component) {
+			this.xclass = xClazz;
+			this.component = component;
+		}
 
 		public ComponentPropertiesSource(ReflectionManager reflectionManager, Component component) {
 			try {
 				this.xclass = reflectionManager.classForName( component.getComponentClassName(), this.getClass() );
 			}
-			catch (ClassNotFoundException e) {
+			catch ( ClassNotFoundException e ) {
 				throw new MappingException( e );
 			}
 
@@ -728,7 +753,7 @@ public class AuditedPropertiesReader {
 		}
 
 		@Override
-		@SuppressWarnings({"unchecked"})
+		@SuppressWarnings({ "unchecked" })
 		public Iterator<Property> getPropertyIterator() {
 			return component.getPropertyIterator();
 		}
@@ -744,14 +769,14 @@ public class AuditedPropertiesReader {
 		}
 	}
 
-    public static class DynamicComponentSource extends ComponentPropertiesSource {
+	public static class DynamicComponentSource extends ComponentPropertiesSource {
 
-        private XProperty baseProperty;
+		private XProperty baseProperty;
 
-        public DynamicComponentSource(ReflectionManager reflectionManager, Component component, XProperty baseProperty) {
-            super(reflectionManager.toXClass(Map.class), component);
-            this.baseProperty = baseProperty;
-        }
-    }
+		public DynamicComponentSource(ReflectionManager reflectionManager, Component component, XProperty baseProperty) {
+			super( reflectionManager.toXClass( Map.class ), component );
+			this.baseProperty = baseProperty;
+		}
+	}
 
 }

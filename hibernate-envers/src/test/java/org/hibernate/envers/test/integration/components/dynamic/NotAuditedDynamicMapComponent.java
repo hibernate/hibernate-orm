@@ -29,7 +29,7 @@ public class NotAuditedDynamicMapComponent implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof NotAuditedDynamicMapComponent) ) {
+		if ( !( o instanceof NotAuditedDynamicMapComponent ) ) {
 			return false;
 		}
 
@@ -50,9 +50,9 @@ public class NotAuditedDynamicMapComponent implements Serializable {
 
 	@Override
 	public int hashCode() {
-		int result = (int) (id ^ (id >>> 32));
-		result = 31 * result + (note != null ? note.hashCode() : 0);
-		result = 31 * result + (customFields != null ? customFields.hashCode() : 0);
+		int result = (int) ( id ^ ( id >>> 32 ) );
+		result = 31 * result + ( note != null ? note.hashCode() : 0 );
+		result = 31 * result + ( customFields != null ? customFields.hashCode() : 0 );
 		return result;
 	}
 

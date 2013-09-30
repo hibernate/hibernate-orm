@@ -125,7 +125,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
     @Test
     public void testRevisionsCounts() {
         Assert.assertEquals(
-                Arrays.asList(2, 3, 4, 5,6,7),
+                Arrays.asList(2, 3, 4, 5, 6, 7),
                 getAuditReader().getRevisions(AuditedDynamicComponentEntity.class, 1L)
         );
     }
@@ -166,7 +166,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         Assert.assertEquals(entity, ver4);
 
         // Revision 5
-        entity.getCustomFields().put("prop2",null);
+        entity.getCustomFields().put("prop2", null);
         AuditedDynamicComponentEntity ver5 = getAuditReader().find(
                 AuditedDynamicComponentEntity.class,
                 entity.getId(),
@@ -175,10 +175,10 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         Assert.assertEquals(entity, ver5);
 
         // Revision 5
-        entity.getCustomFields().put("prop1",null);
-        entity.getCustomFields().put("prop2",null);
-        entity.getCustomFields().put("prop3",null);
-        entity.getCustomFields().put("prop4",null);
+        entity.getCustomFields().put("prop1", null);
+        entity.getCustomFields().put("prop2", null);
+        entity.getCustomFields().put("prop3", null);
+        entity.getCustomFields().put("prop4", null);
         AuditedDynamicComponentEntity ver6 = getAuditReader().find(
                 AuditedDynamicComponentEntity.class,
                 entity.getId(),
@@ -194,17 +194,38 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
         AuditedDynamicComponentEntity entity = new AuditedDynamicComponentEntity(1L, "static field value");
         entity.getCustomFields().put("prop1", 13);
         entity.getCustomFields().put("prop2", 0.1f);
-        entity.getCustomFields().put("prop3", new SimpleEntity(1L,"Very simple entity"));
+        entity.getCustomFields().put("prop3", new SimpleEntity(1L, "Very simple entity"));
         entity.getCustomFields().put("prop4", true);
 
         //when
-        List ver1 = getAuditReader().createQuery()
+        List resultList = getAuditReader().createQuery()
                 .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 2)
                 .add(AuditEntity.property("customFields_prop1").le(20))
                 .getResultList();
 
         //then
-        Assert.assertEquals(entity, ver1.get(0));
+        Assert.assertEquals(entity, resultList.get(0));
+
+        //when
+        resultList = getAuditReader().createQuery()
+                .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 2)
+                .add(AuditEntity.property("customFields_prop3").eq(new SimpleEntity(1L, "Very simple entity")))
+                .getResultList();
+
+
+        //then
+        entity = (AuditedDynamicComponentEntity) getAuditReader().createQuery()
+                .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 4)
+                .getResultList().get(0);
+        entity.getCustomFields().put("prop2", null);
+
+        resultList = getAuditReader().createQuery()
+                .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 5)
+                .add(AuditEntity.property("customFields_prop2").isNull())
+                .getResultList();
+
+        //then
+        Assert.assertEquals(entity, resultList.get(0));
     }
 
 }

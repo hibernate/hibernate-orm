@@ -1,16 +1,25 @@
 package org.hibernate.envers.test.integration.components.dynamic;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import junit.framework.Assert;
 import org.hibernate.Session;
+import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+/**
+ * @author Lukasz Zuchowski (author at zuchos dot com)
+ *         More advanced tests for dynamic component.
+ */
+@TestForIssue(jiraKey = "HHH-8049")
 public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctionalTestCase {
 
     public static final String PROP_BOOLEAN = "propBoolean";
@@ -22,6 +31,8 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
     public static final String INTERNAL_LIST = "internalList";
     public static final String INTERNAL_MAP = "internalMap";
     public static final String INTERNAL_MAP_WITH_MANY_TO_MANY = "internalMapWithEntities";
+    public static final String INTERNAL_SET = "internalSet";
+    public static final String INTERNAL_SET_OF_COMPONENTS = "internalSetOfComponents";
 
     @Override
     protected String[] getMappings() {
@@ -59,13 +70,15 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
         Map<String, ManyToManyEntity> mapWithManyToMany = new HashMap<String, ManyToManyEntity>();
         mapWithManyToMany.put("entity1", manyToManyEntity);
         advancedEntity.getDynamicConfiguration().put(INTERNAL_MAP_WITH_MANY_TO_MANY, mapWithManyToMany);
+        advancedEntity.getDynamicConfiguration().put(INTERNAL_SET, Sets.newHashSet("Uno", "Due"));
+        advancedEntity.getDynamicConfiguration().put(INTERNAL_SET_OF_COMPONENTS, Sets.newHashSet(new InternalComponent("Ein"), new InternalComponent("Zwei")));
         return advancedEntity;
     }
 
     @Test
     @Priority(10)
     //smoke test to make sure that hibernate & envers are working with the entity&mappings
-    public void shouldSaveEntity() {
+    public void shouldInitData() {
         //given
         ManyToOneEntity manyToOne = getManyToOneEntity();
         OneToOneEntity oneToOne = getOneToOneEntity();
@@ -118,6 +131,13 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
         session.save(advancedEntity);
         session.getTransaction().commit();
 
+        //rev 7
+        session.getTransaction().begin();
+        Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration().get(INTERNAL_SET_OF_COMPONENTS);
+        internalComponentSet.add(new InternalComponent("drei"));
+        session.save(advancedEntity);
+        session.getTransaction().commit();
+
         AdvancedEntity advancedEntityActual = (AdvancedEntity) session.load(AdvancedEntity.class, 1L);
 
         Assert.assertEquals(advancedEntity, advancedEntityActual);
@@ -128,7 +148,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
     public void shouldMakeRevisions() {
         Session session = openSession();
         session.getTransaction().begin();
-        //given & when shouldSaveEntity
+        //given & when shouldInitData
         ManyToOneEntity manyToOne = getManyToOneEntity();
         OneToOneEntity oneToOne = getOneToOneEntity();
         ManyToManyEntity manyToManyEntity = getManyToManyEntity();
@@ -197,10 +217,51 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
                 advancedEntity.getId(),
                 6
         );
-        Assert.assertEquals(advancedEntity, ver6);
+
+        //then v7
+        Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration().get(INTERNAL_SET_OF_COMPONENTS);
+        internalComponentSet.add(new InternalComponent("drei"));
+
+        AdvancedEntity ver7 = getAuditReader().find(
+                AdvancedEntity.class,
+                advancedEntity.getId(),
+                7
+        );
+        Assert.assertEquals(advancedEntity, ver7);
 
         session.getTransaction().commit();
     }
 
+    @Test
+    public void testOfQueryOnDynamicComponent() {
+        //given (and result of shouldInitData()
+        AdvancedEntity entity = getAdvancedEntity(getManyToOneEntity(), getOneToOneEntity(), getManyToManyEntity());
 
+        //when
+        OneToOneEntity oneToOneEntity = (OneToOneEntity) entity.getDynamicConfiguration().get(PROP_ONE_TO_ONE);
+        List resultList = getAuditReader().createQuery()
+                .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 1)
+                .add(AuditEntity.relatedId("dynamicConfiguration_" + PROP_ONE_TO_ONE).eq(oneToOneEntity.getId()))
+                .getResultList();
+
+        //then
+        Assert.assertEquals(entity, resultList.get(0));        //when
+
+        ManyToOneEntity manyToOneEntity = (ManyToOneEntity) entity.getDynamicConfiguration().get(PROP_MANY_TO_ONE);
+        resultList = getAuditReader().createQuery()
+                .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 1)
+                .add(AuditEntity.relatedId("manyToOneEntity_" + PROP_MANY_TO_ONE).eq(1L))
+                .getResultList();
+
+        //then
+        Assert.assertEquals(entity, resultList.get(0));
+
+        resultList = getAuditReader().createQuery()
+                .forEntitiesAtRevision(AuditedDynamicComponentEntity.class, 1)
+                .add(AuditEntity.property("dynamicConfiguration_" + INTERNAL_LIST).eq(entity.getDynamicConfiguration().get(INTERNAL_LIST)))
+                .getResultList();
+
+        //then
+        Assert.assertEquals(entity, resultList.get(0));
+    }
 }

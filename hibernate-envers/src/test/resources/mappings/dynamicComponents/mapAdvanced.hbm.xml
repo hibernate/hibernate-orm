@@ -29,10 +29,21 @@
                 <map-key type="string" column="MAP_KEY"/>
                 <element type="string" column="MAP_VALUE"/>
             </map>
+            <set name="internalSet" table="INTERNAL_SET">
+                <key column="ADVANCED_ID"/>
+                <element type="string" column="SET_VALUE"/>
+            </set>
+            <set name="internalSetOfComponents" table="INTERNAL_SET_OF_COMPS">
+                <key column="ADVANCED_ID"/>
+                <composite-element class="org.hibernate.envers.test.integration.components.dynamic.InternalComponent">
+                    <property name="property" type="string" column="PROP_VALUE"/>
+                </composite-element>
+            </set>
             <map name="internalMapWithEntities" table="INTERNAL_MAP_WITH_ENTITIES">
                 <key column="ADVANCED_ID"/>
                 <map-key type="string" column="MAP_KEY"/>
-                <many-to-many class="org.hibernate.envers.test.integration.components.dynamic.ManyToManyEntity" column="MAP_VAL_MANY_TO_MANY"/>
+                <many-to-many class="org.hibernate.envers.test.integration.components.dynamic.ManyToManyEntity"
+                              column="MAP_VAL_MANY_TO_MANY"/>
             </map>
         </dynamic-component>
         <!--<one-to-one name="oneToOneEntity" class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>-->

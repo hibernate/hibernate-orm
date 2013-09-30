@@ -62,11 +62,11 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.TestingDialects;
+import org.hibernate.engine.jdbc.dialect.internal.DatabaseMetaDataDialectResolverSet;
 import org.hibernate.engine.jdbc.dialect.internal.DialectFactoryImpl;
-import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseInfoDialectResolver;
 import org.hibernate.engine.jdbc.dialect.internal.StandardDatabaseMetaDataDialectResolver;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Before;
 import org.junit.Test;
@@ -143,7 +143,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testPreregisteredDialects() {
-		DialectResolver resolver = new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE );
+		DatabaseMetaDataDialectResolver resolver = new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE );
 		testDetermination( "HSQL Database Engine", HSQLDialect.class, resolver );
 		testDetermination( "H2", H2Dialect.class, resolver );
 		testDetermination( "MySQL", MySQLDialect.class, resolver );
@@ -181,7 +181,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testCustomDialects() {
-		DialectResolverSet resolvers = new DialectResolverSet();
+		DatabaseMetaDataDialectResolverSet resolvers = new DatabaseMetaDataDialectResolverSet();
 		resolvers.addResolver( new TestingDialects.MyDialectResolver1() );
 		resolvers.addResolver( new TestingDialects.MyDialectResolver2() );
 		resolvers.addResolver( new TestingDialects.ErrorDialectResolver1() );
@@ -225,15 +225,15 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		}
 	}
 
-	private void testDetermination(String databaseName, Class clazz, DialectResolver resolver) {
+	private void testDetermination(String databaseName, Class clazz, DatabaseMetaDataDialectResolver resolver) {
 		testDetermination( databaseName, -9999, clazz, resolver );
 	}
 
-	private void testDetermination(String databaseName, int databaseMajorVersion, Class clazz, DialectResolver resolver) {
+	private void testDetermination(String databaseName, int databaseMajorVersion, Class clazz, DatabaseMetaDataDialectResolver resolver) {
 		testDetermination( databaseName, databaseMajorVersion, -9999, clazz, resolver );
 	}
 
-	private void testDetermination(String databaseName, int majorVersion, int minorVersion, Class clazz, DialectResolver resolver) {
+	private void testDetermination(String databaseName, int majorVersion, int minorVersion, Class clazz, DatabaseMetaDataDialectResolver resolver) {
 		dialectFactory.setDialectResolver( resolver );
 		Properties properties = new Properties();
 		Connection conn = Mocks.createConnection( databaseName, majorVersion, minorVersion );

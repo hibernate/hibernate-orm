@@ -30,6 +30,7 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -38,28 +39,30 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * Initiator for the DatabaseInfoDialectResolver service
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
-public class DatabaseInfoDialectResolverInitiator implements StandardServiceInitiator<DatabaseInfoDialectResolver> {
+public class DatabaseMetaDataDialectResolverInitiator implements StandardServiceInitiator<DatabaseMetaDataDialectResolver> {
 	/**
 	 * Singleton access
 	 */
-	public static final DatabaseInfoDialectResolverInitiator INSTANCE = new DatabaseInfoDialectResolverInitiator();
+	public static final DatabaseMetaDataDialectResolverInitiator INSTANCE = new DatabaseMetaDataDialectResolverInitiator();
 
 	@Override
-	public Class<DatabaseInfoDialectResolver> getServiceInitiated() {
-		return DatabaseInfoDialectResolver.class;
+	public Class<DatabaseMetaDataDialectResolver> getServiceInitiated() {
+		return DatabaseMetaDataDialectResolver.class;
 	}
 
 	@Override
-	public DatabaseInfoDialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final DatabaseInfoDialectResolverSet resolver = new DatabaseInfoDialectResolverSet();
-		applyCustomReslvers( resolver, configurationValues, registry );
-		resolver.addResolver( StandardDatabaseInfoDialectResolver.INSTANCE );
+	public DatabaseMetaDataDialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		final DatabaseMetaDataDialectResolverSet resolver = new DatabaseMetaDataDialectResolverSet();
+		applyCustomResolvers( resolver, configurationValues, registry );
+		resolver.addResolver(
+				new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE ) );
 		return resolver;
 	}
 
-	private void applyCustomReslvers(
-			DatabaseInfoDialectResolverSet resolver,
+	private void applyCustomResolvers(
+			DatabaseMetaDataDialectResolverSet resolver,
 			Map configurationValues,
 			ServiceRegistryImplementor registry) {
 		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
@@ -68,9 +71,18 @@ public class DatabaseInfoDialectResolverInitiator implements StandardServiceInit
 			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
 				try {
-					resolver.addResolver(
-							(DatabaseInfoDialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
-					);
+					final Object obj = classLoaderService.classForName( resolverImplName ).newInstance();
+					if (DatabaseMetaDataDialectResolver.class.isInstance( obj )) {
+						resolver.addResolver( (DatabaseMetaDataDialectResolver) obj );
+					}
+					else if (DatabaseInfoDialectResolver.class.isInstance( obj )) {
+						resolver.addResolver(
+								new StandardDatabaseMetaDataDialectResolver( (DatabaseInfoDialectResolver) obj ) );
+					}
+					else {
+						throw new ServiceException( "The custom resolver " + resolverImplName
+								+ " must implement DatabaseMetaDataDialectResolver or DatabaseInfoDialectResolver!" );
+					}
 				}
 				catch (HibernateException e) {
 					throw e;

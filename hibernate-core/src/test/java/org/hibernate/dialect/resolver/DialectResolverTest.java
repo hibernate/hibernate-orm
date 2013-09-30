@@ -22,21 +22,19 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect.resolver;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.sql.SQLException;
 
-import org.junit.Test;
-
+import org.hibernate.dialect.BasicDialectResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Mocks;
 import org.hibernate.dialect.TestingDialects;
+import org.hibernate.engine.jdbc.dialect.internal.DatabaseMetaDataDialectResolverSet;
 import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.engine.jdbc.dialect.internal.BasicDialectResolver;
-import org.hibernate.engine.jdbc.dialect.internal.DialectResolverSet;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -44,7 +42,7 @@ import static org.junit.Assert.fail;
 public class DialectResolverTest extends BaseUnitTestCase {
 	@Test
 	public void testDialects() throws Exception {
-		DialectResolverSet resolvers = new DialectResolverSet();
+		DatabaseMetaDataDialectResolverSet resolvers = new DatabaseMetaDataDialectResolverSet();
 
 		resolvers.addResolverAtFirst( new TestingDialects.MyDialectResolver1() );
 		resolvers.addResolverAtFirst( new TestingDialects.MyDialectResolver2() );
@@ -61,7 +59,7 @@ public class DialectResolverTest extends BaseUnitTestCase {
 
 	@Test
 	public void testErrorAndOrder() throws Exception {
-		DialectResolverSet resolvers = new DialectResolverSet();
+		DatabaseMetaDataDialectResolverSet resolvers = new DatabaseMetaDataDialectResolverSet();
 		resolvers.addResolverAtFirst( new TestingDialects.MyDialectResolver1() );
 		resolvers.addResolver( new TestingDialects.ErrorDialectResolver1() );
 		resolvers.addResolverAtFirst( new TestingDialects.ErrorDialectResolver1() );
@@ -84,7 +82,7 @@ public class DialectResolverTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicDialectResolver() throws Exception {
-		DialectResolverSet resolvers = new DialectResolverSet();
+		DatabaseMetaDataDialectResolverSet resolvers = new DatabaseMetaDataDialectResolverSet();
 		// Simulating MyDialectResolver1 by BasicDialectResolvers
 		resolvers.addResolver( new BasicDialectResolver( "MyDatabase1", TestingDialects.MyDialect1.class ) );
 		resolvers.addResolver( new BasicDialectResolver( "MyDatabase2", 1, TestingDialects.MyDialect21.class ) );
@@ -101,11 +99,11 @@ public class DialectResolverTest extends BaseUnitTestCase {
 
 
 	private void testDetermination(
-			DialectResolver resolver,
+			DatabaseMetaDataDialectResolverSet resolver,
 			String databaseName,
 			int version,
 			Class dialectClass) throws SQLException {
-		Dialect dialect = resolver.resolveDialect( Mocks.createConnection( databaseName, version ).getMetaData() );
+		Dialect dialect = resolver.resolve( Mocks.createConnection( databaseName, version ).getMetaData() );
 		if ( dialectClass == null ) {
 			assertEquals( null, dialect );
 		}

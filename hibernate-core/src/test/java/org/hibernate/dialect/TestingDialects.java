@@ -26,7 +26,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.dialect.internal.BasicDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.AbstractDatabaseMetaDataDialectResolver;
 
 /**

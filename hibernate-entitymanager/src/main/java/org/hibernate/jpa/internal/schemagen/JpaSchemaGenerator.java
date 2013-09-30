@@ -23,7 +23,8 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
+import static org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver.DatabaseInfo.NO_VERSION;
+
 import java.io.File;
 import java.io.Reader;
 import java.io.Writer;
@@ -39,7 +40,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jboss.logging.Logger;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -47,8 +48,7 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -60,6 +60,7 @@ import org.hibernate.jpa.SchemaGenSource;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+import org.jboss.logging.Logger;
 
 /**
  * Class responsible for the JPA-defined schema generation behavior.
@@ -431,27 +432,16 @@ public class JpaSchemaGenerator {
 		final String explicitDbMinor = hibernateConfiguration.getProperty( AvailableSettings.SCHEMA_GEN_DB_MINOR_VERSION );
 
 		if ( StringHelper.isNotEmpty( explicitDbName ) ) {
-			serviceRegistry.getService( DatabaseInfoDialectResolver.class ).resolve(
-					new DatabaseInfoDialectResolver.DatabaseInfo() {
-						@Override
-						public String getDatabaseName() {
-							return explicitDbName;
-						}
-
-						@Override
-						public int getDatabaseMajorVersion() {
-							return StringHelper.isEmpty( explicitDbMajor )
+			serviceRegistry.getService( DatabaseMetaDataDialectResolver.class ).resolve(
+					new DefaultDatabaseMetaData(
+							explicitDbName,
+							StringHelper.isEmpty( explicitDbMajor )
 									? NO_VERSION
-									: Integer.parseInt( explicitDbMajor );
-						}
-
-						@Override
-						public int getDatabaseMinorVersion() {
-							return StringHelper.isEmpty( explicitDbMinor )
+									: Integer.parseInt( explicitDbMajor ),
+							StringHelper.isEmpty( explicitDbMinor )
 									? NO_VERSION
-									: Integer.parseInt( explicitDbMinor );
-						}
-					}
+									: Integer.parseInt( explicitDbMinor )
+					)
 			);
 		}
 
@@ -493,10 +483,11 @@ public class JpaSchemaGenerator {
 	private static Dialect determineDialectBasedOnJdbcMetadata(
 			JdbcConnectionContext jdbcConnectionContext,
 			ServiceRegistry serviceRegistry) {
-		final DialectResolver dialectResolver = serviceRegistry.getService( DialectResolver.class );
+		final DatabaseMetaDataDialectResolver dialectResolver = serviceRegistry.getService(
+				DatabaseMetaDataDialectResolver.class );
 		try {
 			final DatabaseMetaData databaseMetaData = jdbcConnectionContext.getJdbcConnection().getMetaData();
-			final Dialect dialect = dialectResolver.resolveDialect( databaseMetaData );
+			final Dialect dialect = dialectResolver.resolve( databaseMetaData );
 
 			if ( dialect == null ) {
 				throw new HibernateException(

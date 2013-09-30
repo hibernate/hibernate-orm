@@ -48,5 +48,5 @@ public interface DatabaseMetaDataDialectResolver extends Service {
 	 * @throws org.hibernate.exception.JDBCConnectionException Indicates a 'non transient connection problem', which indicates that
 	 * we should stop resolution attempts.
 	 */
-	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException;
+	public Dialect resolve(DatabaseMetaData metaData) throws JDBCConnectionException;
 }

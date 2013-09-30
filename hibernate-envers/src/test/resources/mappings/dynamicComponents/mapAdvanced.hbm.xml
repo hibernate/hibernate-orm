@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping default-lazy="false">
+    <class name="org.hibernate.envers.test.integration.components.dynamic.AdvancedEntity" table="advanced_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+        <dynamic-component name="dynamicConfiguration">
+            <property name="propInt" type="integer"/>
+            <property name="propFloat" type="float"/>
+            <property name="propBoolean" type="boolean"/>
+            <many-to-one name="propManyToOne" class="org.hibernate.envers.test.integration.components.dynamic.ManyToOneEntity" column="MANY_TO_ONE_ID"/>
+            <one-to-one name="propOneToOne" class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>
+        </dynamic-component>
+        <!--<one-to-one name="oneToOneEntity" class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>-->
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity" table="one_to_one_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+    <class name="org.hibernate.envers.test.integration.components.dynamic.ManyToOneEntity" table="many_to_one_entity">
+        <id name="id" type="long" column="id"/>
+        <property name="note" type="string"/>
+    </class>
+
+</hibernate-mapping>
+

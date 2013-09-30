@@ -443,7 +443,7 @@ public class AuditedPropertiesReader {
         final boolean isAudited = fillPropertyData(property, componentData, accessType, allClassAudited);
 
         final PersistentPropertiesSource componentPropertiesSource;
-        if (propertyValue.isDynamic() && isAudited) {
+        if (propertyValue.isDynamic()) {
             componentPropertiesSource = new DynamicComponentSource(reflectionManager, propertyValue, property);
         } else {
             componentPropertiesSource = new ComponentPropertiesSource(reflectionManager, propertyValue);

@@ -8,6 +8,8 @@ public class SimpleEntity {
     private Long id;
     private String simpleProperty;
 
+    private AdvancedEntity parent;
+
     public SimpleEntity() {
     }
 
@@ -59,5 +61,13 @@ public class SimpleEntity {
                 "id=" + id +
                 ", simpleProperty='" + simpleProperty + '\'' +
                 '}';
+    }
+
+    public AdvancedEntity getParent() {
+        return parent;
+    }
+
+    public void setParent(AdvancedEntity parent) {
+        this.parent = parent;
     }
 }

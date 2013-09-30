@@ -64,13 +64,21 @@ public class DeleteExecutor extends BasicExecutor {
 		final SessionFactoryImplementor factory = walker.getSessionFactoryHelper().getFactory();
 		final Dialect dialect = factory.getDialect();
 		
-		final DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();
-		final AST whereClause = deleteStatement.getWhereClause();
-		
 		try {
-			final SqlGenerator gen = new SqlGenerator( factory );
-			gen.whereClause( whereClause );
-			parameterSpecifications = gen.getCollectedParameters();
+			final DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();
+			
+			final String idSubselectWhere;
+			if (deleteStatement.hasWhereClause()) {
+				final AST whereClause = deleteStatement.getWhereClause();
+				final SqlGenerator gen = new SqlGenerator( factory );
+				gen.whereClause( whereClause );
+				parameterSpecifications = gen.getCollectedParameters();
+				idSubselectWhere = gen.getSQL().length() > 7 ? gen.getSQL() : "";
+			}
+			else {
+				parameterSpecifications = new ArrayList<ParameterSpecification>();
+				idSubselectWhere = "";
+			}
 			
 			// If many-to-many, delete the FK row in the collection table.
 			for ( Type type : persister.getPropertyTypes() ) {
@@ -86,7 +94,6 @@ public class DeleteExecutor extends BasicExecutor {
 									" the constraints or manually clear the associations prior to deleting the entities." );
 						}
 						else {
-							final String idSubselectWhere = gen.getSQL().length() > 7 ? gen.getSQL() : "";
 							final String idSubselect = "(select "
 									+ StringHelper.join( ", ", persister.getIdentifierColumnNames() ) + " from "
 									+ persister.getTableName() + idSubselectWhere + ")";

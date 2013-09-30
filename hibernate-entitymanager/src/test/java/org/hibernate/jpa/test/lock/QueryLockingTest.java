@@ -23,9 +23,14 @@
  */
 package org.hibernate.jpa.test.lock;
 
+import java.util.List;
 import java.util.Map;
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
+import javax.persistence.Id;
 import javax.persistence.LockModeType;
+import javax.persistence.Query;
+import javax.persistence.Table;
 
 import org.junit.Test;
 
@@ -49,7 +54,7 @@ import static org.junit.Assert.fail;
 public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Lockable.class };
+		return new Class[] { Lockable.class, LocalEntity.class };
 	}
 
 	@Override
@@ -278,5 +283,74 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em.remove( em.getReference( Lockable.class, reread.getId() ) );
 		em.getTransaction().commit();
 		em.close();
+	}
+
+	/**
+	 * lock some entities via a query and check the resulting lock mode type via EntityManager
+	 */
+	@Test
+	public void testEntityLockModeStateAfterQueryLocking() {
+		// Create some test data
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.persist( new LocalEntity( 1, "test" ) );
+		em.getTransaction().commit();
+//		em.close();
+
+		// issue the query with locking
+//		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Query query = em.createQuery( "select l from LocalEntity l" );
+		assertEquals( LockModeType.NONE, query.getLockMode() );
+		query.setLockMode( LockModeType.PESSIMISTIC_READ );
+		assertEquals( LockModeType.PESSIMISTIC_READ, query.getLockMode() );
+		List<LocalEntity> results = query.getResultList();
+
+		// and check the lock mode for each result
+		for ( LocalEntity e : results ) {
+			assertEquals( LockModeType.PESSIMISTIC_READ, em.getLockMode( e ) );
+		}
+
+		em.getTransaction().commit();
+		em.close();
+
+		// clean up test data
+		em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete from LocalEntity" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Entity( name = "LocalEntity" )
+	@Table( name = "LocalEntity" )
+	public static class LocalEntity {
+		private Integer id;
+		private String name;
+
+		public LocalEntity() {
+		}
+
+		public LocalEntity(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 }

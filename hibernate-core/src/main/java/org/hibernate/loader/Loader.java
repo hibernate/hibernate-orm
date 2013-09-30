@@ -1539,7 +1539,7 @@ public abstract class Loader {
 	        final Loadable persister,
 	        final EntityKey key,
 	        final Object object,
-	        final LockMode lockMode,
+	        final LockMode requestedLockMode,
 	        final SessionImplementor session)
 			throws HibernateException, SQLException {
 		if ( !persister.isInstance( object ) ) {
@@ -1547,23 +1547,18 @@ public abstract class Loader {
 					"loaded object was of wrong class " + object.getClass(),
 					key.getIdentifier(),
 					persister.getEntityName()
-				);
+			);
 		}
 
-		if ( LockMode.NONE != lockMode && upgradeLocks() ) { //no point doing this if NONE was requested
-
-			final boolean isVersionCheckNeeded = persister.isVersioned() &&
-					session.getPersistenceContext().getEntry(object)
-							.getLockMode().lessThan( lockMode );
-			// we don't need to worry about existing version being uninitialized
-			// because this block isn't called by a re-entrant load (re-entrant
-			// loads _always_ have lock mode NONE)
-			if (isVersionCheckNeeded) {
+		if ( LockMode.NONE != requestedLockMode && upgradeLocks() ) { //no point doing this if NONE was requested
+			final EntityEntry entry = session.getPersistenceContext().getEntry( object );
+			if ( entry.getLockMode().lessThan( requestedLockMode ) ) {
 				//we only check the version when _upgrading_ lock modes
-				checkVersion( i, persister, key.getIdentifier(), object, rs, session );
+				if ( persister.isVersioned() ) {
+					checkVersion( i, persister, key.getIdentifier(), object, rs, session );
+				}
 				//we need to upgrade the lock mode to the mode requested
-				session.getPersistenceContext().getEntry(object)
-						.setLockMode(lockMode);
+				entry.setLockMode( requestedLockMode );
 			}
 		}
 	}

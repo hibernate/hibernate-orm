@@ -139,37 +139,23 @@ public final class Nullability {
 	 * @throws HibernateException error while getting subcomponent values
 	 */
 	private String checkSubElementsNullability(Type propertyType, Object value) throws HibernateException {
-		// IMPL NOTE : we currently skip checking "any" and "many to any" mappings.  This is not the best solution.
-		//
-		// The problem I ran into with performing the checks on "any" and "many to any" mappings had to do  with
-		// cascaded saves of transient associated entities not yet having assigned the identifier (this was
-		// specifically in the "many to any" case).
-
-		if ( propertyType.isAnyType() ) {
-			return null;
-		}
-
 		if ( propertyType.isComponentType() ) {
 			return checkComponentNullability( value, (CompositeType) propertyType );
 		}
 
 		if ( propertyType.isCollectionType() ) {
-			//persistent collections may have components
+			// persistent collections may have components
 			final CollectionType collectionType = (CollectionType) propertyType;
 			final Type collectionElementType = collectionType.getElementType( session.getFactory() );
 
-			if ( collectionElementType.isAnyType() ) {
-				return null;
-			}
-
 			if ( collectionElementType.isComponentType() ) {
-				//check for all components values in the collection
+				// check for all components values in the collection
 				final CompositeType componentType = (CompositeType) collectionElementType;
 				final Iterator itr = CascadingActions.getLoadedElementsIterator( session, collectionType, value );
 				while ( itr.hasNext() ) {
-					final Object compValue = itr.next();
-					if ( compValue != null ) {
-						return checkComponentNullability( compValue, componentType );
+					final Object compositeElement = itr.next();
+					if ( compositeElement != null ) {
+						return checkComponentNullability( compositeElement, componentType );
 					}
 				}
 			}
@@ -183,29 +169,39 @@ public final class Nullability {
 	 * nullability or null if none
 	 *
 	 * @param value component properties
-	 * @param compType component not-nullable type
+	 * @param compositeType component not-nullable type
 	 *
 	 * @return property path
 	 * @throws HibernateException error while getting subcomponent values
 	 */
-	private String checkComponentNullability(Object value, CompositeType compType) throws HibernateException {
-		/* will check current level if some of them are not null
-		 * or sublevels if they exist
-		 */
-		final boolean[] nullability = compType.getPropertyNullability();
+	private String checkComponentNullability(Object value, CompositeType compositeType) throws HibernateException {
+		// IMPL NOTE : we currently skip checking "any" and "many to any" mappings.
+		//
+		// This is not the best solution.  But atm there is a mismatch between AnyType#getPropertyNullability
+		// and the fact that cascaded-saves for "many to any" mappings are not performed until after this nullability
+		// check.  So the nullability check fails for transient entity elements with generated identifiers because
+		// the identifier is not yet generated/assigned (is null)
+		//
+		// The more correct fix would be to cascade saves of the many-to-any elements before the Nullability checking
+
+		if ( compositeType.isAnyType() ) {
+			return null;
+		}
+
+		final boolean[] nullability = compositeType.getPropertyNullability();
 		if ( nullability != null ) {
 			//do the test
-			final Object[] subValues = compType.getPropertyValues( value, session );
-			final Type[] propertyTypes = compType.getSubtypes();
+			final Object[] subValues = compositeType.getPropertyValues( value, session );
+			final Type[] propertyTypes = compositeType.getSubtypes();
 			for ( int i = 0; i < subValues.length; i++ ) {
 				final Object subValue = subValues[i];
 				if ( !nullability[i] && subValue==null ) {
-					return compType.getPropertyNames()[i];
+					return compositeType.getPropertyNames()[i];
 				}
 				else if ( subValue != null ) {
 					final String breakProperties = checkSubElementsNullability( propertyTypes[i], subValue );
 					if ( breakProperties != null ) {
-						return buildPropertyPath( compType.getPropertyNames()[i], breakProperties );
+						return buildPropertyPath( compositeType.getPropertyNames()[i], breakProperties );
 					}
 				}
 			}

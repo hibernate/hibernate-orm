@@ -18,25 +18,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA  02110-1301, USA.
  */
-package org.hibernate.test.annotations.quote;
+package org.hibernate.test.quote;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import java.util.List;
 
 /**
  * @author Brett Meyer
  */
-@Entity
-@Table(uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
-public class Person {
-	@Id
-	@GeneratedValue
+public class AssociatedDataPoint {
 	private long id;
-
-	private String name;
+	
+	private AssociatedDataPoint manyToOne;
+	
+	private List<AssociatedDataPoint> manyToMany;
 
 	public long getId() {
 		return id;
@@ -46,11 +40,19 @@ public class Person {
 		this.id = id;
 	}
 
-	public String getName() {
-		return name;
+	public AssociatedDataPoint getManyToOne() {
+		return manyToOne;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setManyToOne(AssociatedDataPoint manyToOne) {
+		this.manyToOne = manyToOne;
+	}
+
+	public List<AssociatedDataPoint> getManyToMany() {
+		return manyToMany;
+	}
+
+	public void setManyToMany(List<AssociatedDataPoint> manyToMany) {
+		this.manyToMany = manyToMany;
 	}
 }

@@ -1,5 +1,5 @@
 //$Id$
-package org.hibernate.test.annotations.quote;
+package org.hibernate.test.quote;
 
 import java.io.Serializable;
 import java.util.HashSet;

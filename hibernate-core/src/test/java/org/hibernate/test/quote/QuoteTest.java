@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.quote;
+package org.hibernate.test.quote;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

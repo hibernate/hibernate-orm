@@ -1,4 +1,4 @@
-package org.hibernate.test.annotations.quote;
+package org.hibernate.test.quote;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;

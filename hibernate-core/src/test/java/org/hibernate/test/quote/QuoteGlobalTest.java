@@ -21,9 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.annotations.quote;
+package org.hibernate.test.quote;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Iterator;
@@ -32,6 +33,8 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -75,6 +78,23 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "User_Role", configuration().getCollectionMapping( role ).getCollectionTable().getName() );
 		s.close();
 	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-8520")
+	public void testHbmQuoting() {
+		doTestHbmQuoting( DataPoint.class );
+		doTestHbmQuoting( AssociatedDataPoint.class );
+	}
+	
+	private void doTestHbmQuoting(Class clazz) {
+		Table table = configuration().getClassMapping( clazz.getName() ).getTable();
+		assertTrue( table.isQuoted() );
+		Iterator itr = table.getColumnIterator();
+		while(itr.hasNext()) {
+			Column column = (Column) itr.next();
+			assertTrue( column.isQuoted() );
+		}
+	}
 
 	@Override
 	protected void configure(Configuration cfg) {
@@ -91,5 +111,10 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 				Person.class,
 				House.class
 		};
+	}
+
+	@Override
+	protected String[] getMappings() {
+		return new String[] { "quote/DataPoint.hbm.xml" };
 	}
 }

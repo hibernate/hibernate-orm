@@ -1067,12 +1067,13 @@ public final class HbmBinder {
 					column.setValue( simpleValue );
 					column.setTypeIndex( count++ );
 					bindColumn( columnElement, column, isNullable );
-					final String columnName = columnElement.attributeValue( "name" );
+					String columnName = columnElement.attributeValue( "name" );
 					String logicalColumnName = mappings.getNamingStrategy().logicalColumnName(
 							columnName, propertyPath
 					);
-					column.setName( mappings.getNamingStrategy().columnName(
-						columnName ) );
+					columnName = mappings.getNamingStrategy().columnName( columnName );
+					columnName = quoteIdentifier( columnName, mappings );
+					column.setName( columnName );
 					if ( table != null ) {
 						table.addColumn( column ); // table=null -> an association
 						                           // - fill it in later
@@ -1122,11 +1123,13 @@ public final class HbmBinder {
 			if ( column.isUnique() && ManyToOne.class.isInstance( simpleValue ) ) {
 				( (ManyToOne) simpleValue ).markAsLogicalOneToOne();
 			}
-			final String columnName = columnAttribute.getValue();
+			String columnName = columnAttribute.getValue();
 			String logicalColumnName = mappings.getNamingStrategy().logicalColumnName(
 					columnName, propertyPath
 			);
-			column.setName( mappings.getNamingStrategy().columnName( columnName ) );
+			columnName = mappings.getNamingStrategy().columnName( columnName );
+			columnName = quoteIdentifier( columnName, mappings );
+			column.setName( columnName );
 			if ( table != null ) {
 				table.addColumn( column ); // table=null -> an association - fill
 				                           // it in later
@@ -1142,7 +1145,9 @@ public final class HbmBinder {
 			Column column = new Column();
 			column.setValue( simpleValue );
 			bindColumn( node, column, isNullable );
-			column.setName( mappings.getNamingStrategy().propertyToColumnName( propertyPath ) );
+			String columnName = mappings.getNamingStrategy().propertyToColumnName( propertyPath );
+			columnName = quoteIdentifier( columnName, mappings );
+			column.setName( columnName );
 			String logicalName = mappings.getNamingStrategy().logicalColumnName( null, propertyPath );
 			mappings.addColumnBinding( logicalName, column, table );
 			/* TODO: joinKeyColumnName & foreignKeyColumnName should be called either here or at a
@@ -3195,6 +3200,11 @@ public final class HbmBinder {
 			);
 			recognizeEntities( mappings, element, handler );
 		}
+	}
+	
+	private static String quoteIdentifier(String identifier, Mappings mappings) {
+		return mappings.getObjectNameNormalizer().isUseQuotedIdentifiersGlobally()
+				? StringHelper.quote( identifier ) : identifier;
 	}
 
 	private static interface EntityElementHandler {

@@ -78,4 +78,6 @@ public class AdvancedEntity {
 				", dynamicConfiguration=" + dynamicConfiguration +
 				'}';
 	}
+
+
 }

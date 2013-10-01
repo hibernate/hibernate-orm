@@ -95,6 +95,10 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	public void beforeCompletion() {
 		LOG.trace( "Transaction before completion callback" );
 
+		if ( !transactionCoordinator.isActive() ) {
+			return;
+		}
+
 		boolean flush;
 		try {
 			final int status = transactionCoordinator.getTransactionContext().getTransactionEnvironment()
@@ -160,6 +164,9 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 
 	private void doAfterCompletion(int status) {
 		LOG.tracev( "Transaction afterCompletion callback [status={0}]", status );
+		if ( !transactionCoordinator.isActive() ) {
+			return;
+		}
 
 		try {
 			afterCompletionAction.doAction( transactionCoordinator, status );

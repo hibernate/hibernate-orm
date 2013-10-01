@@ -141,4 +141,6 @@ public interface TransactionCoordinator extends Serializable {
 	public void sendBeforeTransactionCompletionNotifications(TransactionImplementor hibernateTransaction);
 	public void sendAfterTransactionCompletionNotifications(TransactionImplementor hibernateTransaction, int status);
 
+	public boolean isActive();
+
 }

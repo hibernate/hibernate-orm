@@ -37,6 +37,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 	public static final String INTERNAL_SET = "internalSet";
 	public static final String INTERNAL_SET_OF_COMPONENTS = "internalSetOfComponents";
 	public static final String AGE_USER_TYPE = "ageUserType";
+	public static final String INTERNAL_LIST_OF_USER_TYPES = "internalListOfUserTypes";
 
 	@Override
 	protected String[] getMappings() {
@@ -86,7 +87,13 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		componentSet.add( new InternalComponent( "Ein" ) );
 		componentSet.add( new InternalComponent( "Zwei" ) );
 		advancedEntity.getDynamicConfiguration().put( INTERNAL_SET_OF_COMPONENTS, componentSet );
-		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age(18) );
+		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 18 ) );
+		List<Age> ages = new ArrayList<Age>();
+		ages.add( new Age( 1 ) );
+		ages.add( new Age( 2 ) );
+		ages.add( new Age( 3 ) );
+
+		advancedEntity.getDynamicConfiguration().put( INTERNAL_LIST_OF_USER_TYPES, ages );
 		return advancedEntity;
 	}
 
@@ -158,7 +165,14 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 
 		//rev 8
 		session.getTransaction().begin();
-		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE , new Age(19));
+		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
+		session.save( advancedEntity );
+		session.getTransaction().commit();
+
+		//rev 9
+		session.getTransaction().begin();
+		List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
+		ages.add( new Age( 4 ) );
 		session.save( advancedEntity );
 		session.getTransaction().commit();
 
@@ -258,7 +272,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		Assert.assertEquals( advancedEntity, ver7 );
 
 		//then v8
-		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE , new Age(19));
+		advancedEntity.getDynamicConfiguration().put( AGE_USER_TYPE, new Age( 19 ) );
 
 
 		AdvancedEntity ver8 = getAuditReader().find(
@@ -267,6 +281,17 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 				8
 		);
 		Assert.assertEquals( advancedEntity, ver8 );
+
+		//then v9
+		List<Age> ages = (List<Age>) advancedEntity.getDynamicConfiguration().get( INTERNAL_LIST_OF_USER_TYPES );
+		ages.add( new Age( 4 ) );
+
+		AdvancedEntity ver9 = getAuditReader().find(
+				AdvancedEntity.class,
+				advancedEntity.getId(),
+				9
+		);
+		Assert.assertEquals( advancedEntity, ver9 );
 
 		session.getTransaction().commit();
 	}

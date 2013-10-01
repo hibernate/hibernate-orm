@@ -46,6 +46,11 @@
                               column="MAP_VAL_MANY_TO_MANY"/>
             </map>
             <property name="ageUserType" type="org.hibernate.envers.test.integration.components.dynamic.AgeType" column="CUSTOM_TYPE_AGE"/>
+            <list name="internalListOfUserTypes" table="AGES">
+                <key column="ADVANCED_ID"/>
+                <index column="POSITION"/>
+                <element type="org.hibernate.envers.test.integration.components.dynamic.AgeType" column="AGE_USER_TYPE"/>
+            </list>
         </dynamic-component>
         <!--<one-to-one name="oneToOneEntity" class="org.hibernate.envers.test.integration.components.dynamic.OneToOneEntity"/>-->
     </class>

@@ -235,6 +235,7 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 				advancedEntity.getId(),
 				6
 		);
+		Assert.assertEquals( advancedEntity, ver6 );
 
 		//then v7
 		Set<InternalComponent> internalComponentSet = (Set) advancedEntity.getDynamicConfiguration()

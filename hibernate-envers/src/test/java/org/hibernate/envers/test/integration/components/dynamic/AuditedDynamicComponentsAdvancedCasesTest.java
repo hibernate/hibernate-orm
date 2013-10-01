@@ -1,6 +1,7 @@
 package org.hibernate.envers.test.integration.components.dynamic;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -176,6 +177,11 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		session.save( advancedEntity );
 		session.getTransaction().commit();
 
+		//rev this, should not create revision
+		session.getTransaction().begin();
+		session.getTransaction().commit();
+
+		//sanity check. Loaded entity should be equal to one that we created.
 		AdvancedEntity advancedEntityActual = (AdvancedEntity) session.load( AdvancedEntity.class, 1L );
 
 		Assert.assertEquals( advancedEntity, advancedEntityActual );
@@ -352,5 +358,13 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 			Assert.fail();
 		}
 
+	}
+
+	@Test
+	public void testRevisionsCounts() {
+		Assert.assertEquals(
+				Arrays.asList( 1, 2, 3, 4, 5, 6, 7, 8, 9 ),
+				getAuditReader().getRevisions( AdvancedEntity.class, 1L )
+		);
 	}
 }

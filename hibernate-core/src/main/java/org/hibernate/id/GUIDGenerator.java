@@ -60,7 +60,9 @@ public class GUIDGenerator implements IdentifierGenerator {
 				ResultSet rs = session.getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().extract( st );
 				final String result;
 				try {
-					rs.next();
+					if ( !rs.next() ) {
+						throw new HibernateException( "The database returned no GUID identity value" );
+					}
 					result = rs.getString(1);
 				}
 				finally {

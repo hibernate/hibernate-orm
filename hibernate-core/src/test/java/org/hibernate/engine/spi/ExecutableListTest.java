@@ -227,6 +227,8 @@ public class ExecutableListTest extends BaseUnitTestCase {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream( baos );
 		l.writeExternal( oos );
+		// this OOS stream needs to be flushed...
+		oos.flush();
 		ByteArrayInputStream bin = new ByteArrayInputStream( baos.toByteArray() );
 		ObjectInputStream ois = new ObjectInputStream( bin );
 		l = new ExecutableList<ExecutableListTest.AnExecutable>();

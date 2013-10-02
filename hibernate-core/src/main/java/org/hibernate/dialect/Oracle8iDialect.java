@@ -609,6 +609,7 @@ public class Oracle8iDialect extends Dialect {
 	
 	@Override
 	public int getMaxAliasLength() {
-		return 30;
+		// Oracle's max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that,
+		return 20;
 	}
 }

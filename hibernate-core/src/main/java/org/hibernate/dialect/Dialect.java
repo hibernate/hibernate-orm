@@ -1892,6 +1892,11 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * What is the maximum length Hibernate can use for generated aliases?
+	 * <p/>
+	 * The maximum here should account for the fact that Hibernate often needs to append "uniqueing" information
+	 * to the end of generated aliases.  That "uniqueing" information will be added to the end of a identifier
+	 * generated to the length specified here; so be sure to leave some room (generally speaking 5 positions will
+	 * suffice).
 	 *
 	 * @return The maximum length.
 	 */

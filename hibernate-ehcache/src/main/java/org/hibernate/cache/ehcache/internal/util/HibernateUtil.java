@@ -61,6 +61,12 @@ public final class HibernateUtil {
      */
     public static Configuration loadAndCorrectConfiguration(URL url) {
         Configuration config = ConfigurationFactory.parseConfiguration( url );
+        
+        // EHC-875 / HHH-6576
+ 		if ( config == null ) {
+ 			return null;
+ 		}
+        
         if ( config.getDefaultCacheConfiguration().isTerracottaClustered() ) {
             if ( ValueMode.IDENTITY
                     .equals( config.getDefaultCacheConfiguration().getTerracottaConfiguration().getValueMode() ) ) {

@@ -50,8 +50,8 @@ public class ComponentPropertyMapper implements PropertyMapper, CompositeMapperB
 
 	public ComponentPropertyMapper(PropertyData propertyData, Class componentClass) {
 		this.propertyData = propertyData;
-		//ŁŻ this could be done better
-		if ( Map.class.equals( componentClass ) ) {
+		//if class is a map it means that this is dynamic component
+		if ( Map.class.isAssignableFrom( componentClass ) ) {
 			this.delegate = new MultiDynamicComponentMapper( propertyData );
 			this.componentClass = HashMap.class;
 		}

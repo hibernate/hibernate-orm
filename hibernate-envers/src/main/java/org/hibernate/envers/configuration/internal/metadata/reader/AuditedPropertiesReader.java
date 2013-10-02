@@ -319,13 +319,11 @@ public class AuditedPropertiesReader {
 	private void addPropertiesFromDynamicComponent(DynamicComponentSource dynamicComponentSource) {
 		Audited audited = computeAuditConfiguration( dynamicComponentSource.getXClass() );
 		if ( !fieldAccessedPersistentProperties.isEmpty() ) {
-			//TODO ŁŻ hmm... for sure ?
-			throw new MappingException( "Dynamic component cannot have field accessed persistent properties" );
+			throw new MappingException(
+					"Audited dynamic component cannot have properties with access=\"field\" for properties: " + fieldAccessedPersistentProperties + ". \n Change properties access=\"property\", to make it work)"
+			);
 		}
 		for ( String property : propertyAccessedPersistentProperties ) {
-			// If this is not a persistent property, with the same access type as currently checked,
-			// it's not audited as well.
-			// If the property was already defined by the subclass, is ignored by superclasses
 			String accessType = AccessType.PROPERTY.getType();
 			if ( !auditedPropertiesHolder.contains( property ) ) {
 				final Value propertyValue = persistentPropertiesSource.getProperty( property ).getValue();
@@ -341,21 +339,6 @@ public class AuditedPropertiesReader {
 					this.addFromNotComponentProperty(
 							new DynamicProperty( dynamicComponentSource, property ),
 							accessType,
-							audited
-					);
-				}
-			}
-			else if ( propertiesGroupMapping.containsKey( property ) ) {
-				//todo ŁŻ - I'm not sure is that the case that we should handle for dynamic component.
-				// Retrieve embedded component name based on class field.
-				final String embeddedName = propertiesGroupMapping.get( property );
-				if ( !auditedPropertiesHolder.contains( embeddedName ) ) {
-					// Manage properties mapped within <properties> tag.
-					final Value propertyValue = persistentPropertiesSource.getProperty( embeddedName ).getValue();
-					this.addFromPropertiesGroup(
-							embeddedName,
-							new DynamicProperty( dynamicComponentSource, property ), accessType,
-							(Component) propertyValue,
 							audited
 					);
 				}

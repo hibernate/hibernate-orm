@@ -109,14 +109,15 @@ public class ActionQueue {
 		this.session = session;
 
 		unresolvedInsertions = new UnresolvedEntityInsertActions();
-		insertions = new ExecutableList<AbstractEntityInsertAction>( ExecutableList.INIT_QUEUE_LIST_SIZE, new InsertActionSorter() );
-		deletions = new ExecutableList<EntityDeleteAction>( ExecutableList.INIT_QUEUE_LIST_SIZE );
-		updates = new ExecutableList<EntityUpdateAction>( ExecutableList.INIT_QUEUE_LIST_SIZE );
 
-		collectionCreations = new ExecutableList<CollectionRecreateAction>( ExecutableList.INIT_QUEUE_LIST_SIZE );
-		collectionRemovals = new ExecutableList<CollectionRemoveAction>( ExecutableList.INIT_QUEUE_LIST_SIZE );
-		collectionUpdates = new ExecutableList<CollectionUpdateAction>( ExecutableList.INIT_QUEUE_LIST_SIZE );
-		collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>( ExecutableList.INIT_QUEUE_LIST_SIZE );
+		insertions = new ExecutableList<AbstractEntityInsertAction>( new InsertActionSorter() );
+		deletions = new ExecutableList<EntityDeleteAction>();
+		updates = new ExecutableList<EntityUpdateAction>();
+
+		collectionCreations = new ExecutableList<CollectionRecreateAction>();
+		collectionRemovals = new ExecutableList<CollectionRemoveAction>();
+		collectionUpdates = new ExecutableList<CollectionUpdateAction>();
+		collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>();
 
 		// Important: these lists are in execution order
 		List<ExecutableList<?>> tmp = new ArrayList<ExecutableList<?>>( 7 );
@@ -715,6 +716,10 @@ public class ActionQueue {
 	 * @author Jay Erb
 	 */
 	private static class InsertActionSorter implements ExecutableList.Sorter<AbstractEntityInsertAction> {
+		/**
+		 * Singleton access
+		 */
+		public static final InsertActionSorter INSTANCE = new InsertActionSorter();
 
 		// the mapping of entity names to their latest batch numbers.
 		private Map<String, Integer> latestBatches;

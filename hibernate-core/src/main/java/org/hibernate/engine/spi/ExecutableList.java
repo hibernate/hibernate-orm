@@ -36,13 +36,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.action.spi.Executable;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 /**
  * Specialized encapsulating of the state pertaining to each Executable list.
  * <p/>
- * Lazily sorts the list and caches the sorted state.
+ * Manages sorting the executables (lazily)
  * <p/>
- * Lazily calculates the querySpaces affected by the actions in the list, and caches this too.
+ * Manages the querySpaces affected by the executables in the list, and caches this too.
  *
  * @author Steve Ebersole
  * @author Anton Marsden
@@ -72,31 +73,37 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	private final Sorter<E> sorter;
 	private boolean sorted;
 
+	/**
+	 * Used to hold the query spaces (table names, roughly) that all the Executable instances contained
+	 * in this list define.  This information is ultimately used to invalidate cache regions as it is
+	 * exposed from {@link #getQuerySpaces}.  This value being {@code null} indicates that the
+	 * query spaces should be calculated.
+	 */
 	private transient Set<Serializable> querySpaces;
 
 	/**
-	 * Creates a new ExecutableList.
+	 * Creates a new ExecutableList with the default settings.
 	 */
 	public ExecutableList() {
-		this( null );
-	}
-
-	/**
-	 * Creates a new ExecutableList using the specified Sorter.
-	 * 
-	 * @param sorter The Sorter to use; may be {@code null}
-	 */
-	public ExecutableList(ExecutableList.Sorter<E> sorter) {
-		this( INIT_QUEUE_LIST_SIZE, sorter );
+		this( INIT_QUEUE_LIST_SIZE );
 	}
 
 	/**
 	 * Creates a new ExecutableList with the specified initialCapacity.
-	 * 
+	 *
 	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 */
-	ExecutableList(int initialCapacity) {
+	public ExecutableList(int initialCapacity) {
 		this( initialCapacity, null );
+	}
+
+	/**
+	 * Creates a new ExecutableList using the specified Sorter.
+	 *
+	 * @param sorter The Sorter to use; may be {@code null}
+	 */
+	public ExecutableList(ExecutableList.Sorter<E> sorter) {
+		this( INIT_QUEUE_LIST_SIZE, sorter );
 	}
 
 	/**
@@ -105,13 +112,29 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 * @param sorter The Sorter to use; may be {@code null}
 	 */
-	ExecutableList(int initialCapacity, ExecutableList.Sorter<E> sorter) {
+	public ExecutableList(int initialCapacity, ExecutableList.Sorter<E> sorter) {
 		this.sorter = sorter;
 		this.executables = new ArrayList<E>( initialCapacity );
-		// a non-null querySpaces value would add to the querySpaces as the list is added to,
-		// but we would like this data to be lazily initialized.
-		this.querySpaces = null;
+		this.querySpaces = new HashSet<Serializable>();
 		this.sorted = true;
+	}
+
+	/**
+	 * Lazily constructs the querySpaces affected by the actions in the list.
+	 *
+	 * @return the querySpaces affected by the actions in this list
+	 */
+	public Set<Serializable> getQuerySpaces() {
+		if ( querySpaces == null ) {
+			querySpaces = new HashSet<Serializable>();
+			for ( E e : executables ) {
+				Serializable[] propertySpaces = e.getPropertySpaces();
+				if ( querySpaces != null && propertySpaces != null ) {
+					Collections.addAll( querySpaces, propertySpaces );
+				}
+			}
+		}
+		return querySpaces;
 	}
 
 	/**
@@ -129,13 +152,16 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * @return the entry that was removed
 	 */
 	public E remove(int index) {
-		if ( index < executables.size() - 1 ) {
-			sorted = false;
-		}
+		// removals are generally safe in regards to sorting...
 
 		final E e = executables.remove( index );
 
-		// clear the querySpaces cache if the removed Executable had property querySpaces
+		// If the executable being removed defined query spaces we need to recalculate the overall query spaces for
+		// this list.  The problem is that we don't know how many other executable instances in the list also
+		// contributed those query spaces as well.
+		//
+		// An alternative here is to use a "multiset" which is a specialized set that keeps a reference count
+		// associated to each entry.  But that is likely overkill here.
 		if ( e.getPropertySpaces() != null && e.getPropertySpaces().length > 0 ) {
 			querySpaces = null;
 		}
@@ -171,40 +197,38 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Lazily constructs the querySpaces affected by the actions in the list.
-	 * 
-	 * @return the querySpaces affected by the actions in this list
-	 */
-	public Set<Serializable> getQuerySpaces() {
-		if ( querySpaces == null ) {
-			querySpaces = new HashSet<Serializable>();
-			for ( E e : executables ) {
-				Serializable[] propertySpaces = e.getPropertySpaces();
-				if ( querySpaces != null && propertySpaces != null ) {
-					Collections.addAll( querySpaces, propertySpaces );
-				}
-			}
-		}
-		return querySpaces;
-	}
-
-	/**
 	 * Add an Executable to this list.
 	 * 
-	 * @param o the executable to add to the list
+	 * @param executable the executable to add to the list
+	 *
 	 * @return true if the object was added to the list
 	 */
-	public boolean add(E o) {
-		boolean added = executables.add( o );
-		if ( added ) {
-			// no longer sorted
+	public boolean add(E executable) {
+		final E previousLast = sorter != null || executables.isEmpty() ? null : executables.get( executables.size() - 1 );
+		boolean added = executables.add( executable );
+
+		if ( !added ) {
+			return false;
+		}
+
+		// see if the addition invalidated the sorting
+		if ( sorter != null ) {
+			// we don't have intrinsic insight into the sorter's algorithm, so invalidate sorting
 			sorted = false;
-			Serializable[] propertySpaces = o.getPropertySpaces();
-			// we can cheaply keep querySpaces in sync once they are cached
-			if ( querySpaces != null && propertySpaces != null ) {
-				Collections.addAll( querySpaces, propertySpaces );
+		}
+		else {
+			// otherwise, we added to the end of the list.  So check the comparison between the incoming
+			// executable and the one previously at the end of the list using the Comparable contract
+			if ( previousLast != null && previousLast.compareTo( executable ) > 0 ) {
+				sorted = false;
 			}
 		}
+
+		Serializable[] querySpaces = executable.getPropertySpaces();
+		if ( this.querySpaces != null && querySpaces != null ) {
+			Collections.addAll( this.querySpaces, querySpaces );
+		}
+
 		return added;
 	}
 
@@ -253,42 +277,67 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	}
 
 	/**
-	 * Serializes the list out to oos.
+	 * Write this list out to the given stream as part of serialization
 	 * 
 	 * @param oos The stream to which to serialize our state
 	 */
 	@Override
 	public void writeExternal(ObjectOutput oos) throws IOException {
+		oos.writeBoolean( sorted );
+
 		oos.writeInt( executables.size() );
 		for ( E e : executables ) {
 			oos.writeObject( e );
 		}
+
+		// if the spaces are initialized, write them out for usage after deserialization
+		if ( querySpaces == null ) {
+			oos.writeInt( -1 );
+		}
+		else {
+			oos.writeInt( querySpaces.size() );
+			// these are always String, why we treat them as Serializable instead is beyond me...
+			for ( Serializable querySpace : querySpaces ) {
+				oos.writeUTF( querySpace.toString() );
+			}
+		}
 	}
 
 	/**
-	 * De-serializes the list into this object from in.
+	 * Read this object state back in from the given stream as part of de-serialization
 	 * 
 	 * @param in The stream from which to read our serial state
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		sorted = false;
-		querySpaces = null;
-		int size = in.readInt();
-		executables.ensureCapacity( size );
-		if ( size > 0 ) {
-			for ( int i = 0; i < size; i++ ) {
+		sorted = in.readBoolean();
+
+		final int numberOfExecutables = in.readInt();
+		executables.ensureCapacity( numberOfExecutables );
+		if ( numberOfExecutables > 0 ) {
+			for ( int i = 0; i < numberOfExecutables; i++ ) {
 				E e = (E) in.readObject();
 				executables.add( e );
+			}
+		}
+
+		final int numberOfQuerySpaces = in.readInt();
+		if ( numberOfQuerySpaces < 0 ) {
+			this.querySpaces = null;
+		}
+		else {
+			querySpaces = new HashSet<Serializable>( CollectionHelper.determineProperSizing( numberOfQuerySpaces ) );
+			for ( int i = 0; i < numberOfQuerySpaces; i++ ) {
+				querySpaces.add( in.readUTF() );
 			}
 		}
 	}
 
 	/**
-	 * Re-attaches the Executable elements to the session after deserialization.
+	 * Allow the Executables to re-associate themselves with the Session after deserialization.
 	 * 
-	 * @param session The session to which to attach the Executable elements
+	 * @param session The session to which to associate the Executables
 	 */
 	public void afterDeserialize(SessionImplementor session) {
 		for ( E e : executables ) {

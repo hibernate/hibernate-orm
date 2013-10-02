@@ -24,10 +24,12 @@
 package org.hibernate.test.batch.joinedInheritence;
 
 import org.hibernate.Session;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.junit.Test;
 
+@TestForIssue( jiraKey = "HHH-8581" )
 public class BatchVersionedUpdateOfJoinedHierarchyTest
     extends BaseCoreFunctionalTestCase {
 	@Override
@@ -40,6 +42,15 @@ public class BatchVersionedUpdateOfJoinedHierarchyTest
 		Session session = openSession();
 		session.beginTransaction();
         session.createQuery("update versioned Animal set weight = 69 where weight = 0").executeUpdate();
+		session.getTransaction().commit();
+		session.close();
+	}
+    
+	@Test
+	public void testUpdateWithWhereClause() {
+		Session session = openSession();
+		session.beginTransaction();
+        session.createQuery("update Animal set weight = 69 where weight = 0").executeUpdate();
 		session.getTransaction().commit();
 		session.close();
 	}

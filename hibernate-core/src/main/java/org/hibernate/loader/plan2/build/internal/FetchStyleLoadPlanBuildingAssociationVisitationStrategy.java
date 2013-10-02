@@ -106,7 +106,8 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	protected FetchStrategy adjustJoinFetchIfNeeded(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
-		if ( currentDepth() > sessionFactory().getSettings().getMaximumFetchDepth() ) {
+		final Integer maxFetchDepth = sessionFactory().getSettings().getMaximumFetchDepth();
+		if ( maxFetchDepth != null && currentDepth() > maxFetchDepth ) {
 			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
 		}
 

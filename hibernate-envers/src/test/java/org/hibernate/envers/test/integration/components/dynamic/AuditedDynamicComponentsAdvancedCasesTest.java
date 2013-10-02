@@ -321,6 +321,19 @@ public class AuditedDynamicComponentsAdvancedCasesTest extends BaseEnversFunctio
 		Assert.assertEquals( entity, resultList.get( 0 ) );
 
 		//when
+		InternalComponent internalComponent = (InternalComponent) entity.getDynamicConfiguration().get( INTERNAL_COMPONENT );
+		resultList = getAuditReader().createQuery()
+				.forEntitiesAtRevision( AdvancedEntity.class, 1 )
+				.add(
+						AuditEntity.property( "dynamicConfiguration_" + INTERNAL_COMPONENT+"_property")
+								.eq( internalComponent.getProperty() )
+				)
+				.getResultList();
+
+		//then
+		Assert.assertEquals( entity, resultList.get( 0 ) );
+
+		//when
 		try {
 			OneToOneEntity oneToOneEntity = (OneToOneEntity) entity.getDynamicConfiguration().get( PROP_ONE_TO_ONE );
 			getAuditReader().createQuery()

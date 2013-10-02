@@ -54,6 +54,10 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 		plainComponent.setComponentNote( "Note" );
 		plainComponent.setOneToOneEntity( oneToOne );
 		plainComponent.setManyToOneEntity( manyToOne );
+		plainComponent.setInternalComponent( new InternalComponent( "Some val" ) );
+		ArrayList<InternalComponent> internalComponents = new ArrayList<InternalComponent>();
+		internalComponents.add( new InternalComponent( "test" ) );
+		plainComponent.setInternalComponents( internalComponents );
 
 		PlainEntity plainEntity = new PlainEntity();
 		plainEntity.setId( 1L );
@@ -89,6 +93,29 @@ public class SanityCheckTest extends BaseEnversFunctionalTestCase {
 		List resultList = getAuditReader().createQuery()
 				.forEntitiesAtRevision( PlainEntity.class, 1 )
 				.add( AuditEntity.property( "component_componentNote" ).eq( "Note" ) )
+				.getResultList();
+
+		Assert.assertEquals( entity, resultList.get( 0 ) );
+	}
+
+	@Test
+	public void shouldFindByInternalComponentProperty() {
+		ManyToOneEntity manyToOne = getManyToOneEntity();
+		ManyToManyEntity manyToMany = getManyToManyEntity();
+		OneToOneEntity oneToOne = getOneToOneEntity();
+
+		PlainEntity entity = getPlainEntity( manyToOne, manyToMany, oneToOne );
+
+
+		//given (and result of shouldInitData()
+
+		//when
+		List resultList = getAuditReader().createQuery()
+				.forEntitiesAtRevision( PlainEntity.class, 1 )
+				.add(
+						AuditEntity.property( "component_internalComponent_property" )
+								.eq( entity.getComponent().getInternalComponent().getProperty() )
+				)
 				.getResultList();
 
 		Assert.assertEquals( entity, resultList.get( 0 ) );

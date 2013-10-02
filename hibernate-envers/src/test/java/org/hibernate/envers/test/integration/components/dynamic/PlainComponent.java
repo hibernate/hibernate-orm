@@ -9,6 +9,8 @@ public class PlainComponent {
 	private List<ManyToManyEntity> manyToManyList = new ArrayList<ManyToManyEntity>();
 	private OneToOneEntity oneToOneEntity;
 	private ManyToOneEntity manyToOneEntity;
+	private InternalComponent internalComponent;
+	private List<InternalComponent> internalComponents;
 
 	public String getComponentNote() {
 		return componentNote;
@@ -42,6 +44,22 @@ public class PlainComponent {
 		this.manyToOneEntity = manyToOneEntity;
 	}
 
+	public InternalComponent getInternalComponent() {
+		return internalComponent;
+	}
+
+	public void setInternalComponent(InternalComponent internalComponent) {
+		this.internalComponent = internalComponent;
+	}
+
+	public List<InternalComponent> getInternalComponents() {
+		return internalComponents;
+	}
+
+	public void setInternalComponents(List<InternalComponent> internalComponents) {
+		this.internalComponents = internalComponents;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
@@ -54,6 +72,12 @@ public class PlainComponent {
 		PlainComponent that = (PlainComponent) o;
 
 		if ( componentNote != null ? !componentNote.equals( that.componentNote ) : that.componentNote != null ) {
+			return false;
+		}
+		if ( internalComponent != null ? !internalComponent.equals( that.internalComponent ) : that.internalComponent != null ) {
+			return false;
+		}
+		if ( internalComponents != null ? !internalComponents.equals( that.internalComponents ) : that.internalComponents != null ) {
 			return false;
 		}
 		if ( manyToManyList != null ? !manyToManyList.equals( that.manyToManyList ) : that.manyToManyList != null ) {
@@ -75,6 +99,8 @@ public class PlainComponent {
 		result = 31 * result + ( manyToManyList != null ? manyToManyList.hashCode() : 0 );
 		result = 31 * result + ( oneToOneEntity != null ? oneToOneEntity.hashCode() : 0 );
 		result = 31 * result + ( manyToOneEntity != null ? manyToOneEntity.hashCode() : 0 );
+		result = 31 * result + ( internalComponent != null ? internalComponent.hashCode() : 0 );
+		result = 31 * result + ( internalComponents != null ? internalComponents.hashCode() : 0 );
 		return result;
 	}
 }

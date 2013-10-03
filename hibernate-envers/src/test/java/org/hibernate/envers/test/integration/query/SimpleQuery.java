@@ -38,6 +38,10 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.envers.test.entities.StrIntTestEntity;
+import org.hibernate.envers.test.entities.ids.EmbId;
+import org.hibernate.envers.test.entities.ids.EmbIdTestEntity;
+import org.hibernate.envers.test.entities.ids.MulId;
+import org.hibernate.envers.test.entities.ids.MulIdTestEntity;
 import org.hibernate.envers.test.tools.TestTools;
 import org.hibernate.testing.TestForIssue;
 
@@ -50,9 +54,13 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
     private Integer id1;
     private Integer id2;
     private Integer id3;
+    private MulId mulId1;
+    private EmbId embId1;
 
     public void configure(Ejb3Configuration cfg) {
         cfg.addAnnotatedClass(StrIntTestEntity.class);
+        cfg.addAnnotatedClass(MulIdTestEntity.class);
+        cfg.addAnnotatedClass(EmbIdTestEntity.class);
     }
 
     @Test
@@ -78,6 +86,12 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 
         // Revision 2
         em.getTransaction().begin();
+
+        mulId1 = new MulId( 1, 2 );
+        em.persist( new MulIdTestEntity( mulId1.getId1(), mulId1.getId2(), "data" ) );
+
+        embId1 = new EmbId( 3, 4 );
+        em.persist( new EmbIdTestEntity( embId1, "something" ) );
 
         site1 = em.find(StrIntTestEntity.class, id1);
         site2 = em.find(StrIntTestEntity.class, id2);
@@ -342,5 +356,40 @@ public class SimpleQuery extends BaseEnversJPAFunctionalTestCase {
 			int number = entity.getNumber();
 			Assert.assertTrue( ( number >= 0 && number <= 5 ) || ( number >= 20 && number <= 100 ) );
 		}
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8567")
+	public void testIdPropertyRestriction() {
+		StrIntTestEntity ver2 = (StrIntTestEntity) getAuditReader().createQuery()
+				.forEntitiesAtRevision( StrIntTestEntity.class, 2 )
+				.add( AuditEntity.property( "id" ).eq( id2 ) )
+				.getSingleResult();
+
+		Assert.assertEquals( new StrIntTestEntity( "a", 20, id2 ), ver2 );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8567")
+	public void testMultipleIdPropertyRestriction() {
+		MulIdTestEntity ver2 = (MulIdTestEntity) getAuditReader().createQuery()
+				.forEntitiesAtRevision( MulIdTestEntity.class, 2 )
+				.add( AuditEntity.property( "id1" ).eq( mulId1.getId1() ) )
+				.add( AuditEntity.property( "id2" ).eq( mulId1.getId2() ) )
+				.getSingleResult();
+
+		Assert.assertEquals( new MulIdTestEntity( mulId1.getId1(), mulId1.getId2(), "data" ), ver2 );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8567")
+	public void testEmbeddedIdPropertyRestriction() {
+		EmbIdTestEntity ver2 = (EmbIdTestEntity) getAuditReader().createQuery()
+				.forEntitiesAtRevision( EmbIdTestEntity.class, 2 )
+				.add( AuditEntity.property( "id.x" ).eq( embId1.getX() ) )
+				.add( AuditEntity.property( "id.y" ).eq( embId1.getY() ) )
+				.getSingleResult();
+
+		Assert.assertEquals( new EmbIdTestEntity( embId1, "something" ), ver2 );
 	}
 }

@@ -23,6 +23,11 @@
  */
 package org.hibernate.envers.query.criteria.internal;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.configuration.spi.AuditConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
@@ -30,6 +35,8 @@ import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.query.criteria.AuditId;
 import org.hibernate.envers.query.internal.property.PropertyNameGetter;
+import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.Type;
 
 /**
  * @author Adam Warski (adam at warski dot org)
@@ -85,13 +92,40 @@ public abstract class CriteriaTools {
 	public static String determinePropertyName(
 			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader,
 			String entityName, String propertyName) {
+		final SessionFactoryImplementor sessionFactory = versionsReader.getSessionImplementor().getFactory();
+
 		if ( AuditId.IDENTIFIER_PLACEHOLDER.equals( propertyName ) ) {
-			final String identifierPropertyName = versionsReader.getSessionImplementor()
-					.getFactory()
-					.getEntityPersister( entityName )
-					.getIdentifierPropertyName();
+			final String identifierPropertyName = sessionFactory.getEntityPersister( entityName ).getIdentifierPropertyName();
 			propertyName = auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + identifierPropertyName;
 		}
+		else {
+			final List<String> identifierPropertyNames = identifierPropertyNames( sessionFactory, entityName );
+			if ( identifierPropertyNames.contains( propertyName ) ) {
+				propertyName = auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + propertyName;
+			}
+		}
+
 		return propertyName;
+	}
+
+	/**
+	 * @param sessionFactory Session factory.
+	 * @param entityName Entity name.
+	 *
+	 * @return List of property names representing entity identifier.
+	 */
+	private static List<String> identifierPropertyNames(SessionFactoryImplementor sessionFactory, String entityName) {
+		final String identifierPropertyName = sessionFactory.getEntityPersister( entityName ).getIdentifierPropertyName();
+		if ( identifierPropertyName != null ) {
+			// Single id.
+			return Arrays.asList( identifierPropertyName );
+		}
+		final Type identifierType = sessionFactory.getEntityPersister( entityName ).getIdentifierType();
+		if ( identifierType instanceof EmbeddedComponentType ) {
+			// Multiple ids.
+			final EmbeddedComponentType embeddedComponentType = (EmbeddedComponentType) identifierType;
+			return Arrays.asList( embeddedComponentType.getPropertyNames() );
+		}
+		return Collections.EMPTY_LIST;
 	}
 }

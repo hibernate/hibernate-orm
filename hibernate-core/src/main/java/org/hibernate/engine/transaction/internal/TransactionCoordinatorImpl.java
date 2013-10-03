@@ -346,6 +346,11 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( status );
 	}
 
+	@Override
+	public boolean isActive() {
+		return !sessionFactory().isClosed();
+	}
+
 
 	// serialization ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

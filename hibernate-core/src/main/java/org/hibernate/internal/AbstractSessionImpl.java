@@ -120,7 +120,7 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public boolean isClosed() {
-		return closed;
+		return closed || factory.isClosed();
 	}
 
 	protected void setClosed() {
@@ -128,7 +128,7 @@ public abstract class AbstractSessionImpl
 	}
 
 	protected void errorIfClosed() {
-		if ( closed ) {
+		if ( isClosed() ) {
 			throw new SessionException( "Session is closed!" );
 		}
 	}

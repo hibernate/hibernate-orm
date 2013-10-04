@@ -69,7 +69,13 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 				throw e;
 			}
 		}
-		getStatements().clear();
+
+		releaseStatements();
+	}
+
+	@Override
+	protected void clearBatch(PreparedStatement statement) {
+		// no need to call PreparedStatement#clearBatch here...
 	}
 
 	@Override

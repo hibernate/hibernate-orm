@@ -208,7 +208,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					while ( entries.hasNext() ) {
 
 						final Object entry = entries.next();
-						if ( collection.entryExists( entry, i ) ) {
+						if ( entry != null && collection.entryExists( entry, i ) ) {
 							int offset = 1;
 							PreparedStatement st = null;
 							boolean callable = isUpdateCallable();

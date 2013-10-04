@@ -148,34 +148,33 @@ public abstract class AbstractBatchImpl implements Batch {
 	@Override
 	public final void execute() {
 		notifyObserversExplicitExecution();
-		if ( statements.isEmpty() ) {
+		if ( getStatements().isEmpty() ) {
 			return;
 		}
+
 		try {
-			try {
-				doExecuteBatch();
-			}
-			finally {
-				releaseStatements();
-			}
+			doExecuteBatch();
 		}
 		finally {
-			statements.clear();
+			releaseStatements();
 		}
 	}
 
-	private void releaseStatements() {
+	protected void releaseStatements() {
 		for ( PreparedStatement statement : getStatements().values() ) {
-			try {
-				statement.clearBatch();
-				jdbcCoordinator.release( statement );
-			}
-			catch ( SQLException e ) {
-				LOG.unableToReleaseBatchStatement();
-				LOG.sqlExceptionEscapedProxy( e );
-			}
+			clearBatch( statement );
+			jdbcCoordinator.release( statement );
 		}
 		getStatements().clear();
+	}
+
+	protected void clearBatch(PreparedStatement statement) {
+		try {
+			statement.clearBatch();
+		}
+		catch ( SQLException e ) {
+			LOG.unableToReleaseBatchStatement();
+		}
 	}
 
 	/**

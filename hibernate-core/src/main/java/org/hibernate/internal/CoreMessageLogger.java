@@ -804,9 +804,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	void splitQueries(String sourceQuery,
 					  int length);
 
-	@LogMessage(level = ERROR)
-	@Message(value = "SQLException escaped proxy", id = 246)
-	void sqlExceptionEscapedProxy(@Cause SQLException e);
+//	@LogMessage(level = ERROR)
+//	@Message(value = "SQLException escaped proxy", id = 246)
+//	void sqlExceptionEscapedProxy(@Cause SQLException e);
 
 	@LogMessage(level = WARN)
 	@Message(value = "SQL Error: %s, SQLState: %s", id = 247)

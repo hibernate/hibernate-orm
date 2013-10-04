@@ -106,6 +106,10 @@ public abstract class AbstractBatchImpl implements Batch {
 		return sqlStatementLogger;
 	}
 
+	protected void abortBatch() {
+		jdbcCoordinator.abortBatch();
+	}
+
 	/**
 	 * Access to the batch's map of statements (keyed by SQL statement string).
 	 *

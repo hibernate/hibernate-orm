@@ -364,6 +364,10 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		catch ( SQLException e ) {
 			fail(e.getMessage());
 		}
+		finally {
+			s.getTransaction().rollback();
+			s.close();
+		}
 	}
 	
 	@Test

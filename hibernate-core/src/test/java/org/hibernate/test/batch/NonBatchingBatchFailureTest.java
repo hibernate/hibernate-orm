@@ -27,7 +27,6 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
 import java.lang.reflect.Field;
 import java.util.Map;
 
@@ -35,7 +34,7 @@ import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.jdbc.batch.internal.AbstractBatchImpl;
-import org.hibernate.engine.jdbc.batch.internal.BatchingBatch;
+import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -52,7 +51,7 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-7689" )
-public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
+public class NonBatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { User.class };
@@ -61,8 +60,8 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
-		// explicitly enable batching
-		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, "5" );
+		// explicitly disable batching
+		configuration.setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, "-1" );
 		// and disable in-vm nullability checking (so we can force in-db not-null constraint violations)
 		configuration.setProperty( AvailableSettings.CHECK_NULLABILITY, "false" );
 	}
@@ -76,9 +75,6 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 			session.persist( new User( 1, "ok" ) );
 			session.persist( new User( 2, null ) );
 			session.persist( new User( 3, "ok" ) );
-			session.persist( new User( 4, "ok" ) );
-			session.persist( new User( 5, "ok" ) );
-			session.persist( new User( 6, "ok" ) );
 			// the flush should fail
 			session.flush();
 			fail( "Expecting failed flush" );
@@ -98,7 +94,7 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 				}
 				else {
 					//make sure it's actually a batching impl
-					assertEquals( BatchingBatch.class, batch.getClass() );
+					assertEquals( NonBatchingBatch.class, batch.getClass() );
 					field = AbstractBatchImpl.class.getDeclaredField( "statements" );
 					field.setAccessible( true );
 					//check to see that there aren't any statements queued up (this can be an issue if using SavePoints)

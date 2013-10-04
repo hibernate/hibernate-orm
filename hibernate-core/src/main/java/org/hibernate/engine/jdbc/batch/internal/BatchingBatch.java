@@ -119,8 +119,8 @@ public class BatchingBatch extends AbstractBatchImpl {
 					checkRowCounts( statement.executeBatch(), statement );
 				}
 				catch ( SQLException e ) {
-					LOG.debug( "SQLException escaped proxy", e );
-					throw sqlExceptionHelper().convert( e, "could not perform addBatch", entry.getKey() );
+					abortBatch();
+					throw sqlExceptionHelper().convert( e, "could not execute batch", entry.getKey() );
 				}
 			}
 		}

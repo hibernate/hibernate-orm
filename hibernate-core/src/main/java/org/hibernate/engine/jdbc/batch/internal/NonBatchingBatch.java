@@ -27,6 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
 
+import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -62,8 +63,12 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 				jdbcCoordinator.release( statement );
 			}
 			catch ( SQLException e ) {
-				LOG.debug( "SQLException escaped proxy", e );
-				throw sqlExceptionHelper().convert( e, "could not execute batch statement", entry.getKey() );
+				abortBatch();
+				throw sqlExceptionHelper().convert( e, "could not execute non-batched batch statement", entry.getKey() );
+			}
+			catch (JDBCException e) {
+				abortBatch();
+				throw e;
 			}
 		}
 		getStatements().clear();

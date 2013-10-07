@@ -233,9 +233,7 @@ public class MySQLDialect extends Dialect {
 		final String cols = StringHelper.join( ", ", foreignKey );
 		final String referencedCols = StringHelper.join( ", ", primaryKey );
 		return String.format(
-				" add index %s (%s), add constraint %s foreign key (%s) references %s (%s)",
-				constraintName,
-				cols,
+				" add constraint %s foreign key (%s) references %s (%s)",
 				constraintName,
 				cols,
 				referencedTable,

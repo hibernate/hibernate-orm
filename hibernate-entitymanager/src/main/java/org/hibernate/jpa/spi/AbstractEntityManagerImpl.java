@@ -1780,22 +1780,22 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					Object entity = internalGetSession().load( sose.getEntityName(), identifier );
 					if ( entity instanceof Serializable ) {
 						//avoid some user errors regarding boundary crossing
-						pe = new OptimisticLockException( null, e, entity );
+						pe = new OptimisticLockException( e.getMessage(), e, entity );
 					}
 					else {
-						pe = new OptimisticLockException( e );
+						pe = new OptimisticLockException( e.getMessage(), e );
 					}
 				}
 				catch ( EntityNotFoundException enfe ) {
-					pe = new OptimisticLockException( e );
+					pe = new OptimisticLockException( e.getMessage(), e );
 				}
 			}
 			else {
-				pe = new OptimisticLockException( e );
+				pe = new OptimisticLockException( e.getMessage(), e );
 			}
 		}
 		else {
-			pe = new OptimisticLockException( e );
+			pe = new OptimisticLockException( e.getMessage(), e );
 		}
 		return pe;
 	}

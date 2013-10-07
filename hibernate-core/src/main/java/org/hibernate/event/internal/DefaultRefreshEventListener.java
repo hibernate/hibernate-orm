@@ -111,7 +111,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				LOG.tracev( "Refreshing ", MessageHelper.infoString( e.getPersister(), e.getId(), source.getFactory() ) );
 			}
 			if ( !e.isExistsInDatabase() ) {
-				throw new HibernateException( "this instance does not yet exist as a row in the database" );
+				throw new UnresolvableObjectException(e.getId(), "this instance does not yet exist as a row in the database" );
 			}
 
 			persister = e.getPersister();

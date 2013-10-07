@@ -30,6 +30,7 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -38,6 +39,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
  * Initiator for the DatabaseInfoDialectResolver service
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
 public class DatabaseInfoDialectResolverInitiator implements StandardServiceInitiator<DatabaseInfoDialectResolver> {
 	/**
@@ -52,33 +54,6 @@ public class DatabaseInfoDialectResolverInitiator implements StandardServiceInit
 
 	@Override
 	public DatabaseInfoDialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final DatabaseInfoDialectResolverSet resolver = new DatabaseInfoDialectResolverSet();
-		applyCustomReslvers( resolver, configurationValues, registry );
-		resolver.addResolver( StandardDatabaseInfoDialectResolver.INSTANCE );
-		return resolver;
-	}
-
-	private void applyCustomReslvers(
-			DatabaseInfoDialectResolverSet resolver,
-			Map configurationValues,
-			ServiceRegistryImplementor registry) {
-		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
-
-		if ( StringHelper.isNotEmpty( resolverImplNames ) ) {
-			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
-			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
-				try {
-					resolver.addResolver(
-							(DatabaseInfoDialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
-					);
-				}
-				catch (HibernateException e) {
-					throw e;
-				}
-				catch (Exception e) {
-					throw new ServiceException( "Unable to instantiate named dialect resolver [" + resolverImplName + "]", e );
-				}
-			}
-		}
+		return DatabaseInfoDialectResolverSet.INSTANCE;
 	}
 }

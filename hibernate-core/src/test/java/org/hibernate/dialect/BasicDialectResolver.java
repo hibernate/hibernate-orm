@@ -21,24 +21,14 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.engine.jdbc.dialect.internal;
+package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.AbstractDatabaseMetaDataDialectResolver;
 
-/**
- * Intended as support for custom resolvers.
- *
- * @author Steve Ebersole
- *
- * @deprecated Purpose has shifted to new {@link org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver}
- * contract.  See <a href="https://hibernate.onjira.com/browse/HHH-7965">HHH-7965</a> for details.
- */
-@Deprecated
 public class BasicDialectResolver extends AbstractDatabaseMetaDataDialectResolver {
 	/**
 	 * Constant indicating no version info was given

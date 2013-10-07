@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2010, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -30,53 +30,60 @@ import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
- * Standard initiator for the standard {@link DialectResolver} service
+ * Initiator for the DatabaseMetaDataDialectResolver service
  *
  * @author Steve Ebersole
+ * @author Brett Meyer
  */
-@SuppressWarnings("deprecation")
-public class DialectResolverInitiator implements StandardServiceInitiator<DialectResolver> {
+public class DatabaseMetaDataDialectResolverInitiator implements StandardServiceInitiator<DatabaseMetaDataDialectResolver> {
 	/**
 	 * Singleton access
 	 */
-	public static final DialectResolverInitiator INSTANCE = new DialectResolverInitiator();
+	public static final DatabaseMetaDataDialectResolverInitiator INSTANCE = new DatabaseMetaDataDialectResolverInitiator();
 
 	@Override
-	public Class<DialectResolver> getServiceInitiated() {
-		return DialectResolver.class;
+	public Class<DatabaseMetaDataDialectResolver> getServiceInitiated() {
+		return DatabaseMetaDataDialectResolver.class;
 	}
 
 	@Override
-	public DialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
-		final DialectResolverSet resolver = new DialectResolverSet();
-		applyCustomerResolvers( resolver, registry, configurationValues );
-		resolver.addResolver(
-				new StandardDatabaseMetaDataDialectResolver(
-						registry.getService( DatabaseInfoDialectResolver.class )
-				)
-		);
-		return resolver;
+	public DatabaseMetaDataDialectResolver initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+		final DatabaseMetaDataDialectResolverSet databaseMetaDataResolverSet = new DatabaseMetaDataDialectResolverSet();
+		final DatabaseInfoDialectResolverSet databaseInfoResolverSet = DatabaseInfoDialectResolverSet.INSTANCE;
+		applyCustomResolvers( databaseMetaDataResolverSet, databaseInfoResolverSet, configurationValues, registry );
+		databaseMetaDataResolverSet.addResolver(
+				new StandardDatabaseMetaDataDialectResolver( databaseInfoResolverSet ) );
+		return databaseMetaDataResolverSet;
 	}
 
-	private void applyCustomerResolvers(
-			DialectResolverSet resolver,
-			ServiceRegistryImplementor registry,
-			Map configurationValues) {
+	private void applyCustomResolvers(
+			DatabaseMetaDataDialectResolverSet databaseMetaDataResolverSet,
+			DatabaseInfoDialectResolverSet databaseInfoResolverSet,
+			Map configurationValues,
+			ServiceRegistryImplementor registry) {
 		final String resolverImplNames = (String) configurationValues.get( AvailableSettings.DIALECT_RESOLVERS );
 
 		if ( StringHelper.isNotEmpty( resolverImplNames ) ) {
 			final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 			for ( String resolverImplName : StringHelper.split( ", \n\r\f\t", resolverImplNames ) ) {
 				try {
-					resolver.addResolver(
-							(DialectResolver) classLoaderService.classForName( resolverImplName ).newInstance()
-					);
+					final Object obj = classLoaderService.classForName( resolverImplName ).newInstance();
+					if (DatabaseMetaDataDialectResolver.class.isInstance( obj )) {
+						databaseMetaDataResolverSet.addResolver( (DatabaseMetaDataDialectResolver) obj );
+					}
+					else if (DatabaseInfoDialectResolver.class.isInstance( obj )) {
+						databaseInfoResolverSet.addResolver( (DatabaseInfoDialectResolver) obj );
+					}
+					else {
+						throw new ServiceException( "The custom resolver " + resolverImplName
+								+ " must implement DatabaseMetaDataDialectResolver or DatabaseInfoDialectResolver!" );
+					}
 				}
 				catch (HibernateException e) {
 					throw e;

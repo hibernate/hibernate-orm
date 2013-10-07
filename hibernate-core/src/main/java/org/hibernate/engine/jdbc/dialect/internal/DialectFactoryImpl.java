@@ -33,8 +33,8 @@ import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.InjectService;
 
 /**
@@ -50,10 +50,10 @@ public class DialectFactoryImpl implements DialectFactory {
 		this.strategySelector = strategySelector;
 	}
 
-	private DialectResolver dialectResolver;
+	private DatabaseMetaDataDialectResolver dialectResolver;
 
 	@InjectService
-	public void setDialectResolver(DialectResolver dialectResolver) {
+	public void setDialectResolver(DatabaseMetaDataDialectResolver dialectResolver) {
 		this.dialectResolver = dialectResolver;
 	}
 
@@ -101,7 +101,7 @@ public class DialectFactoryImpl implements DialectFactory {
 
 		try {
 			final DatabaseMetaData databaseMetaData = connection.getMetaData();
-			final Dialect dialect = dialectResolver.resolveDialect( databaseMetaData );
+			final Dialect dialect = dialectResolver.resolve( databaseMetaData );
 
 			if ( dialect == null ) {
 				throw new HibernateException(

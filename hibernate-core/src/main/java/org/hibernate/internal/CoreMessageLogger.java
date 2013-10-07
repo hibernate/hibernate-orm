@@ -48,7 +48,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.cache.CacheException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolver;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.loading.internal.CollectionLoadContext;
@@ -1076,7 +1076,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Error executing resolver [%s] : %s", id = 316)
-	void unableToExecuteResolver(DialectResolver abstractDialectResolver,
+	void unableToExecuteResolver(DatabaseMetaDataDialectResolver abstractDialectResolver,
 								 String message);
 
 	@LogMessage(level = INFO)

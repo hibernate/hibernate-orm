@@ -185,4 +185,9 @@ public interface Cache {
 	 * Evict data from all query regions.
 	 */
 	public void evictQueryRegions();
+	
+	/**
+	 * Evict all data from the cache.
+	 */
+	public void evictAllRegions();
 }

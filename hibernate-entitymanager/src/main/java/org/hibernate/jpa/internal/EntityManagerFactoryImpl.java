@@ -557,6 +557,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 		}
 
 		public void evictAll() {
+			// Evict only the "JPA cache", which is purely defined as the entity regions.
 			sessionFactory.getCache().evictEntityRegions();
 // TODO : if we want to allow an optional clearing of all cache data, the additional calls would be:
 //			sessionFactory.getCache().evictCollectionRegions();

@@ -354,4 +354,13 @@ public class CacheImpl implements CacheImplementor {
 	public RegionFactory getRegionFactory() {
 		return regionFactory;
 	}
+	
+	@Override
+	public void evictAllRegions() {
+		evictCollectionRegions();
+		evictDefaultQueryRegion();
+		evictEntityRegions();
+		evictQueryRegions();
+		evictNaturalIdRegions();
+	}
 }

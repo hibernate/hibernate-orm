@@ -33,6 +33,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.compare.EqualsHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 /**
@@ -81,7 +82,15 @@ public class NaturalIdCacheKey implements Serializable {
 
 			result = prime * result + (value != null ? type.getHashCode( value, factory ) : 0);
 
-			this.naturalIdValues[i] = type.disassemble( value, session, null );
+			// The natural id may not be fully resolved in some situations.  See HHH-7513 for one of them
+			// (re-attaching a mutable natural id uses a database snapshot and hydration does not resolve associations).
+			// TODO: The snapshot should probably be revisited at some point.  Consider semi-resolving, hydrating, etc.
+			if (type instanceof EntityType && type.getSemiResolvedType( factory ).getReturnedClass().isInstance( value )) {
+				this.naturalIdValues[i] = (Serializable) value;
+			}
+			else {
+				this.naturalIdValues[i] = type.disassemble( value, session, null );
+			}
 		}
 
 		this.hashCode = result;

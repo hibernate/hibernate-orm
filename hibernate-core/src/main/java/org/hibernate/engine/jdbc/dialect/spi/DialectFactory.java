@@ -23,7 +23,6 @@
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
-import java.sql.Connection;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -46,11 +45,12 @@ public interface DialectFactory extends Service {
 	 * the determination from the given connection.
 	 *
 	 * @param configValues The configuration properties.
-	 * @param connection The configured connection.
+	 * @param resolutionInfoSource Access to DialectResolutionInfo used to resolve the Dialect to use if not
+	 * explicitly named
 	 *
 	 * @return The appropriate dialect instance.
 	 *
 	 * @throws HibernateException No dialect specified and no resolver could make the determination.
 	 */
-	public Dialect buildDialect(Map configValues, Connection connection) throws HibernateException;
+	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException;
 }

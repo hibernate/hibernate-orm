@@ -36,11 +36,16 @@ import java.util.Set;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
+import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -162,7 +167,23 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 					lobLocatorUpdateCopy = meta.locatorsUpdateCopy();
 					typeInfoSet.addAll( TypeInfo.extractTypeInfo( meta ) );
 
-					dialect = dialectFactory.buildDialect( configValues, connection );
+					dialect = dialectFactory.buildDialect(
+							configValues,
+							new DialectResolutionInfoSource() {
+								@Override
+								public DialectResolutionInfo getDialectResolutionInfo() {
+									try {
+										return new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() );
+									}
+									catch ( SQLException sqlException ) {
+										throw new HibernateException(
+												"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
+												sqlException
+										);
+									}
+								}
+							}
+					);
 
 					catalogName = connection.getCatalog();
 					final SchemaNameResolver schemaNameResolver = determineExplicitSchemaNameResolver( configValues );

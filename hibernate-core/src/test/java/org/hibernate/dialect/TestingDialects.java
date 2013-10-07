@@ -22,12 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.dialect;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 
-import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.dialect.internal.BasicDialectResolver;
-import org.hibernate.engine.jdbc.dialect.spi.AbstractDatabaseMetaDataDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.BasicDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 
 /**
  * @author Steve Ebersole
@@ -46,10 +44,11 @@ public class TestingDialects {
 	public static class MySpecialDB2Dialect extends Dialect {
 	}
 
-	public static class MyDialectResolver1 extends AbstractDatabaseMetaDataDialectResolver {
-		protected Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
-			String databaseName = metaData.getDatabaseProductName();
-			int databaseMajorVersion = metaData.getDatabaseMajorVersion();
+	public static class MyDialectResolver1 implements DialectResolver {
+		@Override
+		public Dialect resolveDialect(DialectResolutionInfo info) {
+			String databaseName = info.getDatabaseName();
+			int databaseMajorVersion = info.getDatabaseMajorVersion();
 			if ( "MyDatabase1".equals( databaseName ) ) {
 				return new MyDialect1();
 			}
@@ -68,31 +67,6 @@ public class TestingDialects {
 	public static class MyDialectResolver2 extends BasicDialectResolver {
 		public MyDialectResolver2() {
 			super( "MyTrickyDatabase1", MyDialect1.class );
-		}
-	}
-
-	public static class ErrorDialectResolver1 extends AbstractDatabaseMetaDataDialectResolver {
-		public Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
-			String databaseName = metaData.getDatabaseProductName();
-			if ( databaseName.equals( "ConnectionErrorDatabase1" ) ) {
-				throw new SQLException( "Simulated connection error", "08001" );
-			}
-			else {
-				throw new SQLException();
-			}
-		}
-	}
-
-	public static class ErrorDialectResolver2 extends AbstractDatabaseMetaDataDialectResolver {
-		public Dialect resolveDialectInternal(DatabaseMetaData metaData) throws SQLException {
-			String databaseName = metaData.getDatabaseProductName();
-			if ( databaseName.equals( "ErrorDatabase1" ) ) {
-				throw new SQLException();
-			}
-			if ( databaseName.equals( "ErrorDatabase2" ) ) {
-				throw new HibernateException( "This is a trap!" );
-			}
-			return null;
 		}
 	}
 

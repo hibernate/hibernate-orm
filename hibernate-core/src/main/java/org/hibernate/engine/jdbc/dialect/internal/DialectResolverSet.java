@@ -23,68 +23,45 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
-import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.Dialect;
-import org.hibernate.exception.JDBCConnectionException;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.exception.JDBCConnectionException;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * A {@link DialectResolver} implementation which coordinates resolution by delegating to sub-resolvers.
  *
  * @author Tomoto Shimizu Washio
  * @author Steve Ebersole
- *
- * @deprecated See deprecation on {@link DialectResolver}
  */
-@Deprecated
 public class DialectResolverSet implements DialectResolver {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			DialectResolverSet.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DialectResolverSet.class );
 
 	private List<DialectResolver> resolvers;
 
-	/**
-	 * Deprecated
-	 */
 	public DialectResolverSet() {
 		this( new ArrayList<DialectResolver>() );
-		LOG.debug( "DialectResolverSet is deprecated" );
 	}
 
-	/**
-	 * Deprecated
-	 *
-	 * @param resolvers The delegate resolvers
-	 */
 	public DialectResolverSet(List<DialectResolver> resolvers) {
 		this.resolvers = resolvers;
-		LOG.debug( "DialectResolverSet is deprecated" );
 	}
 
-	/**
-	 * Deprecated
-	 *
-	 * @param resolvers The delegate resolvers
-	 */
 	public DialectResolverSet(DialectResolver... resolvers) {
 		this( Arrays.asList( resolvers ) );
-		LOG.debug( "DialectResolverSet is deprecated" );
 	}
 
 	@Override
-	public Dialect resolveDialect(DatabaseMetaData metaData) throws JDBCConnectionException {
+	public Dialect resolveDialect(DialectResolutionInfo info) {
 		for ( DialectResolver resolver : resolvers ) {
 			try {
-				final Dialect dialect = resolver.resolveDialect( metaData );
+				final Dialect dialect = resolver.resolveDialect( info );
 				if ( dialect != null ) {
 					return dialect;
 				}
@@ -93,9 +70,10 @@ public class DialectResolverSet implements DialectResolver {
 				throw e;
 			}
 			catch ( Exception e ) {
-                LOG.exceptionInSubResolver(e.getMessage());
+				LOG.exceptionInSubResolver( e.getMessage() );
 			}
 		}
+
 		return null;
 	}
 

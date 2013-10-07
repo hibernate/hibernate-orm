@@ -52,29 +52,27 @@ import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseAnywhereDialect;
-import org.hibernate.engine.jdbc.dialect.spi.DatabaseInfoDialectResolver;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
 
 /**
- * The standard DatabaseInfoDialectResolver implementation
+ * The standard DialectResolver implementation
  *
  * @author Steve Ebersole
  */
-public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectResolver {
+public class StandardDialectResolver implements DialectResolver {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StandardDialectResolver.class );
+
 	/**
 	 * Singleton access
 	 */
-	public static final StandardDatabaseInfoDialectResolver INSTANCE = new StandardDatabaseInfoDialectResolver();
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			StandardDatabaseInfoDialectResolver.class.getName()
-	);
+	public static final StandardDialectResolver INSTANCE = new StandardDialectResolver();
 
 	@Override
-	public Dialect resolve(DatabaseInfo databaseInfo) {
-		final String databaseName = databaseInfo.getDatabaseName();
+	public Dialect resolveDialect(DialectResolutionInfo info) {
+		final String databaseName = info.getDatabaseName();
 
 		if ( "CUBRID".equalsIgnoreCase( databaseName ) ) {
 			return new CUBRIDDialect();
@@ -89,7 +87,7 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( "MySQL".equals( databaseName ) ) {
-			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			final int majorVersion = info.getDatabaseMajorVersion();
 			
 			if (majorVersion >= 5 ) {
 				return new MySQL5Dialect();
@@ -99,8 +97,8 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( "PostgreSQL".equals( databaseName ) ) {
-			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
-			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
+			final int majorVersion = info.getDatabaseMajorVersion();
+			final int minorVersion = info.getDatabaseMinorVersion();
 
 			if ( majorVersion == 9 ) {
 				return new PostgreSQL9Dialect();
@@ -118,8 +116,8 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( "Apache Derby".equals( databaseName ) ) {
-			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
-			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
+			final int majorVersion = info.getDatabaseMajorVersion();
+			final int minorVersion = info.getDatabaseMinorVersion();
 
 			if ( majorVersion > 10 || ( majorVersion == 10 && minorVersion >= 7 ) ) {
 				return new DerbyTenSevenDialect();
@@ -136,8 +134,8 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( "ingres".equalsIgnoreCase( databaseName ) ) {
-			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
-			final int minorVersion = databaseInfo.getDatabaseMinorVersion();
+			final int majorVersion = info.getDatabaseMajorVersion();
+			final int minorVersion = info.getDatabaseMinorVersion();
 
 			switch ( majorVersion ) {
 				case 9:
@@ -154,7 +152,7 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( databaseName.startsWith( "Microsoft SQL Server" ) ) {
-			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			final int majorVersion = info.getDatabaseMajorVersion();
 
 			switch ( majorVersion ) {
 				case 8:
@@ -192,7 +190,7 @@ public class StandardDatabaseInfoDialectResolver implements DatabaseInfoDialectR
 		}
 
 		if ( "Oracle".equals( databaseName ) ) {
-			final int majorVersion = databaseInfo.getDatabaseMajorVersion();
+			final int majorVersion = info.getDatabaseMajorVersion();
 
 			switch ( majorVersion ) {
 				case 11:

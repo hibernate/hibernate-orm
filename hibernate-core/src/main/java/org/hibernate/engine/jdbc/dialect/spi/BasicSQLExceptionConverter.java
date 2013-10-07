@@ -29,6 +29,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -39,10 +40,7 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class BasicSQLExceptionConverter {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			BasicSQLExceptionConverter.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BasicSQLExceptionConverter.class );
 
 	/**
 	 * Singleton access
@@ -67,9 +65,6 @@ public class BasicSQLExceptionConverter {
 	}
 
 	private static class ConstraintNameExtracter implements ViolatedConstraintNameExtracter {
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		public String extractConstraintName(SQLException sqle) {
 			return "???";

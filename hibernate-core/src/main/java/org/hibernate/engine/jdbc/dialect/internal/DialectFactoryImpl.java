@@ -23,9 +23,6 @@
  */
 package org.hibernate.engine.jdbc.dialect.internal;
 
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -34,37 +31,44 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
-import org.hibernate.service.spi.InjectService;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
  * Standard implementation of the {@link DialectFactory} service.
  *
  * @author Steve Ebersole
  */
-public class DialectFactoryImpl implements DialectFactory {
+public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareService {
 	private StrategySelector strategySelector;
-
-	@InjectService
-	public void setStrategySelector(StrategySelector strategySelector) {
-		this.strategySelector = strategySelector;
-	}
-
 	private DialectResolver dialectResolver;
 
-	@InjectService
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.strategySelector = serviceRegistry.getService( StrategySelector.class );
+		this.dialectResolver = serviceRegistry.getService( DialectResolver.class );
+	}
+
+	/**
+	 * Intended only for use from testing.
+	 *
+	 * @param dialectResolver The DialectResolver to use
+	 */
 	public void setDialectResolver(DialectResolver dialectResolver) {
 		this.dialectResolver = dialectResolver;
 	}
 
 	@Override
-	public Dialect buildDialect(Map configValues, Connection connection) throws HibernateException {
+	public Dialect buildDialect(Map configValues, DialectResolutionInfoSource resolutionInfoSource) throws HibernateException {
 		final String dialectName = (String) configValues.get( AvailableSettings.DIALECT );
 		if ( !StringHelper.isEmpty( dialectName ) ) {
 			return constructDialect( dialectName );
 		}
 		else {
-			return determineDialect( connection );
+			return determineDialect( resolutionInfoSource );
 		}
 	}
 
@@ -88,36 +92,29 @@ public class DialectFactoryImpl implements DialectFactory {
 	/**
 	 * Determine the appropriate Dialect to use given the connection.
 	 *
-	 * @param connection The configured connection.
+	 * @param resolutionInfoSource Access to DialectResolutionInfo used to resolve the Dialect.
+	 *
 	 * @return The appropriate dialect instance.
 	 *
 	 * @throws HibernateException No connection given or no resolver could make
 	 * the determination from the given connection.
 	 */
-	private Dialect determineDialect(Connection connection) {
-		if ( connection == null ) {
-			throw new HibernateException( "Connection cannot be null when 'hibernate.dialect' not set" );
+	private Dialect determineDialect(DialectResolutionInfoSource resolutionInfoSource) {
+		if ( resolutionInfoSource == null ) {
+			throw new HibernateException( "Access to DialectResolutionInfo cannot be null when 'hibernate.dialect' not set" );
 		}
 
-		try {
-			final DatabaseMetaData databaseMetaData = connection.getMetaData();
-			final Dialect dialect = dialectResolver.resolveDialect( databaseMetaData );
+		final DialectResolutionInfo info = resolutionInfoSource.getDialectResolutionInfo();
+		final Dialect dialect = dialectResolver.resolveDialect( info );
 
-			if ( dialect == null ) {
-				throw new HibernateException(
-						"Unable to determine Dialect to use [name=" + databaseMetaData.getDatabaseProductName() +
-								", majorVersion=" + databaseMetaData.getDatabaseMajorVersion() +
-								"]; user must register resolver or explicitly set 'hibernate.dialect'"
-				);
-			}
-
-			return dialect;
-		}
-		catch ( SQLException sqlException ) {
+		if ( dialect == null ) {
 			throw new HibernateException(
-					"Unable to access java.sql.DatabaseMetaData to determine appropriate Dialect to use",
-					sqlException
+					"Unable to determine Dialect to use [name=" + info.getDatabaseName() +
+							", majorVersion=" + info.getDatabaseMajorVersion() +
+							"]; user must register resolver or explicitly set 'hibernate.dialect'"
 			);
 		}
+
+		return dialect;
 	}
 }

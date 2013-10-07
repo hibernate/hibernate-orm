@@ -26,8 +26,6 @@ package org.hibernate.engine.jdbc.dialect.internal;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -39,15 +37,18 @@ import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.resolver.DialectResolverTest;
+import org.hibernate.dialect.resolver.TestingDialectResolutionInfo;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
 /**
- * Unit test of the {@link StandardDatabaseMetaDataDialectResolver} class.
+ * Unit test of the {@link StandardDialectResolver} class.
  * 
  * @author Bryan Turner
  */
-public class StandardDatabaseMetaDataDialectResolverTest extends BaseUnitTestCase {
+public class StandardDialectResolverTest extends BaseUnitTestCase {
 
 	@Test
 	public void testResolveDialectInternalForSQLServer2000() 
@@ -131,15 +132,13 @@ public class StandardDatabaseMetaDataDialectResolverTest extends BaseUnitTestCas
 	}
 
 	private static void runDialectTest(
-			String productName, int majorVersion, int minorVersion,
-			Class<? extends Dialect> expectedDialect) throws SQLException {
-		DatabaseMetaData metaData = mock( DatabaseMetaData.class );
-		when( metaData.getDatabaseProductName() ).thenReturn( productName );
-		when( metaData.getDatabaseMajorVersion() ).thenReturn( majorVersion );
-		when( metaData.getDatabaseMinorVersion() ).thenReturn( minorVersion );
+			String productName,
+			int majorVersion,
+			int minorVersion,
+			Class<? extends Dialect> expectedDialect) {
+		TestingDialectResolutionInfo info = TestingDialectResolutionInfo.forDatabaseInfo( productName, majorVersion, minorVersion );
 
-		Dialect dialect = new StandardDatabaseMetaDataDialectResolver( StandardDatabaseInfoDialectResolver.INSTANCE )
-				.resolveDialectInternal( metaData );
+		Dialect dialect = StandardDialectResolver.INSTANCE.resolveDialect( info );
 
 		StringBuilder builder = new StringBuilder( productName ).append( " " )
 				.append( majorVersion );

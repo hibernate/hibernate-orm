@@ -23,15 +23,23 @@
  */
 package org.hibernate.engine.jdbc.dialect.spi;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.service.Service;
+
 /**
- * Deprecated
+ * Contract for determining the {@link Dialect} to use based on information about the database / driver.
  *
- * @deprecated Deprecated in favor of {@link DatabaseMetaDataDialectResolver} to account for resolving by name versus
- * by DatabaseMetaData
- *
- * @see DatabaseMetaDataDialectResolver
- * @see DatabaseInfoDialectResolver
+ * @author Tomoto Shimizu Washio
+ * @author Steve Ebersole
  */
-@Deprecated
-public interface DialectResolver extends DatabaseMetaDataDialectResolver {
+public interface DialectResolver extends Service {
+	/**
+	 * Determine the {@link Dialect} to use based on the given information.  Implementations are expected to return
+	 * the {@link Dialect} instance to use, or {@code null} if the they did not locate a match.
+	 *
+	 * @param info Access to the information about the database/driver needed to perform the resolution
+	 *
+	 * @return The dialect to use, or null.
+	 */
+	public Dialect resolveDialect(DialectResolutionInfo info);
 }

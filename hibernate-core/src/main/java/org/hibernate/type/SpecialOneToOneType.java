@@ -115,8 +115,10 @@ public class SpecialOneToOneType extends OneToOneType {
 	public Serializable disassemble(Object value, SessionImplementor session, Object owner)
 	throws HibernateException {
 
-		if ( isNotEmbedded(session) ) {
-			return getIdentifierType(session).disassemble(value, session, owner);
+		if ( isNotEmbedded( session ) || getIdentifierType( session ).getReturnedClass().isInstance( value ) ) {
+			// The id may not be fully resolved in some situations.  See HHH-7513 for one of them (re-attaching a
+			// mutable natural id uses a database snapshot and hydration does not resolve associations).
+			return getIdentifierType( session ).disassemble( value, session, owner );
 		}
 		
 		if (value==null) {

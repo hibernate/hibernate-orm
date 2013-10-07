@@ -598,7 +598,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param factory The mappings...
 	 * @return The identifier type
 	 */
-	Type getIdentifierType(Mapping factory) {
+	public Type getIdentifierType(Mapping factory) {
 		return factory.getIdentifierType( getAssociatedEntityName() );
 	}
 
@@ -608,7 +608,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param session The originating session
 	 * @return The identifier type
 	 */
-	Type getIdentifierType(SessionImplementor session) {
+	public Type getIdentifierType(SessionImplementor session) {
 		return getIdentifierType( session.getFactory() );
 	}
 

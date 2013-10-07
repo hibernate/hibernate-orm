@@ -185,7 +185,6 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 	}
 	
 	@Test
-	@FailureExpected(jiraKey = "HHH-7513")
 	public void testReattachementUnmodifiedInstance() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -197,16 +196,19 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 		b.assA = a;
 		a.assB.add( b );
 		session.getTransaction().commit();
-		session.close();
+		session.clear();
 
-		session = openSession();
 		session.beginTransaction();
 		session.buildLockRequest(LockOptions.NONE).lock(b); // HHH-7513 failure during reattachment
 		session.delete(b.assA);
 		session.delete(b);
 		
 		session.getTransaction().commit();
-		session.close();
+		session.clear();
+		
+		// true if the re-attachment worked
+		assertEquals( session.createQuery( "FROM A" ).list().size(), 0 );
+		assertEquals( session.createQuery( "FROM B" ).list().size(), 0 );
 	}
 
 }

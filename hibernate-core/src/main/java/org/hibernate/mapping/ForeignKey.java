@@ -133,7 +133,7 @@ public class ForeignKey extends Constraint {
 		if ( dialect.supportsIfExistsBeforeConstraintName() ) {
 			buf.append( "if exists " );
 		}
-		buf.append( getName() );
+		buf.append( dialect.quote( getName() ) );
 		if ( dialect.supportsIfExistsAfterConstraintName() ) {
 			buf.append( " if exists" );
 		}

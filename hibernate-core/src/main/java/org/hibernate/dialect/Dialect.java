@@ -1881,7 +1881,7 @@ public abstract class Dialect implements ConversionContext {
 		StringBuilder res = new StringBuilder( 30 );
 
 		res.append( " add constraint " )
-				.append( constraintName )
+				.append( quote( constraintName ) )
 				.append( " foreign key (" )
 				.append( StringHelper.join( ", ", foreignKey ) )
 				.append( ") references " )

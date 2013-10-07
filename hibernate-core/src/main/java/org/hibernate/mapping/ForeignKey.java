@@ -130,7 +130,7 @@ public class ForeignKey extends Constraint {
 		return "alter table " + 
 			getTable().getQualifiedName(dialect, defaultCatalog, defaultSchema) + 
 			dialect.getDropForeignKeyString() + 
-			getName();
+			dialect.quote( getName() );
 	}
 
 	public boolean isCascadeDeleteEnabled() {

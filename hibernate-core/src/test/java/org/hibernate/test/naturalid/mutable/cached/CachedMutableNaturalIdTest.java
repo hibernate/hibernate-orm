@@ -23,21 +23,19 @@
  */
 package org.hibernate.test.naturalid.mutable.cached;
 
-import java.io.Serializable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
-import org.junit.Test;
+import java.io.Serializable;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * Tests of mutable natural ids stored in second level cache
@@ -185,7 +183,6 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 	}
 	
 	@Test
-	@FailureExpected(jiraKey = "HHH-7513")
 	public void testReattachementUnmodifiedInstance() {
 		Session session = openSession();
 		session.beginTransaction();
@@ -197,16 +194,19 @@ public abstract class CachedMutableNaturalIdTest extends BaseCoreFunctionalTestC
 		b.assA = a;
 		a.assB.add( b );
 		session.getTransaction().commit();
-		session.close();
+		session.clear();
 
-		session = openSession();
 		session.beginTransaction();
 		session.buildLockRequest(LockOptions.NONE).lock(b); // HHH-7513 failure during reattachment
 		session.delete(b.assA);
 		session.delete(b);
 		
 		session.getTransaction().commit();
-		session.close();
+		session.clear();
+		
+		// true if the re-attachment worked
+		assertEquals( session.createQuery( "FROM A" ).list().size(), 0 );
+		assertEquals( session.createQuery( "FROM B" ).list().size(), 0 );
 	}
 
 }

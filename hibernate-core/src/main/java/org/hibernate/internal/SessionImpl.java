@@ -109,6 +109,8 @@ import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
+import org.hibernate.event.spi.ClearEvent;
+import org.hibernate.event.spi.ClearEventListener;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.DirtyCheckEvent;
@@ -332,6 +334,11 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private void internalClear() {
 		persistenceContext.clear();
 		actionQueue.clear();
+
+		final ClearEvent event = new ClearEvent( this );
+		for ( ClearEventListener listener : listeners( EventType.CLEAR ) ) {
+			listener.onClear( event );
+		}
 	}
 
 	public long getTimestamp() {

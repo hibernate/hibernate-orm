@@ -55,6 +55,7 @@ import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 
 import static org.hibernate.event.spi.EventType.AUTO_FLUSH;
+import static org.hibernate.event.spi.EventType.CLEAR;
 import static org.hibernate.event.spi.EventType.DELETE;
 import static org.hibernate.event.spi.EventType.DIRTY_CHECK;
 import static org.hibernate.event.spi.EventType.EVICT;
@@ -223,6 +224,11 @@ public class EventListenerRegistryImpl implements EventListenerRegistry {
 		prepareListeners(
 				EVICT,
 				new DefaultEvictEventListener(),
+				workMap
+		);
+
+		prepareListeners(
+				CLEAR,
 				workMap
 		);
 

@@ -27,26 +27,28 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
-import org.jboss.logging.Logger;
 
 /**
  * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
@@ -59,23 +61,165 @@ import org.jboss.logging.Logger;
  */
 public class DriverManagerConnectionProviderImpl
 		implements ConnectionProvider, Configurable, Stoppable, ServiceRegistryAwareService {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, DriverManagerConnectionProviderImpl.class.getName() );
 
-	private String url;
-	private Properties connectionProps;
-	private Integer isolation;
-	private int poolSize;
-	private boolean autocommit;
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
 
-	//Access guarded by synchronization on the pool instance
-	private final ArrayList<Connection> pool = new ArrayList<Connection>();
-	private final AtomicInteger checkedOut = new AtomicInteger();
+	// in TimeUnit.SECONDS
+	public static final String VALIDATION_INTERVAL = "hibernate.connection.pool_validation_interval";
 
-	private boolean stopped;
+	private boolean active = true;
+
+	private ConcurrentLinkedQueue<Connection> connections = new ConcurrentLinkedQueue<Connection>();
+	private ConnectionCreator connectionCreator;
+	private ScheduledExecutorService executorService;
+
+
+
+	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private transient ServiceRegistryImplementor serviceRegistry;
-	
-	private Driver driver;
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
+	}
+
+	@Override
+	public void configure(Map configurationValues) {
+		log.usingHibernateBuiltInConnectionPool();
+
+		connectionCreator = buildCreator( configurationValues );
+
+		// todo : consider adding a min-pool-size option too
+
+		final int maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
+		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
+
+		log.hibernateConnectionPoolSize( maxSize );
+
+		executorService = Executors.newSingleThreadScheduledExecutor();
+		executorService.scheduleWithFixedDelay(
+				new Runnable() {
+					@Override
+					public void run() {
+						int size = connections.size();
+						if ( size > maxSize ) {
+							int sizeToBeRemoved = size - maxSize;
+							for ( int i = 0; i < sizeToBeRemoved; i++ ) {
+								connections.poll();
+							}
+						}
+					}
+				},
+				validationInterval,
+				validationInterval,
+				TimeUnit.SECONDS
+		);
+	}
+
+	private ConnectionCreator buildCreator(Map configurationValues) {
+		final ConnectionCreatorBuilder connectionCreatorBuilder = new ConnectionCreatorBuilder();
+
+		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName ) );
+
+		final String url = (String) configurationValues.get( AvailableSettings.URL );
+		if ( url == null ) {
+			final String msg = log.jdbcUrlNotSpecified( AvailableSettings.URL );
+			log.error( msg );
+			throw new HibernateException( msg );
+		}
+		connectionCreatorBuilder.setUrl( url );
+
+		log.usingDriver( driverClassName, url );
+
+		final Properties connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
+
+		// if debug level is enabled, then log the password, otherwise mask it
+		if ( log.isDebugEnabled() ) {
+			log.connectionProperties( connectionProps );
+		}
+		else {
+			log.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
+		}
+		connectionCreatorBuilder.setConnectionProps( connectionProps );
+
+		final Boolean autoCommit = ConfigurationHelper.getBooleanWrapper( AvailableSettings.AUTOCOMMIT, configurationValues, null );
+		if ( autoCommit != null ) {
+			log.autoCommitMode( autoCommit );
+		}
+		connectionCreatorBuilder.setAutoCommit( autoCommit );
+
+		final Integer isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
+		if ( isolation != null ) {
+			log.jdbcIsolationLevel( Environment.isolationLevelToString( isolation ) );
+		}
+		connectionCreatorBuilder.setIsolation( isolation );
+
+		return connectionCreatorBuilder.build();
+	}
+
+	private Driver loadDriverIfPossible(String driverClassName) {
+		if ( driverClassName == null ) {
+			log.debug( "No driver class specified" );
+			return null;
+		}
+
+		if ( serviceRegistry != null ) {
+			final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+			final Class<Driver> driverClass = classLoaderService.classForName( driverClassName );
+			try {
+				return driverClass.newInstance();
+			}
+			catch ( Exception e ) {
+				throw new ServiceException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e );
+			}
+		}
+
+		try {
+			return (Driver) Class.forName( driverClassName ).newInstance();
+		}
+		catch ( Exception e1 ) {
+			try{
+				return (Driver) ReflectHelper.classForName( driverClassName ).newInstance();
+			}
+			catch ( Exception e2 ) {
+				throw new ServiceException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e2 );
+			}
+		}
+	}
+
+
+	// use the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		if ( !active ) {
+			throw new HibernateException( "Connection pool is no longer active" );
+		}
+
+		Connection connection;
+		if ( (connection = connections.poll()) == null ) {
+			connection = connectionCreator.createConnection();
+		}
+
+		return connection;
+	}
+
+	@Override
+	public void closeConnection(Connection conn) throws SQLException {
+		if (conn == null) {
+			return;
+		}
+
+		this.connections.offer( conn );
+	}
+
+
+	@Override
+	public boolean supportsAggressiveRelease() {
+		return false;
+	}
 
 	@Override
 	public boolean isUnwrappableAs(Class unwrapType) {
@@ -95,188 +239,163 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
-	@Override
-	public void configure(Map configurationValues) {
-		LOG.usingHibernateBuiltInConnectionPool();
 
-		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
-		if ( driverClassName == null ) {
-			LOG.jdbcDriverNotSpecified( AvailableSettings.DRIVER );
-		}
-		else if ( serviceRegistry != null ) {
-			try {
-				driver = (Driver) serviceRegistry.getService(
-						ClassLoaderService.class ).classForName( driverClassName )
-						.newInstance();
-			}
-			catch ( Exception e ) {
-				throw new ClassLoadingException(
-						"Specified JDBC Driver " + driverClassName
-						+ " could not be loaded", e
-				);
-			}
-		}
-		// guard dog, mostly for making test pass
-		else {
-			try {
-				// trying via forName() first to be as close to DriverManager's semantics
-				driver = (Driver) Class.forName( driverClassName ).newInstance();
-			}
-			catch ( Exception e1 ) {
-				try{
-					driver = (Driver) ReflectHelper.classForName( driverClassName ).newInstance();
-				}
-				catch ( Exception e2 ) {
-					throw new HibernateException( "Specified JDBC Driver " + driverClassName + " could not be loaded", e2 );
-				}
-			}
-		}
-
-		// default pool size 20
-		poolSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
-		LOG.hibernateConnectionPoolSize( poolSize );
-
-		autocommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
-		LOG.autoCommitMode( autocommit );
-
-		isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
-		if ( isolation != null ) {
-			LOG.jdbcIsolationLevel( Environment.isolationLevelToString( isolation ) );
-		}
-
-		url = (String) configurationValues.get( AvailableSettings.URL );
-		if ( url == null ) {
-			final String msg = LOG.jdbcUrlNotSpecified( AvailableSettings.URL );
-			LOG.error( msg );
-			throw new HibernateException( msg );
-		}
-
-		connectionProps = ConnectionProviderInitiator.getConnectionProperties( configurationValues );
-
-		LOG.usingDriver( driverClassName, url );
-		// if debug level is enabled, then log the password, otherwise mask it
-		if ( LOG.isDebugEnabled() ) {
-			LOG.connectionProperties( connectionProps );
-		}
-		else {
-			LOG.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
-		}
-	}
+	// destroy the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public void stop() {
-		LOG.cleaningUpConnectionPool( url );
+		if ( !active ) {
+			return;
+		}
 
-		synchronized ( pool ) {
-			for ( Connection connection : pool ) {
-				try {
-					connection.close();
-				}
-				catch (SQLException sqle) {
-					LOG.unableToClosePooledConnection( sqle );
-				}
+		log.cleaningUpConnectionPool( connectionCreator.getUrl() );
+
+		active = false;
+
+		if ( executorService != null ) {
+			executorService.shutdown();
+		}
+		executorService = null;
+
+		for ( Connection connection : connections ) {
+			try {
+				connection.close();
 			}
-			pool.clear();
-		}
-		stopped = true;
-	}
-
-	@Override
-	public Connection getConnection() throws SQLException {
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		if ( traceEnabled ) {
-			LOG.tracev( "Total checked-out connections: {0}", checkedOut.intValue() );
-		}
-
-		// essentially, if we have available connections in the pool, use one...
-		synchronized (pool) {
-			if ( !pool.isEmpty() ) {
-				final int last = pool.size() - 1;
-				if ( traceEnabled ) {
-					LOG.tracev( "Using pooled JDBC connection, pool size: {0}", last );
-				}
-				final Connection pooled = pool.remove( last );
-				if ( isolation != null ) {
-					pooled.setTransactionIsolation( isolation );
-				}
-				if ( pooled.getAutoCommit() != autocommit ) {
-					pooled.setAutoCommit( autocommit );
-				}
-				checkedOut.incrementAndGet();
-				return pooled;
+			catch (SQLException e) {
+				log.unableToClosePooledConnection( e );
 			}
 		}
-
-		// otherwise we open a new connection...
-		final boolean debugEnabled = LOG.isDebugEnabled();
-		if ( debugEnabled ) {
-			LOG.debug( "Opening new JDBC connection" );
-		}
-		
-		final Connection conn;
-		if ( driver != null ) {
-			// If a Driver is available, completely circumvent
-			// DriverManager#getConnection.  It attempts to double check
-			// ClassLoaders before using a Driver.  This does not work well in
-			// OSGi environments without wonky workarounds.
-			conn = driver.connect( url, connectionProps );
-		}
-		else {
-			// If no Driver, fall back on the original method.
-			conn = DriverManager.getConnection( url, connectionProps );
-		}
-		
-		if ( isolation != null ) {
-			conn.setTransactionIsolation( isolation );
-		}
-		if ( conn.getAutoCommit() != autocommit ) {
-			conn.setAutoCommit( autocommit );
-		}
-
-		if ( debugEnabled ) {
-			LOG.debugf( "Created connection to: %s, Isolation Level: %s", url, conn.getTransactionIsolation() );
-		}
-
-		checkedOut.incrementAndGet();
-		return conn;
 	}
 
-	@Override
-	public void closeConnection(Connection conn) throws SQLException {
-		checkedOut.decrementAndGet();
-
-		final boolean traceEnabled = LOG.isTraceEnabled();
-		// add to the pool if the max size is not yet reached.
-		synchronized ( pool ) {
-			final int currentSize = pool.size();
-			if ( currentSize < poolSize ) {
-				if ( traceEnabled ) {
-					LOG.tracev( "Returning connection to pool, pool size: {0}", ( currentSize + 1 ) );
-				}
-				pool.add( conn );
-				return;
-			}
-		}
-
-		LOG.debug( "Closing JDBC connection" );
-		conn.close();
-	}
 
 	@Override
 	protected void finalize() throws Throwable {
-		if ( !stopped ) {
+		if ( active ) {
 			stop();
 		}
 		super.finalize();
 	}
 
-	@Override
-	public boolean supportsAggressiveRelease() {
-		return false;
+
+	// ConnectionCreator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	protected static interface ConnectionCreator {
+		public String getUrl();
+		public Connection createConnection() throws SQLException;
 	}
 
-	@Override
-	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
+	protected static class ConnectionCreatorBuilder {
+		private Driver driver;
+
+		private String url;
+		private Properties connectionProps;
+
+		private Boolean autoCommit;
+		private Integer isolation;
+
+		public void setDriver(Driver driver) {
+			this.driver = driver;
+		}
+
+		public void setUrl(String url) {
+			this.url = url;
+		}
+
+		public void setConnectionProps(Properties connectionProps) {
+			this.connectionProps = connectionProps;
+		}
+
+		public void setAutoCommit(Boolean autoCommit) {
+			this.autoCommit = autoCommit;
+		}
+
+		public void setIsolation(Integer isolation) {
+			this.isolation = isolation;
+		}
+
+		public ConnectionCreator build() {
+			if ( driver == null ) {
+				return new DriverManagerConnectionCreator( url, connectionProps, autoCommit, isolation );
+			}
+			else {
+				return new DriverConnectionCreator( driver, url, connectionProps, autoCommit, isolation );
+			}
+		}
 	}
+
+	protected abstract static class BasicConnectionCreator implements ConnectionCreator {
+		private final String url;
+		private final Properties connectionProps;
+
+		private final Boolean autocommit;
+		private final Integer isolation;
+
+		public BasicConnectionCreator(
+				String url,
+				Properties connectionProps,
+				Boolean autocommit,
+				Integer isolation) {
+			this.url = url;
+			this.connectionProps = connectionProps;
+			this.autocommit = autocommit;
+			this.isolation = isolation;
+		}
+
+		@Override
+		public String getUrl() {
+			return url;
+		}
+
+		@Override
+		public Connection createConnection() throws SQLException {
+			final Connection conn = makeConnection( url, connectionProps );
+
+			if ( isolation != null ) {
+				conn.setTransactionIsolation( isolation );
+			}
+
+			if ( autocommit != null && conn.getAutoCommit() != autocommit ) {
+				conn.setAutoCommit( autocommit );
+			}
+
+			return conn;
+		}
+
+		protected abstract Connection makeConnection(String url, Properties connectionProps) throws SQLException;
+	}
+
+	protected static class DriverConnectionCreator extends BasicConnectionCreator {
+		private final Driver driver;
+
+		public DriverConnectionCreator(
+				Driver driver,
+				String url,
+				Properties connectionProps,
+				Boolean autocommit,
+				Integer isolation) {
+			super( url, connectionProps, autocommit, isolation );
+			this.driver = driver;
+		}
+
+		@Override
+		protected Connection makeConnection(String url, Properties connectionProps) throws SQLException {
+			return driver.connect( url, connectionProps );
+		}
+	}
+
+	protected static class DriverManagerConnectionCreator extends BasicConnectionCreator {
+		public DriverManagerConnectionCreator(
+				String url,
+				Properties connectionProps,
+				Boolean autocommit,
+				Integer isolation) {
+			super( url, connectionProps, autocommit, isolation );
+		}
+
+		@Override
+		protected Connection makeConnection(String url, Properties connectionProps) throws SQLException {
+			return DriverManager.getConnection( url, connectionProps );
+		}
+	}
+
 }

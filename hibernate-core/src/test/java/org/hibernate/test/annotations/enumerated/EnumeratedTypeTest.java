@@ -76,6 +76,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.close();
+
 		session = openSession();
 		session.getTransaction().begin();
 
@@ -105,6 +106,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.close();
+
 		session = openSession();
 		session.getTransaction().begin();
 
@@ -133,6 +135,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.close();
+
 		session = openSession();
 		session.getTransaction().begin();
 
@@ -162,6 +165,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.close();
+
 		session = openSession();
 		session.getTransaction().begin();
 
@@ -191,6 +195,7 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
 
 		session.getTransaction().commit();
 		session.close();
+
 		session = openSession();
 		session.getTransaction().begin();
 
@@ -369,7 +374,9 @@ public class EnumeratedTypeTest extends BaseCoreFunctionalTestCase {
         assertEquals( resultList.size(), 1 );
         assertEquals( resultList.get(0).getTrimmed(), Trimmed.A );
 
-        s.getTransaction().rollback();
+		statement.execute( "delete from EntityEnum" );
+
+        s.getTransaction().commit();
         s.close();
 	}
 

@@ -144,6 +144,30 @@ public final class ConfigurationHelper {
 	}
 
 	/**
+	 * Get the config value as a boolean (default of false)
+	 *
+	 * @param name The config setting name.
+	 * @param values The map of config values
+	 *
+	 * @return The value.
+	 */
+	public static Boolean getBooleanWrapper(String name, Map values, Boolean defaultValue) {
+		Object value = values.get( name );
+		if ( value == null ) {
+			return defaultValue;
+		}
+		if ( Boolean.class.isInstance( value ) ) {
+			return (Boolean) value;
+		}
+		if ( String.class.isInstance( value ) ) {
+			return Boolean.valueOf( (String) value );
+		}
+		throw new ConfigurationException(
+				"Could not determine how to handle configuration value [name=" + name + ", value=" + value + "] as boolean"
+		);
+	}
+
+	/**
 	 * Get the config value as an int
 	 *
 	 * @param name The config setting name.
@@ -196,6 +220,23 @@ public final class ConfigurationHelper {
 		throw new ConfigurationException(
 				"Could not determine how to handle configuration value [name=" + name +
 						", value=" + value + "(" + value.getClass().getName() + ")] as Integer"
+		);
+	}
+
+	public static long getLong(String name, Map values, int defaultValue) {
+		Object value = values.get( name );
+		if ( value == null ) {
+			return defaultValue;
+		}
+		if ( Long.class.isInstance( value ) ) {
+			return (Long) value;
+		}
+		if ( String.class.isInstance( value ) ) {
+			return Long.parseLong( (String) value );
+		}
+		throw new ConfigurationException(
+				"Could not determine how to handle configuration value [name=" + name +
+						", value=" + value + "(" + value.getClass().getName() + ")] as long"
 		);
 	}
 

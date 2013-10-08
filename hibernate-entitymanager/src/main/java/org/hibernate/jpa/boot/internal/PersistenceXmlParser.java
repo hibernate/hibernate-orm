@@ -108,7 +108,7 @@ public class PersistenceXmlParser {
 	}
 
 	private List<ParsedPersistenceXmlDescriptor> parsePersistenceXml(URL xmlUrl, Map integration) {
-		LOG.tracef( "Attempting to parse persistence.xml file : %s" + xmlUrl.toExternalForm() );
+		LOG.tracef( "Attempting to parse persistence.xml file : %s", xmlUrl.toExternalForm() );
 
 		final Document doc = loadUrl( xmlUrl );
 		final Element top = doc.getDocumentElement();

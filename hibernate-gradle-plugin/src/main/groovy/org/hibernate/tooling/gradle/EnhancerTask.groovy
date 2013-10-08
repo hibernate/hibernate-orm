@@ -145,7 +145,7 @@ public class EnhancerTask extends DefaultTask implements EnhancementContext {
     }
 
     public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-        return false;
+        return true;
     }
 
     public CtField[] order(CtField[] fields) {

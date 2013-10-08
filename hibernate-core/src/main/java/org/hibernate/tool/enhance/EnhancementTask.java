@@ -188,7 +188,7 @@ public class EnhancementTask extends Task implements EnhancementContext {
 
 	@Override
 	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-		return false;
+		return true;
 	}
 
 	@Override

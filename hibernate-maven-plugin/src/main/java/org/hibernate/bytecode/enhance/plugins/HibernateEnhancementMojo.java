@@ -226,7 +226,7 @@ public class HibernateEnhancementMojo extends AbstractMojo implements Enhancemen
 
 	@Override
 	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-		return false;
+		return true;
 	}
 
 	@Override

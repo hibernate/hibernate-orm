@@ -133,7 +133,7 @@ public interface Query {
 	public ScrollableResults scroll(ScrollMode scrollMode) throws HibernateException;
 	/**
 	 * Return the query results as a <tt>List</tt>. If the query contains
-	 * multiple results pre row, the results are returned in an instance
+	 * multiple results per row, the results are returned in an instance
 	 * of <tt>Object[]</tt>.
 	 *
 	 * @return the result list

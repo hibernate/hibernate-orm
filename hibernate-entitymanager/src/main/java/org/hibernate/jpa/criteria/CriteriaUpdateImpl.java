@@ -142,12 +142,12 @@ public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> 
 		jpaql.append( " set " );
 		boolean first = true;
 		for ( Assignment assignment : assignments ) {
-			jpaql.append( assignment.attributePath.render( renderingContext ) )
-					.append( " = " )
-					.append( assignment.value.render( renderingContext ) );
 			if ( ! first ) {
 				jpaql.append( ", " );
 			}
+			jpaql.append( assignment.attributePath.render( renderingContext ) )
+					.append( " = " )
+					.append( assignment.value.render( renderingContext ) );
 			first = false;
 		}
 	}

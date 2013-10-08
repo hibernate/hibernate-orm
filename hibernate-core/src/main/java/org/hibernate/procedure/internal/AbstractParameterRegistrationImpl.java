@@ -32,15 +32,15 @@ import java.util.Date;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.procedure.ParameterBind;
 import org.hibernate.procedure.ParameterMisuseException;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarTimeType;
 import org.hibernate.type.CalendarType;
-import org.hibernate.type.DateType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;
 
@@ -105,6 +105,9 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 			Type hibernateType) {
 		this( procedureCall, null, name, mode, type, hibernateType );
 	}
+
+
+	// full constructors ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private AbstractParameterRegistrationImpl(
 			ProcedureCallImpl procedureCall,
@@ -222,10 +225,6 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 
 	@Override
 	public void prepare(CallableStatement statement, int startIndex) throws SQLException {
-		if ( mode == ParameterMode.REF_CURSOR ) {
-			throw new NotYetImplementedException( "Support for REF_CURSOR parameters not yet supported" );
-		}
-
 		// initially set up the Type we will use for binding as the explicit type.
 		Type typeToUse = hibernateType;
 		int[] sqlTypesToUse = sqlTypes;
@@ -303,7 +302,7 @@ public abstract class AbstractParameterRegistrationImpl<T> implements ParameterR
 			else {
 				session().getFactory().getServiceRegistry()
 						.getService( RefCursorSupport.class )
-						.registerRefCursorParameter( statement, getPosition() );
+						.registerRefCursorParameter( statement, startIndex );
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.procedure.internal.ParameterStrategy;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;

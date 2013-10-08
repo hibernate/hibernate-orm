@@ -21,51 +21,28 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure.internal;
+package org.hibernate.procedure.spi;
 
 import java.sql.CallableStatement;
 import java.sql.SQLException;
+import java.util.List;
 
-import org.hibernate.procedure.ParameterRegistration;
-import org.hibernate.type.Type;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * Additional internal contract for ParameterRegistration
- *
  * @author Steve Ebersole
  */
-public interface ParameterRegistrationImplementor<T> extends ParameterRegistration<T> {
-	/**
-	 * Prepare for execution.
-	 *
-	 * @param statement The statement about to be executed
-	 * @param i The parameter index for this registration (used for positional)
-	 *
-	 * @throws SQLException Indicates a problem accessing the statement object
-	 */
-	public void prepare(CallableStatement statement, int i) throws SQLException;
+public interface CallableStatementSupport {
+	public String renderCallableStatement(
+			String name,
+			ParameterStrategy parameterStrategy,
+			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			SessionImplementor session);
 
-	/**
-	 * Access to the Hibernate type for this parameter registration
-	 *
-	 * @return The Hibernate Type
-	 */
-	public Type getHibernateType();
-
-	/**
-	 * Access to the SQL type(s) for this parameter
-	 *
-	 * @return The SQL types (JDBC type codes)
-	 */
-	public int[] getSqlTypes();
-
-	/**
-	 * Extract value from the statement after execution (used for OUT/INOUT parameters).
-	 *
-	 * @param statement The callable statement
-	 *
-	 * @return The extracted value
-	 */
-	public T extract(CallableStatement statement);
-
+	public void registerParameters(
+			String procedureName,
+			CallableStatement statement,
+			ParameterStrategy parameterStrategy,
+			List<ParameterRegistrationImplementor<?>> parameterRegistrations,
+			SessionImplementor session);
 }

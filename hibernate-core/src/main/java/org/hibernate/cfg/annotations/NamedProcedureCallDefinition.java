@@ -40,7 +40,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.internal.ParameterStrategy;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.procedure.internal.Util;
 

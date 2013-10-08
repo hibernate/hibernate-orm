@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.procedure.internal;
+package org.hibernate.procedure.spi;
 
 /**
  * The style/strategy of parameter registration used in a particular procedure call definition.

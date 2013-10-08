@@ -29,6 +29,7 @@ import java.sql.ResultSet;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.result.Output;
 import org.hibernate.result.internal.OutputsImpl;
 

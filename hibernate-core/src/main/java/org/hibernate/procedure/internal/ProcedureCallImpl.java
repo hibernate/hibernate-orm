@@ -56,6 +56,8 @@ import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureCallMemento;
 import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;
 
@@ -393,32 +395,19 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		//		both: (1) add the `? = ` part and also (2) register a REFCURSOR parameter for DBs (Oracle, PGSQL) that
 		//		need it.
 
-		final StringBuilder buffer = new StringBuilder().append( "{call " )
-				.append( procedureName )
-				.append( "(" );
-		String sep = "";
-		for ( ParameterRegistrationImplementor parameter : registeredParameters ) {
-			if ( parameter == null ) {
-				throw new QueryException( "Registered stored procedure parameters had gaps" );
-			}
-			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				buffer.append( sep ).append( "?" );
-				sep = ",";
-			}
-			else {
-				for ( int i = 0; i < parameter.getSqlTypes().length; i++ ) {
-					buffer.append( sep ).append( "?" );
-					sep = ",";
-				}
-			}
-		}
-		buffer.append( ")}" );
+		final String call = session().getFactory().getDialect().getCallableStatementSupport().renderCallableStatement(
+				procedureName,
+				parameterStrategy,
+				registeredParameters,
+				session()
+		);
 
 		try {
 			final CallableStatement statement = (CallableStatement) getSession().getTransactionCoordinator()
 					.getJdbcCoordinator()
 					.getStatementPreparer()
-					.prepareStatement( buffer.toString(), true );
+					.prepareStatement( call, true );
+
 
 			// prepare parameters
 			int i = 1;
@@ -443,7 +432,6 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 			);
 		}
 	}
-
 
 	@Override
 	public Type[] getReturnTypes() throws HibernateException {

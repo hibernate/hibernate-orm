@@ -32,6 +32,8 @@ import org.hibernate.service.Service;
  * Contract for JDBC REF_CURSOR support.
  *
  * @author Steve Ebersole
+ *
+ * @since 4.3
  */
 public interface RefCursorSupport extends Service {
 	/**

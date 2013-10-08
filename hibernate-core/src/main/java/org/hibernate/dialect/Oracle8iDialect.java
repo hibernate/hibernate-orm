@@ -45,6 +45,8 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.procedure.internal.StandardCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.JoinFragment;
@@ -611,5 +613,11 @@ public class Oracle8iDialect extends Dialect {
 	public int getMaxAliasLength() {
 		// Oracle's max identifier length is 30, but Hibernate needs to add "uniqueing info" so we account for that,
 		return 20;
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		// Oracle supports returning cursors
+		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
 	}
 }

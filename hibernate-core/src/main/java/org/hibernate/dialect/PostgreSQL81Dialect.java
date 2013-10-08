@@ -43,6 +43,8 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.sql.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
@@ -513,5 +515,23 @@ public class PostgreSQL81Dialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait ";
+	}
+
+	@Override
+	public CallableStatementSupport getCallableStatementSupport() {
+		return PostgresCallableStatementSupport.INSTANCE;
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, int position) throws SQLException {
+		if ( position != 1 ) {
+			throw new UnsupportedOperationException( "PostgreSQL only supports REF_CURSOR parameters as the first parameter" );
+		}
+		return (ResultSet) statement.getObject( 1 );
+	}
+
+	@Override
+	public ResultSet getResultSet(CallableStatement statement, String name) throws SQLException {
+		throw new UnsupportedOperationException( "PostgreSQL only supports accessing REF_CURSOR parameters by name" );
 	}
 }

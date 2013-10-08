@@ -81,6 +81,8 @@ import org.hibernate.internal.util.io.StreamCopier;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.procedure.internal.StandardCallableStatementSupport;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ANSICaseFragment;
 import org.hibernate.sql.ANSIJoinFragment;
@@ -2696,4 +2698,10 @@ public abstract class Dialect implements ConversionContext {
 	public boolean supportsTuplesInSubqueries() {
 		return true;
 	}
+
+	public CallableStatementSupport getCallableStatementSupport() {
+		// most databases do not support returning cursors (ref_cursor)...
+		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
+	}
+
 }

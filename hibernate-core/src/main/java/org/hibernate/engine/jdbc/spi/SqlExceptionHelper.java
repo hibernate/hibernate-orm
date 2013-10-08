@@ -132,9 +132,7 @@ public class SqlExceptionHelper {
 	 * @param sqlException The exception to log
 	 * @param message The message text to use as a preamble.
 	 */
-	public void logExceptions(
-			SQLException sqlException,
-			String message) {
+	public void logExceptions(SQLException sqlException, String message) {
 		if ( LOG.isEnabled( Level.ERROR ) ) {
 			if ( LOG.isDebugEnabled() ) {
 				message = StringHelper.isNotEmpty( message ) ? message : DEFAULT_EXCEPTION_MSG;

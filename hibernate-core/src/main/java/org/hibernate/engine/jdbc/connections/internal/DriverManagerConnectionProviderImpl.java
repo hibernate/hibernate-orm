@@ -25,7 +25,6 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
@@ -55,6 +54,9 @@ import org.hibernate.service.spi.Stoppable;
  * a very rudimentary connection pool.
  * <p/>
  * IMPL NOTE : not intended for production use!
+ * <p/>
+ * Thanks to Oleg Varaksin and his article on object pooling using the {@link java.util.concurrent} package, from
+ * which much of the pooling code here is derived.  See http://ovaraksin.blogspot.com/2013/08/simple-and-lightweight-pool.html
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -64,6 +66,8 @@ public class DriverManagerConnectionProviderImpl
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( DriverManagerConnectionProviderImpl.class );
 
+	public static final String MIN_SIZE = "hibernate.connection.min_pool_size";
+	public static final String INITIAL_SIZE = "hibernate.connection.initial_pool_size";
 	// in TimeUnit.SECONDS
 	public static final String VALIDATION_INTERVAL = "hibernate.connection.pool_validation_interval";
 
@@ -77,7 +81,7 @@ public class DriverManagerConnectionProviderImpl
 
 	// create the pool ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private transient ServiceRegistryImplementor serviceRegistry;
+	private ServiceRegistryImplementor serviceRegistry;
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
@@ -90,23 +94,51 @@ public class DriverManagerConnectionProviderImpl
 
 		connectionCreator = buildCreator( configurationValues );
 
-		// todo : consider adding a min-pool-size option too
-
+		final int minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 1 );
 		final int maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
+		final int initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );
 		final long validationInterval = ConfigurationHelper.getLong( VALIDATION_INTERVAL, configurationValues, 30 );
 
-		log.hibernateConnectionPoolSize( maxSize );
+		log.hibernateConnectionPoolSize( maxSize, minSize );
+
+		log.debugf( "Initializing Connection pool with %s Connections", initialSize );
+		for ( int i = 0; i < initialSize; i++ ) {
+			connections.add( connectionCreator.createConnection() );
+		}
 
 		executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleWithFixedDelay(
 				new Runnable() {
+					private boolean primed = false;
 					@Override
 					public void run() {
 						int size = connections.size();
-						if ( size > maxSize ) {
-							int sizeToBeRemoved = size - maxSize;
-							for ( int i = 0; i < sizeToBeRemoved; i++ ) {
-								connections.poll();
+
+						if ( !primed && size >= minSize ) {
+							// IMPL NOTE : the purpose of primed is to allow the pool to lazily reach its
+							// defined min-size.
+							log.debug( "Connection pool now considered primed; min-size will be maintained" );
+							primed = true;
+						}
+
+						if ( size < minSize && primed ) {
+							int numberToBeAdded = minSize - size;
+							log.debugf( "Adding %s Connections to the pool", numberToBeAdded );
+							for (int i = 0; i < numberToBeAdded; i++) {
+								connections.add( connectionCreator.createConnection() );
+							}
+						}
+						else if ( size > maxSize ) {
+							int numberToBeRemoved = size - maxSize;
+							log.debugf( "Removing %s Connections from the pool", numberToBeRemoved );
+							for ( int i = 0; i < numberToBeRemoved; i++ ) {
+								Connection connection = connections.poll();
+								try {
+									connection.close();
+								}
+								catch (SQLException e) {
+									log.unableToCloseConnection( e );
+								}
 							}
 						}
 					}
@@ -118,7 +150,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private ConnectionCreator buildCreator(Map configurationValues) {
-		final ConnectionCreatorBuilder connectionCreatorBuilder = new ConnectionCreatorBuilder();
+		final ConnectionCreatorBuilder connectionCreatorBuilder = new ConnectionCreatorBuilder( serviceRegistry );
 
 		final String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
 		connectionCreatorBuilder.setDriver( loadDriverIfPossible( driverClassName ) );
@@ -144,10 +176,8 @@ public class DriverManagerConnectionProviderImpl
 		}
 		connectionCreatorBuilder.setConnectionProps( connectionProps );
 
-		final Boolean autoCommit = ConfigurationHelper.getBooleanWrapper( AvailableSettings.AUTOCOMMIT, configurationValues, null );
-		if ( autoCommit != null ) {
-			log.autoCommitMode( autoCommit );
-		}
+		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
+		log.autoCommitMode( autoCommit );
 		connectionCreatorBuilder.setAutoCommit( autoCommit );
 
 		final Integer isolation = ConfigurationHelper.getInteger( AvailableSettings.ISOLATION, configurationValues );
@@ -274,128 +304,6 @@ public class DriverManagerConnectionProviderImpl
 			stop();
 		}
 		super.finalize();
-	}
-
-
-	// ConnectionCreator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	protected static interface ConnectionCreator {
-		public String getUrl();
-		public Connection createConnection() throws SQLException;
-	}
-
-	protected static class ConnectionCreatorBuilder {
-		private Driver driver;
-
-		private String url;
-		private Properties connectionProps;
-
-		private Boolean autoCommit;
-		private Integer isolation;
-
-		public void setDriver(Driver driver) {
-			this.driver = driver;
-		}
-
-		public void setUrl(String url) {
-			this.url = url;
-		}
-
-		public void setConnectionProps(Properties connectionProps) {
-			this.connectionProps = connectionProps;
-		}
-
-		public void setAutoCommit(Boolean autoCommit) {
-			this.autoCommit = autoCommit;
-		}
-
-		public void setIsolation(Integer isolation) {
-			this.isolation = isolation;
-		}
-
-		public ConnectionCreator build() {
-			if ( driver == null ) {
-				return new DriverManagerConnectionCreator( url, connectionProps, autoCommit, isolation );
-			}
-			else {
-				return new DriverConnectionCreator( driver, url, connectionProps, autoCommit, isolation );
-			}
-		}
-	}
-
-	protected abstract static class BasicConnectionCreator implements ConnectionCreator {
-		private final String url;
-		private final Properties connectionProps;
-
-		private final Boolean autocommit;
-		private final Integer isolation;
-
-		public BasicConnectionCreator(
-				String url,
-				Properties connectionProps,
-				Boolean autocommit,
-				Integer isolation) {
-			this.url = url;
-			this.connectionProps = connectionProps;
-			this.autocommit = autocommit;
-			this.isolation = isolation;
-		}
-
-		@Override
-		public String getUrl() {
-			return url;
-		}
-
-		@Override
-		public Connection createConnection() throws SQLException {
-			final Connection conn = makeConnection( url, connectionProps );
-
-			if ( isolation != null ) {
-				conn.setTransactionIsolation( isolation );
-			}
-
-			if ( autocommit != null && conn.getAutoCommit() != autocommit ) {
-				conn.setAutoCommit( autocommit );
-			}
-
-			return conn;
-		}
-
-		protected abstract Connection makeConnection(String url, Properties connectionProps) throws SQLException;
-	}
-
-	protected static class DriverConnectionCreator extends BasicConnectionCreator {
-		private final Driver driver;
-
-		public DriverConnectionCreator(
-				Driver driver,
-				String url,
-				Properties connectionProps,
-				Boolean autocommit,
-				Integer isolation) {
-			super( url, connectionProps, autocommit, isolation );
-			this.driver = driver;
-		}
-
-		@Override
-		protected Connection makeConnection(String url, Properties connectionProps) throws SQLException {
-			return driver.connect( url, connectionProps );
-		}
-	}
-
-	protected static class DriverManagerConnectionCreator extends BasicConnectionCreator {
-		public DriverManagerConnectionCreator(
-				String url,
-				Properties connectionProps,
-				Boolean autocommit,
-				Integer isolation) {
-			super( url, connectionProps, autocommit, isolation );
-		}
-
-		@Override
-		protected Connection makeConnection(String url, Properties connectionProps) throws SQLException {
-			return DriverManager.getConnection( url, connectionProps );
-		}
 	}
 
 }

@@ -233,7 +233,7 @@ public class CacheImpl implements CacheImplementor {
 	public void evictDefaultQueryRegion() {
 		if ( sessionFactory.getSettings().isQueryCacheEnabled() ) {
             if ( LOG.isDebugEnabled() ) {
-                LOG.debugf( "Evicting default query region cache." );
+                LOG.debug( "Evicting default query region cache." );
             }
 			sessionFactory.getQueryCache().clear();
 		}
@@ -264,7 +264,7 @@ public class CacheImpl implements CacheImplementor {
 			return;
 		}
         if ( LOG.isDebugEnabled() ) {
-            LOG.debugf( "Evicting cache of all query regions." );
+            LOG.debug( "Evicting cache of all query regions." );
         }
 		for ( QueryCache queryCache : queryCaches.values() ) {
 			queryCache.clear();

@@ -124,8 +124,7 @@ subprojects { subProject ->
             testCompile( libraries.byteman_install )
             testCompile( libraries.byteman_bmunit )
             
-            testRuntime( libraries.slf4j_api )
-            testRuntime( libraries.slf4j_log4j12 )
+            testRuntime( libraries.log4j )
             testRuntime( libraries.javassist )
             testRuntime( libraries.h2 )
 

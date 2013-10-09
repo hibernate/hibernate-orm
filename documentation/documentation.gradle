@@ -79,7 +79,7 @@ task buildTutorialZip(type: Zip) {
     from 'src/main/docbook/quickstart/tutorials'
     expand(
             version: project.version,
-            slf4j: parent.slf4jVersion,
+            slf4j: "1.7.5",
             junit: parent.junitVersion,
             h2: parent.h2Version
     )

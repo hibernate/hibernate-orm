@@ -27,7 +27,6 @@
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
 
-    slf4jVersion = '1.7.5'
     junitVersion = '4.11'
     h2Version = '1.2.145'
     bytemanVersion = '2.1.2'
@@ -80,9 +79,7 @@ ext {
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
             // logging for testing
-            slf4j_api:      "org.slf4j:slf4j-api:${slf4jVersion}",
-            slf4j_log4j12:  "org.slf4j:slf4j-log4j12:${slf4jVersion}",
-
+            log4j:          "log4j:log4j:1.2.17",
             junit:           "junit:junit:${junitVersion}",
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",

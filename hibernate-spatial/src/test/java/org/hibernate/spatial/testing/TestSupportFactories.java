@@ -23,6 +23,7 @@ package org.hibernate.spatial.testing;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.testing.dialects.h2geodb.GeoDBTestSupport;
+import org.hibernate.spatial.testing.dialects.mysql.MySQL56TestSupport;
 import org.hibernate.spatial.testing.dialects.mysql.MySQLTestSupport;
 import org.hibernate.spatial.testing.dialects.oracle.OracleSDOTestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisTestSupport;
@@ -37,54 +38,57 @@ public class TestSupportFactories {
 
 	private static TestSupportFactories instance = new TestSupportFactories();
 
+	private TestSupportFactories() {
+	}
+
 	public static TestSupportFactories instance() {
 		return instance;
 	}
 
-	private TestSupportFactories() {
+	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
+		String canonicalName = dialect.getClass().getCanonicalName();
+		if ( "org.hibernate.spatial.dialect.postgis.PostgisDialect".equals( canonicalName ) ) {
+			return PostgisTestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals( canonicalName ) ) {
+			return GeoDBTestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals( canonicalName ) ) {
+			return SQLServerTestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect".equals( canonicalName ) ||
+				"org.hibernate.spatial.dialect.mysql.MySQLSpatialInnoDBDialect".equals( canonicalName ) ||
+				"org.hibernate.spatial.dialect.mysql.MySQLSpatial5InnoDBDialect".equals( canonicalName ) ) {
+			return MySQLTestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.mysql.MySQLSpatial56Dialect".equals( canonicalName ) ) {
+			return MySQL56TestSupport.class;
+		}
+		if ( "org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals( canonicalName ) ) {
+			return OracleSDOTestSupport.class;
+		}
+		throw new IllegalArgumentException( "Dialect not known in test suite" );
 	}
-
 
 	public TestSupport getTestSupportFactory(Dialect dialect) throws InstantiationException, IllegalAccessException {
-		if (dialect == null) {
-			throw new IllegalArgumentException("Dialect argument is required.");
+		if ( dialect == null ) {
+			throw new IllegalArgumentException( "Dialect argument is required." );
 		}
-		Class testSupportFactoryClass = getSupportFactoryClass(dialect);
-		return instantiate(testSupportFactoryClass);
+		Class testSupportFactoryClass = getSupportFactoryClass( dialect );
+		return instantiate( testSupportFactoryClass );
 
 	}
 
-	private TestSupport instantiate(Class<? extends TestSupport> testSupportFactoryClass) throws IllegalAccessException, InstantiationException {
+	private TestSupport instantiate(Class<? extends TestSupport> testSupportFactoryClass)
+			throws IllegalAccessException, InstantiationException {
 		return testSupportFactoryClass.newInstance();
-	}
-
-	private ClassLoader getClassLoader() {
-		return this.getClass().getClassLoader();
 	}
 
 	//TODO -- find a better way to initialize and inject the TestSupport class.
 	//This whole class can probably be made obsolete.
 
-	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
-		String canonicalName = dialect.getClass().getCanonicalName();
-		if ("org.hibernate.spatial.dialect.postgis.PostgisDialect".equals(canonicalName)) {
-			return PostgisTestSupport.class;
-		}
-		if ("org.hibernate.spatial.dialect.h2geodb.GeoDBDialect".equals(canonicalName)) {
-			return GeoDBTestSupport.class;
-		}
-		if ("org.hibernate.spatial.dialect.sqlserver.SqlServer2008SpatialDialect".equals(canonicalName)) {
-			return SQLServerTestSupport.class;
-		}
-		if ("org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect".equals(canonicalName) ||
-				"org.hibernate.spatial.dialect.mysql.MySQLSpatialInnoDBDialect".equals(canonicalName) ||
-				"org.hibernate.spatial.dialect.mysql.MySQLSpatial5InnoDBDialect".equals(canonicalName) ) {
-			return MySQLTestSupport.class;
-		}
-		if ("org.hibernate.spatial.dialect.oracle.OracleSpatial10gDialect".equals(canonicalName)) {
-			return OracleSDOTestSupport.class;
-		}
-		throw new IllegalArgumentException("Dialect not known in test suite");
+	private ClassLoader getClassLoader() {
+		return this.getClass().getClassLoader();
 	}
 
 }

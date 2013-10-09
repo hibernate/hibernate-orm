@@ -25,7 +25,7 @@ package org.hibernate.spatial.dialect.mysql;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 9/13/13
  */
-public class MySQLSpatial5InnoDBDialect extends MySQLSpatialInnoDBDialect {
+public class MySQLSpatial5InnoDBDialect extends MySQLSpatial56Dialect {
 
 	public boolean supportsCascadeDelete() {
 		return true;

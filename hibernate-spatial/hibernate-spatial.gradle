@@ -22,8 +22,14 @@
 apply plugin: 'java'
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
+version = '4.0-SNAPSHOT'
+
 dependencies {
-    compile( project( ':hibernate-core' ) )
+
+    compile( project( ':hibernate-core' ) ) {
+        transitive = false
+    }
+
     compile( [group: 'com.vividsolutions', name: 'jts', version: '1.13'] ) {
         transitive = false
     }

@@ -2148,6 +2148,20 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyNameClosure;
 	}
 
+    @Override
+    public int[] resolveAttributeIndexes(Set<String> properties) {
+        Iterator<String> iter = properties.iterator();
+        int[] fields = new int[properties.size()];
+        int counter = 0;
+        while(iter.hasNext()) {
+            Integer index = entityMetamodel.getPropertyIndexOrNull(iter.next());
+            if(index != null)
+                fields[counter++] = index;
+        }
+
+        return fields;
+    }
+
 	protected String[] getSubclassPropertySubclassNameClosure() {
 		return subclassPropertySubclassNameClosure;
 	}

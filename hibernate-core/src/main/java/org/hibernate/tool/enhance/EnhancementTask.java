@@ -23,7 +23,11 @@
  */
 package org.hibernate.tool.enhance;
 
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 import java.io.File;
 import java.io.FileInputStream;
@@ -84,39 +88,69 @@ public class EnhancementTask extends Task implements EnhancementContext {
 					continue;
 				}
 
-				processClassFile( javaClassFile );
+				processClassFile( javaClassFile);
 			}
 		}
+
 	}
 
-	private void processClassFile(File javaClassFile) {
+    /**
+     * Atm only process files annotated with either @Entity or @Embeddable
+     * @param javaClassFile
+     */
+    private void processClassFile(File javaClassFile) {
 		try {
 			final CtClass ctClass = classPool.makeClass( new FileInputStream( javaClassFile ) );
-			if ( ! shouldInclude( ctClass ) ) {
-				return;
-			}
+            if(this.isEntityClass(ctClass))
+                processEntityClassFile(javaClassFile, ctClass);
+            else if(this.isCompositeClass(ctClass))
+                processCompositeClassFile(javaClassFile, ctClass);
 
-			final byte[] enhancedBytecode;
-			try {
-				enhancedBytecode = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
-			}
-			catch (Exception e) {
-				log( "Unable to enhance class [" + ctClass.getName() + "]", e, Project.MSG_WARN );
-				return;
-			}
+        }
+        catch (IOException e) {
+            throw new BuildException(
+                    String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e );
+        }
+    }
 
+    private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
+        try {
+            byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
+            if(result != null)
+                writeEnhancedClass(javaClassFile, result);
+        }
+        catch (Exception e) {
+            log( "Unable to enhance class [" + ctClass.getName() + "]", e, Project.MSG_WARN );
+            return;
+        }
+    }
+
+    private void processCompositeClassFile(File javaClassFile, CtClass ctClass) {
+        try {
+            byte[] result = enhancer.enhanceComposite(ctClass.getName(), ctClass.toBytecode());
+            if(result != null)
+                writeEnhancedClass(javaClassFile, result);
+        }
+        catch (Exception e) {
+            log( "Unable to enhance class [" + ctClass.getName() + "]", e, Project.MSG_WARN );
+            return;
+        }
+    }
+
+    private void writeEnhancedClass(File javaClassFile, byte[] result) {
+        try {
 			if ( javaClassFile.delete() ) {
-				if ( ! javaClassFile.createNewFile() ) {
-					log( "Unable to recreate class file [" + ctClass.getName() + "]", Project.MSG_INFO );
-				}
-			}
+                    if ( ! javaClassFile.createNewFile() ) {
+                        log( "Unable to recreate class file [" + javaClassFile.getName() + "]", Project.MSG_INFO );
+                    }
+            }
 			else {
-				log( "Unable to delete class file [" + ctClass.getName() + "]", Project.MSG_INFO );
+				log( "Unable to delete class file [" + javaClassFile.getName() + "]", Project.MSG_INFO );
 			}
 
 			FileOutputStream outputStream = new FileOutputStream( javaClassFile, false );
 			try {
-				outputStream.write( enhancedBytecode );
+				outputStream.write( result);
 				outputStream.flush();
 			}
 			finally {
@@ -126,26 +160,17 @@ public class EnhancementTask extends Task implements EnhancementContext {
 				catch ( IOException ignore) {
 				}
 			}
-		}
-		catch (FileNotFoundException ignore) {
-			// should not ever happen because of explicit checks
-		}
-		catch (IOException e) {
-			throw new BuildException(
-					String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ),
-					e
-			);
-		}
-	}
-
-	private boolean shouldInclude(CtClass ctClass) {
-		// we currently only handle entity enhancement
-		return ctClass.hasAnnotation( Entity.class );
-	}
-
+        }
+        catch (FileNotFoundException ignore) {
+            // should not ever happen because of explicit checks
+        }
+        catch (IOException e) {
+            throw new BuildException(
+                    String.format( "Error processing included file [%s]", javaClassFile.getAbsolutePath() ), e );
+        }
+    }
 
 	// EnhancementContext impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	@Override
 	public ClassLoader getLoadingClassLoader() {
 		return getClass().getClassLoader();
@@ -153,18 +178,17 @@ public class EnhancementTask extends Task implements EnhancementContext {
 
 	@Override
 	public boolean isEntityClass(CtClass classDescriptor) {
-		// currently we only call enhance on the classes with @Entity, so here we always return true
-		return true;
-	}
+        return classDescriptor.hasAnnotation(Entity.class);
+    }
 
 	@Override
 	public boolean isCompositeClass(CtClass classDescriptor) {
-		return false;
+        return classDescriptor.hasAnnotation(Embeddable.class);
 	}
 
 	@Override
 	public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -182,6 +206,18 @@ public class EnhancementTask extends Task implements EnhancementContext {
 		// current check is to look for @Transient
 		return ! ctField.hasAnnotation( Transient.class );
 	}
+
+    @Override
+    public boolean isMappedCollection(CtField field) {
+        try {
+            return (field.getAnnotation(OneToMany.class) != null ||
+                    field.getAnnotation(ManyToMany.class) != null ||
+                    field.getAnnotation(ElementCollection.class) != null);
+        }
+        catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
 
 	@Override
 	public CtField[] order(CtField[] persistentFields) {

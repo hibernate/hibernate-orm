@@ -32,7 +32,10 @@ import org.gradle.api.tasks.TaskAction
 import org.hibernate.bytecode.enhance.spi.EnhancementContext
 import org.hibernate.bytecode.enhance.spi.Enhancer
 
+import javax.persistence.ElementCollection
 import javax.persistence.Entity
+import javax.persistence.ManyToMany
+import javax.persistence.OneToMany
 import javax.persistence.Transient
 
 /**
@@ -142,12 +145,23 @@ public class EnhancerTask extends DefaultTask implements EnhancementContext {
     }
 
     public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-        return false;
+        return true;
     }
 
     public CtField[] order(CtField[] fields) {
         // TODO: load ordering from configuration.
         return fields;
+    }
+
+    public boolean isMappedCollection(CtField field) {
+        try {
+            return (field.getAnnotation(OneToMany.class) != null ||
+                    field.getAnnotation(ManyToMany.class) != null ||
+                    field.getAnnotation(ElementCollection.class) != null);
+        }
+        catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public boolean isPersistentField(CtField ctField) {

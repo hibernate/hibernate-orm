@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -693,4 +694,9 @@ public class CustomPersister implements EntityPersister {
 	public Iterable<AttributeDefinition> getAttributes() {
 		throw new NotYetImplementedException();
 	}
+
+    @Override
+    public int[] resolveAttributeIndexes(Set<String> attributes) {
+        return null;
+    }
 }

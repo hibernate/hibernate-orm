@@ -510,6 +510,11 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 			//TODO: if we support multiple fetch groups, we would need
 			//      to clone the set of lazy properties!
 			FieldInterceptionHelper.injectFieldInterceptor( entity, getEntityName(), lazyProps, session );
+
+            //also clear the fields that are marked as dirty in the dirtyness tracker
+            if(entity instanceof org.hibernate.engine.spi.SelfDirtinessTracker) {
+                ((org.hibernate.engine.spi.SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
+            }
 		}
 	}
 

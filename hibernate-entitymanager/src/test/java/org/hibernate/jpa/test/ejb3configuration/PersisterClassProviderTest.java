@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
@@ -611,8 +612,12 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public int[] resolveAttributeIndexes(Set<String> properties) {
+			return new int[0];
+		}
+
+		@Override
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
@@ -623,12 +628,12 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public EntityIdentifierDefinition getEntityKeyDefinition() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 
 		@Override
 		public Iterable<AttributeDefinition> getAttributes() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
+			return null;
 		}
 	}
 

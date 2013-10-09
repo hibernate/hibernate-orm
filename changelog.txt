@@ -5,7 +5,94 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
-Changes in version 4.3.0.Beta4 (2013.05.29)
+Changes in version 4.3.0.Beta5 (2013.10.09)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/14250
+
+** Technical task
+    * [HHH-7841] - Introduce LoadPlan
+    * [HHH-8276] - Integrate LoadPlans into UniqueEntityLoader (PoC)
+    * [HHH-8354] - New dirty-checking options based on bytecode enhancement
+
+** Bug
+    * [HHH-1835] - mysql dialect doesn't contain standard deviation/std() function
+    * [HHH-3812] - Documentation says bags are Lists in Java, but are not
+    * [HHH-4118] - Hibernate ignores invalid values for hibernate.hbm2ddl.auto
+    * [HHH-5744] - Return value check missing for ResultSet.next method
+    * [HHH-5818] - Malformed exception message
+    * [HHH-6255] - SchemaExport quote foreignkey names not correct
+    * [HHH-6576] - NPE in HibernateUtil in case there is no default configuration
+    * [HHH-7513] - PropertyAccessException while reattachement: could not get a field value by reflection getter
+    * [HHH-7689] - Error executing batch should abort rest of batch for "cleanliness" sake
+    * [HHH-8328] - Typo in Query.list Javadoc
+    * [HHH-8394] - Wrong processing of package-info.java on Windows
+    * [HHH-8432] - Wrong bindings of named parameters in IN clause
+    * [HHH-8434] - CriteriaUpdate doesn't separate multiple assignments in rendered string
+    * [HHH-8500] - Interbase does not have a boolean type
+    * [HHH-8502] - EnversIntegrator#disintegrate needs to check config for null
+    * [HHH-8509] - malformed LOG.tracef() throws exception
+    * [HHH-8514] - EntityManager#createQuery(CriteriaQuery) should throw IAE rather than ISE
+    * [HHH-8515] - EntityManager#createStoredProcedureQuery(	String, String...) should throw IAE if result set mapping name(s) do not exist
+    * [HHH-8516] - EnumeratedTypeTest.testTrimmedEnum fails on oracle databases
+    * [HHH-8517] - ResultSet#getDate includes time in oracle12c JDBC
+    * [HHH-8518] - Validate EMF#addNamedQuery transfers all query settings
+    * [HHH-8522] - CompositeIdTypeBindingTest.testCompositeTypeBinding fails on sybase157
+    * [HHH-8523] - Incorrect parameter binding for Calendar and TemporalType
+    * [HHH-8530] - Align JPA "positional parameter" handling in javax.persistence.Parameter impl
+    * [HHH-8532] - ManagedType#getAttribute(String) should throw IAE rather than return null
+    * [HHH-8533] - Add tests of JPA Metamodel handling for MappedSuperclass and mixed @Id/@IdClass declaration
+    * [HHH-8537] - @UniqueConstraint naming non-existent column leads to NPE
+    * [HHH-8539] - @Column#table naming primary table fails
+    * [HHH-8540] - Throw ISE on attempts to create EntityManager using any form of createEntityManager accepting SynchronizationType if RESOURCE_LOCAL
+    * [HHH-8541] - EntityManager#getLockMode should technically throw TransactionRequiredException if transaction is not active
+    * [HHH-8542] - javax.persistence.Query#setLockMode should throw ISE if not a SELECT JPQL or Criteria query
+    * [HHH-8543] - Complete org.hibernate.ejb.HibernatePersistence deprecation
+    * [HHH-8548] - HHH-3047 causes regressions
+    * [HHH-8549] - JPQL TREAT keyword handling is currently case sensitive
+    * [HHH-8551] - Cannot use with-clause on the RHS of a join
+    * [HHH-8553] - hibernate-osgi needs to support alternative locations for hibernate.cfg.xml
+    * [HHH-8556] - QueryStructure#collectCorrelatedJoins should add correlationRoots implementing Join
+    * [HHH-8561] - hibernate.dialect_resolvers causes failures
+    * [HHH-8563] - javax.persistence.Query#getLockMode should throw ISE in some cases
+    * [HHH-8576] - Query not properly locking non-versioned entities associated with PersistenceContext
+    * [HHH-8578] - Bulk delete cascading into many-to-many join table not properly handling where clause
+    * [HHH-8580] - NPE while deleting items from collection
+    * [HHH-8584] - Prefer returning UNKNOWN from PersistenceUtilHelper
+    * [HHH-8586] - Synchronization beforeCompletion/afterCompletion should check if TransactionCoordinator is closed
+    * [HHH-8593] - EntityManager.refresh should throw EntityNotFoundException if the entity no longer exists in the database
+
+** Improvement
+    * [HHH-2155] - mysql dialect should not generate automatically index for foreign key
+    * [HHH-4577] - 2L query cache: Low performance of flush and commit due many unnecessary (pre)invalidate calls on UpdateTimestampsCache
+    * [HHH-7130] - Evicting query regions is not logged
+    * [HHH-7150] - evictAll() method is missing in SessionFactory getCache()
+    * [HHH-8453] - Investigate improving DriverManager-based connection pooling
+    * [HHH-8476] - Bulk delete doesn't cascade delete on join table
+    * [HHH-8503] - invoke determineDialect instead of constructDialect when hibernate.dialect is blank
+    * [HHH-8504] - resolve proper dialect for mysql5 when determine by connection metadata
+    * [HHH-8521] - LockMode should be checked on query execution, not during call to setLockMode
+    * [HHH-8560] - Add (trace/debug) logging of SQL ResultSet mapping info
+
+** New Feature
+    * [HHH-4910] - automatic L2 collection cache eviction when an element is added/updated/removed
+    * [HHH-8478] - AttributeConverters need to be applied to JPQL and Criteria queries
+    * [HHH-8495] - Support ilike in Hibernate Envers
+    * [HHH-8510] - Add a Logger which is able to monitor the creation of new Sessions at DEBUG/TRACE level
+    * [HHH-8520] - Apply "global quote identifier" to HBM processing
+    * [HHH-8529] - AttributeConverter not applied to @ElementCollection
+    * [HHH-8577] - ClearListener: allow to listen for clear events
+
+** Task
+    * [HHH-8445] - Implement REF_CURSOR support for StoredProcedureQuery
+    * [HHH-8498] - Full ConstructorResult handling
+    * [HHH-8525] - Hook in XML overriding of ConstructorResult for sql-result-set-mapping
+    * [HHH-8594] - Update to "final" version of jboss-transaction-api_1.2_spec once it is "final"
+    * [HHH-8595] - Update Jandex to 1.1.0.Final
+    * [HHH-8601] - remove commons-logging and slf4j, using log4j as the backend of jboss-logging for testing
+
+
+
+Changes in version 4.3.0.Beta4 (2013.09.12)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/13652
 

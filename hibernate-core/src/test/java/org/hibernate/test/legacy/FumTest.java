@@ -20,7 +20,6 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.junit.Test;
-
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -32,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MckoiDialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -347,7 +347,13 @@ public class FumTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		fum = (Fum) s.load( Fum.class, fumKey("fum"), LockMode.UPGRADE );
+		if ( getDialect() instanceof AbstractHANADialect ){
+			// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1' if there are more than one tables/views/subqueries in the FROM clause
+			fum = (Fum) s.load( Fum.class, fumKey("fum") );
+		} else {
+			fum = (Fum) s.load( Fum.class, fumKey("fum"), LockMode.UPGRADE );
+		}
+
 		assertTrue( "load by composite key", fum!=null );
 
 		Fum fum2 = new Fum( fumKey("fi") );

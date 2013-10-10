@@ -2023,6 +2023,15 @@ public abstract class Dialect implements ConversionContext {
 		throw new UnsupportedOperationException( "No add column syntax supported by " + getClass().getName() );
 	}
 
+	/**
+	 * The syntax for the suffix used to add a column to a table (optional).
+	 *
+	 * @return The suffix "add column" fragment.
+	 */
+	public String getAddColumnSuffixString() {
+		return "";
+	}
+
 	public String getDropForeignKeyString() {
 		return " drop constraint ";
 	}

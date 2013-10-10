@@ -26,6 +26,7 @@
  */
 package org.hibernate.test.resulttransformer;
 
+import java.sql.ResultSet;
 import java.util.List;
 
 import org.junit.Test;
@@ -34,6 +35,7 @@ import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.transform.ResultTransformer;
@@ -93,7 +95,14 @@ public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 			}
 		});
 		ScrollableResults sr = q.scroll();
-		sr.first();
+		// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
+		// does not support java.sql.ResultSet.first()
+		if (getDialect() instanceof AbstractHANADialect) {
+			sr.next();
+		} else {
+			sr.first();
+		}
+
 		Object[] row = sr.get();
 		assertEquals(1, row.length);
 		Object obj = row[0];

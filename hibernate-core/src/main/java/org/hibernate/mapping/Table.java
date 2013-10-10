@@ -438,6 +438,8 @@ public class Table implements RelationalModel, Serializable {
 					alter.append( dialect.getColumnComment( columnComment ) );
 				}
 
+				alter.append( dialect.getAddColumnSuffixString() );
+
 				results.add( alter.toString() );
 			}
 

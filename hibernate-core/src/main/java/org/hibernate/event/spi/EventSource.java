@@ -71,7 +71,7 @@ public interface EventSource extends SessionImplementor, Session {
 	/**
 	 * Cascade refresh an entity instance
 	 */
-	public void refresh(Object object, Map refreshedAlready) throws HibernateException;
+	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException;
 	/**
 	 * Cascade delete an entity instance
 	 */

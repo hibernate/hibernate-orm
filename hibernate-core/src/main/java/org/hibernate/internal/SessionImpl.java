@@ -1135,8 +1135,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		fireRefresh( new RefreshEvent( entityName, object, lockOptions, this ) );
 	}
 
-	public void refresh(Object object, Map refreshedAlready) throws HibernateException {
-		fireRefresh( refreshedAlready, new RefreshEvent( object, this ) );
+	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException {
+		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
 
 	private void fireRefresh(RefreshEvent event) {

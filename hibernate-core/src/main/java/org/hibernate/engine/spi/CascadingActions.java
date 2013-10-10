@@ -155,7 +155,7 @@ public class CascadingActions {
 				boolean isCascadeDeleteEnabled)
 				throws HibernateException {
 			LOG.tracev( "Cascading to refresh: {0}", entityName );
-			session.refresh( child, (Map) anything );
+			session.refresh( entityName, child, (Map) anything );
 		}
 
 		@Override

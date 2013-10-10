@@ -22,6 +22,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
@@ -358,13 +359,17 @@ public class MultiTableTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
-		t = s.beginTransaction();
-		multi = (Multi) s.load(Top.class, mid, LockMode.UPGRADE);
-		simp = (Top) s.load(Top.class, sid);
-		s.lock(simp, LockMode.UPGRADE_NOWAIT);
-		t.commit();
-		s.close();
+		// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1'
+		// if there are more than one tables/views/subqueries in the FROM clause
+		if ( !( getDialect() instanceof AbstractHANADialect ) ) {
+			s = openSession();
+			t = s.beginTransaction();
+			multi = (Multi) s.load( Top.class, mid, LockMode.UPGRADE );
+			simp = (Top) s.load( Top.class, sid );
+			s.lock( simp, LockMode.UPGRADE_NOWAIT );
+			t.commit();
+			s.close();
+		}
 
 		s = openSession();
 		t = s.beginTransaction();
@@ -476,13 +481,17 @@ public class MultiTableTest extends LegacyTestCase {
 		t.commit();
 		s.close();
 
-		s = openSession();
-		t = s.beginTransaction();
-		multi = (Multi) s.load( Top.class, multiId, LockMode.UPGRADE );
-		simp = (Top) s.load( Top.class, simpId );
-		s.lock(simp, LockMode.UPGRADE_NOWAIT);
-		t.commit();
-		s.close();
+		// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1'
+		// if there are more than one tables/views/subqueries in the FROM clause
+		if ( !( getDialect() instanceof AbstractHANADialect ) ) {
+			s = openSession();
+			t = s.beginTransaction();
+			multi = (Multi) s.load( Top.class, multiId, LockMode.UPGRADE );
+			simp = (Top) s.load( Top.class, simpId );
+			s.lock( simp, LockMode.UPGRADE_NOWAIT );
+			t.commit();
+			s.close();
+		}
 
 		s = openSession();
 		t = s.beginTransaction();

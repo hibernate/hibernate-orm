@@ -20,6 +20,7 @@ import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.test.sql.hand.Dimension;
@@ -796,6 +797,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "On HANA, this returns an clob for the text column which doesn't get mapped to a String")
 	@Test
 	public void testTextTypeInSQLQuery() {
 		Session s = openSession();
@@ -816,6 +818,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "On HANA, this returns a blob for the image column which doesn't get mapped to a byte[]")
 	@Test
 	public void testImageTypeInSQLQuery() {
 		Session s = openSession();

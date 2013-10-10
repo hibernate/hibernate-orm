@@ -31,6 +31,7 @@ import java.sql.Types;
 import org.junit.Test;
 
 import org.hibernate.Session;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLMyISAMDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
@@ -57,8 +58,8 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(
-			value = MySQLMyISAMDialect.class,
-			comment = "MySQL (MyISAM) does not support FK violation checking"
+			value = { MySQLMyISAMDialect.class, AbstractHANADialect.class },
+			comment = "MySQL (MyISAM) / Hana do not support FK violation checking"
 	)
 	public void testIntegrityViolation() throws Exception {
 		final Session session = openSession();

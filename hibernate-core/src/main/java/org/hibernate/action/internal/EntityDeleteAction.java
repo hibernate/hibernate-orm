@@ -43,7 +43,7 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * The action for performing an entity deletion.
  */
-public final class EntityDeleteAction extends EntityAction {
+public class EntityDeleteAction extends EntityAction {
 	private final Object version;
 	private final boolean isCascadeDeleteEnabled;
 	private final Object[] state;

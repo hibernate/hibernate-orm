@@ -26,13 +26,12 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.TransientObjectException;
 import org.hibernate.action.internal.EntityDeleteAction;
+import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
@@ -52,6 +51,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -159,7 +159,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			return;
 		}
 
-		deleteEntity( source, entity, entityEntry, event.isCascadeDeleteEnabled(), persister, transientEntities );
+		deleteEntity( source, entity, entityEntry, event.isCascadeDeleteEnabled(),
+				event.isOrphanRemovalBeforeUpdates(), persister, transientEntities );
 
 		if ( source.getFactory().getSettings().isIdentifierRollbackEnabled() ) {
 			persister.resetIdentifier( entity, id, version, source );
@@ -227,6 +228,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			final Object entity,
 			final EntityEntry entityEntry,
 			final boolean isCascadeDeleteEnabled,
+			final boolean isOrphanRemovalBeforeUpdates,
 			final EntityPersister persister,
 			final Set transientEntities) {
 
@@ -268,18 +270,35 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), persister, true );
 		persistenceContext.getNullifiableEntityKeys().add( key );
 
-		// Ensures that containing deletions happen before sub-deletions
-		session.getActionQueue().addAction(
-				new EntityDeleteAction(
-						entityEntry.getId(),
-						deletedState,
-						version,
-						entity,
-						persister,
-						isCascadeDeleteEnabled,
-						session
-				)
-		);
+		if (isOrphanRemovalBeforeUpdates) {
+			// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+			// ordering is improved.
+			session.getActionQueue().addAction(
+					new OrphanRemovalAction(
+							entityEntry.getId(),
+							deletedState,
+							version,
+							entity,
+							persister,
+							isCascadeDeleteEnabled,
+							session
+					)
+			);
+		}
+		else {
+			// Ensures that containing deletions happen before sub-deletions
+			session.getActionQueue().addAction(
+					new EntityDeleteAction(
+							entityEntry.getId(),
+							deletedState,
+							version,
+							entity,
+							persister,
+							isCascadeDeleteEnabled,
+							session
+					)
+			);
+		}
 
 		cascadeAfterDelete( session, persister, entity, transientEntities );
 

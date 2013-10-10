@@ -957,6 +957,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities) throws HibernateException {
 		fireDelete( new DeleteEvent( entityName, object, isCascadeDeleteEnabled, this ), transientEntities );
 	}
+	
+	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+	// ordering is improved.
+	public void removeOrphanBeforeUpdates(String entityName, Object child) {
+		fireDelete( new DeleteEvent( entityName, child, false, true, this ) );
+	}
 
 	private void fireDelete(DeleteEvent event) {
 		errorIfClosed();

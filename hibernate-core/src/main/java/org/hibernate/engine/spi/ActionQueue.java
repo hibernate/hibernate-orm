@@ -50,6 +50,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
@@ -93,6 +94,10 @@ public class ActionQueue {
 	private final ExecutableList<CollectionUpdateAction> collectionUpdates;
 	private final ExecutableList<QueuedOperationCollectionAction> collectionQueuedOps;
 	private final ExecutableList<CollectionRemoveAction> collectionRemovals;
+	
+	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+	// ordering is improved.
+	private final ExecutableList<OrphanRemovalAction> orphanRemovals;
 
 	// an immutable array holding all 7 ExecutionLists in execution order
 	private final List<ExecutableList<?>> executableLists;
@@ -118,9 +123,12 @@ public class ActionQueue {
 		collectionRemovals = new ExecutableList<CollectionRemoveAction>();
 		collectionUpdates = new ExecutableList<CollectionUpdateAction>();
 		collectionQueuedOps = new ExecutableList<QueuedOperationCollectionAction>();
+		
+		orphanRemovals = new ExecutableList<OrphanRemovalAction>();
 
 		// Important: these lists are in execution order
 		List<ExecutableList<?>> tmp = new ArrayList<ExecutableList<?>>( 7 );
+		tmp.add( orphanRemovals );
 		tmp.add( insertions );
 		tmp.add( updates );
 		// do before actions are handled in the other collection queues
@@ -209,6 +217,15 @@ public class ActionQueue {
 	 */
 	public void addAction(EntityDeleteAction action) {
 		deletions.add( action );
+	}
+
+	/**
+	 * Adds an orphan removal action
+	 *
+	 * @param action The action representing the orphan removal
+	 */
+	public void addAction(OrphanRemovalAction action) {
+		orphanRemovals.add( action );
 	}
 
 	/**
@@ -369,7 +386,7 @@ public class ActionQueue {
 	 * @return {@code true} if insertions or deletions are currently queued; {@code false} otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return !insertions.isEmpty() || !unresolvedInsertions.isEmpty() || !deletions.isEmpty();
+		return !insertions.isEmpty() || !unresolvedInsertions.isEmpty() || !deletions.isEmpty() || !orphanRemovals.isEmpty();
 	}
 
 	/**
@@ -492,6 +509,7 @@ public class ActionQueue {
 		return "ActionQueue[insertions=" + insertions
 				+ " updates=" + updates
 				+ " deletions=" + deletions
+				+ " orphanRemovals=" + orphanRemovals
 				+ " collectionCreations=" + collectionCreations
 				+ " collectionRemovals=" + collectionRemovals
 				+ " collectionUpdates=" + collectionUpdates
@@ -513,7 +531,7 @@ public class ActionQueue {
 	}
 
 	public int numberOfDeletions() {
-		return deletions.size();
+		return deletions.size() + orphanRemovals.size();
 	}
 
 	public int numberOfUpdates() {
@@ -574,6 +592,13 @@ public class ActionQueue {
 			EntityDeleteAction action = deletions.get( i );
 			if ( action.getInstance() == rescuedEntity ) {
 				deletions.remove( i );
+				return;
+			}
+		}
+		for ( int i = 0; i < orphanRemovals.size(); i++ ) {
+			EntityDeleteAction action = orphanRemovals.get( i );
+			if ( action.getInstance() == rescuedEntity ) {
+				orphanRemovals.remove( i );
 				return;
 			}
 		}

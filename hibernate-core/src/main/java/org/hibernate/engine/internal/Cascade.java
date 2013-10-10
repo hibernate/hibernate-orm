@@ -29,8 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Stack;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -47,7 +45,11 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
+import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.OneToOneType;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Delegate responsible for, in conjunction with the various
@@ -156,8 +158,8 @@ public final class Cascade {
 			final String propertyName,
 			final Object anything,
 			final boolean isCascadeDeleteEnabled) throws HibernateException {
-
-		if (child!=null) {
+		
+		if ( child != null ) {
 			if ( type.isAssociationType() ) {
 				final AssociationType associationType = (AssociationType) type;
 				if ( cascadeAssociationNow( associationType ) ) {
@@ -175,53 +177,65 @@ public final class Cascade {
 				cascadeComponent( parent, child, (CompositeType) type, propertyName, anything );
 			}
 		}
-		else {
-			// potentially we need to handle orphan deletes for one-to-ones here...
-			if ( isLogicalOneToOne( type ) ) {
-				// We have a physical or logical one-to-one and from previous checks we know we
-				// have a null value.  See if the attribute cascade settings and action-type require
-				// orphan checking
-				if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
-					// value is orphaned if loaded state for this property shows not null
-					// because it is currently null.
-					final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
-					if ( entry != null && entry.getStatus() != Status.SAVING ) {
-						final Object loadedValue;
-						if ( componentPathStack.isEmpty() ) {
-							// association defined on entity
-							loadedValue = entry.getLoadedValue( propertyName );
-						}
-						else {
-							// association defined on component
-							// 		todo : this is currently unsupported because of the fact that
-							//		we do not know the loaded state of this value properly
-							//		and doing so would be very difficult given how components and
-							//		entities are loaded (and how 'loaded state' is put into the
-							//		EntityEntry).  Solutions here are to either:
-							//			1) properly account for components as a 2-phase load construct
-							//			2) just assume the association was just now orphaned and
-							// 				issue the orphan delete.  This would require a special
-							//				set of SQL statements though since we do not know the
-							//				orphaned value, something a delete with a subquery to
-							// 				match the owner.
+		
+		// potentially we need to handle orphan deletes for one-to-ones here...
+		if ( isLogicalOneToOne( type ) ) {
+			// We have a physical or logical one-to-one.  See if the attribute cascade settings and action-type require
+			// orphan checking
+			if ( style.hasOrphanDelete() && action.deleteOrphans() ) {
+				// value is orphaned if loaded state for this property shows not null
+				// because it is currently null.
+				final EntityEntry entry = eventSource.getPersistenceContext().getEntry( parent );
+				if ( entry != null && entry.getStatus() != Status.SAVING ) {
+					final Object loadedValue;
+					if ( componentPathStack.isEmpty() ) {
+						// association defined on entity
+						loadedValue = entry.getLoadedValue( propertyName );
+					}
+					else {
+						// association defined on component
+						// 		todo : this is currently unsupported because of the fact that
+						//		we do not know the loaded state of this value properly
+						//		and doing so would be very difficult given how components and
+						//		entities are loaded (and how 'loaded state' is put into the
+						//		EntityEntry).  Solutions here are to either:
+						//			1) properly account for components as a 2-phase load construct
+						//			2) just assume the association was just now orphaned and
+						// 				issue the orphan delete.  This would require a special
+						//				set of SQL statements though since we do not know the
+						//				orphaned value, something a delete with a subquery to
+						// 				match the owner.
 //							final EntityType entityType = (EntityType) type;
 //							final String getPropertyPath = composePropertyPath( entityType.getPropertyName() );
-							loadedValue = null;
-						}
-						if ( loadedValue != null ) {
-							final EntityEntry valueEntry = eventSource
-									.getPersistenceContext().getEntry( 
-											loadedValue );
-							// Need to check this in case the context has
-							// already been flushed.  See HHH-7829.
-							if ( valueEntry != null ) {
-								final String entityName = valueEntry.getPersister().getEntityName();
-								if ( LOG.isTraceEnabled() ) {
-									final Serializable id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
-									final String description = MessageHelper.infoString( entityName, id );
-									LOG.tracev( "Deleting orphaned entity instance: {0}", description );
-								}
-								eventSource.delete( entityName, loadedValue, false, new HashSet() );
+						loadedValue = null;
+					}
+					
+					// orphaned if the association was nulled (child == null) or receives a new value while the
+					// entity is managed (without first nulling and manually flushing).
+					if ( child == null || ( loadedValue != null && child != loadedValue ) ) {
+						final EntityEntry valueEntry = eventSource
+								.getPersistenceContext().getEntry( 
+										loadedValue );
+						// Need to check this in case the context has
+						// already been flushed.  See HHH-7829.
+						if ( valueEntry != null ) {
+							final String entityName = valueEntry.getPersister().getEntityName();
+							if ( LOG.isTraceEnabled() ) {
+								final Serializable id = valueEntry.getPersister().getIdentifier( loadedValue, eventSource );
+								final String description = MessageHelper.infoString( entityName, id );
+								LOG.tracev( "Deleting orphaned entity instance: {0}", description );
+							}
+							
+							if (type.isAssociationType() && ((AssociationType)type).getForeignKeyDirection().equals(
+											ForeignKeyDirection.FOREIGN_KEY_TO_PARENT )) {
+								// If FK direction is to-parent, we must remove the orphan *before* the queued update(s)
+								// occur.  Otherwise, replacing the association on a managed entity, without manually
+								// nulling and flushing, causes FK constraint violations.
+								eventSource.removeOrphanBeforeUpdates( entityName, loadedValue );
+							}
+							else {
+								// Else, we must delete after the updates.
+								eventSource.delete( entityName, loadedValue, isCascadeDeleteEnabled, new HashSet() );
 							}
 						}
 					}

@@ -32,6 +32,7 @@ import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
 import org.hibernate.dialect.Ingres10Dialect;
@@ -204,6 +205,10 @@ public class StandardDialectResolver implements DialectResolver {
 				default:
 					LOG.unknownOracleVersion( majorVersion );
 			}
+		}
+
+		if ( "HDB".equals( databaseName ) ) {
+			return new HANAColumnStoreDialect();
 		}
 
 		return null;

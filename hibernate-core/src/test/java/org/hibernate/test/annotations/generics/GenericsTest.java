@@ -29,12 +29,16 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard
  */
 public class GenericsTest extends BaseCoreFunctionalTestCase {
+	
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "known bug in HANA: rs.next() returns false for org.hibernate.id.enhanced.SequenceStructure$1.getNextValue() for this test")
 	@Test
 	public void testManyToOneGenerics() throws Exception {
 		Paper white = new Paper();

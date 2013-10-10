@@ -63,18 +63,19 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 /**
  * An abstract base class for HANA dialects. <br/>
  * <a href="http://help.sap.com/hana/html/sqlmain.html">SAP HANA Reference</a> <br/>
- * This dialect is currently configured to <b>not</b> create foreign keys by
- * returning the empty string from {@link #getAddForeignKeyConstraintString}
- * since they currently have caveats compared to other databases. This does not
+ * 
+ * NOTE: This dialect is currently configured to <b>not</b> create foreign keys by
+ * returning the empty string from {@link #getAddForeignKeyConstraintString} since they currently have caveats compared
+ * to other databases. This does not
  * affect using this dialect with your own DDL scripts which use foreign keys.
- *
+ * 
  * @author Andrew Clemons <andrew.clemons@sap.com>
  */
 public abstract class AbstractHANADialect extends Dialect {
 
 	private static class CloseSuppressingReader extends FilterReader {
-		protected CloseSuppressingReader( final Reader in ) {
-			super(in);
+		protected CloseSuppressingReader(final Reader in) {
+			super( in );
 		}
 
 		@Override
@@ -91,56 +92,58 @@ public abstract class AbstractHANADialect extends Dialect {
 	// using non-contexual lob creation and HANA then closes our StringReader.
 	// see test case LobLocatorTest
 
-	private static final ClobTypeDescriptor HANA_CLOB_STREAM_BINDING =
-		new ClobTypeDescriptor() {
-			/** serial version uid. */
-			private static final long serialVersionUID = -379042275442752102L;
+	private static final ClobTypeDescriptor HANA_CLOB_STREAM_BINDING = new ClobTypeDescriptor() {
+		/** serial version uid. */
+		private static final long serialVersionUID = -379042275442752102L;
 
-			@Override
-			public <X> BasicBinder<X> getClobBinder( final JavaTypeDescriptor<X> javaTypeDescriptor ) {
-				return new BasicBinder<X>( javaTypeDescriptor, this ) {
-					@Override
-					protected void doBind( final PreparedStatement st, final X value, final int index, final WrapperOptions options )
-							throws SQLException {
-						final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
-
-						if (value instanceof ClobImplementer) {
-							st.setCharacterStream( index, new CloseSuppressingReader(characterStream.asReader()), characterStream.getLength() );
-						} else {
-							st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-						}
-
-					}
-				};
-			}
-		};
-
-	private static final NClobTypeDescriptor HANA_NCLOB_STREAM_BINDING =
-			new NClobTypeDescriptor() {
-				/** serial version uid. */
-				private static final long serialVersionUID = 5651116091681647859L;
-
+		@Override
+		public <X> BasicBinder<X> getClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-				public <X> BasicBinder<X> getNClobBinder( final JavaTypeDescriptor<X> javaTypeDescriptor ) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind( final PreparedStatement st, final X value, final int index, final WrapperOptions options )
-								throws SQLException {
-							final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class, options );
+				protected void doBind(final PreparedStatement st, final X value, final int index,
+						final WrapperOptions options) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class,
+							options );
 
-							if (value instanceof NClobImplementer) {
-								st.setCharacterStream( index, new CloseSuppressingReader(characterStream.asReader()), characterStream.getLength() );
-							} else {
-								st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-							}
+					if ( value instanceof ClobImplementer ) {
+						st.setCharacterStream( index, new CloseSuppressingReader( characterStream.asReader() ),
+								characterStream.getLength() );
+					}
+					else {
+						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+					}
 
-						}
-					};
 				}
 			};
+		}
+	};
 
-	/**
-	 */
+	private static final NClobTypeDescriptor HANA_NCLOB_STREAM_BINDING = new NClobTypeDescriptor() {
+		/** serial version uid. */
+		private static final long serialVersionUID = 5651116091681647859L;
+
+		@Override
+		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+				@Override
+				protected void doBind(final PreparedStatement st, final X value, final int index,
+						final WrapperOptions options) throws SQLException {
+					final CharacterStream characterStream = javaTypeDescriptor.unwrap( value, CharacterStream.class,
+							options );
+
+					if ( value instanceof NClobImplementer ) {
+						st.setCharacterStream( index, new CloseSuppressingReader( characterStream.asReader() ),
+								characterStream.getLength() );
+					}
+					else {
+						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
+					}
+
+				}
+			};
+		}
+	};
+
 	public AbstractHANADialect() {
 		super();
 
@@ -359,7 +362,6 @@ public abstract class AbstractHANADialect extends Dialect {
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 				}
 
-
 				return null;
 			}
 		};
@@ -372,7 +374,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getAddColumnString() {
-	    return "add (";
+		return "add (";
 	}
 
 	@Override
@@ -386,7 +388,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getCreateSequenceString( final String sequenceName ) {
+	public String getCreateSequenceString(final String sequenceName) {
 		return "create sequence " + sequenceName;
 	}
 
@@ -401,17 +403,17 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getDropSequenceString( final String sequenceName ) {
+	public String getDropSequenceString(final String sequenceName) {
 		return "drop sequence " + sequenceName;
 	}
 
 	@Override
-	public String getForUpdateString( final String aliases ) {
+	public String getForUpdateString(final String aliases) {
 		return getForUpdateString() + " of " + aliases;
 	}
 
 	@Override
-	public String getForUpdateString( final String aliases, final LockOptions lockOptions ) {
+	public String getForUpdateString(final String aliases, final LockOptions lockOptions) {
 		LockMode lockMode = lockOptions.getLockMode();
 		final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
 		while ( itr.hasNext() ) {
@@ -433,13 +435,13 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Deprecated
 	@Override
-	public String getLimitString( final String sql, final boolean hasOffset ) {
+	public String getLimitString(final String sql, final boolean hasOffset) {
 		return new StringBuilder( sql.length() + 20 ).append( sql )
 				.append( hasOffset ? " limit ? offset ?" : " limit ?" ).toString();
 	}
 
 	@Override
-	public String getNotExpression( final String expression ) {
+	public String getNotExpression(final String expression) {
 		return "not (" + expression + ")";
 	}
 
@@ -449,17 +451,17 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String getSelectSequenceNextValString( final String sequenceName ) {
+	public String getSelectSequenceNextValString(final String sequenceName) {
 		return sequenceName + ".nextval";
 	}
 
 	@Override
-	public String getSequenceNextValString( final String sequenceName ) {
+	public String getSequenceNextValString(final String sequenceName) {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + " from dummy";
 	}
 
 	@Override
-	protected SqlTypeDescriptor getSqlTypeDescriptorOverride( final int sqlCode ) {
+	protected SqlTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
 		switch ( sqlCode ) {
 		case Types.BOOLEAN:
 			return BitTypeDescriptor.INSTANCE;
@@ -572,12 +574,11 @@ public abstract class AbstractHANADialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * HANA does support cascade deletes, but since we have overridden the
-	 * foreign key support, this should also be false.
-	 */
 	@Override
 	public boolean supportsCascadeDelete() {
+		// HANA does support cascade deletes, but since we have (temporarily) overridden the foreign key support,
+		// this should also be false.
+		// TODO: Enable once FK support is solidified and getAddForeignKeyConstraintString is corrected.
 		return false;
 	}
 
@@ -673,13 +674,13 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	/**
 	 * Currently disabling foreign key creation when using Hibernate's auto-ddl
-	 * feature. HANA does allow creating foreign keys, but they do not always
+	 * feature. HANA does allow creating foreign keys, but currently they do not always
 	 * behave as expected.
 	 */
 	@Override
-	public String getAddForeignKeyConstraintString( final String constraintName,
-			final String[] foreignKey, final String referencedTable,
-			final String[] primaryKey, final boolean referencesPrimaryKey ) {
+	public String getAddForeignKeyConstraintString(final String constraintName, final String[] foreignKey,
+			final String referencedTable, final String[] primaryKey, final boolean referencesPrimaryKey) {
+		// TODO: Re-evaluate in a later HANA release where, hopefully, this has been solidified.
 		return "";
 	}
 }

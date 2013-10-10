@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.HibernateException;
+import org.hibernate.annotations.common.util.StringHelper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 
@@ -198,15 +199,18 @@ public abstract class Constraint implements RelationalModel, Serializable {
 
 	public String sqlCreateString(Dialect dialect, Mapping p, String defaultCatalog, String defaultSchema) {
 		if ( isGenerated( dialect ) ) {
+			// Certain dialects (ex: HANA) don't support FKs as expected, but other constraints can still be created.
+			// If that's the case, hasAlterTable() will be true, but getAddForeignKeyConstraintString will return
+			// empty string.  Prevent blank "alter table" statements.
 			String constraintString = sqlConstraintString( dialect, getName(), defaultCatalog, defaultSchema );
-			StringBuilder buf = new StringBuilder( "alter table " )
-					.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
-					.append( constraintString );
-			return buf.toString();
+			if ( !StringHelper.isEmpty( constraintString ) ) {
+				StringBuilder buf = new StringBuilder( "alter table " )
+						.append( getTable().getQualifiedName( dialect, defaultCatalog, defaultSchema ) )
+						.append( constraintString );
+				return buf.toString();
+			}
 		}
-		else {
-			return null;
-		}
+		return null;
 	}
 
 	public List getColumns() {

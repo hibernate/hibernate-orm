@@ -27,14 +27,11 @@ package org.hibernate.dialect;
  * An SQL dialect for HANA. <br/>
  * <a href="http://help.sap.com/hana/html/sqlmain.html">SAP HANA Reference</a> <br/>
  * Column tables are created by this dialect when using the auto-ddl feature.
- * This dialect was tested with HANA Rev 67 and HDB JDBC 1.00.67.383230.
- *
+ * 
  * @author Andrew Clemons <andrew.clemons@sap.com>
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
 
-	/**
-	 */
 	public HANAColumnStoreDialect() {
 		super();
 	}
@@ -43,7 +40,4 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	public String getCreateTableString() {
 		return "create column table";
 	}
-
-
-
 }

@@ -208,6 +208,7 @@ public class StandardDialectResolver implements DialectResolver {
 		}
 
 		if ( "HDB".equals( databaseName ) ) {
+			// SAP recommends defaulting to column store.
 			return new HANAColumnStoreDialect();
 		}
 

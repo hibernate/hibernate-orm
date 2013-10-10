@@ -756,13 +756,14 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		else {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setString( "bar", "xyz" ).list();
 		}
-		if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
-				|| getDialect() instanceof MySQLDialect || getDialect() instanceof AbstractHANADialect ) ) {
-			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" )
+		
+		if ( getDialect() instanceof AbstractHANADialect ) {
+			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" )
 					.setLong( "param", 1 ).list();
 		}
-		else if ( getDialect() instanceof AbstractHANADialect ) {
-			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" )
+		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect
+				|| getDialect() instanceof MySQLDialect ) ) {
+			s.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" )
 					.setLong( "param", 1 ).list();
 		}
 

@@ -1,0 +1,315 @@
+apply plugin: 'java'
+apply plugin: 'version-injection'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'maven-publish-auth'
+apply plugin: 'jdocbook'
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.7'
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Define some project settings
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+project.buildDir = 'target'
+project.group = 'org.hibernate' 
+project.version  = '1.4.0-SNAPSHOT'
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Define repostories for the build script
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+buildscript {
+  repositories {
+      mavenCentral()
+      mavenLocal()
+      mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
+  }
+  dependencies {
+      classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
+      classpath 'org.jboss.jdocbook:gradle-jdocbook:1.2.1'
+      classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
+  }
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Define repositories for the artifact (metamodelgen)
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+repositories {
+	mavenCentral()
+	mavenLocal()
+	mavenRepo name: 'jboss-nexus', url: 'https://repository.jboss.org/nexus/content/groups/public'
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Build a map of the dependency artifacts to use. Centralized definition of the versions to use.
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ext {
+    slf4jVersion = '1.7.5'
+    pressgangVersion = '3.0.0'
+    libraries = [
+        // test libraries
+        testng:                    "org.testng:testng:6.1",
+        hibernate:                 "org.hibernate:hibernate-core:3.6.0.Beta1",
+        jpa_api:                   "org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.0.Final",
+	    slf4j_api:                 "org.slf4j:slf4j-api:${slf4jVersion}",
+	    slf4j_log4j:               "org.slf4j:slf4j-log4j12:${slf4jVersion}",
+
+        // jaxb task
+        jaxb:                      "com.sun.xml.bind:jaxb-xjc:2.1.6",
+        jaxb2_basics:              "org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0",
+        jaxb2_ant:                 "org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0",
+
+        // docbook libraries
+        pressgang_xslt:            "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}",
+        pressgang_fonts:           "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}",
+        hibernate_docbook_style:   "org.hibernate:hibernate-jdocbook-style:2.0.1",
+        jboss_docbook_style:       "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
+    ]
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Create configuration for JAXB class generation
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+configurations.create('jaxb')
+configurations.jaxb {
+    description = 'Dependencies for running ant xjc (jaxb class generation)'
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Prepare the different dependencies per configuration
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dependencies {
+	testCompile libraries.testng
+    testCompile libraries.jpa_api
+    testCompile libraries.hibernate
+	testCompile libraries.slf4j_api
+	testCompile libraries.slf4j_log4j
+
+	jaxb        libraries.jaxb
+    jaxb        libraries.jaxb2_basics
+    jaxb        libraries.jaxb2_ant
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// The main Java build - jaxb schema class generation, compilation, test
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+versionInjection {
+    into( 'org.hibernate.jpamodelgen.Version', 'getVersionString' )
+}
+
+sourceSets.main {
+    ext.jaxbTargetDir = file( "${buildDir}/generated-sources" )
+    java.srcDir jaxbTargetDir
+}
+
+sourceSets.main {
+    ext.xsdDir = file( "${rootDir}/src/main/xsd" )
+    resources.srcDir xsdDir
+}
+
+jar {
+	manifest {
+		attributes 'Implementation-Title'     : '${project.name}', 
+		           'Implementation-URL'       : 'http://www.jboss.org',
+		           'Implementation-Version'   : '${project.version}',
+		           'Implementation-Vendor'    : 'JBoss by Red Hat, Inc.',
+		           'Implementation-Vendor-Id' : 'http://www.jboss.org'
+	}
+}
+
+task jaxb {
+    // output directory
+    ext.jaxbTargetDir = file( "${buildDir}/generated-sources" )
+
+    // input schema
+    ext.ormXsd = file( 'src/main/xsd/orm_2_0.xsd')
+    ext.persistenceXsd = file( 'src/main/xsd/persistence_2_0.xsd')
+
+    // configure Gradle up-to-date checking
+    inputs.files( [ormXsd, persistenceXsd] )
+    outputs.dir( jaxbTargetDir )
+
+    // perform actions
+    doLast {
+        jaxbTargetDir.mkdirs()
+
+        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.jaxb.asPath)
+        ant.jaxbTargetDir = jaxbTargetDir
+
+        ant.xjc(
+                destdir: '${jaxbTargetDir}',
+                package: 'org.hibernate.jpamodelgen.xml.jaxb',
+                extension: 'true'
+        ) {
+            schema  (dir:"src/main/xsd", includes:"*.xsd")
+        }
+    }
+}
+compileJava.dependsOn jaxb
+
+test {
+    useTestNG()
+    systemProperty 'sourceBaseDir', 'src/test/java'
+    systemProperty 'outBaseDir', "${buildDir}/classes/test"
+
+    beforeTest { descriptor ->
+       logger.lifecycle("Running " + descriptor)
+    }
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Javadocs
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+final File documentationDir = mkdir( new File( project.buildDir, 'documentation' ) );
+final File javadocDir = mkdir( new File( documentationDir, 'javadocs' ) );
+final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
+task javadocs(type: Javadoc) {
+    source = sourceSets.main.allJava
+    destinationDir = javadocDir
+    maxMemory = '512m'
+    configure( options ) {
+        stylesheetFile = rootProject.file( 'src/main/javadoc/stylesheet.css' )
+        windowTitle = 'Hibernate JPA 2 Metamodel Generator JavaDocs'
+        docTitle = "Hibernate JPA 2 Metamodel Generator JavaDocs ($project.version)"
+        bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+        use = true
+        links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
+    }
+
+    doLast {
+        copy {
+            from rootProject.file( 'src/main/javadoc/images' )
+            into new File( javadocDir, "/images" )
+        }
+    }
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Docbook
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+jdocbook {
+    useRelativeImageUris = false
+
+    format('html_single') {
+        finalName = "index.html"
+        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
+    }
+
+    format('html') {
+        finalName = "index.html"
+        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
+    }
+
+    dependencies {   
+        jdocbookXsl      libraries.pressgang_xslt
+        jdocbookXsl      libraries.pressgang_fonts
+        jdocbookStyles   libraries.hibernate_docbook_style
+        jdocbookStyles   libraries.jboss_docbook_style
+    }
+
+    manual {
+        masterSourceDocumentName = 'master.xml'
+    }
+}
+
+stageStyles_manual.doLast {
+    logger.lifecycle( "Staging images")
+    copy {
+        from project.file( 'src/main/docbook/manual/en-US/images' )
+        into project.file( "${buildDir}/docbook/stage/manual/images" )
+        include '*.png'
+        includeEmptyDirs = false
+    }
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Maven POM generation and partefact ublishing
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            artifact sourcesJar {
+                classifier "sources"
+            }
+
+            pom.withXml {
+                // append additional metadata
+                asNode().children().last() + {
+                    resolveStrategy = Closure.DELEGATE_FIRST
+
+                    inceptionYear '2009'
+                    name 'Hibernate JPA 2 Metamodel Generator'
+                    description 'Annotation Processor to generate JPA 2 static metamodel classes'
+                    url 'http://hibernate.org'
+                    organization {
+                        name 'Hibernate.org'
+                        url 'http://hibernate.org'
+                    }
+                    issueManagement {
+                        system 'jira'
+                        url 'http://opensource.atlassian.com/projects/hibernate/browse/METAGEN'
+                    }
+                    scm {
+                        url 'http://github.com/hibernate/hibernate-metamodelgen'
+                        connection 'scm:git:git://github.com/hibernate/hibernate-metamodelgen.git'
+                        developerConnection 'scm:git:git@github.com:hibernate/hibernate-metamodelgen.git'
+                    }
+                    licenses {
+                        license {
+                            name 'Apache License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id 'hibernate-team'
+                            name 'The Hibernate Development Team'
+                            organization 'Hibernate.org'
+                            organizationUrl 'http://hibernate.org'
+                        }
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                if ( project.version.endsWith( 'SNAPSHOT' ) ) {
+                    name 'jboss-snapshots-repository'
+                    url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+                }
+                else {
+                    name 'jboss-releases-repository'
+                    url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
+                }
+            }
+        }
+
+        generatePomFileForMavenJavaPublication {
+            destination = file("$buildDir/generated-pom.xml")
+        }
+    }
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Artifact deploy
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+task sourcesJar(type: Jar, dependsOn: compileJava) {
+	from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+artifacts {
+	archives sourcesJar
+}
+
+uploadArchives.dependsOn sourcesJar
+
+
+
+

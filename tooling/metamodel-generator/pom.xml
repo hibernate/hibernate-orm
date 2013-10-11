@@ -299,10 +299,10 @@
                 </dependencies>
                 <configuration>
                     <sourceDocumentName>master.xml</sourceDocumentName>
-                    <sourceDirectory>${basedir}/src/main/docbook</sourceDirectory>
+                    <sourceDirectory>${basedir}/src/main/docbook/manual</sourceDirectory>
                     <masterTranslation>en-US</masterTranslation>
                     <imageResource>
-                        <directory>${basedir}/src/main/docbook/en-US/images</directory>
+                        <directory>${basedir}/src/main/docbook/manual/en-US/images</directory>
                     </imageResource>
                     <formats>
                         <format>

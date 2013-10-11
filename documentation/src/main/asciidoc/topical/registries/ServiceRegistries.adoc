@@ -4,23 +4,23 @@ Services and Registries are a new *formalized* concept starting in 4.0, but have
 Hibernate much, much earlier.  This guide aims to describe the purposes of these Services and Registries.  To a
 certain extent we will also look at details of their implementations
 
+
 == What are Services?
 
 Services provide various types of functionality, in a pluggable manner.  Specifically they are implementations
 of certain service contract interfaces. The interface is known as the service role; the implementation class is
-known as the service implementation.
+known as the service implementation.  The pluggability comes from the fact that the service implementation adheres
+to contract defined by the interface of the service role.
 
-NOTE: The interface is known as the service role; the implementation class is known as the service implementation.
+NOTE: All Services are expected to implement the +org.hibernate.service.Service+ "marker" interface.  Hibernate uses
+this internally for some basic type safety; it defines no methods.
 
-The pluggability comes from the fact that the service implementation adheres to contract defined by the interface
-of the service role.
+Let's look at an example to better define what a Service is.  Hibernate needs to be able to access JDBC Connections
+to the database.  The way it obtains and releases these Connections is through the ConnectionProvider service.  The
+service is defined by the interface (service role) +org.hibernate.engine.jdbc.connections.spi.ConnectionProvider+
+which declares methods for obtaining and releasing the Connections.  There are then multiple implementations of that
+service contract, varying in how they actually manage the Connections:
 
-Let's look at an example to better define what a Service is.  Internally Hibernate needs to be able to access
-JDBC Connections to the database.  The way it obtains and releases these Connections is through the
-ConnectionProvider service.  The service is defined by the interface (service role)
-+org.hibernate.engine.jdbc.connections.spi.ConnectionProvider+ which declares methods for obtaining and releasing
-the Connections.  There are then multiple implementations of that service contract, varying in how they actually
-manage the Connections:
 * +org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl+ for using a +javax.sql.DataSource+
 * +org.hibernate.c3p0.internal.C3P0ConnectionProvider+ for using a C3P0 Connection pool
 * etc.
@@ -30,9 +30,12 @@ specific implementations in consuming the service (we will get to producing the 
 registries).  Because of that fact, other ConnectionProvider service implementations could be plugged in.  There is
 nothing revolutionary here; programming to interfaces is a generally accepted good programming practice.
 
+
 == What is a ServiceRegistry?
 
-A ServiceRegistry, at its most basic, hosts and manages Services.
+A ServiceRegistry, at its most basic, hosts and manages Services.  It contract is defined by the
++org.hibernate.service.ServiceRegistry+ interface.
+
 We already gave a basic overview and definition of services.  But services have other interesting characteristics as
 well.  Services have a lifecycle.  They have a scope.  Services might depend on other services.  And as we mentioned
 before, they need to be produced (choose using one implementation over another).  The ServiceRegistry fulfills all
@@ -41,23 +44,103 @@ these needs.
 In a concise definition, the ServiceRegistry acts as a inversion-of-control (IoC) container.
 
 NOTE: Despite some recent revisionist history, Spring did not invent IoC and dependency injection nor were they even
-the first to bring it into Java.  Projects like the JBoss MicroContainer and Apache Avalon pre-date Spring
-by many years.  The concepts in ServiceRegistry are actually very similar to Apache Avalon.
+the first to bring it into Java.  Projects like JBoss MicroContainer and Apache Avalon pre-date Spring
+by many years and each did IoC and dependency injection.  The concepts in ServiceRegistry are actually very similar
+to Apache Avalon.
 
-Why not just use an existing IoC framework?  In a word, weight.  I wanted, no needed, this to be as light-weight as
-possible.  A Service is associated with a ServiceRegistry.  The ServiceRegistry scopes the Service.  The
+Why not just use an existing IoC framework?  First, this had to be as light-weight and as small of a footprint
+as possible.  The initial design also had called for Services to be swappable at runtime, which unfortunately had
+to be removed due to performance problems in the proxy-based solution to swapping (the plan is to investigate
+alternate ways to achieve swap-ability with better performance at a later date).
+
+A Service is associated with a ServiceRegistry.  The ServiceRegistry scopes the Service.  The
 ServiceRegistry manages the lifecycle of the Service.  The ServiceRegistry handles injecting dependencies into
-the Service (actually both a pull and a push/injection approach are supported).
+the Service (actually both a pull and a push/injection approach are supported).  ServiceRegistries are also
+hierarchical, meaning a ServiceRegistry can have a parent ServiceRegistry.  Services in one registry can depend on
+and utilize services in that same registry as well as any parent registries.
 
-ServiceRegistries are also hierarchical, meaning a ServiceRegistry can have a parent ServiceRegistry.  A "child"
-ServiceRegistry can see Services in its parent, but the inverse is not true.  Services can also be registered
-in a child ServiceRegistry that hide or override the Service of the same role from its parent(s).  We'll talk more
-about this last capability when we discuss expanding versus extending.
 
 
 == Types of ServiceRegistries
 
+Currently Hibernate utilizes 3 different ServiceRegistry implementations forming a hierarchy.
+
 === BootstrapServiceRegistry
+
+The root ServiceRegistry is the +org.hibernate.boot.registry.BootstrapServiceRegistry+.  +BootstrapServiceRegistry+
+is a specialization of +org.hibernate.service.ServiceRegistry+.  The +BootstrapServiceRegistry+ interface adds
+no new behavior, it is simply a specialization for the purpose of type safety.  In normal usage, the
++BootstrapServiceRegistry+ has no parent.
+
+This registry holds services that absolutely have to be available for most things to work.  It normally defines 3
+services...
+
+==== ClassLoaderService
+
+This service exposes the capability to interact with ClassLoaders.  However, the manner in which Hibernate (or any
+library) should interact with ClassLoaders varies based on the runtime environment which is hosting the application.
+Application servers, OSGi containers, and other modular class loading systems impose very specific class-loading
+requirements.  This service is provides Hibernate an abstraction from this environmental complexity.  And just as
+importantly, it does so in a single-swappable-component manner.
+
+The specific capabilities exposed on this service include:
+
+* Locating +java.lang.Class+ references by name.  This includes application classes as well as "integration" classes.
+* Locating resources (properties files, xml files, etc) as "classpath resources"
+* Interacting with +java.util.ServiceLoader+
+
+The service role for this service is +org.hibernate.boot.registry.classloading.spi.ClassLoaderService+.
+
+
+==== IntegratorService
+
+Applications, third-party integrators and others all need to integrate with Hibernate which used to require something
+(usually the application) to coordinate registering the pieces of each integration needed on behalf of each integrator.
+The intent of this service is to allow those integrators to be discovered and to have them integrate themselves
+with Hibernate.
+
+This service mainly focuses on the discovery aspect.  It leverages the standard Java +java.util.ServiceLoader+
+capability provided by the +ClassLoaderService+ in order to discover implementations of the
++org.hibernate.integrator.spi.Integrator+ contract.  Integrators would simply define a file named
++_/META-INF/services/org.hibernate.integrator.spi.Integrator_+ and make it available on the classpath.
++java.util.ServiceLoader+ covers the format of this file in detail, but essentially it lists classes by FQN that
+implement the +org.hibernate.integrator.spi.Integrator+ one per line.
+
+NOTE: The notion of +org.hibernate.integrator.spi.Integrator+ will change as we transition to Hibernate version 5.0.
+In fact that transition is already begun in the repository branch housing 5.0 development.
+
+The service role for this service is +org.hibernate.integrator.spi.IntegratorService+.
+
+
+==== StrategySelector
+
+Think of this as the "short naming" service.  Historically to configure Hibernate users would often need to
+give FQN references to internal Hibernate classes.
+
+For example, to tell Hibernate to use JDBC-based transactions we need to tell it to use the
++org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory+ class.  Historically applications would need
+to pass in the FQN name of that class as part of the config:
+
+[source]
+----
+hibernate.transaction.factory_class=org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory
+----
+
+Of course this has caused lots of problems as we refactor internal code and move these classes around into different
+package structures.  Enter the concept of short-naming, using a well defined and well known "short name" for the
+impl class.  For example, this JdbcTransactionFactory is registered under the short name "jdbc", so:
+
+[source]
+----
+hibernate.transaction.factory_class=jdbc
+----
+
+is functionally equivalent to the initial example.  Not only is the second form more concise, it is also upgrade proof.
+
+Applications (and Integrators!) can add to this list of short names.  This can be very powerful 
+
+The service role for this service is +org.hibernate.boot.registry.selector.spi.StrategySelector+.
+
 
 === StandardServiceRegistry
 

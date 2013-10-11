@@ -36,8 +36,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyValueException;
@@ -52,6 +50,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityIdentityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.internal.UnresolvedEntityInsertActions;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
@@ -61,6 +60,7 @@ import org.hibernate.cache.CacheException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * Responsible for maintaining the queue of actions related to events.
@@ -94,6 +94,10 @@ public class ActionQueue {
 	private ArrayList collectionUpdates;
 	private ArrayList collectionQueuedOps;
 	private ArrayList collectionRemovals;
+	
+	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+	// ordering is improved.
+	private ArrayList<OrphanRemovalAction> orphanRemovals;
 
 	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
 	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
@@ -119,6 +123,8 @@ public class ActionQueue {
 		collectionUpdates = new ArrayList( INIT_QUEUE_LIST_SIZE );
 		collectionQueuedOps = new ArrayList( INIT_QUEUE_LIST_SIZE );
 
+		orphanRemovals = new ArrayList<OrphanRemovalAction>( INIT_QUEUE_LIST_SIZE );
+
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 	}
@@ -133,6 +139,8 @@ public class ActionQueue {
 		collectionUpdates.clear();
 		collectionQueuedOps.clear();
 
+		orphanRemovals.clear();
+
 		unresolvedInsertions.clear();
 	}
 
@@ -145,6 +153,11 @@ public class ActionQueue {
 	@SuppressWarnings({ "unchecked" })
 	public void addAction(EntityDeleteAction action) {
 		deletions.add( action );
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	public void addAction(OrphanRemovalAction action) {
+		orphanRemovals.add( action );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -230,6 +243,7 @@ public class ActionQueue {
 	 * @return true, if there are unresolved entity insert actions that depend on
 	 *               non-nullable associations with a transient entity;
 	 *         false, otherwise
+
 	 */
 	public boolean hasUnresolvedEntityInsertActions() {
 		return ! unresolvedInsertions.isEmpty();
@@ -283,6 +297,7 @@ public class ActionQueue {
 					"About to execute actions, but there are unresolved entity insert actions."
 			);
 		}
+		executeActions( orphanRemovals );
 		executeActions( insertions );
 		executeActions( updates );
 		// do before actions are handled in the other collection queues
@@ -338,7 +353,8 @@ public class ActionQueue {
 				areTablesToUpdated( collectionUpdates, tables ) ||
 				areTablesToUpdated( collectionCreations, tables ) ||
 				areTablesToUpdated( collectionQueuedOps, tables ) ||
-				areTablesToUpdated( collectionRemovals, tables );
+				areTablesToUpdated( collectionRemovals, tables ) ||
+				areTablesToUpdated( orphanRemovals, tables );
 	}
 
 	/**
@@ -347,7 +363,7 @@ public class ActionQueue {
 	 * @return True if insertions or deletions are currently queued; false otherwise.
 	 */
 	public boolean areInsertionsOrDeletionsQueued() {
-		return ( insertions.size() > 0 || ! unresolvedInsertions.isEmpty() || deletions.size() > 0 );
+		return ( insertions.size() > 0 || ! unresolvedInsertions.isEmpty() || deletions.size() > 0 || orphanRemovals.size() > 0 );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -411,6 +427,7 @@ public class ActionQueue {
 				.append( "ActionQueue[insertions=" ).append( insertions )
 				.append( " updates=" ).append( updates )
 				.append( " deletions=" ).append( deletions )
+				.append( " orphanRemovals=" ).append( orphanRemovals )
 				.append( " collectionCreations=" ).append( collectionCreations )
 				.append( " collectionRemovals=" ).append( collectionRemovals )
 				.append( " collectionUpdates=" ).append( collectionUpdates )
@@ -433,7 +450,7 @@ public class ActionQueue {
 	}
 
 	public int numberOfDeletions() {
-		return deletions.size();
+		return deletions.size() + orphanRemovals.size();
 	}
 
 	public int numberOfUpdates() {
@@ -510,6 +527,7 @@ public class ActionQueue {
 				insertions.size() > 0 ||
 				! unresolvedInsertions.isEmpty() ||
 				deletions.size() > 0 ||
+				orphanRemovals.size() > 0 ||
 				collectionUpdates.size() > 0 ||
 				collectionQueuedOps.size() > 0 ||
 				collectionRemovals.size() > 0 ||
@@ -521,6 +539,13 @@ public class ActionQueue {
 			EntityDeleteAction action = deletions.get( i );
 			if ( action.getInstance() == rescuedEntity ) {
 				deletions.remove( i );
+				return;
+			}
+		}
+		for ( int i = 0; i < orphanRemovals.size(); i++ ) {
+			EntityDeleteAction action = orphanRemovals.get( i );
+			if ( action.getInstance() == rescuedEntity ) {
+				orphanRemovals.remove( i );
 				return;
 			}
 		}
@@ -552,6 +577,13 @@ public class ActionQueue {
 		oos.writeInt( queueSize );
 		for ( int i = 0; i < queueSize; i++ ) {
 			oos.writeObject( deletions.get( i ) );
+		}
+
+		queueSize = orphanRemovals.size();
+		LOG.tracev( "Starting serialization of [{0}] orphanRemovals entries", queueSize );
+		oos.writeInt( queueSize );
+		for ( int i = 0; i < queueSize; i++ ) {
+			oos.writeObject( orphanRemovals.get( i ) );
 		}
 
 		queueSize = updates.size();
@@ -627,6 +659,15 @@ public class ActionQueue {
 			EntityDeleteAction action = ( EntityDeleteAction ) ois.readObject();
 			action.afterDeserialize( session );
 			rtn.deletions.add( action );
+		}
+
+		queueSize = ois.readInt();
+		LOG.tracev( "Starting deserialization of [{0}] orphanRemoval entries", queueSize );
+		rtn.orphanRemovals = new ArrayList<OrphanRemovalAction>( queueSize );
+		for ( int i = 0; i < queueSize; i++ ) {
+			OrphanRemovalAction action = ( OrphanRemovalAction ) ois.readObject();
+			action.afterDeserialize( session );
+			rtn.orphanRemovals.add( action );
 		}
 
 		queueSize = ois.readInt();

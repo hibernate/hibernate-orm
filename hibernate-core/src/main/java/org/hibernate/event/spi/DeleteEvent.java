@@ -32,6 +32,9 @@ public class DeleteEvent extends AbstractEvent {
 	private Object object;
 	private String entityName;
 	private boolean cascadeDeleteEnabled;
+	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+	// ordering is improved.
+	private boolean orphanRemovalBeforeUpdates;
 
 	/**
 	 * Constructs a new DeleteEvent instance.
@@ -54,10 +57,18 @@ public class DeleteEvent extends AbstractEvent {
 		this.entityName = entityName;
 	}
 
-	public DeleteEvent(String entityName, Object object, boolean isCascadeDeleteEnabled, EventSource source) {
+	public DeleteEvent(String entityName, Object object, boolean cascadeDeleteEnabled, EventSource source) {
 		this(object, source);
 		this.entityName = entityName;
-		cascadeDeleteEnabled = isCascadeDeleteEnabled;
+		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+	}
+
+	public DeleteEvent(String entityName, Object object, boolean cascadeDeleteEnabled,
+			boolean orphanRemovalBeforeUpdates, EventSource source) {
+		this(object, source);
+		this.entityName = entityName;
+		this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+		this.orphanRemovalBeforeUpdates = orphanRemovalBeforeUpdates;
 	}
 
 	/**
@@ -75,6 +86,10 @@ public class DeleteEvent extends AbstractEvent {
 	
 	public boolean isCascadeDeleteEnabled() {
 		return cascadeDeleteEnabled;
+	}
+	
+	public boolean isOrphanRemovalBeforeUpdates() {
+		return orphanRemovalBeforeUpdates;
 	}
 
 }

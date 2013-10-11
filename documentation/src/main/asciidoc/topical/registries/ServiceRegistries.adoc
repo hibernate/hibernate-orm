@@ -1,0 +1,91 @@
+= Services and Registries
+
+Services and Registries are a new *formalized* concept starting in 4.0, but have actually been around in
+Hibernate much, much earlier.  This guide aims to describe the purposes of these Services and Registries.  To a
+certain extent we will also look at details of their implementations
+
+== What are Services?
+
+Services provide various types of functionality, in a pluggable manner.  Specifically they are implementations
+of certain service contract interfaces. The interface is known as the service role; the implementation class is
+known as the service implementation.
+
+NOTE: The interface is known as the service role; the implementation class is known as the service implementation.
+
+The pluggability comes from the fact that the service implementation adheres to contract defined by the interface
+of the service role.
+
+Let's look at an example to better define what a Service is.  Internally Hibernate needs to be able to access
+JDBC Connections to the database.  The way it obtains and releases these Connections is through the
+ConnectionProvider service.  The service is defined by the interface (service role)
++org.hibernate.engine.jdbc.connections.spi.ConnectionProvider+ which declares methods for obtaining and releasing
+the Connections.  There are then multiple implementations of that service contract, varying in how they actually
+manage the Connections:
+* +org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl+ for using a +javax.sql.DataSource+
+* +org.hibernate.c3p0.internal.C3P0ConnectionProvider+ for using a C3P0 Connection pool
+* etc.
+
+Internally Hibernate always references +org.hibernate.engine.jdbc.connections.spi.ConnectionProvider+ rather than
+specific implementations in consuming the service (we will get to producing the service later when we talk about
+registries).  Because of that fact, other ConnectionProvider service implementations could be plugged in.  There is
+nothing revolutionary here; programming to interfaces is a generally accepted good programming practice.
+
+== What is a ServiceRegistry?
+
+A ServiceRegistry, at its most basic, hosts and manages Services.
+We already gave a basic overview and definition of services.  But services have other interesting characteristics as
+well.  Services have a lifecycle.  They have a scope.  Services might depend on other services.  And as we mentioned
+before, they need to be produced (choose using one implementation over another).  The ServiceRegistry fulfills all
+these needs.
+
+In a concise definition, the ServiceRegistry acts as a inversion-of-control (IoC) container.
+
+NOTE: Despite some recent revisionist history, Spring did not invent IoC and dependency injection nor were they even
+the first to bring it into Java.  Projects like the JBoss MicroContainer and Apache Avalon pre-date Spring
+by many years.  The concepts in ServiceRegistry are actually very similar to Apache Avalon.
+
+Why not just use an existing IoC framework?  In a word, weight.  I wanted, no needed, this to be as light-weight as
+possible.  A Service is associated with a ServiceRegistry.  The ServiceRegistry scopes the Service.  The
+ServiceRegistry manages the lifecycle of the Service.  The ServiceRegistry handles injecting dependencies into
+the Service (actually both a pull and a push/injection approach are supported).
+
+ServiceRegistries are also hierarchical, meaning a ServiceRegistry can have a parent ServiceRegistry.  A "child"
+ServiceRegistry can see Services in its parent, but the inverse is not true.  Services can also be registered
+in a child ServiceRegistry that hide or override the Service of the same role from its parent(s).  We'll talk more
+about this last capability when we discuss expanding versus extending.
+
+
+== Types of ServiceRegistries
+
+=== BootstrapServiceRegistry
+
+=== StandardServiceRegistry
+
+=== SessionFactoryServiceRegistry
+
+
+
+== Service lifecycle
+
+=== Initiation (creation)
+
+=== Starting/Stopping
+
+=== Configuration
+
+
+
+== Service Dependencies
+
+
+
+== Management (JMX)
+
+
+
+== Customization
+
+=== Extending
+
+=== Expanding
+

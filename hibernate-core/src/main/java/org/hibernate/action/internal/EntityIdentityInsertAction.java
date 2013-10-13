@@ -236,7 +236,7 @@ public final class EntityIdentityInsertAction extends AbstractEntityInsertAction
 		return entityKey != null ? entityKey : delayedEntityKey;
 	}
 
-	private static synchronized DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {
+	private static DelayedPostInsertIdentifier generateDelayedPostInsertIdentifier() {
 		return new DelayedPostInsertIdentifier();
 	}
 

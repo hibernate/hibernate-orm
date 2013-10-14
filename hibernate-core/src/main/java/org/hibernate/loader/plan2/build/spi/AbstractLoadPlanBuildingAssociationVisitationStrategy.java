@@ -86,6 +86,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	private final SessionFactoryImplementor sessionFactory;
 	private final QuerySpacesImpl querySpaces;
 
+	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
+
 	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
 
 	protected AbstractLoadPlanBuildingAssociationVisitationStrategy(SessionFactoryImplementor sessionFactory) {
@@ -111,18 +113,14 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	private void pushToStack(ExpandingFetchSource fetchSource) {
 		log.trace( "Pushing fetch source to stack : " + fetchSource );
-		mdcStack().push( fetchSource.getPropertyPath() );
+		propertyPathStack.push( fetchSource.getPropertyPath() );
 		fetchSourceStack.addFirst( fetchSource );
-	}
-
-	private MDCStack mdcStack() {
-		return (MDCStack) MDC.get( MDC_KEY );
 	}
 
 	private ExpandingFetchSource popFromStack() {
 		final ExpandingFetchSource last = fetchSourceStack.removeFirst();
 		log.trace( "Popped fetch owner from stack : " + last );
-		mdcStack().pop();
+		propertyPathStack.pop();
 		if ( FetchStackAware.class.isInstance( last ) ) {
 			( (FetchStackAware) last ).poppedFromStack();
 		}
@@ -144,11 +142,12 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 							"be sure to not use LoadPlanBuilderStrategy instances concurrently"
 			);
 		}
-		MDC.put( MDC_KEY, new MDCStack() );
+		propertyPathStack.push( new PropertyPath() );
 	}
 
 	@Override
 	public void finish() {
+		propertyPathStack.pop();
 		MDC.remove( MDC_KEY );
 		fetchSourceStack.clear();
 	}
@@ -302,14 +301,14 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	private void pushToCollectionStack(CollectionReference collectionReference) {
 		log.trace( "Pushing collection reference to stack : " + collectionReference );
-		mdcStack().push( collectionReference.getPropertyPath() );
+		propertyPathStack.push( collectionReference.getPropertyPath() );
 		collectionReferenceStack.addFirst( collectionReference );
 	}
 
 	private CollectionReference popFromCollectionStack() {
 		final CollectionReference last = collectionReferenceStack.removeFirst();
 		log.trace( "Popped collection reference from stack : " + last );
-		mdcStack().pop();
+		propertyPathStack.pop();
 		if ( FetchStackAware.class.isInstance( last ) ) {
 			( (FetchStackAware) last ).poppedFromStack();
 		}
@@ -821,24 +820,26 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	}
 
 	/**
-	 * Used as the MDC object for logging purposes.  Because of the recursive calls it is often useful (while debugging)
-	 * to be able to see the "property path" as part of the logging output.  This class helps fulfill that role
-	 * here by acting as the object that gets put into the logging libraries underlying MDC.
+	 * Maintains stack information for the property paths we are processing for logging purposes.  Because of the
+	 * recursive calls it is often useful (while debugging) to be able to see the "property path" as part of the
+	 * logging output.
 	 */
-	public static class MDCStack {
+	public static class PropertyPathStack {
 		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();
 
 		public void push(PropertyPath path) {
 			pathStack.addFirst( path );
+			MDC.put( MDC_KEY, extractFullPath( path ) );
+		}
+
+		private String extractFullPath(PropertyPath path) {
+			return path == null ? "<no-path>" : path.getFullPath();
 		}
 
 		public void pop() {
 			pathStack.removeFirst();
-		}
-
-		public String toString() {
-			final PropertyPath path = pathStack.peekFirst();
-			return path == null ? "<no-path>" : path.getFullPath();
+			PropertyPath newHead = pathStack.peekFirst();
+			MDC.put( MDC_KEY, extractFullPath( newHead ) );
 		}
 	}
 }

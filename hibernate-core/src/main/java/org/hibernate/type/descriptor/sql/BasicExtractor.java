@@ -29,7 +29,8 @@ import java.sql.SQLException;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -40,8 +41,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class BasicExtractor<J> implements ValueExtractor<J> {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, BasicExtractor.class.getName() );
+	private static final Logger log = CoreLogging.logger( BasicExtractor.class );
 
 	private final JavaTypeDescriptor<J> javaDescriptor;
 	private final SqlTypeDescriptor sqlDescriptor;
@@ -62,16 +62,25 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	@Override
 	public J extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 		final J value = doExtract( rs, name, options );
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null || rs.wasNull() ) {
 			if ( traceEnabled ) {
-				LOG.tracev( "Found [null] as column [{0}]", name );
+				log.tracef(
+						"extracted value ([%s] : [%s]) - [null]",
+						name,
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+				);
 			}
 			return null;
 		}
 		else {
 			if ( traceEnabled ) {
-				LOG.tracev( "Found [{0}] as column [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), name );
+				log.tracef(
+						"extracted value ([%s] : [%s]) - [%s]",
+						name,
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() ),
+						getJavaDescriptor().extractLoggableRepresentation( value )
+				);
 			}
 			return value;
 		}
@@ -96,16 +105,25 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 	@Override
 	public J extract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 		final J value = doExtract( statement, index, options );
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
 			if ( traceEnabled ) {
-				LOG.tracev( "Found [null] as procedure output  parameter [{0}]", index );
+				log.tracef(
+						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
+						index,
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+				);
 			}
 			return null;
 		}
 		else {
 			if ( traceEnabled ) {
-				LOG.tracev( "Found [{0}] as procedure output parameter [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), index );
+				log.tracef(
+						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
+						index,
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() ),
+						getJavaDescriptor().extractLoggableRepresentation( value )
+				);
 			}
 			return value;
 		}
@@ -134,16 +152,25 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J> {
 		}
 		final String paramName = paramNames[0];
 		final J value = doExtract( statement, paramName, options );
-		final boolean traceEnabled = LOG.isTraceEnabled();
+		final boolean traceEnabled = log.isTraceEnabled();
 		if ( value == null || statement.wasNull() ) {
 			if ( traceEnabled ) {
-				LOG.tracev( "Found [null] as procedure output  parameter [{0}]", paramName );
+				log.tracef(
+						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
+						paramName,
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() )
+				);
 			}
 			return null;
 		}
 		else {
 			if ( traceEnabled ) {
-				LOG.tracev( "Found [{0}] as procedure output parameter [{1}]", getJavaDescriptor().extractLoggableRepresentation( value ), paramName );
+				log.tracef(
+						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",
+						paramName,
+						JdbcTypeNameMapper.getTypeName( getSqlDescriptor().getSqlType() ),
+						getJavaDescriptor().extractLoggableRepresentation( value )
+				);
 			}
 			return value;
 		}

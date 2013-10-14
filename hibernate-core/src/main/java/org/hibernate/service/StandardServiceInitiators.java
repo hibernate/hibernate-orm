@@ -78,8 +78,8 @@ public class StandardServiceInitiators {
 
 		serviceInitiators.add( MutableIdentifierGeneratorFactoryInitiator.INSTANCE);
 
-		serviceInitiators.add( JtaPlatformInitiator.INSTANCE );
 		serviceInitiators.add( JtaPlatformResolverInitiator.INSTANCE );
+		serviceInitiators.add( JtaPlatformInitiator.INSTANCE );
 		serviceInitiators.add( TransactionFactoryInitiator.INSTANCE );
 
 		serviceInitiators.add( SessionFactoryServiceRegistryFactoryInitiator.INSTANCE );

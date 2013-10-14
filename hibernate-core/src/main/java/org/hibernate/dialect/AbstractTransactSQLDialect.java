@@ -265,4 +265,9 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
+	
+	@Override
+	public boolean supportsTuplesInSubqueries() {
+		return false;
+	}
 }

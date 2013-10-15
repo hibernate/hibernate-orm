@@ -3,17 +3,24 @@ buildscript {
       mavenCentral()
       mavenLocal()
 	  mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
+      maven {
+          name 'Bintray Asciidoctor repo'
+          url  'http://dl.bintray.com/content/aalmiray/asciidoctor'
+      }
+      jcenter()
   }
   dependencies {
       classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.1"
+      classpath 'org.asciidoctor:asciidoctor-gradle-plugin:0.7.0'
   }
 }
 
 apply plugin: "java"
 apply plugin: "jdocbook"
+
 ext.pressgangVersion = '3.0.0'
+
 dependencies {
-    
     jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
     jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
     jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
@@ -103,4 +110,33 @@ File[] dirList(String dirName) {
 
 File[] dirList(File dir) {
     return dir.listFiles({file -> file.isDirectory() } as FileFilter).sort();
+}
+
+
+// asciidoctor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//  - aggregator
+task asciidoctor(type: Task, group: 'Documentation')
+
+
+// - ServiceRegistry guide
+task generateRegistryGuide(type: Task, group: 'Documentation')
+asciidoctor.dependsOn generateRegistryGuide
+
+task generateRegistryGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
+    description = 'Generates the ServiceRegistry topical guide in HTML format.'
+    backend = 'html5'
+    sourceDir = file( 'src/main/asciidoc/topical/registries' )
+//    sourceDocumentName = 'ServiceRegistries.adoc'
+    outputDir = new File("$buildDir/asciidoc/topical/html")
+}
+
+tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
+    options = [
+            logDocuments: true,
+            attributes: [
+                    icons: 'font',
+                    'source-highlighter': 'prettify',
+                    experimental: true
+            ]
+    ]
 }

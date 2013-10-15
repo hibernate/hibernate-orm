@@ -27,6 +27,23 @@ import org.hibernate.service.Service;
 
 /**
  * Service which acts as a registry for named strategy implementations.
+ * <p/>
+ * Strategies are more open ended than services, though a strategy managed here might very well also be a service.  The
+ * strategy is any interface that has multiple, (possibly short) named implementations.
+ * <p/>
+ * StrategySelector manages resolution of particular implementation by (possibly short) name via the
+ * {@link #selectStrategyImplementor} method, which is the main contract here.  As indicated in the docs of that
+ * method the given name might be either a short registered name or the implementation FQN.  As an example, consider
+ * resolving the {@link org.hibernate.engine.transaction.spi.TransactionFactory} implementation to use.  To use the
+ * JDBC-based TransactionFactory the passed name might be either {@code "jdbc"} or
+ * {@code "org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory"} (which is the FQN).
+ * <p/>
+ * Strategy implementations can be managed by {@link #registerStrategyImplementor} and
+ * {@link #unRegisterStrategyImplementor}.  Originally designed to help the OSGi use case, though no longer used there.
+ * <p/>
+ * The service also exposes a general typing API via {@link #resolveStrategy} and {@link #resolveDefaultableStrategy}
+ * which accept implementation references rather than implementation names, allowing for a multitude of interpretations
+ * of said "implementation reference".  See the docs for {@link #resolveDefaultableStrategy} for details.
  *
  * @author Steve Ebersole
  */

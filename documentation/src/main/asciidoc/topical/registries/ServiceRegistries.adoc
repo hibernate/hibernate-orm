@@ -3,21 +3,20 @@
 :toc:
 
 Services and Registries are new *as a formalized concept* starting in 4.0.  But the functionality provided by
-the different Services have actually been around in Hibernate much, much longer.  What is new is the managing them,
-their lifecycles and dependencies through a lightweight, dedicated container we call a ServiceRegistry.
-
-This guide aims to describe the design and purpose of these Services and Registries.  Where appropriate it will
-look at details of their implementations.  It will also delve into the ways third-party integrators and applications
-can leverage and customize Services and Registries.
+the different Services have actually been around in Hibernate much, much longer.  What is new is managing them,
+their lifecycles and dependencies through a lightweight, dedicated container we call a ServiceRegistry.  The
+goal of this guide is to describe the design and purpose of these Services and Registries, as well as to look at
+details of their implementations where appropriate.  It will also delve into the ways third-party integrators and
+applications can leverage and customize Services and Registries.
 
 
 == What is a Service?
 
-Services provide various types of functionality, in a pluggable manner.  Specifically they are implementations
-of certain service contract interfaces. The interface is known as the service role; the implementation class is
-known as the service implementation.  The pluggability comes from the fact that the service implementation adheres
-to contract defined by the interface of the service role and that consumers of the service program to the service
-role, not the implementation.
+Services provide various types of functionality, in a pluggable manner.  Specifically they are interfaces defining
+certain functionality and then implementations of those service contract interfaces. The interface is known as the
+service role; the implementation class is known as the service implementation.  The pluggability comes from the fact
+that the service implementation adheres to contract defined by the interface of the service role and that consumers
+of the service program to the service role, not the implementation.
 
 NOTE: All Services are expected to implement the +org.hibernate.service.Service+ "marker" interface.  Hibernate uses
 this internally for some basic type safety; it defines no methods (at the moment).
@@ -34,9 +33,10 @@ service contract, varying in how they actually manage the Connections:
 
 Internally Hibernate always references +org.hibernate.engine.jdbc.connections.spi.ConnectionProvider+ rather than
 specific implementations in consuming the service (we will get to producing the service later when we talk about
-registries).  Because of that fact, other ConnectionProvider service implementations could be plugged in.  There is
-nothing revolutionary here; programming to interfaces is generally accepted as good programming practice.  What's
-interesting is the ServiceRegistry and the pluggable swapping of the different implementors.
+registries).  Because of that fact, other ConnectionProvider service implementations could be plugged in.
+
+There is nothing revolutionary here; programming to interfaces is generally accepted as good programming practice.
+What's interesting is the ServiceRegistry and the pluggable swapping of the different implementors.
 
 
 == What is a ServiceRegistry?
@@ -50,7 +50,7 @@ produced (choose using one implementation over another).  The ServiceRegistry fu
 
 In a concise definition, the ServiceRegistry acts as a inversion-of-control (IoC) container.
 
-NOTE: Despite some recent revisionist history, Spring did not invent IoC and dependency injection nor were they even
+NOTE: Despite some recent revisionist history, Spring did not invent IoC nor dependency injection nor were they even
 the first to bring it into Java.  Projects like JBoss MicroContainer and Apache Avalon pre-date Spring
 by many years and each did IoC and dependency injection.  The concepts in ServiceRegistry are actually very similar
 to Apache Avalon.
@@ -173,6 +173,7 @@ powerful.  For more information on this aspect, see:
 * +BootstrapServiceRegistryBuilder#withStrategySelector+
 * +BootstrapServiceRegistryBuilder#withStrategySelectors+
 * +org.hibernate.boot.registry.selector.StrategyRegistrationProvider+ (via +ServiceLoader+ discovery)
+* 'StrategySelector#registerStrategyImplementor` / 'StrategySelector#unRegisterStrategyImplementor`
 
 The service role for this service is +org.hibernate.boot.registry.selector.spi.StrategySelector+.
 
@@ -226,7 +227,8 @@ if one is found its reported +JtaPlatform+ is used (first wins).
 
 ==== RegionFactory
 
-This is the second level cache service.
+This is the second level cache service in terms of starting the underlying cache provider
+
 
 ==== SessionFactoryServiceRegistryFactory
 
@@ -243,6 +245,7 @@ its parent registry is the +StandardServiceRegistry+.  +SessionFactoryServiceReg
 which need access to the SessionFactory.  Currently that is just 3 Services.
 
 NOTE: Integrators, as it stands in 4.x, operate on the SessionFactoryServiceRegistry...
+
 
 ==== EventListenerRegistry
 
@@ -265,28 +268,347 @@ collector portion, if you will.
 
 == Service lifecycle
 
+Managing the lifecycle of services is the big role of a ServiceRegistry as a container for those services.  The overall
+lifecycle of a Service is:
+
+. <<service-initiation,initiation>>
+. (optional) <<service-configuration,configuration>>
+. (optional) <<service-starting,starting>>
+. in use - until registry closed
+. (optional) <<service-stopping,stopping>>
+
+
+[[service-initiation]]
 === Initiation (creation)
 
+A Service needs to be initiated/created.  We'll explore the details a little more when we discuss
+<<serviceregistry-building>>.  But generally speaking, either
+
+* a Service can be instantiated directly and handed to the ServiceRegistry
+* A `ServiceInitiator` can be handed to the ServiceRegistry to initiate the Service on-demand.
+
+
+[[service-configuration]]
 === Configuration
 
-=== Starting/Stopping
+A Service can optionally implement the `org.hibernate.service.spi.Configurable` interface to be handed the
+`java.util.Map` of configuration settings handed to Hibernate during initial bootstrapping.  `Configurable#configure`
+is called after initiation but before usage
 
 
-== Building ServiceRegistry
+[[service-starting]]
+=== Starting
 
+A Service can optionally implement `org.hibernate.service.spi.Startable` to receive a callback just prior to
+going into "in use".  Reflexively speaking, it is generally good practice for a Service needing `Startable` to also
+need `Stoppable` (<<service-stopping,stopping>>).
+
+
+[[service-stopping]]
+=== Stopping
+
+A Service can optionally implement `org.hibernate.service.spi.Stoppable` to receive a callback as the Service
+is taken out of "in use" as part ServiceRegistry shutdown.
+
+=== Manageable (JMX)
+
+A Service can optionally implement `org.hibernate.service.spi.Manageable` to be made available to JMX.
+
+NOTE: This particular feature is still under design/development
 
 
 == Service Dependencies
 
+Services sometimes depend on other services.  For example, the DataSourceConnectionProvider service implementation
+usually needs access to the JndiService to perform JNDI lookups.  This has 2 implications.  First, it means that
+DataSourceConnectionProvider needs access to JndiService.  Secondly it means that the JndiService musty be fully
+"in use" prior to its usage from DataSourceConnectionProvider.
+
+There are 2 ways to obtain access to dependent Services:
+
+. Have the Service implement `org.hibernate.service.spi.ServiceRegistryAwareService`, which will inject the
+ServiceRegistry into your Service.  You can then look up any Services you need access to.  The returned Services
+you lookup will be fully ready for use.
+. Injecting specific Services using `@org.hibernate.service.spi.InjectService`.
+.. The Service role to inject is generally inferred by the type of parameter of the method to which the annotation
+is attached.  If the parameter type is different from the Service role, use `InjectService#serviceRole` to name the
+role explicitly.
+.. By default the Service to inject is considered required (an exception will be thrown if it is not found).  If the
+service to be injected is optional, use `InjectService#required=false`.
 
 
-== Management (JMX)
+[[serviceregistry-building]]
+== Building ServiceRegistry
+
+Once built, a ServiceRegistry is generally considered immutable.  The Services themselves might accept
+re-configuration, but immutability here means adding/replacing services.  So all the services hosted in a particular
+ServiceRegistry must be known up-front.  To this end, building a ServiceRegistry usually employees a
+http://en.wikipedia.org/wiki/Builder_pattern[builder^].
+
+=== Building BootstrapServiceRegistry
+
+Building the `BootstrapServiceRegistry` is normally done via the 'org.hibernate.boot.registry.BootstrapServiceRegistryBuilder`
+class which exposes methods for defining `ClassLoaders`	to use, non-discoverable `Integrators` to incorporate, etc.
+
+By default Hibernate will use the Thread-context ClassLoader (TCCL), if one, as well as the ClassLoader of its classes
+as the ClassLoaders it will consult when asked to load classes or resources or to perform ServiceLoader resolutions.
+You can tell Hibernate to consider any additional ClassLoaders via the overloaded
+`BootstrapServiceRegistryBuilder#with(ClassLoader)` method:
+
+[source,java]
+----
+BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder()
+        .with( anAdditionalClassLoader )
+        .with( anotherAdditionalClassLoader )
+        .build();
+----
+
+NOTE: you can also tell Hibernate to use a completely different ClassLoaderService implementation using
+`BootstrapServiceRegistryBuilder#with(ClassLoaderService)`.
+
+Integrators are normally discovered via the JDK `ServiceLoader` mechanism.  To tell Hibernate about an Integrator
+that will not be discovered (for whatever reason) you would use the `BootstrapServiceRegistryBuilder#with(Integrator)`
+method:
+
+[source,java]
+----
+BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder()
+        .with( new MyCustomIntegrator() )
+        .build();
+----
+
+`BootstrapServiceRegistryBuilder` also exposes methods to add extra strategy selections.  Let's say we developed
+a custom CORBA-based TransactionFactory named CORBATransactionFactory and that we'd like to make this available via
+short-naming.  One option would be to explicitly set up the short name during BootstrapServiceRegistry building:
+
+[source,java]
+----
+BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder()
+        .withStrategySelector( TransactionFactory.class, "corba", CORBATransactionFactory.class )
+        .build();
+----
+
+If we were going to distribute our CORBATransactionFactory, we might develop a
+`org.hibernate.boot.registry.selector.StrategyRegistrationProvider`:
+
+[source,java]
+----
+public class CORBATransactionFactoryStrategyRegistrationProvider implements StrategyRegistrationProvider {
+    public Iterable<StrategyRegistration> getStrategyRegistrations() {
+        return Collections.singletonList(
+                (StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
+                        ConnectionProvider.class,
+                        CORBATransactionFactory.class,
+                        "corba"
+                )
+        );
+    }
+}
+----
+
+which we could register explicitly:
+
+[source,java]
+----
+BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder()
+        .withStrategySelectors( new CORBATransactionFactoryStrategyRegistrationProvider() )
+        .build();
+----
+
+or define for discovery by adding a `META-INF/services/org.hibernate.boot.registry.selector.StrategyRegistrationProvider`
+file to our artifact naming `CORBATransactionFactoryStrategyRegistrationProvider`.
+
+We might combine several of these at once:
+
+[source,java]
+----
+BootstrapServiceRegistry bootstrapServiceRegistry = new BootstrapServiceRegistryBuilder()
+        .with( anAdditionalClassLoader )
+        .with( anotherAdditionalClassLoader )
+        .with( new MyCustomIntegrator() )
+        .withStrategySelector( ConnectionProvider.class, "custom", MyCustomConnectionProvider.class )
+        .withStrategySelectors( new CORBATransactionFactoryStrategyRegistrationProvider() )
+        .build();
+----
+
+=== Building StandardServiceRegistry
+
+Building the `StandardServiceRegistry` is normally done via the
+'org.hibernate.boot.registry.StandardServiceRegistryBuilder` which exposes methods for managing settings and
+controlling the services hosted by the built StandardServiceRegistry.
+
+Managing settings can be as simple as telling the builder about one or more settings directly:
+
+[source,java]
+----
+StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+        .applySetting( "hibernate.hbm2ddl.auto", true )
+        .applySettings( Collections.singletonMap( "hibernate.transaction.factory_class", "jdbc" ) )
+        .build();
+----
+
+Or we can tell it to load settings from various files:
+
+[source,java]
+----
+StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+        .configure()                                          <1>
+        .configure( "com/acme/hibernate.cfg.xml" )            <2>
+        .loadProperties( "com/acme/hibernate.properties" )    <3>
+        .build();
+----
+<1> loads settings from an XML file (conforming to the Hibernate cfg.xml DTD) via a ClassLoader resource lookup for hibernate.cfg.xml
+<2> loads settings from an XML file (conforming to the Hibernate cfg.xml DTD) via a ClassLoader resource lookup for com/acme/hibernate.cfg.xml
+<3> loads settings from Properties via a ClassLoader resource lookup for com/acme/hibernate.properties
+
+The other methods of interest on `StandardServiceRegistryBuilder` relate to customizing the Services to use.  We can
+either pass in a Service instance to use or the ServiceInitiator to use as already discussed.  There are 2 distinct
+ways to customize the Services to use:
 
 
+==== Building StandardServiceRegistry - Overriding
 
-== Customization
+Here the intent is to override or replace a service impl.  Many of the standard ServiceInitiators look through the
+settings to determine the appropriate service to use.  Going back to an example we have used multiple times:
 
-=== Extending
+[source]
+----
+hibernate.transaction.factory_class=jdbc
+----
 
-=== Expanding
+The standard `TransactionFactoryInitiator` looks for this setting and determines what `TransactionFactory` service
+implementation to use.  Let's say for whatever reason we always want it to use JdbcTransactionFactory:
 
+[source,java]
+----
+StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+        .addService( TransactionFactory.class, new JdbcTransactionFactory() )
+        .build();
+----
+
+Or say we want to resolve the service implementation to use differently:
+
+[source,java]
+----
+StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+        .addInitiator( new MyCustomTransactionFactoryInitiator() )
+        .build();
+----
+
+==== Building StandardServiceRegistry - Expanding
+
+Here the intent is to have the ServiceRegistry host custom services (completely new Service roles).  As an example,
+let's say our application publishes Hibernate events to a JMS Topic and that we want to leverage the Hibernate
+ServiceRegistry to host a Service representing our TopicPublisher.  So we will expand the ServiceRegistry to host this
+completely new Service role:
+
+
+[source,java]
+----
+/**
+ * The service role
+ */
+public interface EventPublishingService extends Service {
+    public void publish(Event theEvent);
+}
+
+/**
+ * A disabled (no-op) impl
+ */
+public class DisabledEventPublishingServiceImpl implements EventPublishingService {
+    public static DisabledEventPublishingServiceImpl INSTANCE = new DisabledEventPublishingServiceImpl();
+
+    private DisabledEventPublishingServiceImpl() {
+    }
+
+    @Override
+    public void publish(Event theEvent) {
+        // nothing to do...
+    }
+}
+
+/**
+ * A standard impl
+ */
+public class EventPublishingServiceImpl
+        implements EventPublishingService, Configurable, Startable, Stoppable, ServiceRegistryAwareService {
+
+    private ServiceRegistryImplementor serviceRegistry;
+    private String jmsConnectionFactoryName;
+    private String destinationName;
+
+    private Connection jmsConnection;
+    private Session jmsSession;
+    private MessageProducer publisher;
+
+    @Override
+    public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+        this.serviceRegistry = serviceRegistry;
+    }
+
+	public void configure(Map configurationValues) {
+	    this.jmsConnectionFactoryName = configurationValues.get( JMS_CONNECTION_FACTORY_NAME_SETTING );
+	    this.destinationName = configurationValues.get( JMS_DESTINATION_NAME_SETTING );
+	}
+
+    @Override
+	public void start() {
+	    final JndiService jndiService = serviceRegistry.getService( JndiService.class );
+	    final ConnectionFactory jmsConnectionFactory = jndiService.locate( jmsConnectionFactoryName );
+
+        this.jmsConnection = jmsConnectionFactory.createConnection();
+        this.jmsSession = jmsConnection.createSession( true,  Session.AUTO_ACKNOWLEDGE );
+
+	    final Destination destination = jndiService.locate( destinationName );
+
+	    this.publisher = jmsSession.createProducer( destination );
+	}
+
+    @Override
+    public void publish(Event theEvent) {
+        publisher.send( theEvent );
+    }
+
+    @Override
+	public void stop() {
+        publisher.close();
+        jmsSession.close();
+        jmsConnection.close();
+	}
+}
+
+public class EventPublishingServiceInitiator implements StandardServiceInitiator<EventPublishingService> {
+    public static EventPublishingServiceInitiator INSTANCE = new EventPublishingServiceInitiator();
+    public static final String ENABLE_PUBLISHING_SETTING = "com.acme.EventPublishingService.enabled";
+
+	public Class<R> getServiceInitiated() {
+	    return EventPublishingService.class;
+	}
+
+    @Override
+	public R initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+	    final boolean enabled = extractBoolean( configurationValues, ENABLE_PUBLISHING_SETTING );
+	    if ( enabled ) {
+	        return new EventPublishingServiceImpl();
+	    }
+	    else {
+	        return DisabledEventPublishingServiceImpl.INSTANCE;
+	    }
+	}
+}
+----
+
+Now, lets tell Hibernate about this custom Service:
+
+
+[source,java]
+----
+StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+        .addInitiator( EventPublishingServiceInitiator.INSTANCE )
+        ...
+        .build();
+----
+
+== Conclusion
+
+Blah, blah, blah...

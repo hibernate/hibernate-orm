@@ -24,6 +24,7 @@
 package org.hibernate.action.internal;
 
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Acts as a stand-in for an entity identifier which is supposed to be
@@ -36,9 +37,11 @@ import java.io.Serializable;
  * the entity instance or returned to the client...
  *
  * @author Steve Ebersole
+ * @author Sanne Grinovero
  */
-public class DelayedPostInsertIdentifier implements Serializable {
-	private static long sequence;
+public class DelayedPostInsertIdentifier implements Serializable, Comparable<DelayedPostInsertIdentifier> {
+
+	private static final AtomicLong sequence = new AtomicLong( 0 );
 
 	private final long identifier;
 
@@ -46,12 +49,17 @@ public class DelayedPostInsertIdentifier implements Serializable {
 	 * Constructs a DelayedPostInsertIdentifier
 	 */
 	public DelayedPostInsertIdentifier() {
-		synchronized( DelayedPostInsertIdentifier.class ) {
-			if ( sequence == Long.MAX_VALUE ) {
-				sequence = 0;
+		long value = sequence.incrementAndGet();
+		if ( value < 0 ) {
+			synchronized ( sequence ) {
+				value = sequence.incrementAndGet();
+				if ( value < 0 ) {
+					sequence.set( 0 );
+					value = 0;
+				}
 			}
-			this.identifier = sequence++;
 		}
+		this.identifier = value;
 	}
 
 	@Override
@@ -75,5 +83,18 @@ public class DelayedPostInsertIdentifier implements Serializable {
 	public String toString() {
 		return "<delayed:" + identifier + ">";
 
+	}
+
+	@Override
+	public int compareTo(DelayedPostInsertIdentifier that) {
+		if ( this.identifier < that.identifier ) {
+			return -1;
+		}
+		else if ( this.identifier > that.identifier ) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
 	}
 }

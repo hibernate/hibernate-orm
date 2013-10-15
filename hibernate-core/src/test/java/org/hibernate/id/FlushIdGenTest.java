@@ -26,11 +26,14 @@ package org.hibernate.id;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-import org.hibernate.testing.TestForIssue;
 
 @TestForIssue(jiraKey = "HHH-8611")
+@RequiresDialectFeature( DialectChecks.SupportsIdentityColumns.class )
 public class FlushIdGenTest extends BaseCoreFunctionalTestCase {
 
 	@Test

@@ -396,8 +396,8 @@ If we were going to distribute our CORBATransactionFactory, we might develop a
 public class CORBATransactionFactoryStrategyRegistrationProvider implements StrategyRegistrationProvider {
     public Iterable<StrategyRegistration> getStrategyRegistrations() {
         return Collections.singletonList(
-                (StrategyRegistration) new SimpleStrategyRegistrationImpl<ConnectionProvider>(
-                        ConnectionProvider.class,
+                (StrategyRegistration) new SimpleStrategyRegistrationImpl<TransactionFactory>(
+                        TransactionFactory.class,
                         CORBATransactionFactory.class,
                         "corba"
                 )

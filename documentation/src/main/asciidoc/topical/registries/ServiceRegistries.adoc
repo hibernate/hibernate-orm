@@ -1,12 +1,14 @@
 = Services and Registries
+:imagesdir: .
+:toc:
 
 Services and Registries are new *as a formalized concept* starting in 4.0.  But the functionality provided by
-the Services have actually been around in Hibernate much, much longer.  What is new is the managing them, their
-lifecycles and dependencies through a lightweight, dedicated container we call a ServiceRegistry.
+the different Services have actually been around in Hibernate much, much longer.  What is new is the managing them,
+their lifecycles and dependencies through a lightweight, dedicated container we call a ServiceRegistry.
 
-This guide aims to describe the design and purpose of these Services and Registries.  To a certain extent we will
-also look at details of their implementations.  It will also delve into the ways third-party integrators and
-applications can leverage and customize Services and Registries.
+This guide aims to describe the design and purpose of these Services and Registries.  Where appropriate it will
+look at details of their implementations.  It will also delve into the ways third-party integrators and applications
+can leverage and customize Services and Registries.
 
 
 == What is a Service?
@@ -14,7 +16,8 @@ applications can leverage and customize Services and Registries.
 Services provide various types of functionality, in a pluggable manner.  Specifically they are implementations
 of certain service contract interfaces. The interface is known as the service role; the implementation class is
 known as the service implementation.  The pluggability comes from the fact that the service implementation adheres
-to contract defined by the interface of the service role.
+to contract defined by the interface of the service role and that consumers of the service program to the service
+role, not the implementation.
 
 NOTE: All Services are expected to implement the +org.hibernate.service.Service+ "marker" interface.  Hibernate uses
 this internally for some basic type safety; it defines no methods (at the moment).
@@ -32,19 +35,18 @@ service contract, varying in how they actually manage the Connections:
 Internally Hibernate always references +org.hibernate.engine.jdbc.connections.spi.ConnectionProvider+ rather than
 specific implementations in consuming the service (we will get to producing the service later when we talk about
 registries).  Because of that fact, other ConnectionProvider service implementations could be plugged in.  There is
-nothing revolutionary here; programming to interfaces is a generally accepted good programming practice.  What's
+nothing revolutionary here; programming to interfaces is generally accepted as good programming practice.  What's
 interesting is the ServiceRegistry and the pluggable swapping of the different implementors.
 
 
 == What is a ServiceRegistry?
 
-A ServiceRegistry, at its most basic, hosts and manages Services.  It contract is defined by the
+A ServiceRegistry, at its most basic, hosts and manages Services.  Its contract is defined by the
 +org.hibernate.service.ServiceRegistry+ interface.
 
 We already gave a basic overview and definition of services.  But services have other interesting characteristics as
-well.  Services have a lifecycle.  They have a scope.  Services might depend on other services.  And as we mentioned
-before, they need to be produced (choose using one implementation over another).  The ServiceRegistry fulfills all
-these needs.
+well.  Services have a lifecycle.  They have a scope.  Services might depend on other services.  And they need to be
+produced (choose using one implementation over another).  The ServiceRegistry fulfills all these needs.
 
 In a concise definition, the ServiceRegistry acts as a inversion-of-control (IoC) container.
 
@@ -53,10 +55,10 @@ the first to bring it into Java.  Projects like JBoss MicroContainer and Apache 
 by many years and each did IoC and dependency injection.  The concepts in ServiceRegistry are actually very similar
 to Apache Avalon.
 
-Why not just use an existing IoC framework?  First, this had to be as light-weight and as small of a footprint
-as possible.  The initial design also had called for Services to be swappable at runtime, which unfortunately had
-to be removed due to performance problems in the proxy-based solution to swapping (the plan is to investigate
-alternate ways to achieve swap-ability with better performance at a later date).
+Why not just use an existing IoC framework?  The main reason was that this had to be as light-weight and as small of
+a footprint as possible.  The initial design also had called for Services to be swappable at runtime, which
+unfortunately had to be removed due to performance problems in the proxy-based solution to swapping (the plan is to
+investigate alternate ways to achieve swap-ability with better performance at a later date).
 
 A Service is associated with a ServiceRegistry.  The ServiceRegistry scopes the Service.  The
 ServiceRegistry manages the lifecycle of the Service.  The ServiceRegistry handles injecting dependencies into
@@ -64,7 +66,7 @@ the Service (actually both a pull and a push/injection approach are supported). 
 hierarchical, meaning a ServiceRegistry can have a parent ServiceRegistry.  Services in one registry can depend on
 and utilize services in that same registry as well as any parent registries.
 
-image::registry_hierarchy.jpg
+image::registry_hierarchy.jpg[ServiceRegistry UML]
 
 
 == ServiceBinding
@@ -74,15 +76,13 @@ The association of a given Service to a given ServiceRegistry is called a bindin
 and the ServiceRegistry is represented by the +org.hibernate.service.spi.ServiceBinding.ServiceLifecycleOwner+
 interface.
 
-There are 2 ways to associate a Service with a ServiceRegistry.  Either the Service can be directly instantiated
+There are 2 ways to associate a Service with a ServiceRegistry.  The Service can be directly instantiated
 and then handed to the ServiceRegistry, or a ServiceInitiator can be given to the ServiceRegistry (which the
 ServiceRegistry will use if and when the Service is needed).  ServiceRegistry implementations (those using the
 +org.hibernate.service.internal.AbstractServiceRegistryImpl+ convenience base implementation) register bindings
 through calls to the overloaded +AbstractServiceRegistryImpl#createServiceBinding+ method accepting either a Service
-instance or a ServiceInitiator instance.
-
-However, each specific ServiceRegistry type has a dedicated builder through which its Services are typically defined
-and customized.
+instance or a ServiceInitiator instance.  However, each specific ServiceRegistry type has a dedicated builder through
+which its Services are typically defined and customized.
 
 
 == Types of ServiceRegistries
@@ -96,7 +96,7 @@ is a specialization of +org.hibernate.service.ServiceRegistry+.  The +BootstrapS
 no new behavior, it is simply a specialization for the purpose of type safety.  In normal usage, the
 +BootstrapServiceRegistry+ has no parent.
 
-IMPORTANT: This registry holds services that absolutely have to be available for most things to work.
+IMPORTANT: This registry holds services that absolutely have to be available for most things in Hibernate to work.
 
 The +BootstrapServiceRegistry+ normally holds 3 services and is normally built by means of the
 +org.hibernate.boot.registry.BootstrapServiceRegistryBuilder+ class.  The builder gives type safe access to customizing
@@ -105,11 +105,11 @@ these 3 Services.
 
 ==== ClassLoaderService
 
-This service exposes the capability to interact with ClassLoaders.  However, the manner in which Hibernate (or any
+This service exposes the capability to interact with ClassLoaders.  The manner in which Hibernate (or any
 library) should interact with ClassLoaders varies based on the runtime environment which is hosting the application.
 Application servers, OSGi containers, and other modular class loading systems impose very specific class-loading
 requirements.  This service is provides Hibernate an abstraction from this environmental complexity.  And just as
-importantly, it does so in a single-swappable-component manner.
+importantly, it does so in a centralized, swappable manner.
 
 The specific capabilities exposed on this service include:
 
@@ -122,13 +122,15 @@ The service role for this service is +org.hibernate.boot.registry.classloading.s
 
 ==== IntegratorService
 
-Applications, third-party integrators and others all need to integrate with Hibernate which used to require something
-(usually the application) to coordinate registering the pieces of each integration needed on behalf of each integrator.
+Applications, third-party integrators and others all need to integrate with Hibernate.  Historically this used to
+require something (usually the application) to coordinate registering the pieces of each integration needed on behalf
+of each integration.  The +org.hibernate.integrator.spi.Integrator+ formalized this "integration SPI".  The
+IntegratorService manages all known integrators.
 
 TIP: The concept of "Integrator" is still being actively defined and developed as part of the 5.0 codebase.  Expect
 changes in these SPIs; in fact those changes are already begun in the repository branch housing 5.0 development.
 
-The IntegratorService manages all known integrators.  There are 2 ways an integrator becomes known.
+There are 2 ways an integrator becomes known.
 
 . The integrator may be manually registered by calling +BootstrapServiceRegistryBuilder#with(Integrator)+
 . The integrator may be discovered, leveraging the standard Java +java.util.ServiceLoader+
@@ -146,8 +148,8 @@ Think of this as the "short naming" service.  Historically to configure Hibernat
 give FQN references to internal Hibernate classes.
 
 For example, to tell Hibernate to use JDBC-based transactions we need to tell it to use the
-+org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory+ class.  Historically applications would need
-to pass in the FQN name of that class as part of the config:
++org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory+ class by specifying its FQN as part of the
+config:
 
 [source]
 ----
@@ -170,7 +172,7 @@ powerful.  For more information on this aspect, see:
 
 * +BootstrapServiceRegistryBuilder#withStrategySelector+
 * +BootstrapServiceRegistryBuilder#withStrategySelectors+
-* Via +ServiceLoader+ discovery under +org.hibernate.boot.registry.selector.StrategyRegistrationProvider+
+* +org.hibernate.boot.registry.selector.StrategyRegistrationProvider+ (via +ServiceLoader+ discovery)
 
 The service role for this service is +org.hibernate.boot.registry.selector.spi.StrategySelector+.
 

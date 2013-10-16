@@ -12,7 +12,7 @@
 				<column name="string_" length="10"/>
 			</key-property>
 			<key-property name="short" column="short_"/>
-			<key-property name="date" column="date_" type="date"/>
+			<key-property name="date" column="date_" type="calendar"/>
 		</composite-id>
 		<version name="vid" type="short" access="field"/>
 		<!--version name="lastUpdated" type="calendar"/-->

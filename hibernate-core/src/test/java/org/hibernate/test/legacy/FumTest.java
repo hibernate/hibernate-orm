@@ -1,6 +1,11 @@
 //$Id: FumTest.java 10977 2006-12-12 23:28:04Z steve.ebersole@jboss.com $
 package org.hibernate.test.legacy;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,6 +14,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
@@ -40,16 +46,12 @@ import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.TimesTenDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.DateType;
+import org.hibernate.type.CalendarType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
 
 public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
@@ -317,10 +319,10 @@ public class FumTest extends LegacyTestCase {
 				now.get(java.util.Calendar.MONTH),
 				now.get(java.util.Calendar.DATE)
 			);
-			id.setDate( cal.getTime() );
+			id.setDate( cal );
 		}
 		else {
-			id.setDate( new Date() );
+			id.setDate( Calendar.getInstance() );
 		}
 		id.setString( str );
 
@@ -338,10 +340,11 @@ public class FumTest extends LegacyTestCase {
 	public void testCompositeID() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
-		Fum fum = new Fum( fumKey("fum") );
+		FumCompositeID fumKey = fumKey("fum");
+		Fum fum = new Fum( fumKey );
 		fum.setFum("fee fi fo");
 		s.save(fum);
-		assertTrue( "load by composite key", fum==s.load( Fum.class, fumKey("fum") ) );
+		assertTrue( "load by composite key", fum==s.load( Fum.class, fumKey ) );
 		txn.commit();
 		s.close();
 
@@ -349,14 +352,15 @@ public class FumTest extends LegacyTestCase {
 		txn = s.beginTransaction();
 		if ( getDialect() instanceof AbstractHANADialect ){
 			// HANA currently requires specifying table name by 'FOR UPDATE of t1.c1' if there are more than one tables/views/subqueries in the FROM clause
-			fum = (Fum) s.load( Fum.class, fumKey("fum") );
+			fum = (Fum) s.load( Fum.class, fumKey );
 		} else {
-			fum = (Fum) s.load( Fum.class, fumKey("fum"), LockMode.UPGRADE );
+			fum = (Fum) s.load( Fum.class, fumKey, LockMode.UPGRADE );
 		}
 
 		assertTrue( "load by composite key", fum!=null );
 
-		Fum fum2 = new Fum( fumKey("fi") );
+		FumCompositeID fumKey2 = fumKey("fi");
+		Fum fum2 = new Fum( fumKey2 );
 		fum2.setFum("fee fo fi");
 		fum.setFo(fum2);
 		s.save(fum2);
@@ -391,7 +395,8 @@ public class FumTest extends LegacyTestCase {
 	public void testCompositeIDOneToOne() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
-		Fum fum = new Fum( fumKey("fum") );
+		FumCompositeID fumKey = fumKey("fum");
+		Fum fum = new Fum( fumKey );
 		fum.setFum("fee fi fo");
 		//s.save(fum);
 		Fumm fumm = new Fumm();
@@ -402,7 +407,7 @@ public class FumTest extends LegacyTestCase {
 
 		s = openSession();
 		txn = s.beginTransaction();
-		fumm = (Fumm) s.load( Fumm.class, fumKey("fum") );
+		fumm = (Fumm) s.load( Fumm.class, fumKey );
 		//s.delete( fumm.getFum() );
 		s.delete(fumm);
 		txn.commit();
@@ -447,7 +452,7 @@ public class FumTest extends LegacyTestCase {
 
 		// Make sure we can return all of the objects by searching by the date id
 		vList = s.createQuery( "from Fum fum where fum.id.date <= ? and not fum.fum='FRIEND'" )
-				.setParameter( 0, new Date(), StandardBasicTypes.DATE )
+				.setParameter( 0, Calendar.getInstance(), StandardBasicTypes.CALENDAR )
 				.list();
 		assertEquals( "find by composite key query with arguments", 4, vList.size() );
 		s.getTransaction().commit();
@@ -470,7 +475,7 @@ public class FumTest extends LegacyTestCase {
 		assertTrue(types[0] instanceof StringType);
 		assertTrue(types[1] instanceof EntityType);
 		assertTrue(types[2] instanceof StringType);
-		assertTrue(types[3] instanceof DateType);
+		assertTrue(types[3] instanceof CalendarType);
 		Iterator iter = qu.iterate();
 		int j = 0;
 		while ( iter.hasNext() ) {
@@ -595,7 +600,8 @@ public class FumTest extends LegacyTestCase {
 	public void testCompositeIDs() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
-		Fo fo = Fo.newFo( fumKey("an instance of fo") );
+		FumCompositeID fumKey = fumKey("an instance of fo");
+		Fo fo = Fo.newFo( fumKey );
 		Properties props = new Properties();
 		props.setProperty("foo", "bar");
 		props.setProperty("bar", "foo");
@@ -609,7 +615,7 @@ public class FumTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		fo = (Fo) s.load( Fo.class, fumKey("an instance of fo") );
+		fo = (Fo) s.load( Fo.class, fumKey );
 		props = (Properties) fo.getSerial();
 		assertTrue( props.getProperty("foo").equals("bar") );
 		//assertTrue( props.contains("x") );
@@ -621,7 +627,7 @@ public class FumTest extends LegacyTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		fo = (Fo) s.load( Fo.class, fumKey("an instance of fo") );
+		fo = (Fo) s.load( Fo.class, fumKey );
 		assertTrue( fo.getBuf()[1]==126 );
 		assertTrue(
 				s.createQuery( "from Fo fo where fo.id.string like 'an instance of fo'" ).iterate().next()==fo

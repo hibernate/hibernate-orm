@@ -21,25 +21,41 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.lazynocascadecache;
+package org.hibernate.test.collection.lazynocascade;
 
 /**
  * @author Vasily Kochnev
  */
-public class Child extends BaseChild {
-	private String name;
+public class BaseChild {
+	private Long id;
+
+	private BaseChild dependency;
 
 	/**
-	 * @return Name of the child.
+	 * @return Entity identifier.
 	 */
-	public String getName() {
-		return name;
+	public Long getId() {
+		return id;
 	}
 
 	/**
-	 * @param name The name to set.
+	 * @param id Identifier to set.
 	 */
-	public void setName(String name) {
-		this.name = name;
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return Child dependency
+	 */
+	public BaseChild getDependency() {
+		return dependency;
+	}
+
+	/**
+	 * @param dependency Dependency to set.
+	 */
+	public void setDependency(BaseChild dependency) {
+		this.dependency = dependency;
 	}
 }

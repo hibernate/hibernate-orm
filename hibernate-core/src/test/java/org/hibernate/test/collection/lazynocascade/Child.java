@@ -21,45 +21,25 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.lazynocascadecache;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
+package org.hibernate.test.collection.lazynocascade;
 
 /**
  * @author Vasily Kochnev
  */
-public class Parent {
-	private Long id;
-
-	// LinkedHashSet used for the reason to force the specific order of elements in collection
-	private Set<BaseChild> children = new LinkedHashSet<BaseChild>();
+public class Child extends BaseChild {
+	private String name;
 
 	/**
-	 * @return Entity identifier.
+	 * @return Name of the child.
 	 */
-	public Long getId() {
-		return id;
+	public String getName() {
+		return name;
 	}
 
 	/**
-	 * @param id Identifier to set.
+	 * @param name The name to set.
 	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
-
-	/**
-	 * @return Set of children entities.
-	 */
-	public Set<BaseChild> getChildren() {
-		return children;
-	}
-
-	/**
-	 * @param children Set of children entities to set.
-	 */
-	public void setChildren(Set<BaseChild> children) {
-		this.children = children;
+	public void setName(String name) {
+		this.name = name;
 	}
 }

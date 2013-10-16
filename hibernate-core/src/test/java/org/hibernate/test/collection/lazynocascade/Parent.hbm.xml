@@ -2,7 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<hibernate-mapping package="org.hibernate.test.lazynocascadecache">
+<hibernate-mapping package="org.hibernate.test.collection.lazynocascade">
     <class name="Parent">
         <id name="id" column="parent_id">
             <generator class="increment"/>

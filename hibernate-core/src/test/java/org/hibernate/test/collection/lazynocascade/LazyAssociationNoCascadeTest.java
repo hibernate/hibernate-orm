@@ -21,21 +21,22 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.lazynocascadecache;
+package org.hibernate.test.collection.lazynocascade;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.hibernate.Session;
-import org.hibernate.Transaction;
-
-import org.junit.Test;
-
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Vasily Kochnev
  */
-public class LazyNoCascadeCacheTest extends BaseCoreFunctionalTestCase {
+public class LazyAssociationNoCascadeTest extends BaseCoreFunctionalTestCase {
+	
 	public String[] getMappings() {
-		return new String[] {"lazynocascadecache/Parent.hbm.xml"};
+		return new String[] {"collection/lazynocascade/Parent.hbm.xml"};
 	}
 
 	@Test
@@ -44,17 +45,25 @@ public class LazyNoCascadeCacheTest extends BaseCoreFunctionalTestCase {
 
 		BaseChild firstChild = new BaseChild();
 		parent.getChildren().add( firstChild );
+		
+		Session s = openSession();
+		s.beginTransaction();
+		s.save(parent);
+		s.getTransaction().commit();
+		s.clear();
 
 		Child secondChild = new Child();
 		secondChild.setName( "SecondChildName" );
-		parent.getChildren().add( secondChild );//Dependency child must go after dependent in collection
+		parent.getChildren().add( secondChild );
 
 		firstChild.setDependency( secondChild );
 
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		s.merge( parent );
-		t.commit();
+		s.beginTransaction();
+		Parent mergedParent = (Parent) s.merge( parent );
+		s.getTransaction().commit();
 		s.close();
+		
+		assertNotNull( mergedParent );
+		assertEquals( mergedParent.getChildren().size(), 2 );
 	}
 }

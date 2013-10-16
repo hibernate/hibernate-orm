@@ -27,8 +27,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
 
+import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.exception.internal.SQLStateConversionDelegate;
+import org.hibernate.exception.spi.ConversionContext;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -66,6 +72,9 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 	@Override
 	public Connection createConnection() {
 		final Connection conn = makeConnection( url, connectionProps );
+		if ( conn == null ) {
+			throw new HibernateException( "Unable to make JDBC Connection [" + url + "]" );
+		}
 
 		try {
 			if ( isolation != null ) {
@@ -88,8 +97,33 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		return conn;
 	}
 
+	private ValueHolder<SQLExceptionConversionDelegate> simpleConverterAccess = new ValueHolder<SQLExceptionConversionDelegate>(
+			new ValueHolder.DeferredInitializer<SQLExceptionConversionDelegate>() {
+				@Override
+				public SQLExceptionConversionDelegate initialize() {
+					return new SQLStateConversionDelegate(
+							new ConversionContext() {
+								@Override
+								public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+									// this should never happen...
+									throw new HibernateException( "Unexpected call to org.hibernate.exception.spi.ConversionContext.getViolatedConstraintNameExtracter" );
+								}
+							}
+					);
+				}
+			}
+	);
+
 	protected JDBCException convertSqlException(String message, SQLException e) {
-		return serviceRegistry.getService( JdbcServices.class ).getSqlExceptionHelper().convert( e, message, null );
+		// if JdbcServices#getSqlExceptionHelper is available, use it...
+		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		if ( jdbcServices != null && jdbcServices.getSqlExceptionHelper() != null ) {
+			return jdbcServices.getSqlExceptionHelper().convert( e, message, null );
+		}
+
+		// likely we are still in the process of initializing the ServiceRegistry, so use the simplified
+		// SQLException conversion
+		return simpleConverterAccess.getValue().convert( e, message, null );
 	}
 
 	protected abstract Connection makeConnection(String url, Properties connectionProps);

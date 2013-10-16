@@ -3,7 +3,6 @@ package org.hibernate.test.legacy;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -32,7 +31,7 @@ public class Fum implements Lifecycle, Serializable {
 		this.id = id;
 		friends = new HashSet();
 		FumCompositeID fid = new FumCompositeID();
-		fid.setDate( new Date() );
+		fid.setDate( Calendar.getInstance() );
 		fid.setShort( (short) ( id.short_ + 33 ) );
 		fid.setString( id.string_ + "dd" );
 		Fum f = new Fum();

@@ -22,7 +22,7 @@
 apply plugin: 'java'
 apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
 
-version = '4.0-SNAPSHOT'
+version = '4.0'
 
 dependencies {
 

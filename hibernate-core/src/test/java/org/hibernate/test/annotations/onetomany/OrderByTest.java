@@ -410,13 +410,79 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "john", forum.getUsers().get( 0 ).getName() );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-7630")
+	public void testOrderByOnJoinedClassIdentifier() {
+
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		Employee employee = new Employee(1);
+
+		Computer computer = new Computer(1);
+		computer.setComputerName("Bob's computer");
+		computer.setEmployee(employee);
+
+		Computer computer2 = new Computer(2);
+		computer2.setComputerName("Alice's computer");
+		computer2.setEmployee(employee);
+
+		s.save(employee);
+		s.save(computer2);
+		s.save(computer);
+
+		s.flush();
+		s.clear();
+		sessionFactory().getCache().evictEntityRegions();
+
+		employee = (Employee) s.get(Employee.class, employee.getId());
+
+		assertEquals(2, employee.getAssets().size());
+		assertEquals(1, employee.getAssets().get(0).getIdAsset().intValue());
+		assertEquals(2, employee.getAssets().get(1).getIdAsset().intValue());
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7888")
+	public void testOrderByOnJoinedClassEmpty() {
+
+		final Session s = openSession();
+		s.getTransaction().begin();
+
+		Employee2 employee = new Employee2(1);
+
+		Computer2 computer = new Computer2(1);
+		computer.setComputerName("Bob's computer");
+		computer.setEmployee(employee);
+
+		Computer2 computer2 = new Computer2(2);
+		computer2.setComputerName("Alice's computer");
+		computer2.setEmployee(employee);
+
+		s.save(employee);
+		s.save(computer2);
+		s.save(computer);
+
+		s.flush();
+		s.clear();
+		sessionFactory().getCache().evictEntityRegions();
+
+		employee = (Employee2) s.get(Employee2.class, employee.getId());
+
+		assertEquals(2, employee.getAssets().size());
+		assertEquals(1, employee.getAssets().get(0).getIdAsset().intValue());
+		assertEquals(2, employee.getAssets().get(1).getIdAsset().intValue());
+	}
+
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[] {
 				Order.class, OrderItem.class, Zoo.class, Tiger.class,
 				Monkey.class, Visitor.class, Box.class, Item.class,
 				BankAccount.class, Transaction.class,
-				Comment.class, Forum.class, Post.class, User.class
+				Comment.class, Forum.class, Post.class, User.class,
+				Asset.class, Computer.class, Employee.class,
+				Asset2.class, Computer2.class, Employee2.class,
 		};
 	}
 }

@@ -851,6 +851,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 			}
 		}
+
+		// if the column is not located in normal column names,
+		// then search though the identifier column names
+		for ( String identifier : this.getIdentifierColumnNames() ) {
+			if ( identifier.equals(columnName) ) {
+				return 0;
+			}
+		}
+
 		throw new HibernateException( "Could not locate table which owns column [" + columnName + "] referenced in order-by mapping" );
 	}
 

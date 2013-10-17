@@ -320,7 +320,6 @@ public class InfinispanRegionFactoryTestCase  {
          Configuration cacheCfg = cache.getCacheConfiguration();
          assertEquals(EvictionStrategy.NONE, cacheCfg.eviction().strategy());
          assertEquals(CacheMode.REPL_ASYNC, cacheCfg.clustering().cacheMode());
-         assertTrue(cacheCfg.storeAsBinary().enabled());
          assertFalse(cacheCfg.jmxStatistics().enabled());
       } finally {
          factory.stop();

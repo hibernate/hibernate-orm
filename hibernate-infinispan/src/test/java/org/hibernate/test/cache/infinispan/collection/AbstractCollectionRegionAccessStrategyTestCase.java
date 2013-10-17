@@ -164,7 +164,7 @@ public abstract class AbstractCollectionRegionAccessStrategyTestCase extends Abs
 		final CountDownLatch pferLatch = new CountDownLatch( 1 );
 		final CountDownLatch removeLatch = new CountDownLatch( 1 );
       final TransactionManager remoteTm = remoteCollectionRegion.getTransactionManager();
-      withCacheManager(new CacheManagerCallable(TestCacheManagerFactory.createLocalCacheManager(false)) {
+      withCacheManager(new CacheManagerCallable(TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             PutFromLoadValidator validator = new PutFromLoadValidator(cm,

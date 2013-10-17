@@ -96,7 +96,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void nakedPutTest(final boolean transactional) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             try {
@@ -132,7 +132,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void registeredPutTest(final boolean transactional) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm,
@@ -179,7 +179,7 @@ public class PutFromLoadValidatorUnitTestCase {
    private void nakedPutAfterRemovalTest(final boolean transactional,
          final boolean removeRegion) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm,
@@ -231,7 +231,7 @@ public class PutFromLoadValidatorUnitTestCase {
    private void registeredPutAfterRemovalTest(final boolean transactional,
          final boolean removeRegion) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm,
@@ -285,7 +285,7 @@ public class PutFromLoadValidatorUnitTestCase {
          final boolean transactional, final boolean removeRegion)
          throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new PutFromLoadValidator(cm,
@@ -338,7 +338,7 @@ public class PutFromLoadValidatorUnitTestCase {
          final boolean transactional, final boolean removeRegion)
          throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             PutFromLoadValidator testee = new TestValidator(cm,
@@ -382,7 +382,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void multipleRegistrationtest(final boolean transactional) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             final PutFromLoadValidator testee = new PutFromLoadValidator(cm,
@@ -453,7 +453,7 @@ public class PutFromLoadValidatorUnitTestCase {
    @Test
    public void testRemovalCleanup() throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             TestValidator testee = new TestValidator(cm, null, 200);
@@ -501,7 +501,7 @@ public class PutFromLoadValidatorUnitTestCase {
 
    private void invalidationBlocksForInProgressPutTest(final boolean keyOnly) throws Exception {
       withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createLocalCacheManager(false)) {
+            TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
             final PutFromLoadValidator testee = new PutFromLoadValidator(

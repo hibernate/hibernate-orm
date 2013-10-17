@@ -23,9 +23,15 @@
  */
 package org.hibernate.ejb;
 
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
+import javax.persistence.spi.PersistenceUnitInfo;
+import javax.persistence.spi.ProviderUtil;
+
+import java.util.Map;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.HEMLogging;
 
@@ -41,9 +47,59 @@ public class HibernatePersistence extends HibernatePersistenceProvider implement
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( HibernatePersistence.class );
 
 	public HibernatePersistence() {
+	}
+
+	@Override
+	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+		logDeprecation();
+		return super.createEntityManagerFactory( persistenceUnitName, properties );
+	}
+
+	protected void logDeprecation() {
 		log.deprecatedPersistenceProvider(
 				HibernatePersistence.class.getName(),
 				HibernatePersistenceProvider.class.getName()
 		);
+	}
+
+	@Override
+	public EntityManagerFactory createContainerEntityManagerFactory(PersistenceUnitInfo info, Map properties) {
+		logDeprecation();
+		return super.createContainerEntityManagerFactory( info, properties );
+	}
+
+	@Override
+	public void generateSchema(PersistenceUnitInfo info, Map map) {
+		logDeprecation();
+		super.generateSchema( info, map );
+	}
+
+	@Override
+	public boolean generateSchema(String persistenceUnitName, Map map) {
+		logDeprecation();
+		return super.generateSchema( persistenceUnitName, map );
+	}
+
+	@Override
+	public ProviderUtil getProviderUtil() {
+		logDeprecation();
+		return super.getProviderUtil();
+	}
+
+	@Override
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+			String persistenceUnitName,
+			Map properties,
+			ClassLoader providedClassLoader) {
+		logDeprecation();
+		return super.getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties, providedClassLoader );
+	}
+
+	@Override
+	protected EntityManagerFactoryBuilder getEntityManagerFactoryBuilderOrNull(
+			String persistenceUnitName,
+			Map properties) {
+		logDeprecation();
+		return super.getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
 	}
 }

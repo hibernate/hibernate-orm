@@ -23,8 +23,6 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import javax.transaction.Transaction;
-
 import org.infinispan.AdvancedCache;
 import org.infinispan.util.logging.Log;
 import org.infinispan.util.logging.LogFactory;
@@ -138,7 +136,14 @@ public class TransactionalAccessDelegate {
 		}
 
 		try {
-			writeCache.putForExternalRead( key, value );
+			// Conditional put/putForExternalRead. If the region has been
+			// evicted in the current transaction, do a put instead of a
+			// putForExternalRead to make it stick, otherwise the current
+			// transaction won't see it.
+			if ( region.isRegionInvalidatedInCurrentTx() )
+				writeCache.put( key, value );
+			else
+				writeCache.putForExternalRead( key, value );
 		}
 		finally {
 			putValidator.releasePutFromLoadLock( key );
@@ -244,15 +249,10 @@ public class TransactionalAccessDelegate {
 		if ( !putValidator.invalidateRegion() ) {
 			throw new CacheException( "Failed to invalidate pending putFromLoad calls for region " + region.getName() );
 		}
-		final Transaction tx = region.suspend();
-		try {
-			// Invalidate the local region and then go remote
-			region.invalidateRegion();
-			Caches.broadcastEvictAll( cache );
-		}
-		finally {
-			region.resume( tx );
-		}
+
+		// Invalidate the local region and then go remote
+		region.invalidateRegion();
+		Caches.broadcastEvictAll( cache );
 	}
 
 }

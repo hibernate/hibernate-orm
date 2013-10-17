@@ -53,6 +53,7 @@ import org.hibernate.cache.spi.RegionFactory;
 public abstract class BaseRegion implements Region {
 
 	private static final Log log = LogFactory.getLog( BaseRegion.class );
+	private Transaction currentTransaction;
 
 	private enum InvalidateState {
 		INVALID, CLEARING, VALID
@@ -61,9 +62,12 @@ public abstract class BaseRegion implements Region {
 	private final String name;
 	private final AdvancedCache regionClearCache;
 	private final TransactionManager tm;
+
 	private final Object invalidationMutex = new Object();
 	private final AtomicReference<InvalidateState> invalidateState =
 			new AtomicReference<InvalidateState>( InvalidateState.VALID );
+	private volatile Transaction invalidateTransaction;
+
 	private final RegionFactory factory;
 
 	protected final AdvancedCache cache;
@@ -164,35 +168,35 @@ public abstract class BaseRegion implements Region {
 		boolean valid = isValid();
 		if ( !valid ) {
 			synchronized (invalidationMutex) {
-				if ( invalidateState.compareAndSet(
-						InvalidateState.INVALID, InvalidateState.CLEARING
-				) ) {
-					final Transaction tx = suspend();
+				if ( invalidateState.compareAndSet( InvalidateState.INVALID, InvalidateState.CLEARING ) ) {
 					try {
-						// Clear region in a separate transaction
-						Caches.withinTx(
-								cache, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								regionClearCache.clear();
-								return null;
-							}
+						// Even if no transactions are running, a new transaction
+						// needs to be started to do clear the region
+						// (without forcing autoCommit cache configuration).
+						Transaction tx = getCurrentTransaction();
+						if ( tx != null ) {
+							regionClearCache.clear();
+						} else {
+							Caches.withinTx( cache, new Callable<Void>() {
+								@Override
+								public Void call() throws Exception {
+									regionClearCache.clear();
+									return null;
+								}
+							} );
 						}
-						);
+
 						invalidateState.compareAndSet(
 								InvalidateState.CLEARING, InvalidateState.VALID
 						);
 					}
-					catch (Exception e) {
+					catch ( Exception e ) {
 						if ( log.isTraceEnabled() ) {
 							log.trace(
 									"Could not invalidate region: "
 											+ e.getLocalizedMessage()
 							);
 						}
-					}
-					finally {
-						resume( tx );
 					}
 				}
 			}
@@ -244,11 +248,20 @@ public abstract class BaseRegion implements Region {
    /**
     * Invalidates the region.
     */
-	public void invalidateRegion() {
-		if ( log.isTraceEnabled() ) {
-			log.trace( "Invalidate region: " + name );
+   public void invalidateRegion() {
+		if (log.isTraceEnabled()) {
+			log.trace("Invalidate region: " + name);
 		}
-		invalidateState.set( InvalidateState.INVALID );
+
+		Transaction tx = getCurrentTransaction();
+		if ( tx != null ) {
+			synchronized ( invalidationMutex ) {
+				invalidateTransaction = tx;
+				invalidateState.set( InvalidateState.INVALID );
+			}
+		} else {
+			invalidateState.set( InvalidateState.INVALID );
+		}
 	}
 
 	public TransactionManager getTransactionManager() {
@@ -263,6 +276,20 @@ public abstract class BaseRegion implements Region {
 
 	public AdvancedCache getCache() {
 		return cache;
+	}
+
+	public boolean isRegionInvalidatedInCurrentTx() {
+		Transaction tx = getCurrentTransaction();
+		return tx != null && tx.equals(invalidateTransaction);
+	}
+
+	private Transaction getCurrentTransaction() {
+		try {
+			// Transaction manager could be null
+			return tm != null ? tm.getTransaction() : null;
+		} catch (SystemException e) {
+			throw new CacheException("Unable to get current transaction", e);
+		}
 	}
 
 }

@@ -24,11 +24,13 @@
 package org.hibernate.test.cache.infinispan.functional;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.hibernate.Cache;
 import org.hibernate.Criteria;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
@@ -43,11 +45,10 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.stat.SecondLevelCacheStatistics;
 import org.hibernate.stat.Statistics;
 
+import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.infinispan.test.TestingUtil.withTx;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Functional entity transactional tests.
@@ -418,6 +419,9 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
    public void testNaturalIdCached() throws Exception {
       saveSomeCitizens();
 
+      // Clear the cache before the transaction begins
+      BasicTransactionalTestCase.this.cleanupCache();
+
       withTx(tm, new Callable<Void>() {
          @Override
          public Void call() throws Exception {
@@ -427,8 +431,6 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             Criteria criteria = s.createCriteria( Citizen.class );
             criteria.add( Restrictions.naturalId().set( "ssn", "1234" ).set( "state", france ) );
             criteria.setCacheable( true );
-
-            BasicTransactionalTestCase.this.cleanupCache();
 
             Statistics stats = sessionFactory().getStatistics();
             stats.setStatisticsEnabled( true );
@@ -566,7 +568,52 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
 
    }
 
-   private void saveSomeCitizens() throws Exception {
+   @Test
+   public void testEntityCacheContentsAfterEvictAll() throws Exception {
+      final List<Citizen> citizens = saveSomeCitizens();
+
+      withTx(tm, new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            Session s = openSession();
+            Transaction tx = s.beginTransaction();
+            Cache cache = s.getSessionFactory().getCache();
+
+            Statistics stats = sessionFactory().getStatistics();
+            SecondLevelCacheStatistics slcStats = stats.getSecondLevelCacheStatistics(Citizen.class.getName());
+
+            assertTrue("2lc entity cache is expected to contain Citizen id = " + citizens.get(0).getId(),
+                  cache.containsEntity(Citizen.class, citizens.get(0).getId()));
+            assertTrue("2lc entity cache is expected to contain Citizen id = " + citizens.get(1).getId(),
+                  cache.containsEntity(Citizen.class, citizens.get(1).getId()));
+            assertEquals(2, slcStats.getPutCount());
+
+            cache.evictEntityRegions();
+
+            assertEquals(0, slcStats.getElementCountInMemory());
+            assertFalse("2lc entity cache is expected to not contain Citizen id = " + citizens.get(0).getId(),
+                  cache.containsEntity(Citizen.class, citizens.get(0).getId()));
+            assertFalse("2lc entity cache is expected to not contain Citizen id = " + citizens.get(1).getId(),
+                  cache.containsEntity(Citizen.class, citizens.get(1).getId()));
+
+            Citizen citizen = (Citizen) s.load(Citizen.class, citizens.get(0).getId());
+            assertNotNull(citizen);
+            assertNotNull(citizen.getFirstname()); // proxy gets resolved
+            assertEquals(1, slcStats.getMissCount());
+            assertEquals(3, slcStats.getPutCount());
+            assertEquals(1, slcStats.getElementCountInMemory());
+            assertTrue("2lc entity cache is expected to contain Citizen id = " + citizens.get(0).getId(),
+                  cache.containsEntity(Citizen.class, citizens.get(0).getId()));
+
+            // cleanup
+            tx.rollback();
+            s.close();
+            return null;
+         }
+      });
+   }
+
+   private List<Citizen> saveSomeCitizens() throws Exception {
       final Citizen c1 = new Citizen();
       c1.setFirstname( "Emmanuel" );
       c1.setLastname( "Bernard" );
@@ -598,6 +645,11 @@ public class BasicTransactionalTestCase extends AbstractFunctionalTestCase {
             return null;
          }
       });
+
+      List<Citizen> citizens = new ArrayList<Citizen>(2);
+      citizens.add(c1);
+      citizens.add(c2);
+      return citizens;
    }
 
    private State getState(Session s, String name) {

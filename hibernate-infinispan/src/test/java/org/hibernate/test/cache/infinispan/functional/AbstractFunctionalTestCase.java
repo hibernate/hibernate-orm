@@ -72,4 +72,48 @@ public abstract class AbstractFunctionalTestCase extends SingleNodeTestCase {
       });
    }
 
+   @Test
+   public void testInsertClearCacheDeleteEntity() throws Exception {
+      final Statistics stats = sessionFactory().getStatistics();
+      stats.clear();
+
+      final Item item = new Item( "chris", "Chris's Item" );
+      withTx(tm, new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            Session s = openSession();
+            s.getTransaction().begin();
+            s.persist(item);
+            s.getTransaction().commit();
+            assertEquals(0, stats.getSecondLevelCacheMissCount());
+            assertEquals(0, stats.getSecondLevelCacheHitCount());
+            assertEquals(1, stats.getSecondLevelCachePutCount());
+            s.close();
+            return null;
+         }
+      });
+
+      log.info("Entry persisted, let's load and delete it.");
+
+      cleanupCache();
+
+      withTx(tm, new Callable<Void>() {
+         @Override
+         public Void call() throws Exception {
+            Session s = openSession();
+            s.getTransaction().begin();
+            Item found = (Item) s.load(Item.class, item.getId());
+            log.info(stats.toString());
+            assertEquals(item.getDescription(), found.getDescription());
+            assertEquals(1, stats.getSecondLevelCacheMissCount());
+            assertEquals(0, stats.getSecondLevelCacheHitCount());
+            assertEquals(2, stats.getSecondLevelCachePutCount());
+            s.delete(found);
+            s.getTransaction().commit();
+            s.close();
+            return null;
+         }
+      });
+   }
+
 }

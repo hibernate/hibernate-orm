@@ -401,7 +401,7 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			final HibernateQuery unwrapped = query.unwrap( HibernateQuery.class );
 			if ( unwrapped != null ) {
 				// create and register the proper NamedQueryDefinition...
-				final org.hibernate.Query hibernateQuery = ( (HibernateQuery) query ).getHibernateQuery();
+				final org.hibernate.Query hibernateQuery = unwrapped.getHibernateQuery();
 				if ( org.hibernate.SQLQuery.class.isInstance( hibernateQuery ) ) {
 					sessionFactory.registerNamedSQLQueryDefinition(
 							name,

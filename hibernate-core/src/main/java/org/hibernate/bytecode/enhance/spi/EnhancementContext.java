@@ -95,4 +95,11 @@ public interface EnhancementContext {
 	public CtField[] order(CtField[] persistentFields);
 
 	public boolean isLazyLoadable(CtField field);
+
+    /**
+     *
+     * @param field the field to check
+     * @return {@code true} if the field is mapped
+     */
+    public boolean isMappedCollection(CtField field);
 }

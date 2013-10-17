@@ -28,11 +28,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.cfg.Environment;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownServiceException;
@@ -48,19 +49,22 @@ import org.hibernate.service.spi.Startable;
 import org.hibernate.service.spi.Stoppable;
 
 /**
+ * Basic implementation of the ServiceRegistry and ServiceRegistryImplementor contracts
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractServiceRegistryImpl
 		implements ServiceRegistryImplementor, ServiceBinding.ServiceLifecycleOwner {
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			AbstractServiceRegistryImpl.class.getName()
-	);
+	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractServiceRegistryImpl.class );
+
+	public static final String ALLOW_CRAWLING = "hibernate.service.allow_crawling";
 
 	private final ServiceRegistryImplementor parent;
+	private final boolean allowCrawling;
 
 	private final ConcurrentHashMap<Class,ServiceBinding> serviceBindingMap = CollectionHelper.concurrentMap( 20 );
+	private ConcurrentHashMap<Class,Class> roleXref;
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator
@@ -74,13 +78,15 @@ public abstract class AbstractServiceRegistryImpl
 
 	protected AbstractServiceRegistryImpl(ServiceRegistryImplementor parent) {
 		this.parent = parent;
+		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 	}
 
 	public AbstractServiceRegistryImpl(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		if ( ! ServiceRegistryImplementor.class.isInstance( bootstrapServiceRegistry ) ) {
-			throw new IllegalArgumentException( "Boot-strap registry was not " );
+			throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
 		}
 		this.parent = (ServiceRegistryImplementor) bootstrapServiceRegistry;
+		this.allowCrawling = ConfigurationHelper.getBoolean( ALLOW_CRAWLING, Environment.getProperties(), true );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -117,7 +123,47 @@ public abstract class AbstractServiceRegistryImpl
 			// look in parent
 			serviceBinding = parent.locateServiceBinding( serviceRole );
 		}
-		return serviceBinding;
+
+		if ( serviceBinding != null ) {
+			return serviceBinding;
+		}
+
+		if ( !allowCrawling ) {
+			return null;
+		}
+
+		// look for a previously resolved alternate registration
+		if ( roleXref != null ) {
+			if ( roleXref.containsKey( serviceRole ) ) {
+				return serviceBindingMap.get( roleXref.get( serviceRole ) );
+			}
+		}
+
+		// perform a crawl looking for an alternate registration
+		for ( ServiceBinding binding : serviceBindingMap.values() ) {
+			if ( serviceRole.isAssignableFrom( binding.getServiceRole() ) ) {
+				// we found an alternate...
+				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				registerAlternate( serviceRole, binding.getServiceRole() );
+				return binding;
+			}
+
+			if ( binding.getService() != null && serviceRole.isInstance( binding.getService() ) ) {
+				// we found an alternate...
+				log.alternateServiceRole( serviceRole.getName(), binding.getServiceRole().getName() );
+				registerAlternate( serviceRole, binding.getServiceRole() );
+				return binding;
+			}
+		}
+
+		return null;
+	}
+
+	private void registerAlternate(Class alternate, Class target) {
+		if ( roleXref == null ) {
+			roleXref = CollectionHelper.concurrentMap( 20 );
+		}
+		roleXref.put( alternate, target );
 	}
 
 	@Override
@@ -143,8 +189,8 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	private <R extends Service> R initializeService(ServiceBinding<R> serviceBinding) {
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Initializing service [role={0}]", serviceBinding.getServiceRole().getName() );
+		if ( log.isTraceEnabled() ) {
+			log.tracev( "Initializing service [role={0}]", serviceBinding.getServiceRole().getName() );
 		}
 
 		// PHASE 1 : create service
@@ -211,7 +257,7 @@ public abstract class AbstractServiceRegistryImpl
 			}
 		}
 		catch (NullPointerException e) {
-            LOG.error("NPE injecting service deps : " + service.getClass().getName());
+            log.error( "NPE injecting service deps : " + service.getClass().getName() );
 		}
 	}
 
@@ -285,7 +331,7 @@ public abstract class AbstractServiceRegistryImpl
 				( (Stoppable) service ).stop();
 			}
 			catch ( Exception e ) {
-				LOG.unableToStopService( service.getClass(), e.toString() );
+				log.unableToStopService( service.getClass(), e.toString() );
 			}
 		}
 	}

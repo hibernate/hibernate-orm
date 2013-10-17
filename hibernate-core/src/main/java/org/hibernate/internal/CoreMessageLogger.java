@@ -56,6 +56,7 @@ import org.hibernate.engine.loading.internal.EntityLoadContext;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IntegralDataTypeHolder;
+import org.hibernate.service.Service;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
@@ -1629,4 +1630,11 @@ public interface CoreMessageLogger extends BasicLogger {
 					"using 'key'/'value' as required by spec; attempting to DoTheRightThing"
 	)
 	void nonCompliantMapConversion(String collectionRole);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 450,
+			value = "Encountered request for Service by non-primary service role [%s -> %s]; please update usage"
+	)
+	void alternateServiceRole(String requestedRole, String targetRole);
 }

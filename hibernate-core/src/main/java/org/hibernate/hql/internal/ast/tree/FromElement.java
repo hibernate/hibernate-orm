@@ -369,6 +369,10 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 	public void setRole(String role) {
 		this.role = role;
 	}
+	
+	public String getRole() {
+		return role;
+	}
 
 	public void setQueryableCollection(QueryableCollection queryableCollection) {
 		elementType.setQueryableCollection( queryableCollection );

@@ -260,11 +260,11 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 	private void assertEjbqlEqualsHql(String ejbql, String hql) {
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
 
-		QueryTranslator queryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, sessionFactory() );
+		QueryTranslator queryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, sessionFactory(), null );
 		queryTranslator.compile( Collections.EMPTY_MAP, true );
 		String hqlSql = queryTranslator.getSQLString();
 
-		queryTranslator = ast.createQueryTranslator( ejbql, ejbql, Collections.EMPTY_MAP, sessionFactory() );
+		queryTranslator = ast.createQueryTranslator( ejbql, ejbql, Collections.EMPTY_MAP, sessionFactory(), null );
 		queryTranslator.compile( Collections.EMPTY_MAP, true );
 		String ejbqlSql = queryTranslator.getSQLString();
 
@@ -273,7 +273,7 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 
 	private QueryTranslatorImpl compile(String input) {
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
-		QueryTranslator queryTranslator = ast.createQueryTranslator( input, input, Collections.EMPTY_MAP, sessionFactory() );
+		QueryTranslator queryTranslator = ast.createQueryTranslator( input, input, Collections.EMPTY_MAP, sessionFactory(), null );
 		queryTranslator.compile( Collections.EMPTY_MAP, true );
 
 		return ( QueryTranslatorImpl ) queryTranslator;
@@ -303,7 +303,7 @@ public class EJBQLTest extends BaseCoreFunctionalTestCase {
 
 	private String toSql(String hql) {
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
-		QueryTranslator queryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, sessionFactory() );
+		QueryTranslator queryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, sessionFactory(), null );
 		queryTranslator.compile( Collections.EMPTY_MAP, true );
 		return queryTranslator.getSQLString();
 	}

@@ -472,6 +472,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			if ( lhsFromElement == null ) {
 				throw new QueryException( "Unable to locate appropriate lhs" );
 			}
+			
+			String role = lhsFromElement.getClassName() + "." + propertyName;
 
 			FromElementFactory factory = new FromElementFactory(
 			        currentFromClause,
@@ -487,7 +489,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 					joinSequence,
 					fetch,
 					getWalker().isInFrom(),
-					propertyType
+					propertyType,
+					role
 			);
 		}
 		else {

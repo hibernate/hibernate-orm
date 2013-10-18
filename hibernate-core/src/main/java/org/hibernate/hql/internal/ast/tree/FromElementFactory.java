@@ -180,7 +180,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		return createCollectionJoin( collectionJoinSequence, null );
 	}
 
-	FromElement createCollection(
+	public FromElement createCollection(
 	        QueryableCollection queryableCollection,
 	        String role,
 	        JoinType joinType,
@@ -242,13 +242,14 @@ public class FromElementFactory implements SqlTokenTypes {
 		return elem;
 	}
 
-	FromElement createEntityJoin(
+	public FromElement createEntityJoin(
 	        String entityClass,
 	        String tableAlias,
 	        JoinSequence joinSequence,
 	        boolean fetchFlag,
 	        boolean inFrom,
-	        EntityType type) throws SemanticException {
+	        EntityType type,
+	        String role) throws SemanticException {
 		FromElement elem = createJoin( entityClass, tableAlias, joinSequence, type, false );
 		elem.setFetch( fetchFlag );
 		EntityPersister entityPersister = elem.getEntityPersister();
@@ -279,6 +280,8 @@ public class FromElementFactory implements SqlTokenTypes {
 				elem.setUseFromFragment( false );
 			}
 		}
+		
+		elem.setRole( role );
 
 		return elem;
 	}

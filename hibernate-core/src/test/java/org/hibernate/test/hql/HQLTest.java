@@ -1535,7 +1535,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 		Map replacements = new HashMap();
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
 		SessionFactoryImplementor factory = getSessionFactoryImplementor();
-		QueryTranslator newQueryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory );
+		QueryTranslator newQueryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory, null );
 		newQueryTranslator.compile( replacements, scalar );
 	}
 

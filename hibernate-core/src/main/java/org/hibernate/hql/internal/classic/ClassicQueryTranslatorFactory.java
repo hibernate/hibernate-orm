@@ -25,6 +25,7 @@
 package org.hibernate.hql.internal.classic;
 import java.util.Map;
 
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.QueryTranslator;
@@ -45,7 +46,9 @@ public class ClassicQueryTranslatorFactory implements QueryTranslatorFactory {
 			String queryIdentifier,
 	        String queryString,
 	        Map filters,
-	        SessionFactoryImplementor factory) {
+	        SessionFactoryImplementor factory,
+	        EntityGraphQueryHint entityGraphQueryHint) {
+		// TODO: Log warning if entityGraphQueryHint != null?
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}
 

@@ -139,7 +139,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 		try {
 			System.out.println("Compiling with classic QueryTranslator...");
 			QueryTranslatorFactory classic = new ClassicQueryTranslatorFactory();
-			oldQueryTranslator = classic.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory );
+			oldQueryTranslator = classic.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory, null );
 			oldQueryTranslator.compile( replacements, scalar );
 		}
 		catch ( QueryException e ) {
@@ -187,7 +187,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 
 	private QueryTranslatorImpl createNewQueryTranslator(String hql, Map replacements, boolean scalar, SessionFactoryImplementor factory) {
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
-		QueryTranslatorImpl newQueryTranslator = ( QueryTranslatorImpl ) ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory );
+		QueryTranslatorImpl newQueryTranslator = ( QueryTranslatorImpl ) ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory, null );
 		newQueryTranslator.compile( replacements, scalar );
 		return newQueryTranslator;
 	}
@@ -243,7 +243,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 		SessionFactoryImplementor factory = sessionFactory();
 		try {
 			QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
-			newQueryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory );
+			newQueryTranslator = ast.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, factory, null );
 			newQueryTranslator.compile( replacements, scalar );
 		}
 		catch ( QueryException e ) {

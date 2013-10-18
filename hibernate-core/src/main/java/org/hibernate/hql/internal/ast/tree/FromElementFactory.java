@@ -180,7 +180,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		return createCollectionJoin( collectionJoinSequence, null );
 	}
 
-	FromElement createCollection(
+	public FromElement createCollection(
 	        QueryableCollection queryableCollection,
 	        String role,
 	        JoinType joinType,
@@ -242,7 +242,7 @@ public class FromElementFactory implements SqlTokenTypes {
 		return elem;
 	}
 
-	FromElement createEntityJoin(
+	public FromElement createEntityJoin(
 	        String entityClass,
 	        String tableAlias,
 	        JoinSequence joinSequence,

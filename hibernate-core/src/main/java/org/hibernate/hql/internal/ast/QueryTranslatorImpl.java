@@ -36,6 +36,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -105,6 +106,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 
 	private ParameterTranslations paramTranslations;
 	private List<ParameterSpecification> collectedParameterSpecifications;
+	
+	private EntityGraphQueryHint entityGraphQueryHint;
 
 
 	/**
@@ -126,6 +129,16 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		this.shallowQuery = false;
 		this.enabledFilters = enabledFilters;
 		this.factory = factory;
+	}
+	
+	public QueryTranslatorImpl(
+			String queryIdentifier,
+			String query,
+			Map enabledFilters,
+			SessionFactoryImplementor factory,
+			EntityGraphQueryHint entityGraphQueryHint) {
+		this( queryIdentifier, query, enabledFilters, factory );
+		this.entityGraphQueryHint = entityGraphQueryHint;
 	}
 
 	/**
@@ -257,7 +270,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private static final ASTPrinter SQL_TOKEN_PRINTER = new ASTPrinter( SqlTokenTypes.class );
 
 	private HqlSqlWalker analyze(HqlParser parser, String collectionRole) throws QueryException, RecognitionException {
-		final HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole );
+		final HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole,
+				entityGraphQueryHint );
 		final AST hqlAst = parser.getAST();
 
 		// Transform the tree.

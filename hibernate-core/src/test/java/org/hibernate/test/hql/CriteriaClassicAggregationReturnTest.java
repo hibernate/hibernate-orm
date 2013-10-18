@@ -116,7 +116,8 @@ public class CriteriaClassicAggregationReturnTest extends QueryTranslatorTestCas
 		// special case to test classicquery special case handling of count(*)
 		String hql = "select count(*) from Human h";
 		QueryTranslatorFactory classic = new ClassicQueryTranslatorFactory();
-		QueryTranslator oldQueryTranslator = classic.createQueryTranslator( hql, hql, Collections.EMPTY_MAP, sessionFactory() );
+		QueryTranslator oldQueryTranslator = classic.createQueryTranslator( hql, hql, Collections.EMPTY_MAP,
+				sessionFactory(), null );
 		oldQueryTranslator.compile( Collections.EMPTY_MAP, true);
 		assertEquals( "incorrect return type count", 1, oldQueryTranslator.getReturnTypes().length );
 		assertEquals( "incorrect return type", IntegerType.INSTANCE, oldQueryTranslator.getReturnTypes()[0] );

@@ -74,6 +74,8 @@ public class HQLQueryPlan implements Serializable {
 
 	private final Set<String> enabledFilterNames;
 	private final boolean shallow;
+	
+	private EntityGraphQueryHint entityGraphQueryHint;
 
 	/**
 	 * Constructs a HQLQueryPlan
@@ -83,8 +85,14 @@ public class HQLQueryPlan implements Serializable {
 	 * @param enabledFilters The enabled filters (we only keep the names)
 	 * @param factory The factory
 	 */
-	public HQLQueryPlan(String hql, boolean shallow, Map<String,Filter> enabledFilters, SessionFactoryImplementor factory) {
-		this( hql, null, shallow, enabledFilters, factory );
+	public HQLQueryPlan(String hql, boolean shallow, Map<String,Filter> enabledFilters,
+			SessionFactoryImplementor factory) {
+		this( hql, null, shallow, enabledFilters, factory, null );
+	}
+	
+	public HQLQueryPlan(String hql, boolean shallow, Map<String,Filter> enabledFilters,
+			SessionFactoryImplementor factory, EntityGraphQueryHint entityGraphQueryHint) {
+		this( hql, null, shallow, enabledFilters, factory, entityGraphQueryHint );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -93,7 +101,8 @@ public class HQLQueryPlan implements Serializable {
 			String collectionRole,
 			boolean shallow,
 			Map<String,Filter> enabledFilters,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			EntityGraphQueryHint entityGraphQueryHint) {
 		this.sourceQuery = hql;
 		this.shallow = shallow;
 
@@ -115,7 +124,7 @@ public class HQLQueryPlan implements Serializable {
 		for ( int i=0; i<length; i++ ) {
 			if ( hasCollectionRole ) {
 				translators[i] = queryTranslatorFactory
-						.createQueryTranslator( hql, concreteQueryStrings[i], enabledFilters, factory );
+						.createQueryTranslator( hql, concreteQueryStrings[i], enabledFilters, factory, entityGraphQueryHint );
 				translators[i].compile( querySubstitutions, shallow );
 			}
 			else {
@@ -144,6 +153,8 @@ public class HQLQueryPlan implements Serializable {
 				returnMetadata = new ReturnMetadata( translators[0].getReturnAliases(), types );
 			}
 		}
+		
+		this.entityGraphQueryHint = entityGraphQueryHint;
 	}
 
 	public String getSourceQuery() {

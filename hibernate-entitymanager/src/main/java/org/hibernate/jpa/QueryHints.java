@@ -30,8 +30,10 @@ import static org.hibernate.annotations.QueryHints.CACHEABLE;
 import static org.hibernate.annotations.QueryHints.CACHE_MODE;
 import static org.hibernate.annotations.QueryHints.CACHE_REGION;
 import static org.hibernate.annotations.QueryHints.COMMENT;
+import static org.hibernate.annotations.QueryHints.FETCHGRAPH;
 import static org.hibernate.annotations.QueryHints.FETCH_SIZE;
 import static org.hibernate.annotations.QueryHints.FLUSH_MODE;
+import static org.hibernate.annotations.QueryHints.LOADGRAPH;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
 import static org.hibernate.annotations.QueryHints.READ_ONLY;
 import static org.hibernate.annotations.QueryHints.TIMEOUT_HIBERNATE;
@@ -97,6 +99,18 @@ public class QueryHints {
 	public static final String HINT_FLUSH_MODE = FLUSH_MODE;
 
 	public static final String HINT_NATIVE_LOCKMODE = NATIVE_LOCKMODE;
+	
+	/**
+	 * Hint providing an EntityGraph.  With JPQL/HQL, the sole functionality is attribute nodes are treated as
+	 * FetchType.EAGER.  Laziness is not affected.
+	 */
+	public static final String HINT_FETCHGRAPH = FETCHGRAPH;
+	
+	/**
+	 * Hint providing an EntityGraph.  With JPQL/HQL, the sole functionality is attribute nodes are treated as
+	 * FetchType.EAGER.  Laziness is not affected.
+	 */
+	public static final String HINT_LOADGRAPH = LOADGRAPH;
 
 	private static final Set<String> HINTS = buildHintsSet();
 
@@ -112,6 +126,8 @@ public class QueryHints {
 		hints.add( HINT_CACHE_MODE );
 		hints.add( HINT_FLUSH_MODE );
 		hints.add( HINT_NATIVE_LOCKMODE );
+		hints.add( HINT_FETCHGRAPH );
+		hints.add( HINT_LOADGRAPH );
 		return java.util.Collections.unmodifiableSet( hints );
 	}
 

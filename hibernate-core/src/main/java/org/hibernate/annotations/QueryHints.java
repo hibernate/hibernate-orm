@@ -117,5 +117,17 @@ public class QueryHints {
 	 * Accepts a {@link javax.persistence.LockModeType} or a {@link org.hibernate.LockMode}
 	 */
 	public static final String NATIVE_LOCKMODE = "org.hibernate.lockMode";
+	
+	/**
+	 * Hint providing an EntityGraph.  With JPQL/HQL, the sole functionality is attribute nodes are treated as
+	 * FetchType.EAGER.  Laziness is not affected.
+	 */
+	public static final String FETCHGRAPH = "javax.persistence.fetchgraph";
+	
+	/**
+	 * Hint providing an EntityGraph.  With JPQL/HQL, the sole functionality is attribute nodes are treated as
+	 * FetchType.EAGER.  Laziness is not affected.
+	 */
+	public static final String LOADGRAPH = "javax.persistence.loadgraph";
 
 }

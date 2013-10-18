@@ -21,7 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.dialect;
+package com.hps.hibernate.dialect;
+
+import org.hibernate.dialect.SQLServer2008Dialect;
 
 
 /**
@@ -74,7 +76,38 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 				.toString();
 	}
 
+	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return false ;
 	}
+
+	@Override
+	public boolean supportsVariableLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean bindLimitParametersFirst() {
+		return false ;
+	}
+
+	@Override
+	public boolean useMaxForLimit() {
+		return false ;
+	}
+
+	@Override
+	public boolean forceLimitUsage() {
+		return true ;
+	}
+
+	@Override
+	public boolean supportsLimit() {
+		return true;
+	}
+
+    @Override
+    public boolean supportsLimitOffset() {
+            return true ;
+    }
 }

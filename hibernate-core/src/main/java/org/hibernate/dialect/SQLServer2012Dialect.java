@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package com.hps.hibernate.dialect;
+package org.hibernate.dialect;
 
 import org.hibernate.dialect.SQLServer2008Dialect;
 

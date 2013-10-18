@@ -35,63 +35,63 @@ import org.hibernate.engine.spi.RowSelection;
  */
 public class SQLServer2012Dialect extends SQLServer2008Dialect {
 
-    @Override
-    public boolean supportsSequences() {
-        return true;
-    }
+	@Override
+	public boolean supportsSequences() {
+		return true;
+	}
 
-    @Override
-    public boolean supportsPooledSequences() {
-        return true;
-    }
+	@Override
+	public boolean supportsPooledSequences() {
+		return true;
+	}
 
-    @Override
-    public String getCreateSequenceString(String sequenceName) {
-        return "create sequence " + sequenceName;
-    }
+	@Override
+	public String getCreateSequenceString(String sequenceName) {
+		return "create sequence " + sequenceName;
+	}
 
-    @Override
-    public String getDropSequenceString(String sequenceName) {
-        return "drop sequence " + sequenceName;
-    }
+	@Override
+	public String getDropSequenceString(String sequenceName) {
+		return "drop sequence " + sequenceName;
+	}
 
-    @Override
-    public String getSelectSequenceNextValString(String sequenceName) {
-        return "next value for " + sequenceName;
-    }
+	@Override
+	public String getSelectSequenceNextValString(String sequenceName) {
+		return "next value for " + sequenceName;
+	}
 
-    @Override
-    public String getSequenceNextValString(String sequenceName) {
-        return "select " + getSelectSequenceNextValString( sequenceName );
-    }
+	@Override
+	public String getSequenceNextValString(String sequenceName) {
+		return "select " + getSelectSequenceNextValString(sequenceName);
+	}
 
-    @Override
-    public String getQuerySequencesString() {
-        return "select name from sys.sequences";
-    }
+	@Override
+	public String getQuerySequencesString() {
+		return "select name from sys.sequences";
+	}
 
-    @Override
-    public boolean supportsVariableLimit() {
-        return true;
-    }
+	@Override
+	public boolean supportsVariableLimit() {
+		return true;
+	}
 
-    @Override
-    public boolean useMaxForLimit() {
-        return false ;
-    }
+	@Override
+	public boolean useMaxForLimit() {
+		return false;
+	}
 
-    @Override
-    public boolean supportsLimit() {
-        return true;
-    }
+	@Override
+	public boolean supportsLimit() {
+		return true;
+	}
 
-    @Override
-    public boolean supportsLimitOffset() {
-        return true ;
-    }
+	@Override
+	public boolean supportsLimitOffset() {
+		return true;
+	}
 
-    @Override
-    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-        return new SQLServer2012LimitHandler( sql, selection );
-    }
+	@Override
+	public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+		return new SQLServer2012LimitHandler(sql, selection);
+	}
 }

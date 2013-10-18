@@ -45,7 +45,7 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	private static final String DISTINCT = "distinct";
 	private static final String ORDER_BY = "order by";
 
-	private static final Pattern ALIAS_PATTERN = Pattern.compile( "(?i)\\sas\\s(.)+$" );
+	private static final Pattern ALIAS_PATTERN = Pattern.compile("(?i)\\sas\\s(.)+$");
 
 	// Flag indicating whether TOP(?) expression has been added to the original query.
 	private boolean topAdded;
@@ -55,11 +55,11 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	/**
 	 * Constructs a SQLServer2005LimitHandler
 	 *
-	 * @param sql The SQL
+	 * @param sql       The SQL
 	 * @param selection The row selection options
 	 */
 	public SQLServer2012LimitHandler(String sql, RowSelection selection) {
-		super( sql, selection );
+		super(sql, selection);
 	}
 
 	@Override
@@ -90,30 +90,30 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 
 	/**
 	 * Add a LIMIT clause to the given SQL SELECT (HHH-2655: ROW_NUMBER for Paging)
-	 *
+	 * <p/>
 	 * The LIMIT SQL will look like:
-	 *
+	 * <p/>
 	 * <pre>
-     * SELECT * FROM TableName ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY;
+	 * SELECT * FROM TableName ORDER BY id OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY;
 	 * </pre>
-	 *
+	 * <p/>
 	 * When offset equals {@literal 0}, only <code>TOP(?)</code> expression is added to the original query.
 	 *
 	 * @return A new SQL statement with the LIMIT clause applied.
 	 */
 	@Override
 	public String getProcessedSql() {
-		final StringBuilder sb = new StringBuilder( sql );
-		if ( sb.charAt( sb.length() - 1 ) == ';' ) {
-			sb.setLength( sb.length() - 1 );
+		final StringBuilder sb = new StringBuilder(sql);
+		if (sb.charAt(sb.length() - 1) == ';') {
+			sb.setLength(sb.length() - 1);
 		}
 
-		if ( LimitHelper.hasFirstRow( selection ) ) {
+		if (LimitHelper.hasFirstRow(selection)) {
 			// Wrap the query within a with statement:
-			sb.append( " offset ? rows fetch next ? rows only" );
+			sb.append(" offset ? rows fetch next ? rows only");
 		} else {
 			hasOffset = false;
-			addTopExpression( sb );
+			addTopExpression(sb);
 		}
 
 		return sb.toString();
@@ -121,9 +121,9 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public int bindLimitParametersAtStartOfQuery(PreparedStatement statement, int index) throws SQLException {
-		if ( topAdded ) {
+		if (topAdded) {
 			// Binding TOP(?)
-			statement.setInt( index, getMaxOrLimit() - 1 );
+			statement.setInt(index, getMaxOrLimit() - 1);
 			return 1;
 		}
 		return 0;
@@ -131,7 +131,7 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public int bindLimitParametersAtEndOfQuery(PreparedStatement statement, int index) throws SQLException {
-		return hasOffset ? super.bindLimitParametersAtEndOfQuery( statement, index ) : 0;
+		return hasOffset ? super.bindLimitParametersAtEndOfQuery(statement, index) : 0;
 	}
 
 	/**
@@ -140,74 +140,70 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	 * method returns {@literal *}.
 	 *
 	 * @param sb SQL query.
-	 *
 	 * @return List of aliases separated with comas or {@literal *}.
 	 */
 	protected String fillAliasInSelectClause(StringBuilder sb) {
 		final List<String> aliases = new LinkedList<String>();
-		final int startPos = shallowIndexOf( sb, SELECT_WITH_SPACE, 0 );
-		int endPos = shallowIndexOfWord( sb, FROM, startPos );
+		final int startPos = shallowIndexOf(sb, SELECT_WITH_SPACE, 0);
+		int endPos = shallowIndexOfWord(sb, FROM, startPos);
 		int nextComa = startPos;
 		int prevComa = startPos;
 		int unique = 0;
 		boolean selectsMultipleColumns = false;
 
-		while ( nextComa != -1 ) {
+		while (nextComa != -1) {
 			prevComa = nextComa;
-			nextComa = shallowIndexOf( sb, ",", nextComa );
-			if ( nextComa > endPos ) {
+			nextComa = shallowIndexOf(sb, ",", nextComa);
+			if (nextComa > endPos) {
 				break;
 			}
-			if ( nextComa != -1 ) {
-				final String expression = sb.substring( prevComa, nextComa );
-				if ( selectsMultipleColumns( expression ) ) {
+			if (nextComa != -1) {
+				final String expression = sb.substring(prevComa, nextComa);
+				if (selectsMultipleColumns(expression)) {
 					selectsMultipleColumns = true;
-				}
-				else {
-					String alias = getAlias( expression );
-					if ( alias == null ) {
+				} else {
+					String alias = getAlias(expression);
+					if (alias == null) {
 						// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-						alias = StringHelper.generateAlias( "page", unique );
-						sb.insert( nextComa, " as " + alias );
-						int aliasExprLength = ( " as " + alias ).length();
+						alias = StringHelper.generateAlias("page", unique);
+						sb.insert(nextComa, " as " + alias);
+						int aliasExprLength = (" as " + alias).length();
 						++unique;
 						nextComa += aliasExprLength;
 						endPos += aliasExprLength;
 					}
-					aliases.add( alias );
+					aliases.add(alias);
 				}
 				++nextComa;
 			}
 		}
 		// Processing last column.
 		// Refreshing end position, because we might have inserted new alias.
-		endPos = shallowIndexOfWord( sb, FROM, startPos );
-		final String expression = sb.substring( prevComa, endPos );
-		if ( selectsMultipleColumns( expression ) ) {
+		endPos = shallowIndexOfWord(sb, FROM, startPos);
+		final String expression = sb.substring(prevComa, endPos);
+		if (selectsMultipleColumns(expression)) {
 			selectsMultipleColumns = true;
-		}
-		else {
-			String alias = getAlias( expression );
-			if ( alias == null ) {
+		} else {
+			String alias = getAlias(expression);
+			if (alias == null) {
 				// Inserting alias. It is unlikely that we would have to add alias, but just in case.
-				alias = StringHelper.generateAlias( "page", unique );
-				sb.insert( endPos - 1, " as " + alias );
+				alias = StringHelper.generateAlias("page", unique);
+				sb.insert(endPos - 1, " as " + alias);
 			}
-			aliases.add( alias );
+			aliases.add(alias);
 		}
 
 		// In case of '*' or '{table}.*' expressions adding an alias breaks SQL syntax, returning '*'.
-		return selectsMultipleColumns ? "*" : StringHelper.join( ", ", aliases.iterator() );
+		return selectsMultipleColumns ? "*" : StringHelper.join(", ", aliases.iterator());
 	}
 
 	/**
 	 * @param expression Select expression.
-	 *
 	 * @return {@code true} when expression selects multiple columns, {@code false} otherwise.
 	 */
 	private boolean selectsMultipleColumns(String expression) {
-		final String lastExpr = expression.trim().replaceFirst( "(?i)(.)*\\s", "" );
-		return "*".equals( lastExpr ) || lastExpr.endsWith( ".*" );
+		final String lastExpr = expression.trim().replaceFirst("(?i)(.)*\\s", "");
+		return "*".equals(lastExpr) || lastExpr.endsWith(".*");
 	}
 
 	/**
@@ -215,15 +211,14 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	 * Alias should be preceded with {@code AS} keyword.
 	 *
 	 * @param expression Single column select expression.
-	 *
 	 * @return Column alias.
 	 */
 	private String getAlias(String expression) {
-		final Matcher matcher = ALIAS_PATTERN.matcher( expression );
-		if ( matcher.find() ) {
+		final Matcher matcher = ALIAS_PATTERN.matcher(expression);
+		if (matcher.find()) {
 			// Taking advantage of Java regular expressions greedy behavior while extracting the last AS keyword.
 			// Note that AS keyword can appear in CAST operator, e.g. 'cast(tab1.col1 as varchar(255)) as col1'.
-			return matcher.group( 0 ).replaceFirst( "(?i)(.)*\\sas\\s", "" ).trim();
+			return matcher.group(0).replaceFirst("(?i)(.)*\\sas\\s", "").trim();
 		}
 		return null;
 	}
@@ -234,8 +229,8 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	 * @param sql SQL query.
 	 */
 	protected void encloseWithOuterQuery(StringBuilder sql) {
-		sql.insert( 0, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( " );
-		sql.append( " ) inner_query " );
+		sql.insert(0, "SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( ");
+		sql.append(" ) inner_query ");
 	}
 
 	/**
@@ -245,15 +240,14 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	 * @param sql SQL query.
 	 */
 	protected void addTopExpression(StringBuilder sql) {
-		final int distinctStartPos = shallowIndexOfWord( sql, DISTINCT, 0 );
-		if ( distinctStartPos > 0 ) {
+		final int distinctStartPos = shallowIndexOfWord(sql, DISTINCT, 0);
+		if (distinctStartPos > 0) {
 			// Place TOP after DISTINCT.
-			sql.insert( distinctStartPos + DISTINCT.length(), " TOP(?)" );
-		}
-		else {
-			final int selectStartPos = shallowIndexOf( sql, SELECT_WITH_SPACE, 0 );
+			sql.insert(distinctStartPos + DISTINCT.length(), " TOP(?)");
+		} else {
+			final int selectStartPos = shallowIndexOf(sql, SELECT_WITH_SPACE, 0);
 			// Place TOP after SELECT.
-			sql.insert( selectStartPos + SELECT.length(), " TOP(?)" );
+			sql.insert(selectStartPos + SELECT.length(), " TOP(?)");
 		}
 		topAdded = true;
 	}
@@ -262,25 +256,23 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	 * Returns index of the first case-insensitive match of search term surrounded by spaces
 	 * that is not enclosed in parentheses.
 	 *
-	 * @param sb String to search.
-	 * @param search Search term.
+	 * @param sb        String to search.
+	 * @param search    Search term.
 	 * @param fromIndex The index from which to start the search.
-	 *
 	 * @return Position of the first match, or {@literal -1} if not found.
 	 */
 	private static int shallowIndexOfWord(final StringBuilder sb, final String search, int fromIndex) {
-		final int index = shallowIndexOf( sb, ' ' + search + ' ', fromIndex );
+		final int index = shallowIndexOf(sb, ' ' + search + ' ', fromIndex);
 		// In case of match adding one because of space placed in front of search term.
-		return index != -1 ? ( index + 1 ) : -1;
+		return index != -1 ? (index + 1) : -1;
 	}
 
 	/**
 	 * Returns index of the first case-insensitive match of search term that is not enclosed in parentheses.
 	 *
-	 * @param sb String to search.
-	 * @param search Search term.
+	 * @param sb        String to search.
+	 * @param search    Search term.
 	 * @param fromIndex The index from which to start the search.
-	 *
 	 * @return Position of the first match, or {@literal -1} if not found.
 	 */
 	private static int shallowIndexOf(StringBuilder sb, String search, int fromIndex) {
@@ -292,20 +284,19 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 		int depth = 0;
 		int cur = fromIndex;
 		do {
-			pos = lowercase.indexOf( search, cur );
-			if ( pos != -1 ) {
-				for ( int iter = cur; iter < pos; iter++ ) {
-					final char c = sb.charAt( iter );
-					if ( c == '(' ) {
+			pos = lowercase.indexOf(search, cur);
+			if (pos != -1) {
+				for (int iter = cur; iter < pos; iter++) {
+					final char c = sb.charAt(iter);
+					if (c == '(') {
 						depth = depth + 1;
-					}
-					else if ( c == ')' ) {
+					} else if (c == ')') {
 						depth = depth - 1;
 					}
 				}
 				cur = pos + searchlen;
 			}
-		} while ( cur < len && depth != 0 && pos != -1 );
+		} while (cur < len && depth != 0 && pos != -1);
 		return depth == 0 ? pos : -1;
 	}
 }

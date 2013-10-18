@@ -56,39 +56,39 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		// HHH-3965 fix
 		// As per http://www.sql-server-helper.com/faq/sql-server-2005-varchar-max-p01.aspx
 		// use varchar(max) and varbinary(max) instead of TEXT and IMAGE types
-		registerColumnType( Types.BLOB, "varbinary(MAX)" );
-		registerColumnType( Types.VARBINARY, "varbinary(MAX)" );
-		registerColumnType( Types.VARBINARY, MAX_LENGTH, "varbinary($l)" );
-		registerColumnType( Types.LONGVARBINARY, "varbinary(MAX)" );
+		registerColumnType(Types.BLOB, "varbinary(MAX)");
+		registerColumnType(Types.VARBINARY, "varbinary(MAX)");
+		registerColumnType(Types.VARBINARY, MAX_LENGTH, "varbinary($l)");
+		registerColumnType(Types.LONGVARBINARY, "varbinary(MAX)");
 
-		registerColumnType( Types.CLOB, "varchar(MAX)" );
-		registerColumnType( Types.LONGVARCHAR, "varchar(MAX)" );
-		registerColumnType( Types.VARCHAR, "varchar(MAX)" );
-		registerColumnType( Types.VARCHAR, MAX_LENGTH, "varchar($l)" );
+		registerColumnType(Types.CLOB, "varchar(MAX)");
+		registerColumnType(Types.LONGVARCHAR, "varchar(MAX)");
+		registerColumnType(Types.VARCHAR, "varchar(MAX)");
+		registerColumnType(Types.VARCHAR, MAX_LENGTH, "varchar($l)");
 
-		registerColumnType( Types.BIGINT, "bigint" );
-		registerColumnType( Types.BIT, "bit" );
+		registerColumnType(Types.BIGINT, "bigint");
+		registerColumnType(Types.BIT, "bit");
 
 
-		registerFunction( "row_number", new NoArgSQLFunction( "row_number", StandardBasicTypes.INTEGER, true ) );
+		registerFunction("row_number", new NoArgSQLFunction("row_number", StandardBasicTypes.INTEGER, true));
 	}
 
 	@Override
 	public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
-		return new SQLServer2005LimitHandler( sql, selection );
+		return new SQLServer2005LimitHandler(sql, selection);
 	}
 
 	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
 		// NOTE : since SQLServer2005 the nowait hint is supported
-		if ( lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT ) {
+		if (lockOptions.getLockMode() == LockMode.UPGRADE_NOWAIT) {
 			return tableName + " with (updlock, rowlock, nowait)";
 		}
 
 		final LockMode mode = lockOptions.getLockMode();
 		final boolean isNoWait = lockOptions.getTimeOut() == LockOptions.NO_WAIT;
 		final String noWaitStr = isNoWait ? ", nowait" : "";
-		switch ( mode ) {
+		switch (mode) {
 			case UPGRADE_NOWAIT:
 				return tableName + " with (updlock, rowlock, nowait)";
 			case UPGRADE:
@@ -107,13 +107,13 @@ public class SQLServer2005Dialect extends SQLServerDialect {
 		return new SQLExceptionConversionDelegate() {
 			@Override
 			public JDBCException convert(SQLException sqlException, String message, String sql) {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-				if ( "HY008".equals( sqlState ) ) {
-					throw new QueryTimeoutException( message, sqlException, sql );
+				final String sqlState = JdbcExceptionHelper.extractSqlState(sqlException);
+				final int errorCode = JdbcExceptionHelper.extractErrorCode(sqlException);
+				if ("HY008".equals(sqlState)) {
+					throw new QueryTimeoutException(message, sqlException, sql);
 				}
-				if (1222 == errorCode ) {
-					throw new LockTimeoutException( message, sqlException, sql );
+				if (1222 == errorCode) {
+					throw new LockTimeoutException(message, sqlException, sql);
 				}
 				return null;
 			}

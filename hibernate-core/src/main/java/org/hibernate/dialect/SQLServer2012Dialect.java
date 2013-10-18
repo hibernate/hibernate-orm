@@ -65,4 +65,16 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	public String getQuerySequencesString() {
 		return "select name from sys.sequences";
 	}
+
+	@Override
+	public String getLimitString(String sql, boolean hasOffset) {
+		return new StringBuffer( sql.length()+20 )
+				.append( sql )
+				.append( hasOffset ? " offset ? rows fetch next ? rows only" : " offset 0 rows fetch next ? rows only" )
+				.toString();
+	}
+
+	public boolean bindLimitParametersInReverseOrder() {
+		return false ;
+	}
 }

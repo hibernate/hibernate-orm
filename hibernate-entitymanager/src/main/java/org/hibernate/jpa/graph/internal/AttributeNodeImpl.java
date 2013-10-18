@@ -23,13 +23,15 @@
  */
 package org.hibernate.jpa.graph.internal;
 
-import javax.persistence.AttributeNode;
-import javax.persistence.Subgraph;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.PluralAttribute;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.persistence.AttributeNode;
+import javax.persistence.Subgraph;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.PluralAttribute;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -173,8 +175,19 @@ public class AttributeNodeImpl<T> implements AttributeNode<T>, AttributeNodeImpl
 				}
 			}
 		}
+		
+		ManagedType managedType = null;
+		try {
+			managedType = entityManagerFactory.getEntityTypeByName( type.getName() );
+		}
+		catch (IllegalArgumentException e) {
+			// do nothing
+		}
+		if (managedType == null) {
+			managedType = attribute.getDeclaringType();
+		}
 
-		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, attribute.getDeclaringType(), type );
+		final SubgraphImpl subgraph = new SubgraphImpl( this.entityManagerFactory, managedType, type );
 		subgraphMap.put( type, subgraph );
 		return subgraph;
 	}

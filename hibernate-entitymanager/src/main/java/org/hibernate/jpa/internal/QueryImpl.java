@@ -23,13 +23,10 @@
  */
 package org.hibernate.jpa.internal;
 
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.ParameterMode;
-import javax.persistence.PersistenceException;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +36,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+import javax.persistence.ParameterMode;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -47,10 +50,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.SQLQuery;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.internal.SQLQueryImpl;
 import org.hibernate.jpa.AvailableSettings;
@@ -63,10 +68,7 @@ import org.hibernate.jpa.spi.ParameterBind;
 import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
-
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
+import org.jboss.logging.Logger;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.
@@ -444,7 +446,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		checkTransaction();
 		beforeQuery();
 		try {
-			return query.list();
+			return list();
 		}
 		catch (QueryExecutionRequestException he) {
 			throw new IllegalStateException(he);
@@ -490,7 +492,7 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		checkTransaction();
 		beforeQuery();
 		try {
-			final List<X> result = query.list();
+			final List<X> result = list();
 
 			if ( result.size() == 0 ) {
 				NoResultException nre = new NoResultException( "No entity found for query" );
@@ -560,5 +562,15 @@ public class QueryImpl<X> extends AbstractQueryImpl<X> implements TypedQuery<X>,
 		return true;
 	}
 
+	private List<X> list() {
+		if (getEntityGraphQueryHint() != null) {
+			SessionImplementor sessionImpl = (SessionImplementor) getEntityManager().getSession();
+			HQLQueryPlan entityGraphQueryPlan = new HQLQueryPlan( getHibernateQuery().getQueryString(), false,
+					sessionImpl.getEnabledFilters(), sessionImpl.getFactory(), getEntityGraphQueryHint() );
+			// Safe to assume QueryImpl at this point.
+			unwrap( org.hibernate.internal.QueryImpl.class ).setQueryPlan( entityGraphQueryPlan );
+		}
+		return query.list();
+	}
 
 }

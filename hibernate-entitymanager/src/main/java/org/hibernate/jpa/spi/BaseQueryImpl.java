@@ -23,13 +23,19 @@
  */
 package org.hibernate.jpa.spi;
 
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
+import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
+import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
+import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
+
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -38,32 +44,30 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
+import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
+import javax.persistence.Parameter;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.QueryParameterException;
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
+import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
-
-import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
-import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
-import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
-import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
+import org.jboss.logging.Logger;
 
 /**
  * Intended as the base class for all {@link javax.persistence.Query} implementations, including
@@ -84,6 +88,7 @@ public abstract class BaseQueryImpl implements Query {
 	private int maxResults = -1;
 	private Map<String, Object> hints;
 
+	private EntityGraphQueryHint entityGraphQueryHint;
 
 	public BaseQueryImpl(HibernateEntityManagerImplementor entityManager) {
 		this.entityManager = entityManager;
@@ -374,6 +379,15 @@ public abstract class BaseQueryImpl implements Query {
 				else {
 					applied = false;
 				}
+			}
+			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
+				if (value instanceof EntityGraphImpl) {
+					entityGraphQueryHint = new EntityGraphQueryHint( (EntityGraphImpl) value );
+				}
+				else {
+					LOG.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
+				}
+				applied = true;
 			}
 			else {
 				LOG.ignoringUnrecognizedQueryHint( hintName );
@@ -828,6 +842,10 @@ public abstract class BaseQueryImpl implements Query {
 	public Object getParameterValue(int position) {
 		checkOpen( false );
 		return getParameterValue( getParameter( position ) );
+	}
+	
+	protected EntityGraphQueryHint getEntityGraphQueryHint() {
+		return entityGraphQueryHint;
 	}
 
 

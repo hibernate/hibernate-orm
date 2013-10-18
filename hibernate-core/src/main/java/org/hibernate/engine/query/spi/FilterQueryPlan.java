@@ -53,7 +53,7 @@ public class FilterQueryPlan extends HQLQueryPlan implements Serializable {
 			boolean shallow,
 			Map enabledFilters,
 			SessionFactoryImplementor factory) {
-		super( hql, collectionRole, shallow, enabledFilters, factory );
+		super( hql, collectionRole, shallow, enabledFilters, factory, null );
 		this.collectionRole = collectionRole;
 	}
 

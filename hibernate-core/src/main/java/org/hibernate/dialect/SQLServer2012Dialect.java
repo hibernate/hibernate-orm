@@ -23,8 +23,10 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.dialect.SQLServer2008Dialect;
 
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.engine.spi.RowSelection;
 
 /**
  * Microsoft SQL Server 2012 Dialect
@@ -33,81 +35,63 @@ import org.hibernate.dialect.SQLServer2008Dialect;
  */
 public class SQLServer2012Dialect extends SQLServer2008Dialect {
 
-	@Override
-	public boolean supportsSequences() {
-		return true;
-	}
+    @Override
+    public boolean supportsSequences() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsPooledSequences() {
-		return true;
-	}
+    @Override
+    public boolean supportsPooledSequences() {
+        return true;
+    }
 
-	@Override
-	public String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
-	}
+    @Override
+    public String getCreateSequenceString(String sequenceName) {
+        return "create sequence " + sequenceName;
+    }
 
-	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence " + sequenceName;
-	}
+    @Override
+    public String getDropSequenceString(String sequenceName) {
+        return "drop sequence " + sequenceName;
+    }
 
-	@Override
-	public String getSelectSequenceNextValString(String sequenceName) {
-		return "next value for " + sequenceName;
-	}
+    @Override
+    public String getSelectSequenceNextValString(String sequenceName) {
+        return "next value for " + sequenceName;
+    }
 
-	@Override
-	public String getSequenceNextValString(String sequenceName) {
-		return "select " + getSelectSequenceNextValString( sequenceName );
-	}
+    @Override
+    public String getSequenceNextValString(String sequenceName) {
+        return "select " + getSelectSequenceNextValString( sequenceName );
+    }
 
-	@Override
-	public String getQuerySequencesString() {
-		return "select name from sys.sequences";
-	}
+    @Override
+    public String getQuerySequencesString() {
+        return "select name from sys.sequences";
+    }
 
-	@Override
-	public String getLimitString(String sql, boolean hasOffset) {
-		return new StringBuffer( sql.length()+20 )
-				.append( sql )
-				.append( hasOffset ? " offset ? rows fetch next ? rows only" : " offset 0 rows fetch next ? rows only" )
-				.toString();
-	}
+    @Override
+    public boolean supportsVariableLimit() {
+        return true;
+    }
 
-	@Override
-	public boolean bindLimitParametersInReverseOrder() {
-		return false ;
-	}
+    @Override
+    public boolean useMaxForLimit() {
+        return false ;
+    }
 
-	@Override
-	public boolean supportsVariableLimit() {
-		return true;
-	}
-
-	@Override
-	public boolean bindLimitParametersFirst() {
-		return false ;
-	}
-
-	@Override
-	public boolean useMaxForLimit() {
-		return false ;
-	}
-
-	@Override
-	public boolean forceLimitUsage() {
-		return true ;
-	}
-
-	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
+    @Override
+    public boolean supportsLimit() {
+        return true;
+    }
 
     @Override
     public boolean supportsLimitOffset() {
-            return true ;
+        return true ;
+    }
+
+    @Override
+    public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+        return new SQLServer2012LimitHandler( sql, selection );
     }
 }

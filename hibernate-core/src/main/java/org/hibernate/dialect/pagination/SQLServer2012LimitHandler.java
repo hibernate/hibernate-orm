@@ -36,7 +36,8 @@ import java.util.regex.Pattern;
 /**
  * LIMIT clause handler compatible with SQL Server 2005 and later.
  *
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * @see SQLServer2005LimitHandler
+ * @author Deven Phillips (deven dot phillips at gmail dot com)
  */
 public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	private static final String SELECT = "select";

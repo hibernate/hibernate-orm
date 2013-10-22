@@ -44,7 +44,7 @@ public class FileTimeStampChecker implements Serializable {
 			return false;
 		}
 
-		FileTimeStampChecker that = ( FileTimeStampChecker ) o;
+		FileTimeStampChecker that = (FileTimeStampChecker) o;
 
 		if ( !lastModifiedCache.equals( that.lastModifiedCache ) ) {
 			return false;

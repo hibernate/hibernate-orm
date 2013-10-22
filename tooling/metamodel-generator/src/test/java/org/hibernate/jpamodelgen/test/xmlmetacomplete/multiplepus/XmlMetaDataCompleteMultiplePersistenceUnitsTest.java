@@ -57,3 +57,4 @@ public class XmlMetaDataCompleteMultiplePersistenceUnitsTest extends Compilation
 		return properties;
 	}
 }
+

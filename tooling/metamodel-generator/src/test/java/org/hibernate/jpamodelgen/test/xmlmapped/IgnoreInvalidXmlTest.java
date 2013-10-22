@@ -30,7 +30,8 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
 /**
  * @author Hardy Ferentschik
  */
-public class IgnoreInvalidXmlTest extends CompilationTest {
+public class
+		IgnoreInvalidXmlTest extends CompilationTest {
 	@Test
 	public void testInvalidXmlFilesGetIgnored() {
 		// this is only a indirect test, but if the invalid xml files would cause the processor to abort the

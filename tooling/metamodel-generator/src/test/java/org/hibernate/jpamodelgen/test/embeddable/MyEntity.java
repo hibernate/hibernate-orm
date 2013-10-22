@@ -21,6 +21,6 @@ import javax.persistence.Entity;
 
 @Entity
 public class MyEntity extends Base {
-    @Embedded
-    private EmbeddableEntity emb;
+	@Embedded
+	private EmbeddableEntity emb;
 }

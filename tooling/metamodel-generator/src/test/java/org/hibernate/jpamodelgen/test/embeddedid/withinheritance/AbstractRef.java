@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * @author Hardy Ferentschik
  */
-public class AbstractRef implements Serializable {
+public abstract class AbstractRef implements Serializable {
 	private final int id;
 
 	protected AbstractRef() {

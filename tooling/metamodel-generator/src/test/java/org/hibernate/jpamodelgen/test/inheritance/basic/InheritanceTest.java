@@ -59,3 +59,4 @@ public class InheritanceTest extends CompilationTest {
 		return InheritanceTest.class.getPackage().getName();
 	}
 }
+

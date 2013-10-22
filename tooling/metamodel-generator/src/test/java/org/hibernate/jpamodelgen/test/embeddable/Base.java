@@ -22,6 +22,6 @@ import javax.persistence.MappedSuperclass;
 @MappedSuperclass
 public class Base {
 
-    @Id
-    protected String uuid;
+	@Id
+	protected String uuid;
 }

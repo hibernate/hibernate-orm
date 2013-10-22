@@ -37,7 +37,7 @@ public class ImportContextImpl implements ImportContext {
 
 	private String basePackage = "";
 
-	private static String LINE_SEPARATOR = System.getProperty( "line.separator" );
+	private static final String LINE_SEPARATOR = System.getProperty( "line.separator" );
 	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
 
 	static {
@@ -110,7 +110,7 @@ public class ImportContextImpl implements ImportContext {
 
 
 		if ( inSamePackage( fqcn ) || ( imports.contains( pureFqcn ) && canBeSimple ) ) {
-			result = unqualify( result ); // de-qualify
+			result = unqualify( result );
 		}
 		else if ( inJavaLang( fqcn ) ) {
 			result = result.substring( "java.lang.".length() );

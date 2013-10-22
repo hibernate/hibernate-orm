@@ -55,9 +55,9 @@ public class XmlParserHelper {
 	 */
 	private static final int NUMBER_OF_SCHEMAS = 4;
 
-	private static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
+	private static final XMLInputFactory XML_INPUT_FACTORY = XMLInputFactory.newInstance();
 
-	private static final ConcurrentMap<String, Schema> schemaCache = new ConcurrentHashMap<String, Schema>(
+	private static final ConcurrentMap<String, Schema> SCHEMA_CACHE = new ConcurrentHashMap<String, Schema>(
 			NUMBER_OF_SCHEMAS
 	);
 
@@ -102,14 +102,14 @@ public class XmlParserHelper {
 	}
 
 	public Schema getSchema(String schemaResource) throws XmlParsingException {
-		Schema schema = schemaCache.get( schemaResource );
+		Schema schema = SCHEMA_CACHE.get( schemaResource );
 
 		if ( schema != null ) {
 			return schema;
 		}
 
 		schema = loadSchema( schemaResource );
-		Schema previous = schemaCache.putIfAbsent( schemaResource, schema );
+		Schema previous = SCHEMA_CACHE.putIfAbsent( schemaResource, schema );
 
 		return previous != null ? previous : schema;
 	}
@@ -147,7 +147,7 @@ public class XmlParserHelper {
 	}
 
 	private synchronized XMLEventReader createXmlEventReader(InputStream xmlStream) throws XMLStreamException {
-		return xmlInputFactory.createXMLEventReader( xmlStream );
+		return XML_INPUT_FACTORY.createXMLEventReader( xmlStream );
 	}
 
 	private String getPackage(String resourceName) {

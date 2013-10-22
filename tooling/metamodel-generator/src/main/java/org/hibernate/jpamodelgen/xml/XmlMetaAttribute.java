@@ -55,7 +55,7 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 	}
 
 	@Override
-	abstract public String getMetaType();
+	public abstract String getMetaType();
 
 	@Override
 	public String toString() {

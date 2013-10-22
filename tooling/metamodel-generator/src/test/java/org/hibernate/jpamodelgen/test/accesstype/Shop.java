@@ -20,15 +20,15 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-@Entity 
+@Entity
 public class Shop {
 	@Id
 	long id;
 	String name;
 }
+
  

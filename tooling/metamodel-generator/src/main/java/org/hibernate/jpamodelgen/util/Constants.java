@@ -41,7 +41,7 @@ public final class Constants {
 	public static final String ELEMENT_COLLECTION = "javax.persistence.ElementCollection";
 	public static final String ACCESS = "javax.persistence.Access";
 
-	public static Map<String, String> COLLECTIONS = new HashMap<String, String>();
+	public static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
 		COLLECTIONS.put( java.util.Collection.class.getName(), "javax.persistence.metamodel.CollectionAttribute" );
@@ -54,7 +54,7 @@ public final class Constants {
 		COLLECTIONS.put( java.util.SortedMap.class.getName(), "javax.persistence.metamodel.MapAttribute" );
 	}
 
-	public static List<String> BASIC_TYPES = new ArrayList<String>();
+	public static final List<String> BASIC_TYPES = new ArrayList<String>();
 
 	static {
 		BASIC_TYPES.add( java.lang.String.class.getName() );
@@ -76,7 +76,7 @@ public final class Constants {
 		BASIC_TYPES.add( java.sql.Blob.class.getName() );
 	}
 
-	public static List<String> BASIC_ARRAY_TYPES = new ArrayList<String>();
+	public static final List<String> BASIC_ARRAY_TYPES = new ArrayList<String>();
 
 	static {
 		BASIC_ARRAY_TYPES.add( java.lang.Character.class.getName() );

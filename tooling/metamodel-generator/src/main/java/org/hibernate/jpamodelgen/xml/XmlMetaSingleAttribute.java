@@ -23,12 +23,12 @@ import org.hibernate.jpamodelgen.model.MetaSingleAttribute;
  */
 public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSingleAttribute {
 
-    public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
-        super(parent, propertyName, type);
-    }
+	public XmlMetaSingleAttribute(XmlMetaEntity parent, String propertyName, String type) {
+		super( parent, propertyName, type );
+	}
 
 	@Override
-    public String getMetaType() {
-        return "javax.persistence.metamodel.SingularAttribute";
-    }
+	public String getMetaType() {
+		return "javax.persistence.metamodel.SingularAttribute";
+	}
 }

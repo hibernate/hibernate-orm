@@ -28,13 +28,16 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 	private final String keyType;
 
 	public AnnotationMetaMap(AnnotationMetaEntity parent, Element element, String collectionType,
-							 String keyType, String elementType) {
+			String keyType, String elementType) {
 		super( parent, element, collectionType, elementType );
 		this.keyType = keyType;
 	}
 
 	public String getDeclarationString() {
-		return "public static volatile " + getHostingEntity().importType( getMetaType() ) + "<" + getHostingEntity().importType( getHostingEntity().getQualifiedName() ) + ", " + getHostingEntity()
-				.importType( keyType ) + ", " + getHostingEntity().importType( getTypeDeclaration() ) + "> " + getPropertyName() + ";";
+		return "public static volatile " + getHostingEntity().importType( getMetaType() )
+				+ "<" + getHostingEntity().importType( getHostingEntity().getQualifiedName() )
+				+ ", " + getHostingEntity().importType( keyType ) + ", "
+				+ getHostingEntity().importType( getTypeDeclaration() ) + "> "
+				+ getPropertyName() + ";";
 	}
 }

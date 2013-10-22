@@ -16,8 +16,8 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import org.hibernate.jpamodelgen.test.accesstype.*;
 import org.hibernate.jpamodelgen.test.accesstype.Address;
+import org.hibernate.jpamodelgen.test.accesstype.Area;
 
 /**
  * @author Hardy Ferentschik

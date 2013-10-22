@@ -23,8 +23,6 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.jpamodelgen.test.accesstype.Product;
-
 /**
  *
  * @author Max Andersen
@@ -34,49 +32,49 @@ import org.hibernate.jpamodelgen.test.accesstype.Product;
 @Entity  
 public class Item {
 	
-	long _id;
+	long id;
 	
-	int _quantity;
+	int quantity;
 	
-	Product _product;
+	Product product;
 	
-	Order _order;
+	Order order;
 
 	Detail detail;
 
 	@Id
 	public long getId() {
-		return _id;
+		return id;
 	}
 
 	public void setId(long id) {
-		this._id = id;
+		this.id = id;
 	}
 
 	public int getQuantity() {
-		return _quantity;
+		return quantity;
 	}
 
 	public void setQuantity(int quantity) {
-		this._quantity = quantity;
+		this.quantity = quantity;
 	}
 
 	@ManyToOne
 	public Product getProduct() {
-		return _product;
+		return product;
 	}
 
 	public void setProduct(Product product) {
-		this._product = product;
+		this.product = product;
 	}
 
 	@ManyToOne
 	public Order getOrder() {
-		return _order;
+		return order;
 	}
 
 	public void setOrder(Order order) {
-		this._order = order;
+		this.order = order;
 	}
 	
 	@OneToMany

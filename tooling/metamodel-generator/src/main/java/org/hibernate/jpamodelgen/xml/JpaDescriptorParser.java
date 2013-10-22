@@ -450,6 +450,8 @@ public class JpaDescriptorParser {
 			case PROPERTY: {
 				return AccessType.PROPERTY;
 			}
+			default: {
+			}
 		}
 		return null;
 	}

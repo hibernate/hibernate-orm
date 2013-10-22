@@ -167,6 +167,10 @@ final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
 task javadocs(type: Javadoc) {
     source = sourceSets.main.allJava
     destinationDir = javadocDir
+    excludes = ['org/hibernate/jpamodelgen/xml/jaxb/**']
+    // need to update the javadic classpath and add the main compilation directory to avoid missing classes warnigns due to the
+    // above excludes
+    classpath = files( configurations.compile, "${buildDir}/classes/main" )
     maxMemory = '512m'
     configure( options ) {
         stylesheetFile = rootProject.file( 'src/main/javadoc/stylesheet.css' )

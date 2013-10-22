@@ -26,6 +26,8 @@ import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
+import org.hibernate.TransactionException;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -71,13 +73,17 @@ public class OsgiJtaPlatform implements JtaPlatform {
 
 	@Override
 	public boolean canRegisterSynchronization() {
-		// TODO
-		return false;
+		return JtaStatusHelper.isActive( retrieveTransactionManager() );
 	}
 
 	@Override
 	public void registerSynchronization(Synchronization synchronization) {
-		// TODO
+		try {
+			retrieveTransactionManager().getTransaction().registerSynchronization( synchronization );
+		}
+		catch (Exception e) {
+			throw new TransactionException( "Could not obtain transaction from OSGi services!" );
+		}
 	}
 
 	@Override

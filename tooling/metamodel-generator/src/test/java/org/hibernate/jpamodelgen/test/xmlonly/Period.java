@@ -22,3 +22,4 @@ public class Period {
 	private Date start;
 	private Date end;
 }
+

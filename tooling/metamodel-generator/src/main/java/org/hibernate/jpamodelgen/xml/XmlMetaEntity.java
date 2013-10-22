@@ -61,7 +61,7 @@ import org.hibernate.jpamodelgen.xml.jaxb.OneToOne;
  */
 public class XmlMetaEntity implements MetaEntity {
 
-	static Map<String, String> COLLECTIONS = new HashMap<String, String>();
+	static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
 		COLLECTIONS.put( "java.util.Collection", "javax.persistence.metamodel.CollectionAttribute" );
@@ -353,6 +353,8 @@ public class XmlMetaEntity implements MetaEntity {
 				}
 				case TYPEVAR: {
 					return mirror.toString();
+				}
+				default: {
 				}
 			}
 		}

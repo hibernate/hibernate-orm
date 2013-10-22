@@ -18,38 +18,33 @@ package org.hibernate.jpamodelgen.test.accesstype;
 
 import java.math.BigDecimal;
 import java.util.Set;
-
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.jpamodelgen.test.accesstype.Item;
-import org.hibernate.jpamodelgen.test.accesstype.Shop;
-
 /**
- *
  * @author Max Andersen
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-@Entity  
+@Entity
 public class Product {
 
 	transient String nonPersistent;
 	static String nonPersistent2;
-	
+
 	@Id
 	long id;
 
-    int test;
-	
+	int test;
+
 	String description;
 	BigDecimal price;
-	
+
 	@ManyToOne
 	Shop shop;
-	
+
 	@OneToMany
 	Set<Item> items;
 }

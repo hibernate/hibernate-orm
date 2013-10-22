@@ -80,7 +80,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		return parent;
 	}
 
-	abstract public String getMetaType();
+	public abstract String getMetaType();
 
 	public String getTypeDeclaration() {
 		return type;

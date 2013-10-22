@@ -4,6 +4,7 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'jdocbook'
+apply plugin: 'checkstyle'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.7'
@@ -158,6 +159,13 @@ test {
     }
 }
 
+checkstyle {
+    configFile = rootProject.file( 'src/config/checkstyle/checkstyle.xml' )
+    showViolations = true
+    ignoreFailures = true
+}
+checkstyleMain.exclude '**/jaxb/**'
+
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Javadocs
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,7 +181,7 @@ task javadocs(type: Javadoc) {
     classpath = files( configurations.compile, "${buildDir}/classes/main" )
     maxMemory = '512m'
     configure( options ) {
-        stylesheetFile = rootProject.file( 'src/main/javadoc/stylesheet.css' )
+        stylesheetFile = rootProject.file( 'src/config/javadoc/stylesheet.css' )
         windowTitle = 'Hibernate JPA 2 Metamodel Generator JavaDocs'
         docTitle = "Hibernate JPA 2 Metamodel Generator JavaDocs ($project.version)"
         bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
@@ -183,7 +191,7 @@ task javadocs(type: Javadoc) {
 
     doLast {
         copy {
-            from rootProject.file( 'src/main/javadoc/images' )
+            from rootProject.file( 'src/config/javadoc/images' )
             into new File( javadocDir, "/images" )
         }
     }
@@ -298,21 +306,19 @@ publishing {
     }
 }
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Artifact deploy
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 task sourcesJar(type: Jar, dependsOn: compileJava) {
-	from sourceSets.main.allSource
+    from sourceSets.main.allSource
     classifier = 'sources'
 }
 
 artifacts {
-	archives sourcesJar
+    archives sourcesJar
 }
 
-uploadArchives.dependsOn sourcesJar
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Release
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 
 

@@ -64,7 +64,7 @@ public final class Context {
 	 * Whether all mapping files are xml-mapping-metadata-complete. In this case no annotation processing will take
 	 * place.
 	 */
-	private Boolean fullyXmlConfigured = null;
+	private Boolean fullyXmlConfigured;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;

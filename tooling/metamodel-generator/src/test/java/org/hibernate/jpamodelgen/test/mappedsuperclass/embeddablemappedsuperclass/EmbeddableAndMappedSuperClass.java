@@ -25,7 +25,7 @@ import javax.persistence.MappedSuperclass;
 @Embeddable
 @MappedSuperclass
 public class EmbeddableAndMappedSuperClass {
-
 }
+
 
 

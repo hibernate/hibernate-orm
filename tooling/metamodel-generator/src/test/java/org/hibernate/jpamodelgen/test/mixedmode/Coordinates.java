@@ -24,7 +24,8 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class Coordinates {
 	public float longitude;
- 	public float latitude;
+	public float latitude;
 }
+
 
 

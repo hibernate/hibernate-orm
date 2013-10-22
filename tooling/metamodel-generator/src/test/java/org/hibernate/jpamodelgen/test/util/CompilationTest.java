@@ -49,8 +49,8 @@ public abstract class CompilationTest {
 	private static final String ANNOTATION_PROCESSOR_OPTION_PREFIX = "-A";
 	private static final String SOURCE_BASE_DIR_PROPERTY = "sourceBaseDir";
 	private static final String OUT_BASE_DIR_PROPERTY = "outBaseDir";
-	private static final String sourceBaseDir;
-	private static final String outBaseDir;
+	private static final String SOURCE_BASE_DIR;
+	private static final String OUT_BASE_DIR;
 
 	public static final String DIRECTORY_SEPARATOR = File.separator;
 
@@ -61,13 +61,13 @@ public abstract class CompilationTest {
 		if ( tmp == null ) {
 			fail( "The system property sourceBaseDir has to be set and point to the base directory of the test java sources." );
 		}
-		sourceBaseDir = tmp;
+		SOURCE_BASE_DIR = tmp;
 
 		tmp = System.getProperty( OUT_BASE_DIR_PROPERTY );
 		if ( tmp == null ) {
 			fail( "The system property outBaseDir has to be set and point to the base directory of the test output directory." );
 		}
-		outBaseDir = tmp;
+		OUT_BASE_DIR = tmp;
 	}
 
 	public CompilationTest() {
@@ -79,14 +79,14 @@ public abstract class CompilationTest {
 	}
 
 	public static String getSourceBaseDir() {
-		return sourceBaseDir;
+		return SOURCE_BASE_DIR;
 	}
 
 	@BeforeClass
 	protected void compileAllTestEntities() throws Exception {
-		List<File> sourceFiles = getCompilationUnits( sourceBaseDir, getPackageNameOfCurrentTest() );
+		List<File> sourceFiles = getCompilationUnits( SOURCE_BASE_DIR, getPackageNameOfCurrentTest() );
 		// make sure there are no relics from previous runs
-		TestUtil.deleteGeneratedSourceFiles( new File( outBaseDir ) );
+		TestUtil.deleteGeneratedSourceFiles( new File( OUT_BASE_DIR ) );
 		compile( sourceFiles );
 	}
 
@@ -134,7 +134,7 @@ public abstract class CompilationTest {
 		return javaFiles;
 	}
 
-	abstract protected String getPackageNameOfCurrentTest();
+	protected abstract String getPackageNameOfCurrentTest();
 
 	protected Map<String, String> getProcessorOptions() {
 		return Collections.emptyMap();
@@ -157,7 +157,7 @@ public abstract class CompilationTest {
 	private List<String> createJavaOptions() {
 		List<String> options = new ArrayList<String>();
 		options.add( "-d" );
-		options.add( outBaseDir );
+		options.add( OUT_BASE_DIR );
 
 		// pass orm files if specified
 		if ( !getOrmFiles().isEmpty() ) {

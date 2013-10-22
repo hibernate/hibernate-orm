@@ -23,14 +23,14 @@ import org.hibernate.jpamodelgen.model.MetaCollection;
  */
 public class XmlMetaCollection extends XmlMetaAttribute implements MetaCollection {
 
-    private String collectionType;
+	private String collectionType;
 
-    public XmlMetaCollection(XmlMetaEntity parent, String propertyName, String type, String collectionType) {
-        super(parent, propertyName, type);
-        this.collectionType = collectionType;
-    }
+	public XmlMetaCollection(XmlMetaEntity parent, String propertyName, String type, String collectionType) {
+		super( parent, propertyName, type );
+		this.collectionType = collectionType;
+	}
 
-    @Override
+	@Override
 	public String getMetaType() {
 		return collectionType;
 	}

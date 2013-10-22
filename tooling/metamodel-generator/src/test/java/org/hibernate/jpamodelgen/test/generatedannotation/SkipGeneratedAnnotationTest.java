@@ -19,11 +19,10 @@ package org.hibernate.jpamodelgen.test.generatedannotation;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.testng.annotations.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;

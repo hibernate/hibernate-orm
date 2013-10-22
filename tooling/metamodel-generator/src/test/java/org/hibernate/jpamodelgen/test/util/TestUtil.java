@@ -46,14 +46,14 @@ public class TestUtil {
 	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String META_MODEL_CLASS_POSTFIX = "_";
-	private static final String outBaseDir;
+	private static final String OUT_BASE_DIR;
 
 	static {
 		String tmp = System.getProperty( "outBaseDir" );
 		if ( tmp == null ) {
 			fail( "The system property outBaseDir has to be set and point to the base directory of the test output directory." );
 		}
-		outBaseDir = tmp;
+		OUT_BASE_DIR = tmp;
 	}
 
 	private TestUtil() {
@@ -112,7 +112,7 @@ public class TestUtil {
 		// generate the file name
 		String fileName = metaModelClassName.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 		fileName = fileName.concat( ".java" );
-		return new File( outBaseDir + PATH_SEPARATOR + fileName );
+		return new File( OUT_BASE_DIR + PATH_SEPARATOR + fileName );
 	}
 
 	public static String getMetaModelSourceAsString(Class<?> clazz) {
@@ -122,7 +122,7 @@ public class TestUtil {
 		try {
 			BufferedReader input = new BufferedReader( new FileReader( sourceFile ) );
 			try {
-				String line = null; //not declared within while loop
+				String line = null;
 				/*
 						* readLine is a bit quirky :
 						* it returns the content of a line MINUS the newline.
@@ -281,7 +281,7 @@ public class TestUtil {
 		}
 		else {
 			fail( "Unexpected component type" );
-			return null; // making the compiler happy
+			return null;
 		}
 	}
 

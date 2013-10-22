@@ -119,7 +119,6 @@ public class EntityGraphQueryHint {
 							columns, false);
 					final QueryableCollection queryableCollection = walker.getSessionFactoryHelper()
 							.requireQueryableCollection( role );
-					// TODO: indexed?
 					fromElements.add( fromElementFactory.createCollection(
 							queryableCollection, role, JoinType.LEFT_OUTER_JOIN, true, false ) );
 				}

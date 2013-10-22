@@ -5,6 +5,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven-publish-auth'
 apply plugin: 'jdocbook'
 apply plugin: 'checkstyle'
+apply plugin: 'distribution'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.7'
@@ -169,8 +170,7 @@ checkstyleMain.exclude '**/jaxb/**'
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Javadocs
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-final File documentationDir = mkdir( new File( project.buildDir, 'documentation' ) );
-final File javadocDir = mkdir( new File( documentationDir, 'javadocs' ) );
+final File javadocDir = mkdir( new File( project.buildDir, 'javadocs/api' ) );
 final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
 task javadocs(type: Javadoc) {
     source = sourceSets.main.allJava
@@ -318,7 +318,68 @@ artifacts {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+distributions {
+    main {
+        baseName = 'hibernate-jpamodelgen-dist'
+        contents {
+            from rootProject.file( 'README.md' )
+            from rootProject.file( 'license.txt' )
+            from rootProject.file( 'changelog.txt' )
+            
+            into('lib') {
+                configurations.archives.allArtifacts
+            }
 
+            // javadocs
+            into('docs/api') {
+                from javadocDir
+            }
+
+            //  docbook
+            into('docs/reference') {
+                from "${buildDir}/docbook/publish/manual/en-US"
+            }
+
+            into( 'project' ) {
+                from ( rootProject.projectDir ) {
+                    exclude( '.git' )
+                    exclude( '.gitignore' )
+                    exclude( 'README.md')
+                    exclude( 'changelog.txt' )
+                    exclude( 'license.txt' )
+                    exclude( 'gradle' )
+                    exclude( 'gradlew' )
+                    exclude( 'gradlew.bat' )
+                    exclude( 'wrapper/*' )
+                    exclude( '**/.gradle/**' )
+                    exclude( '**/target/**' )
+                    exclude( '.idea' )
+                    exclude( '**/*.ipr' )
+                    exclude( '**/*.iml' )
+                    exclude( '**/*.iws' )
+                    exclude( '**/atlassian-ide-plugin.xml' )
+                    exclude( '**/.classpath' )
+                    exclude( '**/.project' )
+                    exclude( '**/.settings' )
+                }
+            }
+        }
+    }
+}
+
+distZip.dependsOn build,javadocs,buildDocs
+distTar.dependsOn build,javadocs,buildDocs
+distTar {
+    compression = Compression.GZIP
+}
+
+task buildBundles(type: Task, dependsOn: [distZip,distTar]) {
+    description = "Builds all release bundles"
+}
+
+task release(dependsOn: [publish,buildBundles]) {
+    description = "Execute all release tasks"
+}
 
 
 

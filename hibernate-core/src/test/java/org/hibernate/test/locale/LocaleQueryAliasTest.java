@@ -30,6 +30,7 @@ import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -40,6 +41,8 @@ import org.junit.Test;
 public class LocaleQueryAliasTest extends BaseCoreFunctionalTestCase {
 	
 	private static final String asciiRegex = "^\\p{ASCII}*$";
+	
+	private static Locale currentLocale;
 	
 	@Test
 	public void testAliasWithLocale() {
@@ -57,8 +60,15 @@ public class LocaleQueryAliasTest extends BaseCoreFunctionalTestCase {
 	
 	@BeforeClass
 	public static void beforeClass() {
+		currentLocale = Locale.getDefault();
+		
 		// Turkish will generate a "dotless i" when toLowerCase is used on "I".
 		Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+	}
+	
+	@AfterClass
+	public static void afterClass() {
+		Locale.setDefault(currentLocale);
 	}
 	
 	@Override

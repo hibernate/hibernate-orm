@@ -6,6 +6,8 @@ apply plugin: 'maven-publish-auth'
 apply plugin: 'jdocbook'
 apply plugin: 'checkstyle'
 apply plugin: 'distribution'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.7'
@@ -327,7 +329,9 @@ distributions {
             from rootProject.file( 'changelog.txt' )
             
             into('lib') {
-                configurations.archives.allArtifacts
+                from ( "${buildDir}/libs" ) {
+                  exclude( '*-sources.jar' )  
+                }
             }
 
             // javadocs

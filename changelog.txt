@@ -5,6 +5,12 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.7.SP1 (2013.10.23)
+------------------------------------------------------------------------------------------------------------------------
+
+** Bug
+    * [HHH-8617] - Unexpected (changed) behavior of @Temporal(TemporalType.DATE) columns
+
 Changes in version 4.2.7.Final (2013.10.23)
 ------------------------------------------------------------------------------------------------------------------------
 

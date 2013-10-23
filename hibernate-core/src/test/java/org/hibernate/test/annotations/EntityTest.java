@@ -39,6 +39,8 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.type.StandardBasicTypes;
@@ -356,6 +358,7 @@ public class EntityTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = Oracle10gDialect.class, comment = "oracle12c returns time in getDate.  For now, skip.")
 	public void testTemporalType() throws Exception {
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();

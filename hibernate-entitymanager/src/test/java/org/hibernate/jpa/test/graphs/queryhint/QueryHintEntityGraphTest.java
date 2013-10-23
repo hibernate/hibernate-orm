@@ -60,7 +60,8 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.getTransaction().begin();
 		
 		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
-		entityGraph.addAttributeNodes( "employees" );
+		entityGraph.addAttributeNodes( "location" );
+		entityGraph.addAttributeNodes( "markets" );
 		Query query = entityManager.createQuery( "from " + Company.class.getName() );
 		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
 		Company company = (Company) query.getSingleResult();
@@ -68,17 +69,14 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.getTransaction().commit();
 		entityManager.close();
 		
-		assertTrue( Hibernate.isInitialized( company.employees ) );
-		assertFalse( Hibernate.isInitialized( company.employees.iterator().next().managers ) );
-		assertFalse( Hibernate.isInitialized( company.location ) );
-		assertFalse( Hibernate.isInitialized( company.markets ) );
+		assertFalse( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
 		
 		entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		
-		entityGraph.addAttributeNodes( "location" );
-		entityGraph.addAttributeNodes( "markets" );
-		Subgraph<?> subgraph = entityGraph.addSubgraph( "employees" );
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
 		subgraph.addAttributeNodes( "managers" );
 		query = entityManager.createQuery( "from " + Company.class.getName() );
 		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );

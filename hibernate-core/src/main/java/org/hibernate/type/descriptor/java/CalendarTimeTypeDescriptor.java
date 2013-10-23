@@ -106,38 +106,28 @@ public class CalendarTimeTypeDescriptor extends AbstractTypeDescriptor<Calendar>
 	}
 
 	public <X> Calendar wrap(X value, WrapperOptions options) {
-		Calendar cal = null;
-		
 		if ( value == null ) {
 			return null;
 		}
 		if ( Calendar.class.isInstance( value ) ) {
-			cal = (Calendar) value;
+			return (Calendar) value;
 		}
 
 		if ( ! Date.class.isInstance( value ) ) {
 			throw unknownWrap( value.getClass() );
 		}
-		
-		if ( cal == null ) {
-			cal = new GregorianCalendar();
-			if ( Environment.jvmHasTimestampBug() ) {
-				final long milliseconds = ( (Date) value ).getTime();
-				final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
-						? ( (java.sql.Timestamp) value ).getNanos()
-						: 0;
-				cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
-			}
-			else {
-				cal.setTime( (Date) value );
-			}
+
+		Calendar cal = new GregorianCalendar();
+		if ( Environment.jvmHasTimestampBug() ) {
+			final long milliseconds = ( (Date) value ).getTime();
+			final long nanoseconds = java.sql.Timestamp.class.isInstance( value )
+					? ( (java.sql.Timestamp) value ).getNanos()
+					: 0;
+			cal.setTime( new Date( milliseconds + nanoseconds / 1000000 ) );
 		}
-		
-		// Ensure the year/month/date is actually stripped out.
-		cal.set( Calendar.YEAR, 0 );
-		cal.set( Calendar.MONTH, 0 );
-		cal.set( Calendar.DATE, 0 );
-		
+		else {
+			cal.setTime( (Date) value );
+		}
 		return cal;
 	}
 }

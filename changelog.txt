@@ -5,6 +5,43 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.7.Final (2013.10.23)
+------------------------------------------------------------------------------------------------------------------------
+
+** Technical task
+    * [HHH-8354] - New dirty-checking options based on bytecode enhancement
+
+** Bug
+    * [HHH-3812] - Documentation says bags are Lists in Java, but are not
+    * [HHH-4118] - Hibernate ignores invalid values for hibernate.hbm2ddl.auto
+    * [HHH-5744] - Return value check missing for ResultSet.next method
+    * [HHH-5818] - Malformed exception message
+    * [HHH-6255] - SchemaExport quote foreignkey names not correct
+    * [HHH-6484] - Replacing an entity on a one-to-one delete-orphan association with a new instance does not delete the previous one
+    * [HHH-6576] - NPE in HibernateUtil in case there is no default configuration
+    * [HHH-6859] - Typo in AbstractEntityManagerImpl.determineCacheStoreMode(Map)
+    * [HHH-7513] - PropertyAccessException while reattachement: could not get a field value by reflection getter
+    * [HHH-7984] - Prepared statement for callable returning cursor not closed
+    * [HHH-8032] - Create OptimisticLockException with message of the wrapped StaleObjectStateException
+    * [HHH-8328] - Typo in Query.list Javadoc
+    * [HHH-8537] - @UniqueConstraint naming non-existent column leads to NPE
+    * [HHH-8551] - Cannot use with-clause on the RHS of a join
+    * [HHH-8567] - AuditProperty.property('id') does not reference original id, it references generated composite id of AUD instead
+    * [HHH-8573] - PropertyAccessException when instance of a subclass gets to cache via lazy not cascading association
+    * [HHH-8578] - Bulk delete cascading into many-to-many join table not properly handling where clause
+    * [HHH-8579] - toLowerCase() in Turkish locale converts to non-ascii lowercase character
+    * [HHH-8580] - NPE while deleting items from collection
+    * [HHH-8605] - ManyToManyTest.testManyToManyWithFormula fails on mssql2008R2, mssql2012, sybase157
+    * [HHH-8612] - FumTest hangs on oracle12c
+    * [HHH-8633] - OsgiJtaPlatform does not register synchronization
+
+** Improvement
+    * [HHH-7130] - Evicting query regions is not logged
+
+** Task
+    * [HHH-8463] - Upgrade to Javassist 3.18.1-GA
+
+
 Changes in version 4.2.6.Final (2013.09.25)
 ------------------------------------------------------------------------------------------------------------------------
 

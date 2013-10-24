@@ -16,10 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.inheritance.deep;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -34,6 +34,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
 public class DeepInheritanceTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-69")
+	@WithClasses({ JetPlane.class, PersistenceBase.class, Plane.class })
 	public void testDeepInheritance() throws Exception {
 		assertMetamodelClassGeneratedFor( Plane.class );
 		assertMetamodelClassGeneratedFor( JetPlane.class );
@@ -44,10 +45,5 @@ public class DeepInheritanceTest extends CompilationTest {
 				Integer.class,
 				"jets should be defined in JetPlane_"
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return DeepInheritanceTest.class.getPackage().getName();
 	}
 }

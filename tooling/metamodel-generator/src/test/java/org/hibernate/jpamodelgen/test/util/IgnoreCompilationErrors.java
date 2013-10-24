@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -16,24 +16,17 @@
  */
 package org.hibernate.jpamodelgen.test.util;
 
-import org.junit.After;
-import org.junit.runner.RunWith;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Base class for annotation processor tests.
+ * Used to indicate that for this test it is ok to get compilation errors via {@link javax.tools.Diagnostic}.
  *
  * @author Hardy Ferentschik
  */
-@RunWith(CompilationRunner.class)
-public abstract class CompilationTest {
-
-	public CompilationTest() {
-	}
-
-	@After
-	public void cleanup() throws Exception {
-		TestUtil.deleteProcessorGeneratedFiles();
-	}
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface IgnoreCompilationErrors {
 }
-
-

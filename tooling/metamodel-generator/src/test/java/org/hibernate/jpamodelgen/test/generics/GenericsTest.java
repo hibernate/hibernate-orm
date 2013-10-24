@@ -16,9 +16,9 @@
  */
 package org.hibernate.jpamodelgen.test.generics;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
@@ -28,13 +28,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
 public class GenericsTest extends CompilationTest {
 
 	@Test
+	@WithClasses({ Parent.class, Child.class })
 	public void testGenerics() {
 		assertMetamodelClassGeneratedFor( Parent.class );
 		assertMetamodelClassGeneratedFor( Child.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return GenericsTest.class.getPackage().getName();
 	}
 }

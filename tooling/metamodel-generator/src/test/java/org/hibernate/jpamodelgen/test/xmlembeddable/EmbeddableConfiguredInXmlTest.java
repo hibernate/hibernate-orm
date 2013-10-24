@@ -16,20 +16,16 @@
  */
 package org.hibernate.jpamodelgen.test.xmlembeddable;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.IgnoreCompilationErrors;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.hibernate.jpamodelgen.test.xmlembeddable.foo.BusinessId;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
@@ -37,37 +33,13 @@ import static org.testng.Assert.assertTrue;
 public class EmbeddableConfiguredInXmlTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-66")
+	@WithClasses(value = { Foo.class, BusinessEntity.class }, preCompile = BusinessId.class)
+	@WithMappingFiles("orm.xml")
+	@IgnoreCompilationErrors
 	public void testAttributeForEmbeddableConfiguredInXmlExists() {
 		// need to work with the source file. BusinessEntity_.class won't get generated, because the business id won't
 		// be on the classpath
 		String entityMetaModel = getMetaModelSourceAsString( BusinessEntity.class );
 		assertTrue( entityMetaModel.contains( "SingularAttribute<BusinessEntity, BusinessId<T>> businessId" ) );
-	}
-
-	@Override
-	@BeforeClass
-	// override compileAllTestEntities to compile the the business id explicitly
-	protected void compileAllTestEntities() throws Exception {
-		String fooPackageName = getPackageNameOfCurrentTest() + ".foo";
-		List<File> sourceFiles = getCompilationUnits(
-				CompilationTest.getSourceBaseDir(), fooPackageName
-		);
-		compile( sourceFiles );
-
-		sourceFiles = getCompilationUnits( getSourceBaseDir(), getPackageNameOfCurrentTest() );
-		compile( sourceFiles );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return EmbeddableConfiguredInXmlTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		String packageName = TestUtil.fcnToPath( EmbeddableConfiguredInXmlTest.class.getPackage().getName() );
-		ormFiles.add( packageName + "/orm.xml" );
-		return ormFiles;
 	}
 }

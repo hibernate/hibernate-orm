@@ -15,10 +15,10 @@
  * limitations under the License.
  */
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
@@ -26,15 +26,11 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
  * @author Hardy Ferentschik
  */
 @TestForIssue(jiraKey = "METAGEN-40")
+@WithClasses(DefaultPackageEntity.class)
 public class DefaultPackageTest extends CompilationTest {
 	@Test
 	public void testMetaModelGeneratedForEntitiesInDefaultPackage() {
 		assertMetamodelClassGeneratedFor( DefaultPackageEntity.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return null;
 	}
 }
 

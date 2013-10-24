@@ -16,9 +16,9 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.mappedsuperclasswithoutid;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -28,15 +28,11 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  */
 public class MappedSuperclassWithoutExplicitIdTest extends CompilationTest {
 	@Test
+	@WithClasses({ ConcreteProduct.class, Product.class, Shop.class })
 	public void testRightAccessTypeForMappedSuperclass() {
 		assertMetamodelClassGeneratedFor( ConcreteProduct.class );
 		assertMetamodelClassGeneratedFor( Product.class );
 		assertMetamodelClassGeneratedFor( Shop.class );
 		assertPresenceOfFieldInMetamodelFor( Product.class, "shop", "The many to one attribute shop is missing" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return MappedSuperclassWithoutExplicitIdTest.class.getPackage().getName();
 	}
 }

@@ -16,15 +16,12 @@
  */
 package org.hibernate.jpamodelgen.test.accesstype;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -34,6 +31,31 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
  */
+// TODO - differentiate needed classes per test better. Right now all test classes are processed for each test (HF)
+@WithClasses({
+		Address.class,
+		Area.class,
+		Building.class,
+		Country.class,
+		Customer.class,
+		Detail.class,
+		Hominidae.class,
+		Hotel.class,
+		HotelRoom.class,
+		House.class,
+		Human.class,
+		Inhabitant.class,
+		Item.class,
+		LivingBeing.class,
+		Mammals.class,
+		Order.class,
+		Pet.class,
+		Product.class,
+		Room.class,
+		Shop.class,
+		User.class
+})
+@WithMappingFiles("orm.xml")
 public class AccessTypeTest extends CompilationTest {
 
 	@Test
@@ -71,10 +93,12 @@ public class AccessTypeTest extends CompilationTest {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = " METAGEN-81")
+	@TestForIssue(jiraKey = " METAGEN-81")
 	public void testAccessTypeForEmbeddableDeterminedByIdAnnotationInRootEntity() {
-		assertPresenceOfFieldInMetamodelFor( Hotel.class, "webmaster",
-				"Access type should be inherited position of the @Id field annotation in the root entity" );
+		assertPresenceOfFieldInMetamodelFor(
+				Hotel.class, "webmaster",
+				"Access type should be inherited position of the @Id field annotation in the root entity"
+		);
 	}
 
 	@Test
@@ -101,17 +125,5 @@ public class AccessTypeTest extends CompilationTest {
 	public void testMemberAccessType() {
 		assertPresenceOfFieldInMetamodelFor( Customer.class, "goodPayer", "access type overriding" );
 		assertAttributeTypeInMetaModelFor( Customer.class, "goodPayer", Boolean.class, "access type overriding" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return AccessTypeTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		ormFiles.add( TestUtil.fcnToPath( AccessTypeTest.class.getPackage().getName() ) + "/orm.xml" );
-		return ormFiles;
 	}
 }

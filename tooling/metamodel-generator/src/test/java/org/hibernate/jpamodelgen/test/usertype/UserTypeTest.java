@@ -16,10 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.usertype;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -30,15 +30,11 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
 @TestForIssue(jiraKey = "METAGEN-28")
 public class UserTypeTest extends CompilationTest {
 	@Test
+	@WithClasses({ ContactDetails.class, PhoneNumber.class })
 	public void testCustomUserTypeInMetaModel() {
 		assertMetamodelClassGeneratedFor( ContactDetails.class );
 		assertPresenceOfFieldInMetamodelFor(
-				ContactDetails.class, "phoneNumber", "@Type annotated filed should be in metamodel"
+				ContactDetails.class, "phoneNumber", "@Type annotated field should be in metamodel"
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return UserTypeTest.class.getPackage().getName();
 	}
 }

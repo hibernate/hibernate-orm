@@ -16,14 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -33,6 +29,8 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  */
 public class EmbeddedIdNoInheritanceTest extends CompilationTest {
 	@Test
+	@WithClasses({ Person.class, XmlPerson.class, PersonId.class })
+	@WithMappingFiles("orm.xml")
 	public void testGeneratedAnnotationNotGenerated() {
 		assertMetamodelClassGeneratedFor( Person.class );
 		assertPresenceOfFieldInMetamodelFor(
@@ -50,19 +48,5 @@ public class EmbeddedIdNoInheritanceTest extends CompilationTest {
 		assertPresenceOfFieldInMetamodelFor(
 				XmlPerson.class, "address", "Property id should be in metamodel"
 		);
-
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return EmbeddedIdNoInheritanceTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		String dir = TestUtil.fcnToPath( EmbeddedIdNoInheritanceTest.class.getPackage().getName() );
-		ormFiles.add( dir + "/orm.xml" );
-		return ormFiles;
 	}
 }

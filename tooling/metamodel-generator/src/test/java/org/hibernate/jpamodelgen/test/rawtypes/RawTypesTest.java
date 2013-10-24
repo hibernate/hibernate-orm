@@ -16,9 +16,9 @@
  */
 package org.hibernate.jpamodelgen.test.rawtypes;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
@@ -28,13 +28,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
 public class RawTypesTest extends CompilationTest {
 
 	@Test
+	@WithClasses({ DeskWithRawType.class, EmployeeWithRawType.class })
 	public void testGenerics() {
 		assertMetamodelClassGeneratedFor( DeskWithRawType.class );
 		assertMetamodelClassGeneratedFor( EmployeeWithRawType.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return DeskWithRawType.class.getPackage().getName();
 	}
 }

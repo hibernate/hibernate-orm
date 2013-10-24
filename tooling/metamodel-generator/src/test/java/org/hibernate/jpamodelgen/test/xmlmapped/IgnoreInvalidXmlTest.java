@@ -16,42 +16,23 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
 /**
  * @author Hardy Ferentschik
  */
-public class
-		IgnoreInvalidXmlTest extends CompilationTest {
+public class IgnoreInvalidXmlTest extends CompilationTest {
 	@Test
+	@WithClasses(Superhero.class)
+	@WithMappingFiles({ "orm.xml", "jpa1-orm.xml", "malformed-mapping.xml", "non-existend-class.xml" })
 	public void testInvalidXmlFilesGetIgnored() {
 		// this is only a indirect test, but if the invalid xml files would cause the processor to abort the
 		// meta class would not have been generated
 		assertMetamodelClassGeneratedFor( Superhero.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return IgnoreInvalidXmlTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		String packageName = TestUtil.fcnToPath( IgnoreInvalidXmlTest.class.getPackage().getName() );
-		ormFiles.add( packageName + "/orm.xml" );
-		ormFiles.add( packageName + "/jpa1-orm.xml" );
-		ormFiles.add( packageName + "/malformed-mapping.xml" );
-		ormFiles.add( packageName + "/non-existend-class.xml" );
-		return ormFiles;
 	}
 }

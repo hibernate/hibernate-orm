@@ -16,10 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.typedmappedsuperclass;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 
@@ -29,12 +29,15 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
 @TestForIssue(jiraKey = "METAGEN-37")
 public class TypesMappedSuperclassTest extends CompilationTest {
 	@Test
+	@WithClasses({
+			AttachmentGroup.class,
+			AttachmentGroupInTopic.class,
+			AttachmentGroupPost.class,
+			AttachmentGroupPostInTopic.class,
+			Post.class,
+			UserRole.class
+	})
 	public void testExtractClosestRealType() {
 		assertMetamodelClassGeneratedFor( AttachmentGroup.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return TypesMappedSuperclassTest.class.getPackage().getName();
 	}
 }

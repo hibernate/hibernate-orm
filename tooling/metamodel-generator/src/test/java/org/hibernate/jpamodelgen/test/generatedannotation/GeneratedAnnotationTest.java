@@ -16,14 +16,14 @@
  */
 package org.hibernate.jpamodelgen.test.generatedannotation;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
@@ -32,17 +32,13 @@ public class GeneratedAnnotationTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-79")
+	@WithClasses(TestEntity.class)
 	public void testGeneratedAnnotationNotGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
 		// need to check the source because @Generated is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
 		String generatedString = "@Generated(value = \"org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor\")";
-		assertTrue( metaModelSource.contains( generatedString ), "@Generated should be added to the metamodel." );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return GeneratedAnnotationTest.class.getPackage().getName();
+		assertTrue( "@Generated should be added to the metamodel.", metaModelSource.contains( generatedString ) );
 	}
 }

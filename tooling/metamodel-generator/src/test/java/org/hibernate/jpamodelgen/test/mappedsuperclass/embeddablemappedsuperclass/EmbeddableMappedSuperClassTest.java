@@ -16,13 +16,12 @@
  */
 package org.hibernate.jpamodelgen.test.mappedsuperclass.embeddablemappedsuperclass;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoCompilationError;
 
 /**
  * @author Hardy Ferentschik
@@ -31,13 +30,8 @@ public class EmbeddableMappedSuperClassTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-36")
+	@WithClasses(EmbeddableAndMappedSuperClass.class)
 	public void testMetaModelsGenerated() {
 		assertMetamodelClassGeneratedFor( EmbeddableAndMappedSuperClass.class );
-		assertNoCompilationError( getCompilationDiagnostics() );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return EmbeddableMappedSuperClassTest.class.getPackage().getName();
 	}
 }

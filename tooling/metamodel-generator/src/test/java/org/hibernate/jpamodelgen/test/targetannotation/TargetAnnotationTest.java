@@ -14,14 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 package org.hibernate.jpamodelgen.test.targetannotation;
-
-import org.testng.annotations.Test;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -34,6 +32,7 @@ public class TargetAnnotationTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-30")
+	@WithClasses({ Address.class, AddressImpl.class, House.class })
 	public void testEmbeddableWithTargetAnnotation() {
 		assertMetamodelClassGeneratedFor( House.class );
 		assertPresenceOfFieldInMetamodelFor( House.class, "address", "the metamodel should have a member 'address'" );
@@ -43,10 +42,5 @@ public class TargetAnnotationTest extends CompilationTest {
 				AddressImpl.class,
 				"The target annotation set the type to AddressImpl"
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return TargetAnnotationTest.class.getPackage().getName();
 	}
 }

@@ -19,11 +19,10 @@ package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGeneratedFor;
 
@@ -38,18 +37,13 @@ public class XmlMetaDataCompleteSinglePersistenceUnitTest extends CompilationTes
 		assertNoSourceFileGeneratedFor( Dummy.class );
 	}
 
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return XmlMetaDataCompleteSinglePersistenceUnitTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Map<String, String> getProcessorOptions() {
-		Map<String, String> properties = new HashMap<String, String>();
-		properties.put(
-				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-				TestUtil.fcnToPath( XmlMetaDataCompleteSinglePersistenceUnitTest.class.getPackage().getName() ) + "/persistence.xml"
-		);
-		return properties;
-	}
+//	@Override
+//	protected Map<String, String> getProcessorOptions() {
+//		Map<String, String> properties = new HashMap<String, String>();
+//		properties.put(
+//				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+//				TestUtil.fcnToPath( XmlMetaDataCompleteSinglePersistenceUnitTest.class.getPackage().getName() ) + "/persistence.xml"
+//		);
+//		return properties;
+//	}
 }

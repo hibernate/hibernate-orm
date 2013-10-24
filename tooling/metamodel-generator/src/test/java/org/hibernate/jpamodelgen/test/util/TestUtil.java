@@ -174,7 +174,7 @@ public class TestUtil {
 		String metaModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
 		try {
 			URL outDirUrl = OUT_BASE_DIR.toURI().toURL();
-			URL urls[] = new URL[1];
+			URL[] urls = new URL[1];
 			urls[0] = outDirUrl;
 			URLClassLoader classLoader = new URLClassLoader( urls, TestUtil.class.getClassLoader() );
 			return classLoader.loadClass( metaModelClassName );

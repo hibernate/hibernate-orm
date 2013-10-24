@@ -16,12 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmetacomplete.singlepu;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithProcessorOption;
 import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGeneratedFor;
@@ -31,19 +29,12 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertNoSourceFileGen
  */
 public class XmlMetaDataCompleteSinglePersistenceUnitTest extends CompilationTest {
 	@Test
+	@WithClasses(org.hibernate.jpamodelgen.test.xmlmetacomplete.multiplepus.Dummy.class)
+	@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+			value = "org/hibernate/jpamodelgen/test/xmlmetacomplete/singlepu/persistence.xml")
 	public void testNoMetaModelGenerated() {
 		// the xml mapping files used in the example say that the xml data is meta complete. For that
 		// reason there should be no meta model source file for the annotated Dummy entity
 		assertNoSourceFileGeneratedFor( Dummy.class );
 	}
-
-//	@Override
-//	protected Map<String, String> getProcessorOptions() {
-//		Map<String, String> properties = new HashMap<String, String>();
-//		properties.put(
-//				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-//				TestUtil.fcnToPath( XmlMetaDataCompleteSinglePersistenceUnitTest.class.getPackage().getName() ) + "/persistence.xml"
-//		);
-//		return properties;
-//	}
 }

@@ -36,7 +36,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -104,23 +103,6 @@ public class QueryImpl extends AbstractQueryImpl {
 			return getSession().list(
 					expandParameterLists(namedParams),
 			        getQueryParameters(namedParams)
-				);
-		}
-		finally {
-			after();
-		}
-	}
-
-	public List list(HQLQueryPlan queryPlan) throws HibernateException {
-		verifyParameters();
-		Map namedParams = getNamedParams();
-		before();
-		QueryParameters queryParameters = getQueryParameters(namedParams);
-		queryParameters.setQueryPlan( queryPlan );
-		try {
-			return getSession().list(
-					expandParameterLists(namedParams),
-					queryParameters
 				);
 		}
 		finally {

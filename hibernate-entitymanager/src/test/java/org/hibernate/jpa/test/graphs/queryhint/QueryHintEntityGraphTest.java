@@ -45,17 +45,16 @@ import javax.persistence.Subgraph;
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
  * @author Brett Meyer
  */
-public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCase implements Serializable {
+public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	
 	@Test
 	public void testQueryHintEntityGraph() {
-		createData();
-		
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		
@@ -89,13 +88,32 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		assertTrue( Hibernate.isInitialized( company.employees.iterator().next().managers ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
 		assertTrue( Hibernate.isInitialized( company.markets ) );
-		
-		// TODO: another test with a join in the query to ensure the hint doesn't collide with it
-		
-		deleteData();
 	}
 	
-	private void createData() {
+	@Test
+	public void testQueryHintEntityGraphWithExplicitFetch() {
+		EntityManager entityManager = getOrCreateEntityManager();
+		entityManager.getTransaction().begin();
+		
+		EntityGraph<Company> entityGraph = entityManager.createEntityGraph( Company.class );
+		entityGraph.addAttributeNodes( "location" );
+		entityGraph.addAttributeNodes( "markets" );
+		entityGraph.addAttributeNodes( "employees" );
+		Query query = entityManager.createQuery( "from " + Company.class.getName()
+				+ " as c left join fetch c.location left join fetch c.employees" );
+		query.setHint( QueryHints.HINT_FETCHGRAPH, entityGraph );
+		Company company = (Company) query.getSingleResult();
+		
+		entityManager.getTransaction().commit();
+		entityManager.close();
+		
+		assertTrue( Hibernate.isInitialized( company.employees ) );
+		assertTrue( Hibernate.isInitialized( company.location ) );
+		assertTrue( Hibernate.isInitialized( company.markets ) );
+	}
+	
+	@Before
+	public void createData() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		
@@ -124,14 +142,6 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.getTransaction().commit();
 		entityManager.close();
 	}
-	
-	private void deleteData() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		entityManager.getTransaction().begin();
-		entityManager.createQuery( "delete from java.lang.Object" );
-		entityManager.getTransaction().commit();
-		entityManager.close();
-	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -155,7 +165,7 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	
 	@Entity
 	@Inheritance( strategy = InheritanceType.TABLE_PER_CLASS )
-	private static class Employee implements Serializable {
+	private static class Employee {
 		@Id @GeneratedValue
 		public long id;
 		
@@ -164,11 +174,11 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 	}
 	
 	@Entity
-	private static class Manager extends Employee implements Serializable {
+	private static class Manager extends Employee {
 	}
 	
 	@Entity
-	private static class Location implements Serializable {
+	private static class Location {
 		public Location() { }
 		
 		@Id @GeneratedValue

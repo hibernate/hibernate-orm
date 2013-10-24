@@ -248,7 +248,8 @@ public class FromElementFactory implements SqlTokenTypes {
 	        JoinSequence joinSequence,
 	        boolean fetchFlag,
 	        boolean inFrom,
-	        EntityType type) throws SemanticException {
+	        EntityType type,
+	        String role) throws SemanticException {
 		FromElement elem = createJoin( entityClass, tableAlias, joinSequence, type, false );
 		elem.setFetch( fetchFlag );
 		EntityPersister entityPersister = elem.getEntityPersister();
@@ -279,6 +280,8 @@ public class FromElementFactory implements SqlTokenTypes {
 				elem.setUseFromFragment( false );
 			}
 		}
+		
+		elem.setRole( role );
 
 		return elem;
 	}

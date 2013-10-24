@@ -1269,21 +1269,23 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		return list( query, queryParameters, getHQLQueryPlan( query, false ) );
-	}
-
-	public List list(String query, QueryParameters queryParameters, HQLQueryPlan queryPlan) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
-		autoFlushIfRequired( queryPlan.getQuerySpaces() );
+		
+		HQLQueryPlan plan = queryParameters.getQueryPlan();
+		if (plan == null) {
+			plan = getHQLQueryPlan( query, false );
+		}
+		
+		autoFlushIfRequired( plan.getQuerySpaces() );
 
 		List results = Collections.EMPTY_LIST;
 		boolean success = false;
 
 		dontFlushFromFind++;   //stops flush being called multiple times if this method is recursively called
 		try {
-			results = queryPlan.performList( queryParameters, this );
+			results = plan.performList( queryParameters, this );
 			success = true;
 		}
 		finally {

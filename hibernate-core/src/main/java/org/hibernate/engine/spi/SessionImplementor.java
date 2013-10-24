@@ -42,8 +42,6 @@ import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.internal.CriteriaImpl;
@@ -163,10 +161,6 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Execute a <tt>find()</tt> query
 	 */
 	public List list(String query, QueryParameters queryParameters) throws HibernateException;
-	/**
-	 * Execute a <tt>find()</tt> query using the provided HQLQueryPlan (ignores the QueryPlanCache).
-	 */
-	public List list(String query, QueryParameters queryParameters, HQLQueryPlan queryPlan) throws HibernateException;
 	/**
 	 * Execute an <tt>iterate()</tt> query
 	 */

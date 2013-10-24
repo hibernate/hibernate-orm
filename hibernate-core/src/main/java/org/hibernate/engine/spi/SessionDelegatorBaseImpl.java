@@ -55,7 +55,6 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
-import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.jdbc.ReturningWork;
@@ -167,11 +166,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	@Override
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
 		return sessionImplementor.list( query, queryParameters );
-	}
-
-	@Override
-	public List list(String query, QueryParameters queryParameters, HQLQueryPlan queryPlan) throws HibernateException {
-		return sessionImplementor.list( query, queryParameters, queryPlan );
 	}
 
 	@Override

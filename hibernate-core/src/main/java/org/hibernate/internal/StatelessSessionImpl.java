@@ -570,14 +570,9 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
-		return list( query, queryParameters, getHQLQueryPlan( query, false ) );
-	}
-
-	@Override
-	public List list(String query, QueryParameters queryParameters, HQLQueryPlan queryPlan) throws HibernateException {
 		errorIfClosed();
 		queryParameters.validateParameters();
-		HQLQueryPlan plan = queryPlan;
+		HQLQueryPlan plan = getHQLQueryPlan( query, false );
 		boolean success = false;
 		List results = Collections.EMPTY_LIST;
 		try {

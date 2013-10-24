@@ -115,11 +115,12 @@ public class QueryImpl extends AbstractQueryImpl {
 		verifyParameters();
 		Map namedParams = getNamedParams();
 		before();
+		QueryParameters queryParameters = getQueryParameters(namedParams);
+		queryParameters.setQueryPlan( queryPlan );
 		try {
 			return getSession().list(
 					expandParameterLists(namedParams),
-			        getQueryParameters(namedParams),
-			        queryPlan
+					queryParameters
 				);
 		}
 		finally {

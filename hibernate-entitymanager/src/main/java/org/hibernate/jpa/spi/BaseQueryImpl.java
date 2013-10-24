@@ -382,8 +382,7 @@ public abstract class BaseQueryImpl implements Query {
 			}
 			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
 				if (value instanceof EntityGraphImpl) {
-					final EntityGraphImpl entityGraph = (EntityGraphImpl) value;
-					entityGraphQueryHint = new EntityGraphQueryHint( entityGraph, entityGraph.getEntityType().getJavaType() );
+					entityGraphQueryHint = new EntityGraphQueryHint( (EntityGraphImpl) value );
 				}
 				else {
 					LOG.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );

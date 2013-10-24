@@ -74,8 +74,6 @@ public class HQLQueryPlan implements Serializable {
 
 	private final Set<String> enabledFilterNames;
 	private final boolean shallow;
-	
-	private EntityGraphQueryHint entityGraphQueryHint;
 
 	/**
 	 * Constructs a HQLQueryPlan
@@ -153,8 +151,6 @@ public class HQLQueryPlan implements Serializable {
 				returnMetadata = new ReturnMetadata( translators[0].getReturnAliases(), types );
 			}
 		}
-		
-		this.entityGraphQueryHint = entityGraphQueryHint;
 	}
 
 	public String getSourceQuery() {

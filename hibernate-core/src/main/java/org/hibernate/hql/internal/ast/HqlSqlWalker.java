@@ -40,7 +40,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.internal.ParameterBinder;
-import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlBaseWalker;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
@@ -151,8 +150,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 	private ArrayList assignmentSpecifications = new ArrayList();
 
 	private JoinType impliedJoinType = JoinType.INNER_JOIN;
-	
-	private EntityGraphQueryHint entityGraphQueryHint;
 
 	/**
 	 * Create a new tree transformer.
@@ -182,18 +179,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		this.hqlParser = parser;
 		this.printer = new ASTPrinter( SqlTokenTypes.class );
 	}
-	
-	public HqlSqlWalker(
-			QueryTranslatorImpl qti,
-			SessionFactoryImplementor sfi,
-			HqlParser parser,
-			Map tokenReplacements,
-			String collectionRole,
-			EntityGraphQueryHint entityGraphQueryHint) {
-		this( qti, sfi, parser, tokenReplacements, collectionRole );
-		this.entityGraphQueryHint = entityGraphQueryHint;
-	}
-
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -667,9 +652,9 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			boolean explicitSelect = select != null && select.getNumberOfChildren() > 0;
 			
 			// Add in the EntityGraph attribute nodes.
-			if (entityGraphQueryHint != null) {
+			if (queryTranslatorImpl.getEntityGraphQueryHint() != null) {
 				qn.getFromClause().getFromElements().addAll(
-						entityGraphQueryHint.toFromElements( qn.getFromClause(), this ) );
+						queryTranslatorImpl.getEntityGraphQueryHint().toFromElements( qn.getFromClause(), this ) );
 			}
 
 			if ( !explicitSelect ) {

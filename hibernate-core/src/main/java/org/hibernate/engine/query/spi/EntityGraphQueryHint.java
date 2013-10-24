@@ -50,11 +50,8 @@ public class EntityGraphQueryHint {
 	
 	private final EntityGraph<?> originEntityGraph;
 	
-	private final Class<?> originEntityClass;
-	
-	public EntityGraphQueryHint( EntityGraph<?> originEntityGraph, Class<?> originEntityClass ) {
+	public EntityGraphQueryHint( EntityGraph<?> originEntityGraph ) {
 		this.originEntityGraph = originEntityGraph;
-		this.originEntityClass = originEntityClass;
 	}
 	
 	public List<FromElement> toFromElements(FromClause fromClause, HqlSqlWalker walker) {
@@ -76,7 +73,7 @@ public class EntityGraphQueryHint {
 		for (Object obj : attributeNodes) {			
 			final AttributeNode<?> attributeNode = (AttributeNode<?>) obj;
 			
-			final String className = originEntityClass.getName();
+			final String className = origin.getClassName();
 			final String attributeName = attributeNode.getAttributeName();
 			final String role = className + "." + attributeName;
 			
@@ -91,6 +88,7 @@ public class EntityGraphQueryHint {
 			Type propertyType = origin.getPropertyType( attributeName, path );
 			
 			try {
+				FromElement fromElement = null;
 				if ( propertyType.isEntityType() ) {
 					final EntityType entityType = (EntityType) propertyType;
 					
@@ -103,14 +101,8 @@ public class EntityGraphQueryHint {
 					// TODO: impliedJoin?
 					final JoinSequence joinSequence = walker.getSessionFactoryHelper().createJoinSequence(
 							false, entityType, tableAlias, JoinType.LEFT_OUTER_JOIN, columns );
-					fromElements.add( fromElementFactory.createEntityJoin(
-							entityType.getAssociatedEntityName(),
-							tableAlias,
-							joinSequence,
-							true,
-							walker.isInFrom(),
-							entityType
-					) );
+					fromElement = fromElementFactory.createEntityJoin(
+							entityType.getAssociatedEntityName(), tableAlias, joinSequence, true, walker.isInFrom(), entityType );
 				}
 				else if ( propertyType.isCollectionType() ) {
 					final String[] columns = origin.toColumns( originTableAlias, path, false );		
@@ -119,14 +111,18 @@ public class EntityGraphQueryHint {
 							columns, false);
 					final QueryableCollection queryableCollection = walker.getSessionFactoryHelper()
 							.requireQueryableCollection( role );
-					fromElements.add( fromElementFactory.createCollection(
-							queryableCollection, role, JoinType.LEFT_OUTER_JOIN, true, false ) );
+					fromElement = fromElementFactory.createCollection(
+							queryableCollection, role, JoinType.LEFT_OUTER_JOIN, true, false ) ;
 				}
 				
-				// recurse into subgraphs
-				for (Subgraph<?> subgraph : attributeNode.getSubgraphs().values()) {
-					fromElements.addAll( getFromElements( subgraph.getAttributeNodes(), fromClause.getFromElement(),
-							fromClause, walker ) );
+				if (fromElement != null) {
+					fromElements.add( fromElement );
+					
+					// recurse into subgraphs
+					for (Subgraph<?> subgraph : attributeNode.getSubgraphs().values()) {
+						fromElements.addAll( getFromElements( subgraph.getAttributeNodes(), fromElement,
+								fromClause, walker ) );
+					}
 				}
 			}
 			catch (Exception e) {

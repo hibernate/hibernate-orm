@@ -270,8 +270,7 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	private static final ASTPrinter SQL_TOKEN_PRINTER = new ASTPrinter( SqlTokenTypes.class );
 
 	private HqlSqlWalker analyze(HqlParser parser, String collectionRole) throws QueryException, RecognitionException {
-		final HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole,
-				entityGraphQueryHint );
+		final HqlSqlWalker w = new HqlSqlWalker( this, factory, parser, tokenReplacements, collectionRole );
 		final AST hqlAst = parser.getAST();
 
 		// Transform the tree.
@@ -625,5 +624,13 @@ public class QueryTranslatorImpl implements FilterTranslator {
 				dotStructureRoot.setText( expression );
 			}
 		}
+	}
+
+	public EntityGraphQueryHint getEntityGraphQueryHint() {
+		return entityGraphQueryHint;
+	}
+
+	public void setEntityGraphQueryHint(EntityGraphQueryHint entityGraphQueryHint) {
+		this.entityGraphQueryHint = entityGraphQueryHint;
 	}
 }

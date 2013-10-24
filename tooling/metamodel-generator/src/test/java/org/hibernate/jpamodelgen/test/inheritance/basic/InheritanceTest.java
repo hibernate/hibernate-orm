@@ -16,9 +16,9 @@
  */
 package org.hibernate.jpamodelgen.test.inheritance.basic;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -30,6 +30,15 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelat
  */
 public class InheritanceTest extends CompilationTest {
 	@Test
+	@WithClasses({
+			AbstractEntity.class,
+			Area.class,
+			Building.class,
+			Customer.class,
+			House.class,
+			Person.class,
+			User.class
+	})
 	public void testInheritance() throws Exception {
 
 		// entity inheritance
@@ -52,11 +61,6 @@ public class InheritanceTest extends CompilationTest {
 		);
 
 		assertPresenceOfFieldInMetamodelFor( Person.class, "name", "Property 'name' should exist" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return InheritanceTest.class.getPackage().getName();
 	}
 }
 

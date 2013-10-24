@@ -16,9 +16,9 @@
  */
 package org.hibernate.jpamodelgen.test.embeddable;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 
@@ -27,6 +27,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeIn
  */
 public class EmbeddableAccessTypeTest extends CompilationTest {
 	@Test
+	@WithClasses({ Base.class, EmbeddableEntity.class, IStuff.class, MyEntity.class, Stuff.class })
 	public void testCorrectAccessTypeUsedForEmbeddable() {
 		assertAttributeTypeInMetaModelFor(
 				EmbeddableEntity.class,
@@ -34,10 +35,5 @@ public class EmbeddableAccessTypeTest extends CompilationTest {
 				Stuff.class,
 				"The target annotation set the type to Stuff"
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return EmbeddableAccessTypeTest.class.getPackage().getName();
 	}
 }

@@ -16,14 +16,11 @@
  */
 package org.hibernate.jpamodelgen.test.xmlonly;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithProcessorOption;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -31,6 +28,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
 /**
  * @author Hardy Ferentschik
  */
+@WithClasses({ Car.class, Course.class, Option.class, Period.class, Teacher.class, Tire.class, XmlOnly.class })
+@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+		value = "org/hibernate/jpamodelgen/test/xmlonly/persistence.xml")
 public class XmlOnlyTest extends CompilationTest {
 	@Test
 	public void testMetaModelGeneratedForXmlConfiguredEntity() {
@@ -54,20 +54,5 @@ public class XmlOnlyTest extends CompilationTest {
 		assertPresenceOfFieldInMetamodelFor( Option.class, "period", "Embedded expected" );
 		assertPresenceOfFieldInMetamodelFor( Period.class, "start", "Embedded expected" );
 		assertPresenceOfFieldInMetamodelFor( Period.class, "end", "Embedded expected" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return XmlOnlyTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Map<String, String> getProcessorOptions() {
-		Map<String, String> properties = new HashMap<String, String>();
-		properties.put(
-				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-				TestUtil.fcnToPath( XmlOnlyTest.class.getPackage().getName() ) + "/persistence.xml"
-		);
-		return properties;
 	}
 }

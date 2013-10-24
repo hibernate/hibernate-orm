@@ -18,7 +18,8 @@ package org.hibernate.jpamodelgen.test.hashcode;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.testng.annotations.Test;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -31,15 +32,11 @@ public class HashCodeTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-76")
+	@WithClasses(HashEntity.class)
 	public void testHashCodeDoesNotCreateSingularAttribute() {
 		assertMetamodelClassGeneratedFor( HashEntity.class );
 
 		assertPresenceOfFieldInMetamodelFor( HashEntity.class, "id" );
 		assertAbsenceOfFieldInMetamodelFor( HashEntity.class, "hashCode", "hashCode is not a persistent property" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return HashCodeTest.class.getPackage().getName();
 	}
 }

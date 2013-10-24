@@ -16,14 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.mixedmode;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -33,20 +29,10 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
  */
 public class XmlMetaCompleteTest extends CompilationTest {
 	@Test
+	@WithClasses(Person.class)
+	@WithMappingFiles("orm.xml")
 	public void testXmlConfiguredEmbeddedClassGenerated() {
 		assertMetamodelClassGeneratedFor( Person.class );
 		assertAbsenceOfFieldInMetamodelFor( Person.class, "name" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return XmlMetaCompleteTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		ormFiles.add( TestUtil.fcnToPath( XmlMetaCompleteTest.class.getPackage().getName() ) + "/orm.xml" );
-		return ormFiles;
 	}
 }

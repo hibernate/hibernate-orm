@@ -16,14 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.mixedmode;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAbsenceOfFieldInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
@@ -35,6 +31,8 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfField
  */
 public class MixedConfigurationTest extends CompilationTest {
 	@Test
+	@WithClasses({ Car.class, Vehicle.class })
+	@WithMappingFiles("car.xml")
 	public void testDefaultAccessTypeApplied() {
 		assertMetamodelClassGeneratedFor( Vehicle.class );
 		assertMetamodelClassGeneratedFor( Car.class );
@@ -45,6 +43,8 @@ public class MixedConfigurationTest extends CompilationTest {
 	}
 
 	@Test
+	@WithClasses({ Truck.class, Vehicle.class })
+	@WithMappingFiles("truck.xml")
 	public void testExplicitXmlConfiguredAccessTypeApplied() {
 		assertMetamodelClassGeneratedFor( Vehicle.class );
 		assertMetamodelClassGeneratedFor( Truck.class );
@@ -56,6 +56,8 @@ public class MixedConfigurationTest extends CompilationTest {
 	}
 
 	@Test
+	@WithClasses({ Car.class, Vehicle.class, RentalCar.class, RentalCompany.class })
+	@WithMappingFiles({ "car.xml", "rentalcar.xml" })
 	public void testMixedConfiguration() {
 		assertMetamodelClassGeneratedFor( RentalCar.class );
 		assertMetamodelClassGeneratedFor( RentalCompany.class );
@@ -72,6 +74,8 @@ public class MixedConfigurationTest extends CompilationTest {
 	}
 
 	@Test
+	@WithClasses({ Coordinates.class, ZeroCoordinates.class, Location.class })
+	@WithMappingFiles("coordinates.xml")
 	public void testAccessTypeForXmlConfiguredEmbeddables() {
 		assertMetamodelClassGeneratedFor( Coordinates.class );
 		assertPresenceOfFieldInMetamodelFor(
@@ -90,21 +94,5 @@ public class MixedConfigurationTest extends CompilationTest {
 				"latitude",
 				"Field access should be used, but ZeroCoordinates does not define fields"
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return MixedConfigurationTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		String dir = TestUtil.fcnToPath( MixedConfigurationTest.class.getPackage().getName() );
-		ormFiles.add( dir + "/car.xml" );
-		ormFiles.add( dir + "/rentalcar.xml" );
-		ormFiles.add( dir + "/truck.xml" );
-		ormFiles.add( dir + "/coordinates.xml" );
-		return ormFiles;
 	}
 }

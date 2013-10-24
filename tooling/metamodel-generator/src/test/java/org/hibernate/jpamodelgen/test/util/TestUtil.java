@@ -25,18 +25,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.List;
 import javax.tools.Diagnostic;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.FileAssert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Hardy Ferentschik
@@ -46,48 +47,93 @@ public class TestUtil {
 	private static final String PATH_SEPARATOR = System.getProperty( "file.separator" );
 	private static final String PACKAGE_SEPARATOR = ".";
 	private static final String META_MODEL_CLASS_POSTFIX = "_";
-	private static final String OUT_BASE_DIR;
+	private static final File OUT_BASE_DIR;
 
 	static {
-		String tmp = System.getProperty( "outBaseDir" );
-		if ( tmp == null ) {
-			fail( "The system property outBaseDir has to be set and point to the base directory of the test output directory." );
+		File targetDir = getTargetDir();
+		OUT_BASE_DIR = new File( targetDir, "processor-generated-test-classes" );
+		if ( !OUT_BASE_DIR.exists() ) {
+			if ( !OUT_BASE_DIR.mkdirs() ) {
+				fail( "Unable to create test output directory " + OUT_BASE_DIR.toString() );
+			}
 		}
-		OUT_BASE_DIR = tmp;
 	}
 
 	private TestUtil() {
 	}
 
-	public static void deleteGeneratedSourceFiles(File path) {
-		if ( path.exists() ) {
-			File[] files = path.listFiles( new MetaModelFilenameFilter() );
-			for ( File file : files ) {
-				if ( file.isDirectory() ) {
-					deleteGeneratedSourceFiles( file );
-				}
-				else {
-					boolean success = file.delete();
-					if ( success ) {
-						log.debug( file.getAbsolutePath() + " deleted successfully" );
-					}
-					else {
-						log.debug( "Failed to delete generated source file" + file.getAbsolutePath() );
-					}
-				}
-			}
-		}
+	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
+		assertNotNull( "Class parameter cannot be null", clazz );
+		File sourceFile = getMetaModelSourceFileFor( clazz );
+		assertFalse( "There should be no source file: " + sourceFile.getName(), sourceFile.exists() );
 	}
 
-	public static Class<?> getMetamodelClassFor(Class<?> entityClass) {
-		String entityModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
+	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
+		assertAbsenceOfFieldInMetamodelFor(
+				clazz,
+				fieldName,
+				"'" + fieldName + "' should not appear in metamodel class"
+		);
+	}
 
-		try {
-			return Class.forName( entityModelClassName );
+	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
+		assertFalse( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+	}
+
+	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
+		assertPresenceOfFieldInMetamodelFor(
+				clazz,
+				fieldName,
+				"'" + fieldName + "' should appear in metamodel class"
+		);
+	}
+
+	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
+		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+	}
+
+	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
+		Field field = getFieldFromMetamodelFor( clazz, fieldName );
+		assertNotNull( "Cannot find field '" + fieldName + "' in " + clazz.getName(), field );
+		ParameterizedType type = (ParameterizedType) field.getGenericType();
+		Type actualType = type.getActualTypeArguments()[1];
+		if ( expectedType.isArray() ) {
+			expectedType = expectedType.getComponentType();
+			actualType = getComponentType( actualType );
 		}
-		catch ( ClassNotFoundException e ) {
-			fail( "Unable to load class " + entityModelClassName );
-			return null;
+		assertEquals(
+				"Types do not match: " + buildErrorString( errorString, clazz ),
+				expectedType,
+				actualType
+		);
+	}
+
+	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey, Class<?> expectedMapValue, String errorString) {
+		Field field = getFieldFromMetamodelFor( clazz, fieldName );
+		assertNotNull( field );
+		ParameterizedType type = (ParameterizedType) field.getGenericType();
+		Type actualMapKeyType = type.getActualTypeArguments()[1];
+		assertEquals( buildErrorString( errorString, clazz ), expectedMapKey, actualMapKeyType );
+
+		Type actualMapKeyValue = type.getActualTypeArguments()[2];
+		assertEquals( buildErrorString( errorString, clazz ), expectedMapValue, actualMapKeyValue );
+	}
+
+	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
+		Class<?> clazz = getMetamodelClassFor( entityClass );
+		Class<?> superClazz = getMetamodelClassFor( superEntityClass );
+		assertEquals(
+				"Entity " + superClazz.getName() + " should be the superclass of " + clazz.getName(),
+				superClazz.getName(),
+				clazz.getSuperclass().getName()
+		);
+	}
+
+	public static void assertNoCompilationError(List<Diagnostic<?>> diagnostics) {
+		for ( Diagnostic<?> diagnostic : diagnostics ) {
+			if ( diagnostic.getKind().equals( Diagnostic.Kind.ERROR ) ) {
+				fail( "There was a compilation error during annotation processing:\n" + diagnostic.getMessage( null ) );
+			}
 		}
 	}
 
@@ -97,14 +143,47 @@ public class TestUtil {
 	 * @param clazz the class for which a metamodel class should have been generated.
 	 */
 	public static void assertMetamodelClassGeneratedFor(Class<?> clazz) {
-		assertNotNull( clazz, "Class parameter cannot be null" );
-		String metaModelClassName = clazz.getName() + META_MODEL_CLASS_POSTFIX;
-		try {
-			assertNotNull( Class.forName( metaModelClassName ) );
+		assertNotNull( getMetamodelClassFor( clazz ) );
+	}
+
+	/**
+	 * Deletes recursively all files found in the output directory for the annotation processor.
+	 */
+	public static void deleteProcessorGeneratedFiles() {
+		for ( File file : OUT_BASE_DIR.listFiles() ) {
+			deleteFilesRecursive( file );
 		}
-		catch ( ClassNotFoundException e ) {
+	}
+
+	/**
+	 * @return the output directory for the generated source and class files.
+	 */
+	public static File getOutBaseDir() {
+		return OUT_BASE_DIR;
+	}
+
+	/**
+	 * Returns the static metamodel class for the specified entity.
+	 *
+	 * @param entityClass the entity for which to retrieve the metamodel class. Cannot be {@code null}.
+	 *
+	 * @return the static metamodel class for the specified entity.
+	 */
+	public static Class<?> getMetamodelClassFor(Class<?> entityClass) {
+		assertNotNull( "Class parameter cannot be null", entityClass );
+		String metaModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
+		try {
+			URL outDirUrl = OUT_BASE_DIR.toURI().toURL();
+			URL urls[] = new URL[1];
+			urls[0] = outDirUrl;
+			URLClassLoader classLoader = new URLClassLoader( urls, TestUtil.class.getClassLoader() );
+			return classLoader.loadClass( metaModelClassName );
+		}
+		catch ( Exception e ) {
 			fail( metaModelClassName + " was not generated." );
 		}
+		// keep the compiler happy
+		return null;
 	}
 
 	public static File getMetaModelSourceFileFor(Class<?> clazz) {
@@ -122,7 +201,7 @@ public class TestUtil {
 		try {
 			BufferedReader input = new BufferedReader( new FileReader( sourceFile ) );
 			try {
-				String line = null;
+				String line;
 				/*
 						* readLine is a bit quirky :
 						* it returns the content of a line MINUS the newline.
@@ -150,81 +229,6 @@ public class TestUtil {
 		log.info( getMetaModelSourceAsString( clazz ) );
 	}
 
-	public static void assertNoSourceFileGeneratedFor(Class<?> clazz) {
-		assertNotNull( clazz, "Class parameter cannot be null" );
-		File sourceFile = getMetaModelSourceFileFor( clazz );
-		assertFalse( sourceFile.exists(), "There should be no source file: " + sourceFile.getName() );
-	}
-
-	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
-		assertAbsenceOfFieldInMetamodelFor(
-				clazz,
-				fieldName,
-				"'" + fieldName + "' should not appear in metamodel class"
-		);
-	}
-
-	public static void assertAbsenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		assertFalse( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
-	}
-
-	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName) {
-		assertPresenceOfFieldInMetamodelFor(
-				clazz,
-				fieldName,
-				"'" + fieldName + "' should appear in metamodel class"
-		);
-	}
-
-	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
-		assertTrue( hasFieldInMetamodelFor( clazz, fieldName ), buildErrorString( errorString, clazz ) );
-	}
-
-	public static void assertAttributeTypeInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedType, String errorString) {
-		Field field = getFieldFromMetamodelFor( clazz, fieldName );
-		assertNotNull( field, "Cannot find field '" + fieldName + "' in " + clazz.getName() );
-		ParameterizedType type = (ParameterizedType) field.getGenericType();
-		Type actualType = type.getActualTypeArguments()[1];
-		if ( expectedType.isArray() ) {
-			expectedType = expectedType.getComponentType();
-			actualType = getComponentType( actualType );
-		}
-		assertEquals(
-				actualType,
-				expectedType,
-				"Types do not match: " + buildErrorString( errorString, clazz )
-		);
-	}
-
-	public static void assertMapAttributesInMetaModelFor(Class<?> clazz, String fieldName, Class<?> expectedMapKey, Class<?> expectedMapValue, String errorString) {
-		Field field = getFieldFromMetamodelFor( clazz, fieldName );
-		assertNotNull( field );
-		ParameterizedType type = (ParameterizedType) field.getGenericType();
-		Type actualMapKeyType = type.getActualTypeArguments()[1];
-		assertEquals( actualMapKeyType, expectedMapKey, buildErrorString( errorString, clazz ) );
-
-		Type actualMapKeyValue = type.getActualTypeArguments()[2];
-		assertEquals( actualMapKeyValue, expectedMapValue, buildErrorString( errorString, clazz ) );
-	}
-
-	public static void assertSuperClassRelationShipInMetamodel(Class<?> entityClass, Class<?> superEntityClass) {
-		String entityModelClassName = entityClass.getName() + META_MODEL_CLASS_POSTFIX;
-		String superEntityModelClassName = superEntityClass.getName() + META_MODEL_CLASS_POSTFIX;
-		Class<?> clazz;
-		Class<?> superClazz;
-		try {
-			clazz = Class.forName( entityModelClassName );
-			superClazz = Class.forName( superEntityModelClassName );
-			Assert.assertEquals(
-					clazz.getSuperclass(), superClazz,
-					"Entity " + superEntityModelClassName + " should be the superclass of " + entityModelClassName
-			);
-		}
-		catch ( ClassNotFoundException e ) {
-			fail( "Unable to load metamodel class: " + e.getMessage() );
-		}
-	}
-
 	public static Field getFieldFromMetamodelFor(Class<?> entityClass, String fieldName) {
 		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
 		Field field;
@@ -241,14 +245,6 @@ public class TestUtil {
 		return fcn.replace( PACKAGE_SEPARATOR, PATH_SEPARATOR );
 	}
 
-	public static void assertNoCompilationError(List<Diagnostic<?>> diagnostics) {
-		for ( Diagnostic<?> diagnostic : diagnostics ) {
-			if ( diagnostic.getKind().equals( Diagnostic.Kind.ERROR ) ) {
-				fail( "There was a compilation error. " + diagnostic.getMessage( null ) );
-			}
-		}
-	}
-
 	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {
 		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
 	}
@@ -256,7 +252,7 @@ public class TestUtil {
 	private static String buildErrorString(String baseError, Class<?> clazz) {
 		StringBuilder builder = new StringBuilder();
 		builder.append( baseError );
-		builder.append( "\n" );
+		builder.append( ".\n\n" );
 		builder.append( "Source code for " );
 		builder.append( clazz.getName() );
 		builder.append( "_.java:" );
@@ -296,6 +292,38 @@ public class TestUtil {
 						|| pathName.getAbsolutePath().endsWith( "_.class" );
 			}
 		}
+	}
+
+	private static void deleteFilesRecursive(File file) {
+		if ( file.isDirectory() ) {
+			for ( File c : file.listFiles() ) {
+				deleteFilesRecursive( c );
+			}
+		}
+		if ( !file.delete() ) {
+			fail( "Unable to delete file: " + file );
+		}
+	}
+
+	/**
+	 * Returns the target directory of the build.
+	 *
+	 * @return the target directory of the build
+	 */
+	public static File getTargetDir() {
+		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		// get a URL reference to something we now is part of the classpath (our own classes)
+		String currentTestClass = TestUtil.class.getName();
+		int hopsToCompileDirectory = currentTestClass.split( "\\." ).length;
+		int hopsToTargetDirectory = hopsToCompileDirectory + 2;
+		URL classURL = contextClassLoader.getResource( currentTestClass.replace( '.', '/' ) + ".class" );
+		// navigate back to '/target'
+		File targetDir = new File( classURL.getFile() );
+		// navigate back to '/target'
+		for ( int i = 0; i < hopsToTargetDirectory; i++ ) {
+			targetDir = targetDir.getParentFile();
+		}
+		return targetDir;
 	}
 }
 

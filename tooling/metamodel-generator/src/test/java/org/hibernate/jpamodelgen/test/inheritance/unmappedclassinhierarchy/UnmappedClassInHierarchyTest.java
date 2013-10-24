@@ -16,9 +16,9 @@
  */
 package org.hibernate.jpamodelgen.test.inheritance.unmappedclassinhierarchy;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelationShipInMetamodel;
 
@@ -28,13 +28,16 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelat
  */
 public class UnmappedClassInHierarchyTest extends CompilationTest {
 	@Test
+	@WithClasses({
+			BaseEntity.class,
+			MappedBase.class,
+			NormalExtendsEntity.class,
+			NormalExtendsMapped.class,
+			SubA.class,
+			SubB.class
+	})
 	public void testUnmappedClassInHierarchy() throws Exception {
 		assertSuperClassRelationShipInMetamodel( SubA.class, BaseEntity.class );
 		assertSuperClassRelationShipInMetamodel( SubB.class, MappedBase.class );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return UnmappedClassInHierarchyTest.class.getPackage().getName();
 	}
 }

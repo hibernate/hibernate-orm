@@ -16,18 +16,16 @@
  */
 package org.hibernate.jpamodelgen.test.supresswarnings;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithProcessorOption;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
@@ -35,29 +33,16 @@ import static org.testng.Assert.assertTrue;
 public class SuppressWarningsAnnotationGeneratedTest extends CompilationTest {
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-50")
+	@WithClasses(TestEntity.class)
+	@WithProcessorOption(key = JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION, value = "true")
 	public void testSuppressedWarningsAnnotationGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
 		// need to check the source because @SuppressWarnings is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
 		assertTrue(
-				metaModelSource.contains( "@SuppressWarnings(\"all\")" ),
-				"@SuppressWarnings should be added to the metamodel."
+				"@SuppressWarnings should be added to the metamodel.",
+				metaModelSource.contains( "@SuppressWarnings(\"all\")" )
 		);
-	}
-
-	@Override
-	protected Map<String, String> getProcessorOptions() {
-		Map<String, String> properties = new HashMap<String, String>();
-		properties.put(
-				JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION,
-				"true"
-		);
-		return properties;
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return SuppressWarningsAnnotationGeneratedTest.class.getPackage().getName();
 	}
 }

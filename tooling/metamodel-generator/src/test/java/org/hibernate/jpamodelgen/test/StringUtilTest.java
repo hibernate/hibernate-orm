@@ -16,13 +16,12 @@
  */
 package org.hibernate.jpamodelgen.test;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
 import org.hibernate.jpamodelgen.util.StringUtil;
+import org.junit.Test;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.AssertJUnit.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -16,24 +16,23 @@
  */
 package org.hibernate.jpamodelgen.test.util;
 
-import org.junit.After;
-import org.junit.runner.RunWith;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * Base class for annotation processor tests.
+ * Annotation allowing to specify which classes should be passed to the annotation processor for compilation.
  *
  * @author Hardy Ferentschik
  */
-@RunWith(CompilationRunner.class)
-public abstract class CompilationTest {
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE, ElementType.METHOD })
+public @interface WithClasses {
+	Class<?>[] value();
 
-	public CompilationTest() {
-	}
-
-	@After
-	public void cleanup() throws Exception {
-		TestUtil.deleteProcessorGeneratedFiles();
-	}
+	/**
+	 * @return an array of classes which should be complied prior to compiling the actual test classes
+	 */
+	Class<?>[] preCompile() default { };
 }
-
-

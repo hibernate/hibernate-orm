@@ -16,10 +16,10 @@
  */
 package org.hibernate.jpamodelgen.test.sortedcollection;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfFieldInMetamodelFor;
@@ -31,15 +31,11 @@ public class SortedCollectionTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-62")
+	@WithClasses({ Printer.class, PrintJob.class })
 	public void testGenerics() {
 		assertMetamodelClassGeneratedFor( Printer.class );
 		assertMetamodelClassGeneratedFor( PrintJob.class );
 		assertPresenceOfFieldInMetamodelFor( Printer.class, "printQueue", "There sorted set attribute is missing" );
 		assertPresenceOfFieldInMetamodelFor( Printer.class, "printedJobs", "There sorted map attribute is missing" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return SortedCollectionTest.class.getPackage().getName();
 	}
 }

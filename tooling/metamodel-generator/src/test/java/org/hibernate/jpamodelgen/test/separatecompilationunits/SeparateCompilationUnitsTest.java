@@ -16,17 +16,15 @@
  */
 package org.hibernate.jpamodelgen.test.separatecompilationunits;
 
-import java.io.File;
-import java.util.List;
-
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-
+import org.hibernate.jpamodelgen.test.separatecompilationunits.superclass.MappedSuperclass;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
+import org.hibernate.jpamodelgen.test.util.IgnoreCompilationErrors;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Hardy Ferentschik
@@ -34,6 +32,8 @@ import static org.testng.Assert.assertTrue;
 @TestForIssue(jiraKey = "METAGEN-35")
 public class SeparateCompilationUnitsTest extends CompilationTest {
 	@Test
+	@WithClasses(value = Entity.class, preCompile = MappedSuperclass.class)
+	@IgnoreCompilationErrors
 	public void testInheritance() throws Exception {
 		// need to work with the source file. Entity_.class won't get generated, because the mapped superclass
 		// will not be on the classpath
@@ -43,24 +43,5 @@ public class SeparateCompilationUnitsTest extends CompilationTest {
 						"extends org.hibernate.jpamodelgen.test.separatecompilationunits.superclass.MappedSuperclass"
 				)
 		);
-	}
-
-	@Override
-	@BeforeClass
-	// override compileAllTestEntities to compile the mapped super class explicitly
-	protected void compileAllTestEntities() throws Exception {
-		String superClassPackageName = getPackageNameOfCurrentTest() + ".superclass";
-		List<File> sourceFiles = getCompilationUnits(
-				CompilationTest.getSourceBaseDir(), superClassPackageName
-		);
-		compile( sourceFiles );
-
-		sourceFiles = getCompilationUnits( getSourceBaseDir(), getPackageNameOfCurrentTest() );
-		compile( sourceFiles );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return SeparateCompilationUnitsTest.class.getPackage().getName();
 	}
 }

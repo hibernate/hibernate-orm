@@ -16,15 +16,11 @@
  */
 package org.hibernate.jpamodelgen.test.elementcollection;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithMappingFiles;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -37,6 +33,7 @@ public class ElementCollectionTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-8")
+	@WithClasses({ House.class, Room.class })
 	public void testElementCollectionOnMap() {
 		assertMetamodelClassGeneratedFor( House.class );
 		assertMetamodelClassGeneratedFor( Room.class );
@@ -46,6 +43,7 @@ public class ElementCollectionTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-19")
+	@WithClasses({ Hotel.class, Room.class, Cleaner.class })
 	public void testMapKeyClass() {
 		assertMetamodelClassGeneratedFor( Hotel.class );
 		assertMapAttributesInMetaModelFor(
@@ -59,6 +57,8 @@ public class ElementCollectionTest extends CompilationTest {
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-22")
+	@WithClasses({ Hostel.class, Room.class, Cleaner.class })
+	@WithMappingFiles("hostel.xml")
 	public void testMapKeyClassXmlConfigured() {
 		assertMetamodelClassGeneratedFor( Hostel.class );
 		assertMapAttributesInMetaModelFor(
@@ -68,17 +68,5 @@ public class ElementCollectionTest extends CompilationTest {
 		assertMapAttributesInMetaModelFor(
 				Hostel.class, "cleaners", Room.class, Cleaner.class, "Wrong type in map attribute."
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return ElementCollectionTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Collection<String> getOrmFiles() {
-		List<String> ormFiles = new ArrayList<String>();
-		ormFiles.add( TestUtil.fcnToPath( ElementCollectionTest.class.getPackage().getName() ) + "/hostel.xml" );
-		return ormFiles;
 	}
 }

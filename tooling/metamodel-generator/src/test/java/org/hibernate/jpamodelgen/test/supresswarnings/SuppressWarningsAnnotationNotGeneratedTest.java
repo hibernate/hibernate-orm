@@ -16,14 +16,14 @@
  */
 package org.hibernate.jpamodelgen.test.supresswarnings;
 
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.getMetaModelSourceAsString;
-import static org.testng.Assert.assertFalse;
+import static org.junit.Assert.assertFalse;
 
 /**
  * @author Hardy Ferentschik
@@ -32,19 +32,15 @@ public class SuppressWarningsAnnotationNotGeneratedTest extends CompilationTest 
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-50")
+	@WithClasses(TestEntity.class)
 	public void testSuppressedWarningsAnnotationNotGenerated() {
 		assertMetamodelClassGeneratedFor( TestEntity.class );
 
 		// need to check the source because @SuppressWarnings is not a runtime annotation
 		String metaModelSource = getMetaModelSourceAsString( TestEntity.class );
 		assertFalse(
-				metaModelSource.contains( "@SuppressWarnings(\"all\")" ),
-				"@SuppressWarnings should not be added to the metamodel."
+				"@SuppressWarnings should not be added to the metamodel.",
+				metaModelSource.contains( "@SuppressWarnings(\"all\")" )
 		);
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return SuppressWarningsAnnotationNotGeneratedTest.class.getPackage().getName();
 	}
 }

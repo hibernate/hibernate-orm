@@ -53,7 +53,7 @@ ext {
     pressgangVersion = '3.0.0'
     libraries = [
         // test libraries
-        testng:                    "org.testng:testng:6.1",
+        junit:                     "junit:junit:4.10",
         hibernate:                 "org.hibernate:hibernate-core:3.6.0.Beta1",
         jpa_api:                   "org.hibernate.javax.persistence:hibernate-jpa-2.0-api:1.0.0.Final",
 	    slf4j_api:                 "org.slf4j:slf4j-api:${slf4jVersion}",
@@ -84,7 +84,7 @@ configurations.jaxb {
 // Prepare the different dependencies per configuration
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 dependencies {
-	testCompile libraries.testng
+	testCompile libraries.junit
     testCompile libraries.jpa_api
     testCompile libraries.hibernate
 	testCompile libraries.slf4j_api
@@ -98,6 +98,8 @@ dependencies {
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // The main Java build - jaxb schema class generation, compilation, test
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
+compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 versionInjection {
     into( 'org.hibernate.jpamodelgen.Version', 'getVersionString' )
 }
@@ -153,10 +155,6 @@ task jaxb {
 compileJava.dependsOn jaxb
 
 test {
-    useTestNG()
-    systemProperty 'sourceBaseDir', 'src/test/java'
-    systemProperty 'outBaseDir', "${buildDir}/classes/test"
-
     beforeTest { descriptor ->
        logger.lifecycle("Running " + descriptor)
     }

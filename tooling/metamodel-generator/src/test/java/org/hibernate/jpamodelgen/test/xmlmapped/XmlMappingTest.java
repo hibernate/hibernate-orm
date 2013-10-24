@@ -16,15 +16,12 @@
  */
 package org.hibernate.jpamodelgen.test.xmlmapped;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.testng.annotations.Test;
-
 import org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
-import org.hibernate.jpamodelgen.test.util.TestUtil;
+import org.hibernate.jpamodelgen.test.util.WithClasses;
+import org.hibernate.jpamodelgen.test.util.WithProcessorOption;
+import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertAttributeTypeInMetaModelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
@@ -34,6 +31,18 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSuperClassRelat
 /**
  * @author Hardy Ferentschik
  */
+// TODO - differentiate needed classes per test better. Right now all test classes are processed for each test (HF)
+@WithClasses({
+		Address.class,
+		Boy.class,
+		Building.class,
+		FakeHero.class,
+		LivingBeing.class,
+		Mammal.class,
+		Superhero.class
+})
+@WithProcessorOption(key = JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
+		value = "org/hibernate/jpamodelgen/test/xmlmapped/persistence.xml")
 public class XmlMappingTest extends CompilationTest {
 	@Test
 	public void testXmlConfiguredEmbeddedClassGenerated() {
@@ -90,23 +99,8 @@ public class XmlMappingTest extends CompilationTest {
 		assertSuperClassRelationShipInMetamodel( Mammal.class, LivingBeing.class );
 	}
 
-	@Test(expectedExceptions = ClassNotFoundException.class)
+	@Test(expected = ClassNotFoundException.class)
 	public void testNonExistentMappedClassesGetIgnored() throws Exception {
 		Class.forName( "org.hibernate.jpamodelgen.test.model.Dummy_" );
-	}
-
-	@Override
-	protected String getPackageNameOfCurrentTest() {
-		return XmlMappingTest.class.getPackage().getName();
-	}
-
-	@Override
-	protected Map<String, String> getProcessorOptions() {
-		Map<String, String> properties = new HashMap<String, String>();
-		properties.put(
-				JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
-				TestUtil.fcnToPath( XmlMappingTest.class.getPackage().getName() ) + "/persistence.xml"
-		);
-		return properties;
 	}
 }

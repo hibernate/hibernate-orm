@@ -103,44 +103,6 @@ task javadocs(type: Javadoc) {
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Docbook
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/*jdocbook {
-    useRelativeImageUris = false
-
-    format('html_single') {
-        finalName = "index.html"
-        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
-    }
-
-    format('html') {
-        finalName = "index.html"
-        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
-    }
-
-    dependencies {   
-        jdocbookXsl      libraries.pressgang_xslt
-        jdocbookXsl      libraries.pressgang_fonts
-        jdocbookStyles   libraries.hibernate_docbook_style
-        jdocbookStyles   libraries.jboss_docbook_style
-    }
-
-    manual {
-        masterSourceDocumentName = 'master.xml'
-    }
-}
-
-stageStyles_manual.doLast {
-    logger.lifecycle( "Staging images")
-    copy {
-        from project.file( 'src/main/docbook/manual/en-US/images' )
-        into project.file( "${buildDir}/docbook/stage/manual/images" )
-        include '*.png'
-        includeEmptyDirs = false
-    }
-}*/
-
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 distributions {

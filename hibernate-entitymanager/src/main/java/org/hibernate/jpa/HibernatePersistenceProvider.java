@@ -64,13 +64,22 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	public EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
 		log.tracef( "Starting createEntityManagerFactory for persistenceUnitName %s", persistenceUnitName );
 
-		final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
-		if ( builder == null ) {
-			log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
-			return null;
+		try {
+			final EntityManagerFactoryBuilder builder = getEntityManagerFactoryBuilderOrNull( persistenceUnitName, properties );
+			if ( builder == null ) {
+				log.trace( "Could not obtain matching EntityManagerFactoryBuilder, returning null" );
+				return null;
+			}
+			else {
+				return builder.build();
+			}
 		}
-		else {
-			return builder.build();
+		catch (PersistenceException pe) {
+			throw pe;
+		}
+		catch (Exception e) {
+			log.debug( "Unable to build entity manager factory", e );
+			throw new PersistenceException( "Unable to build entity manager factory", e );
 		}
 	}
 
@@ -85,10 +94,6 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		final List<ParsedPersistenceXmlDescriptor> units;
 		try {
 			units = PersistenceXmlParser.locatePersistenceUnits( integration );
-		}
-		catch (RuntimeException e) {
-			log.debug( "Unable to locate persistence units", e );
-			throw e;
 		}
 		catch (Exception e) {
 			log.debug( "Unable to locate persistence units", e );

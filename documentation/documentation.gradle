@@ -29,31 +29,34 @@ dependencies {
 defaultTasks 'buildDocs'
 
 jdocbook {
-    // apply shared formatting config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    format('html_single') {
+  // apply shared formatting config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  format('html_single') {
 		finalName = "index.html"
 		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
-	}
-	format('html') {
+	 }
+
+  format('html') {
 		finalName = "index.html"
 		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
-	}
+	 }
 
-    // book-specific config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    quickstart {
-        masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
-        // only html supported due to tutorials.zip
-//        formats.pdf.enable = false
-    }
+  // book-specific config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  quickstart {
+    masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
+  }
+
 	devguide {
 		masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
 		useRelativeImageUris = false
 	}
-// todo : need to remove this once all content moved to devguide
+
 	manual {
 		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
-//		translation = ['de-DE','es-ES','fr-FR','ja-JP','pt-BR','zh-CN']
 	}
+
+  metamodelgen {
+    masterSourceDocumentName = 'master.xml'
+  }
 }
 
 // todo : make this part of gradle-jdocbook.
@@ -69,7 +72,17 @@ stageStyles_devguide.doLast {
 	}
 }
 
-[ 'devguide', 'manual', 'quickstart' ].each { bookName ->
+stageStyles_metamodelgen.doLast {
+  logger.lifecycle( "Staging metamodelgen-specific style resources")
+  copy {
+    from project.file( 'src/main/docbook/metamodelgen/en-US/images' )
+    into project.file( "${buildDir}/docbook/stage/metamodelgen/images" )
+    include '*.png'
+    includeEmptyDirs = false
+  }
+}
+
+[ 'devguide', 'manual', 'quickstart', 'metamodelgen' ].each { bookName ->
 	tasks[ "stageStyles_$bookName" ].doLast {
 		logger.lifecycle( "Staging local style resources")
 		copy {

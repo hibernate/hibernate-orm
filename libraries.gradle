@@ -62,6 +62,9 @@ ext {
             logging_annotations: 'org.jboss.logging:jboss-logging-annotations:1.2.0.Beta1',
             logging_processor:  'org.jboss.logging:jboss-logging-processor:1.2.0.Beta1',
 
+            slf4j_api:                 "org.slf4j:slf4j-api:1.7.5",
+            slf4j_log4j:               "org.slf4j:slf4j-log4j12:1.7.5",
+
             // jaxb task
             jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
             jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',

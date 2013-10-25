@@ -86,7 +86,7 @@ subprojects { subProject ->
         apply plugin: 'maven' // temporary, still needed for install task until bug with publishToMavenLocal task is fixed
         apply plugin: 'osgi'
 
-        apply from: "../utilities.gradle"
+        apply from: "${rootProject.projectDir}/utilities.gradle"
 
         apply plugin: 'findbugs'
         apply plugin: 'checkstyle'

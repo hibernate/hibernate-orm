@@ -87,13 +87,8 @@ public abstract class AbstractNonIdentifierAttribute extends AbstractAttribute i
 	}
 
 	@Override
-	public boolean isInsertGenerated() {
-		return attributeInformation.isInsertGenerated();
-	}
-
-	@Override
-	public boolean isUpdateGenerated() {
-		return attributeInformation.isUpdateGenerated();
+	public ValueGeneration getValueGenerationStrategy() {
+		return attributeInformation.getValueGenerationStrategy();
 	}
 
 	@Override

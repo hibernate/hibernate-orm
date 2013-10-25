@@ -51,8 +51,10 @@ import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractCompositionAttribute extends AbstractNonIdentifierAttribute implements
-																						   CompositionDefinition {
+public abstract class AbstractCompositionAttribute
+		extends AbstractNonIdentifierAttribute
+		implements CompositionDefinition {
+
 	private final int columnStartPosition;
 
 	protected AbstractCompositionAttribute(
@@ -163,8 +165,8 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 									new BaselineAttributeInformation.Builder()
 											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
 											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
-											.setInsertGenerated( AbstractCompositionAttribute.this.isInsertGenerated() )
-											.setUpdateGenerated( AbstractCompositionAttribute.this.isUpdateGenerated() )
+											// todo : handle nested ValueGeneration strategies...
+											//		disallow if our strategy != NEVER
 											.setNullable( nullable )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
@@ -186,8 +188,8 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 									new BaselineAttributeInformation.Builder()
 											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
 											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
-											.setInsertGenerated( AbstractCompositionAttribute.this.isInsertGenerated() )
-											.setUpdateGenerated( AbstractCompositionAttribute.this.isUpdateGenerated() )
+											// todo : handle nested ValueGeneration strategies...
+											//		disallow if our strategy != NEVER
 											.setNullable( getType().getPropertyNullability()[subAttributeNumber] )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )
@@ -209,8 +211,8 @@ public abstract class AbstractCompositionAttribute extends AbstractNonIdentifier
 									new BaselineAttributeInformation.Builder()
 											.setInsertable( AbstractCompositionAttribute.this.isInsertable() )
 											.setUpdateable( AbstractCompositionAttribute.this.isUpdateable() )
-											.setInsertGenerated( AbstractCompositionAttribute.this.isInsertGenerated() )
-											.setUpdateGenerated( AbstractCompositionAttribute.this.isUpdateGenerated() )
+											// todo : handle nested ValueGeneration strategies...
+											//		disallow if our strategy != NEVER
 											.setNullable( nullable )
 											.setDirtyCheckable( true )
 											.setVersionable( AbstractCompositionAttribute.this.isVersionable() )

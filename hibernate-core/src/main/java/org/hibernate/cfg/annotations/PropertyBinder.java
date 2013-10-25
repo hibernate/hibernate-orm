@@ -52,11 +52,14 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerator;
+
 import org.jboss.logging.Logger;
 
 /**
@@ -271,28 +274,9 @@ public class PropertyBinder {
 		prop.setLazy( lazy );
 		prop.setCascade( cascade );
 		prop.setPropertyAccessorName( accessType.getType() );
-		
-		Generated ann = property != null ?
-				property.getAnnotation( Generated.class ) :
-				null;
-		GenerationTime generated = ann != null ?
-				ann.value() :
-				null;
-		if ( generated != null ) {
-			if ( !GenerationTime.NEVER.equals( generated ) ) {
-				if ( property.isAnnotationPresent( javax.persistence.Version.class )
-						&& GenerationTime.INSERT.equals( generated ) ) {
-					throw new AnnotationException(
-							"@Generated(INSERT) on a @Version property not allowed, use ALWAYS: "
-									+ StringHelper.qualify( holder.getPath(), name )
-					);
-				}
-				insertable = false;
-				if ( GenerationTime.ALWAYS.equals( generated ) ) {
-					updatable = false;
-				}
-				prop.setGeneration( PropertyGeneration.parse( generated.toString().toLowerCase() ) );
-			}
+
+		if ( property != null ) {
+			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
 		}
 		
 		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;
@@ -343,6 +327,89 @@ public class PropertyBinder {
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		this.mappingProperty = prop;
 		return prop;
+	}
+
+	private ValueGeneration determineValueGenerationStrategy(XProperty property) {
+		// for now, we just handle the legacy '@Generated' annotation
+		Generated generatedAnnotation = property.getAnnotation( Generated.class );
+		if ( generatedAnnotation == null
+				|| generatedAnnotation.value() == null
+				|| generatedAnnotation.value() == GenerationTime.NEVER ) {
+			return NoValueGeneration.INSTANCE;
+		}
+
+		final GenerationTiming when = generatedAnnotation.value().getEquivalent();
+
+		if ( property.isAnnotationPresent( javax.persistence.Version.class ) && when == GenerationTiming.INSERT ) {
+			throw new AnnotationException(
+					"@Generated(INSERT) on a @Version property not allowed, use ALWAYS (or NEVER): "
+							+ StringHelper.qualify( holder.getPath(), name )
+			);
+		}
+
+		insertable = false;
+		if ( when == GenerationTiming.ALWAYS ) {
+			updatable = false;
+		}
+
+		return new LegacyValueGeneration( when );
+	}
+
+	private static class NoValueGeneration implements ValueGeneration {
+		/**
+		 * Singleton access
+		 */
+		public static final NoValueGeneration INSTANCE = new NoValueGeneration();
+
+		@Override
+		public GenerationTiming getGenerationTiming() {
+			return GenerationTiming.NEVER;
+		}
+
+		@Override
+		public ValueGenerator getValueGenerator() {
+			return null;
+		}
+
+		@Override
+		public boolean referenceColumnInSql() {
+			return true;
+		}
+
+		@Override
+		public String getDatabaseGeneratedReferencedColumnValue() {
+			return null;
+		}
+	}
+
+	private static class LegacyValueGeneration implements ValueGeneration {
+		private final GenerationTiming timing;
+
+		private LegacyValueGeneration(GenerationTiming timing) {
+			this.timing = timing;
+		}
+
+		@Override
+		public GenerationTiming getGenerationTiming() {
+			return timing;
+		}
+
+		@Override
+		public ValueGenerator getValueGenerator() {
+			// database generated values do not have a value generator
+			return null;
+		}
+
+		@Override
+		public boolean referenceColumnInSql() {
+			// historically these columns are not referenced in the SQL
+			return false;
+		}
+
+		@Override
+		public String getDatabaseGeneratedReferencedColumnValue() {
+			return null;
+		}
 	}
 
 	private boolean isCollection(Value value) {

@@ -29,6 +29,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Index;
@@ -74,6 +75,8 @@ public class Ejb3Column {
 	private Table table;
 	private String readExpression;
 	private String writeExpression;
+
+	private String defaultValue;
 
 	public void setTable(Table table) {
 		this.table = table;
@@ -208,6 +211,14 @@ public class Ejb3Column {
 		return mappingColumn.isNullable();
 	}
 
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+
+	public void setDefaultValue(String defaultValue) {
+		this.defaultValue = defaultValue;
+	}
+
 	public Ejb3Column() {
 	}
 
@@ -221,6 +232,9 @@ public class Ejb3Column {
 			initMappingColumn(
 					logicalColumnName, propertyName, length, precision, scale, nullable, sqlType, unique, true
 			);
+			if ( defaultValue != null ) {
+				mappingColumn.setDefaultValue( defaultValue );
+			}
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Binding column: %s", toString() );
 			}
@@ -472,6 +486,11 @@ public class Ejb3Column {
                                              : "";
 					final String columnName = nameNormalizer.normalizeIdentifierQuoting( col.name() );
 					Ejb3Column column = new Ejb3Column();
+
+					if ( length == 1 ) {
+						applyColumnDefault( column, inferredData );
+					}
+
 					column.setImplicit( false );
 					column.setSqlType( sqlType );
 					column.setLength( col.length() );
@@ -504,6 +523,21 @@ public class Ejb3Column {
 			}
 		}
 		return columns;
+	}
+
+	private static void applyColumnDefault(Ejb3Column column, PropertyData inferredData) {
+		final XProperty xProperty = inferredData.getProperty();
+		if ( xProperty != null ) {
+			ColumnDefault columnDefaultAnn = xProperty.getAnnotation( ColumnDefault.class );
+			if ( columnDefaultAnn != null ) {
+				column.setDefaultValue( columnDefaultAnn.value() );
+			}
+		}
+		else {
+			LOG.trace(
+					"Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty"
+			);
+		}
 	}
 
 	//must only be called after all setters are defined and before bind
@@ -572,6 +606,7 @@ public class Ejb3Column {
 		else {
 			column.setImplicit( true );
 		}
+		applyColumnDefault( column, inferredData );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
 		return columns;

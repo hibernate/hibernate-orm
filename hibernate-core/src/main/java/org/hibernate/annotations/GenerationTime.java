@@ -23,6 +23,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.tuple.GenerationTiming;
+
 /**
  * At what time(s) will the generation occur?
  *
@@ -32,13 +34,23 @@ public enum GenerationTime {
 	/**
 	 * Indicates the value is never generated.
 	 */
-	NEVER,
+	NEVER( GenerationTiming.NEVER ),
 	/**
 	 * Indicates the value is generated on insert.
 	 */
-	INSERT,
+	INSERT( GenerationTiming.INSERT ),
 	/**
 	 * Indicates the value is generated on insert and on update.
 	 */
-	ALWAYS
+	ALWAYS( GenerationTiming.ALWAYS );
+
+	private final GenerationTiming equivalent;
+
+	private GenerationTime(GenerationTiming equivalent) {
+		this.equivalent = equivalent;
+	}
+
+	public GenerationTiming getEquivalent() {
+		return equivalent;
+	}
 }

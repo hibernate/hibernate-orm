@@ -418,12 +418,18 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 
 	/**
 	 * Which of the properties of this class are database generated values on insert?
+	 *
+	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
 	 */
+	@Deprecated
 	public ValueInclusion[] getPropertyInsertGenerationInclusions();
 
 	/**
 	 * Which of the properties of this class are database generated values on update?
+	 *
+	 * @deprecated Replaced internally with InMemoryValueGenerationStrategy / InDatabaseValueGenerationStrategy
 	 */
+	@Deprecated
 	public ValueInclusion[] getPropertyUpdateGenerationInclusions();
 
 	/**

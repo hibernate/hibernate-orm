@@ -288,7 +288,7 @@ public class BinderHelper {
 					clone.setInsertable( false );
 					clone.setUpdateable( false );
 					clone.setNaturalIdentifier( false );
-					clone.setGeneration( property.getGeneration() );
+					clone.setValueGenerationStrategy( property.getValueGenerationStrategy() );
 					embeddedComp.addProperty( clone );
                                 }
                                     synthProp = new SyntheticProperty();

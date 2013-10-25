@@ -29,7 +29,10 @@ import java.io.Serializable;
  * so, at what time(s) they are generated.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This is replaced by {@link org.hibernate.tuple.ValueGeneration} and {@link org.hibernate.tuple.GenerationTiming}
  */
+@Deprecated
 public class PropertyGeneration implements Serializable {
 
 	/**

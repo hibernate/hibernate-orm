@@ -10,8 +10,7 @@ public class BaselineAttributeInformation {
 	private final boolean lazy;
 	private final boolean insertable;
 	private final boolean updateable;
-	private final boolean insertGenerated;
-	private final boolean updateGenerated;
+	private final ValueGeneration valueGenerationStrategy;
 	private final boolean nullable;
 	private final boolean dirtyCheckable;
 	private final boolean versionable;
@@ -23,8 +22,7 @@ public class BaselineAttributeInformation {
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			boolean insertGenerated,
-			boolean updateGenerated,
+			ValueGeneration valueGenerationStrategy,
 			boolean nullable,
 			boolean dirtyCheckable,
 			boolean versionable,
@@ -33,8 +31,7 @@ public class BaselineAttributeInformation {
 		this.lazy = lazy;
 		this.insertable = insertable;
 		this.updateable = updateable;
-		this.insertGenerated = insertGenerated;
-		this.updateGenerated = updateGenerated;
+		this.valueGenerationStrategy = valueGenerationStrategy;
 		this.nullable = nullable;
 		this.dirtyCheckable = dirtyCheckable;
 		this.versionable = versionable;
@@ -54,12 +51,8 @@ public class BaselineAttributeInformation {
 		return updateable;
 	}
 
-	public boolean isInsertGenerated() {
-		return insertGenerated;
-	}
-
-	public boolean isUpdateGenerated() {
-		return updateGenerated;
+	public ValueGeneration getValueGenerationStrategy() {
+		return valueGenerationStrategy;
 	}
 
 	public boolean isNullable() {
@@ -90,8 +83,7 @@ public class BaselineAttributeInformation {
 		private boolean lazy;
 		private boolean insertable;
 		private boolean updateable;
-		private boolean insertGenerated;
-		private boolean updateGenerated;
+		private ValueGeneration valueGenerationStrategy;
 		private boolean nullable;
 		private boolean dirtyCheckable;
 		private boolean versionable;
@@ -113,13 +105,8 @@ public class BaselineAttributeInformation {
 			return this;
 		}
 
-		public Builder setInsertGenerated(boolean insertGenerated) {
-			this.insertGenerated = insertGenerated;
-			return this;
-		}
-
-		public Builder setUpdateGenerated(boolean updateGenerated) {
-			this.updateGenerated = updateGenerated;
+		public Builder setValueGenerationStrategy(ValueGeneration valueGenerationStrategy) {
+			this.valueGenerationStrategy = valueGenerationStrategy;
 			return this;
 		}
 
@@ -153,8 +140,7 @@ public class BaselineAttributeInformation {
 					lazy,
 					insertable,
 					updateable,
-					insertGenerated,
-					updateGenerated,
+					valueGenerationStrategy,
 					nullable,
 					dirtyCheckable,
 					versionable,

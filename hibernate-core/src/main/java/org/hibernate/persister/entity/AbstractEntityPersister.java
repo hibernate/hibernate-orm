@@ -124,6 +124,11 @@ import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
+import org.hibernate.tuple.InMemoryValueGenerationStrategy;
+import org.hibernate.tuple.NonIdentifierAttribute;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AssociationType;
@@ -1679,14 +1684,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected String generateInsertGeneratedValuesSelectString() {
-		return generateGeneratedValuesSelectString( getPropertyInsertGenerationInclusions() );
+		return generateGeneratedValuesSelectString( GenerationTiming.INSERT );
 	}
 
 	protected String generateUpdateGeneratedValuesSelectString() {
-		return generateGeneratedValuesSelectString( getPropertyUpdateGenerationInclusions() );
+		return generateGeneratedValuesSelectString( GenerationTiming.ALWAYS );
 	}
 
-	private String generateGeneratedValuesSelectString(ValueInclusion[] inclusions) {
+	private String generateGeneratedValuesSelectString(final GenerationTiming generationTimingToMatch) {
 		Select select = new Select( getFactory().getDialect() );
 
 		if ( getFactory().getSettings().isCommentsEnabled() ) {
@@ -1698,17 +1703,28 @@ public abstract class AbstractEntityPersister
 		// Here we render the select column list based on the properties defined as being generated.
 		// For partial component generation, we currently just re-select the whole component
 		// rather than trying to handle the individual generated portions.
-		String selectClause = concretePropertySelectFragment( getRootAlias(), inclusions );
+		String selectClause = concretePropertySelectFragment(
+				getRootAlias(),
+				new InclusionChecker() {
+					@Override
+					public boolean includeProperty(int propertyNumber) {
+						final InDatabaseValueGenerationStrategy generationStrategy
+								= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
+						return generationStrategy != null
+								&& generationStrategy.getGenerationTiming() == generationTimingToMatch;
+					}
+				}
+		);
 		selectClause = selectClause.substring( 2 );
 
 		String fromClause = fromTableFragment( getRootAlias() ) +
 				fromJoinFragment( getRootAlias(), true, false );
 
 		String whereClause = new StringBuilder()
-			.append( StringHelper.join( "=? and ", aliasedIdColumns ) )
-			.append( "=?" )
-			.append( whereJoinFragment( getRootAlias(), true, false ) )
-			.toString();
+				.append( StringHelper.join( "=? and ", aliasedIdColumns ) )
+				.append( "=?" )
+				.append( whereJoinFragment( getRootAlias(), true, false ) )
+				.toString();
 
 		return select.setSelectClause( selectClause )
 				.setFromClause( fromClause )
@@ -1719,21 +1735,6 @@ public abstract class AbstractEntityPersister
 
 	protected static interface InclusionChecker {
 		public boolean includeProperty(int propertyNumber);
-	}
-
-	protected String concretePropertySelectFragment(String alias, final ValueInclusion[] inclusions) {
-		return concretePropertySelectFragment(
-				alias,
-				new InclusionChecker() {
-					// TODO : currently we really do not handle ValueInclusion.PARTIAL...
-					// ValueInclusion.PARTIAL would indicate parts of a component need to
-					// be included in the select; currently we then just render the entire
-					// component into the select clause in that case.
-					public boolean includeProperty(int propertyNumber) {
-						return inclusions[propertyNumber] != ValueInclusion.NONE;
-					}
-				}
-		);
 	}
 
 	protected String concretePropertySelectFragment(String alias, final boolean[] includeProperty) {
@@ -2643,8 +2644,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean checkVersion(final boolean[] includeProperty) {
-        return includeProperty[ getVersionProperty() ] ||
-				entityMetamodel.getPropertyUpdateGenerationInclusions()[ getVersionProperty() ] != ValueInclusion.NONE;
+        return includeProperty[ getVersionProperty() ]
+				|| entityMetamodel.isVersionGenerated();
 	}
 
 	protected String generateInsertString(boolean[] includeProperty, int j) {
@@ -2658,8 +2659,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that inserts a row
 	 */
-	protected String generateInsertString(boolean identityInsert,
-			boolean[] includeProperty, int j) {
+	protected String generateInsertString(boolean identityInsert, boolean[] includeProperty, int j) {
 
 		// todo : remove the identityInsert param and variations;
 		//   identity-insert strings are now generated from generateIdentityInsertString()
@@ -2669,13 +2669,37 @@ public abstract class AbstractEntityPersister
 
 		// add normal properties
 		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			
-			if ( includeProperty[i] && isPropertyOfTable( i, j )
-					&& !lobProperties.contains( i ) ) {
-				// this property belongs on the table and is to be inserted
-				insert.addColumns( getPropertyColumnNames(i),
-						propertyColumnInsertable[i],
-						propertyColumnWriters[i] );
+			// the incoming 'includeProperty' array only accounts for insertable defined at the root level, it
+			// does not account for partially generated composites etc.  We also need to account for generation
+			// values
+			if ( isPropertyOfTable( i, j ) ) {
+				if ( !lobProperties.contains( i ) ) {
+					final InDatabaseValueGenerationStrategy generationStrategy = entityMetamodel.getInDatabaseValueGenerationStrategies()[i];
+					if ( generationStrategy != null && generationStrategy.getGenerationTiming().includesInsert() ) {
+						if ( generationStrategy.referenceColumnsInSql() ) {
+							final String[] values;
+							if ( generationStrategy.getReferencedColumnValues() == null ) {
+								values = propertyColumnWriters[i];
+							}
+							else {
+								final int numberOfColumns = propertyColumnWriters[i].length;
+								values = new String[ numberOfColumns ];
+								for ( int x = 0; x < numberOfColumns; x++ ) {
+									if ( generationStrategy.getReferencedColumnValues()[x] != null ) {
+										values[x] = generationStrategy.getReferencedColumnValues()[x];
+									}
+									else {
+										values[x] = propertyColumnWriters[i][x];
+									}
+								}
+							}
+							insert.addColumns( getPropertyColumnNames(i), propertyColumnInsertable[i], values );
+						}
+					}
+					else if ( includeProperty[i] ) {
+						insert.addColumns( getPropertyColumnNames(i), propertyColumnInsertable[i], propertyColumnWriters[i] );
+					}
+				}
 			}
 		}
 
@@ -2702,9 +2726,11 @@ public abstract class AbstractEntityPersister
 		for ( int i : lobProperties ) {
 			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
 				// this property belongs on the table and is to be inserted
-				insert.addColumns( getPropertyColumnNames(i),
+				insert.addColumns(
+						getPropertyColumnNames(i),
 						propertyColumnInsertable[i],
-						propertyColumnWriters[i] );
+						propertyColumnWriters[i]
+				);
 			}
 		}
 
@@ -3422,6 +3448,18 @@ public abstract class AbstractEntityPersister
 	        final Object rowId,
 	        final SessionImplementor session) throws HibernateException {
 
+		// apply any pre-update in-memory value generation
+		if ( getEntityMetamodel().hasPreUpdateGeneratedValues() ) {
+			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
+			for ( int i = 0; i < strategies.length; i++ ) {
+				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesUpdate() ) {
+					fields[i] = strategies[i].getValueGenerator().generateValue( session, object );
+					setPropertyValue( object, i, fields[i] );
+					// todo : probably best to add to dirtyFields if not-null
+				}
+			}
+		}
+
 		//note: dirtyFields==null means we had no snapshot, and we couldn't get one using select-before-update
 		//	  oldFields==null just means we had no snapshot to begin with (we might have used select-before-update to get the dirtyFields)
 
@@ -3519,8 +3557,17 @@ public abstract class AbstractEntityPersister
 		return id;
 	}
 
-	public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session)
-			throws HibernateException {
+	public void insert(Serializable id, Object[] fields, Object object, SessionImplementor session) {
+		// apply any pre-insert in-memory value generation
+		if ( getEntityMetamodel().hasPreInsertGeneratedValues() ) {
+			final InMemoryValueGenerationStrategy[] strategies = getEntityMetamodel().getInMemoryValueGenerationStrategies();
+			for ( int i = 0; i < strategies.length; i++ ) {
+				if ( strategies[i] != null && strategies[i].getGenerationTiming().includesInsert() ) {
+					fields[i] = strategies[i].getValueGenerator().generateValue( session, object );
+					setPropertyValue( object, i, fields[i] );
+				}
+			}
+		}
 
 		final int span = getTableSpan();
 		if ( entityMetamodel.isDynamicInsert() ) {
@@ -4485,7 +4532,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public boolean isVersionPropertyGenerated() {
-		return isVersioned() && ( getPropertyUpdateGenerationInclusions() [ getVersionProperty() ] != ValueInclusion.NONE );
+		return isVersioned() && getEntityMetamodel().isVersionGenerated();
 	}
 
 	public boolean isVersionPropertyInsertable() {
@@ -4524,12 +4571,14 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.getPropertyInsertability();
 	}
 
+	@Deprecated
 	public ValueInclusion[] getPropertyInsertGenerationInclusions() {
-		return entityMetamodel.getPropertyInsertGenerationInclusions();
+		return null;
 	}
 
+	@Deprecated
 	public ValueInclusion[] getPropertyUpdateGenerationInclusions() {
-		return entityMetamodel.getPropertyUpdateGenerationInclusions();
+		return null;
 	}
 
 	public boolean[] getPropertyNullability() {
@@ -4663,14 +4712,14 @@ public abstract class AbstractEntityPersister
 		if ( !hasInsertGeneratedProperties() ) {
 			throw new AssertionFailure("no insert-generated properties");
 		}
-		processGeneratedProperties( id, entity, state, session, sqlInsertGeneratedValuesSelectString, getPropertyInsertGenerationInclusions() );
+		processGeneratedProperties( id, entity, state, session, sqlInsertGeneratedValuesSelectString, GenerationTiming.INSERT );
 	}
 
 	public void processUpdateGeneratedProperties(Serializable id, Object entity, Object[] state, SessionImplementor session) {
 		if ( !hasUpdateGeneratedProperties() ) {
 			throw new AssertionFailure("no update-generated properties");
 		}
-		processGeneratedProperties( id, entity, state, session, sqlUpdateGeneratedValuesSelectString, getPropertyUpdateGenerationInclusions() );
+		processGeneratedProperties( id, entity, state, session, sqlUpdateGeneratedValuesSelectString, GenerationTiming.ALWAYS );
 	}
 
 	private void processGeneratedProperties(
@@ -4679,7 +4728,7 @@ public abstract class AbstractEntityPersister
 	        Object[] state,
 	        SessionImplementor session,
 	        String selectionSQL,
-	        ValueInclusion[] includeds) {
+			GenerationTiming matchTiming) {
 		// force immediate execution of the insert batch (if one)
 		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
 
@@ -4698,13 +4747,28 @@ public abstract class AbstractEntityPersister
 								MessageHelper.infoString( this, id, getFactory() )
 							);
 					}
-					for ( int i = 0; i < getPropertySpan(); i++ ) {
-						if ( includeds[i] != ValueInclusion.NONE ) {
-							Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
-							state[i] = getPropertyTypes()[i].resolve( hydratedState, session, entity );
-							setPropertyValue( entity, i, state[i] );
+					int propertyIndex = -1;
+					for ( NonIdentifierAttribute attribute : entityMetamodel.getProperties() ) {
+						propertyIndex++;
+						final ValueGeneration valueGeneration = attribute.getValueGenerationStrategy();
+						if ( valueGeneration != null && valueGeneration.getGenerationTiming() == matchTiming ) {
+							final Object hydratedState = attribute.getType().hydrate(
+									rs, getPropertyAliases(
+									"",
+									propertyIndex
+							), session, entity
+							);
+							state[propertyIndex] = attribute.getType().resolve( hydratedState, session, entity );
+							setPropertyValue( entity, propertyIndex, state[propertyIndex] );
 						}
 					}
+//					for ( int i = 0; i < getPropertySpan(); i++ ) {
+//						if ( includeds[i] != ValueInclusion.NONE ) {
+//							Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
+//							state[i] = getPropertyTypes()[i].resolve( hydratedState, session, entity );
+//							setPropertyValue( entity, i, state[i] );
+//						}
+//					}
 				}
 				finally {
 					if ( rs != null ) {

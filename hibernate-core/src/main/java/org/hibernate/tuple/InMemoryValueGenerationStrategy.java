@@ -23,31 +23,24 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-
 /**
  * @author Steve Ebersole
  */
-public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
-	public boolean isLazy();
+public interface InMemoryValueGenerationStrategy {
+	/**
+	 * When is this value generated : NEVER, INSERT, ALWAYS (INSERT+UPDATE)
+	 *
+	 * @return When the value is generated.
+	 */
+	public GenerationTiming getGenerationTiming();
 
-	public boolean isInsertable();
-
-	public boolean isUpdateable();
-
-	public ValueGeneration getValueGenerationStrategy();
-
-	public boolean isNullable();
-
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
-
-	public boolean isDirtyCheckable();
-
-	public boolean isVersionable();
-
-	public CascadeStyle getCascadeStyle();
-
-	public FetchMode getFetchMode();
+	/**
+	 * Obtain the in-VM value generator.
+	 * <p/>
+	 * May return {@code null}.  In fact for values that are generated "in the database" via execution of the
+	 * INSERT/UPDATE statement, the expectation is that {@code null} be returned here
+	 *
+	 * @return The strategy for performing in-VM value generation
+	 */
+	public ValueGenerator getValueGenerator();
 }

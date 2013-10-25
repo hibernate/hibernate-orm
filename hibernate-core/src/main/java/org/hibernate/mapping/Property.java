@@ -38,6 +38,7 @@ import org.hibernate.property.Getter;
 import org.hibernate.property.PropertyAccessor;
 import org.hibernate.property.PropertyAccessorFactory;
 import org.hibernate.property.Setter;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -54,7 +55,7 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean insertable = true;
 	private boolean selectable = true;
 	private boolean optimisticLocked = true;
-	private PropertyGeneration generation = PropertyGeneration.NEVER;
+	private ValueGeneration valueGenerationStrategy;
 	private String propertyAccessorName;
 	private boolean lazy;
 	private boolean optional;
@@ -189,13 +190,13 @@ public class Property implements Serializable, MetaAttributable {
 			);
 	}
 
-    public PropertyGeneration getGeneration() {
-        return generation;
-    }
+	public ValueGeneration getValueGenerationStrategy() {
+		return valueGenerationStrategy;
+	}
 
-    public void setGeneration(PropertyGeneration generation) {
-        this.generation = generation;
-    }
+	public void setValueGenerationStrategy(ValueGeneration valueGenerationStrategy) {
+		this.valueGenerationStrategy = valueGenerationStrategy;
+	}
 
     public void setUpdateable(boolean mutable) {
 		this.updateable = mutable;

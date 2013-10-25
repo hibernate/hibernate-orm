@@ -23,31 +23,21 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
+import org.hibernate.engine.spi.SessionImplementor;
 
 /**
+ * Defines a generator for in-VM generation of (non-identifier) attribute values.
+ *
  * @author Steve Ebersole
  */
-public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
-	public boolean isLazy();
-
-	public boolean isInsertable();
-
-	public boolean isUpdateable();
-
-	public ValueGeneration getValueGenerationStrategy();
-
-	public boolean isNullable();
-
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
-
-	public boolean isDirtyCheckable();
-
-	public boolean isVersionable();
-
-	public CascadeStyle getCascadeStyle();
-
-	public FetchMode getFetchMode();
+public interface ValueGenerator<T> {
+	/**
+	 * Generate the value.
+	 *
+	 * @param session The Session from which the request originates.
+	 * @param owner The instance of the object owning the attribute for which we are generating a value.
+	 *
+	 * @return The generated value
+	 */
+	public T generateValue(SessionImplementor session, Object owner);
 }

@@ -83,7 +83,6 @@ import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimitiveArray;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Set;
@@ -97,6 +96,9 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.ValueGeneration;
+import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -524,8 +526,10 @@ public final class HbmBinder {
 		// for version properties marked as being generated, make sure they are "always"
 		// generated; aka, "insert" is invalid; this is dis-allowed by the DTD,
 		// but just to make sure...
-		if ( prop.getGeneration() == PropertyGeneration.INSERT ) {
-			throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
+		if ( prop.getValueGenerationStrategy() != null ) {
+			if ( prop.getValueGenerationStrategy().getGenerationTiming() == GenerationTiming.INSERT ) {
+				throw new MappingException( "'generated' attribute cannot be 'insert' for versioning property" );
+			}
 		}
 		makeVersion( subnode, val );
 		entity.setVersion( prop );
@@ -1297,46 +1301,51 @@ public final class HbmBinder {
 
 		Attribute generatedNode = node.attribute( "generated" );
         String generationName = generatedNode == null ? null : generatedNode.getValue();
-        PropertyGeneration generation = PropertyGeneration.parse( generationName );
-		property.setGeneration( generation );
 
-        if ( generation == PropertyGeneration.ALWAYS || generation == PropertyGeneration.INSERT ) {
-	        // generated properties can *never* be insertable...
-	        if ( property.isInsertable() ) {
-		        if ( insertNode == null ) {
-			        // insertable simply because that is the user did not specify
-			        // anything; just override it
+		// Handle generated properties.
+		GenerationTiming generationTiming = GenerationTiming.parseFromName( generationName );
+		if ( generationTiming == GenerationTiming.ALWAYS || generationTiming == GenerationTiming.INSERT ) {
+			// we had generation specified...
+			//   	HBM only supports "database generated values"
+			property.setValueGenerationStrategy( new HbmDefinedValueGeneration( generationTiming ) );
+
+			// generated properties can *never* be insertable...
+			if ( property.isInsertable() ) {
+				if ( insertNode == null ) {
+					// insertable simply because that is the user did not specify
+					// anything; just override it
 					property.setInsertable( false );
-		        }
-		        else {
-			        // the user specifically supplied insert="true",
-			        // which constitutes an illegal combo
+				}
+				else {
+					// the user specifically supplied insert="true",
+					// which constitutes an illegal combo
 					throw new MappingException(
-							"cannot specify both insert=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							propName
+							"cannot specify both insert=\"true\" and generated=\"" + generationTiming.name().toLowerCase() +
+									"\" for property: " +
+									propName
 					);
-		        }
-	        }
+				}
+			}
 
-	        // properties generated on update can never be updateable...
-	        if ( property.isUpdateable() && generation == PropertyGeneration.ALWAYS ) {
-		        if ( updateNode == null ) {
-			        // updateable only because the user did not specify
-			        // anything; just override it
-			        property.setUpdateable( false );
-		        }
-		        else {
-			        // the user specifically supplied update="true",
-			        // which constitutes an illegal combo
+			// properties generated on update can never be updateable...
+			if ( property.isUpdateable() && generationTiming == GenerationTiming.ALWAYS ) {
+				if ( updateNode == null ) {
+					// updateable only because the user did not specify
+					// anything; just override it
+					property.setUpdateable( false );
+				}
+				else {
+					// the user specifically supplied update="true",
+					// which constitutes an illegal combo
 					throw new MappingException(
-							"cannot specify both update=\"true\" and generated=\"" + generation.getName() +
-							"\" for property: " +
-							propName
+							"cannot specify both update=\"true\" and generated=\"" + generationTiming.name().toLowerCase() +
+									"\" for property: " +
+									propName
 					);
-		        }
-	        }
-        }
+				}
+			}
+		}
+
 
 		boolean isLazyable = "property".equals( node.getName() ) ||
 				"component".equals( node.getName() ) ||
@@ -1359,6 +1368,37 @@ public final class HbmBinder {
 
 		property.setMetaAttributes( getMetas( node, inheritedMetas ) );
 
+	}
+
+	private static class HbmDefinedValueGeneration implements ValueGeneration {
+		private final GenerationTiming timing;
+
+		private HbmDefinedValueGeneration(GenerationTiming timing) {
+			this.timing = timing;
+		}
+
+		@Override
+		public GenerationTiming getGenerationTiming() {
+			return timing;
+		}
+
+		@Override
+		public ValueGenerator getValueGenerator() {
+			// database generated values do not have a value generator
+			return null;
+		}
+
+		@Override
+		public boolean referenceColumnInSql() {
+			// historically these columns are not referenced in the SQL
+			return false;
+		}
+
+		@Override
+		public String getDatabaseGeneratedReferencedColumnValue() {
+			// the column is not referenced in the sql.
+			return null;
+		}
 	}
 
 	private static String columns(Value val) {

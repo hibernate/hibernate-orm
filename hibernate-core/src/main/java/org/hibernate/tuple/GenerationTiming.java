@@ -23,31 +23,56 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-
 /**
  * @author Steve Ebersole
  */
-public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
-	public boolean isLazy();
+public enum GenerationTiming {
+	NEVER {
+		@Override
+		public boolean includesInsert() {
+			return false;
+		}
 
-	public boolean isInsertable();
+		@Override
+		public boolean includesUpdate() {
+			return false;
+		}
+	},
+	INSERT {
+		@Override
+		public boolean includesInsert() {
+			return true;
+		}
 
-	public boolean isUpdateable();
+		@Override
+		public boolean includesUpdate() {
+			return false;
+		}
+	},
+	ALWAYS {
+		@Override
+		public boolean includesInsert() {
+			return true;
+		}
 
-	public ValueGeneration getValueGenerationStrategy();
+		@Override
+		public boolean includesUpdate() {
+			return true;
+		}
+	};
 
-	public boolean isNullable();
+	public abstract boolean includesInsert();
+	public abstract boolean includesUpdate();
 
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
-
-	public boolean isDirtyCheckable();
-
-	public boolean isVersionable();
-
-	public CascadeStyle getCascadeStyle();
-
-	public FetchMode getFetchMode();
+	public static GenerationTiming parseFromName(String name) {
+		if ( "insert".equalsIgnoreCase( name ) ) {
+			return INSERT;
+		}
+		else if ( "always".equalsIgnoreCase( name ) ) {
+			return ALWAYS;
+		}
+		else {
+			return NEVER;
+		}
+	}
 }

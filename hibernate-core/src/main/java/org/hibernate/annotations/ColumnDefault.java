@@ -21,33 +21,26 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.tuple;
+package org.hibernate.annotations;
 
-import org.hibernate.FetchMode;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
+import java.lang.annotation.Retention;
+
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
+ * Identifies the DEFAULT value to apply to the associated column via DDL.
+ *
  * @author Steve Ebersole
  */
-public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
-	public boolean isLazy();
-
-	public boolean isInsertable();
-
-	public boolean isUpdateable();
-
-	public ValueGeneration getValueGenerationStrategy();
-
-	public boolean isNullable();
-
-	public boolean isDirtyCheckable(boolean hasUninitializedProperties);
-
-	public boolean isDirtyCheckable();
-
-	public boolean isVersionable();
-
-	public CascadeStyle getCascadeStyle();
-
-	public FetchMode getFetchMode();
+@Target( {FIELD, METHOD} )
+@Retention( RUNTIME )
+public @interface ColumnDefault {
+	/**
+	 * The DEFAULT definition to apply to the DDL.
+	 */
+	String value();
 }

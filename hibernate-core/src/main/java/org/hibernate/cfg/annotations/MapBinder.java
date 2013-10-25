@@ -381,7 +381,7 @@ public class MapBinder extends CollectionBinder {
 				Property current = (Property) properties.next();
 				Property newProperty = new Property();
 				newProperty.setCascade( current.getCascade() );
-				newProperty.setGeneration( current.getGeneration() );
+				newProperty.setValueGenerationStrategy( current.getValueGenerationStrategy() );
 				newProperty.setInsertable( false );
 				newProperty.setUpdateable( false );
 				newProperty.setMetaAttributes( current.getMetaAttributes() );

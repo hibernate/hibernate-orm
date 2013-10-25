@@ -44,8 +44,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 	 * @param lazy Should this property be handled lazily?
 	 * @param insertable Is this property an insertable value?
 	 * @param updateable Is this property an updateable value?
-	 * @param insertGenerated Is this property generated in the database on insert?
-	 * @param updateGenerated Is this property generated in the database on update?
+	 * @param valueGenerationStrategy How (if) values for this attribute are generated
 	 * @param nullable Is this property a nullable value?
 	 * @param checkable Is this property a checkable value?
 	 * @param versionable Is this property a versionable value?
@@ -58,8 +57,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 			boolean lazy,
 			boolean insertable,
 			boolean updateable,
-			boolean insertGenerated,
-			boolean updateGenerated,
+			ValueGeneration valueGenerationStrategy,
 			boolean nullable,
 			boolean checkable,
 			boolean versionable,
@@ -75,8 +73,7 @@ public class StandardProperty extends AbstractNonIdentifierAttribute implements 
 						.setLazy( lazy )
 						.setInsertable( insertable )
 						.setUpdateable( updateable )
-						.setInsertGenerated( insertGenerated )
-						.setUpdateGenerated( updateGenerated )
+						.setValueGenerationStrategy( valueGenerationStrategy )
 						.setNullable( nullable )
 						.setDirtyCheckable( checkable )
 						.setVersionable( versionable )

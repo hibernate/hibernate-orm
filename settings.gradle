@@ -10,11 +10,15 @@ include 'hibernate-proxool'
 
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
+
+include 'metamodel-generator'
+project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
+
 include 'hibernate-gradle-plugin'
 include 'hibernate-maven-plugin'
+
 include 'documentation'
 include 'release'
-
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

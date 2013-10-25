@@ -49,7 +49,8 @@ public class Helper implements QueryBuildingParameters {
 	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, EntityPersister entityPersister) {
 		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 				sf,
-				LoadQueryInfluencers.NONE
+				LoadQueryInfluencers.NONE,
+				LockMode.NONE
 		);
 		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 	}

@@ -37,6 +37,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
@@ -104,10 +105,17 @@ public class FetchStrategyHelper {
 			return FetchStyle.JOIN;
 		}
 
+		if ( mappingFetchMode == FetchMode.SELECT ) {
+			return FetchStyle.SELECT;
+
+		}
 		if ( type.isEntityType() ) {
 			EntityPersister persister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister.isBatchLoadable() ) {
 				return FetchStyle.BATCH;
+			}
+			else if ( !persister.hasProxy() ) {
+				return FetchStyle.JOIN;
 			}
 		}
 		else {

@@ -33,7 +33,7 @@ import org.hibernate.persister.entity.EntityPersister;
 public interface EntityReference extends FetchSource {
 
 	/**
-	 * Obtain the UID of the QuerySpace (specifically a {@link CollectionQuerySpace}) that this CollectionReference
+	 * Obtain the UID of the QuerySpace (specifically a {@link EntityQuerySpace}) that this EntityReference
 	 * refers to.
 	 *
 	 * @return The UID

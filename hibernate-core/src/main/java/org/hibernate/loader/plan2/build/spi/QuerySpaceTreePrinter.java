@@ -220,7 +220,7 @@ public class QuerySpaceTreePrinter {
 
 	private String determineJoinType(Join join) {
 		if ( JoinDefinedByMetadata.class.isInstance( join ) ) {
-			return "JoinDefinedByMetadata(" + ( (JoinDefinedByMetadata) join ).getJoinedAssociationPropertyName() + ")";
+			return "JoinDefinedByMetadata(" + ( (JoinDefinedByMetadata) join ).getJoinedPropertyName() + ")";
 		}
 
 		return join.getClass().getSimpleName();

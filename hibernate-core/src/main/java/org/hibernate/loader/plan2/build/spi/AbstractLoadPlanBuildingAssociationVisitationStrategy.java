@@ -339,8 +339,18 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		pushToCollectionStack( collectionReturn );
 		addRootReturn( collectionReturn );
 
+		//if ( collectionDefinition.getCollectionPersister().isOneToMany() ) {
+			associationKeyRegistered(
+					new AssociationKey(
+							( (Joinable) collectionDefinition.getCollectionPersister() ).getTableName(),
+							( (Joinable) collectionDefinition.getCollectionPersister() ).getKeyColumnNames()
+					)
+			);
+		//}
+
 		// also add an AssociationKey for the root so we can later on recognize circular references back to the root.
 		// for a collection, the circularity would always be to an entity element...
+		/*
 		if ( collectionReturn.getElementGraph() != null ) {
 			if ( EntityReference.class.isInstance( collectionReturn.getElementGraph() ) ) {
 				final EntityReference entityReference = (EntityReference) collectionReturn.getElementGraph();
@@ -350,6 +360,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				);
 			}
 		}
+		*/
 	}
 
 	protected boolean supportsRootCollectionReturns() {
@@ -375,7 +386,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	public void startingCollectionIndex(CollectionIndexDefinition indexDefinition) {
 		final Type indexType = indexDefinition.getType();
 		if ( indexType.isAnyType() ) {
-			throw new WalkingException( "CollectionIndexDefinition reported any-type mapping as map index" );
+			return;
 		}
 
 		log.tracef(
@@ -409,6 +420,11 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	public void finishingCollectionIndex(CollectionIndexDefinition indexDefinition) {
 		final Type indexType = indexDefinition.getType();
+
+		if ( indexType.isAnyType() ) {
+			return;
+		}
+
 		if ( indexType.isComponentType() ) {
 			// todo : validate the stack?
 			popFromStack();
@@ -463,6 +479,10 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	public void finishingCollectionElements(CollectionElementDefinition elementDefinition) {
 		final Type elementType = elementDefinition.getType();
+		if ( elementType.isAnyType() ) {
+			return;
+		}
+
 		if ( elementType.isComponentType() ) {
 			// pop it from the stack
 			final ExpandingFetchSource popped = popFromStack();
@@ -597,7 +617,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			// TODO: AFAICT, to avoid an overflow, the associated entity must already be loaded into the session, or
 			// it must be loaded when the ID for the dependent entity is resolved. Is there some other way to
 			// deal with this???
-			if ( ! associationKey.equals( currentEntityReferenceAssociationKey ) ) {
+			final FetchSource registeredFetchSource = registeredFetchSource( associationKey );
+			if ( registeredFetchSource != null && ! associationKey.equals( currentEntityReferenceAssociationKey ) ) {
 				currentSource().buildBidirectionalEntityReference(
 						attributeDefinition,
 						fetchStrategy,

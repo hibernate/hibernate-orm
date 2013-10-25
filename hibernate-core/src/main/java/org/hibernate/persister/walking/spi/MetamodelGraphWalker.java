@@ -241,7 +241,7 @@ public class MetamodelGraphWalker {
 		try {
 			final Type collectionIndexType = collectionIndexDefinition.getType();
 			if ( collectionIndexType.isComponentType() ) {
-				visitCompositeDefinition( collectionIndexDefinition.toCompositeDefinition() );
+				visitAttributes( collectionIndexDefinition.toCompositeDefinition() );
 			}
 			else if ( collectionIndexType.isAssociationType() ) {
 				visitEntityDefinition( collectionIndexDefinition.toEntityDefinition() );

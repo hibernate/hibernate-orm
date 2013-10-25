@@ -34,6 +34,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -5240,9 +5241,28 @@ public abstract class AbstractEntityPersister
 				EntityIdentifierDefinitionHelper.buildNonEncapsulatedCompositeIdentifierDefinition( this );
 	}
 
-	private void collectAttributeDefinitions(List<AttributeDefinition> definitions, EntityMetamodel metamodel) {
+	private void collectAttributeDefinitions(
+			Map<String,AttributeDefinition> attributeDefinitionsByName,
+			EntityMetamodel metamodel) {
 		for ( int i = 0; i < metamodel.getPropertySpan(); i++ ) {
-			definitions.add( metamodel.getProperties()[i] );
+			final AttributeDefinition attributeDefinition = metamodel.getProperties()[i];
+			// Don't replace an attribute definition if it is already in attributeDefinitionsByName
+			// because the new value will be from a subclass.
+			final AttributeDefinition oldAttributeDefinition = attributeDefinitionsByName.get(
+					attributeDefinition.getName()
+			);
+			if ( oldAttributeDefinition != null ) {
+				if ( LOG.isTraceEnabled() ) {
+						LOG.tracef(
+								"Ignoring subclass attribute definition [%s.%s] because it is defined in a superclass ",
+								entityMetamodel.getName(),
+								attributeDefinition.getName()
+						);
+				}
+			}
+			else {
+				attributeDefinitionsByName.put( attributeDefinition.getName(), attributeDefinition );
+			}
 		}
 
 		// see if there are any subclass persisters...
@@ -5259,7 +5279,7 @@ public abstract class AbstractEntityPersister
 			}
 			try {
 				final EntityPersister subClassEntityPersister = factory.getEntityPersister( subClassEntityName );
-				collectAttributeDefinitions( definitions, subClassEntityPersister.getEntityMetamodel() );
+				collectAttributeDefinitions( attributeDefinitionsByName, subClassEntityPersister.getEntityMetamodel() );
 			}
 			catch (MappingException e) {
 				throw new IllegalStateException(
@@ -5284,8 +5304,8 @@ public abstract class AbstractEntityPersister
 		//			to try and drive SQL generation on these (which we do ultimately).  A possible solution there
 		//			would be to delay all SQL generation until postInstantiate
 
-		List<AttributeDefinition> attributeDefinitions = new ArrayList<AttributeDefinition>();
-		collectAttributeDefinitions( attributeDefinitions, getEntityMetamodel() );
+		Map<String,AttributeDefinition> attributeDefinitionsByName = new LinkedHashMap<String,AttributeDefinition>();
+		collectAttributeDefinitions( attributeDefinitionsByName, getEntityMetamodel() );
 
 
 //		EntityMetamodel currentEntityMetamodel = this.getEntityMetamodel();
@@ -5303,7 +5323,9 @@ public abstract class AbstractEntityPersister
 //			}
 //		}
 
-		this.attributeDefinitions = Collections.unmodifiableList( attributeDefinitions );
+		this.attributeDefinitions = Collections.unmodifiableList(
+				new ArrayList<AttributeDefinition>( attributeDefinitionsByName.values() )
+		);
 //		// todo : leverage the attribute definitions housed on EntityMetamodel
 //		// 		for that to work, we'd have to be able to walk our super entity persister(s)
 //		this.attributeDefinitions = new Iterable<AttributeDefinition>() {

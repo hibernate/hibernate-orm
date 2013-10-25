@@ -21,24 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan2.spi;
+package org.hibernate.loader.collection.plan;
 
-import org.hibernate.type.AssociationType;
-import org.hibernate.type.Type;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.collection.BatchingCollectionInitializerBuilder;
+import org.hibernate.loader.collection.CollectionInitializer;
+import org.hibernate.persister.collection.QueryableCollection;
 
 /**
- * Specialization of a Join that is defined by the metadata.
+ * Base class for LoadPlan-based BatchingCollectionInitializerBuilder implementations.  Mainly we handle the common
+ * "no batching" case here to use the LoadPlan-based CollectionLoader
  *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface JoinDefinedByMetadata extends Join {
-	/**
-	 * Obtain the name of the property that defines the join, relative to the PropertyMapping
-	 * ({@link org.hibernate.loader.plan2.spi.QuerySpace#getPropertyMapping()}) of the left-hand-side
-	 * ({@link #getLeftHandSide()}) of the join
-	 *
-	 * @return The property name
-	 */
-	public String getJoinedPropertyName();
-	public Type getJoinedPropertyType();
+public abstract class AbstractBatchingCollectionInitializerBuilder extends BatchingCollectionInitializerBuilder {
+
+	@Override
+	protected CollectionInitializer buildNonBatchingLoader(
+			QueryableCollection persister,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
+		return CollectionLoader.forCollection( persister ).withInfluencers( influencers ).byKey();
+	}
 }

@@ -30,7 +30,6 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan2.exec.process.spi.ReturnReader;
-import org.hibernate.loader.plan2.exec.spi.EntityReferenceAliases;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -41,11 +40,9 @@ import static org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingCon
  */
 public class EntityReturnReader implements ReturnReader {
 	private final EntityReturn entityReturn;
-	private final EntityReferenceAliases aliases;
 
-	public EntityReturnReader(EntityReturn entityReturn, EntityReferenceAliases aliases) {
+	public EntityReturnReader(EntityReturn entityReturn) {
 		this.entityReturn = entityReturn;
-		this.aliases = aliases;
 	}
 
 	public EntityReferenceProcessingState getIdentifierResolutionContext(ResultSetProcessingContext context) {

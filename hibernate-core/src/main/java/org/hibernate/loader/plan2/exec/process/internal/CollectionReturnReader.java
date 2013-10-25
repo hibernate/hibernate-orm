@@ -21,24 +21,27 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan2.spi;
+package org.hibernate.loader.plan2.exec.process.internal;
 
-import org.hibernate.type.AssociationType;
-import org.hibernate.type.Type;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessingContext;
+import org.hibernate.loader.plan2.exec.process.spi.ReturnReader;
+import org.hibernate.loader.plan2.spi.CollectionReturn;
 
 /**
- * Specialization of a Join that is defined by the metadata.
- *
  * @author Steve Ebersole
  */
-public interface JoinDefinedByMetadata extends Join {
-	/**
-	 * Obtain the name of the property that defines the join, relative to the PropertyMapping
-	 * ({@link org.hibernate.loader.plan2.spi.QuerySpace#getPropertyMapping()}) of the left-hand-side
-	 * ({@link #getLeftHandSide()}) of the join
-	 *
-	 * @return The property name
-	 */
-	public String getJoinedPropertyName();
-	public Type getJoinedPropertyType();
+public class CollectionReturnReader implements ReturnReader {
+	private final CollectionReturn collectionReturn;
+
+	public CollectionReturnReader(CollectionReturn collectionReturn) {
+		this.collectionReturn = collectionReturn;
+	}
+
+	@Override
+	public Object read(ResultSet resultSet, ResultSetProcessingContext context) throws SQLException {
+		return null;  //To change body of implemented methods use File | Settings | File Templates.
+	}
 }

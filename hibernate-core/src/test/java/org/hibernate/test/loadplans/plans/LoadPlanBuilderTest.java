@@ -31,6 +31,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.plan2.build.internal.CascadeStyleLoadPlanBuildingAssociationVisitationStrategy;
@@ -40,6 +41,7 @@ import org.hibernate.loader.plan2.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan2.exec.internal.AliasResolutionContextImpl;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
 import org.hibernate.loader.plan2.spi.EntityFetch;
+import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.LoadPlan;
@@ -70,7 +72,8 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		EntityPersister ep = (EntityPersister) sessionFactory().getClassMetadata(Message.class);
 		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 				sessionFactory(),
-				LoadQueryInfluencers.NONE
+				LoadQueryInfluencers.NONE,
+				LockMode.NONE
 		);
 		LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 		assertFalse( plan.hasAnyScalarReturns() );
@@ -93,7 +96,8 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		CascadeStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new CascadeStyleLoadPlanBuildingAssociationVisitationStrategy(
 				CascadingActions.MERGE,
 				sessionFactory(),
-				LoadQueryInfluencers.NONE
+				LoadQueryInfluencers.NONE,
+				LockMode.NONE
 		);
 		LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, ep );
 		assertFalse( plan.hasAnyScalarReturns() );
@@ -115,7 +119,8 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		CollectionPersister cp = sessionFactory().getCollectionPersister( Poster.class.getName() + ".messages" );
 		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 				sessionFactory(),
-				LoadQueryInfluencers.NONE
+				LoadQueryInfluencers.NONE,
+				LockMode.NONE
 		);
 		LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, cp );
 		assertFalse( plan.hasAnyScalarReturns() );
@@ -123,12 +128,14 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		Return rtn = plan.getReturns().get( 0 );
 		CollectionReturn collectionReturn = ExtraAssertions.assertTyping( CollectionReturn.class, rtn );
 
+		assertNotNull( collectionReturn.getElementGraph() );
 		assertNotNull( collectionReturn.getElementGraph().getFetches() );
-		assertEquals( 1, collectionReturn.getElementGraph().getFetches().length ); // the collection elements are fetched
-		Fetch fetch = collectionReturn.getElementGraph().getFetches()[0];
-		EntityFetch entityFetch = ExtraAssertions.assertTyping( EntityFetch.class, fetch );
-		assertNotNull( entityFetch.getFetches() );
-		assertEquals( 0, entityFetch.getFetches().length );
+		// the collection Message elements are fetched, but Message.poster is not fetched
+		// (because that collection is owned by that Poster)
+		assertEquals( 0, collectionReturn.getElementGraph().getFetches().length );
+		EntityReference entityReference = ExtraAssertions.assertTyping( EntityReference.class, collectionReturn.getElementGraph() );
+		assertNotNull( entityReference.getFetches() );
+		assertEquals( 0, entityReference.getFetches().length );
 
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sessionFactory() ) );
 	}

@@ -174,7 +174,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	}
 
 	protected abstract CompositeFetch createCompositeFetch(
-			CompositeType compositeType,
+			CompositionDefinition compositeType,
 			ExpandingCompositeQuerySpace compositeQuerySpace);
 
 	@Override
@@ -187,7 +187,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 				loadPlanBuildingContext.getQuerySpaces().generateImplicitUid()
 		);
 		final CompositeFetch fetch = createCompositeFetch(
-				attributeDefinition.getType(),
+				attributeDefinition,
 				(ExpandingCompositeQuerySpace) join.getRightHandSide()
 		);
 		addFetch( fetch );

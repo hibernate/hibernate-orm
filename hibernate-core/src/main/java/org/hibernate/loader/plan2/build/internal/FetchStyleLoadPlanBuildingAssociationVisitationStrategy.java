@@ -26,6 +26,7 @@ package org.hibernate.loader.plan2.build.internal;
 import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -50,14 +51,17 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	private static final Logger log = CoreLogging.logger( FetchStyleLoadPlanBuildingAssociationVisitationStrategy.class );
 
 	private final LoadQueryInfluencers loadQueryInfluencers;
+	private final LockMode lockMode;
 
 	private Return rootReturn;
 
 	public FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 			SessionFactoryImplementor sessionFactory,
-			LoadQueryInfluencers loadQueryInfluencers) {
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockMode lockMode) {
 		super( sessionFactory );
 		this.loadQueryInfluencers = loadQueryInfluencers;
+		this.lockMode = lockMode;
 	}
 
 	@Override
@@ -106,6 +110,10 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	protected FetchStrategy adjustJoinFetchIfNeeded(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
+		if ( lockMode.greaterThan( LockMode.READ ) ) {
+			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
+		}
+
 		final Integer maxFetchDepth = sessionFactory().getSettings().getMaximumFetchDepth();
 		if ( maxFetchDepth != null && currentDepth() > maxFetchDepth ) {
 			return new FetchStrategy( fetchStrategy.getTiming(), FetchStyle.SELECT );
@@ -121,7 +129,7 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	protected boolean isTooManyCollections() {
-		return false;
+		return CollectionReturn.class.isInstance( rootReturn );
 	}
 
 //	@Override

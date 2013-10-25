@@ -91,11 +91,11 @@ public class CompositePropertyMapping implements PropertyMapping {
 			throw new NullPointerException( "Provided property name cannot be null" );
 		}
 
-		if ( propertyName.contains( "." ) ) {
-			throw new IllegalArgumentException(
-					"Provided property name cannot contain paths (dots) [" + propertyName + "]"
-			);
-		}
+		//if ( propertyName.contains( "." ) ) {
+		//	throw new IllegalArgumentException(
+		//			"Provided property name cannot contain paths (dots) [" + propertyName + "]"
+		//	);
+		//}
 	}
 
 	/**

@@ -44,7 +44,8 @@ public abstract class BatchingCollectionInitializerBuilder {
 				return DynamicBatchingCollectionInitializerBuilder.INSTANCE;
 			}
 			default: {
-				return LegacyBatchingCollectionInitializerBuilder.INSTANCE;
+				return org.hibernate.loader.collection.plan.LegacyBatchingCollectionInitializerBuilder.INSTANCE;
+				//return LegacyBatchingCollectionInitializerBuilder.INSTANCE;
 			}
 		}
 	}
@@ -67,7 +68,7 @@ public abstract class BatchingCollectionInitializerBuilder {
 			LoadQueryInfluencers influencers) {
 		if ( maxBatchSize <= 1 ) {
 			// no batching
-			return new BasicCollectionLoader( persister, factory, influencers );
+			return buildNonBatchingLoader( persister, factory, influencers );
 		}
 
 		return createRealBatchingCollectionInitializer( persister, maxBatchSize, factory, influencers );
@@ -98,7 +99,7 @@ public abstract class BatchingCollectionInitializerBuilder {
 			LoadQueryInfluencers influencers) {
 		if ( maxBatchSize <= 1 ) {
 			// no batching
-			return new OneToManyLoader( persister, factory, influencers );
+			return buildNonBatchingLoader( persister, factory, influencers );
 		}
 
 		return createRealBatchingOneToManyInitializer( persister, maxBatchSize, factory, influencers );
@@ -109,4 +110,13 @@ public abstract class BatchingCollectionInitializerBuilder {
 			int maxBatchSize,
 			SessionFactoryImplementor factory,
 			LoadQueryInfluencers influencers);
+
+	protected CollectionInitializer buildNonBatchingLoader(
+			QueryableCollection persister,
+			SessionFactoryImplementor factory,
+			LoadQueryInfluencers influencers) {
+		return persister.isOneToMany() ?
+				new OneToManyLoader( persister, factory, influencers ) :
+				new BasicCollectionLoader( persister, factory, influencers );
+	}
 }

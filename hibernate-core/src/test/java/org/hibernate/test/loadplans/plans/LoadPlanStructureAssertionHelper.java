@@ -78,7 +78,7 @@ public class LoadPlanStructureAssertionHelper {
 		);
 //		final EntityLoader loader = new EntityLoader( persister, lockMode, sf, influencers );
 
-		LoadPlan plan = buildLoadPlan( sf, persister, influencers );
+		LoadPlan plan = buildLoadPlan( sf, persister, influencers, lockMode );
 		EntityLoadQueryDetails details = EntityLoadQueryDetails.makeForBatching(
 				plan, persister.getKeyColumnNames(),
 				new QueryBuildingParameters() {
@@ -110,13 +110,18 @@ public class LoadPlanStructureAssertionHelper {
 	public LoadPlan buildLoadPlan(
 			SessionFactoryImplementor sf,
 			OuterJoinLoadable persister,
-			LoadQueryInfluencers influencers) {
-		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy( sf, influencers );
+			LoadQueryInfluencers influencers,
+			LockMode lockMode) {
+		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+				sf,
+				influencers,
+				lockMode
+				);
 		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
 	}
 
 	public LoadPlan buildLoadPlan(SessionFactoryImplementor sf, OuterJoinLoadable persister) {
-		return buildLoadPlan( sf, persister, LoadQueryInfluencers.NONE );
+		return buildLoadPlan( sf, persister, LoadQueryInfluencers.NONE, LockMode.NONE );
 	}
 
 	private void compare(JoinWalker walker, EntityLoadQueryDetails details) {

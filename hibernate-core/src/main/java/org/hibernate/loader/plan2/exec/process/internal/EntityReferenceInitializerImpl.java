@@ -210,6 +210,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 
 			// use the existing association as the hydrated state
 			processingState.registerEntityInstance( existing );
+			//context.registerHydratedEntity( entityReference, entityKey, existing );
 			return;
 		}
 

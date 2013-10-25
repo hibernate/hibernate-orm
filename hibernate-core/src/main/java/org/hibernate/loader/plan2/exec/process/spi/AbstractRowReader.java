@@ -25,6 +25,8 @@ package org.hibernate.loader.plan2.exec.process.spi;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,18 +57,27 @@ import org.hibernate.persister.entity.Loadable;
 public abstract class AbstractRowReader implements RowReader {
 	private static final Logger log = CoreLogging.logger( AbstractRowReader.class );
 
-	protected abstract List<EntityReferenceInitializer> getEntityReferenceInitializers();
-	protected abstract List<CollectionReferenceInitializer> getArrayReferenceInitializers();
-	protected abstract List<CollectionReferenceInitializer> getCollectionReferenceInitializers();
+	private final List<EntityReferenceInitializer> entityReferenceInitializers;
+	private final List<CollectionReferenceInitializer> arrayReferenceInitializers;
+	private final List<CollectionReferenceInitializer> collectionReferenceInitializers;
+
+	public AbstractRowReader(ReaderCollector readerCollector) {
+		this.entityReferenceInitializers = readerCollector.getEntityReferenceInitializers() != null
+				? new ArrayList<EntityReferenceInitializer>( readerCollector.getEntityReferenceInitializers() )
+				: Collections.<EntityReferenceInitializer>emptyList();
+		this.arrayReferenceInitializers = readerCollector.getArrayReferenceInitializers() != null
+				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getArrayReferenceInitializers() )
+				: Collections.<CollectionReferenceInitializer>emptyList();
+		this.collectionReferenceInitializers = readerCollector.getNonArrayCollectionReferenceInitializers() != null
+				? new ArrayList<CollectionReferenceInitializer>( readerCollector.getNonArrayCollectionReferenceInitializers() )
+				: Collections.<CollectionReferenceInitializer>emptyList();
+	}
 
 	protected abstract Object readLogicalRow(ResultSet resultSet, ResultSetProcessingContextImpl context)
 			throws SQLException;
 
 	@Override
 	public Object readRow(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException {
-		final List<EntityReferenceInitializer> entityReferenceInitializers = getEntityReferenceInitializers();
-		final List<CollectionReferenceInitializer> arrayReferenceInitializers = getArrayReferenceInitializers();
-		final List<CollectionReferenceInitializer> collectionReferenceInitializers = getCollectionReferenceInitializers();
 
 		final boolean hasEntityReferenceInitializers = CollectionHelper.isNotEmpty( entityReferenceInitializers );
 
@@ -209,11 +220,8 @@ public abstract class AbstractRowReader implements RowReader {
 	}
 
 	private void finishLoadingArrays(ResultSetProcessingContextImpl context) {
-		final List<CollectionReferenceInitializer> arrayReferenceInitializers = getArrayReferenceInitializers();
-		if ( arrayReferenceInitializers != null ) {
-			for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
-				arrayReferenceInitializer.endLoading( context );
-			}
+		for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
+			arrayReferenceInitializer.endLoading( context );
 		}
 	}
 
@@ -241,11 +249,8 @@ public abstract class AbstractRowReader implements RowReader {
 	}
 
 	private void finishLoadingCollections(ResultSetProcessingContextImpl context) {
-		final List<CollectionReferenceInitializer> collectionReferenceInitializers = getCollectionReferenceInitializers();
-		if ( collectionReferenceInitializers != null ) {
-			for ( CollectionReferenceInitializer arrayReferenceInitializer : collectionReferenceInitializers ) {
-				arrayReferenceInitializer.endLoading( context );
-			}
+		for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
+			collectionReferenceInitializer.endLoading( context );
 		}
 	}
 

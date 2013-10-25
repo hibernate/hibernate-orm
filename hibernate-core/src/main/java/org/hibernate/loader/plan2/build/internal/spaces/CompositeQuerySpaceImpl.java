@@ -78,7 +78,11 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Expan
 		final boolean required = canJoinsBeRequired() && !compositionDefinition.isNullable();
 
 		final CompositeQuerySpaceImpl rhs = new CompositeQuerySpaceImpl(
-				compositeSubPropertyMapping,
+				new CompositePropertyMapping(
+						compositionDefinition.getType(),
+						compositeSubPropertyMapping,
+						compositionDefinition.getName()
+				),
 				querySpaceUid,
 				getQuerySpaces(),
 				required,
@@ -90,8 +94,8 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Expan
 				this,
 				propertyPath,
 				rhs,
-				null,
-				null,
+				getPropertyMapping().toColumns( compositionDefinition.getName() ),
+				compositionDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -123,11 +127,8 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Expan
 				this,
 				propertyPath,
 				rhs,
-				Helper.INSTANCE.determineRhsColumnNames(
-						(EntityType) attributeDefinition.getType(),
-						sessionFactory()
-				),
-				(EntityType) attributeDefinition.getType(),
+				Helper.INSTANCE.determineRhsColumnNames( (EntityType) attributeDefinition.getType(), sessionFactory() ),
+				attributeDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -156,7 +157,7 @@ public class CompositeQuerySpaceImpl extends AbstractQuerySpace implements Expan
 				attributeDefinition.getName(),
 				rhs,
 				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
-				(AssociationType) attributeDefinition.getType(),
+				attributeDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );

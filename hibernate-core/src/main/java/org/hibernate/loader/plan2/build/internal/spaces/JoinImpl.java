@@ -26,7 +26,7 @@ package org.hibernate.loader.plan2.build.internal.spaces;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 import org.hibernate.loader.plan2.spi.QuerySpace;
-import org.hibernate.type.AssociationType;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -38,22 +38,22 @@ public class JoinImpl implements JoinDefinedByMetadata {
 	private final String lhsPropertyName;
 
 	private final String[] rhsColumnNames;
-	private final boolean rightHandSideOptional;
-	private final AssociationType joinedAssociationPropertyType;
+	private final boolean rightHandSideRequired;
+	private final Type joinedPropertyType;
 
 	public JoinImpl(
 			QuerySpace leftHandSide,
 			String lhsPropertyName,
 			QuerySpace rightHandSide,
 			String[] rhsColumnNames,
-			AssociationType attributeType,
-			boolean rightHandSideOptional) {
+			Type propertyType,
+			boolean rightHandSideRequired) {
 		this.leftHandSide = leftHandSide;
 		this.lhsPropertyName = lhsPropertyName;
 		this.rightHandSide = rightHandSide;
 		this.rhsColumnNames = rhsColumnNames;
-		this.rightHandSideOptional = rightHandSideOptional;
-		this.joinedAssociationPropertyType = attributeType;
+		this.rightHandSideRequired = rightHandSideRequired;
+		this.joinedPropertyType = propertyType;
 		if ( StringHelper.isEmpty( lhsPropertyName ) ) {
 			throw new IllegalArgumentException( "Incoming 'lhsPropertyName' parameter was empty" );
 		}
@@ -71,12 +71,12 @@ public class JoinImpl implements JoinDefinedByMetadata {
 
 	@Override
 	public boolean isRightHandSideRequired() {
-		return rightHandSideOptional;
+		return rightHandSideRequired;
 	}
 
 	@Override
 	public String[] resolveAliasedLeftHandSideJoinConditionColumns(String leftHandSideTableAlias) {
-		return getLeftHandSide().getPropertyMapping().toColumns( leftHandSideTableAlias, getJoinedAssociationPropertyName() );
+		return getLeftHandSide().getPropertyMapping().toColumns( leftHandSideTableAlias, getJoinedPropertyName() );
 	}
 
 	@Override
@@ -99,12 +99,12 @@ public class JoinImpl implements JoinDefinedByMetadata {
 	}
 
 	@Override
-	public String getJoinedAssociationPropertyName() {
+	public String getJoinedPropertyName() {
 		return lhsPropertyName;
 	}
 
 	@Override
-	public AssociationType getJoinedAssociationPropertyType() {
-		return joinedAssociationPropertyType;
+	public Type getJoinedPropertyType() {
+		return joinedPropertyType;
 	}
 }

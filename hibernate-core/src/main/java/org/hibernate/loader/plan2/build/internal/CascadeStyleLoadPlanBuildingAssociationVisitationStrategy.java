@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan2.build.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -47,8 +48,9 @@ public class CascadeStyleLoadPlanBuildingAssociationVisitationStrategy
 	public CascadeStyleLoadPlanBuildingAssociationVisitationStrategy(
 			CascadingAction cascadeActionToMatch,
 			SessionFactoryImplementor sessionFactory,
-			LoadQueryInfluencers loadQueryInfluencers) {
-		super( sessionFactory, loadQueryInfluencers );
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockMode lockMode) {
+		super( sessionFactory, loadQueryInfluencers, lockMode );
 		this.cascadeActionToMatch = cascadeActionToMatch;
 	}
 

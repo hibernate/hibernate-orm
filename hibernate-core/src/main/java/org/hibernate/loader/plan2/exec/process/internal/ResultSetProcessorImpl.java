@@ -169,11 +169,11 @@ public class ResultSetProcessorImpl implements ResultSetProcessor {
 						"Preparing collection intializer : %s",
 							MessageHelper.collectionInfoString( persister, key, session.getFactory() )
 				);
-				session.getPersistenceContext()
-						.getLoadContexts()
-						.getCollectionLoadContext( resultSet )
-						.getLoadingCollection( persister, key );
 			}
+			session.getPersistenceContext()
+					.getLoadContexts()
+					.getCollectionLoadContext( resultSet )
+					.getLoadingCollection( persister, key );
 		}
 	}
 

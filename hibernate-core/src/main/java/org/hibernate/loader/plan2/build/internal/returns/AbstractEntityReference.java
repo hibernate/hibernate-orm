@@ -31,6 +31,7 @@ import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.type.CompositeType;
@@ -112,14 +113,14 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 	}
 
 	protected CompositeFetch createCompositeFetch(
-			CompositeType compositeType,
+			CompositionDefinition compositionDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		return new CompositeFetchImpl(
 				this,
-				compositeType,
+				compositionDefinition.getType(),
 				compositeQuerySpace,
 				true,
-				getPropertyPath()
+				getPropertyPath().append( compositionDefinition.getName() )
 		);
 	}
 }

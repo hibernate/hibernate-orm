@@ -29,6 +29,7 @@ import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -92,8 +93,8 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				this,
 				compositionDefinition.getName(),
 				rhs,
-				null,
-				null,
+				( (PropertyMapping) persister ).toColumns( compositionDefinition.getName() ),
+				compositionDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -127,7 +128,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 						(EntityType) attribute.getType(),
 						sessionFactory()
 				),
-				(AssociationType) attribute.getType(),
+				attribute.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -156,7 +157,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				attributeDefinition.getName(),
 				rhs,
 				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
-				(AssociationType) attributeDefinition.getType(),
+				attributeDefinition.getType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -181,9 +182,9 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 
 		final JoinImpl join = new JoinImpl(
 				this,
-				"id",
+				EntityPersister.ENTITY_ID,
 				rhs,
-				null,
+				( (Loadable) persister ).getIdentifierColumnNames(),
 				null,
 				canJoinsBeRequired()
 		);

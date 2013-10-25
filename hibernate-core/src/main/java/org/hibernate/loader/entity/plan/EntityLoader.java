@@ -42,7 +42,6 @@ import org.hibernate.type.Type;
  * Can handle batch-loading as well as non-pk, unique-key loading,
  * <p/>
  * Much is ultimately delegated to its superclass, AbstractLoadPlanBasedEntityLoader.  However:
- * todo How much of AbstractLoadPlanBasedEntityLoader is actually needed?
  *
  * Loads an entity instance using outerjoin fetching to fetch associated entities.
  * <br>

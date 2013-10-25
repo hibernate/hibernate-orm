@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.collection;
+package org.hibernate.loader.collection.plan;
 
 import java.io.Serializable;
 
@@ -32,16 +32,21 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.Loader;
+import org.hibernate.loader.collection.BasicCollectionLoader;
+import org.hibernate.loader.collection.CollectionInitializer;
+import org.hibernate.loader.collection.OneToManyLoader;
 import org.hibernate.persister.collection.QueryableCollection;
 
 /**
+ * LoadPlan-based implementation of the the legacy batch collection initializer.
+ *
  * @author Steve Ebersole
  */
-public class LegacyBatchingCollectionInitializerBuilder extends BatchingCollectionInitializerBuilder {
+public class LegacyBatchingCollectionInitializerBuilder extends AbstractBatchingCollectionInitializerBuilder {
 	public static final LegacyBatchingCollectionInitializerBuilder INSTANCE = new LegacyBatchingCollectionInitializerBuilder();
 
 	@Override
-	protected CollectionInitializer createRealBatchingCollectionInitializer(
+	public CollectionInitializer createRealBatchingCollectionInitializer(
 			QueryableCollection persister,
 			int maxBatchSize,
 			SessionFactoryImplementor factory,
@@ -55,7 +60,7 @@ public class LegacyBatchingCollectionInitializerBuilder extends BatchingCollecti
 	}
 
 	@Override
-	protected CollectionInitializer createRealBatchingOneToManyInitializer(
+	public CollectionInitializer createRealBatchingOneToManyInitializer(
 			QueryableCollection persister,
 			int maxBatchSize,
 			SessionFactoryImplementor factory,
@@ -85,19 +90,19 @@ public class LegacyBatchingCollectionInitializerBuilder extends BatchingCollecti
 		@Override
 		public void initialize(Serializable id, SessionImplementor session)	throws HibernateException {
 			Serializable[] batch = session.getPersistenceContext().getBatchFetchQueue()
-					.getCollectionBatch( collectionPersister(), id, batchSizes[0] );
+					.getCollectionBatch( getCollectionPersister(), id, batchSizes[0] );
 
 			for ( int i=0; i<batchSizes.length-1; i++) {
 				final int smallBatchSize = batchSizes[i];
 				if ( batch[smallBatchSize-1]!=null ) {
 					Serializable[] smallBatch = new Serializable[smallBatchSize];
 					System.arraycopy(batch, 0, smallBatch, 0, smallBatchSize);
-					loaders[i].loadCollectionBatch( session, smallBatch, collectionPersister().getKeyType() );
+					loaders[i].loadCollectionBatch( session, smallBatch, getCollectionPersister().getKeyType() );
 					return; //EARLY EXIT!
 				}
 			}
 
-			loaders[batchSizes.length-1].loadCollection( session, id, collectionPersister().getKeyType() );
+			loaders[batchSizes.length-1].loadCollection( session, id, getCollectionPersister().getKeyType() );
 		}
 	}
 }

@@ -23,22 +23,28 @@
  */
 package org.hibernate.loader.plan2.build.internal.spaces;
 
+import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan2.build.spi.AbstractQuerySpace;
 import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.CollectionPropertyMapping;
+import org.hibernate.persister.collection.CollectionPropertyNames;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements CollectionQuerySpace {
 	private final CollectionPersister persister;
+	private final CollectionPropertyMapping propertyMapping;
 
 	public CollectionQuerySpaceImpl(
 			CollectionPersister persister,
@@ -48,6 +54,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 			SessionFactoryImplementor sessionFactory) {
 		super( uid, Disposition.COLLECTION, querySpaces, canJoinsBeRequired, sessionFactory );
 		this.persister = persister;
+		this.propertyMapping = new CollectionPropertyMapping( (QueryableCollection) persister );
 	}
 
 	@Override
@@ -57,7 +64,7 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 
 	@Override
 	public PropertyMapping getPropertyMapping() {
-		return (PropertyMapping) persister;
+		return propertyMapping;
 	}
 
 	public JoinImpl addIndexEntityJoin(
@@ -76,11 +83,10 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 
 		final JoinImpl join = new JoinImpl(
 				this,
-				"index",
+				CollectionPropertyNames.COLLECTION_INDICES,
 				entityQuerySpace,
-				// not sure this 'rhsColumnNames' bit is correct...
-				( (Queryable) indexPersister ).getKeyColumnNames(),
-				null,
+				Helper.INSTANCE.determineRhsColumnNames( (EntityType) persister.getIndexType(), sessionFactory() ),
+				persister.getIndexType(),
 				required
 		);
 		internalGetJoins().add( join );
@@ -107,10 +113,10 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 
 		final JoinImpl join = new JoinImpl(
 				this,
-				"index",
+				CollectionPropertyNames.COLLECTION_INDICES,
 				compositeQuerySpace,
-				null,
-				null,
+				( (QueryableCollection) persister ).getIndexColumnNames(),
+				persister.getIndexType(),
 				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
@@ -134,10 +140,10 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 		final JoinImpl join = new JoinImpl(
 				this,
 				// collection persister maps its elements (through its PropertyMapping contract) as non-prefixed
-				"id",
+				CollectionPropertyNames.COLLECTION_ELEMENTS,
 				entityQuerySpace,
-				( (Queryable) elementPersister ).getKeyColumnNames(),
-				null,
+				Helper.INSTANCE.determineRhsColumnNames( (EntityType) persister.getElementType(), sessionFactory() ),
+				persister.getElementType(),
 				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );
@@ -166,10 +172,10 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 		final JoinImpl join = new JoinImpl(
 				this,
 				// collection persister maps its elements (through its PropertyMapping contract) as non-prefixed
-				"elements",
+				CollectionPropertyNames.COLLECTION_ELEMENTS,
 				compositeQuerySpace,
-				null,
-				null,
+				( (QueryableCollection) persister ).getElementColumnNames(),
+				compositeType,
 				canJoinsBeRequired()
 		);
 		internalGetJoins().add( join );

@@ -287,6 +287,9 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	 */
 	void finishUpRow() {
 		if ( currentRowHydratedEntityRegistrationList == null ) {
+			if ( identifierResolutionContextMap != null ) {
+				identifierResolutionContextMap.clear();
+			}
 			return;
 		}
 

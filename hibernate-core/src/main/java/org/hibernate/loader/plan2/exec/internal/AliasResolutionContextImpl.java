@@ -129,8 +129,17 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	}
 
 	public CollectionReferenceAliases generateCollectionReferenceAliases(String uid, CollectionPersister persister) {
-		final String manyToManyTableAlias = persister.isManyToMany()? createTableAlias( persister.getRole() ) : null;
-		final String tableAlias = createTableAlias( persister.getRole() );
+		final String manyToManyTableAlias;
+		final String tableAlias;
+		if ( persister.isManyToMany() ) {
+			manyToManyTableAlias = createTableAlias( persister.getRole() );
+			tableAlias = createTableAlias( persister.getElementDefinition().toEntityDefinition().getEntityPersister() );
+		}
+		else {
+			manyToManyTableAlias = null;
+			tableAlias = createTableAlias( persister.getRole() );
+		}
+
 		final CollectionReferenceAliasesImpl aliases = new CollectionReferenceAliasesImpl(
 				tableAlias,
 				manyToManyTableAlias,

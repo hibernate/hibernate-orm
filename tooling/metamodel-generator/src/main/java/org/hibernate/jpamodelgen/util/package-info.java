@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source
- * Copyright 2010, Red Hat Middleware LLC, and individual contributors
+ * Copyright 2013, Red Hat Middleware LLC, and individual contributors
  * by the @authors tag. See the copyright.txt in the distribution for a
  * full listing of individual contributors.
  *
@@ -14,20 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.jpamodelgen.test.accesstype;
-
-import javax.persistence.Entity;
-import javax.persistence.Id;
-
 /**
- * @author Max Andersen
- * @author Hardy Ferentschik
- * @author Emmanuel Bernard
+ * Helper classes for string and type processing as well as access type detection.
  */
-@Entity
-public class Shop {
-	@Id
-	long id;
-	String name;
-}
- 
+package org.hibernate.jpamodelgen.util;

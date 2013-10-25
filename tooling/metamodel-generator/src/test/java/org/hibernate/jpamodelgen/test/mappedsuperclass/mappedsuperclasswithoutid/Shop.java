@@ -28,6 +28,4 @@ public class Shop {
 	long id;
 	String name;
 }
-
-
  

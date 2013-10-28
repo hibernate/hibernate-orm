@@ -63,12 +63,10 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 /**
  * An abstract base class for HANA dialects. <br/>
  * <a href="http://help.sap.com/hana/html/sqlmain.html">SAP HANA Reference</a> <br/>
- * 
- * NOTE: This dialect is currently configured to <b>not</b> create foreign keys by
- * returning the empty string from {@link #getAddForeignKeyConstraintString} since they currently have caveats compared
- * to other databases. This does not
- * affect using this dialect with your own DDL scripts which use foreign keys.
- * 
+ *
+ * NOTE: This dialect is currently configured to create foreign keys with
+ * <code>on update cascade</code>.
+ *
  * @author Andrew Clemons <andrew.clemons@sap.com>
  */
 public abstract class AbstractHANADialect extends Dialect {
@@ -575,14 +573,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCascadeDelete() {
-		// HANA does support cascade deletes, but since we have (temporarily) overridden the foreign key support,
-		// this should also be false.
-		// TODO: Enable once FK support is solidified and getAddForeignKeyConstraintString is corrected.
-		return false;
-	}
-
-	@Override
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.FORWARD_ONLY;
 	}
@@ -673,14 +663,14 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	/**
-	 * Currently disabling foreign key creation when using Hibernate's auto-ddl
-	 * feature. HANA does allow creating foreign keys, but currently they do not always
-	 * behave as expected.
+	 * The default behaviour for 'on update restrict' on HANA is currently
+	 * to not allow any updates to any column of a row if the row has a 
+	 * foreign key. Make the default for foreign keys have 'on update cascade'
+	 * to work around the issue.
 	 */
 	@Override
 	public String getAddForeignKeyConstraintString(final String constraintName, final String[] foreignKey,
 			final String referencedTable, final String[] primaryKey, final boolean referencesPrimaryKey) {
-		// TODO: Re-evaluate in a later HANA release where, hopefully, this has been solidified.
-		return "";
+		return super.getAddForeignKeyConstraintString(constraintName, foreignKey, referencedTable, primaryKey, referencesPrimaryKey) + " on update cascade";
 	}
 }

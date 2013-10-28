@@ -17,4 +17,3 @@
 /**
  * The main package of this annotation processor. The actual processor class is {@link JPAMetaModelEntityProcessor}.
  */
-package org.hibernate.jpamodelgen;

@@ -23,6 +23,7 @@
  */
 package org.hibernate.osgi;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,30 +122,30 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		settings.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 
-		final List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		final Integrator[] integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
 		final IntegratorProvider integratorProvider = new IntegratorProvider() {
 			@Override
 			public List<Integrator> getIntegrators() {
-				return integrators;
+				return Arrays.asList( integrators );
 			}
 		};
 		settings.put( EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, integratorProvider );
 
-		final List<StrategyRegistrationProvider> strategyRegistrationProviders = OsgiServiceUtil.getServiceImpls(
+		final StrategyRegistrationProvider[] strategyRegistrationProviders = OsgiServiceUtil.getServiceImpls(
 				StrategyRegistrationProvider.class, context );
 		final StrategyRegistrationProviderList strategyRegistrationProviderList = new StrategyRegistrationProviderList() {
 			@Override
 			public List<StrategyRegistrationProvider> getStrategyRegistrationProviders() {
-				return strategyRegistrationProviders;
+				return Arrays.asList( strategyRegistrationProviders );
 			}
 		};
 		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
 
-		final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+		final TypeContributor[] typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
 		final TypeContributorList typeContributorList = new TypeContributorList() {
 			@Override
 			public List<TypeContributor> getTypeContributors() {
-				return typeContributors;
+				return Arrays.asList( typeContributors );
 			}
 		};
 		settings.put( EntityManagerFactoryBuilderImpl.TYPE_CONTRIBUTORS, typeContributorList );

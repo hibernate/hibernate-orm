@@ -20,13 +20,11 @@
  */
 package org.hibernate.osgi;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.lang.reflect.Array;
 
 import org.jboss.logging.Logger;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Utilities for dealing with OSGi environments
@@ -37,28 +35,47 @@ public class OsgiServiceUtil {
 	private static final Logger LOG = Logger.getLogger( OsgiServiceUtil.class );
 
 	/**
-	 * Locate all implementors of the given service contract in the given OSGi buindle context
+	 * Locate all implementors of the given service contract in the given OSGi buindle context.  Utilizes
+	 * {@link ServiceTracker} (best practice, automatically handles a lot of boilerplate and error conditions).
 	 *
 	 * @param contract The service contract for which to locate implementors
 	 * @param context The OSGi bundle context
-	 * @param <T> The Java type of the service to locate
+	 * @param T[] The Java type of the service to locate
 	 *
 	 * @return All know implementors
 	 */
-	public static <T> List<T> getServiceImpls(Class<T> contract, BundleContext context) {
-		final List<T> serviceImpls = new ArrayList<T>();
+	public static <T> T[] getServiceImpls(Class<T> contract, BundleContext bundleContext) {
+		final ServiceTracker<T, T> serviceTracker = new ServiceTracker<T, T>( bundleContext, contract, null );
 		try {
-			final Collection<ServiceReference<T>> serviceRefs = context.getServiceReferences( contract, null );
-			for ( ServiceReference<T> serviceRef : serviceRefs ) {
-				serviceImpls.add( context.getService( serviceRef ) );
+			T[] services = (T[]) serviceTracker.getServices();
+			if (services != null) {
+				return services;
 			}
 		}
 		catch ( Exception e ) {
 			LOG.warnf( e, "Exception while discovering OSGi service implementations : %s", contract.getName() );
 		}
-		return serviceImpls;
+		return (T[]) Array.newInstance(contract, 0);
 	}
 
-	private OsgiServiceUtil() {
+	/**
+	 * Locate the single implementor of the given service contract in the given OSGi buindle context.  Utilizes
+	 * {@link ServiceTracker#waitForService(long)}
+	 *
+	 * @param contract The service contract for which to locate implementors
+	 * @param context The OSGi bundle context
+	 * @param T[] The Java type of the service to locate
+	 *
+	 * @return All know implementors
+	 */
+	public static <T> T getServiceImpl(Class<T> contract, BundleContext bundleContext) {
+		final ServiceTracker<T, T> serviceTracker = new ServiceTracker<T, T>( bundleContext, contract, null );
+		try {
+			return (T) serviceTracker.waitForService( 1000 );
+		}
+		catch ( Exception e ) {
+			LOG.warnf( e, "Exception while discovering OSGi service implementations : %s", contract.getName() );
+			return null;
+		}
 	}
 }

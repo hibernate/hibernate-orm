@@ -30,7 +30,6 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 /**
  * Offers the JTA Platform provided by the OSGi container. The Enterprise
@@ -55,14 +54,32 @@ public class OsgiJtaPlatform implements JtaPlatform {
 
 	@Override
 	public TransactionManager retrieveTransactionManager() {
-		final ServiceReference sr = bundleContext.getServiceReference( TransactionManager.class.getName() );
-		return sr == null ? null : (TransactionManager) bundleContext.getService( sr );
+		try {
+			final TransactionManager transactionManager = OsgiServiceUtil.getServiceImpl(
+					TransactionManager.class, bundleContext );
+			if (transactionManager == null) {
+				throw new TransactionException("Cannot retrieve the TransactionManager OSGi service!");
+			}
+			return transactionManager;
+		}
+		catch (Exception e) {
+			throw new TransactionException("Cannot retrieve the TransactionManager OSGi service!", e);
+		}
 	}
 
 	@Override
 	public UserTransaction retrieveUserTransaction() {
-		final ServiceReference sr = bundleContext.getServiceReference( UserTransaction.class.getName() );
-		return sr == null ? null : (UserTransaction) bundleContext.getService( sr );
+		try {
+			final UserTransaction userTransaction = OsgiServiceUtil.getServiceImpl(
+					UserTransaction.class, bundleContext );
+			if (userTransaction == null) {
+				throw new TransactionException("Cannot retrieve the UserTransaction OSGi service!");
+			}
+			return userTransaction;
+		}
+		catch (Exception e) {
+			throw new TransactionException("Cannot retrieve the UserTransaction OSGi service!", e);
+		}
 	}
 
 	@Override
@@ -73,7 +90,12 @@ public class OsgiJtaPlatform implements JtaPlatform {
 
 	@Override
 	public boolean canRegisterSynchronization() {
-		return JtaStatusHelper.isActive( retrieveTransactionManager() );
+		try {
+			return JtaStatusHelper.isActive( retrieveTransactionManager() );
+		}
+		catch (Exception e) {
+			return false;
+		}
 	}
 
 	@Override

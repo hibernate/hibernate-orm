@@ -21,7 +21,6 @@
 package org.hibernate.osgi;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -107,18 +106,18 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.with( osgiClassLoader );
 
-		final List<Integrator> integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		final Integrator[] integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
 		for ( Integrator integrator : integrators ) {
 			builder.with( integrator );
 		}
 
-		final List<StrategyRegistrationProvider> strategyRegistrationProviders
+		final StrategyRegistrationProvider[] strategyRegistrationProviders
 				= OsgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class, context );
 		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
 			builder.withStrategySelectors( strategyRegistrationProvider );
 		}
         
-		final List<TypeContributor> typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+		final TypeContributor[] typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
 		for ( TypeContributor typeContributor : typeContributors ) {
 			configuration.registerTypeContributor( typeContributor );
 		}

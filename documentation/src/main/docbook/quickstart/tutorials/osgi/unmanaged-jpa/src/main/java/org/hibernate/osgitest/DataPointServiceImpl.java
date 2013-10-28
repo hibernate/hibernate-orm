@@ -30,9 +30,11 @@ import org.hibernate.osgitest.entity.DataPoint;
  * @author Brett Meyer
  */
 public class DataPointServiceImpl implements DataPointService {
+	
+	private HibernateUtil hibernateUtil = new HibernateUtil();
 
 	public void add(DataPoint dp) {
-		EntityManager em = HibernateUtil.getEntityManager();
+		EntityManager em = hibernateUtil.getEntityManager();
 		em.getTransaction().begin();
 		em.persist( dp );
 		em.getTransaction().commit();
@@ -40,7 +42,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public void update(DataPoint dp) {
-		EntityManager em = HibernateUtil.getEntityManager();
+		EntityManager em = hibernateUtil.getEntityManager();
 		em.getTransaction().begin();
 		em.merge( dp );
 		em.getTransaction().commit();
@@ -48,7 +50,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public DataPoint get(long id) {
-		EntityManager em = HibernateUtil.getEntityManager();
+		EntityManager em = hibernateUtil.getEntityManager();
 		em.getTransaction().begin();
 		DataPoint dp = (DataPoint) em.createQuery( "from DataPoint dp where dp.id=" + id ).getSingleResult();
 		em.getTransaction().commit();
@@ -57,7 +59,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public List<DataPoint> getAll() {
-		EntityManager em = HibernateUtil.getEntityManager();
+		EntityManager em = hibernateUtil.getEntityManager();
 		em.getTransaction().begin();
 		List list = em.createQuery( "from DataPoint" ).getResultList();
 		em.getTransaction().commit();
@@ -66,7 +68,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public void deleteAll() {
-		EntityManager em = HibernateUtil.getEntityManager();
+		EntityManager em = hibernateUtil.getEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete from DataPoint" ).executeUpdate();
 		em.getTransaction().commit();

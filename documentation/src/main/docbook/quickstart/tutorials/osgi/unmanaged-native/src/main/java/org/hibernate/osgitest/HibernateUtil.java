@@ -33,13 +33,13 @@ import org.osgi.framework.ServiceReference;
 
 public class HibernateUtil {
 
-	private static SessionFactory sf;
+	private SessionFactory sf;
 
-	public static Session getSession() {
+	public Session getSession() {
 		return getSessionFactory().openSession();
 	}
 
-	private static SessionFactory getSessionFactory() {
+	private SessionFactory getSessionFactory() {
 		if ( sf == null ) {
 			Bundle thisBundle = FrameworkUtil.getBundle( HibernateUtil.class );
 			// Could get this by wiring up OsgiTestBundleActivator as well.

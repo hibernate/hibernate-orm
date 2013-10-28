@@ -383,14 +383,6 @@
                 	tutorials' <literal>features.xml</literal> for example sequences.
                 </para>
             </listitem>
-            <listitem>
-                <para>
-                	The environment should be considered STATIC.  Hibernate currently does not support the ability
-                	to dynamically add and remove client bundles during runtime.  Doing so is typically
-                	catastrophic.  We hope to better support at least partially-dynamic environments in
-                	Hibernate 5.
-                </para>
-            </listitem>
         </itemizedlist>
     </section>
 

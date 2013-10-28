@@ -395,7 +395,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			else if ( temporalType == TIMESTAMP ) {
 				query.setTimestamp( name, value );
 			}
-			registerParameterBinding( getParameter( name ), value );
+			registerParameterBinding( getParameter( name ), value, temporalType );
 			return this;
 		}
 		catch (QueryParameterException e) {
@@ -420,7 +420,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 			else if ( temporalType == TIMESTAMP ) {
 				query.setCalendar( name, value );
 			}
-			registerParameterBinding( getParameter(name), value );
+			registerParameterBinding( getParameter(name), value, temporalType );
 			return this;
 		}
 		catch (QueryParameterException e) {
@@ -476,7 +476,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				else if ( temporalType == TIMESTAMP ) {
 					query.setTimestamp( position - 1, value );
 				}
-				registerParameterBinding( getParameter( position ), value );
+				registerParameterBinding( getParameter( position ), value, temporalType );
 			}
 			return this;
 		}
@@ -507,7 +507,7 @@ public class QueryImpl<X> extends org.hibernate.ejb.AbstractQueryImpl<X> impleme
 				else if ( temporalType == TIMESTAMP ) {
 					query.setCalendar( position - 1, value );
 				}
-				registerParameterBinding( getParameter( position ), value );
+				registerParameterBinding( getParameter( position ), value, temporalType );
 			}
 			return this;
 		}

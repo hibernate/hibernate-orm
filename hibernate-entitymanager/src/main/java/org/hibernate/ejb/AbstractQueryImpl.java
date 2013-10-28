@@ -23,18 +23,30 @@
  */
 package org.hibernate.ejb;
 
+import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
+import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
+import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
+import static org.hibernate.ejb.QueryHints.HINT_COMMENT;
+import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
+import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.ejb.QueryHints.HINT_READONLY;
+import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
+
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
 import javax.persistence.Parameter;
+import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -46,16 +58,7 @@ import org.hibernate.ejb.util.CacheModeHelper;
 import org.hibernate.ejb.util.ConfigurationHelper;
 import org.hibernate.ejb.util.LockModeTypeHelper;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
-
-import static org.hibernate.ejb.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.ejb.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.ejb.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.ejb.QueryHints.HINT_COMMENT;
-import static org.hibernate.ejb.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.ejb.QueryHints.HINT_FLUSH_MODE;
-import static org.hibernate.ejb.QueryHints.HINT_READONLY;
-import static org.hibernate.ejb.QueryHints.HINT_TIMEOUT;
-import static org.hibernate.ejb.QueryHints.SPEC_HINT_TIMEOUT;
+import org.jboss.logging.Logger;
 
 /**
  * Intended as a base class providing convenience in implementing both {@link javax.persistence.Query} and
@@ -341,11 +344,16 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 
 	@SuppressWarnings( {"unchecked"})
 	protected void registerParameterBinding(Parameter parameter, Object value) {
+		registerParameterBinding( parameter, value, null );
+	}
+
+	@SuppressWarnings( {"unchecked"})
+	protected void registerParameterBinding(Parameter parameter, Object value, TemporalType temporalType) {
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "parameter cannot be null" );
 		}
 
-		validateParameterBinding( parameter, value );
+		validateBinding( parameter.getParameterType(), value, temporalType );
 
 		if ( parameterBindings == null ) {
 			parameterBindings = new HashMap();
@@ -353,90 +361,123 @@ public abstract class AbstractQueryImpl<X> implements TypedQuery<X> {
 		parameterBindings.put( parameter, value );
 	}
 
-	private void validateParameterBinding(Parameter parameter, Object value) {
-		if ( value == null || parameter.getParameterType() == null ) {
-			// nothing we can check
-			return;
-		}
+	private void validateBinding(Class parameterType, Object bind, TemporalType temporalType) {
+        if ( bind == null || parameterType == null ) {
+                // nothing we can check
+                return;
+        }
 
-		if ( Collection.class.isInstance( value )
-				&& ! Collection.class.isAssignableFrom( parameter.getParameterType() ) ) {
-			// we have a collection passed in where we are expecting a non-collection.
-			// 		NOTE : this can happen in Hibernate's notion of "parameter list" binding
-			// 		NOTE2 : the case of a collection value and an expected collection (if that can even happen)
-			//			will fall through to the main check.
-			validateCollectionValuedParameterMultiBinding( parameter, (Collection) value );
-		}
-		else if ( value.getClass().isArray() ) {
-			validateArrayValuedParameterBinding( parameter, value );
-		}
-		else {
-			if ( ! parameter.getParameterType().isInstance( value ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value [%s] did not match expected type [%s]",
-								value,
-								parameter.getParameterType().getName()
-						)
-				);
-			}
-		}
+        if ( Collection.class.isInstance( bind ) && ! Collection.class.isAssignableFrom( parameterType ) ) {
+                // we have a collection passed in where we are expecting a non-collection.
+                //                 NOTE : this can happen in Hibernate's notion of "parameter list" binding
+                //                 NOTE2 : the case of a collection value and an expected collection (if that can even happen)
+                //                        will fall through to the main check.
+                validateCollectionValuedParameterBinding( parameterType, (Collection) bind, temporalType );
+        }
+        else if ( bind.getClass().isArray() ) {
+                validateArrayValuedParameterBinding( parameterType, bind, temporalType );
+        }
+        else {
+                if ( ! isValidBindValue( parameterType, bind, temporalType ) ) {
+                        throw new IllegalArgumentException(
+                                        String.format(
+                                                        "Parameter value [%s] did not match expected type [%s (%s)]",
+                                                        bind,
+                                                        parameterType.getName(),
+                                                        extractName( temporalType )
+                                        )
+                        );
+                }
+        }
 	}
-
-	private void validateCollectionValuedParameterMultiBinding(Parameter parameter, Collection value) {
-		// validate the elements...
-		for ( Object element : value ) {
-			if ( ! parameter.getParameterType().isInstance( element ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value element [%s] did not match expected type [%s]",
-								element,
-								parameter.getParameterType().getName()
-						)
-				);
-			}
-		}
+	
+	private String extractName(TemporalType temporalType) {
+	        return temporalType == null ? "n/a" : temporalType.name();
 	}
-
-	private void validateArrayValuedParameterBinding(Parameter parameter, Object value) {
-		if ( ! parameter.getParameterType().isArray() ) {
-			throw new IllegalArgumentException(
-					String.format(
-							"Encountered array-valued parameter binding, but was expecting [%s]",
-							parameter.getParameterType().getName()
-					)
-			);
-		}
-
-		if ( value.getClass().getComponentType().isPrimitive() ) {
-			// we have a primitive array.  we validate that the actual array has the component type (type odf elements)
-			// we expect based on the component type of the parameter specification
-			if ( ! parameter.getParameterType().getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Primitive array-valued parameter bind value type [%s] did not match expected type [%s]",
-								value.getClass().getComponentType().getName(),
-								parameter.getParameterType().getName()
-						)
-				);
-			}
-		}
-		else {
-			// we have an object array.  Here we loop over the array and physically check each element against
-			// the type we expect based on the component type of the parameter specification
-			final Object[] array = (Object[]) value;
-			for ( Object element : array ) {
-				if ( ! parameter.getParameterType().getComponentType().isInstance( element ) ) {
-					throw new IllegalArgumentException(
-							String.format(
-									"Array-valued parameter value element [%s] did not match expected type [%s]",
-									element,
-									parameter.getParameterType().getName()
-							)
-					);
-				}
-			}
-		}
+	
+	private void validateCollectionValuedParameterBinding(
+	                Class parameterType,
+	                Collection value,
+	                TemporalType temporalType) {
+	        // validate the elements...
+	        for ( Object element : value ) {
+	                if ( ! isValidBindValue( parameterType, element, temporalType ) ) {
+	                        throw new IllegalArgumentException(
+	                                        String.format(
+	                                                        "Parameter value element [%s] did not match expected type [%s (%s)]",
+	                                                        element,
+	                                                        parameterType.getName(),
+	                                                        extractName( temporalType )
+	                                        )
+	                        );
+	                }
+	        }
+	}
+	
+	private void validateArrayValuedParameterBinding(
+	                Class parameterType,
+	                Object value,
+	                TemporalType temporalType) {
+	        if ( ! parameterType.isArray() ) {
+	                throw new IllegalArgumentException(
+	                                String.format(
+	                                                "Encountered array-valued parameter binding, but was expecting [%s (%s)]",
+	                                                parameterType.getName(),
+	                                                extractName( temporalType )
+	                                )
+	                );
+	        }
+	
+	        if ( value.getClass().getComponentType().isPrimitive() ) {
+	                // we have a primitive array. we validate that the actual array has the component type (type of elements)
+	                // we expect based on the component type of the parameter specification
+	                if ( ! parameterType.getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
+	                        throw new IllegalArgumentException(
+	                                        String.format(
+	                                                        "Primitive array-valued parameter bind value type [%s] did not match expected type [%s (%s)]",
+	                                                        value.getClass().getComponentType().getName(),
+	                                                        parameterType.getName(),
+	                                                        extractName( temporalType )
+	                                        )
+	                        );
+	                }
+	        }
+	        else {
+	                // we have an object array. Here we loop over the array and physically check each element against
+	                // the type we expect based on the component type of the parameter specification
+	                final Object[] array = (Object[]) value;
+	                for ( Object element : array ) {
+	                        if ( ! isValidBindValue( parameterType.getComponentType(), element, temporalType ) ) {
+	                                throw new IllegalArgumentException(
+	                                                String.format(
+	                                                                "Array-valued parameter value element [%s] did not match expected type [%s (%s)]",
+	                                                                element,
+	                                                                parameterType.getName(),
+	                                                                extractName( temporalType )
+	                                                )
+	                                );
+	                        }
+	                }
+	        }
+	}
+	
+	private boolean isValidBindValue(Class expectedType, Object value, TemporalType temporalType) {
+	        if ( expectedType.isInstance( value ) ) {
+	                return true;
+	        }
+	
+	        if ( temporalType != null ) {
+	                final boolean parameterDeclarationIsTemporal = Date.class.isAssignableFrom( expectedType )
+	                                || Calendar.class.isAssignableFrom( expectedType );
+	                final boolean bindIsTemporal = Date.class.isInstance( value )
+	                                || Calendar.class.isInstance( value );
+	
+	                if ( parameterDeclarationIsTemporal && bindIsTemporal ) {
+	                        return true;
+	                }
+	        }
+	
+	        return false;
 	}
 
 	@Override

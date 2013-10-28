@@ -402,14 +402,6 @@
             </listitem>
             <listitem>
                 <para>
-                	The environment should be considered STATIC.  Hibernate currently does not support the ability
-                	to dynamically add and remove client bundles during runtime.  Doing so is typically
-                	catastrophic.  We hope to better support at least partially-dynamic environments in
-                	Hibernate 5.
-                </para>
-            </listitem>
-            <listitem>
-                <para>
                 	No Enterprise OSGi JPA container currently supports JPA 2.1 (the spec is not yet released).  For
                 	testing, the managed-jpa example makes use of
                 	<link xl:href="https://github.com/brmeyer/aries/tree/jpa21">Brett's fork of Aries</link>.  To work

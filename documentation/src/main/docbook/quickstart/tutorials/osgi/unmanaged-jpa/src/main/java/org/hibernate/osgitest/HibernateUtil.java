@@ -35,13 +35,13 @@ import org.osgi.framework.ServiceReference;
 
 public class HibernateUtil {
 
-	private static EntityManagerFactory emf;
+	private EntityManagerFactory emf;
 
-	public static EntityManager getEntityManager() {
+	public EntityManager getEntityManager() {
 		return getEntityManagerFactory().createEntityManager();
 	}
 
-	private static EntityManagerFactory getEntityManagerFactory() {
+	private EntityManagerFactory getEntityManagerFactory() {
 		if ( emf == null ) {
 			Bundle thisBundle = FrameworkUtil.getBundle( HibernateUtil.class );
 			// Could get this by wiring up OsgiTestBundleActivator as well.

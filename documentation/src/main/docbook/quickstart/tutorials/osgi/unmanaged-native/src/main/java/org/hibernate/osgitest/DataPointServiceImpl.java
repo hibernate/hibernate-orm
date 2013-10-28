@@ -36,9 +36,11 @@ import org.hibernate.osgitest.entity.DataPoint;
  * @author Brett Meyer
  */
 public class DataPointServiceImpl implements DataPointService {
+	
+	private HibernateUtil hibernateUtil = new HibernateUtil();
 
 	public void add(DataPoint dp) {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		s.getTransaction().begin();
 		s.persist( dp );
 		s.getTransaction().commit();
@@ -46,7 +48,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public void update(DataPoint dp) {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		s.getTransaction().begin();
 		s.update( dp );
 		s.getTransaction().commit();
@@ -54,7 +56,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public DataPoint get(long id) {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		s.getTransaction().begin();
 		DataPoint dp = (DataPoint) s.createCriteria( DataPoint.class ).add(
 				Restrictions.eq( "id", id ) ).uniqueResult();
@@ -65,7 +67,7 @@ public class DataPointServiceImpl implements DataPointService {
 
 	// Test lazy loading (mainly to make sure the proxy classes work in OSGi)
 	public DataPoint load(long id) {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		s.getTransaction().begin();
 		DataPoint dp = (DataPoint) s.load( DataPoint.class, new Long(id) );
 		// initialize
@@ -76,7 +78,7 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 
 	public List<DataPoint> getAll() {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		s.getTransaction().begin();
 		List list = s.createQuery( "from DataPoint" ).list();
 		s.getTransaction().commit();
@@ -85,14 +87,14 @@ public class DataPointServiceImpl implements DataPointService {
 	}
 	
 	public Map<Number, DefaultRevisionEntity> getRevisions(long id) {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		AuditReader reader = AuditReaderFactory.get(s);
 		List<Number> revisionNums = reader.getRevisions( DataPoint.class, id );
 		return reader.findRevisions( DefaultRevisionEntity.class, new HashSet<Number>(revisionNums) );
 	}
 
 	public void deleteAll() {
-		Session s = HibernateUtil.getSession();
+		Session s = hibernateUtil.getSession();
 		s.getTransaction().begin();
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		s.getTransaction().commit();

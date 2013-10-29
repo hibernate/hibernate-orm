@@ -42,6 +42,10 @@ public class HashEntity {
 		this.id = id;
 	}
 
+	public Boolean goo() {
+		return null;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {

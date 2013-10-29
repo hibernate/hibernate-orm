@@ -36,21 +36,20 @@ import static org.junit.Assert.assertTrue;
 public class StringUtilTest {
 	@Test
 	public void testIsPropertyName() {
-		assertTrue( StringUtil.isPropertyName( "getFoo" ) );
-		assertTrue( StringUtil.isPropertyName( "isFoo" ) );
-		assertTrue( StringUtil.isPropertyName( "hasFoo" ) );
+		assertTrue( StringUtil.isProperty( "getFoo", "java.lang.Object" ) );
+		assertTrue( StringUtil.isProperty( "isFoo", "Boolean" ) );
+		assertTrue( StringUtil.isProperty( "hasFoo", "java.lang.Boolean" ) );
 
-		assertFalse( StringUtil.isPropertyName( "getfoo" ) );
-		assertFalse( StringUtil.isPropertyName( "isfoo" ) );
-		assertFalse( StringUtil.isPropertyName( "hasfoo" ) );
+		assertFalse( StringUtil.isProperty( "isfoo", "void" ) );
+		assertFalse( StringUtil.isProperty( "hasfoo", "java.lang.Object" ) );
 
-		assertFalse( StringUtil.isPropertyName( "" ) );
-		assertFalse( StringUtil.isPropertyName( null ) );
+		assertFalse( StringUtil.isProperty( "", "java.lang.Object" ) );
+		assertFalse( StringUtil.isProperty( null, "java.lang.Object" ) );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "METAGEN-76")
 	public void testHashCodeNotAProperty() {
-		assertFalse( StringUtil.isPropertyName( "hashCode" ) );
+		assertFalse( StringUtil.isProperty( "hashCode", "Integer" ) );
 	}
 }

@@ -173,7 +173,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 		}
 
 		String string = p.getSimpleName().toString();
-		if ( !StringUtil.isPropertyName( string ) ) {
+		if ( !StringUtil.isProperty( string, TypeUtils.toTypeString( t.getReturnType() ) ) ) {
 			return null;
 		}
 
@@ -186,7 +186,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
 				|| TypeUtils.containsAnnotation( element, Constants.ONE_TO_ONE )
 				|| TypeUtils.containsAnnotation( element, Constants.MANY_TO_ONE )
 				|| TypeUtils.containsAnnotation( element, Constants.EMBEDDED_ID )
-				|| TypeUtils.containsAnnotation( element, Constants.ID )) {
+				|| TypeUtils.containsAnnotation( element, Constants.ID ) ) {
 			return true;
 		}
 

@@ -56,37 +56,36 @@ public final class StringUtil {
 		return fqcn.substring( fqcn.lastIndexOf( NAME_SEPARATOR ) + 1 );
 	}
 
-	public static boolean isPropertyName(String name) {
-		if ( name == null ) {
+	public static boolean isProperty(String methodName, String returnTypeAsString) {
+		if ( methodName == null || "void".equals( returnTypeAsString ) ) {
 			return false;
 		}
-		return checkPropertyName( name, PROPERTY_PREFIX_GET )
-				|| checkPropertyName( name, PROPERTY_PREFIX_IS )
-				|| checkPropertyName( name, PROPERTY_PREFIX_HAS );
+
+		if ( isValidPropertyName( methodName, PROPERTY_PREFIX_GET ) ) {
+			return true;
+		}
+
+		if ( isValidPropertyName( methodName, PROPERTY_PREFIX_IS ) || isValidPropertyName( methodName, PROPERTY_PREFIX_HAS ) ) {
+			return isBooleanGetter( returnTypeAsString );
+		}
+
+		return false;
 	}
 
-	private static boolean checkPropertyName(String name, String prefix) {
+	private static boolean isBooleanGetter(String type) {
+		return "Boolean".equals( type ) || "java.lang.Boolean".equals( type );
+	}
+
+	private static boolean isValidPropertyName(String name, String prefix) {
 		if ( !name.startsWith( prefix ) ) {
 			return false;
 		}
 
 		// the name has to start with the prefix and have at least one more character
-		if ( name.length() < prefix.length() + 1 ) {
-			return false;
-		}
-
-		if ( !Character.isUpperCase( name.charAt( prefix.length() ) ) ) {
-			return false;
-		}
-
-		return true;
+		return name.length() >= prefix.length() + 1;
 	}
 
 	public static String getPropertyName(String name) {
-		if ( !isPropertyName( name ) ) {
-			return null;
-		}
-
 		String tmp = name;
 		if ( name.startsWith( PROPERTY_PREFIX_GET ) ) {
 			tmp = name.replaceFirst( PROPERTY_PREFIX_GET, "" );
@@ -97,7 +96,22 @@ public final class StringUtil {
 		else if ( name.startsWith( PROPERTY_PREFIX_HAS ) ) {
 			tmp = name.replaceFirst( PROPERTY_PREFIX_HAS, "" );
 		}
-		return tmp.substring( 0, 1 ).toLowerCase() + tmp.substring( 1 );
+		return decapitalize( tmp );
+	}
+
+	public static String decapitalize(String string) {
+		if ( string == null || string.isEmpty() || startsWithSeveralUpperCaseLetters( string ) ) {
+			return string;
+		}
+		else {
+			return string.substring( 0, 1 ).toLowerCase() + string.substring( 1 );
+		}
+	}
+
+	private static boolean startsWithSeveralUpperCaseLetters(String string) {
+		return string.length() > 1 &&
+				Character.isUpperCase( string.charAt( 0 ) ) &&
+				Character.isUpperCase( string.charAt( 1 ) );
 	}
 }
 

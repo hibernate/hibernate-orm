@@ -71,12 +71,7 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
     @Message( value = "Exploded jar file not a directory (ignored): %s", id = 15006 )
     void explodedJarNotDirectory( URL jarUrl );
 
-    @LogMessage( level = ERROR )
-    @Message( value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s", id = 15007 )
-    void illegalArgumentOnStaticMetamodelFieldInjection( String name,
-                                                         String name2,
-                                                         String name3,
-                                                         String name4 );
+
 
     @LogMessage( level = ERROR )
     @Message( value = "Malformed URL: %s", id = 15008 )
@@ -93,10 +88,7 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
     void unableToFindFile( URL jarUrl,
                            @Cause Exception e );
 
-    @LogMessage( level = ERROR )
-    @Message( value = "Unable to locate static metamodel field : %s#%s", id = 15011 )
-    void unableToLocateStaticMetamodelField( String name,
-                                             String name2 );
+
 
     @LogMessage( level = INFO )
     @Message( value = "Using provided datasource", id = 15012 )
@@ -118,12 +110,7 @@ public interface EntityManagerMessageLogger extends CoreMessageLogger {
 	)
 	void deprecatedJpaPositionalParameterAccess(Integer jpaPositionalParameter);
 
-	@LogMessage( level = INFO )
-	@Message(
-			id = 15015,
-			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
-	)
-	void unusedMappedSuperclass(String name);
+
 
 	@LogMessage( level = WARN )
 	@Message(

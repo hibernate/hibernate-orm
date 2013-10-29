@@ -54,6 +54,8 @@ import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.FilterKey;
 import org.hibernate.cache.spi.QueryCache;
 import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.cache.spi.entry.CacheEntry;
+import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -115,8 +117,11 @@ public abstract class Loader {
 	private final SessionFactoryImplementor factory;
 	private ColumnNameCache columnNameCache;
 
+	private final boolean referenceCachingEnabled;
+
 	public Loader(SessionFactoryImplementor factory) {
 		this.factory = factory;
+		this.referenceCachingEnabled = factory.getSettings().isDirectReferenceCacheEntriesEnabled();
 	}
 
 	/**
@@ -1563,6 +1568,7 @@ public abstract class Loader {
 		}
 	}
 
+
 	/**
 	 * The entity instance is not in the session cache
 	 */
@@ -1585,6 +1591,22 @@ public abstract class Loader {
 				key.getIdentifier(),
 				session
 		);
+
+		// see if the entity defines reference caching, and if so use the cached reference (if one).
+		if ( persister.canUseReferenceCacheEntries() ) {
+			final Object cachedEntry = persister.getCacheAccessStrategy().get(
+					session.generateCacheKey(
+							key.getIdentifier(),
+							persister.getEntityMetamodel().getEntityType(),
+							key.getEntityName()
+					),
+					session.getTimestamp()
+			);
+			if ( cachedEntry != null ) {
+				CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( cachedEntry, factory );
+				return ( (ReferenceCacheEntryImpl) entry ).getReference();
+			}
+		}
 
 		final Object object;
 		if ( optionalObjectKey != null && key.equals( optionalObjectKey ) ) {

@@ -31,6 +31,7 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.Proxy;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.persister.entity.EntityPersister;
@@ -50,6 +51,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration configuration) {
 		super.configure( configuration );
 		configuration.setProperty( AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES, "true" );
+		configuration.setProperty( AvailableSettings.USE_QUERY_CACHE, "true" );
 	}
 
 	@Override
@@ -84,6 +86,16 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 		// the 2 instances should be the same (==)
 		assertTrue( "The two instances were different references", myReferenceData == loaded );
 
+		// now try query caching
+		s = openSession();
+		s.beginTransaction();
+		MyReferenceData queried = (MyReferenceData) s.createQuery( "from MyReferenceData" ).setCacheable( true ).list().get( 0 );
+		s.getTransaction().commit();
+		s.close();
+
+		// the 2 instances should be the same (==)
+		assertTrue( "The two instances were different references", myReferenceData == queried );
+
 		// cleanup
 		s = openSession();
 		s.beginTransaction();
@@ -96,7 +108,7 @@ public class ReferenceCacheTest extends BaseCoreFunctionalTestCase {
 	@Immutable
 	@Cacheable
 	@Cache( usage = CacheConcurrencyStrategy.READ_ONLY )
-//	@Proxy( lazy = false )
+	@Proxy( lazy = false )
 	@SuppressWarnings("UnusedDeclaration")
 	public static class MyReferenceData {
 		@Id

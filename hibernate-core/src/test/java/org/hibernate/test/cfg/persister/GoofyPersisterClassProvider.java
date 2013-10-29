@@ -609,6 +609,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
         public int[] resolveAttributeIndexes(Set<String> attributes) {
             return null;
         }
+
+		@Override
+		public boolean canUseReferenceCacheEntries() {
+			return false;
+		}
 	}
 
 	public static class NoopCollectionPersister implements CollectionPersister {

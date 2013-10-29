@@ -28,9 +28,6 @@ import java.util.Set;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -63,6 +60,8 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.NonPojoInstrumentationMetadata;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard <emmanuel@hibernate.org>
@@ -147,6 +146,11 @@ public class PersisterClassProviderTest {
 		@Override
 		public String getRootEntityName() {
 			return null;
+		}
+
+		@Override
+		public boolean canUseReferenceCacheEntries() {
+			return false;
 		}
 
 		@Override

@@ -759,4 +759,5 @@ public interface EntityPersister extends OptimisticCacheSource {
 
     public int[] resolveAttributeIndexes(Set<String> properties);
 
+	public boolean canUseReferenceCacheEntries();
 }

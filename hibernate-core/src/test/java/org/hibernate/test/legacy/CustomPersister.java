@@ -699,4 +699,9 @@ public class CustomPersister implements EntityPersister {
     public int[] resolveAttributeIndexes(Set<String> attributes) {
         return null;
     }
+
+	@Override
+	public boolean canUseReferenceCacheEntries() {
+		return false;  //To change body of implemented methods use File | Settings | File Templates.
+	}
 }

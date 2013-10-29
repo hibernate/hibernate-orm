@@ -617,6 +617,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean canUseReferenceCacheEntries() {
+			return false;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SessionImplementor session) {
 			return null;
 		}

@@ -806,7 +806,7 @@ public abstract class AbstractEntityPersister
 				: new StandardCacheEntryHelper( this );
 	}
 
-	protected boolean canUseReferenceCacheEntries() {
+	public boolean canUseReferenceCacheEntries() {
 		// todo : should really validate that the cache access type is read-only
 
 		if ( ! factory.getSettings().isDirectReferenceCacheEntriesEnabled() ) {

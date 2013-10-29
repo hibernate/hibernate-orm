@@ -328,7 +328,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			}
 
 			String string = element.getSimpleName().toString();
-			if ( !StringUtil.isPropertyName( string ) ) {
+			if ( !StringUtil.isProperty( string, TypeUtils.toTypeString( t.getReturnType() ) ) ) {
 				return Boolean.FALSE;
 			}
 

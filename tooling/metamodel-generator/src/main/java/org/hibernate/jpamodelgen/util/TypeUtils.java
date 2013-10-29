@@ -434,7 +434,7 @@ public final class TypeUtils {
 			}
 
 			String string = p.getSimpleName().toString();
-			if ( !StringUtil.isPropertyName( string ) ) {
+			if ( !StringUtil.isProperty( string, TypeUtils.toTypeString( t.getReturnType() ) ) ) {
 				return null;
 			}
 

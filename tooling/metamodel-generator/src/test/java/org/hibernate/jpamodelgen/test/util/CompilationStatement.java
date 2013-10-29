@@ -36,10 +36,13 @@ public class CompilationStatement extends Statement {
 	private static final String SOURCE_BASE_DIR;
 
 	static {
-		// first we try to guess the target directory. This will work, if the build is triggered from the
-		// command line or the output directory used by the id is within the project directory (eg 'out' in Intellij).
-		File targetDir = TestUtil.getTargetDir();
-		File potentialSourceDirectory = new File( targetDir.getParent(), "src/test/java" );
+		// first we try to guess the target directory.
+		File potentialSourceDirectory = new File(System.getProperty( "user.dir" ), "tooling/metamodel-generator/src/test/java");
+
+		// the command line build sets the user.dir to sub project directory
+		if ( !potentialSourceDirectory.exists() ) {
+			potentialSourceDirectory = new File(System.getProperty( "user.dir" ), "src/test/java");
+		}
 
 		if ( potentialSourceDirectory.exists() ) {
 			SOURCE_BASE_DIR = potentialSourceDirectory.getAbsolutePath();

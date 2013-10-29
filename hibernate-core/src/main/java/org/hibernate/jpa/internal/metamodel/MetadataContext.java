@@ -41,8 +41,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -64,7 +64,7 @@ import org.hibernate.mapping.Property;
  */
 class MetadataContext {
 
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
+    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
                                                                            MetadataContext.class.getName());
 
 	private final SessionFactoryImplementor sessionFactory;

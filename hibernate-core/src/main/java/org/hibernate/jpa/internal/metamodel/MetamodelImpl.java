@@ -36,9 +36,8 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.HEMLogging;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 
@@ -49,7 +48,9 @@ import org.hibernate.mapping.PersistentClass;
  * @author Emmanuel Bernard
  */
 public class MetamodelImpl implements Metamodel, Serializable {
-	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MetamodelImpl.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
+			MetamodelImpl.class.getName());
+
 
 	private final Map<Class<?>,EntityTypeImpl<?>> entities;
 	private final Map<Class<?>, EmbeddableTypeImpl<?>> embeddables;
@@ -103,7 +104,7 @@ public class MetamodelImpl implements Metamodel, Serializable {
 		final Set<MappedSuperclass> unusedMappedSuperclasses = context.getUnusedMappedSuperclasses();
 		if ( !unusedMappedSuperclasses.isEmpty() ) {
 			for ( MappedSuperclass mappedSuperclass : unusedMappedSuperclasses ) {
-				log.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
+				LOG.unusedMappedSuperclass( mappedSuperclass.getMappedClass().getName() );
 				locateOrBuildMappedsuperclassType( mappedSuperclass, context );
 			}
 		}

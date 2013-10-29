@@ -32,13 +32,14 @@ import java.util.Iterator;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
 import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.AssertionFailure;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;
@@ -65,7 +66,7 @@ import org.hibernate.type.EntityType;
  */
 public class AttributeFactory {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
+    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AttributeFactory.class.getName());
 
 	private final MetadataContext context;

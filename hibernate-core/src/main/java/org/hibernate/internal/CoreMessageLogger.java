@@ -1637,24 +1637,4 @@ public interface CoreMessageLogger extends BasicLogger {
 			value = "Encountered request for Service by non-primary service role [%s -> %s]; please update usage"
 	)
 	void alternateServiceRole(String requestedRole, String targetRole);
-
-	@LogMessage( level = ERROR )
-	@Message(
-			id = 451,
-			value = "Illegal argument on static metamodel field injection : %s#%s; expected type :  %s; encountered type : %s" )
-	void illegalArgumentOnStaticMetamodelFieldInjection( String name,
-														 String name2,
-														 String name3,
-														 String name4 );
-
-	@LogMessage( level = ERROR )
-	@Message( id = 452, value = "Unable to locate static metamodel field : %s#%s" )
-	void unableToLocateStaticMetamodelField( String name,
-											 String name2 );
-	@LogMessage( level = INFO )
-	@Message(
-			id = 453,
-			value = "Encountered a MappedSuperclass [%s] not used in any entity hierarchy"
-	)
-	void unusedMappedSuperclass(String name);
 }

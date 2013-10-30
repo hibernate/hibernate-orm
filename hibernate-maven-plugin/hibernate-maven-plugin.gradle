@@ -8,6 +8,7 @@ repositories {
 dependencies {
     compile( libraries.maven_plugin )
     compile( libraries.maven_plugin_tools )
+    compile( libraries.plexus_utils )
     compile( project(':hibernate-core') )
     compile( libraries.jpa )
     compile( libraries.javassist )

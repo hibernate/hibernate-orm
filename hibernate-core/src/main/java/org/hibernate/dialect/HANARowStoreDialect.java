@@ -31,7 +31,7 @@ package org.hibernate.dialect;
  * @author Andrew Clemons <andrew.clemons@sap.com>
  */
 public class HANARowStoreDialect extends AbstractHANADialect {
-	
+
 	// Even though it's currently pointless, provide this structure in case HANA row store merits additional
 	// differences in the future.
 

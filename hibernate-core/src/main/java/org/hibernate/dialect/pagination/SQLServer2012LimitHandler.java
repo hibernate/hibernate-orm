@@ -28,9 +28,8 @@ import java.sql.*;
 import org.hibernate.engine.spi.*;
 
 /**
- * LIMIT clause handler compatible with SQL Server 2005 and later.
+ * LIMIT clause handler compatible with SQL Server 2012 and later.
  *
- * @see SQLServer2005LimitHandler
  * @author Deven Phillips (deven dot phillips at gmail dot com)
  */
 public class SQLServer2012LimitHandler extends AbstractLimitHandler {
@@ -39,7 +38,7 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	private boolean hasOffset = true;
 
 	/**
-	 * Constructs a SQLServer2005LimitHandler
+	 * Constructs a SQLServer2012LimitHandler
 	 *
 	 * @param sql       The SQL
 	 * @param selection The row selection options
@@ -49,23 +48,13 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsLimit() {
-		return true;
-	}
-
-	@Override
 	public boolean useMaxForLimit() {
 		return true;
 	}
 
 	@Override
-	public boolean supportsLimitOffset() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsVariableLimit() {
-		return true;
+	public boolean supportsLimit() {
+		return true ;
 	}
 
 	@Override
@@ -75,7 +64,7 @@ public class SQLServer2012LimitHandler extends AbstractLimitHandler {
 	}
 
 	/**
-	 * Add a LIMIT clause to the given SQL SELECT (HHH-2655: ROW_NUMBER for Paging)
+	 * Add a LIMIT clause to the given SQL SELECT
 	 * <p/>
 	 * The LIMIT SQL will look like:
 	 * <p/>

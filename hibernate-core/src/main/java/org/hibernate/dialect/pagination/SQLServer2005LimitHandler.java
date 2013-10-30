@@ -78,11 +78,6 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public boolean supportsVariableLimit() {
-		return true;
-	}
-
-	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		// Our dialect paginated results aren't zero based. The first row should get the number 1 and so on
 		return zeroBasedFirstResult + 1;

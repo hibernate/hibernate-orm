@@ -30,7 +30,7 @@ import javax.persistence.NamedEntityGraph;
 /**
  * @author Steve Ebersole
  */
-@Entity(name = "Person")
+@Entity
 @NamedEntityGraph
 public class Person {
 	@Id

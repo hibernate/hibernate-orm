@@ -233,7 +233,20 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 	@SuppressWarnings("unchecked")
 	private void applyNamedEntityGraphs(Collection<NamedEntityGraphDefinition> namedEntityGraphs) {
 		for ( NamedEntityGraphDefinition definition : namedEntityGraphs ) {
-			final EntityType entityType = metamodel.getEntityTypeByName( definition.getJpaEntityName() );
+			log.debugf(
+					"Applying named entity graph [name=%s, entity-name=%s, jpa-entity-name=%s",
+					definition.getRegisteredName(),
+					definition.getEntityName(),
+					definition.getJpaEntityName()
+			);
+			final EntityType entityType = metamodel.getEntityTypeByName( definition.getEntityName() );
+			if ( entityType == null ) {
+				throw new IllegalArgumentException(
+						"Attempted to register named entity graph [" + definition.getRegisteredName()
+								+ "] for unknown entity ["+ definition.getEntityName() + "]"
+
+				);
+			}
 			final EntityGraphImpl entityGraph = new EntityGraphImpl(
 					definition.getRegisteredName(),
 					entityType,

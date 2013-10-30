@@ -21,48 +21,30 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.cfg.annotations;
+package org.hibernate.jpa.test.graphs.named.multiple;
 
-import javax.persistence.NamedEntityGraph;
+import javax.persistence.EntityGraph;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
+import static junit.framework.Assert.assertNotNull;
 
 /**
- * Models the definition of a {@link NamedEntityGraph} annotation
- *
  * @author Steve Ebersole
  */
-public class NamedEntityGraphDefinition {
-	private final NamedEntityGraph annotation;
-	private final String jpaEntityName;
-	private final String entityName;
-	private final String name;
-
-	public NamedEntityGraphDefinition(NamedEntityGraph annotation, String jpaEntityName, String entityName) {
-		this.annotation = annotation;
-		this.jpaEntityName = jpaEntityName;
-		this.entityName = entityName;
-		this.name = StringHelper.isNotEmpty( annotation.name() )
-				? annotation.name()
-				: jpaEntityName;
-		if ( name == null ) {
-			throw new IllegalArgumentException( "Named entity graph name cannot be null" );
-		}
+public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase {
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Person.class };
 	}
 
-	public String getRegisteredName() {
-		return name;
-	}
-
-	public String getJpaEntityName() {
-		return jpaEntityName;
-	}
-
-	public String getEntityName() {
-		return entityName;
-	}
-
-	public NamedEntityGraph getAnnotation() {
-		return annotation;
+	@Test
+	public void testIt() {
+		EntityGraph graph = getOrCreateEntityManager().getEntityGraph( "abc" );
+		assertNotNull( graph );
+		graph = getOrCreateEntityManager().getEntityGraph( "xyz" );
+		assertNotNull( graph );
 	}
 }

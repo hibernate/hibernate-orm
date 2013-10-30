@@ -164,25 +164,6 @@ public class EntityBinder {
 		this.annotatedClass = annotatedClass;
 		bindEjb3Annotation( ejb3Ann );
 		bindHibernateAnnotation( hibAnn );
-
-		processNamedEntityGraphs();
-	}
-
-	private void processNamedEntityGraphs() {
-		processNamedEntityGraph( annotatedClass.getAnnotation( NamedEntityGraph.class ) );
-		final NamedEntityGraphs graphs = annotatedClass.getAnnotation( NamedEntityGraphs.class );
-		if ( graphs != null ) {
-			for ( NamedEntityGraph graph : graphs.value() ) {
-				processNamedEntityGraph( graph );
-			}
-		}
-	}
-
-	private void processNamedEntityGraph(NamedEntityGraph annotation) {
-		if ( annotation == null ) {
-			return;
-		}
-		mappings.addNamedEntityGraphDefintion( new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() ) );
 	}
 
 
@@ -425,6 +406,25 @@ public class EntityBinder {
 		catch (MappingException me) {
 			throw new AnnotationException( "Use of the same entity name twice: " + name, me );
 		}
+
+		processNamedEntityGraphs();
+	}
+
+	private void processNamedEntityGraphs() {
+		processNamedEntityGraph( annotatedClass.getAnnotation( NamedEntityGraph.class ) );
+		final NamedEntityGraphs graphs = annotatedClass.getAnnotation( NamedEntityGraphs.class );
+		if ( graphs != null ) {
+			for ( NamedEntityGraph graph : graphs.value() ) {
+				processNamedEntityGraph( graph );
+			}
+		}
+	}
+
+	private void processNamedEntityGraph(NamedEntityGraph annotation) {
+		if ( annotation == null ) {
+			return;
+		}
+		mappings.addNamedEntityGraphDefintion( new NamedEntityGraphDefinition( annotation, name, persistentClass.getEntityName() ) );
 	}
 	
 	public void bindDiscriminatorValue() {

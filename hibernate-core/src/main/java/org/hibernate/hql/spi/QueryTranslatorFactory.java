@@ -25,6 +25,7 @@
 package org.hibernate.hql.spi;
 import java.util.Map;
 
+import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 /**
@@ -45,9 +46,11 @@ public interface QueryTranslatorFactory {
 	 * @param queryString The query string to be translated
 	 * @param filters Currently enabled filters
 	 * @param factory The session factory.
+	 * @param entityGraphQueryHint
 	 * @return an appropriate translator.
 	 */
-	public QueryTranslator createQueryTranslator(String queryIdentifier, String queryString, Map filters, SessionFactoryImplementor factory);
+	public QueryTranslator createQueryTranslator(String queryIdentifier, String queryString, Map filters,
+			SessionFactoryImplementor factory, EntityGraphQueryHint entityGraphQueryHint);
 
 	/**
 	 * Construct a {@link FilterTranslator} instance capable of translating

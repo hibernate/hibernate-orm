@@ -1272,7 +1272,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		queryParameters.validateParameters();
-		HQLQueryPlan plan = getHQLQueryPlan( query, false );
+		
+		HQLQueryPlan plan = queryParameters.getQueryPlan();
+		if (plan == null) {
+			plan = getHQLQueryPlan( query, false );
+		}
+		
 		autoFlushIfRequired( plan.getQuerySpaces() );
 
 		List results = Collections.EMPTY_LIST;

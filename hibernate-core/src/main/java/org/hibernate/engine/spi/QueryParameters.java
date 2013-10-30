@@ -31,13 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterImpl;
@@ -45,6 +44,7 @@ import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King
@@ -77,6 +77,8 @@ public final class QueryParameters {
 	private String processedSQL;
 	private Type[] processedPositionalParameterTypes;
 	private Object[] processedPositionalParameterValues;
+	
+	private HQLQueryPlan queryPlan;
 
 	public QueryParameters() {
 		this( ArrayHelper.EMPTY_TYPE_ARRAY, ArrayHelper.EMPTY_OBJECT_ARRAY );
@@ -588,5 +590,13 @@ public final class QueryParameters {
 		copy.processedPositionalParameterTypes = this.processedPositionalParameterTypes;
 		copy.processedPositionalParameterValues = this.processedPositionalParameterValues;
 		return copy;
+	}
+
+	public HQLQueryPlan getQueryPlan() {
+		return queryPlan;
+	}
+
+	public void setQueryPlan(HQLQueryPlan queryPlan) {
+		this.queryPlan = queryPlan;
 	}
 }

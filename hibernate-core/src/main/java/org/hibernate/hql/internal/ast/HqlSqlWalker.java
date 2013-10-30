@@ -180,7 +180,6 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		this.printer = new ASTPrinter( SqlTokenTypes.class );
 	}
 
-
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private int traceDepth = 0;
@@ -651,6 +650,12 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 			// Was there an explicit select expression?
 			boolean explicitSelect = select != null && select.getNumberOfChildren() > 0;
+			
+			// Add in the EntityGraph attribute nodes.
+			if (queryTranslatorImpl.getEntityGraphQueryHint() != null) {
+				qn.getFromClause().getFromElements().addAll(
+						queryTranslatorImpl.getEntityGraphQueryHint().toFromElements( qn.getFromClause(), this ) );
+			}
 
 			if ( !explicitSelect ) {
 				// No explicit select expression; render the id and properties

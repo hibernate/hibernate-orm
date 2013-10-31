@@ -30,7 +30,7 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.jpa.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.loader.plan.spi.FetchOwner;
 
 /**

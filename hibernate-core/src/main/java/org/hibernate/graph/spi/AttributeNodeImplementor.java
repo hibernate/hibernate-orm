@@ -21,29 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.graph.internal.advisor;
+package org.hibernate.graph.spi;
 
-import org.hibernate.graph.spi.AttributeNodeImplementor;
-import org.hibernate.loader.plan.spi.FetchOwner;
+import javax.persistence.AttributeNode;
+import javax.persistence.metamodel.Attribute;
 
 /**
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
-class JpaGraphCollectionReference extends JpaGraphReferenceSubGraphSupport {
-	private final AttributeNodeImplementor<?> attributeNode;
-
-	JpaGraphCollectionReference(AttributeNodeImplementor<?> attributeNode) {
-		super( attributeNode );
-		this.attributeNode = attributeNode;
-	}
-
-	@Override
-	public void applyMissingFetches(FetchOwner fetchOwner) {
-		super.applyMissingFetches( fetchOwner );
-		// todo : additionally we need to process key graph(s)
-	}
-
-	void applyMissingKeyFetches(FetchOwner fetchOwner) {
-		// todo : additionally we need to process key graph(s)
-	}
+public interface AttributeNodeImplementor<T> extends AttributeNode<T> {
+	public Attribute<?,T> getAttribute();
+	public AttributeNodeImplementor<T> makeImmutableCopy();
 }

@@ -30,6 +30,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityGraph;
+
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.internal.FilterImpl;
@@ -57,6 +59,8 @@ public class LoadQueryInfluencers implements Serializable {
 	private String internalFetchProfile;
 	private final Map<String,Filter> enabledFilters;
 	private final Set<String> enabledFetchProfileNames;
+	private EntityGraph fetchGraph;
+	private EntityGraph loadGraph;
 
 	public LoadQueryInfluencers() {
 		this( null );
@@ -195,4 +199,19 @@ public class LoadQueryInfluencers implements Serializable {
 		enabledFetchProfileNames.remove( name );
 	}
 
+	public EntityGraph getFetchGraph() {
+		return fetchGraph;
+	}
+
+	public void setFetchGraph(final EntityGraph fetchGraph) {
+		this.fetchGraph = fetchGraph;
+	}
+
+	public EntityGraph getLoadGraph() {
+		return loadGraph;
+	}
+
+	public void setLoadGraph(final EntityGraph loadGraph) {
+		this.loadGraph = loadGraph;
+	}
 }

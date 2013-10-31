@@ -24,7 +24,6 @@
 package org.hibernate.jpa.graph.internal;
 
 import javax.persistence.AttributeNode;
-import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,17 +33,18 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.graph.spi.AttributeNodeImplementor;
+import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.jpa.graph.spi.AttributeNodeImplementor;
-import org.hibernate.jpa.graph.spi.GraphNodeImplementor;
+import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
 
 /**
  * Base class for EntityGraph and Subgraph implementations.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
+public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, HibernateEntityManagerFactoryAware{
 	private static final Logger log = Logger.getLogger( AbstractGraphNode.class );
 
 	private final HibernateEntityManagerFactory entityManagerFactory;
@@ -80,7 +80,7 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor {
 	}
 
 	@Override
-	public HibernateEntityManagerFactory entityManagerFactory() {
+	public HibernateEntityManagerFactory getFactory() {
 		return entityManagerFactory;
 	}
 

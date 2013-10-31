@@ -4031,6 +4031,11 @@ public abstract class AbstractEntityPersister
 		affectingFetchProfileNames.add( fetchProfileName );
 	}
 
+	private boolean isAffectedByEntityGraph(SessionImplementor session) {
+		return session.getLoadQueryInfluencers().getFetchGraph() != null || session.getLoadQueryInfluencers()
+				.getLoadGraph() != null;
+	}
+
 	private boolean isAffectedByEnabledFetchProfiles(SessionImplementor session) {
 		for ( String s : session.getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 			if ( affectingFetchProfileNames.contains( s ) ) {
@@ -4066,6 +4071,9 @@ public abstract class AbstractEntityPersister
 			// If the session has associated influencers we need to adjust the
 			// SQL query used for loading based on those influencers
 			return createEntityLoader(lockOptions, session.getLoadQueryInfluencers() );
+		}
+		else if ( isAffectedByEntityGraph( session ) ) {
+			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );
 		}
 		else if ( lockOptions.getTimeOut() != LockOptions.WAIT_FOREVER ) {
 			return createEntityLoader( lockOptions, session.getLoadQueryInfluencers() );

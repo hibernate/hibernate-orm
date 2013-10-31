@@ -21,20 +21,15 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.graph.spi;
+package org.hibernate.graph.spi;
 
-import javax.persistence.AttributeNode;
 import java.util.List;
-
-import org.hibernate.jpa.HibernateEntityManagerFactory;
+import javax.persistence.AttributeNode;
 
 /**
- * Extended contract for a "graph node" (entity-graph or sub-graph).
- *
- * @author Steve Ebersole
+ * @author Strong Liu <stliu@hibernate.org>
  */
 public interface GraphNodeImplementor {
-	public HibernateEntityManagerFactory entityManagerFactory();
-	public List<AttributeNodeImplementor<?>> attributeImplementorNodes();
-	public List<AttributeNode<?>> attributeNodes();
+	List<AttributeNodeImplementor<?>> attributeImplementorNodes();
+	List<AttributeNode<?>> attributeNodes();
 }

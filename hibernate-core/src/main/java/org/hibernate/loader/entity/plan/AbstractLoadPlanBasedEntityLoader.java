@@ -40,7 +40,10 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.entity.UniqueEntityLoader;
+import org.hibernate.loader.plan2.build.internal.FetchGraphLoadPlanBuildingStrategy;
 import org.hibernate.loader.plan2.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan2.build.internal.LoadGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan2.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan2.exec.internal.AbstractLoadPlanBasedLoader;
 import org.hibernate.loader.plan2.exec.query.spi.NamedParameterContext;
@@ -80,11 +83,22 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		this.uniqueKeyType = uniqueKeyType;
 		this.entityName = entityPersister.getEntityName();
 
-		final FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
-				factory,
-				buildingParameters.getQueryInfluencers(),
-				buildingParameters.getLockMode()
-		);
+		final LoadPlanBuildingAssociationVisitationStrategy strategy;
+		if ( buildingParameters.getQueryInfluencers().getFetchGraph() != null ) {
+			strategy = new FetchGraphLoadPlanBuildingStrategy(
+					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+			);
+		}
+		else if ( buildingParameters.getQueryInfluencers().getLoadGraph() != null ) {
+			strategy = new LoadGraphLoadPlanBuildingStrategy(
+					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+			);
+		}
+		else {
+			strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+					factory, buildingParameters.getQueryInfluencers(),buildingParameters.getLockMode()
+			);
+		}
 
 		this.plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
 		this.staticLoadQuery = EntityLoadQueryDetails.makeForBatching(

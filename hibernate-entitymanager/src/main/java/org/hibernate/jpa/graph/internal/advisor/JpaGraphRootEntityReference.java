@@ -29,8 +29,8 @@ import java.util.Map;
 
 import org.jboss.logging.Logger;
 
+import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-import org.hibernate.jpa.graph.spi.AttributeNodeImplementor;
 import org.hibernate.loader.plan.spi.FetchOwner;
 
 /**

@@ -100,7 +100,28 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		@Id
 		String name;
 	}
-
+	/**
+	 * EntityGraph(1):
+	 *
+	 * 	Cat
+	 *
+	 * LoadPlan:
+	 *
+	 *  Cat
+	 *
+	 * ---------------------
+	 *
+	 * EntityGraph(2):
+	 *
+	 *  Cat
+	 *    owner -- Person
+	 *
+	 * LoadPlan:
+	 *
+	 *   Cat
+	 *     owner -- Person
+	 *                address --- Address
+	 */
 	@Test
 	public void testBasicFetchLoadPlanBuilding() {
 		EntityManager em = getOrCreateEntityManager();
@@ -143,6 +164,29 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		em.close();
 	}
 
+	/**
+	 * EntityGraph(1):
+	 *
+	 * 	Cat
+	 *
+	 * LoadPlan:
+	 *
+	 *  Cat
+	 *
+	 * ---------------------
+	 *
+	 * EntityGraph(2):
+	 *
+	 *  Cat
+	 *    owner -- Person
+	 *
+	 * LoadPlan:
+	 *
+	 *   Cat
+	 *     owner -- Person
+	 *                address --- Address
+	 *                                country -- Country
+	 */
 	@Test
 	public void testBasicLoadLoadPlanBuilding() {
 		EntityManager em = getOrCreateEntityManager();

@@ -736,7 +736,7 @@ public class BinderHelper {
 
 		//id columns
 		final String propertyName = inferredData.getPropertyName();
-		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + propertyName );
+		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + "." + propertyName );
 		for (Ejb3JoinColumn column : columns) {
 			column.linkWithValue( value );
 		}

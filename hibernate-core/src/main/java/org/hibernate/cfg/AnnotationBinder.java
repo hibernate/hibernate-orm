@@ -2686,7 +2686,7 @@ public final class AnnotationBinder {
 					secondPass
 			);
 		}
-		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + propertyName );
+		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + "." + propertyName );
 		//PropertyBinder binder = new PropertyBinder();
 		propertyBinder.setName( propertyName );
 		propertyBinder.setValue( value );

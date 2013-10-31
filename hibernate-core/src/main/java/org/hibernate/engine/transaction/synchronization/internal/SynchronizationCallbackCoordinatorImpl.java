@@ -163,7 +163,7 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	}
 
 	private void doAfterCompletion(int status) {
-		LOG.tracev( "Transaction afterCompletion callback [status={0}]", status );
+		LOG.tracef( "Starting transaction afterCompletion callback [status=%s]", status );
 		if ( !transactionCoordinator.isActive() ) {
 			return;
 		}

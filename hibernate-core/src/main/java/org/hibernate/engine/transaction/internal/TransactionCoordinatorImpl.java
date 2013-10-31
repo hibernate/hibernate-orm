@@ -137,7 +137,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 		final boolean success = JtaStatusHelper.isCommitted( status );
 
-		if (sessionFactory().getStatistics().isStatisticsEnabled()) {
+		if ( sessionFactory().getStatistics().isStatisticsEnabled() ) {
 			transactionEnvironment.getStatisticsImplementor().endTransaction( success );
 		}
 

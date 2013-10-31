@@ -632,14 +632,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		LOG.trace( "after transaction completion" );
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
-		if ( hibernateTransaction != null ) {
-			try {
-				interceptor.afterTransactionCompletion( hibernateTransaction );
-			}
-			catch (Throwable t) {
-				LOG.exceptionInAfterTransactionCompletionInterceptor( t );
-			}
+
+		try {
+			interceptor.afterTransactionCompletion( hibernateTransaction );
 		}
+		catch (Throwable t) {
+			LOG.exceptionInAfterTransactionCompletionInterceptor( t );
+		}
+
 		if ( autoClear ) {
 			internalClear();
 		}

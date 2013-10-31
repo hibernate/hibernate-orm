@@ -51,7 +51,7 @@ public class LocaleQueryAliasTest extends BaseCoreFunctionalTestCase {
 		
 		QueryTranslatorFactory ast = new ASTQueryTranslatorFactory();
 		QueryTranslator queryTranslator = ast.createQueryTranslator(
-				hql, hql, Collections.EMPTY_MAP, sessionFactory() );
+				hql, hql, Collections.EMPTY_MAP, sessionFactory(), null );
 		queryTranslator.compile( Collections.EMPTY_MAP, false );
 		String sql = queryTranslator.getSQLString();
 		

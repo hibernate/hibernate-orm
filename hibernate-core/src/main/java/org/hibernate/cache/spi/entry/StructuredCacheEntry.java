@@ -69,7 +69,7 @@ public class StructuredCacheEntry implements CacheEntryStructure {
 	public Object structure(Object item) {
 		final CacheEntry entry = (CacheEntry) item;
 		final String[] names = persister.getPropertyNames();
-		final Map map = new HashMap(names.length+2);
+		final Map map = new HashMap( names.length + 3, 1f );
 		map.put( "_subclass", entry.getSubclass() );
 		map.put( "_version", entry.getVersion() );
 		map.put( "_lazyPropertiesUnfetched", entry.areLazyPropertiesUnfetched() );

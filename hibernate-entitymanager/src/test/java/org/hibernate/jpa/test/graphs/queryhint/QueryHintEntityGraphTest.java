@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.persistence.ElementCollection;
@@ -34,8 +35,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -87,12 +86,21 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.close();
 		
 		assertTrue( Hibernate.isInitialized( company.employees ) );
-		Employee employee = company.employees.iterator().next();
-		assertTrue( Hibernate.isInitialized( employee.managers ) );
-		Employee manager = employee.managers.iterator().next();
-		assertTrue( Hibernate.isInitialized( manager.managers ) );
 		assertTrue( Hibernate.isInitialized( company.location ) );
 		assertTrue( Hibernate.isInitialized( company.markets ) );
+		
+		boolean foundManager = false;
+		Iterator<Employee> employeeItr = company.employees.iterator();
+		while (employeeItr.hasNext()) {
+			Employee employee = employeeItr.next();
+			assertTrue( Hibernate.isInitialized( employee.managers ) );
+			Iterator<Employee> managerItr =  employee.managers.iterator();
+			while (managerItr.hasNext()) {
+				foundManager = true;
+				assertTrue( Hibernate.isInitialized( managerItr.next().managers ) );
+			}
+		}
+		assertTrue(foundManager);
 	}
 	
 	@Test

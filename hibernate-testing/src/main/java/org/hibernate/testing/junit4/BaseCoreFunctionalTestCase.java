@@ -182,7 +182,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		return cfg;
 	}
 
-	private Configuration constructAndConfigureConfiguration() {
+	protected Configuration constructAndConfigureConfiguration() {
 		Configuration cfg = constructConfiguration();
 		configure( cfg );
 		return cfg;

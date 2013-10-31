@@ -29,6 +29,12 @@ import static org.junit.Assert.fail;
 
 import java.util.Iterator;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
@@ -38,6 +44,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.junit.Test;
 
 /**
@@ -85,6 +93,20 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 		doTestHbmQuoting( DataPoint.class );
 		doTestHbmQuoting( AssociatedDataPoint.class );
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-7927")
+	public void testTableGeneratorQuoting() {
+		Configuration configuration = constructAndConfigureConfiguration();
+		configuration.addAnnotatedClass(TestEntity.class);
+		new SchemaExport(configuration).execute( false, true, false, true );
+		try {
+			new SchemaValidator(configuration).validate();
+		}
+		catch (HibernateException e) {
+			fail( "The identifier generator table should have validated.  " + e.getMessage() );
+		}
+	}
 	
 	private void doTestHbmQuoting(Class clazz) {
 		Table table = configuration().getClassMapping( clazz.getName() ).getTable();
@@ -116,5 +138,12 @@ public class QuoteGlobalTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
 		return new String[] { "quote/DataPoint.hbm.xml" };
+	}
+	
+	@Entity
+	private static class TestEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.TABLE)
+		private int id;
 	}
 }

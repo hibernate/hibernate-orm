@@ -1342,6 +1342,9 @@ public class Configuration implements Serializable {
 		while ( iter.hasNext() ) {
 			PersistentIdentifierGenerator generator = (PersistentIdentifierGenerator) iter.next();
 			Object key = generator.generatorKey();
+			if (key instanceof String) {
+				key = normalizer.normalizeIdentifierQuoting( (String) key );
+			}
 			if ( !databaseMetadata.isSequence( key ) && !databaseMetadata.isTable( key ) ) {
 				throw new HibernateException( "Missing sequence or table: " + key );
 			}

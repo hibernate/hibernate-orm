@@ -32,6 +32,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
+import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 
 /**
@@ -39,7 +40,7 @@ import org.hibernate.jpa.HibernateEntityManagerFactory;
  *
  * @author Steve Ebersole
  */
-public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraph<T> {
+public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGraph<T>, GraphNodeImplementor {
 	private final String name;
 	private final EntityType<T> entityType;
 
@@ -150,7 +151,7 @@ public class EntityGraphImpl<T> extends AbstractGraphNode<T> implements EntityGr
 
 	@SuppressWarnings("unchecked")
 	public boolean appliesTo(String entityName) {
-		return appliesTo( entityManagerFactory().getEntityTypeByName( entityName ) );
+		return appliesTo( getFactory().getEntityTypeByName( entityName ) );
 	}
 
 	public boolean appliesTo(EntityType<? super T> entityType) {

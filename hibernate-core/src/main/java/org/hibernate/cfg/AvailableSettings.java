@@ -35,13 +35,13 @@ public interface AvailableSettings {
 	 *
 	 * @see #SESSION_FACTORY_NAME_IS_JNDI
 	 */
-	public static final String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
+	 String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
 	/**
 	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a {@literal JNDI} namespace into which
 	 * the {@link org.hibernate.SessionFactory} should be bound?
 	 */
-	public static final String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
+	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
 
 	/**
 	 * Names the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} to use for obtaining
@@ -50,17 +50,17 @@ public interface AvailableSettings {
 	 * reference to the {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} implementation
 	 * class.
 	 */
-	public static final String CONNECTION_PROVIDER ="hibernate.connection.provider_class";
+	String CONNECTION_PROVIDER ="hibernate.connection.provider_class";
 
 	/**
 	 * Names the {@literal JDBC} driver class
 	 */
-	public static final String DRIVER ="hibernate.connection.driver_class";
+	String DRIVER ="hibernate.connection.driver_class";
 
 	/**
 	 * Names the {@literal JDBC} connection url.
 	 */
-	public static final String URL ="hibernate.connection.url";
+	String URL ="hibernate.connection.url";
 
 	/**
 	 * Names the connection user.  This might mean one of 2 things in out-of-the-box Hibernate
@@ -69,210 +69,210 @@ public interface AvailableSettings {
 	 *     <li>The username used to obtain a JDBC connection from a data source</li>
 	 * </ul>
 	 */
-	public static final String USER ="hibernate.connection.username";
+	String USER ="hibernate.connection.username";
 
 	/**
 	 * Names the connection password.  See usage discussion on {@link #USER}
 	 */
-	public static final String PASS ="hibernate.connection.password";
+	String PASS ="hibernate.connection.password";
 
 	/**
 	 * Names the {@literal JDBC} transaction isolation level
 	 */
-	public static final String ISOLATION ="hibernate.connection.isolation";
+	String ISOLATION ="hibernate.connection.isolation";
 
 	/**
 	 * Names the {@literal JDBC} autocommit mode
 	 */
-	public static final String AUTOCOMMIT ="hibernate.connection.autocommit";
+	String AUTOCOMMIT ="hibernate.connection.autocommit";
 
 	/**
 	 * Maximum number of inactive connections for the built-in Hibernate connection pool.
 	 */
-	public static final String POOL_SIZE ="hibernate.connection.pool_size";
+	String POOL_SIZE ="hibernate.connection.pool_size";
 
 	/**
 	 * Names a {@link javax.sql.DataSource}.  Can either reference a {@link javax.sql.DataSource} instance or
 	 * a {@literal JNDI} name under which to locate the {@link javax.sql.DataSource}.
 	 */
-	public static final String DATASOURCE ="hibernate.connection.datasource";
+	String DATASOURCE ="hibernate.connection.datasource";
 
 	/**
 	 * Names a prefix used to define arbitrary JDBC connection properties.  These properties are passed along to
 	 * the {@literal JDBC} provider when creating a connection.
 	 */
-	public static final String CONNECTION_PREFIX = "hibernate.connection";
+	String CONNECTION_PREFIX = "hibernate.connection";
 
 	/**
 	 * Names the {@literal JNDI} {@link javax.naming.InitialContext} class.
 	 *
 	 * @see javax.naming.Context#INITIAL_CONTEXT_FACTORY
 	 */
-	public static final String JNDI_CLASS ="hibernate.jndi.class";
+	String JNDI_CLASS ="hibernate.jndi.class";
 
 	/**
 	 * Names the {@literal JNDI} provider/connection url
 	 *
 	 * @see javax.naming.Context#PROVIDER_URL
 	 */
-	public static final String JNDI_URL ="hibernate.jndi.url";
+	String JNDI_URL ="hibernate.jndi.url";
 
 	/**
 	 * Names a prefix used to define arbitrary {@literal JNDI} {@link javax.naming.InitialContext} properties.  These
 	 * properties are passed along to {@link javax.naming.InitialContext#InitialContext(java.util.Hashtable)}
 	 */
-	public static final String JNDI_PREFIX = "hibernate.jndi";
+	String JNDI_PREFIX = "hibernate.jndi";
 
 	/**
 	 * Names the Hibernate {@literal SQL} {@link org.hibernate.dialect.Dialect} class
 	 */
-	public static final String DIALECT ="hibernate.dialect";
+	String DIALECT ="hibernate.dialect";
 
 	/**
 	 * Names any additional {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolver} implementations to
 	 * register with the standard {@link org.hibernate.engine.jdbc.dialect.spi.DialectFactory}.
 	 */
-	public static final String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
+	String DIALECT_RESOLVERS = "hibernate.dialect_resolvers";
 
 
 	/**
 	 * A default database schema (owner) name to use for unqualified tablenames
 	 */
-	public static final String DEFAULT_SCHEMA = "hibernate.default_schema";
+	String DEFAULT_SCHEMA = "hibernate.default_schema";
 	/**
 	 * A default database catalog name to use for unqualified tablenames
 	 */
-	public static final String DEFAULT_CATALOG = "hibernate.default_catalog";
+	String DEFAULT_CATALOG = "hibernate.default_catalog";
 
 	/**
 	 * Enable logging of generated SQL to the console
 	 */
-	public static final String SHOW_SQL ="hibernate.show_sql";
+	String SHOW_SQL ="hibernate.show_sql";
 	/**
 	 * Enable formatting of SQL logged to the console
 	 */
-	public static final String FORMAT_SQL ="hibernate.format_sql";
+	String FORMAT_SQL ="hibernate.format_sql";
 	/**
 	 * Add comments to the generated SQL
 	 */
-	public static final String USE_SQL_COMMENTS ="hibernate.use_sql_comments";
+	String USE_SQL_COMMENTS ="hibernate.use_sql_comments";
 	/**
 	 * Maximum depth of outer join fetching
 	 */
-	public static final String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
+	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
 	/**
 	 * The default batch size for batch fetching
 	 */
-	public static final String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
+	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
 	/**
 	 * Use <tt>java.io</tt> streams to read / write binary data from / to JDBC
 	 */
-	public static final String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
+	String USE_STREAMS_FOR_BINARY = "hibernate.jdbc.use_streams_for_binary";
 	/**
 	 * Use JDBC scrollable <tt>ResultSet</tt>s. This property is only necessary when there is
 	 * no <tt>ConnectionProvider</tt>, ie. the user is supplying JDBC connections.
 	 */
-	public static final String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
+	String USE_SCROLLABLE_RESULTSET = "hibernate.jdbc.use_scrollable_resultset";
 	/**
 	 * Tells the JDBC driver to attempt to retrieve row Id with the JDBC 3.0 PreparedStatement.getGeneratedKeys()
 	 * method. In general, performance will be better if this property is set to true and the underlying
 	 * JDBC driver supports getGeneratedKeys().
 	 */
-	public static final String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
+	String USE_GET_GENERATED_KEYS = "hibernate.jdbc.use_get_generated_keys";
 	/**
 	 * Gives the JDBC driver a hint as to the number of rows that should be fetched from the database
 	 * when more rows are needed. If <tt>0</tt>, JDBC driver default settings will be used.
 	 */
-	public static final String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
+	String STATEMENT_FETCH_SIZE = "hibernate.jdbc.fetch_size";
 	/**
 	 * Maximum JDBC batch size. A nonzero value enables batch updates.
 	 */
-	public static final String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
+	String STATEMENT_BATCH_SIZE = "hibernate.jdbc.batch_size";
 	/**
 	 * Select a custom batcher.
 	 */
-	public static final String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
+	String BATCH_STRATEGY = "hibernate.jdbc.factory_class";
 	/**
 	 * Should versioned data be included in batching?
 	 */
-	public static final String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
+	String BATCH_VERSIONED_DATA = "hibernate.jdbc.batch_versioned_data";
 	/**
 	 * An XSLT resource used to generate "custom" XML
 	 */
-	public static final String OUTPUT_STYLESHEET ="hibernate.xml.output_stylesheet";
+	String OUTPUT_STYLESHEET ="hibernate.xml.output_stylesheet";
 
 	/**
 	 * Maximum size of C3P0 connection pool
 	 */
-	public static final String C3P0_MAX_SIZE = "hibernate.c3p0.max_size";
+	String C3P0_MAX_SIZE = "hibernate.c3p0.max_size";
 	/**
 	 * Minimum size of C3P0 connection pool
 	 */
-	public static final String C3P0_MIN_SIZE = "hibernate.c3p0.min_size";
+	String C3P0_MIN_SIZE = "hibernate.c3p0.min_size";
 
 	/**
 	 * Maximum idle time for C3P0 connection pool
 	 */
-	public static final String C3P0_TIMEOUT = "hibernate.c3p0.timeout";
+	String C3P0_TIMEOUT = "hibernate.c3p0.timeout";
 	/**
 	 * Maximum size of C3P0 statement cache
 	 */
-	public static final String C3P0_MAX_STATEMENTS = "hibernate.c3p0.max_statements";
+	String C3P0_MAX_STATEMENTS = "hibernate.c3p0.max_statements";
 	/**
 	 * Number of connections acquired when pool is exhausted
 	 */
-	public static final String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
+	String C3P0_ACQUIRE_INCREMENT = "hibernate.c3p0.acquire_increment";
 	/**
 	 * Idle time before a C3P0 pooled connection is validated
 	 */
-	public static final String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
+	String C3P0_IDLE_TEST_PERIOD = "hibernate.c3p0.idle_test_period";
 
 	/**
 	 * Proxool/Hibernate property prefix
 	 * @deprecated Use {@link #PROXOOL_CONFIG_PREFIX} instead
 	 */
-	public static final String PROXOOL_PREFIX = "hibernate.proxool";
+	String PROXOOL_PREFIX = "hibernate.proxool";
 	/**
 	 * Proxool property to configure the Proxool Provider using an XML (<tt>/path/to/file.xml</tt>)
 	 */
-	public static final String PROXOOL_XML = "hibernate.proxool.xml";
+	String PROXOOL_XML = "hibernate.proxool.xml";
 	/**
 	 * Proxool property to configure the Proxool Provider  using a properties file (<tt>/path/to/proxool.properties</tt>)
 	 */
-	public static final String PROXOOL_PROPERTIES = "hibernate.proxool.properties";
+	String PROXOOL_PROPERTIES = "hibernate.proxool.properties";
 	/**
 	 * Proxool property to configure the Proxool Provider from an already existing pool (<tt>true</tt> / <tt>false</tt>)
 	 */
-	public static final String PROXOOL_EXISTING_POOL = "hibernate.proxool.existing_pool";
+	String PROXOOL_EXISTING_POOL = "hibernate.proxool.existing_pool";
 	/**
 	 * Proxool property with the Proxool pool alias to use
 	 * (Required for <tt>PROXOOL_EXISTING_POOL</tt>, <tt>PROXOOL_PROPERTIES</tt>, or
 	 * <tt>PROXOOL_XML</tt>)
 	 */
-	public static final String PROXOOL_POOL_ALIAS = "hibernate.proxool.pool_alias";
+	String PROXOOL_POOL_ALIAS = "hibernate.proxool.pool_alias";
 
 	/**
 	 * Enable automatic session close at end of transaction
 	 */
-	public static final String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
+	String AUTO_CLOSE_SESSION = "hibernate.transaction.auto_close_session";
 	/**
 	 * Enable automatic flush during the JTA <tt>beforeCompletion()</tt> callback
 	 */
-	public static final String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
+	String FLUSH_BEFORE_COMPLETION = "hibernate.transaction.flush_before_completion";
 	/**
 	 * Specifies how Hibernate should release JDBC connections.
 	 */
-	public static final String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
+	String RELEASE_CONNECTIONS = "hibernate.connection.release_mode";
 	/**
 	 * Context scoping impl for {@link org.hibernate.SessionFactory#getCurrentSession()} processing.
 	 */
-	public static final String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
+	String CURRENT_SESSION_CONTEXT_CLASS = "hibernate.current_session_context_class";
 
 	/**
 	 * Names the implementation of {@link org.hibernate.engine.transaction.spi.TransactionFactory} to use for
 	 * creating {@link org.hibernate.Transaction} instances
 	 */
-	public static final String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
+	String TRANSACTION_STRATEGY = "hibernate.transaction.factory_class";
 
 	/**
 	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation to use for integrating
@@ -280,91 +280,91 @@ public interface AvailableSettings {
 	 * instance or the name of the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation class
 	 * @since 4.0
 	 */
-	public static final String JTA_PLATFORM = "hibernate.transaction.jta.platform";
+	String JTA_PLATFORM = "hibernate.transaction.jta.platform";
 
 	/**
 	 * Names the {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver} implementation to use.
 	 * @since 4.3
 	 */
-	public static final String JTA_PLATFORM_RESOLVER = "hibernate.transaction.jta.platform_resolver";
+	String JTA_PLATFORM_RESOLVER = "hibernate.transaction.jta.platform_resolver";
 
 	/**
 	 * The {@link org.hibernate.cache.spi.RegionFactory} implementation class
 	 */
-	public static final String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
+	String CACHE_REGION_FACTORY = "hibernate.cache.region.factory_class";
 
 	/**
 	 * The <tt>CacheProvider</tt> implementation class
 	 */
-	public static final String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
+	String CACHE_PROVIDER_CONFIG = "hibernate.cache.provider_configuration_file_resource_path";
 	/**
 	 * The <tt>CacheProvider</tt> JNDI namespace, if pre-bound to JNDI.
 	 */
-	public static final String CACHE_NAMESPACE = "hibernate.cache.jndi";
+	String CACHE_NAMESPACE = "hibernate.cache.jndi";
 	/**
 	 * Enable the query cache (disabled by default)
 	 */
-	public static final String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
+	String USE_QUERY_CACHE = "hibernate.cache.use_query_cache";
 	/**
 	 * The <tt>QueryCacheFactory</tt> implementation class.
 	 */
-	public static final String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
+	String QUERY_CACHE_FACTORY = "hibernate.cache.query_cache_factory";
 	/**
 	 * Enable the second-level cache (enabled by default)
 	 */
-	public static final String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
+	String USE_SECOND_LEVEL_CACHE = "hibernate.cache.use_second_level_cache";
 	/**
 	 * Optimize the cache for minimal puts instead of minimal gets
 	 */
-	public static final String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
+	String USE_MINIMAL_PUTS = "hibernate.cache.use_minimal_puts";
 	/**
 	 * The <tt>CacheProvider</tt> region name prefix
 	 */
-	public static final String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
+	String CACHE_REGION_PREFIX = "hibernate.cache.region_prefix";
 	/**
 	 * Enable use of structured second-level cache entries
 	 */
-	public static final String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
+	String USE_STRUCTURED_CACHE = "hibernate.cache.use_structured_entries";
 	/**
 	 * Enables the automatic eviction of a bi-directional association's collection cache when an element in the
 	 * ManyToOne collection is added/updated/removed without properly managing the change on the OneToMany side.
 	 */
-	public static final String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
+	String AUTO_EVICT_COLLECTION_CACHE = "hibernate.cache.auto_evict_collection_cache";
 	/**
 	 * Enable statistics collection
 	 */
-	public static final String GENERATE_STATISTICS = "hibernate.generate_statistics";
+	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
-	public static final String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
+	String USE_IDENTIFIER_ROLLBACK = "hibernate.use_identifier_rollback";
 
 	/**
 	 * Use bytecode libraries optimized property access
 	 */
-	public static final String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
+	String USE_REFLECTION_OPTIMIZER = "hibernate.bytecode.use_reflection_optimizer";
 
 	/**
 	 * The classname of the HQL query parser factory
 	 */
-	public static final String QUERY_TRANSLATOR = "hibernate.query.factory_class";
+	String QUERY_TRANSLATOR = "hibernate.query.factory_class";
 
 	/**
 	 * A comma-separated list of token substitutions to use when translating a Hibernate
 	 * query to SQL
 	 */
-	public static final String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
+	String QUERY_SUBSTITUTIONS = "hibernate.query.substitutions";
 
 	/**
 	 * Should named queries be checked during startup (the default is enabled).
 	 * <p/>
 	 * Mainly intended for test environments.
 	 */
-	public static final String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
+	String QUERY_STARTUP_CHECKING = "hibernate.query.startup_check";
 
 	/**
 	 * Auto export/update schema using hbm2ddl tool. Valid values are <tt>update</tt>,
 	 * <tt>create</tt>, <tt>create-drop</tt> and <tt>validate</tt>.
 	 */
-	public static final String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
+	String HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
 
 	/**
 	 * Comma-separated names of the optional files containing SQL DML statements executed
@@ -377,7 +377,7 @@ public interface AvailableSettings {
 	 *
 	 * The default value is <tt>/import.sql</tt>
 	 */
-	public static final String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
+	String HBM2DDL_IMPORT_FILES = "hibernate.hbm2ddl.import_files";
 
 	/**
 	 * {@link String} reference to {@link org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor} implementation class.
@@ -385,46 +385,46 @@ public interface AvailableSettings {
 	 *
 	 * The default value is <tt>org.hibernate.tool.hbm2ddl.SingleLineSqlCommandExtractor</tt>.
 	 */
-	public static final String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
+	String HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR = "hibernate.hbm2ddl.import_files_sql_extractor";
 
 	/**
 	 * The {@link org.hibernate.exception.spi.SQLExceptionConverter} to use for converting SQLExceptions
 	 * to Hibernate's JDBCException hierarchy.  The default is to use the configured
 	 * {@link org.hibernate.dialect.Dialect}'s preferred SQLExceptionConverter.
 	 */
-	public static final String SQL_EXCEPTION_CONVERTER = "hibernate.jdbc.sql_exception_converter";
+	String SQL_EXCEPTION_CONVERTER = "hibernate.jdbc.sql_exception_converter";
 
 	/**
 	 * Enable wrapping of JDBC result sets in order to speed up column name lookups for
 	 * broken JDBC drivers
 	 */
-	public static final String WRAP_RESULT_SETS = "hibernate.jdbc.wrap_result_sets";
+	String WRAP_RESULT_SETS = "hibernate.jdbc.wrap_result_sets";
 
 	/**
 	 * Enable ordering of update statements by primary key value
 	 */
-	public static final String ORDER_UPDATES = "hibernate.order_updates";
+	String ORDER_UPDATES = "hibernate.order_updates";
 
 	/**
 	 * Enable ordering of insert statements for the purpose of more efficient JDBC batching.
 	 */
-	public static final String ORDER_INSERTS = "hibernate.order_inserts";
+	String ORDER_INSERTS = "hibernate.order_inserts";
 
 	/**
 	 * Default precedence of null values in {@code ORDER BY} clause.  Supported options: {@code none} (default),
 	 * {@code first}, {@code last}.
 	 */
-	public static final String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
+	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 
 	/**
 	 * The EntityMode in which set the Session opened from the SessionFactory.
 	 */
-    public static final String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
+    String DEFAULT_ENTITY_MODE = "hibernate.default_entity_mode";
 
 	/**
 	 * Should all database identifiers be quoted.
 	 */
-	public static final String GLOBALLY_QUOTED_IDENTIFIERS = "hibernate.globally_quoted_identifiers";
+	String GLOBALLY_QUOTED_IDENTIFIERS = "hibernate.globally_quoted_identifiers";
 
 	/**
 	 * Enable nullability checking.
@@ -432,32 +432,32 @@ public interface AvailableSettings {
 	 * Default to false if Bean Validation is present in the classpath and Hibernate Annotations is used,
 	 * true otherwise.
 	 */
-	public static final String CHECK_NULLABILITY = "hibernate.check_nullability";
+	String CHECK_NULLABILITY = "hibernate.check_nullability";
 
 
-	public static final String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
+	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
-	public static final String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
+	String JPAQL_STRICT_COMPLIANCE= "hibernate.query.jpaql_strict_compliance";
 
 	/**
 	 * When using pooled {@link org.hibernate.id.enhanced.Optimizer optimizers}, prefer interpreting the
 	 * database value as the lower (lo) boundary.  The default is to interpret it as the high boundary.
 	 */
-	public static final String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
+	String PREFER_POOLED_VALUES_LO = "hibernate.id.optimizer.pooled.prefer_lo";
 
 	/**
 	 * The maximum number of strong references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
 	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE}
 	 */
 	@Deprecated
-	public static final String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
+	String QUERY_PLAN_CACHE_MAX_STRONG_REFERENCES = "hibernate.query.plan_cache_max_strong_references";
 
 	/**
 	 * The maximum number of soft references maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
 	 * @deprecated in favor of {@link #QUERY_PLAN_CACHE_MAX_SIZE}
 	 */
 	@Deprecated
-	public static final String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
+	String QUERY_PLAN_CACHE_MAX_SOFT_REFERENCES = "hibernate.query.plan_cache_max_soft_references";
 
 	/**
 	 * The maximum number of entries including:
@@ -469,18 +469,18 @@ public interface AvailableSettings {
 	 * 
 	 * maintained by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 2048.
 	 */
-	public static final String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
+	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
 	/**
 	 * The maximum number of {@link org.hibernate.engine.query.spi.ParameterMetadata} maintained 
 	 * by {@link org.hibernate.engine.query.spi.QueryPlanCache}. Default is 128.
 	 */
-	public static final String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
+	String QUERY_PLAN_CACHE_PARAMETER_METADATA_MAX_SIZE = "hibernate.query.plan_parameter_metadata_max_size";
 
 	/**
 	 * Should we not use contextual LOB creation (aka based on {@link java.sql.Connection#createBlob()} et al).
 	 */
-	public static final String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
+	String NON_CONTEXTUAL_LOB_CREATION = "hibernate.jdbc.lob.non_contextual_creation";
 
 	/**
 	 * Used to define a {@link java.util.Collection} of the {@link ClassLoader} instances Hibernate should use for
@@ -488,7 +488,7 @@ public interface AvailableSettings {
 	 *
 	 * @since 5.0
 	 */
-	public static final String CLASSLOADERS = "hibernate.classLoaders";
+	String CLASSLOADERS = "hibernate.classLoaders";
 
 	/**
 	 * Names the {@link ClassLoader} used to load user application classes.
@@ -497,7 +497,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #CLASSLOADERS} instead
 	 */
 	@Deprecated
-	public static final String APP_CLASSLOADER = "hibernate.classLoader.application";
+	String APP_CLASSLOADER = "hibernate.classLoader.application";
 
 	/**
 	 * Names the {@link ClassLoader} Hibernate should use to perform resource loading.
@@ -505,7 +505,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #CLASSLOADERS} instead
 	 */
 	@Deprecated
-	public static final String RESOURCES_CLASSLOADER = "hibernate.classLoader.resources";
+	String RESOURCES_CLASSLOADER = "hibernate.classLoader.resources";
 
 	/**
 	 * Names the {@link ClassLoader} responsible for loading Hibernate classes.  By default this is
@@ -514,7 +514,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #CLASSLOADERS} instead
 	 */
 	@Deprecated
-	public static final String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
+	String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
 
 	/**
 	 * Names the {@link ClassLoader} used when Hibernate is unable to locates classes on the
@@ -523,54 +523,54 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #CLASSLOADERS} instead
 	 */
 	@Deprecated
-	public static final String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
+	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
 
 
-	public static final String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
+	String C3P0_CONFIG_PREFIX = "hibernate.c3p0";
 
-	public static final String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
+	String PROXOOL_CONFIG_PREFIX = "hibernate.proxool";
 
 
-	public static final String JMX_ENABLED = "hibernate.jmx.enabled";
-	public static final String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
-	public static final String JMX_AGENT_ID = "hibernate.jmx.agentId";
-	public static final String JMX_DOMAIN_NAME = "hibernate.jmx.defaultDomain";
-	public static final String JMX_SF_NAME = "hibernate.jmx.sessionFactoryName";
-	public static final String JMX_DEFAULT_OBJ_NAME_DOMAIN = "org.hibernate.core";
+	String JMX_ENABLED = "hibernate.jmx.enabled";
+	String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
+	String JMX_AGENT_ID = "hibernate.jmx.agentId";
+	String JMX_DOMAIN_NAME = "hibernate.jmx.defaultDomain";
+	String JMX_SF_NAME = "hibernate.jmx.sessionFactoryName";
+	String JMX_DEFAULT_OBJ_NAME_DOMAIN = "org.hibernate.core";
 
 	/**
 	 * A configuration value key used to indicate that it is safe to cache
 	 * {@link javax.transaction.TransactionManager} references.
 	 * @since 4.0
 	 */
-	public static final String JTA_CACHE_TM = "hibernate.jta.cacheTransactionManager";
+	String JTA_CACHE_TM = "hibernate.jta.cacheTransactionManager";
 
 	/**
 	 * A configuration value key used to indicate that it is safe to cache
 	 * {@link javax.transaction.UserTransaction} references.
 	 * @since 4.0
 	 */
-	public static final String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
+	String JTA_CACHE_UT = "hibernate.jta.cacheUserTransaction";
 
 	/**
 	 * Setting used to give the name of the default {@link org.hibernate.annotations.CacheConcurrencyStrategy}
 	 * to use when either {@link javax.persistence.Cacheable @Cacheable} or
 	 * {@link org.hibernate.annotations.Cache @Cache} is used.  {@link org.hibernate.annotations.Cache @Cache(strategy="..")} is used to override.
 	 */
-	public static final String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
+	String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
 
 	/**
 	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
 	 * for AUTO, TABLE and SEQUENCE.
 	 * Default to false to keep backward compatibility.
 	 */
-	public static final String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
+	String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
 
 	/**
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.  May point to
 	 * either a class name or instance.
 	 */
-	public static final String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
+	String CUSTOM_ENTITY_DIRTINESS_STRATEGY = "hibernate.entity_dirtiness_strategy";
 
 	/**
 	 * Strategy for multi-tenancy.
@@ -578,7 +578,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.MultiTenancyStrategy
 	 * @since 4.0
 	 */
-	public static final String MULTI_TENANT = "hibernate.multiTenancy";
+	String MULTI_TENANT = "hibernate.multiTenancy";
 
 	/**
 	 * Names a {@link org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider} implementation to
@@ -587,7 +587,7 @@ public interface AvailableSettings {
 	 *
 	 * @since 4.1
 	 */
-	public static final String MULTI_TENANT_CONNECTION_PROVIDER = "hibernate.multi_tenant_connection_provider";
+	String MULTI_TENANT_CONNECTION_PROVIDER = "hibernate.multi_tenant_connection_provider";
 
 	/**
 	 * Names a {@link org.hibernate.context.spi.CurrentTenantIdentifierResolver} implementation to use.
@@ -600,33 +600,33 @@ public interface AvailableSettings {
 	 *
 	 * @since 4.1
 	 */
-	public static final String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
+	String MULTI_TENANT_IDENTIFIER_RESOLVER = "hibernate.tenant_identifier_resolver";
 
-	public static final String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
+	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
 
-    public static final String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
+    String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
-	public static final String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
+	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
 
 	/**
 	 * Names the {@link org.hibernate.loader.BatchFetchStyle} to use.  Can specify either the
 	 * {@link org.hibernate.loader.BatchFetchStyle} name (insensitively), or a
 	 * {@link org.hibernate.loader.BatchFetchStyle} instance.
 	 */
-	public static final String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
+	String BATCH_FETCH_STYLE = "hibernate.batch_fetch_style";
 
 	/**
 	 * Enable direct storage of entity references into the second level cache when applicable (immutable data, etc).
 	 * Default is to not store direct references.
 	 */
-	public static final String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
+	String USE_DIRECT_REFERENCE_CACHE_ENTRIES = "hibernate.cache.use_reference_entries";
 
 	/**
 	 * Enable nationalized character support on all string / clob based attribute ( string, char, clob, text etc ).
 	 *
 	 * Default is <clode>false</clode>.
 	 */
-	public static final String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
+	String USE_NATIONALIZED_CHARACTER_DATA = "hibernate.use_nationalized_character_data";
 	
 	/**
 	 * A transaction can be rolled back by another thread ("tracking by thread")
@@ -637,11 +637,11 @@ public interface AvailableSettings {
 	 * 
 	 * Default is <code>true</code> (enabled).
 	 */
-	public static final String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
+	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 
-	public static final String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
-	public static final String JACC_PREFIX = "hibernate.jacc";
-	public static final String JACC_ENABLED = "hibernate.jacc.enabled";
+	String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
+	String JACC_PREFIX = "hibernate.jacc";
+	String JACC_ENABLED = "hibernate.jacc.enabled";
 
 	/**
 	 * If enabled, allows {@link org.hibernate.tool.hbm2ddl.DatabaseMetadata} to
@@ -649,7 +649,7 @@ public interface AvailableSettings {
 	 * possibility that this would return duplicate tables (especially in
 	 * Oracle), this is disabled by default.
 	 */
-	public static final String ENABLE_SYNONYMS = "hibernate.synonyms";
+	String ENABLE_SYNONYMS = "hibernate.synonyms";
 	
 	/**
 	 * Unique columns and unique keys both use unique constraints in most dialects.
@@ -667,5 +667,5 @@ public interface AvailableSettings {
 	 * {@link org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy#SKIP}:
 	 * 			do not attempt to create unique constraints on a schema update
 	 */
-	public static final String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
+	String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
 }

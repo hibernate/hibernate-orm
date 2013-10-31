@@ -41,28 +41,28 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.4
 	 */
-	public static final String PROVIDER = "javax.persistence.provider";
+	String PROVIDER = "javax.persistence.provider";
 
 	/**
 	 * The type of transactions supported by the entity managers.
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.2
 	 */
-	public static final String TRANSACTION_TYPE = "javax.persistence.transactionType";
+	String TRANSACTION_TYPE = "javax.persistence.transactionType";
 
 	/**
 	 * The JNDI name of a JTA {@link javax.sql.DataSource}.
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 */
-	public static final String JTA_DATASOURCE = "javax.persistence.jtaDataSource";
+	String JTA_DATASOURCE = "javax.persistence.jtaDataSource";
 
 	/**
 	 * The JNDI name of a non-JTA {@link javax.sql.DataSource}.
 	 * <p/>
 	 * See JPA 2 sections 9.4.3 and 8.2.1.5
 	 */
-	public static final String NON_JTA_DATASOURCE = "javax.persistence.nonJtaDataSource";
+	String NON_JTA_DATASOURCE = "javax.persistence.nonJtaDataSource";
 
 	/**
 	 * The name of a JDBC driver to use to connect to the database.
@@ -73,7 +73,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See section 8.2.1.9
 	 */
-	public static final String JDBC_DRIVER = "javax.persistence.jdbc.driver";
+	String JDBC_DRIVER = "javax.persistence.jdbc.driver";
 
 	/**
 	 * The JDBC connection url to use to connect to the database.
@@ -84,7 +84,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See section 8.2.1.9
 	 */
-	public static final String JDBC_URL = "javax.persistence.jdbc.url";
+	String JDBC_URL = "javax.persistence.jdbc.url";
 
 	/**
 	 * The JDBC connection user name.
@@ -95,7 +95,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See section 8.2.1.9
 	 */
-	public static final String JDBC_USER = "javax.persistence.jdbc.user";
+	String JDBC_USER = "javax.persistence.jdbc.user";
 
 	/**
 	 * The JDBC connection password.
@@ -106,7 +106,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
-	public static final String JDBC_PASSWORD = "javax.persistence.jdbc.password";
+	String JDBC_PASSWORD = "javax.persistence.jdbc.password";
 
 	/**
 	 * Used to indicate whether second-level (what JPA terms shared cache) caching is
@@ -115,7 +115,7 @@ public interface AvailableSettings {
 	 * See JPA 2 sections 9.4.3 and 8.2.1.7
 	 * @see javax.persistence.SharedCacheMode
 	 */
-	public static final String SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
+	String SHARED_CACHE_MODE = "javax.persistence.sharedCache.mode";
 
 	/**
 	 * NOTE : Not a valid EMF property...
@@ -125,7 +125,7 @@ public interface AvailableSettings {
 	 *
 	 * @see javax.persistence.CacheRetrieveMode
 	 */
-	public static final String SHARED_CACHE_RETRIEVE_MODE ="javax.persistence.cache.retrieveMode";
+	String SHARED_CACHE_RETRIEVE_MODE ="javax.persistence.cache.retrieveMode";
 
 	/**
 	 * NOTE : Not a valid EMF property...
@@ -135,7 +135,7 @@ public interface AvailableSettings {
 	 *
 	 * @see javax.persistence.CacheStoreMode
 	 */
-	public static final String SHARED_CACHE_STORE_MODE ="javax.persistence.cache.storeMode";
+	String SHARED_CACHE_STORE_MODE ="javax.persistence.cache.storeMode";
 
 	/**
 	 * Used to indicate what form of automatic validation is in effect as per rules defined
@@ -144,52 +144,52 @@ public interface AvailableSettings {
 	 * See JPA 2 sections 9.4.3 and 8.2.1.8
 	 * @see javax.persistence.ValidationMode
 	 */
-	public static final String VALIDATION_MODE = "javax.persistence.validation.mode";
+	String VALIDATION_MODE = "javax.persistence.validation.mode";
 
 	/**
 	 * Used to pass along any discovered validator factory.
 	 */
-	public static final String VALIDATION_FACTORY = "javax.persistence.validation.factory";
+	String VALIDATION_FACTORY = "javax.persistence.validation.factory";
 
 	/**
 	 * Used to request (hint) a pessimistic lock scope.
 	 * <p/>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 */
-	public static final String LOCK_SCOPE = "javax.persistence.lock.scope";
+	String LOCK_SCOPE = "javax.persistence.lock.scope";
 
 	/**
 	 * Used to request (hint) a pessimistic lock timeout (in milliseconds).
 	 * <p/>
 	 * See JPA 2 sections 8.2.1.9 and 3.4.4.3
 	 */
-	public static final String LOCK_TIMEOUT = "javax.persistence.lock.timeout";
+	String LOCK_TIMEOUT = "javax.persistence.lock.timeout";
 
 	/**
 	 * Used to coordinate with bean validators
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
-	public static final String PERSIST_VALIDATION_GROUP = "javax.persistence.validation.group.pre-persist";
+	String PERSIST_VALIDATION_GROUP = "javax.persistence.validation.group.pre-persist";
 
 	/**
 	 * Used to coordinate with bean validators
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
-	public static final String UPDATE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-update";
+	String UPDATE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-update";
 
 	/**
 	 * Used to coordinate with bean validators
 	 * <p/>
 	 * See JPA 2 section 8.2.1.9
 	 */
-	public static final String REMOVE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-remove";
+	String REMOVE_VALIDATION_GROUP = "javax.persistence.validation.group.pre-remove";
 
 	/**
 	 * Used to pass along the CDI BeanManager, if any, to be used.
 	 */
-	public static final String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
+	String CDI_BEAN_MANAGER = "javax.persistence.bean.manager";
 
 	/**
 	 * Specifies whether schema generation commands for schema creation are to be determine based on object/relational
@@ -205,7 +205,7 @@ public interface AvailableSettings {
 	 *
 	 * @see SchemaGenSource
 	 */
-	public static final String SCHEMA_GEN_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
+	String SCHEMA_GEN_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
 	 * Specifies whether schema generation commands for schema dropping are to be determine based on object/relational
@@ -221,7 +221,7 @@ public interface AvailableSettings {
 	 *
 	 * @see SchemaGenSource
 	 */
-	public static final String SCHEMA_GEN_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
+	String SCHEMA_GEN_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
 	 * Specifies the CREATE script file as either a {@link java.io.Reader} configured for reading of the DDL script
@@ -230,7 +230,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_CREATE_SOURCE
 	 * @see #SCHEMA_GEN_DROP_SCRIPT_SOURCE
 	 */
-	public static final String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
+	String SCHEMA_GEN_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
 	 * Specifies the DROP script file as either a {@link java.io.Reader} configured for reading of the DDL script
@@ -239,7 +239,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_DROP_SOURCE
 	 * @see #SCHEMA_GEN_CREATE_SCRIPT_SOURCE
 	 */
-	public static final String SCHEMA_GEN_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
+	String SCHEMA_GEN_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
 	 * Specifies the type of schema generation action to be taken by the persistence provider in regards to sending
@@ -249,7 +249,7 @@ public interface AvailableSettings {
 	 *
 	 * @see SchemaGenAction
 	 */
-	public static final String SCHEMA_GEN_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
+	String SCHEMA_GEN_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
 
 	/**
 	 * Specifies the type of schema generation action to be taken by the persistence provider in regards to writing
@@ -259,7 +259,7 @@ public interface AvailableSettings {
 	 *
 	 * @see SchemaGenAction
 	 */
-	public static final String SCHEMA_GEN_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
+	String SCHEMA_GEN_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
 
 	/**
 	 * For cases where the {@value #SCHEMA_GEN_SCRIPTS_ACTION} value indicates that schema creation commands should
@@ -270,7 +270,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_SCRIPTS_ACTION
 	 */
 	@SuppressWarnings("JavaDoc")
-	public static final String SCHEMA_GEN_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
+	String SCHEMA_GEN_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**
 	 * For cases where the {@value #SCHEMA_GEN_SCRIPTS_ACTION} value indicates that schema drop commands should
@@ -281,7 +281,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_SCRIPTS_ACTION
 	 */
 	@SuppressWarnings("JavaDoc")
-	public static final String SCHEMA_GEN_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
+	String SCHEMA_GEN_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
 
 	/**
 	 * Specifies whether the persistence provider is to create the database schema(s) in addition to creating
@@ -290,7 +290,7 @@ public interface AvailableSettings {
 	 * contains “CREATE SCHEMA” commands.  If this property is not supplied (or is explicitly {@code false}), the
 	 * provider should not attempt to create database schemas.
 	 */
-	public static final String SCHEMA_GEN_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
+	String SCHEMA_GEN_CREATE_SCHEMAS = "javax.persistence.create-database-schemas";
 
 	/**
 	 * Allows passing the specific {@link java.sql.Connection} instance to be used for performing schema generation
@@ -299,7 +299,7 @@ public interface AvailableSettings {
 	 * May also be used to determine the values for {@value #SCHEMA_GEN_DB_NAME},
 	 * {@value #SCHEMA_GEN_DB_MAJOR_VERSION} and {@value #SCHEMA_GEN_DB_MINOR_VERSION}.
 	 */
-	public static final String SCHEMA_GEN_CONNECTION = "javax.persistence.schema-generation-connection";
+	String SCHEMA_GEN_CONNECTION = "javax.persistence.schema-generation-connection";
 
 	/**
 	 * Specifies the name of the database provider in cases where a Connection to the underlying database is
@@ -316,7 +316,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_DB_MINOR_VERSION
 	 */
 	@SuppressWarnings("JavaDoc")
-	public static final String SCHEMA_GEN_DB_NAME = "javax.persistence.database-product-name";
+	String SCHEMA_GEN_DB_NAME = "javax.persistence.database-product-name";
 
 	/**
 	 * Specifies the major version of the underlying database, as would be returned by
@@ -327,7 +327,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_DB_NAME
 	 * @see #SCHEMA_GEN_DB_MINOR_VERSION
 	 */
-	public static final String SCHEMA_GEN_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
+	String SCHEMA_GEN_DB_MAJOR_VERSION = "javax.persistence.database-major-version";
 
 	/**
 	 * Specifies the minor version of the underlying database, as would be returned by
@@ -339,7 +339,7 @@ public interface AvailableSettings {
 	 * @see #SCHEMA_GEN_DB_NAME
 	 * @see #SCHEMA_GEN_DB_MAJOR_VERSION
 	 */
-	public static final String SCHEMA_GEN_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
+	String SCHEMA_GEN_DB_MINOR_VERSION = "javax.persistence.database-minor-version";
 
 	/**
 	 * Specifies a {@link java.io.Reader} configured for reading of the SQL load script or a string designating the
@@ -347,7 +347,7 @@ public interface AvailableSettings {
 	 * <p/>
 	 * A "SQL load script" is a script that performs some database initialization (INSERT, etc).
 	 */
-	public static final String SCHEMA_GEN_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
+	String SCHEMA_GEN_LOAD_SCRIPT_SOURCE = "javax.persistence.sql-load-script-source";
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -367,75 +367,75 @@ public interface AvailableSettings {
 	 * would apply <code>someLockMode</code> to the alias <code>"a"</code>.
 	 */
 	//Use the org.hibernate prefix. instead of hibernate. as it is a query hint se QueryHints
-	public static final String ALIAS_SPECIFIC_LOCK_MODE = "org.hibernate.lockMode";
+	String ALIAS_SPECIFIC_LOCK_MODE = "org.hibernate.lockMode";
 
 	/**
 	 * JAR autodetection artifacts class, hbm
 	 */
-	public static final String AUTODETECTION = "hibernate.archive.autodetection";
+	String AUTODETECTION = "hibernate.archive.autodetection";
 
 	/**
 	 * cfg.xml configuration file used
 	 */
-	public static final String CFG_FILE = "hibernate.ejb.cfgfile";
+	String CFG_FILE = "hibernate.ejb.cfgfile";
 
 	/**
 	 * Caching configuration should follow the following pattern
 	 * hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]
 	 * where usage is the cache strategy used and region the cache region name
 	 */
-	public static final String CLASS_CACHE_PREFIX = "hibernate.ejb.classcache";
+	String CLASS_CACHE_PREFIX = "hibernate.ejb.classcache";
 
 	/**
 	 * Caching configuration should follow the following pattern
 	 * hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]
 	 * where usage is the cache strategy used and region the cache region name
 	 */
-	public static final String COLLECTION_CACHE_PREFIX = "hibernate.ejb.collectioncache";
+	String COLLECTION_CACHE_PREFIX = "hibernate.ejb.collectioncache";
 
 	/**
 	 * Interceptor class name, the class has to have a no-arg constructor
 	 * the interceptor instance is shared amongst all EntityManager of a given EntityManagerFactory
 	 */
-	public static final String INTERCEPTOR = "hibernate.ejb.interceptor";
+	String INTERCEPTOR = "hibernate.ejb.interceptor";
 
 	/**
 	 * Interceptor class name, the class has to have a no-arg constructor
 	 */
-	public static final String SESSION_INTERCEPTOR = "hibernate.ejb.interceptor.session_scoped";
+	String SESSION_INTERCEPTOR = "hibernate.ejb.interceptor.session_scoped";
 
 	/**
 	 * SessionFactoryObserver class name, the class must have a no-arg constructor
 	 */
-	public static final String SESSION_FACTORY_OBSERVER = "hibernate.ejb.session_factory_observer";
+	String SESSION_FACTORY_OBSERVER = "hibernate.ejb.session_factory_observer";
 
 	/**
 	 * Naming strategy class name, the class has to have a no-arg constructor
 	 */
-	public static final String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";
+	String NAMING_STRATEGY = "hibernate.ejb.naming_strategy";
 
 	/**
 	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor
 	 * @deprecated if possible wait of Hibernate 4.1 and theService registry (MutableIdentifierGeneratorStrategy service)
 	 */
-	public static final String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.ejb.identifier_generator_strategy_provider";
+	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.ejb.identifier_generator_strategy_provider";
 
 	/**
 	 * Event configuration should follow the following pattern
 	 * hibernate.ejb.event.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
 	 */
-	public static final String EVENT_LISTENER_PREFIX = "hibernate.ejb.event";
+	String EVENT_LISTENER_PREFIX = "hibernate.ejb.event";
 
 	/**
 	 * Enable the class file enhancement
 	 */
-	public static final String USE_CLASS_ENHANCER = "hibernate.ejb.use_class_enhancer";
+	String USE_CLASS_ENHANCER = "hibernate.ejb.use_class_enhancer";
 
 	/**
 	 * Whether or not discard persistent context on entityManager.close()
 	 * The EJB3 compliant and default choice is false
 	 */
-	public static final String DISCARD_PC_ON_CLOSE = "hibernate.ejb.discard_pc_on_close";
+	String DISCARD_PC_ON_CLOSE = "hibernate.ejb.discard_pc_on_close";
 
 	/**
 	 * Consider this as experimental
@@ -445,20 +445,20 @@ public interface AvailableSettings {
 	 * @deprecated Configuration going away.
 	 */
 	@Deprecated
-	public static final String CONFIGURATION_JNDI_NAME = "hibernate.ejb.configuration_jndi_name";
+	String CONFIGURATION_JNDI_NAME = "hibernate.ejb.configuration_jndi_name";
 
 	/**
 	 * Used to determine flush mode.
 	 */
 	//Use the org.hibernate prefix. instead of hibernate. as it is a query hint se QueryHints
-	public static final String FLUSH_MODE = "org.hibernate.flushMode";
+	String FLUSH_MODE = "org.hibernate.flushMode";
 
 	/**
 	 * Pass an implementation of {@link org.hibernate.ejb.packaging.Scanner}:
 	 *  - preferably an actual instance
 	 *  - or a class name with a no-arg constructor 
 	 */
-	public static final String SCANNER = "hibernate.ejb.resource_scanner";
+	String SCANNER = "hibernate.ejb.resource_scanner";
 
 	/**
 	 * List of classes names
@@ -468,7 +468,7 @@ public interface AvailableSettings {
 	 */
 	@Deprecated
 	@SuppressWarnings("UnusedDeclaration")
-	public static final String CLASS_NAMES = "hibernate.ejb.classes";
+	String CLASS_NAMES = "hibernate.ejb.classes";
 
 	/**
 	 * List of annotated packages
@@ -478,18 +478,18 @@ public interface AvailableSettings {
 	 */
 	@Deprecated
 	@SuppressWarnings("UnusedDeclaration")
-	public static final String PACKAGE_NAMES = "hibernate.ejb.packages";
+	String PACKAGE_NAMES = "hibernate.ejb.packages";
 
 	/**
 	 * EntityManagerFactory name
 	 */
-	public static final String ENTITY_MANAGER_FACTORY_NAME = "hibernate.ejb.entitymanager_factory_name";
+	String ENTITY_MANAGER_FACTORY_NAME = "hibernate.ejb.entitymanager_factory_name";
 
 	/**
 	 * @deprecated use {@link #JPA_METAMODEL_POPULATION} instead.
 	 */
 	@Deprecated
-	public static final String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
+	String JPA_METAMODEL_GENERATION = "hibernate.ejb.metamodel.generation";
 
 	/**
 	 * Setting that controls whether we seek out JPA "static metamodel" classes and populate them.  Accepts
@@ -507,16 +507,16 @@ public interface AvailableSettings {
 	 * </ul>
 	 *
 	 */
-	public static final String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
+	String JPA_METAMODEL_POPULATION = "hibernate.ejb.metamodel.population";
 
 
 	/**
 	 * List of classes names
 	 * Internal use only
 	 */
-	public static final String XML_FILE_NAMES = "hibernate.ejb.xml_files";
-	public static final String HBXML_FILES = "hibernate.hbmxml.files";
-	public static final String LOADED_CLASSES = "hibernate.ejb.loaded.classes";
+	String XML_FILE_NAMES = "hibernate.ejb.xml_files";
+	String HBXML_FILES = "hibernate.hbmxml.files";
+	String LOADED_CLASSES = "hibernate.ejb.loaded.classes";
 
 	/**
 	 * Deprecated
@@ -524,7 +524,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#JACC_CONTEXT_ID} instead
 	 */
 	@Deprecated
-	public static final String JACC_CONTEXT_ID = org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
+	String JACC_CONTEXT_ID = org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
 
 	/**
 	 * Deprecated
@@ -532,7 +532,7 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#JACC_PREFIX} instead
 	 */
 	@Deprecated
-	public static final String JACC_PREFIX = org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
+	String JACC_PREFIX = org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
 
 	/**
 	 * Deprecated
@@ -540,11 +540,10 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link org.hibernate.cfg.AvailableSettings#JACC_ENABLED} instead
 	 */
 	@Deprecated
-	public static final String JACC_ENABLED = org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
+	String JACC_ENABLED = org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
 
 	/**
 	 * Used to pass along the name of the persistence unit.
 	 */
-	public static final String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
-
+	String PERSISTENCE_UNIT_NAME = "hibernate.ejb.persistenceUnitName";
 }

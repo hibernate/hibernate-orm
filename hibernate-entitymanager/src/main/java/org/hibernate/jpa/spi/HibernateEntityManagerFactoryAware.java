@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2012, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,20 +21,20 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.graph.spi;
-
-import javax.persistence.AttributeNode;
-import javax.persistence.metamodel.Attribute;
+package org.hibernate.jpa.spi;
 
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 
 /**
- * @author Steve Ebersole
+ * Internal contact for things that have {@link HibernateEntityManagerFactory} access.
+ *
+ * @author Strong Liu <stliu@hibernate.org>
  */
-public interface AttributeNodeImplementor<T> extends AttributeNode<T> {
-	public HibernateEntityManagerFactory entityManagerFactory();
-
-	public Attribute<?,T> getAttribute();
-
-	public AttributeNodeImplementor<T> makeImmutableCopy();
+public interface HibernateEntityManagerFactoryAware {
+	/**
+	 * Get access to the Hibernate extended EMF contract.
+	 *
+	 * @return The Hibernate EMF contract for this EM.
+	 */
+	HibernateEntityManagerFactory getFactory();
 }

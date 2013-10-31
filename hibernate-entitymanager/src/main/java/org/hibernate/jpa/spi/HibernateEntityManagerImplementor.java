@@ -44,13 +44,8 @@ import org.hibernate.type.Type;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public interface HibernateEntityManagerImplementor extends HibernateEntityManager {
-	/**
-	 * Get access to the Hibernate extended EMF contract.
-	 *
-	 * @return The Hibernate EMF contract for this EM.
-	 */
-	public HibernateEntityManagerFactory getFactory();
+public interface HibernateEntityManagerImplementor extends HibernateEntityManager, HibernateEntityManagerFactoryAware {
+
 
 	/**
 	 * Used to ensure the EntityManager is open, throwing IllegalStateException if it is closed.

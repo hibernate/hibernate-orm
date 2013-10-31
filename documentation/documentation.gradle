@@ -53,10 +53,6 @@ jdocbook {
 	manual {
 		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
 	}
-
-  metamodelgen {
-    masterSourceDocumentName = 'master.xml'
-  }
 }
 
 // todo : make this part of gradle-jdocbook.
@@ -72,17 +68,7 @@ stageStyles_devguide.doLast {
 	}
 }
 
-stageStyles_metamodelgen.doLast {
-  logger.lifecycle( "Staging metamodelgen-specific style resources")
-  copy {
-    from project.file( 'src/main/docbook/metamodelgen/en-US/images' )
-    into project.file( "${buildDir}/docbook/stage/metamodelgen/images" )
-    include '*.png'
-    includeEmptyDirs = false
-  }
-}
-
-[ 'devguide', 'manual', 'quickstart', 'metamodelgen' ].each { bookName ->
+[ 'devguide', 'manual', 'quickstart' ].each { bookName ->
 	tasks[ "stageStyles_$bookName" ].doLast {
 		logger.lifecycle( "Staging local style resources")
 		copy {
@@ -127,19 +113,17 @@ File[] dirList(File dir) {
 
 
 // asciidoctor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//  - aggregator
-task asciidoctor(type: Task, group: 'Documentation')
-
-
-// - ServiceRegistry guide
-task generateRegistryGuide(type: Task, group: 'Documentation')
-asciidoctor.dependsOn generateRegistryGuide
-
 task generateRegistryGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
     description = 'Generates the ServiceRegistry topical guide in HTML format.'
     backend = 'html5'
     sourceDir = file( 'src/main/asciidoc/topical/registries' )
-//    sourceDocumentName = 'ServiceRegistries.adoc'
+    outputDir = new File("$buildDir/asciidoc/topical/html")
+}
+
+task generateMetamodelgenGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
+    description = 'Generates the Metamodel Generator topical guide in HTML format.'
+    backend = 'html5'
+    sourceDir = file( 'src/main/asciidoc/topical/metamodelgen' )
     outputDir = new File("$buildDir/asciidoc/topical/html")
 }
 
@@ -153,3 +137,7 @@ tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
             ]
     ]
 }
+
+//  - aggregator
+task asciidoctor(type: Task, group: 'Documentation')
+asciidoctor.dependsOn generateRegistryGuideHtml, generateMetamodelgenGuideHtml

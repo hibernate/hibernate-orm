@@ -3,9 +3,6 @@
 :version: CURRENT-VERSION
 :toc:
  
-[[introduction]]
-
-
 [[whatisit]]
 == What is it about?
 

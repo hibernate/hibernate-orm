@@ -23,7 +23,7 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.Session;
 
 /**
  * Defines a generator for in-VM generation of (non-identifier) attribute values.
@@ -39,5 +39,5 @@ public interface ValueGenerator<T> {
 	 *
 	 * @return The generated value
 	 */
-	public T generateValue(SessionImplementor session, Object owner);
+	public T generateValue(Session session, Object owner);
 }

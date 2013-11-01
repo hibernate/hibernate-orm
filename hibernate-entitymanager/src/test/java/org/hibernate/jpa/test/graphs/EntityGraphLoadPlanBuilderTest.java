@@ -26,6 +26,7 @@ package org.hibernate.jpa.test.graphs;
 
 import java.util.Iterator;
 import java.util.Set;
+import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -66,7 +67,15 @@ import org.hibernate.persister.entity.EntityPersister;
 public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Cat.class, Person.class, Country.class };
+		return new Class[] { Cat.class, Person.class, Country.class, Dog.class, ExpressCompany.class };
+	}
+
+	@Entity
+	public static class Dog {
+		@Id
+		String name;
+		@ElementCollection
+		Set<String> favorites;
 	}
 
 	@Entity
@@ -92,7 +101,14 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 	public static class Address {
 		@ManyToOne
 		Country country;
+	}
 
+	@Entity
+	public static class ExpressCompany {
+		@Id
+		String name;
+		@ElementCollection
+		Set<Address> shipAddresses;
 	}
 
 	@Entity
@@ -100,33 +116,34 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		@Id
 		String name;
 	}
+
 	/**
 	 * EntityGraph(1):
 	 *
-	 * 	Cat
+	 * Cat
 	 *
 	 * LoadPlan:
 	 *
-	 *  Cat
+	 * Cat
 	 *
 	 * ---------------------
 	 *
 	 * EntityGraph(2):
 	 *
-	 *  Cat
-	 *    owner -- Person
+	 * Cat
+	 * owner -- Person
 	 *
 	 * LoadPlan:
 	 *
-	 *   Cat
-	 *     owner -- Person
-	 *                address --- Address
+	 * Cat
+	 * owner -- Person
+	 * address --- Address
 	 */
 	@Test
 	public void testBasicFetchLoadPlanBuilding() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph eg = em.createEntityGraph( Cat.class );
-		LoadPlan plan = buildLoadPlan( eg, Mode.FETCH );
+		LoadPlan plan = buildLoadPlan( eg, Mode.FETCH, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		QuerySpace rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		assertFalse(
@@ -136,7 +153,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		// -------------------------------------------------- another a little more complicated case
 		eg = em.createEntityGraph( Cat.class );
 		eg.addSubgraph( "owner", Person.class );
-		plan = buildLoadPlan( eg, Mode.FETCH );
+		plan = buildLoadPlan( eg, Mode.FETCH, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		Iterator<Join> iterator = rootQuerySpace.getJoins().iterator();
@@ -167,31 +184,31 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 	/**
 	 * EntityGraph(1):
 	 *
-	 * 	Cat
+	 * Cat
 	 *
 	 * LoadPlan:
 	 *
-	 *  Cat
+	 * Cat
 	 *
 	 * ---------------------
 	 *
 	 * EntityGraph(2):
 	 *
-	 *  Cat
-	 *    owner -- Person
+	 * Cat
+	 * owner -- Person
 	 *
 	 * LoadPlan:
 	 *
-	 *   Cat
-	 *     owner -- Person
-	 *                address --- Address
-	 *                                country -- Country
+	 * Cat
+	 * owner -- Person
+	 * address --- Address
+	 * country -- Country
 	 */
 	@Test
 	public void testBasicLoadLoadPlanBuilding() {
 		EntityManager em = getOrCreateEntityManager();
 		EntityGraph eg = em.createEntityGraph( Cat.class );
-		LoadPlan plan = buildLoadPlan( eg, Mode.LOAD );
+		LoadPlan plan = buildLoadPlan( eg, Mode.LOAD, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		QuerySpace rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		assertFalse(
@@ -201,7 +218,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		// -------------------------------------------------- another a little more complicated case
 		eg = em.createEntityGraph( Cat.class );
 		eg.addSubgraph( "owner", Person.class );
-		plan = buildLoadPlan( eg, Mode.LOAD );
+		plan = buildLoadPlan( eg, Mode.LOAD, Cat.class );
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sfi() ) );
 		rootQuerySpace = plan.getQuerySpaces().getRootQuerySpaces().get( 0 );
 		Iterator<Join> iterator = rootQuerySpace.getJoins().iterator();
@@ -234,11 +251,91 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		em.close();
 	}
 
+
+	@Test
+	public void testBasicElementCollections() {
+		EntityManager em = getOrCreateEntityManager();
+		EntityGraph eg = em.createEntityGraph( Dog.class );
+		eg.addAttributeNodes( "favorites" );
+		LoadPlan loadLoadPlan = buildLoadPlan( eg, Mode.LOAD, Dog.class ); //WTF name!!!
+		LoadPlanTreePrinter.INSTANCE.logTree( loadLoadPlan, new AliasResolutionContextImpl( sfi() ) );
+		QuerySpace querySpace = loadLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
+		Iterator<Join> iterator = querySpace.getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		Join collectionJoin = iterator.next();
+		assertEquals( QuerySpace.Disposition.COLLECTION, collectionJoin.getRightHandSide().getDisposition() );
+		assertFalse( iterator.hasNext() );
+		//----------------------------------------------------------------
+		LoadPlan fetchLoadPlan = buildLoadPlan( eg, Mode.FETCH, Dog.class );
+		LoadPlanTreePrinter.INSTANCE.logTree( fetchLoadPlan, new AliasResolutionContextImpl( sfi() ) );
+		querySpace = fetchLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
+		iterator = querySpace.getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		collectionJoin = iterator.next();
+		assertEquals( QuerySpace.Disposition.COLLECTION, collectionJoin.getRightHandSide().getDisposition() );
+		assertFalse( iterator.hasNext() );
+		em.close();
+	}
+
+
+	@Test
+	public void testEmbeddedCollection() {
+		EntityManager em = getOrCreateEntityManager();
+		EntityGraph eg = em.createEntityGraph( ExpressCompany.class );
+		eg.addAttributeNodes( "shipAddresses" );
+
+		LoadPlan loadLoadPlan = buildLoadPlan( eg, Mode.LOAD, ExpressCompany.class ); //WTF name!!!
+		LoadPlanTreePrinter.INSTANCE.logTree( loadLoadPlan, new AliasResolutionContextImpl( sfi() ) );
+
+		QuerySpace querySpace = loadLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
+		Iterator<Join> iterator = querySpace.getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		Join collectionJoin = iterator.next();
+		assertEquals( QuerySpace.Disposition.COLLECTION, collectionJoin.getRightHandSide().getDisposition() );
+		assertFalse( iterator.hasNext() );
+
+		iterator = collectionJoin.getRightHandSide().getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		Join collectionElementJoin = iterator.next();
+		assertFalse( iterator.hasNext() );
+		assertEquals( QuerySpace.Disposition.COMPOSITE, collectionElementJoin.getRightHandSide().getDisposition() );
+
+		iterator = collectionElementJoin.getRightHandSide().getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		Join countryJoin = iterator.next();
+		assertFalse( iterator.hasNext() );
+		assertEquals( QuerySpace.Disposition.ENTITY, countryJoin.getRightHandSide().getDisposition() );
+
+		//----------------------------------------------------------------
+		LoadPlan fetchLoadPlan = buildLoadPlan( eg, Mode.FETCH, ExpressCompany.class );
+		LoadPlanTreePrinter.INSTANCE.logTree( fetchLoadPlan, new AliasResolutionContextImpl( sfi() ) );
+
+
+		querySpace = fetchLoadPlan.getQuerySpaces().getRootQuerySpaces().iterator().next();
+		iterator = querySpace.getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		collectionJoin = iterator.next();
+		assertEquals( QuerySpace.Disposition.COLLECTION, collectionJoin.getRightHandSide().getDisposition() );
+		assertFalse( iterator.hasNext() );
+
+		iterator = collectionJoin.getRightHandSide().getJoins().iterator();
+		assertTrue( iterator.hasNext() );
+		collectionElementJoin = iterator.next();
+		assertFalse( iterator.hasNext() );
+		assertEquals( QuerySpace.Disposition.COMPOSITE, collectionElementJoin.getRightHandSide().getDisposition() );
+
+		iterator = collectionElementJoin.getRightHandSide().getJoins().iterator();
+		assertFalse( iterator.hasNext() );
+		//----------------------------------------------------------------
+		em.close();
+	}
+
+
 	private SessionFactoryImplementor sfi() {
 		return entityManagerFactory().unwrap( SessionFactoryImplementor.class );
 	}
 
-	private LoadPlan buildLoadPlan(EntityGraph entityGraph, Mode mode) {
+	private LoadPlan buildLoadPlan(EntityGraph entityGraph, Mode mode, Class clazz) {
 
 		LoadQueryInfluencers loadQueryInfluencers = new LoadQueryInfluencers( sfi() );
 		if ( Mode.FETCH == mode ) {
@@ -247,7 +344,7 @@ public class EntityGraphLoadPlanBuilderTest extends BaseEntityManagerFunctionalT
 		else {
 			loadQueryInfluencers.setLoadGraph( entityGraph );
 		}
-		EntityPersister ep = (EntityPersister) sfi().getClassMetadata( Cat.class );
+		EntityPersister ep = (EntityPersister) sfi().getClassMetadata( clazz );
 		AbstractLoadPlanBuildingAssociationVisitationStrategy strategy = Mode.FETCH == mode ? new FetchGraphLoadPlanBuildingStrategy(
 				sfi(), loadQueryInfluencers, LockMode.NONE
 		) : new LoadGraphLoadPlanBuildingStrategy( sfi(), loadQueryInfluencers, LockMode.NONE );

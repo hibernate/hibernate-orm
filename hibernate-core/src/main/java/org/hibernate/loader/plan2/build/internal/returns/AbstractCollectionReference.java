@@ -29,7 +29,6 @@ import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
-import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -71,16 +70,14 @@ public abstract class AbstractCollectionReference implements CollectionReference
 					);
 
 					final Join join = collectionQuerySpace.addIndexEntityJoin(
-							indexPersister,
-							loadPlanBuildingContext
+							indexPersister
 					);
 					return new CollectionFetchableIndexEntityGraph( this, join );
 				}
 			}
 			else if ( type.isComponentType() ) {
 				final Join join = collectionQuerySpace.addIndexCompositeJoin(
-						(CompositeType) type,
-						loadPlanBuildingContext
+						(CompositeType) type
 				);
 				return new CollectionFetchableIndexCompositeGraph( this, join );
 			}
@@ -100,14 +97,13 @@ public abstract class AbstractCollectionReference implements CollectionReference
 						( (EntityType) type ).getAssociatedEntityName()
 				);
 
-				final Join join = collectionQuerySpace.addElementEntityJoin( elementPersister, loadPlanBuildingContext );
+				final Join join = collectionQuerySpace.addElementEntityJoin( elementPersister );
 				return new CollectionFetchableElementEntityGraph( this, join );
 			}
 		}
 		else if ( type.isComponentType() ) {
 			final Join join = collectionQuerySpace.addElementCompositeJoin(
-					(CompositeType) type,
-					loadPlanBuildingContext
+					(CompositeType) type
 			);
 			return new CollectionFetchableElementCompositeGraph( this, join );
 		}

@@ -25,10 +25,11 @@ package org.hibernate.loader.plan2.build.spi;
 
 import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 import org.hibernate.loader.plan2.spi.Join;
+import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 
 /**
  * @author Steve Ebersole
  */
 public interface ExpandingEntityQuerySpace extends EntityQuerySpace, ExpandingQuerySpace {
-	public Join makeCompositeIdentifierJoin();
+	public JoinDefinedByMetadata makeCompositeIdentifierJoin();
 }

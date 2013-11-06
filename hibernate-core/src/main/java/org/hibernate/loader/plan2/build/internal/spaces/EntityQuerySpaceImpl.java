@@ -27,14 +27,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan2.build.spi.AbstractQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.spi.Join;
+import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
@@ -73,7 +72,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 	}
 
 	@Override
-	public JoinImpl addCompositeJoin(CompositionDefinition compositionDefinition, String querySpaceUid) {
+	public JoinDefinedByMetadata addCompositeJoin(CompositionDefinition compositionDefinition, String querySpaceUid) {
 		final boolean required = canJoinsBeRequired() && !compositionDefinition.isNullable();
 
 		final CompositeQuerySpaceImpl rhs = new CompositeQuerySpaceImpl(
@@ -89,20 +88,19 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
 
-		final JoinImpl join = new JoinImpl(
+		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCompositeJoin(
 				this,
 				compositionDefinition.getName(),
 				rhs,
-				( (PropertyMapping) persister ).toColumns( compositionDefinition.getName() ),
-				compositionDefinition.getType(),
-				required
+				required,
+				compositionDefinition.getType()
 		);
 		internalGetJoins().add( join );
 
 		return join;
 	}
 
-	public JoinImpl addEntityJoin(
+	public JoinDefinedByMetadata addEntityJoin(
 			AttributeDefinition attribute,
 			EntityPersister persister,
 			String querySpaceUid,
@@ -120,24 +118,22 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
 
-		final JoinImpl join = new JoinImpl(
+		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createEntityJoin(
 				this,
 				attribute.getName(),
 				rhs,
-				Helper.INSTANCE.determineRhsColumnNames(
-						(EntityType) attribute.getType(),
-						sessionFactory()
-				),
-				attribute.getType(),
-				required
+				required,
+				(EntityType) attribute.getType(),
+				sessionFactory()
 		);
+
 		internalGetJoins().add( join );
 
 		return join;
 	}
 
 	@Override
-	public JoinImpl addCollectionJoin(
+	public JoinDefinedByMetadata addCollectionJoin(
 			AttributeDefinition attributeDefinition,
 			CollectionPersister collectionPersister,
 			String querySpaceUid) {
@@ -151,14 +147,13 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 				sessionFactory()
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
-
-		final JoinImpl join = new JoinImpl(
+		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCollectionJoin(
 				this,
 				attributeDefinition.getName(),
 				rhs,
-				( (CollectionType) attributeDefinition.getType() ).getAssociatedJoinable( sessionFactory() ).getKeyColumnNames(),
-				attributeDefinition.getType(),
-				required
+				required,
+				(CollectionType) attributeDefinition.getType(),
+				sessionFactory()
 		);
 		internalGetJoins().add( join );
 
@@ -166,7 +161,7 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 	}
 
 	@Override
-	public Join makeCompositeIdentifierJoin() {
+	public JoinDefinedByMetadata makeCompositeIdentifierJoin() {
 		final String compositeQuerySpaceUid = getUid() + "-id";
 		final CompositeQuerySpaceImpl rhs = new CompositeQuerySpaceImpl(
 				this,
@@ -180,13 +175,12 @@ public class EntityQuerySpaceImpl extends AbstractQuerySpace implements Expandin
 		);
 		getQuerySpaces().registerQuerySpace( rhs );
 
-		final JoinImpl join = new JoinImpl(
+		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCompositeJoin(
 				this,
 				EntityPersister.ENTITY_ID,
 				rhs,
-				( (Loadable) persister ).getIdentifierColumnNames(),
-				null,
-				canJoinsBeRequired()
+				canJoinsBeRequired(),
+				(CompositeType) persister.getIdentifierType()
 		);
 		internalGetJoins().add( join );
 

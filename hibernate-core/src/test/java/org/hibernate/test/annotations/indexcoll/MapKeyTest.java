@@ -42,6 +42,7 @@ public class MapKeyTest extends BaseCoreFunctionalTestCase {
 		Generation c = new Generation();
 		c.setAge( "a" );
 		c.setCulture( "b" );
+		c.setSubGeneration( new Generation.SubGeneration( "description" ) );
 		GenerationGroup r = new GenerationGroup();
 		r.setGeneration( c );
 		s.persist( r );
@@ -52,7 +53,9 @@ public class MapKeyTest extends BaseCoreFunctionalTestCase {
 		s.clear();
 
 		m = (GenerationUser) s.get( GenerationUser.class, m.getId() );
-		assertEquals( "a", m.getRef().keySet().iterator().next().getAge() );
+		Generation cRead =  m.getRef().keySet().iterator().next();
+		assertEquals( "a",cRead.getAge() );
+		assertEquals( "description", cRead.getSubGeneration().getDescription() );
 		tx.rollback();
 		s.close();
 	}

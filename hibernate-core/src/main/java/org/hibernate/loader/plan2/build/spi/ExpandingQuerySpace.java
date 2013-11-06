@@ -35,7 +35,9 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
  */
 public interface ExpandingQuerySpace extends QuerySpace {
 
-	public JoinDefinedByMetadata addCompositeJoin(CompositionDefinition compositionDefinition, String querySpaceUid);
+	public JoinDefinedByMetadata addCompositeJoin(
+			CompositionDefinition compositionDefinition,
+			String querySpaceUid);
 
 	public JoinDefinedByMetadata addEntityJoin(
 			AttributeDefinition attributeDefinition,

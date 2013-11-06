@@ -33,7 +33,6 @@ import javax.persistence.Lob;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
@@ -333,50 +332,22 @@ public class PropertyBinder {
 	}
 
 	private ValueGeneration determineValueGenerationStrategy(XProperty property) {
-		ValueGeneration annotationValueGeneration = getValueGenerationFromAnnotations( property );
-		ValueGeneration legacyValueGeneration = getLegacyValueGeneration( property );
+		ValueGeneration valueGeneration = getValueGenerationFromAnnotations( property );
 
-		if ( annotationValueGeneration == null && legacyValueGeneration == null ) {
+		if ( valueGeneration == null ) {
 			return NoValueGeneration.INSTANCE;
 		}
-		else if ( annotationValueGeneration != null && legacyValueGeneration != null ) {
-			throw new AnnotationException(
-					"@Generated and a generator annotation must not be specified at the same time:" + StringHelper.qualify(
-							holder.getPath(),
-							name
-					)
-			);
-		}
 
-		final GenerationTiming when = annotationValueGeneration != null ?
-				annotationValueGeneration.getGenerationTiming() :
-				legacyValueGeneration.getGenerationTiming();
+		final GenerationTiming when = valueGeneration.getGenerationTiming();
 
-		if ( property.isAnnotationPresent( javax.persistence.Version.class ) && when == GenerationTiming.INSERT ) {
-			throw new AnnotationException(
-					"@Generated(INSERT) on a @Version property not allowed, use ALWAYS (or NEVER): "
-							+ StringHelper.qualify( holder.getPath(), name )
-			);
-		}
-
-		if ( legacyValueGeneration != null ) {
+		if ( valueGeneration.getValueGenerator() == null ) {
 			insertable = false;
 			if ( when == GenerationTiming.ALWAYS ) {
 				updatable = false;
 			}
 		}
 
-		return annotationValueGeneration != null ? annotationValueGeneration : legacyValueGeneration;
-	}
-
-	private ValueGeneration getLegacyValueGeneration(XProperty property) {
-		Generated generatedAnnotation = property.getAnnotation( Generated.class );
-
-		if ( generatedAnnotation != null && generatedAnnotation.value() != null && generatedAnnotation.value() != GenerationTime.NEVER ) {
-			return new LegacyValueGeneration( generatedAnnotation.value().getEquivalent() );
-		}
-
-		return null;
+		return valueGeneration;
 	}
 
 	/**
@@ -421,9 +392,21 @@ public class PropertyBinder {
 		}
 
 		Class<? extends AnnotationValueGeneration<?>> generationType = generatorAnnotation.generatedBy();
-		return instantiateAndInitializeValueGeneration(
+		AnnotationValueGeneration<A> valueGeneration = instantiateAndInitializeValueGeneration(
 				annotation, generationType, property
 		);
+
+		if ( annotation.annotationType() == Generated.class &&
+				property.isAnnotationPresent( javax.persistence.Version.class ) &&
+				valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
+
+			throw new AnnotationException(
+					"@Generated(INSERT) on a @Version property not allowed, use ALWAYS (or NEVER): "
+							+ StringHelper.qualify( holder.getPath(), name )
+			);
+		}
+
+		return valueGeneration;
 	}
 
 	/**
@@ -470,7 +453,7 @@ public class PropertyBinder {
 		}
 
 		@Override
-		public ValueGenerator getValueGenerator() {
+		public ValueGenerator<?> getValueGenerator() {
 			return null;
 		}
 
@@ -483,40 +466,6 @@ public class PropertyBinder {
 		public String getDatabaseGeneratedReferencedColumnValue() {
 			return null;
 		}
-	}
-
-	private static class LegacyValueGeneration implements ValueGeneration {
-		private final GenerationTiming timing;
-
-		private LegacyValueGeneration(GenerationTiming timing) {
-			this.timing = timing;
-		}
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
-		}
-
-		@Override
-		public ValueGenerator getValueGenerator() {
-			// database generated values do not have a value generator
-			return null;
-		}
-
-		@Override
-		public boolean referenceColumnInSql() {
-			// historically these columns are not referenced in the SQL
-			return false;
-		}
-
-		@Override
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return null;
-		}
-	}
-
-	private boolean isCollection(Value value) {
-		return Collection.class.isInstance( value );
 	}
 
 	private boolean isToOneValue(Value value) {

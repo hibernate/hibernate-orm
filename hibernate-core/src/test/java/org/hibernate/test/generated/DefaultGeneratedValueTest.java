@@ -23,27 +23,30 @@
  */
 package org.hibernate.test.generated;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.Date;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
-import org.hibernate.tuple.ValueGenerator;
-
-import org.junit.Test;
-
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import org.hibernate.tuple.ValueGenerator;
+import org.junit.Test;
 
 /**
  * Test for the generation of column values using different
@@ -61,9 +64,18 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		TheEntity theEntity = new TheEntity( 1 );
 		assertNull( theEntity.createdDate );
+		assertNull( theEntity.vmCreatedDate );
+		assertNull( theEntity.vmCreatedSqlDate );
+		assertNull( theEntity.vmCreatedSqlTime );
+		assertNull( theEntity.vmCreatedSqlTimestamp );
 		assertNull( theEntity.name );
 		s.save( theEntity );
+		//TODO: Actually the values should be non-null after save
 		assertNull( theEntity.createdDate );
+		assertNull( theEntity.vmCreatedDate );
+		assertNull( theEntity.vmCreatedSqlDate );
+		assertNull( theEntity.vmCreatedSqlTime );
+		assertNull( theEntity.vmCreatedSqlTimestamp );
 		assertNull( theEntity.name );
 		s.getTransaction().commit();
 		s.close();
@@ -75,7 +87,12 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		theEntity = (TheEntity) session.get( TheEntity.class, 1 );
 		assertNotNull( theEntity.createdDate );
+		assertNotNull( theEntity.vmCreatedDate );
+		assertNotNull( theEntity.vmCreatedSqlDate );
+		assertNotNull( theEntity.vmCreatedSqlTime );
+		assertNotNull( theEntity.vmCreatedSqlTimestamp );
 		assertEquals( "Bob", theEntity.name );
+
 		s.delete( theEntity );
 		s.getTransaction().commit();
 		s.close();
@@ -96,6 +113,22 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Date createdDate;
+
+		@CreationTimestamp
+		private Date vmCreatedDate;
+
+		@CreationTimestamp
+		private Calendar vmCreatedCalendar;
+
+		@CreationTimestamp
+		private java.sql.Date vmCreatedSqlDate;
+
+		@CreationTimestamp
+		private Time vmCreatedSqlTime;
+
+		@CreationTimestamp
+		private Timestamp vmCreatedSqlTimestamp;
+
 
 		@GeneratorType( type = MyVmValueGenerator.class, when = GenerationTime.INSERT )
 		private String name;

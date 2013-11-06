@@ -744,7 +744,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public Object getLoadedCollectionOwnerOrNull(PersistentCollection collection) {
 		final CollectionEntry ce = getCollectionEntry( collection );
-		if ( ce.getLoadedPersister() == null ) {
+		if ( ce == null || ce.getLoadedPersister() == null ) {
 			return null;
 		}
 
@@ -910,7 +910,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public Serializable getSnapshot(PersistentCollection coll) {
-		return getCollectionEntry( coll ).getSnapshot();
+		final CollectionEntry ce = getCollectionEntry( coll );
+		return ce == null ? null : ce.getSnapshot();
 	}
 
 	@Override

@@ -208,7 +208,7 @@ public class JoinSequence {
 				condition = on;
 			}
 
-			if ( withClauseFragment != null ) {
+			if ( withClauseFragment != null && !isManyToManyRoot( join.joinable )) {
 				condition += " and " + withClauseFragment;
 			}
 

@@ -21,25 +21,23 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.envers.internal.entities;
+package org.hibernate.envers.test.integration.basic;
 
-import org.hibernate.envers.RevisionType;
-import org.hibernate.metamodel.spi.TypeContributions;
-import org.hibernate.metamodel.spi.TypeContributor;
-import org.hibernate.service.ServiceRegistry;
+import java.util.Map;
+
+import org.hibernate.cfg.Environment;
+import org.hibernate.hql.internal.classic.ClassicQueryTranslatorFactory;
+
+import org.hibernate.testing.TestForIssue;
 
 /**
- * Envers specific TypeContributor
- *
- * @author Brett Meyer
+ * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class TypeContributorImpl implements TypeContributor {
+@TestForIssue(jiraKey = "HHH-8497")
+public class ClassicQueryTranslatorFactoryTest extends Simple {
 	@Override
-	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType(
-				new RevisionTypeType(),
-				new String[] { RevisionType.class.getName() }
-		);
+	protected void addConfigOptions(Map options) {
+		super.addConfigOptions( options );
+		options.put( Environment.QUERY_TRANSLATOR, ClassicQueryTranslatorFactory.class.getName() );
 	}
-
 }

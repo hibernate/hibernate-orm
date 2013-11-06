@@ -34,7 +34,6 @@ import org.dom4j.Attribute;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.jboss.logging.Logger;
-
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -96,6 +95,7 @@ import org.hibernate.mapping.TypeDef;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
+import org.hibernate.tuple.GeneratedValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
@@ -1307,7 +1307,7 @@ public final class HbmBinder {
 		if ( generationTiming == GenerationTiming.ALWAYS || generationTiming == GenerationTiming.INSERT ) {
 			// we had generation specified...
 			//   	HBM only supports "database generated values"
-			property.setValueGenerationStrategy( new HbmDefinedValueGeneration( generationTiming ) );
+			property.setValueGenerationStrategy( new GeneratedValueGeneration( generationTiming ) );
 
 			// generated properties can *never* be insertable...
 			if ( property.isInsertable() ) {
@@ -1368,37 +1368,6 @@ public final class HbmBinder {
 
 		property.setMetaAttributes( getMetas( node, inheritedMetas ) );
 
-	}
-
-	private static class HbmDefinedValueGeneration implements ValueGeneration {
-		private final GenerationTiming timing;
-
-		private HbmDefinedValueGeneration(GenerationTiming timing) {
-			this.timing = timing;
-		}
-
-		@Override
-		public GenerationTiming getGenerationTiming() {
-			return timing;
-		}
-
-		@Override
-		public ValueGenerator getValueGenerator() {
-			// database generated values do not have a value generator
-			return null;
-		}
-
-		@Override
-		public boolean referenceColumnInSql() {
-			// historically these columns are not referenced in the SQL
-			return false;
-		}
-
-		@Override
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			// the column is not referenced in the sql.
-			return null;
-		}
 	}
 
 	private static String columns(Value val) {

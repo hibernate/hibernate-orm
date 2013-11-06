@@ -20,6 +20,7 @@
  */
 package org.hibernate.envers.entities;
 
+import org.hibernate.envers.RevisionType;
 import org.hibernate.metamodel.spi.TypeContributions;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
@@ -32,7 +33,7 @@ public class TypeContributorImpl implements TypeContributor {
 	@Override
 	public void contribute(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		typeContributions.contributeType( new RevisionTypeType(),
-				new String[] { RevisionTypeType.class.getName() } );
+				new String[] { RevisionType.class.getName() } );
 	}
 
 }

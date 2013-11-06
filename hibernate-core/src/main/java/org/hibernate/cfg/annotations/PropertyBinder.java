@@ -23,6 +23,7 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import javax.persistence.EmbeddedId;
@@ -30,11 +31,13 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.HibernateException;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -56,10 +59,10 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -278,7 +281,7 @@ public class PropertyBinder {
 		if ( property != null ) {
 			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
 		}
-		
+
 		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;
 		if ( naturalId != null ) {
 			if ( ! entityBinder.isRootEntity() ) {
@@ -289,11 +292,11 @@ public class PropertyBinder {
 			}
 			prop.setNaturalIdentifier( true );
 		}
-		
+
 		// HHH-4635 -- needed for dialect-specific property ordering
 		Lob lob = property != null ? property.getAnnotation( Lob.class ) : null;
 		prop.setLob( lob != null );
-		
+
 		prop.setInsertable( insertable );
 		prop.setUpdateable( updatable );
 
@@ -330,15 +333,24 @@ public class PropertyBinder {
 	}
 
 	private ValueGeneration determineValueGenerationStrategy(XProperty property) {
-		// for now, we just handle the legacy '@Generated' annotation
-		Generated generatedAnnotation = property.getAnnotation( Generated.class );
-		if ( generatedAnnotation == null
-				|| generatedAnnotation.value() == null
-				|| generatedAnnotation.value() == GenerationTime.NEVER ) {
+		ValueGeneration annotationValueGeneration = getValueGenerationFromAnnotations( property );
+		ValueGeneration legacyValueGeneration = getLegacyValueGeneration( property );
+
+		if ( annotationValueGeneration == null && legacyValueGeneration == null ) {
 			return NoValueGeneration.INSTANCE;
 		}
+		else if ( annotationValueGeneration != null && legacyValueGeneration != null ) {
+			throw new AnnotationException(
+					"@Generated and a generator annotation must not be specified at the same time:" + StringHelper.qualify(
+							holder.getPath(),
+							name
+					)
+			);
+		}
 
-		final GenerationTiming when = generatedAnnotation.value().getEquivalent();
+		final GenerationTiming when = annotationValueGeneration != null ?
+				annotationValueGeneration.getGenerationTiming() :
+				legacyValueGeneration.getGenerationTiming();
 
 		if ( property.isAnnotationPresent( javax.persistence.Version.class ) && when == GenerationTiming.INSERT ) {
 			throw new AnnotationException(
@@ -347,12 +359,103 @@ public class PropertyBinder {
 			);
 		}
 
-		insertable = false;
-		if ( when == GenerationTiming.ALWAYS ) {
-			updatable = false;
+		if ( legacyValueGeneration != null ) {
+			insertable = false;
+			if ( when == GenerationTiming.ALWAYS ) {
+				updatable = false;
+			}
 		}
 
-		return new LegacyValueGeneration( when );
+		return annotationValueGeneration != null ? annotationValueGeneration : legacyValueGeneration;
+	}
+
+	private ValueGeneration getLegacyValueGeneration(XProperty property) {
+		Generated generatedAnnotation = property.getAnnotation( Generated.class );
+
+		if ( generatedAnnotation != null && generatedAnnotation.value() != null && generatedAnnotation.value() != GenerationTime.NEVER ) {
+			return new LegacyValueGeneration( generatedAnnotation.value().getEquivalent() );
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the value generation strategy for the given property, if any.
+	 */
+	private ValueGeneration getValueGenerationFromAnnotations(XProperty property) {
+		AnnotationValueGeneration<?> valueGeneration = null;
+
+		for ( Annotation annotation : property.getAnnotations() ) {
+			AnnotationValueGeneration<?> candidate = getValueGenerationFromAnnotation( property, annotation );
+
+			if ( candidate != null ) {
+				if ( valueGeneration != null ) {
+					throw new AnnotationException(
+							"Only one generator annotation is allowed:" + StringHelper.qualify(
+									holder.getPath(),
+									name
+							)
+					);
+				}
+				else {
+					valueGeneration = candidate;
+				}
+			}
+		}
+
+		return valueGeneration;
+	}
+
+	/**
+	 * In case the given annotation is a value generator annotation, the corresponding value generation strategy to be
+	 * applied to the given property is returned, {@code null} otherwise.
+	 */
+	private <A extends Annotation> AnnotationValueGeneration<A> getValueGenerationFromAnnotation(
+			XProperty property,
+			A annotation) {
+		ValueGenerationType generatorAnnotation = annotation.annotationType()
+				.getAnnotation( ValueGenerationType.class );
+
+		if ( generatorAnnotation == null ) {
+			return null;
+		}
+
+		Class<? extends AnnotationValueGeneration<?>> generationType = generatorAnnotation.generatedBy();
+		return instantiateAndInitializeValueGeneration(
+				annotation, generationType, property
+		);
+	}
+
+	/**
+	 * Instantiates the given generator annotation type, initializing it with the given instance of the corresponding
+	 * generator annotation and the property's type.
+	 */
+	private <A extends Annotation> AnnotationValueGeneration<A> instantiateAndInitializeValueGeneration(
+			A annotation,
+			Class<? extends AnnotationValueGeneration<?>> generationType,
+			XProperty property) {
+
+		try {
+			// This will cause a CCE in case the generation type doesn't match the annotation type; As this would be a
+			// programming error of the generation type developer and thus should show up during testing, we don't
+			// check this explicitly; If required, this could be done e.g. using ClassMate
+			@SuppressWarnings( "unchecked" )
+			AnnotationValueGeneration<A> valueGeneration = (AnnotationValueGeneration<A>) generationType.newInstance();
+			valueGeneration.initialize( annotation, mappings.getReflectionManager().toClass(property.getType() ) );
+
+			return valueGeneration;
+		}
+		catch (HibernateException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new AnnotationException(
+					"Exception occurred during processing of generator annotation:" + StringHelper.qualify(
+							holder.getPath(),
+							name
+					), e
+			);
+		}
 	}
 
 	private static class NoValueGeneration implements ValueGeneration {

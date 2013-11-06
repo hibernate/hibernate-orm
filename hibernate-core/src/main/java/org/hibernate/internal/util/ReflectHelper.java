@@ -296,13 +296,13 @@ public final class ReflectHelper {
 	 * @return The default constructor.
 	 * @throws PropertyNotFoundException Indicates there was not publicly accessible, no-arg constructor (todo : why PropertyNotFoundException???)
 	 */
-	public static Constructor getDefaultConstructor(Class clazz) throws PropertyNotFoundException {
+	public static <T> Constructor<T> getDefaultConstructor(Class<T> clazz) throws PropertyNotFoundException {
 		if ( isAbstractClass( clazz ) ) {
 			return null;
 		}
 
 		try {
-			Constructor constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
+			Constructor<T> constructor = clazz.getDeclaredConstructor( NO_PARAM_SIGNATURE );
 			if ( !isPublic( clazz, constructor ) ) {
 				constructor.setAccessible( true );
 			}

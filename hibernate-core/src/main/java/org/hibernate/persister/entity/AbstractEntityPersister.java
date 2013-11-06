@@ -81,6 +81,7 @@ import org.hibernate.engine.spi.PersistenceContext.NaturalIdHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -4853,7 +4854,7 @@ public abstract class AbstractEntityPersister
 					for ( NonIdentifierAttribute attribute : entityMetamodel.getProperties() ) {
 						propertyIndex++;
 						final ValueGeneration valueGeneration = attribute.getValueGenerationStrategy();
-						if ( valueGeneration != null && valueGeneration.getGenerationTiming() == matchTiming ) {
+						if ( isReadRequired( valueGeneration, matchTiming ) ) {
 							final Object hydratedState = attribute.getType().hydrate(
 									rs, getPropertyAliases(
 									"",
@@ -4890,6 +4891,22 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
+	}
+
+	/**
+	 * Whether the given value generation strategy requires to read the value from the database or not.
+	 */
+	private boolean isReadRequired(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
+		return valueGeneration != null &&
+				valueGeneration.getValueGenerator() == null &&
+				timingsMatch( valueGeneration, matchTiming );
+	}
+
+	private boolean timingsMatch(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
+		return
+				(matchTiming == GenerationTiming.INSERT && valueGeneration.getGenerationTiming().includesInsert()) ||
+						(matchTiming == GenerationTiming.ALWAYS && valueGeneration.getGenerationTiming()
+								.includesUpdate());
 	}
 
 	public String getIdentifierPropertyName() {

@@ -29,19 +29,19 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
- * Value generation implementation for {@link CreationTimestamp}.
+ * Value generation implementation for {@link UpdateTimestamp}.
  *
  * @author Gunnar Morling
  */
-public class CreationTimestampGeneration implements AnnotationValueGeneration<CreationTimestamp> {
+public class UpdateTimestampGeneration implements AnnotationValueGeneration<UpdateTimestamp> {
 
 	private ValueGenerator<?> generator;
 
 	@Override
-	public void initialize(CreationTimestamp annotation, Class<?> propertyType) {
+	public void initialize(UpdateTimestamp annotation, Class<?> propertyType) {
 		if ( java.sql.Date.class.isAssignableFrom( propertyType ) ) {
 			generator = new TimestampGenerators.CurrentSqlDateGenerator();
 		}
@@ -58,13 +58,13 @@ public class CreationTimestampGeneration implements AnnotationValueGeneration<Cr
 			generator = new TimestampGenerators.CurrentCalendarGenerator();
 		}
 		else {
-			throw new HibernateException( "Unsupported property type for generator annotation @CreationTimestamp" );
+			throw new HibernateException( "Unsupported property type for generator annotation @UpdateTimestamp" );
 		}
 	}
 
 	@Override
 	public GenerationTiming getGenerationTiming() {
-		return GenerationTiming.INSERT;
+		return GenerationTiming.ALWAYS;
 	}
 
 	@Override

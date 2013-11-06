@@ -26,6 +26,7 @@ package org.hibernate.test.generated;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -43,6 +44,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.tuple.ValueGenerator;
@@ -85,13 +87,54 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		theEntity = (TheEntity) session.get( TheEntity.class, 1 );
+		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
 		assertNotNull( theEntity.createdDate );
 		assertNotNull( theEntity.vmCreatedDate );
 		assertNotNull( theEntity.vmCreatedSqlDate );
 		assertNotNull( theEntity.vmCreatedSqlTime );
 		assertNotNull( theEntity.vmCreatedSqlTimestamp );
 		assertEquals( "Bob", theEntity.name );
+
+		s.delete( theEntity );
+		s.getTransaction().commit();
+		s.close();
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-2907")
+	public void testUpdateTimestampGeneration() {
+		Session s = openSession();
+		s.beginTransaction();
+		TheEntity theEntity = new TheEntity( 1 );
+		assertNull( theEntity.updated );
+		s.save( theEntity );
+
+		//TODO: Actually the value should be non-null after save
+		assertNull( theEntity.updated );
+		s.getTransaction().commit();
+		s.close();
+
+		Timestamp created = theEntity.vmCreatedSqlTimestamp;
+		Timestamp updated = theEntity.updated;
+		assertNotNull( updated );
+		assertNotNull( created );
+
+		s = openSession();
+		s.beginTransaction();
+
+		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
+		theEntity.lastName = "Smith";
+
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+
+		theEntity = (TheEntity) session.get( TheEntity.class, 1 );
+
+		assertEquals( "Creation timestamp should not change on update", created, theEntity.vmCreatedSqlTimestamp );
+		assertTrue( "Update timestamp should have changed due to update", theEntity.updated.after( updated ) );
 
 		s.delete( theEntity );
 		s.getTransaction().commit();
@@ -129,9 +172,14 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		@CreationTimestamp
 		private Timestamp vmCreatedSqlTimestamp;
 
+		@UpdateTimestamp
+		private Timestamp updated;
 
 		@GeneratorType( type = MyVmValueGenerator.class, when = GenerationTime.INSERT )
 		private String name;
+
+		@SuppressWarnings("unused")
+		private String lastName;
 
 		private TheEntity() {
 		}

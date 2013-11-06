@@ -44,7 +44,7 @@ public interface ValueGeneration {
 	 *
 	 * @return The strategy for performing in-VM value generation
 	 */
-	public ValueGenerator getValueGenerator();
+	public ValueGenerator<?> getValueGenerator();
 
 	/**
 	 * For values which are generated in the database ({@link #getValueGenerator()} == {@code null}), should the

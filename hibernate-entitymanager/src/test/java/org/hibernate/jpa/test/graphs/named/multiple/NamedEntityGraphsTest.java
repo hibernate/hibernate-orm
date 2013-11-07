@@ -23,13 +23,18 @@
  */
 package org.hibernate.jpa.test.graphs.named.multiple;
 
+import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
+import javax.persistence.EntityManager;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import java.util.List;
+
 import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -37,7 +42,7 @@ import static junit.framework.Assert.assertNotNull;
 public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
+		return new Class[] { Person.class, Employee.class };
 	}
 
 	@Test
@@ -47,4 +52,40 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 		graph = getOrCreateEntityManager().getEntityGraph( "xyz" );
 		assertNotNull( graph );
 	}
+
+	@Test
+	public void testGetData() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Employee employee = new Employee();
+		employee.setId(3l);
+		employee.setName("Sharon");
+		employee.setSalary(20000.0);
+		em.persist(employee);
+		try {
+			EntityGraph graph = em.getEntityGraph( "name_salary_graph" );
+			assertNotNull( graph );
+
+			List<AttributeNode<?>> list =  graph.getAttributeNodes();
+			assertNotNull( list );
+			assertTrue("expected list.size() is two but actual list size is " + list.size(), 2 == list.size() );
+
+			AttributeNode attributeNode1 = list.get(0);
+			AttributeNode attributeNode2 = list.get(1);
+			assertNotNull( attributeNode1 );
+			assertNotNull( attributeNode2 );
+
+			assertTrue( "node1 attribute name is expected to be either 'name' or 'salary' but actually is "+attributeNode1.getAttributeName(),
+					"name".equals(attributeNode1.getAttributeName()) || "salary".equals(attributeNode1.getAttributeName()));
+
+			assertTrue( "node2 attribute name is expected to be either 'name' or 'salary' but actually is "+attributeNode2.getAttributeName(),
+					"name".equals(attributeNode2.getAttributeName()) || "salary".equals(attributeNode2.getAttributeName()));
+
+		}
+		finally {
+			em.getTransaction().rollback();
+		}
+	}
+
 }

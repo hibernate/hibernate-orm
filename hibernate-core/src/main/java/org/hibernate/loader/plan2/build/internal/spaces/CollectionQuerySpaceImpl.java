@@ -24,9 +24,10 @@
 package org.hibernate.loader.plan2.build.internal.spaces;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan2.build.spi.AbstractQuerySpace;
-import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
-import org.hibernate.loader.plan2.spi.Join;
+import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
 import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.CollectionPropertyMapping;
@@ -40,14 +41,14 @@ import org.hibernate.type.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements CollectionQuerySpace {
+public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements ExpandingCollectionQuerySpace {
 	private final CollectionPersister persister;
 	private final CollectionPropertyMapping propertyMapping;
 
 	public CollectionQuerySpaceImpl(
 			CollectionPersister persister,
 			String uid,
-			QuerySpacesImpl querySpaces,
+			ExpandingQuerySpaces querySpaces,
 			boolean canJoinsBeRequired,
 			SessionFactoryImplementor sessionFactory) {
 		super( uid, Disposition.COLLECTION, querySpaces, canJoinsBeRequired, sessionFactory );
@@ -65,47 +66,44 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 		return propertyMapping;
 	}
 
-	public JoinDefinedByMetadata addIndexEntityJoin(final EntityPersister indexPersister) {
+	@Override
+	public ExpandingEntityQuerySpace addIndexEntityQuerySpace(
+			final EntityPersister indexPersister) {
 		final boolean required = canJoinsBeRequired();
-		final String entityQuerySpaceUid = getQuerySpaces().generateImplicitUid();
-		final EntityQuerySpaceImpl entityQuerySpace = new EntityQuerySpaceImpl(
-				indexPersister,
+		final String entityQuerySpaceUid = getExpandingQuerySpaces().generateImplicitUid();
+		final ExpandingEntityQuerySpace entityQuerySpace = getExpandingQuerySpaces().makeEntityQuerySpace(
 				entityQuerySpaceUid,
-				getQuerySpaces(),
-				required,
-				sessionFactory()
+				indexPersister,
+				required
 		);
-		getQuerySpaces().registerQuerySpace( entityQuerySpace );
 
 		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createEntityJoin(
 				this,
 				// collection persister maps its index (through its PropertyMapping contract) as non-prefixed
 				CollectionPropertyNames.COLLECTION_INDICES,
 				entityQuerySpace,
-				canJoinsBeRequired(),
+				required,
 				(EntityType) persister.getIndexType(),
 				sessionFactory()
 		);
-
 		internalGetJoins().add( join );
 
-		return join;
+		return entityQuerySpace;
 	}
 
-	public JoinDefinedByMetadata addIndexCompositeJoin(CompositeType compositeType) {
-		final String compositeQuerySpaceUid = getQuerySpaces().generateImplicitUid();
-		final CompositeQuerySpaceImpl compositeQuerySpace = new CompositeQuerySpaceImpl(
+	@Override
+	public ExpandingCompositeQuerySpace addIndexCompositeQuerySpace(
+			CompositeType compositeType) {
+		final String compositeQuerySpaceUid = getExpandingQuerySpaces().generateImplicitUid();
+		final ExpandingCompositeQuerySpace compositeQuerySpace = getExpandingQuerySpaces().makeCompositeQuerySpace(
+				compositeQuerySpaceUid,
 				new CompositePropertyMapping(
 						compositeType,
 						(PropertyMapping) getCollectionPersister(),
 						"index"
 				),
-				compositeQuerySpaceUid,
-				getQuerySpaces(),
-				canJoinsBeRequired(),
-				sessionFactory()
+				canJoinsBeRequired()
 		);
-		getQuerySpaces().registerQuerySpace( compositeQuerySpace );
 
 		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCompositeJoin(
 				this,
@@ -116,19 +114,18 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 		);
 		internalGetJoins().add( join );
 
-		return join;
+		return compositeQuerySpace;
 	}
 
-	public JoinDefinedByMetadata addElementEntityJoin(final EntityPersister elementPersister) {
-		final String entityQuerySpaceUid = getQuerySpaces().generateImplicitUid();
-		final EntityQuerySpaceImpl entityQuerySpace = new EntityQuerySpaceImpl(
-				elementPersister,
+	@Override
+	public ExpandingEntityQuerySpace addElementEntityQuerySpace(
+			final EntityPersister elementPersister) {
+		final String entityQuerySpaceUid = getExpandingQuerySpaces().generateImplicitUid();
+		final ExpandingEntityQuerySpace entityQuerySpace = getExpandingQuerySpaces().makeEntityQuerySpace(
 				entityQuerySpaceUid,
-				getQuerySpaces(),
-				canJoinsBeRequired(),
-				sessionFactory()
+				elementPersister,
+				canJoinsBeRequired()
 		);
-		getQuerySpaces().registerQuerySpace( entityQuerySpace );
 
 		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createEntityJoin(
 				this,
@@ -141,25 +138,23 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 		);
 		internalGetJoins().add( join );
 
-		return join;
+		return entityQuerySpace;
 	}
 
-	public JoinDefinedByMetadata addElementCompositeJoin(
+	@Override
+	public ExpandingCompositeQuerySpace addElementCompositeQuerySpace(
 			CompositeType compositeType) {
-		final String compositeQuerySpaceUid = getQuerySpaces().generateImplicitUid();
+		final String compositeQuerySpaceUid = getExpandingQuerySpaces().generateImplicitUid();
 
-		final CompositeQuerySpaceImpl compositeQuerySpace = new CompositeQuerySpaceImpl(
+		final ExpandingCompositeQuerySpace compositeQuerySpace = getExpandingQuerySpaces().makeCompositeQuerySpace(
+				compositeQuerySpaceUid,
 				new CompositePropertyMapping(
 						compositeType,
 						(PropertyMapping) getCollectionPersister(),
 						""
 				),
-				compositeQuerySpaceUid,
-				getQuerySpaces(),
-				canJoinsBeRequired(),
-				sessionFactory()
+				canJoinsBeRequired()
 		);
-		getQuerySpaces().registerQuerySpace( compositeQuerySpace );
 		final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCompositeJoin(
 				this,
 				// collection persister maps its elements (through its PropertyMapping contract) as non-prefixed
@@ -170,6 +165,6 @@ public class CollectionQuerySpaceImpl extends AbstractQuerySpace implements Coll
 		);
 		internalGetJoins().add( join );
 
-		return join;
+		return compositeQuerySpace;
 	}
 }

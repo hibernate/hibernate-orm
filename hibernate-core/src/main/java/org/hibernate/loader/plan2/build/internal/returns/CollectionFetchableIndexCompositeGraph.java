@@ -46,18 +46,18 @@ public class CollectionFetchableIndexCompositeGraph
 
 	public CollectionFetchableIndexCompositeGraph(
 			CollectionReference collectionReference,
-			Join compositeJoin) {
+			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		super(
-				extractIndexType( compositeJoin ),
-				(ExpandingCompositeQuerySpace) compositeJoin.getRightHandSide(),
+				extractIndexType( compositeQuerySpace ),
+				compositeQuerySpace,
 				false,
 				collectionReference.getPropertyPath().append( "<index>" )
 		);
 		this.collectionReference = collectionReference;
 	}
 
-	private static CompositeType extractIndexType(Join compositeJoin) {
-		final Type type = compositeJoin.getRightHandSide().getPropertyMapping().getType();
+	private static CompositeType extractIndexType(ExpandingCompositeQuerySpace compositeQuerySpace) {
+		final Type type = compositeQuerySpace.getPropertyMapping().getType();
 		if ( CompositeType.class.isInstance( type ) ) {
 			return (CompositeType) type;
 		}

@@ -28,7 +28,6 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
@@ -45,7 +44,7 @@ import org.hibernate.type.Type;
  * @author Gail Badner
  */
 public abstract class AbstractCompositeFetch extends AbstractExpandingFetchSource implements CompositeFetch {
-	private static final FetchStrategy FETCH_STRATEGY = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
+	protected static final FetchStrategy FETCH_STRATEGY = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 
 	private final CompositeType compositeType;
 	private final boolean allowCollectionFetches;
@@ -104,8 +103,7 @@ public abstract class AbstractCompositeFetch extends AbstractExpandingFetchSourc
 	@Override
 	public CollectionFetch buildCollectionFetch(
 			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
+			FetchStrategy fetchStrategy) {
 		if ( !allowCollectionFetches ) {
 			throw new WalkingException(
 					String.format(
@@ -114,7 +112,7 @@ public abstract class AbstractCompositeFetch extends AbstractExpandingFetchSourc
 					)
 			);
 		}
-		return super.buildCollectionFetch( attributeDefinition, fetchStrategy, loadPlanBuildingContext );
+		return super.buildCollectionFetch( attributeDefinition, fetchStrategy );
 	}
 
 	@Override

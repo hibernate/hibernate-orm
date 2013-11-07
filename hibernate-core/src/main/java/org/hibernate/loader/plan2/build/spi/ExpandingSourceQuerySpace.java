@@ -23,7 +23,6 @@
  */
 package org.hibernate.loader.plan2.build.spi;
 
-import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
 import org.hibernate.loader.plan2.spi.QuerySpace;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -33,20 +32,25 @@ import org.hibernate.persister.walking.spi.CompositionDefinition;
 /**
  * @author Steve Ebersole
  */
-public interface ExpandingQuerySpace extends QuerySpace {
+public interface ExpandingSourceQuerySpace extends QuerySpace {
 
-	public JoinDefinedByMetadata addCompositeJoin(
+	public ExpandingCompositeQuerySpace addCompositeQuerySpace(
 			CompositionDefinition compositionDefinition,
-			String querySpaceUid);
+			String querySpaceUid,
+			boolean shouldIncludeJoin);
 
-	public JoinDefinedByMetadata addEntityJoin(
+	public ExpandingEntityQuerySpace addEntityQuerySpace(
 			AttributeDefinition attributeDefinition,
 			EntityPersister persister,
 			String querySpaceUid,
-			boolean optional);
+			boolean optional,
+			boolean shouldIncludeJoin);
 
-	public JoinDefinedByMetadata addCollectionJoin(
+	public ExpandingCollectionQuerySpace addCollectionQuerySpace(
 			AttributeDefinition attributeDefinition,
 			CollectionPersister collectionPersister,
-			String querySpaceUid);
+			String querySpaceUid,
+			boolean shouldIncludeJoin);
+
+	public ExpandingQuerySpaces getExpandingQuerySpaces();
 }

@@ -33,6 +33,7 @@ import org.jboss.logging.MDC;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
@@ -184,7 +185,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			throw new HibernateException( "This strategy does not support root entity returns" );
 		}
 
-		final EntityReturnImpl entityReturn = new EntityReturnImpl( entityDefinition, this );
+		final EntityReturnImpl entityReturn = new EntityReturnImpl( entityDefinition, querySpaces );
 		addRootReturn( entityReturn );
 		pushToStack( entityReturn );
 
@@ -335,7 +336,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			throw new HibernateException( "This strategy does not support root collection returns" );
 		}
 
-		final CollectionReturn collectionReturn = new CollectionReturnImpl( collectionDefinition, this );
+		final CollectionReturn collectionReturn = new CollectionReturnImpl( collectionDefinition, querySpaces );
 		pushToCollectionStack( collectionReturn );
 		addRootReturn( collectionReturn );
 
@@ -515,7 +516,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			throw new HibernateException( "A component cannot be the root of a walk nor a graph" );
 		}
 
-		final CompositeFetch compositeFetch = currentSource().buildCompositeFetch( compositionDefinition, this );
+		final CompositeFetch compositeFetch = currentSource().buildCompositeFetch( compositionDefinition );
 		pushToStack( (ExpandingFetchSource) compositeFetch );
 	}
 
@@ -622,8 +623,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				currentSource().buildBidirectionalEntityReference(
 						attributeDefinition,
 						fetchStrategy,
-						registeredFetchSource( associationKey ).resolveEntityReference(),
-						this
+						registeredFetchSource( associationKey ).resolveEntityReference()
 				);
 			}
 		}
@@ -786,12 +786,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	protected boolean handleAssociationAttribute(AssociationAttributeDefinition attributeDefinition) {
 		// todo : this seems to not be correct for one-to-one
 		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
-		if ( fetchStrategy.getStyle() != FetchStyle.JOIN ) {
+		if ( fetchStrategy.getTiming() != FetchTiming.IMMEDIATE ) {
 			return false;
 		}
-//		if ( fetchStrategy.getTiming() != FetchTiming.IMMEDIATE ) {
-//			return false;
-//		}
 
 		final ExpandingFetchSource currentSource = currentSource();
 		currentSource.validateFetchPlan( fetchStrategy, attributeDefinition );
@@ -804,14 +801,13 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( nature == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
 			EntityFetch fetch = currentSource.buildEntityFetch(
 					attributeDefinition,
-					fetchStrategy,
-					this
+					fetchStrategy
 			);
 			pushToStack( (ExpandingFetchSource) fetch );
 		}
 		else {
 			// Collection
-			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy, this );
+			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy );
 			pushToCollectionStack( fetch );
 		}
 		return true;

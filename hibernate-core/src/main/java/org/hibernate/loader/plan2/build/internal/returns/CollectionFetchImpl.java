@@ -24,12 +24,10 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.plan2.build.internal.spaces.CollectionQuerySpaceImpl;
+import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.CollectionType;
@@ -41,24 +39,20 @@ public class CollectionFetchImpl extends AbstractCollectionReference implements 
 	private final ExpandingFetchSource fetchSource;
 	private final AttributeDefinition fetchedAttribute;
 	private final FetchStrategy fetchStrategy;
-	private final Join fetchedJoin;
 
 	public CollectionFetchImpl(
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy,
-			Join fetchedJoin,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
+			ExpandingCollectionQuerySpace collectionQuerySpace) {
 		super(
-				(CollectionQuerySpaceImpl) fetchedJoin.getRightHandSide(),
-				fetchSource.getPropertyPath().append( fetchedAttribute.getName() ),
-				loadPlanBuildingContext
+				collectionQuerySpace,
+				fetchSource.getPropertyPath().append( fetchedAttribute.getName() )
 		);
 
 		this.fetchSource = fetchSource;
 		this.fetchedAttribute = fetchedAttribute;
 		this.fetchStrategy = fetchStrategy;
-		this.fetchedJoin = fetchedJoin;
 	}
 
 	@Override

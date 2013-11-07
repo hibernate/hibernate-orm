@@ -23,37 +23,22 @@
  */
 package org.hibernate.loader.plan2.build.spi;
 
-import org.hibernate.loader.plan2.build.internal.spaces.CompositePropertyMapping;
-import org.hibernate.loader.plan2.spi.QuerySpaces;
-import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.CompositeType;
 
 /**
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface ExpandingQuerySpaces extends QuerySpaces {
-	public String generateImplicitUid();
+public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace {
 
-	public ExpandingEntityQuerySpace makeRootEntityQuerySpace(
-			String uid,
-			EntityPersister entityPersister);
+	public ExpandingEntityQuerySpace addIndexEntityQuerySpace(final EntityPersister elementPersister);
 
-	public ExpandingEntityQuerySpace makeEntityQuerySpace(
-			String uid,
-			EntityPersister entityPersister,
-			boolean canJoinsBeRequired);
+	public ExpandingCompositeQuerySpace addIndexCompositeQuerySpace(CompositeType compositeType);
 
-	public ExpandingCollectionQuerySpace makeRootCollectionQuerySpace(
-			String uid,
-			CollectionPersister collectionPersister);
+	public ExpandingEntityQuerySpace addElementEntityQuerySpace(
+			final EntityPersister elementPersister);
 
-	public ExpandingCollectionQuerySpace makeCollectionQuerySpace(
-			String uid,
-			CollectionPersister collectionPersister,
-			boolean canJoinsBeRequired);
-
-	public ExpandingCompositeQuerySpace makeCompositeQuerySpace(
-			String uid,
-			CompositePropertyMapping compositePropertyMapping,
-			boolean canJoinsBeRequired);
+	public ExpandingCompositeQuerySpace addElementCompositeQuerySpace(
+			CompositeType compositeType);
 }

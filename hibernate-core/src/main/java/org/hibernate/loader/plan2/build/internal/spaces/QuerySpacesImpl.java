@@ -32,9 +32,10 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpace;
 import org.hibernate.loader.plan2.spi.QuerySpaceUidNotRegisteredException;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -86,41 +87,83 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 	}
 
 	@Override
-	public ExpandingEntityQuerySpace makeEntityQuerySpace(String uid, EntityPersister entityPersister) {
-		if ( querySpaceByUid.containsKey( uid ) ) {
-			throw new IllegalStateException( "Encountered duplicate QuerySpace uid : " + uid );
-		}
+	public ExpandingEntityQuerySpace makeRootEntityQuerySpace(String uid, EntityPersister entityPersister) {
+		final ExpandingEntityQuerySpace space = makeEntityQuerySpace( uid, entityPersister, true );
+		roots.add( space );
+		return space;
+	}
+
+	@Override
+	public ExpandingEntityQuerySpace makeEntityQuerySpace(
+			String uid,
+			EntityPersister entityPersister,
+			boolean canJoinsBeRequired) {
+
+		checkQuerySpaceDoesNotExist( uid );
 
 		final EntityQuerySpaceImpl space = new EntityQuerySpaceImpl(
 				entityPersister,
 				uid,
 				this,
-				true,
+				canJoinsBeRequired,
 				sessionFactory
 		);
 		registerQuerySpace( space );
-		roots.add( space );
 
 		return space;
 	}
 
 	@Override
-	public CollectionQuerySpace makeCollectionQuerySpace(String uid, CollectionPersister collectionPersister) {
-		if ( querySpaceByUid.containsKey( uid ) ) {
-			throw new IllegalStateException( "Encountered duplicate QuerySpace uid : " + uid );
-		}
+	public ExpandingCollectionQuerySpace makeRootCollectionQuerySpace(String uid, CollectionPersister collectionPersister) {
+		final ExpandingCollectionQuerySpace space = makeCollectionQuerySpace( uid, collectionPersister, true );
+		roots.add( space );
+		return space;
+	}
 
-		final CollectionQuerySpaceImpl space = new CollectionQuerySpaceImpl(
+	@Override
+	public ExpandingCollectionQuerySpace makeCollectionQuerySpace(
+			String uid,
+			CollectionPersister collectionPersister,
+			boolean canJoinsBeRequired) {
+
+		checkQuerySpaceDoesNotExist( uid );
+
+		final ExpandingCollectionQuerySpace space = new CollectionQuerySpaceImpl(
 				collectionPersister,
 				uid,
 				this,
-				true,
+				canJoinsBeRequired,
 				sessionFactory
 		);
 		registerQuerySpace( space );
-		roots.add( space );
 
 		return space;
+	}
+
+	@Override
+	public ExpandingCompositeQuerySpace makeCompositeQuerySpace(
+			String uid,
+			CompositePropertyMapping compositePropertyMapping,
+			boolean canJoinsBeRequired) {
+
+		checkQuerySpaceDoesNotExist( uid );
+
+		final ExpandingCompositeQuerySpace space = new CompositeQuerySpaceImpl(
+				compositePropertyMapping,
+				uid,
+				this,
+				canJoinsBeRequired,
+				sessionFactory
+		);
+		registerQuerySpace( space );
+
+		return space;
+	}
+
+	private void checkQuerySpaceDoesNotExist(String uid) {
+		if ( querySpaceByUid.containsKey( uid ) ) {
+			throw new IllegalStateException( "Encountered duplicate QuerySpace uid : " + uid );
+		}
 	}
 
 	/**
@@ -128,7 +171,7 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 	 *
 	 * @param querySpace The space
 	 */
-	public void registerQuerySpace(QuerySpace querySpace) {
+	private void registerQuerySpace(QuerySpace querySpace) {
 		log.debugf(
 				"Adding QuerySpace : uid = %s -> %s]",
 				querySpace.getUid(),

@@ -45,9 +45,9 @@ public class EntityFetchImpl extends AbstractEntityReference implements EntityFe
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy,
-			Join fetchedJoin) {
+			ExpandingEntityQuerySpace entityQuerySpace) {
 		super(
-				(ExpandingEntityQuerySpace) fetchedJoin.getRightHandSide(),
+				entityQuerySpace,
 				fetchSource.getPropertyPath().append( fetchedAttribute.getName() )
 		);
 

@@ -51,22 +51,18 @@ public interface ExpandingFetchSource extends FetchSource {
 
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext);
+			FetchStrategy fetchStrategy);
 
 	public BidirectionalEntityReference buildBidirectionalEntityReference(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
-			EntityReference targetEntityReference,
-			LoadPlanBuildingContext loadPlanBuildingContext);
+			EntityReference targetEntityReference);
 
 	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition,
-			LoadPlanBuildingContext loadPlanBuildingContext);
+			CompositionDefinition attributeDefinition);
 
 	public CollectionFetch buildCollectionFetch(
 			AssociationAttributeDefinition attributeDefinition,
-			FetchStrategy fetchStrategy,
-			LoadPlanBuildingContext loadPlanBuildingContext);
+			FetchStrategy fetchStrategy);
 
 }

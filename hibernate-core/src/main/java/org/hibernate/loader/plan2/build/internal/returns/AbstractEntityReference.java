@@ -29,7 +29,6 @@ import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan2.spi.EntityReference;
-import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
@@ -73,27 +72,29 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 		}
 
 		// if we get here, we know we have a composite identifier...
-		final Join join = expandingEntityQuerySpace().makeCompositeIdentifierJoin();
+		final ExpandingCompositeQuerySpace querySpace = expandingEntityQuerySpace().makeCompositeIdentifierQuerySpace();
 		return identifierDefinition.isEncapsulated()
-				? buildEncapsulatedCompositeIdentifierDescription( join )
-				: buildNonEncapsulatedCompositeIdentifierDescription( join );
+				? buildEncapsulatedCompositeIdentifierDescription( querySpace )
+				: buildNonEncapsulatedCompositeIdentifierDescription( querySpace );
 	}
 
-	private NonEncapsulatedEntityIdentifierDescription buildNonEncapsulatedCompositeIdentifierDescription(Join compositeJoin) {
+	private NonEncapsulatedEntityIdentifierDescription buildNonEncapsulatedCompositeIdentifierDescription(
+			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		return new NonEncapsulatedEntityIdentifierDescription(
 				this,
-				(ExpandingCompositeQuerySpace) compositeJoin.getRightHandSide(),
+				compositeQuerySpace,
 				(CompositeType) getEntityPersister().getIdentifierType(),
-				getPropertyPath().append( "id" )
+				getPropertyPath().append( EntityPersister.ENTITY_ID )
 		);
 	}
 
-	private EncapsulatedEntityIdentifierDescription buildEncapsulatedCompositeIdentifierDescription(Join compositeJoin) {
+	private EncapsulatedEntityIdentifierDescription buildEncapsulatedCompositeIdentifierDescription(
+			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		return new EncapsulatedEntityIdentifierDescription(
 				this,
-				(ExpandingCompositeQuerySpace) compositeJoin.getRightHandSide(),
+				compositeQuerySpace,
 				(CompositeType) getEntityPersister().getIdentifierType(),
-				getPropertyPath().append( "id" )
+				getPropertyPath().append( EntityPersister.ENTITY_ID )
 		);
 	}
 

@@ -24,12 +24,12 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan2.build.internal.spaces.CollectionQuerySpaceImpl;
-import org.hibernate.loader.plan2.build.spi.LoadPlanBuildingContext;
+import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
-import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
@@ -40,26 +40,23 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public abstract class AbstractCollectionReference implements CollectionReference {
-	private final CollectionQuerySpaceImpl collectionQuerySpace;
+	private final ExpandingCollectionQuerySpace collectionQuerySpace;
 	private final PropertyPath propertyPath;
 
 	private final CollectionFetchableIndex index;
 	private final CollectionFetchableElement element;
 
 	protected AbstractCollectionReference(
-			CollectionQuerySpaceImpl collectionQuerySpace,
-			PropertyPath propertyPath,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
+			ExpandingCollectionQuerySpace collectionQuerySpace,
+			PropertyPath propertyPath) {
 		this.collectionQuerySpace = collectionQuerySpace;
 		this.propertyPath = propertyPath;
 
-		this.index = buildIndexGraph( collectionQuerySpace, loadPlanBuildingContext );
-		this.element = buildElementGraph( collectionQuerySpace, loadPlanBuildingContext );
+		this.index = buildIndexGraph( collectionQuerySpace );
+		this.element = buildElementGraph( collectionQuerySpace );
 	}
 
-	private CollectionFetchableIndex buildIndexGraph(
-			CollectionQuerySpaceImpl collectionQuerySpace,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
+	private CollectionFetchableIndex buildIndexGraph(ExpandingCollectionQuerySpace collectionQuerySpace) {
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		if ( persister.hasIndex() ) {
 			final Type type = persister.getIndexType();
@@ -69,17 +66,17 @@ public abstract class AbstractCollectionReference implements CollectionReference
 							( (EntityType) type ).getAssociatedEntityName()
 					);
 
-					final Join join = collectionQuerySpace.addIndexEntityJoin(
+					final ExpandingEntityQuerySpace entityQuerySpace = collectionQuerySpace.addIndexEntityQuerySpace(
 							indexPersister
 					);
-					return new CollectionFetchableIndexEntityGraph( this, join );
+					return new CollectionFetchableIndexEntityGraph( this, entityQuerySpace );
 				}
 			}
 			else if ( type.isComponentType() ) {
-				final Join join = collectionQuerySpace.addIndexCompositeJoin(
+				final ExpandingCompositeQuerySpace compositeQuerySpace = collectionQuerySpace.addIndexCompositeQuerySpace(
 						(CompositeType) type
 				);
-				return new CollectionFetchableIndexCompositeGraph( this, join );
+				return new CollectionFetchableIndexCompositeGraph( this, compositeQuerySpace );
 			}
 		}
 
@@ -87,8 +84,7 @@ public abstract class AbstractCollectionReference implements CollectionReference
 	}
 
 	private CollectionFetchableElement buildElementGraph(
-			CollectionQuerySpaceImpl collectionQuerySpace,
-			LoadPlanBuildingContext loadPlanBuildingContext) {
+			ExpandingCollectionQuerySpace collectionQuerySpace) {
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
@@ -97,15 +93,17 @@ public abstract class AbstractCollectionReference implements CollectionReference
 						( (EntityType) type ).getAssociatedEntityName()
 				);
 
-				final Join join = collectionQuerySpace.addElementEntityJoin( elementPersister );
-				return new CollectionFetchableElementEntityGraph( this, join );
+				final ExpandingEntityQuerySpace entityQuerySpace = collectionQuerySpace.addElementEntityQuerySpace(
+						elementPersister
+				);
+				return new CollectionFetchableElementEntityGraph( this, entityQuerySpace );
 			}
 		}
 		else if ( type.isComponentType() ) {
-			final Join join = collectionQuerySpace.addElementCompositeJoin(
+			final ExpandingCompositeQuerySpace compositeQuerySpace = collectionQuerySpace.addElementCompositeQuerySpace(
 					(CompositeType) type
 			);
-			return new CollectionFetchableElementCompositeGraph( this, join );
+			return new CollectionFetchableElementCompositeGraph( this, compositeQuerySpace );
 		}
 
 		return null;

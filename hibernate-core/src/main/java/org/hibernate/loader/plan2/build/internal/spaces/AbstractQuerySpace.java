@@ -21,17 +21,18 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan2.build.spi;
+package org.hibernate.loader.plan2.build.internal.spaces;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
 import org.hibernate.loader.plan2.spi.AbstractPlanNode;
-import org.hibernate.loader.plan2.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.loader.plan2.spi.QuerySpace;
+import org.hibernate.loader.plan2.spi.QuerySpaces;
 
 /**
  * Convenience base class for QuerySpace implementations.
@@ -41,7 +42,7 @@ import org.hibernate.loader.plan2.spi.QuerySpace;
 public abstract class AbstractQuerySpace extends AbstractPlanNode implements QuerySpace {
 	private final String uid;
 	private final Disposition disposition;
-	private final QuerySpacesImpl querySpaces;
+	private final ExpandingQuerySpaces querySpaces;
 	private final boolean canJoinsBeRequired;
 
 	private List<Join> joins;
@@ -49,7 +50,7 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 	public AbstractQuerySpace(
 			String uid,
 			Disposition disposition,
-			QuerySpacesImpl querySpaces,
+			ExpandingQuerySpaces querySpaces,
 			boolean canJoinsBeRequired,
 			SessionFactoryImplementor sessionFactory) {
 		super( sessionFactory );
@@ -80,7 +81,11 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 	 *
 	 * @return The query spaces
 	 */
-	public QuerySpacesImpl getQuerySpaces() {
+	public QuerySpaces getQuerySpaces() {
+		return querySpaces;
+	}
+
+	protected ExpandingQuerySpaces getExpandingQuerySpaces() {
 		return querySpaces;
 	}
 

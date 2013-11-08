@@ -104,13 +104,13 @@ public abstract class AbstractGraphNode<T> implements GraphNodeImplementor, Hibe
 		}
 	}
 
-	protected void addAttributeNodes(String... attributeNames) {
+	public void addAttributeNodes(String... attributeNames) {
 		for ( String attributeName : attributeNames ) {
 			addAttribute( attributeName );
 		}
 	}
 
-	protected AttributeNodeImpl addAttribute(String attributeName) {
+	public AttributeNodeImpl addAttribute(String attributeName) {
 		return addAttributeNode( buildAttributeNode( attributeName ) );
 	}
 

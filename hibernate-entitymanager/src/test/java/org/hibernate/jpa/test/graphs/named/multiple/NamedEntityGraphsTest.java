@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class, Employee.class };
+		return new Class[] { /*Person.class,*/ Employee.class };
 	}
 
 	@Test
@@ -56,13 +56,13 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 	@Test
 	public void testGetData() {
 		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		Employee employee = new Employee();
-		employee.setId(3l);
-		employee.setName("Sharon");
-		employee.setSalary(20000.0);
-		em.persist(employee);
+//		em.getTransaction().begin();
+//
+//		Employee employee = new Employee();
+//		employee.setId(3l);
+//		employee.setName("Sharon");
+//		employee.setSalary(20000.0);
+//		em.persist(employee);
 		try {
 			EntityGraph graph = em.getEntityGraph( "name_salary_graph" );
 			assertNotNull( graph );
@@ -84,7 +84,8 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 
 		}
 		finally {
-			em.getTransaction().rollback();
+//			em.getTransaction().rollback();
+			em.close();
 		}
 	}
 

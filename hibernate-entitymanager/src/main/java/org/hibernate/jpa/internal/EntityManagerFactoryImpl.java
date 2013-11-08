@@ -76,6 +76,7 @@ import org.hibernate.jpa.HibernateQuery;
 import org.hibernate.jpa.boot.internal.SettingsImpl;
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.graph.internal.AbstractGraphNode;
+import org.hibernate.jpa.graph.internal.AttributeNodeImpl;
 import org.hibernate.jpa.graph.internal.EntityGraphImpl;
 import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.jpa.internal.metamodel.EntityTypeImpl;
@@ -274,8 +275,10 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 			NamedEntityGraph namedEntityGraph,
 			AbstractGraphNode graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
+			final String value = namedAttributeNode.value();
+			AttributeNodeImpl attributeNode = graphNode.addAttribute( value );
 			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
-				final SubgraphImpl subgraph = graphNode.addSubgraph( namedAttributeNode.value() );
+				final SubgraphImpl subgraph = attributeNode.makeSubgraph();
 				applyNamedSubgraphs(
 						namedEntityGraph,
 						namedAttributeNode.subgraph(),
@@ -283,7 +286,8 @@ public class EntityManagerFactoryImpl implements HibernateEntityManagerFactory {
 				);
 			}
 			if ( StringHelper.isNotEmpty( namedAttributeNode.keySubgraph() ) ) {
-				final SubgraphImpl subgraph = graphNode.addKeySubgraph( namedAttributeNode.value() );
+				final SubgraphImpl subgraph = attributeNode.makeKeySubgraph();
+
 				applyNamedSubgraphs(
 						namedEntityGraph,
 						namedAttributeNode.keySubgraph(),

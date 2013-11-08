@@ -67,12 +67,21 @@ public class EntityGraphQueryHint {
 			}
 		}
 		
-		return getFromElements( originEntityGraph.getAttributeNodes(), fromClause.getFromElement(), fromClause,
-				walker, explicitFetches );
+		return getFromElements(
+				originEntityGraph.getAttributeNodes(),
+				fromClause.getFromElement(),
+				fromClause,
+				walker,
+				explicitFetches
+		);
 	}
 	
-	private List<FromElement> getFromElements(List attributeNodes, FromElement origin, FromClause fromClause,
-			HqlSqlWalker walker, Map<String, FromElement> explicitFetches) {
+	private List<FromElement> getFromElements(
+			List attributeNodes,
+			FromElement origin,
+			FromClause fromClause,
+			HqlSqlWalker walker,
+			Map<String, FromElement> explicitFetches) {
 		final List<FromElement> fromElements = new ArrayList<FromElement>();
 		
 		for (Object obj : attributeNodes) {			
@@ -102,8 +111,16 @@ public class EntityGraphQueryHint {
 								attributeName, classAlias, columns, false);
 						final JoinSequence joinSequence = walker.getSessionFactoryHelper().createJoinSequence(
 								false, entityType, tableAlias, JoinType.LEFT_OUTER_JOIN, columns );
-						fromElement = fromElementFactory.createEntityJoin( entityType.getAssociatedEntityName(), tableAlias,
-								joinSequence, true, walker.isInFrom(), entityType, role );
+						fromElement = fromElementFactory.createEntityJoin(
+								entityType.getAssociatedEntityName(),
+								tableAlias,
+								joinSequence,
+								true,
+								walker.isInFrom(),
+								entityType,
+								role,
+								null
+						);
 					}
 					else if ( propertyType.isCollectionType() ) {					
 						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );		

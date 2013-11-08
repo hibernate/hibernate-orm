@@ -408,6 +408,16 @@ public final class ArrayHelper {
 		return i;
 	}
 
+	public static String[] reverse(String[] source) {
+		final int length = source.length;
+		final String[] destination = new String[length];
+		for ( int i = 0; i < length; i++ ) {
+			final int x = length - i - 1;
+			destination[x] = source[i];
+		}
+		return destination;
+	}
+
 	public static void main(String... args) {
 		int[] batchSizes = ArrayHelper.getBatchSizes( 32 );
 

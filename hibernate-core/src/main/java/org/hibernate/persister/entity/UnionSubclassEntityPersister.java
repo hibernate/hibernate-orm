@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -356,10 +357,16 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		return getTableName() + ' '  + name;
 	}
 
+	@Override
 	public String filterFragment(String name) {
-		return hasWhere() ?
-			" and " + getSQLWhereString(name) :
-			"";
+		return hasWhere()
+				? " and " + getSQLWhereString( name )
+				: "";
+	}
+
+	@Override
+	protected String filterFragment(String alias, Set<String> treatAsDeclarations) {
+		return filterFragment( alias );
 	}
 
 	public String getSubclassPropertyTableName(int i) {

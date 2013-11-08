@@ -24,6 +24,7 @@
  */
 package org.hibernate.persister.entity;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 
@@ -55,21 +56,44 @@ public interface Joinable {
 	 * (optional operation)
 	 */
 	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses);
+
+	/**
+	 * Get the where clause part of any joins
+	 * (optional operation)
+	 */
+	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations);
+
 	/**
 	 * Get the from clause part of any joins
 	 * (optional operation)
 	 */
 	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses);
+
+	/**
+	 * Get the from clause part of any joins
+	 * (optional operation)
+	 */
+	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations);
+
 	/**
 	 * The columns to join on
 	 */
 	public String[] getKeyColumnNames();
+
 	/**
 	 * Get the where clause filter, given a query alias and considering enabled session filters
 	 */
 	public String filterFragment(String alias, Map enabledFilters) throws MappingException;
 
+	/**
+	 * Get the where clause filter, given a query alias and considering enabled session filters
+	 */
+	public String filterFragment(String alias, Map enabledFilters, Set<String> treatAsDeclarations) throws MappingException;
+
 	public String oneToManyFilterFragment(String alias) throws MappingException;
+
+	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations);
+
 	/**
 	 * Is this instance actually a CollectionPersister?
 	 */

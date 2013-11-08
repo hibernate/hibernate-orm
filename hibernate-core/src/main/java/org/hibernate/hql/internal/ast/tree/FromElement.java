@@ -27,6 +27,7 @@ package org.hibernate.hql.internal.ast.tree;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.jboss.logging.Logger;
 
@@ -109,11 +110,13 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 		this.classAlias = alias;
 		this.tableAlias = origin.getTableAlias();
 		super.initialize( fromClause.getWalker() );
+
 	}
 
 	protected void initializeComponentJoin(FromElementType elementType) {
-		this.elementType = elementType;
 		fromClause.registerFromElement( this );
+		elementType.applyTreatAsDeclarations( getWalker().getTreatAsDeclarationsByPath( classAlias ) );
+		this.elementType = elementType;
 		initialized = true;
 	}
 
@@ -368,8 +371,13 @@ public class FromElement extends HqlSqlWalkerNode implements DisplayableNode, Pa
 
 	public void setRole(String role) {
 		this.role = role;
+		applyTreatAsDeclarations( getWalker().getTreatAsDeclarationsByPath( role ) );
 	}
-	
+
+	public void applyTreatAsDeclarations(Set<String> treatAsDeclarationsByPath) {
+		elementType.applyTreatAsDeclarations( treatAsDeclarationsByPath );
+	}
+
 	public String getRole() {
 		return role;
 	}

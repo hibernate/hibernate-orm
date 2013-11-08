@@ -27,6 +27,11 @@ package org.hibernate.hql.internal.ast;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import antlr.ASTPair;
 import antlr.MismatchedTokenException;
@@ -396,6 +401,41 @@ public final class HqlParser extends HqlBaseParser {
 		AST elementsNode = astFactory.create( ELEMENTS, "elements" );
 		inListNode.addChild( elementsNode );
 		elementsNode.addChild( p );
+	}
+
+	private Map<String,Set<String>> treatMap;
+
+	@Override
+	protected void registerTreat(AST pathToTreat, AST treatAs) {
+		final String path = toPathText( pathToTreat );
+		final String subclassName = toPathText( treatAs );
+		LOG.debugf( "Registering discovered request to treat(%s as %s)", path, subclassName );
+
+		if ( treatMap == null ) {
+			treatMap = new HashMap<String, Set<String>>();
+		}
+
+		Set<String> subclassNames = treatMap.get( path );
+		if ( subclassNames == null ) {
+			subclassNames = new HashSet<String>();
+			treatMap.put( path, subclassNames );
+		}
+		subclassNames.add( subclassName );
+	}
+
+	private String toPathText(AST node) {
+		final String text = node.getText();
+		if ( text.equals( "." )
+				&& node.getFirstChild() != null
+				&& node.getFirstChild().getNextSibling() != null
+				&& node.getFirstChild().getNextSibling().getNextSibling() == null ) {
+			return toPathText( node.getFirstChild() ) + '.' + toPathText( node.getFirstChild().getNextSibling() );
+		}
+		return text;
+	}
+
+	public Map<String, Set<String>> getTreatMap() {
+		return treatMap == null ? Collections.<String, Set<String>>emptyMap() : treatMap;
 	}
 
 	static public void panic() {

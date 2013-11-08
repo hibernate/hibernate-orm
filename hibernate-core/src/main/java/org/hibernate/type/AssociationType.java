@@ -24,6 +24,7 @@
 package org.hibernate.type;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -79,6 +80,12 @@ public interface AssociationType extends Type {
 	 */	
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) 
 	throws MappingException;
+
+	/**
+	 * Get the "filtering" SQL fragment that is applied in the
+	 * SQL on clause, in addition to the usual join condition
+	 */
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters, Set<String> treatAsDeclarations);
 	
 	/**
 	 * Do we dirty check this association, even when there are

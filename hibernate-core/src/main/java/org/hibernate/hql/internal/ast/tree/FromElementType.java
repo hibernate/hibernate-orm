@@ -24,8 +24,12 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import antlr.SemanticException;
 
 import org.jboss.logging.Logger;
 
@@ -256,8 +260,10 @@ class FromElementType {
 		return fragment.trim();
 	}
 
+
 	public void setJoinSequence(JoinSequence joinSequence) {
 		this.joinSequence = joinSequence;
+		joinSequence.applyTreatAsDeclarations( treatAsDeclarations );
 	}
 
 	public JoinSequence getJoinSequence() {
@@ -268,10 +274,37 @@ class FromElementType {
 		// Class names in the FROM clause result in a JoinSequence (the old FromParser does this).
 		if ( persister instanceof Joinable ) {
 			Joinable joinable = ( Joinable ) persister;
-			return fromElement.getSessionFactoryHelper().createJoinSequence().setRoot( joinable, getTableAlias() );
+			final JoinSequence joinSequence = fromElement.getSessionFactoryHelper().createJoinSequence().setRoot( joinable, getTableAlias() );
+			joinSequence.applyTreatAsDeclarations( treatAsDeclarations );
+			return joinSequence;
 		}
 		else {
-			return null;	// TODO: Should this really return null?  If not, figure out something better to do here.
+			// TODO: Should this really return null?  If not, figure out something better to do here.
+			return null;
+		}
+	}
+
+	private Set<String> treatAsDeclarations;
+
+	public void applyTreatAsDeclarations(Set<String> treatAsDeclarations) {
+		if ( treatAsDeclarations != null && !treatAsDeclarations.isEmpty() ) {
+			if ( this.treatAsDeclarations == null ) {
+				this.treatAsDeclarations = new HashSet<String>();
+			}
+
+			for ( String treatAsSubclassName : treatAsDeclarations ) {
+				try {
+					EntityPersister subclassPersister = fromElement.getSessionFactoryHelper().requireClassPersister( treatAsSubclassName );
+					this.treatAsDeclarations.add( subclassPersister.getEntityName() );
+				}
+				catch (SemanticException e) {
+					throw new QueryException( "Unable to locate persister for subclass named in TREAT-AS : " + treatAsSubclassName );
+				}
+			}
+
+			if ( joinSequence != null ) {
+				joinSequence.applyTreatAsDeclarations( this.treatAsDeclarations );
+			}
 		}
 	}
 

@@ -318,6 +318,8 @@ public abstract class AbstractEntityPersister
 
 	protected abstract String filterFragment(String alias) throws MappingException;
 
+	protected abstract String filterFragment(String alias, Set<String> treatAsDeclarations);
+
 	private static final String DISCRIMINATOR_ALIAS = "clazz_";
 
 	public String getDiscriminatorColumnName() {
@@ -3697,10 +3699,18 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
+	@Override
 	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
+	}
+
+	@Override
+	public String filterFragment(String alias, Map enabledFilters, Set<String> treatAsDeclarations) {
+		final StringBuilder sessionFilterFragment = new StringBuilder();
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
+		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {
@@ -3711,55 +3721,137 @@ public abstract class AbstractEntityPersister
 		return "";
 	}
 
-	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		return getSubclassTableSpan() == 1 ?
-				"" : //just a performance opt!
-				createJoin( alias, innerJoin, includeSubclasses ).toFromFragmentString();
+	@Override
+	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations) {
+		return oneToManyFilterFragment( alias );
 	}
 
+	@Override
+	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
+		// NOTE : Not calling createJoin here is just a performance optimization
+		return getSubclassTableSpan() == 1
+				? ""
+				: createJoin( alias, innerJoin, includeSubclasses, Collections.<String>emptySet() ).toFromFragmentString();
+	}
+
+	@Override
+	public String fromJoinFragment(
+			String alias,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations) {
+		// NOTE : Not calling createJoin here is just a performance optimization
+		return getSubclassTableSpan() == 1
+				? ""
+				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations ).toFromFragmentString();
+	}
+
+	@Override
 	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		return getSubclassTableSpan() == 1 ?
-				"" : //just a performance opt!
-				createJoin( alias, innerJoin, includeSubclasses ).toWhereFragmentString();
+		// NOTE : Not calling createJoin here is just a performance optimization
+		return getSubclassTableSpan() == 1
+				? ""
+				: createJoin( alias, innerJoin, includeSubclasses, Collections.<String>emptySet() ).toWhereFragmentString();
+	}
+
+	@Override
+	public String whereJoinFragment(
+			String alias,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations) {
+		// NOTE : Not calling createJoin here is just a performance optimization
+		return getSubclassTableSpan() == 1
+				? ""
+				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations ).toWhereFragmentString();
 	}
 
 	protected boolean isSubclassTableLazy(int j) {
 		return false;
 	}
 
-	protected JoinFragment createJoin(String name, boolean innerJoin, boolean includeSubclasses) {
-		final String[] idCols = StringHelper.qualify( name, getIdentifierColumnNames() ); //all joins join to the pk of the driving table
+	protected JoinFragment createJoin(String name, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations) {
+		// IMPL NOTE : all joins join to the pk of the driving table
+		final String[] idCols = StringHelper.qualify( name, getIdentifierColumnNames() );
 		final JoinFragment join = getFactory().getDialect().createOuterJoinFragment();
 		final int tableSpan = getSubclassTableSpan();
-		for ( int j = 1; j < tableSpan; j++ ) { //notice that we skip the first table; it is the driving table!
-			final boolean joinIsIncluded = isClassOrSuperclassTable( j ) ||
-					( includeSubclasses && !isSubclassTableSequentialSelect( j ) && !isSubclassTableLazy( j ) );
-			if ( joinIsIncluded ) {
-				join.addJoin( getSubclassTableName( j ),
+		// IMPL NOTE : notice that we skip the first table; it is the driving table!
+		for ( int j = 1; j < tableSpan; j++ ) {
+			final JoinType joinType = determineSubclassTableJoinType(
+					j,
+					innerJoin,
+					includeSubclasses,
+					treatAsDeclarations
+			);
+
+			if ( joinType != null && joinType != JoinType.NONE ) {
+				join.addJoin(
+						getSubclassTableName( j ),
 						generateTableAlias( name, j ),
 						idCols,
 						getSubclassTableKeyColumns( j ),
-						innerJoin && isClassOrSuperclassTable( j ) && !isInverseTable( j ) && !isNullableTable( j ) ?
-						JoinType.INNER_JOIN : //we can inner join to superclass tables (the row MUST be there)
-						JoinType.LEFT_OUTER_JOIN //we can never inner join to subclass tables
-					);
+						joinType
+				);
 			}
 		}
 		return join;
 	}
 
+	protected JoinType determineSubclassTableJoinType(
+			int subclassTableNumber,
+			boolean canInnerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations) {
+
+		if ( isClassOrSuperclassTable( subclassTableNumber ) ) {
+			final boolean shouldInnerJoin = canInnerJoin
+					&& !isInverseTable( subclassTableNumber )
+					&& !isNullableTable( subclassTableNumber );
+			// the table is either this persister's driving table or (one of) its super class persister's driving
+			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
+			return shouldInnerJoin ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN;
+		}
+
+		// otherwise we have a subclass table and need to look a little deeper...
+
+		// IMPL NOTE : By default includeSubclasses indicates that all subclasses should be joined and that each
+		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
+		// so we give TREAT-AS higher precedence...
+
+		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
+			return JoinType.INNER_JOIN;
+		}
+
+		if ( includeSubclasses
+				&& !isSubclassTableSequentialSelect( subclassTableNumber )
+				&& !isSubclassTableLazy( subclassTableNumber ) ) {
+			return JoinType.LEFT_OUTER_JOIN;
+		}
+
+		return JoinType.NONE;
+	}
+
+	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
+			int subclassTableNumber,
+			Set<String> treatAsDeclarations) {
+		return false;
+	}
+
+
 	protected JoinFragment createJoin(int[] tableNumbers, String drivingAlias) {
 		final String[] keyCols = StringHelper.qualify( drivingAlias, getSubclassTableKeyColumns( tableNumbers[0] ) );
 		final JoinFragment jf = getFactory().getDialect().createOuterJoinFragment();
-		for ( int i = 1; i < tableNumbers.length; i++ ) { //skip the driving table
+		// IMPL NOTE : notice that we skip the first table; it is the driving table!
+		for ( int i = 1; i < tableNumbers.length; i++ ) {
 			final int j = tableNumbers[i];
 			jf.addJoin( getSubclassTableName( j ),
 					generateTableAlias( getRootAlias(), j ),
 					keyCols,
 					getSubclassTableKeyColumns( j ),
-					isInverseSubclassTable( j ) || isNullableSubclassTable( j ) ?
-					JoinType.LEFT_OUTER_JOIN :
-					JoinType.INNER_JOIN );
+					isInverseSubclassTable( j ) || isNullableSubclassTable( j )
+							? JoinType.LEFT_OUTER_JOIN
+							: JoinType.INNER_JOIN
+			);
 		}
 		return jf;
 	}

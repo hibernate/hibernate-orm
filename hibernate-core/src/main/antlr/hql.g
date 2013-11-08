@@ -217,6 +217,9 @@ tokens
     protected String unquote(String text) {
         return text.substring( 1, text.length() - 1 );
     }
+
+    protected void registerTreat(AST pathToTreat, AST treatAs) {
+    }
 }
 
 statement
@@ -369,7 +372,9 @@ joinPath
  * Uses a validating semantic predicate to make sure the text of the matched first IDENT is the TREAT keyword
  */
 castedJoinPath
-    : i:IDENT! OPEN! p:path AS! path! CLOSE! {i.getText().equalsIgnoreCase("treat") }?
+    : i:IDENT! OPEN! p:path AS! a:path! CLOSE! {i.getText().equalsIgnoreCase("treat") }? {
+        registerTreat( #p, #a );
+    }
     ;
 
 withClause
@@ -738,7 +743,9 @@ identPrimaryBase
     ;
 
 castedIdentPrimaryBase
-    : i:IDENT! OPEN! p:path AS! path! CLOSE! { i.getText().equals("treat") }?
+    : i:IDENT! OPEN! p:path AS! a:path! CLOSE! { i.getText().equals("treat") }? {
+        registerTreat( #p, #a );
+    }
     ;
 
 aggregate

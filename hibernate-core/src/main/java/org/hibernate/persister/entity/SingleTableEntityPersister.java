@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -835,48 +837,95 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return getTableName() + ' ' + name;
 	}
 
+	@Override
 	public String filterFragment(String alias) throws MappingException {
 		String result = discriminatorFilterFragment(alias);
 		if ( hasWhere() ) result += " and " + getSQLWhereString(alias);
 		return result;
 	}
-	
-	public String oneToManyFilterFragment(String alias) throws MappingException {
-		return forceDiscriminator ?
-			discriminatorFilterFragment(alias) :
-			"";
-	}
 
 	private String discriminatorFilterFragment(String alias) throws MappingException {
-		if ( needsDiscriminator() ) {
-			InFragment frag = new InFragment();
+		return discriminatorFilterFragment( alias, null );
+	}
+	
+	public String oneToManyFilterFragment(String alias) throws MappingException {
+		return forceDiscriminator
+				? discriminatorFilterFragment( alias, null )
+				: "";
+	}
 
-			if ( isDiscriminatorFormula() ) {
-				frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
-			}
-			else {
-				frag.setColumn( alias, getDiscriminatorColumnName() );
-			}
+	@Override
+	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations) {
+		return needsDiscriminator()
+				? discriminatorFilterFragment( alias, treatAsDeclarations )
+				: "";
+	}
 
-			String[] subclasses = getSubclassClosure();
-			for ( int i=0; i<subclasses.length; i++ ) {
-				final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclasses[i] );
-				if ( !queryable.isAbstract() ) frag.addValue( queryable.getDiscriminatorSQLValue() );
-			}
-
-			StringBuilder buf = new StringBuilder(50)
-				.append(" and ")
-				.append( frag.toFragmentString() );
-
-			return buf.toString();
+	@Override
+	public String filterFragment(String alias, Set<String> treatAsDeclarations) {
+		String result = discriminatorFilterFragment( alias, treatAsDeclarations );
+		if ( hasWhere() ) {
+			result += " and " + getSQLWhereString( alias );
 		}
-		else {
+		return result;
+	}
+
+	private String discriminatorFilterFragment(String alias, Set<String> treatAsDeclarations)  {
+		final boolean hasTreatAs = treatAsDeclarations != null && !treatAsDeclarations.isEmpty();
+
+		if ( !needsDiscriminator() && !hasTreatAs) {
 			return "";
 		}
+
+		final InFragment frag = new InFragment();
+		if ( isDiscriminatorFormula() ) {
+			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
+		}
+		else {
+			frag.setColumn( alias, getDiscriminatorColumnName() );
+		}
+
+		if ( hasTreatAs ) {
+			frag.addValues( decodeTreatAsRequests( treatAsDeclarations ) );
+		}
+		else {
+			frag.addValues( fullDiscriminatorValues() );
+		}
+
+		return " and " + frag.toFragmentString();
 	}
 
 	private boolean needsDiscriminator() {
 		return forceDiscriminator || isInherited();
+	}
+
+	private String[] decodeTreatAsRequests(Set<String> treatAsDeclarations) {
+		final List<String> values = new ArrayList<String>();
+		for ( String subclass : treatAsDeclarations ) {
+			final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclass );
+			if ( !queryable.isAbstract() ) {
+				values.add( queryable.getDiscriminatorSQLValue() );
+			}
+		}
+		return values.toArray( new String[ values.size() ] );
+	}
+
+	private String[] fullDiscriminatorValues;
+
+	private String[] fullDiscriminatorValues() {
+		if ( fullDiscriminatorValues == null ) {
+			// first access; build it
+			final List<String> values = new ArrayList<String>();
+			for ( String subclass : getSubclassClosure() ) {
+				final Queryable queryable = (Queryable) getFactory().getEntityPersister( subclass );
+				if ( !queryable.isAbstract() ) {
+					values.add( queryable.getDiscriminatorSQLValue() );
+				}
+			}
+			fullDiscriminatorValues = values.toArray( new String[values.size() ] );
+		}
+
+		return fullDiscriminatorValues;
 	}
 
 	public String getSubclassPropertyTableName(int i) {

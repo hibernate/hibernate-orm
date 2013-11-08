@@ -24,6 +24,8 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import java.util.Set;
+
 import antlr.SemanticException;
 import antlr.collections.AST;
 import org.jboss.logging.Logger;
@@ -490,7 +492,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 					fetch,
 					getWalker().isInFrom(),
 					propertyType,
-					role
+					role,
+					joinPath
 			);
 		}
 		else {

@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Set;
 
 import org.dom4j.Element;
 import org.dom4j.Node;
@@ -466,13 +467,22 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
-	throws MappingException {
-		if ( isReferenceToPrimaryKey() ) { //TODO: this is a bit arbitrary, expose a switch to the user?
+	@Override
+	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters) {
+		return getOnCondition( alias, factory, enabledFilters, null );
+	}
+
+	@Override
+	public String getOnCondition(
+			String alias,
+			SessionFactoryImplementor factory,
+			Map enabledFilters,
+			Set<String> treatAsDeclarations) {
+		if ( isReferenceToPrimaryKey() && ( treatAsDeclarations == null || treatAsDeclarations.isEmpty() ) ) {
 			return "";
 		}
 		else {
-			return getAssociatedJoinable( factory ).filterFragment( alias, enabledFilters );
+			return getAssociatedJoinable( factory ).filterFragment( alias, enabledFilters, treatAsDeclarations );
 		}
 	}
 

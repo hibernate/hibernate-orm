@@ -149,11 +149,15 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 	}
 
 	private boolean resolveAsAlias() {
+		final String alias = getText();
+
 		// This is not actually a constant, but a reference to FROM element.
-		final FromElement element = getWalker().getCurrentFromClause().getFromElement( getText() );
+		final FromElement element = getWalker().getCurrentFromClause().getFromElement( alias );
 		if ( element == null ) {
 			return false;
 		}
+
+		element.applyTreatAsDeclarations( getWalker().getTreatAsDeclarationsByPath( alias ) );
 
 		setType( SqlTokenTypes.ALIAS_REF );
 		setFromElement( element );

@@ -24,10 +24,14 @@
 package org.hibernate.persister.entity;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -45,6 +49,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -498,12 +503,168 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			k++;
 		}
 
+		subclassNamesBySubclassTable = buildSubclassNamesBySubclassTableMapping( persistentClass, factory );
+
 		initLockers();
 
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( mapping );
 
+	}
+
+
+	/**
+	 * Used to hold the name of subclasses that each "subclass table" is part of.  For example, given a hierarchy like:
+	 * {@code JoinedEntity <- JoinedEntitySubclass <- JoinedEntitySubSubclass}..
+	 * <p/>
+	 * For the persister for JoinedEntity, we'd have:
+	 * <pre>
+	 *     subclassClosure[0] = "JoinedEntitySubSubclass"
+	 *     subclassClosure[1] = "JoinedEntitySubclass"
+	 *     subclassClosure[2] = "JoinedEntity"
+	 *
+	 *     subclassTableNameClosure[0] = "T_JoinedEntity"
+	 *     subclassTableNameClosure[1] = "T_JoinedEntitySubclass"
+	 *     subclassTableNameClosure[2] = "T_JoinedEntitySubSubclass"
+	 *
+	 *     subclassNameClosureBySubclassTable[0] = ["JoinedEntitySubSubclass", "JoinedEntitySubclass"]
+	 *     subclassNameClosureBySubclassTable[1] = ["JoinedEntitySubSubclass"]
+	 * </pre>
+	 * Note that there are only 2 entries in subclassNameClosureBySubclassTable.  That is because there are really only
+	 * 2 tables here that make up the subclass mapping, the others make up the class/superclass table mappings.  We
+	 * do not need to account for those here.  The "offset" is defined by the value of {@link #getTableSpan()}.
+	 * Therefore the corresponding row in subclassNameClosureBySubclassTable for a given row in subclassTableNameClosure
+	 * is calculated as {@code subclassTableNameClosureIndex - getTableSpan()}.
+	 * <p/>
+	 * As we consider each subclass table we can look into this array based on the subclass table's index and see
+	 * which subclasses would require it to be included.  E.g., given {@code TREAT( x AS JoinedEntitySubSubclass )},
+	 * when trying to decide whether to include join to "T_JoinedEntitySubclass" (subclassTableNameClosureIndex = 1),
+	 * we'd look at {@code subclassNameClosureBySubclassTable[0]} and see if the TREAT-AS subclass name is included in
+	 * its values.  Since {@code subclassNameClosureBySubclassTable[1]} includes "JoinedEntitySubSubclass", we'd
+	 * consider it included.
+	 * <p/>
+	 * {@link #subclassTableNameClosure} also accounts for secondary tables and we properly handle those as we
+	 * build the subclassNamesBySubclassTable array and they are therefore properly handled when we use it
+	 */
+	private final String[][] subclassNamesBySubclassTable;
+
+	/**
+	 * Essentially we are building a mapping that we can later use to determine whether a given "subclass table"
+	 * should be included in joins when JPA TREAT-AS is used.
+	 *
+	 * @param persistentClass
+	 * @param factory
+	 * @return
+	 */
+	private String[][] buildSubclassNamesBySubclassTableMapping(PersistentClass persistentClass, SessionFactoryImplementor factory) {
+		// this value represents the number of subclasses (and not the class itself)
+		final int numberOfSubclassTables = subclassTableNameClosure.length - coreTableSpan;
+		if ( numberOfSubclassTables == 0 ) {
+			return new String[0][];
+		}
+
+		final String[][] mapping = new String[numberOfSubclassTables][];
+		processPersistentClassHierarchy( persistentClass, true, factory, mapping );
+		return mapping;
+	}
+
+	private Set<String> processPersistentClassHierarchy(
+			PersistentClass persistentClass,
+			boolean isBase,
+			SessionFactoryImplementor factory,
+			String[][] mapping) {
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// collect all the class names that indicate that the "main table" of the given PersistentClass should be
+		// included when one of the collected class names is used in TREAT
+		final Set<String> classNames = new HashSet<String>();
+
+		final Iterator itr = persistentClass.getDirectSubclasses();
+		while ( itr.hasNext() ) {
+			final Subclass subclass = (Subclass) itr.next();
+			final Set<String> subclassSubclassNames = processPersistentClassHierarchy(
+					subclass,
+					false,
+					factory,
+					mapping
+			);
+			classNames.addAll( subclassSubclassNames );
+		}
+
+		classNames.add( persistentClass.getEntityName() );
+
+		if ( ! isBase ) {
+			MappedSuperclass msc = persistentClass.getSuperMappedSuperclass();
+			while ( msc != null ) {
+				classNames.add( msc.getMappedClass().getName() );
+				msc = msc.getSuperMappedSuperclass();
+			}
+
+			associateSubclassNamesToSubclassTableIndexes( persistentClass, classNames, mapping, factory );
+		}
+
+		return classNames;
+	}
+
+	private void associateSubclassNamesToSubclassTableIndexes(
+			PersistentClass persistentClass,
+			Set<String> classNames,
+			String[][] mapping,
+			SessionFactoryImplementor factory) {
+
+		final String tableName = persistentClass.getTable().getQualifiedName(
+				factory.getDialect(),
+				factory.getSettings().getDefaultCatalogName(),
+				factory.getSettings().getDefaultSchemaName()
+		);
+
+		associateSubclassNamesToSubclassTableIndex( tableName, classNames, mapping );
+
+		Iterator itr = persistentClass.getJoinIterator();
+		while ( itr.hasNext() ) {
+			final Join join = (Join) itr.next();
+			final String secondaryTableName = join.getTable().getQualifiedName(
+					factory.getDialect(),
+					factory.getSettings().getDefaultCatalogName(),
+					factory.getSettings().getDefaultSchemaName()
+			);
+			associateSubclassNamesToSubclassTableIndex( secondaryTableName, classNames, mapping );
+		}
+	}
+
+	private void associateSubclassNamesToSubclassTableIndex(
+			String tableName,
+			Set<String> classNames,
+			String[][] mapping) {
+		// find the table's entry in the subclassTableNameClosure array
+		boolean found = false;
+		for ( int i = 0; i < subclassTableNameClosure.length; i++ ) {
+			if ( subclassTableNameClosure[i].equals( tableName ) ) {
+				found = true;
+				final int index = i - coreTableSpan;
+				if ( index < 0 || index >= mapping.length ) {
+					throw new IllegalStateException(
+							String.format(
+									"Encountered 'subclass table index' [%s] was outside expected range ( [%s] < i < [%s] )",
+									index,
+									0,
+									mapping.length
+							)
+					);
+				}
+				mapping[index] = classNames.toArray( new String[ classNames.size() ] );
+				break;
+			}
+		}
+		if ( !found ) {
+			throw new IllegalStateException(
+					String.format(
+							"Was unable to locate subclass table [%s] in 'subclassTableNameClosure'",
+							tableName
+					)
+			);
+		}
 	}
 
 	public JoinedSubclassEntityPersister(
@@ -545,6 +706,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		discriminatorSQLString = null;
 		coreTableSpan = -1;
 		isNullableTable = null;
+		subclassNamesBySubclassTable = null;
 	}
 
 	protected boolean isNullableTable(int j) {
@@ -716,10 +878,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return cases;
 	}
 
+	@Override
 	public String filterFragment(String alias) {
-		return hasWhere() ?
-				" and " + getSQLWhereString( generateFilterConditionAlias( alias ) ) :
-				"";
+		return hasWhere()
+				? " and " + getSQLWhereString( generateFilterConditionAlias( alias ) )
+				: "";
+	}
+
+	@Override
+	public String filterFragment(String alias, Set<String> treatAsDeclarations) {
+		return filterFragment( alias );
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {
@@ -800,6 +968,41 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	protected boolean isClassOrSuperclassTable(int j) {
 		return isClassOrSuperclassTable[j];
+	}
+
+	@Override
+	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
+			int subclassTableNumber,
+			Set<String> treatAsDeclarations) {
+		if ( treatAsDeclarations == null || treatAsDeclarations.isEmpty() ) {
+			return false;
+		}
+
+		final String[] inclusionSubclassNameClosure = getSubclassNameClosureBySubclassTable( subclassTableNumber );
+
+		// NOTE : we assume the entire hierarchy is joined-subclass here
+		for ( String subclassName : treatAsDeclarations ) {
+			for ( String inclusionSubclassName : inclusionSubclassNameClosure ) {
+				if ( inclusionSubclassName.equals( subclassName ) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private String[] getSubclassNameClosureBySubclassTable(int subclassTableNumber) {
+		final int index = subclassTableNumber - getTableSpan();
+
+		if ( index > subclassNamesBySubclassTable.length ) {
+			throw new IllegalArgumentException(
+					"Given subclass table number is outside expected range [" + subclassNamesBySubclassTable.length
+							+ "] as defined by subclassTableNameClosure/subclassClosure"
+			);
+		}
+
+		return subclassNamesBySubclassTable[index];
 	}
 
 	public String getPropertyTableName(String propertyName) {

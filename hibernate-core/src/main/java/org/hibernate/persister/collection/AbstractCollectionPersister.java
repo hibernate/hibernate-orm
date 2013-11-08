@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -1671,16 +1672,36 @@ public abstract class AbstractCollectionPersister
 		return hasWhere() ? " and " + getSQLWhereString( alias ) : "";
 	}
 
-	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
+	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
+		return hasWhere() ? " and " + getSQLWhereString( alias ) : "";
+	}
 
+	public String filterFragment(String alias, Map enabledFilters) throws MappingException {
 		StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
 
 		return sessionFilterFragment.append( filterFragment( alias ) ).toString();
 	}
 
+	@Override
+	public String filterFragment(
+			String alias,
+			Map enabledFilters,
+			Set<String> treatAsDeclarations) {
+		StringBuilder sessionFilterFragment = new StringBuilder();
+		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
+
+		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+	}
+
+	@Override
 	public String oneToManyFilterFragment(String alias) throws MappingException {
 		return "";
+	}
+
+	@Override
+	public String oneToManyFilterFragment(String alias, Set<String> treatAsDeclarations) {
+		return oneToManyFilterFragment( alias );
 	}
 
 	protected boolean isInsertCallable() {

@@ -249,9 +249,15 @@ public class FromElementFactory implements SqlTokenTypes {
 	        boolean fetchFlag,
 	        boolean inFrom,
 	        EntityType type,
-	        String role) throws SemanticException {
+	        String role,
+			String joinPath) throws SemanticException {
 		FromElement elem = createJoin( entityClass, tableAlias, joinSequence, type, false );
 		elem.setFetch( fetchFlag );
+
+		if ( joinPath != null ) {
+			elem.applyTreatAsDeclarations( fromClause.getWalker().getTreatAsDeclarationsByPath( joinPath ) );
+		}
+
 		EntityPersister entityPersister = elem.getEntityPersister();
 		int numberOfTables = entityPersister.getQuerySpaces().length;
 		if ( numberOfTables > 1 && implied && !elem.useFromFragment() ) {
@@ -287,6 +293,7 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	public FromElement createComponentJoin(ComponentType type) {
+
 		// need to create a "place holder" from-element that can store the component/alias for this
 		// 		component join
 		return new ComponentJoin( fromClause, origin, classAlias, path, type );

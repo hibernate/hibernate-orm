@@ -1280,6 +1280,10 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
+	public Set<String> getTreatAsDeclarationsByPath(String path) {
+		return hqlParser.getTreatMap().get( path );
+	}
+
 	public static void panic() {
 		throw new QueryException( "TreeWalker: panic" );
 	}

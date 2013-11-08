@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -692,6 +693,15 @@ public abstract class CollectionType extends AbstractType implements Association
 	public String getOnCondition(String alias, SessionFactoryImplementor factory, Map enabledFilters)
 			throws MappingException {
 		return getAssociatedJoinable( factory ).filterFragment( alias, enabledFilters );
+	}
+
+	@Override
+	public String getOnCondition(
+			String alias,
+			SessionFactoryImplementor factory,
+			Map enabledFilters,
+			Set<String> treatAsDeclarations) {
+		return getAssociatedJoinable( factory ).filterFragment( alias, enabledFilters, treatAsDeclarations );
 	}
 
 	/**

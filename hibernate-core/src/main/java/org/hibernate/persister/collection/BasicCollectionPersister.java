@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -343,11 +344,23 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				.createBatchingCollectionInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
 	}
 
+	@Override
 	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
 		return "";
 	}
 
+	@Override
+	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations) {
+		return "";
+	}
+
+	@Override
 	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
+		return "";
+	}
+
+	@Override
+	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations) {
 		return "";
 	}
 

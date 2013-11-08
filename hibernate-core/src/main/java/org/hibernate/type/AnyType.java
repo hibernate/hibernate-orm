@@ -30,6 +30,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 import org.dom4j.Node;
 
@@ -510,6 +511,14 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public String getOnCondition(
+			String alias,
+			SessionFactoryImplementor factory,
+			Map enabledFilters,
+			Set<String> treatAsDeclarations) {
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Used to externalize discrimination per a given identifier.  For example, when writing to

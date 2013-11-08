@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -478,21 +479,37 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				.createBatchingOneToManyInitializer( this, batchSize, getFactory(), loadQueryInfluencers );
 	}
 
-	public String fromJoinFragment(String alias,
-								   boolean innerJoin,
-								   boolean includeSubclasses) {
-		return ( ( Joinable ) getElementPersister() ).fromJoinFragment( alias, innerJoin, includeSubclasses );
+	@Override
+	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
+		return ( (Joinable) getElementPersister() ).fromJoinFragment( alias, innerJoin, includeSubclasses );
 	}
 
-	public String whereJoinFragment(String alias,
-									boolean innerJoin,
-									boolean includeSubclasses) {
-		return ( ( Joinable ) getElementPersister() ).whereJoinFragment( alias, innerJoin, includeSubclasses );
+	@Override
+	public String fromJoinFragment(
+			String alias,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations) {
+		return ( (Joinable) getElementPersister() ).fromJoinFragment( alias, innerJoin, includeSubclasses, treatAsDeclarations );
+	}
+
+	@Override
+	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
+		return ( (Joinable) getElementPersister() ).whereJoinFragment( alias, innerJoin, includeSubclasses );
+	}
+
+	@Override
+	public String whereJoinFragment(
+			String alias,
+			boolean innerJoin,
+			boolean includeSubclasses,
+			Set<String> treatAsDeclarations) {
+		return ( (Joinable) getElementPersister() ).whereJoinFragment( alias, innerJoin, includeSubclasses, treatAsDeclarations );
 	}
 
 	@Override
     public String getTableName() {
-		return ( ( Joinable ) getElementPersister() ).getTableName();
+		return ( (Joinable) getElementPersister() ).getTableName();
 	}
 
 	@Override
@@ -503,6 +520,15 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 		return result;
 
+	}
+
+	@Override
+	protected String filterFragment(String alias, Set<String> treatAsDeclarations) throws MappingException {
+		String result = super.filterFragment( alias );
+		if ( getElementPersister() instanceof Joinable ) {
+			result += ( ( Joinable ) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
+		}
+		return result;
 	}
 
 	@Override

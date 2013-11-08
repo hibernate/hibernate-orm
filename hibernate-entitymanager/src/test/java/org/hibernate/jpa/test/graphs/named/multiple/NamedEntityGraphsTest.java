@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { /*Person.class,*/ Employee.class };
+		return new Class[] { Person.class, Employee.class };
 	}
 
 	@Test
@@ -54,16 +54,8 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 	}
 
 	@Test
-	public void testGetData() {
+	public void testAttributeNodesAreAvailable() {
 		EntityManager em = getOrCreateEntityManager();
-//		em.getTransaction().begin();
-//
-//		Employee employee = new Employee();
-//		employee.setId(3l);
-//		employee.setName("Sharon");
-//		employee.setSalary(20000.0);
-//		em.persist(employee);
-		try {
 			EntityGraph graph = em.getEntityGraph( "name_salary_graph" );
 			assertNotNull( graph );
 
@@ -81,12 +73,6 @@ public class NamedEntityGraphsTest  extends BaseEntityManagerFunctionalTestCase 
 
 			assertTrue( "node2 attribute name is expected to be either 'name' or 'salary' but actually is "+attributeNode2.getAttributeName(),
 					"name".equals(attributeNode2.getAttributeName()) || "salary".equals(attributeNode2.getAttributeName()));
-
-		}
-		finally {
-//			em.getTransaction().rollback();
-			em.close();
-		}
 	}
 
 }

@@ -59,7 +59,7 @@ class WKB {
 
 
 	static byte[] toWKB(Geometry jtsGeom) {
-		WKBWriter writer = new WKBWriter(2, true);
+		WKBWriter writer = new WKBWriter(3, true);
 		return writer.write(jtsGeom);
 	}
 }

@@ -51,9 +51,8 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 			String uid,
 			Disposition disposition,
 			ExpandingQuerySpaces querySpaces,
-			boolean canJoinsBeRequired,
-			SessionFactoryImplementor sessionFactory) {
-		super( sessionFactory );
+			boolean canJoinsBeRequired) {
+		super( querySpaces.getSessionFactory() );
 		this.uid = uid;
 		this.disposition = disposition;
 		this.querySpaces = querySpaces;

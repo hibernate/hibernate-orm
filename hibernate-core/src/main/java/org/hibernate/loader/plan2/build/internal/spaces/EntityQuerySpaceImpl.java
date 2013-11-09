@@ -42,9 +42,8 @@ public class EntityQuerySpaceImpl extends AbstractExpandingSourceQuerySpace impl
 			EntityPersister persister,
 			String uid,
 			ExpandingQuerySpaces querySpaces,
-			boolean canJoinsBeRequired,
-			SessionFactoryImplementor sessionFactory) {
-		super( uid, Disposition.ENTITY, querySpaces, canJoinsBeRequired, sessionFactory );
+			boolean canJoinsBeRequired) {
+		super( uid, Disposition.ENTITY, querySpaces, canJoinsBeRequired );
 		this.persister = persister;
 	}
 
@@ -58,6 +57,11 @@ public class EntityQuerySpaceImpl extends AbstractExpandingSourceQuerySpace impl
 		// "optional interface hierarchy" for entity persisters.  The internal ones all implement
 		// PropertyMapping...
 		return (PropertyMapping) persister;
+	}
+
+	@Override
+	public String[] toAliasedColumns(String alias, String propertyName) {
+		return getPropertyMapping().toColumns( alias, propertyName );
 	}
 
 	@Override

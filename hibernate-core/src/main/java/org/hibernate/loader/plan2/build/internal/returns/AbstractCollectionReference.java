@@ -24,6 +24,8 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan2.build.internal.spaces.CompositePropertyMapping;
+import org.hibernate.loader.plan2.build.internal.spaces.QuerySpaceHelper;
 import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
@@ -31,7 +33,9 @@ import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -48,15 +52,18 @@ public abstract class AbstractCollectionReference implements CollectionReference
 
 	protected AbstractCollectionReference(
 			ExpandingCollectionQuerySpace collectionQuerySpace,
-			PropertyPath propertyPath) {
+			PropertyPath propertyPath,
+			boolean shouldIncludeJoins) {
 		this.collectionQuerySpace = collectionQuerySpace;
 		this.propertyPath = propertyPath;
 
-		this.index = buildIndexGraph( collectionQuerySpace );
-		this.element = buildElementGraph( collectionQuerySpace );
+		this.index = buildIndexGraph( collectionQuerySpace, shouldIncludeJoins );
+		this.element = buildElementGraph( collectionQuerySpace, shouldIncludeJoins );
 	}
 
-	private CollectionFetchableIndex buildIndexGraph(ExpandingCollectionQuerySpace collectionQuerySpace) {
+	private CollectionFetchableIndex buildIndexGraph(
+			ExpandingCollectionQuerySpace collectionQuerySpace,
+			boolean shouldIncludeJoins) {
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		if ( persister.hasIndex() ) {
 			final Type type = persister.getIndexType();
@@ -66,15 +73,31 @@ public abstract class AbstractCollectionReference implements CollectionReference
 							( (EntityType) type ).getAssociatedEntityName()
 					);
 
-					final ExpandingEntityQuerySpace entityQuerySpace = collectionQuerySpace.addIndexEntityQuerySpace(
-							indexPersister
+					final ExpandingEntityQuerySpace entityQuerySpace = QuerySpaceHelper.INSTANCE.makeEntityQuerySpace(
+							collectionQuerySpace,
+							indexPersister,
+							CollectionPropertyNames.COLLECTION_INDICES,
+							(EntityType) persister.getIndexType(),
+							collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
+							collectionQuerySpace.canJoinsBeRequired(),
+							shouldIncludeJoins
 					);
 					return new CollectionFetchableIndexEntityGraph( this, entityQuerySpace );
 				}
 			}
 			else if ( type.isComponentType() ) {
-				final ExpandingCompositeQuerySpace compositeQuerySpace = collectionQuerySpace.addIndexCompositeQuerySpace(
-						(CompositeType) type
+				final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
+						collectionQuerySpace,
+						new CompositePropertyMapping(
+								(CompositeType) persister.getIndexType(),
+								(PropertyMapping) persister,
+								""
+						),
+						CollectionPropertyNames.COLLECTION_INDICES,
+						(CompositeType) persister.getIndexType(),
+						collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
+						collectionQuerySpace.canJoinsBeRequired(),
+						shouldIncludeJoins
 				);
 				return new CollectionFetchableIndexCompositeGraph( this, compositeQuerySpace );
 			}
@@ -84,7 +107,8 @@ public abstract class AbstractCollectionReference implements CollectionReference
 	}
 
 	private CollectionFetchableElement buildElementGraph(
-			ExpandingCollectionQuerySpace collectionQuerySpace) {
+			ExpandingCollectionQuerySpace collectionQuerySpace,
+			boolean shouldIncludeJoins) {
 		final CollectionPersister persister = collectionQuerySpace.getCollectionPersister();
 		final Type type = persister.getElementType();
 		if ( type.isAssociationType() ) {
@@ -92,16 +116,31 @@ public abstract class AbstractCollectionReference implements CollectionReference
 				final EntityPersister elementPersister = persister.getFactory().getEntityPersister(
 						( (EntityType) type ).getAssociatedEntityName()
 				);
-
-				final ExpandingEntityQuerySpace entityQuerySpace = collectionQuerySpace.addElementEntityQuerySpace(
-						elementPersister
+				final ExpandingEntityQuerySpace entityQuerySpace = QuerySpaceHelper.INSTANCE.makeEntityQuerySpace(
+						collectionQuerySpace,
+						elementPersister,
+						CollectionPropertyNames.COLLECTION_ELEMENTS,
+						(EntityType) persister.getElementType(),
+						collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
+						collectionQuerySpace.canJoinsBeRequired(),
+						shouldIncludeJoins
 				);
 				return new CollectionFetchableElementEntityGraph( this, entityQuerySpace );
 			}
 		}
 		else if ( type.isComponentType() ) {
-			final ExpandingCompositeQuerySpace compositeQuerySpace = collectionQuerySpace.addElementCompositeQuerySpace(
-					(CompositeType) type
+			final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
+					collectionQuerySpace,
+					new CompositePropertyMapping(
+							(CompositeType) persister.getElementType(),
+							(PropertyMapping) persister,
+							""
+					),
+					CollectionPropertyNames.COLLECTION_ELEMENTS,
+					(CompositeType) persister.getElementType(),
+					collectionQuerySpace.getExpandingQuerySpaces().generateImplicitUid(),
+					collectionQuerySpace.canJoinsBeRequired(),
+					shouldIncludeJoins
 			);
 			return new CollectionFetchableElementCompositeGraph( this, compositeQuerySpace );
 		}

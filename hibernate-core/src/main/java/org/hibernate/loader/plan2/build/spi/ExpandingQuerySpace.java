@@ -23,34 +23,17 @@
  */
 package org.hibernate.loader.plan2.build.spi;
 
+import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.loader.plan2.spi.QuerySpace;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
  * @author Steve Ebersole
  */
-public interface ExpandingSourceQuerySpace extends QuerySpace {
+public interface ExpandingQuerySpace extends QuerySpace {
 
-	public ExpandingCompositeQuerySpace addCompositeQuerySpace(
-			CompositionDefinition compositionDefinition,
-			String querySpaceUid,
-			boolean shouldIncludeJoin);
+	public boolean canJoinsBeRequired();
 
-	public ExpandingEntityQuerySpace addEntityQuerySpace(
-			AttributeDefinition attributeDefinition,
-			EntityPersister persister,
-			String querySpaceUid,
-			boolean optional,
-			boolean shouldIncludeJoin);
-
-	public ExpandingCollectionQuerySpace addCollectionQuerySpace(
-			AttributeDefinition attributeDefinition,
-			CollectionPersister collectionPersister,
-			String querySpaceUid,
-			boolean shouldIncludeJoin);
+	public void addJoin(Join join);
 
 	public ExpandingQuerySpaces getExpandingQuerySpaces();
 }

@@ -30,24 +30,23 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.plan2.build.internal.spaces.QuerySpaceHelper;
 import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
+import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan2.build.spi.ExpandingSourceQuerySpace;
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
-import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
-import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 
 /**
@@ -65,12 +64,12 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	private static final BidirectionalEntityReference[] NO_BIDIRECTIONAL_ENTITY_REFERENCES =
 			new BidirectionalEntityReference[0];
 
-	private final ExpandingSourceQuerySpace querySpace;
+	private final ExpandingQuerySpace querySpace;
 	private final PropertyPath propertyPath;
 	private List<Fetch> fetches;
 	private List<BidirectionalEntityReference> bidirectionalEntityReferences;
 
-	public AbstractExpandingFetchSource(ExpandingSourceQuerySpace querySpace, PropertyPath propertyPath) {
+	public AbstractExpandingFetchSource(ExpandingQuerySpace querySpace, PropertyPath propertyPath) {
 		this.querySpace = querySpace;
 		this.propertyPath = propertyPath;
 	}
@@ -80,7 +79,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 		return querySpace.getUid();
 	}
 
-	protected final ExpandingSourceQuerySpace expandingQuerySpace() {
+	protected final ExpandingQuerySpace expandingQuerySpace() {
 		return querySpace;
 	}
 
@@ -121,25 +120,12 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	public EntityFetch buildEntityFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
-		final EntityType fetchedType = (EntityType) attributeDefinition.getType();
-		final EntityPersister fetchedPersister = attributeDefinition.toEntityDefinition().getEntityPersister();
 
-		if ( fetchedPersister == null ) {
-			throw new WalkingException(
-					String.format(
-							"Unable to locate EntityPersister [%s] for fetch [%s]",
-							fetchedType.getAssociatedEntityName(),
-							attributeDefinition.getName()
-					)
-			);
-		}
-
-		final ExpandingEntityQuerySpace entityQuerySpace = querySpace.addEntityQuerySpace(
+		final ExpandingEntityQuerySpace entityQuerySpace = QuerySpaceHelper.INSTANCE.makeEntityQuerySpace(
+				expandingQuerySpace(),
 				attributeDefinition,
-				fetchedPersister,
 				getQuerySpaces().generateImplicitUid(),
-				attributeDefinition.isNullable(),
-				shouldIncludeJoin( fetchStrategy )
+				fetchStrategy
 		);
 		final EntityFetch fetch = new EntityFetchImpl( this, attributeDefinition, fetchStrategy, entityQuerySpace );
 		addFetch( fetch );
@@ -181,12 +167,13 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	@Override
 	public CompositeFetch buildCompositeFetch(
 			CompositionDefinition attributeDefinition) {
-		final ExpandingSourceQuerySpace leftHandSide = expandingQuerySpace();
-		final ExpandingCompositeQuerySpace compositeQuerySpace = leftHandSide.addCompositeQuerySpace(
+		final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
+				expandingQuerySpace(),
 				attributeDefinition,
 				getQuerySpaces().generateImplicitUid(),
-				shouldIncludeJoin( AbstractCompositeFetch.FETCH_STRATEGY )
+				true
 		);
+
 		final CompositeFetch fetch = createCompositeFetch( attributeDefinition, compositeQuerySpace );
 		addFetch( fetch );
 		return fetch;
@@ -197,27 +184,13 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
 
-		// general question here wrt Joins and collection fetches...  do we create multiple Joins for many-to-many,
-		// for example, or do we allow the Collection QuerySpace to handle that?
-
-		final CollectionType fetchedType = (CollectionType) attributeDefinition.getType();
-		final CollectionPersister fetchedPersister = attributeDefinition.toCollectionDefinition().getCollectionPersister();
-
-		if ( fetchedPersister == null ) {
-			throw new WalkingException(
-					String.format(
-							"Unable to locate CollectionPersister [%s] for fetch [%s]",
-							fetchedType.getRole(),
-							attributeDefinition.getName()
-					)
-			);
-		}
-		final ExpandingCollectionQuerySpace collectionQuerySpace = querySpace.addCollectionQuerySpace(
+		final ExpandingCollectionQuerySpace collectionQuerySpace = QuerySpaceHelper.INSTANCE.makeCollectionQuerySpace(
+				querySpace,
 				attributeDefinition,
-				fetchedPersister,
 				getQuerySpaces().generateImplicitUid(),
-				shouldIncludeJoin( fetchStrategy )
+				fetchStrategy
 		);
+
 		final CollectionFetch fetch = new CollectionFetchImpl(
 				this,
 				attributeDefinition,
@@ -226,9 +199,5 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 		);
 		addFetch( fetch );
 		return fetch;
-	}
-
-	private boolean shouldIncludeJoin(FetchStrategy fetchStrategy) {
-		return fetchStrategy.getTiming() == FetchTiming.IMMEDIATE && fetchStrategy.getStyle() == FetchStyle.JOIN;
 	}
 }

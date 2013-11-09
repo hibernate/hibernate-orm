@@ -57,6 +57,16 @@ public interface QuerySpace {
 	 */
 	public PropertyMapping getPropertyMapping();
 
+
+	/**
+	 * Get the aliased column names for the specified property in the query space..
+	 *
+	 * @return the aliased column names for the specified property
+	 * @param alias - the table alias
+	 * @param propertyName - the property name
+	 */
+	public String[] toAliasedColumns(String alias, String propertyName);
+
 	/**
 	 * Enumeration of the different types of QuerySpaces we can have.
 	 */

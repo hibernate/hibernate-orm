@@ -45,7 +45,7 @@ public class CollectionFetchableElementCompositeGraph
 			CollectionReference collectionReference,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		super(
-				(CompositeType) compositeQuerySpace.getPropertyMapping().getType(),
+				(CompositeType) collectionReference.getCollectionPersister().getElementType(),
 				compositeQuerySpace,
 				false,
 				// these property paths are just informational...

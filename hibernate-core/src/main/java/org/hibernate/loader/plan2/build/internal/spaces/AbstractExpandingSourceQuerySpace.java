@@ -24,124 +24,26 @@
 package org.hibernate.loader.plan2.build.internal.spaces;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
-import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
-import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
+import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan2.build.spi.ExpandingSourceQuerySpace;
-import org.hibernate.loader.plan2.spi.JoinDefinedByMetadata;
-import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Queryable;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.EntityType;
+import org.hibernate.loader.plan2.spi.Join;
 
 /**
  * @author Gail Badner
  */
-public abstract class AbstractExpandingSourceQuerySpace extends AbstractQuerySpace implements ExpandingSourceQuerySpace {
+public abstract class AbstractExpandingSourceQuerySpace extends AbstractQuerySpace implements ExpandingQuerySpace {
 
 	public AbstractExpandingSourceQuerySpace(
 			String uid,
 			Disposition disposition,
 			ExpandingQuerySpaces querySpaces,
-			boolean canJoinsBeRequired,
-			SessionFactoryImplementor sessionFactory) {
-		super( uid, disposition, querySpaces, canJoinsBeRequired, sessionFactory );
+			boolean canJoinsBeRequired) {
+		super( uid, disposition, querySpaces, canJoinsBeRequired );
 	}
 
 	@Override
-	public ExpandingCompositeQuerySpace addCompositeQuerySpace(
-			CompositionDefinition compositionDefinition,
-			String querySpaceUid,
-			boolean shouldIncludeJoin) {
-		final boolean required = canJoinsBeRequired() && !compositionDefinition.isNullable();
-
-		final ExpandingCompositeQuerySpace rhs = getExpandingQuerySpaces().makeCompositeQuerySpace(
-				querySpaceUid,
-				new CompositePropertyMapping(
-						compositionDefinition.getType(),
-						getPropertyMapping(),
-						compositionDefinition.getName()
-				),
-				required
-		);
-
-		if ( shouldIncludeJoin ) {
-			final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCompositeJoin(
-					this,
-					compositionDefinition.getName(),
-					rhs,
-					required,
-					compositionDefinition.getType()
-			);
-			internalGetJoins().add( join );
-		}
-
-		return rhs;
-	}
-
-	@Override
-	public ExpandingEntityQuerySpace addEntityQuerySpace(
-			AttributeDefinition attribute,
-			EntityPersister persister,
-			String querySpaceUid,
-			boolean optional,
-			boolean shouldIncludeJoin) {
-		// TODO: Queryable.isMultiTable() may be more broad than it needs to be...
-		final boolean isMultiTable = Queryable.class.cast( persister ).isMultiTable();
-		final boolean required = canJoinsBeRequired() && !isMultiTable && !optional;
-
-		final ExpandingEntityQuerySpace rhs = getExpandingQuerySpaces().makeEntityQuerySpace(
-				querySpaceUid,
-				persister,
-				required
-		);
-
-		if ( shouldIncludeJoin ) {
-			final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createEntityJoin(
-					this,
-					attribute.getName(),
-					rhs,
-					required,
-					(EntityType) attribute.getType(),
-					sessionFactory()
-			);
-			internalGetJoins().add( join );
-		}
-
-		return rhs;
-	}
-
-	@Override
-	public ExpandingCollectionQuerySpace addCollectionQuerySpace(
-			AttributeDefinition attributeDefinition,
-			CollectionPersister collectionPersister,
-			String querySpaceUid,
-			boolean shouldIncludeJoin) {
-		final boolean required = canJoinsBeRequired() && !attributeDefinition.isNullable();
-
-		final ExpandingCollectionQuerySpace rhs = getExpandingQuerySpaces().makeCollectionQuerySpace(
-				querySpaceUid,
-				collectionPersister,
-				required
-		);
-
-		if ( shouldIncludeJoin ) {
-			final JoinDefinedByMetadata join = JoinHelper.INSTANCE.createCollectionJoin(
-					this,
-					attributeDefinition.getName(),
-					rhs,
-					required,
-					(CollectionType) attributeDefinition.getType(),
-					sessionFactory()
-			);
-			internalGetJoins().add( join );
-		}
-
-		return rhs;
+	public void addJoin(Join join) {
+		internalGetJoins().add( join );
 	}
 
 	@Override

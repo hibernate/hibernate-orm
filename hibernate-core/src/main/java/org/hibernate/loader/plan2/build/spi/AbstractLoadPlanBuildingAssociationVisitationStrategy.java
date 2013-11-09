@@ -803,14 +803,18 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 					attributeDefinition,
 					fetchStrategy
 			);
-			pushToStack( (ExpandingFetchSource) fetch );
+			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
+				pushToStack( (ExpandingFetchSource) fetch );
+			}
 		}
 		else {
 			// Collection
 			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy );
-			pushToCollectionStack( fetch );
+			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
+				pushToCollectionStack( fetch );
+			}
 		}
-		return true;
+		return fetchStrategy.getStyle() == FetchStyle.JOIN;
 	}
 
 	protected abstract FetchStrategy determineFetchStrategy(AssociationAttributeDefinition attributeDefinition);

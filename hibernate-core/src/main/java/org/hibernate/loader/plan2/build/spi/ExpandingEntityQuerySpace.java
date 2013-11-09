@@ -28,6 +28,6 @@ import org.hibernate.loader.plan2.spi.EntityQuerySpace;
 /**
  * @author Steve Ebersole
  */
-public interface ExpandingEntityQuerySpace extends EntityQuerySpace, ExpandingSourceQuerySpace {
+public interface ExpandingEntityQuerySpace extends EntityQuerySpace, ExpandingQuerySpace {
 	public ExpandingCompositeQuerySpace makeCompositeIdentifierQuerySpace();
 }

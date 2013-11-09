@@ -24,6 +24,7 @@
 package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.engine.FetchStrategy;
+import org.hibernate.loader.plan2.build.internal.spaces.QuerySpaceHelper;
 import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
@@ -47,7 +48,9 @@ public class CollectionFetchImpl extends AbstractCollectionReference implements 
 			ExpandingCollectionQuerySpace collectionQuerySpace) {
 		super(
 				collectionQuerySpace,
-				fetchSource.getPropertyPath().append( fetchedAttribute.getName() )
+				fetchSource.getPropertyPath().append( fetchedAttribute.getName() ),
+				QuerySpaceHelper.INSTANCE.shouldIncludeJoin( fetchStrategy )
+
 		);
 
 		this.fetchSource = fetchSource;

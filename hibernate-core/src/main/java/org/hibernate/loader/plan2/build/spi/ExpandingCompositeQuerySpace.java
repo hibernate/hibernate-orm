@@ -28,5 +28,5 @@ import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 /**
  * @author Gail Badner
  */
-public interface ExpandingCompositeQuerySpace extends CompositeQuerySpace, ExpandingSourceQuerySpace {
+public interface ExpandingCompositeQuerySpace extends CompositeQuerySpace, ExpandingQuerySpace {
 }

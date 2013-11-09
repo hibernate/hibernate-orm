@@ -23,6 +23,7 @@
  */
 package org.hibernate.loader.plan2.build.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan2.build.internal.spaces.CompositePropertyMapping;
 import org.hibernate.loader.plan2.spi.QuerySpaces;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -56,4 +57,6 @@ public interface ExpandingQuerySpaces extends QuerySpaces {
 			String uid,
 			CompositePropertyMapping compositePropertyMapping,
 			boolean canJoinsBeRequired);
+
+	public SessionFactoryImplementor getSessionFactory();
 }

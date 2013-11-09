@@ -30,15 +30,5 @@ import org.hibernate.type.CompositeType;
 /**
  * @author Gail Badner
  */
-public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace {
-
-	public ExpandingEntityQuerySpace addIndexEntityQuerySpace(final EntityPersister elementPersister);
-
-	public ExpandingCompositeQuerySpace addIndexCompositeQuerySpace(CompositeType compositeType);
-
-	public ExpandingEntityQuerySpace addElementEntityQuerySpace(
-			final EntityPersister elementPersister);
-
-	public ExpandingCompositeQuerySpace addElementCompositeQuerySpace(
-			CompositeType compositeType);
+public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace, ExpandingQuerySpace {
 }

@@ -105,8 +105,7 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 				entityPersister,
 				uid,
 				this,
-				canJoinsBeRequired,
-				sessionFactory
+				canJoinsBeRequired
 		);
 		registerQuerySpace( space );
 
@@ -132,8 +131,7 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 				collectionPersister,
 				uid,
 				this,
-				canJoinsBeRequired,
-				sessionFactory
+				canJoinsBeRequired
 		);
 		registerQuerySpace( space );
 
@@ -152,12 +150,16 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 				compositePropertyMapping,
 				uid,
 				this,
-				canJoinsBeRequired,
-				sessionFactory
+				canJoinsBeRequired
 		);
 		registerQuerySpace( space );
 
 		return space;
+	}
+
+	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return sessionFactory;
 	}
 
 	private void checkQuerySpaceDoesNotExist(String uid) {

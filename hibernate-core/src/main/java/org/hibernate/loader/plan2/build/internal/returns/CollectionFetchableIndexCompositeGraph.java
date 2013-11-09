@@ -28,7 +28,6 @@ import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.loader.plan2.spi.Join;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -48,21 +47,12 @@ public class CollectionFetchableIndexCompositeGraph
 			CollectionReference collectionReference,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		super(
-				extractIndexType( compositeQuerySpace ),
+				(CompositeType) collectionReference.getCollectionPersister().getIndexType(),
 				compositeQuerySpace,
 				false,
 				collectionReference.getPropertyPath().append( "<index>" )
 		);
 		this.collectionReference = collectionReference;
-	}
-
-	private static CompositeType extractIndexType(ExpandingCompositeQuerySpace compositeQuerySpace) {
-		final Type type = compositeQuerySpace.getPropertyMapping().getType();
-		if ( CompositeType.class.isInstance( type ) ) {
-			return (CompositeType) type;
-		}
-
-		throw new IllegalArgumentException( "Could note extract collection composite-index" );
 	}
 
 	@Override

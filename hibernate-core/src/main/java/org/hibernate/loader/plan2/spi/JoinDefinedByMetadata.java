@@ -23,7 +23,6 @@
  */
 package org.hibernate.loader.plan2.spi;
 
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 
 /**
@@ -34,7 +33,7 @@ import org.hibernate.type.Type;
 public interface JoinDefinedByMetadata extends Join {
 	/**
 	 * Obtain the name of the property that defines the join, relative to the PropertyMapping
-	 * ({@link org.hibernate.loader.plan2.spi.QuerySpace#getPropertyMapping()}) of the left-hand-side
+	 * ({@link QuerySpace#toAliasedColumns(String, String)}) of the left-hand-side
 	 * ({@link #getLeftHandSide()}) of the join
 	 *
 	 * @return The property name

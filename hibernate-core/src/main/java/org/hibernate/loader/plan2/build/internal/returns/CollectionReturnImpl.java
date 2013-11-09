@@ -39,7 +39,8 @@ public class CollectionReturnImpl extends AbstractCollectionReference implements
 						querySpaces.generateImplicitUid(),
 						collectionDefinition.getCollectionPersister()
 				),
-				new PropertyPath( "[" + collectionDefinition.getCollectionPersister().getRole() + "]" )
+				new PropertyPath( "[" + collectionDefinition.getCollectionPersister().getRole() + "]" ),
+				true
 		);
 	}
 }

@@ -25,6 +25,9 @@ package org.hibernate.loader.plan2.spi;
 
 import java.util.List;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.SessionFactoryImpl;
+
 /**
  * Models a collection of {@link QuerySpace} references and exposes the ability to find a {@link QuerySpace} by its UID
  * <p/>

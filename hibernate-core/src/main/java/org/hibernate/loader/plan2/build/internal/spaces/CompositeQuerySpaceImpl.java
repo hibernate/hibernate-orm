@@ -23,7 +23,6 @@
  */
 package org.hibernate.loader.plan2.build.internal.spaces;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -38,14 +37,18 @@ public class CompositeQuerySpaceImpl extends AbstractExpandingSourceQuerySpace i
 			CompositePropertyMapping compositeSubPropertyMapping,
 			String uid,
 			ExpandingQuerySpaces querySpaces,
-			boolean canJoinsBeRequired,
-			SessionFactoryImplementor sessionFactory) {
-		super( uid, Disposition.COMPOSITE, querySpaces, canJoinsBeRequired, sessionFactory );
+			boolean canJoinsBeRequired) {
+		super( uid, Disposition.COMPOSITE, querySpaces, canJoinsBeRequired );
 		this.compositeSubPropertyMapping = compositeSubPropertyMapping;
 	}
 
 	@Override
 	public PropertyMapping getPropertyMapping() {
 		return compositeSubPropertyMapping;
+	}
+
+	@Override
+	public String[] toAliasedColumns(String alias, String propertyName) {
+		return compositeSubPropertyMapping.toColumns( alias,propertyName );
 	}
 }

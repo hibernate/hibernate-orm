@@ -76,7 +76,7 @@ public class JoinImpl implements JoinDefinedByMetadata {
 
 	@Override
 	public String[] resolveAliasedLeftHandSideJoinConditionColumns(String leftHandSideTableAlias) {
-		return getLeftHandSide().getPropertyMapping().toColumns( leftHandSideTableAlias, getJoinedPropertyName() );
+		return getLeftHandSide().toAliasedColumns( leftHandSideTableAlias, getJoinedPropertyName() );
 	}
 
 	@Override

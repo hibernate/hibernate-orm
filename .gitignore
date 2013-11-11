@@ -7,6 +7,7 @@
 # Build output directies
 /target
 */target
+*/**/target
 /build
 */build
 testdb

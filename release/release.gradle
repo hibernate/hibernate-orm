@@ -191,7 +191,7 @@ distributions {
             }
 
             into( 'lib/jpa-metamodel-generator' ) {
-                from parent.project( 'metamodel-generator' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
             }
 
             into( 'lib/envers' ) {

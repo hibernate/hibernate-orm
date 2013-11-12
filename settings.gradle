@@ -13,6 +13,7 @@ include 'hibernate-infinispan'
 
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
+project(':metamodel-generator').name = 'hibernate-jpamodelgen'
 
 include 'hibernate-gradle-plugin'
 include 'hibernate-maven-plugin'

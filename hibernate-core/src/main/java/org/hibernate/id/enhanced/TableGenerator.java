@@ -525,7 +525,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 	}
 
 	@Override
-	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
+	public Serializable generate(final SessionImplementor session, final Object obj) {
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();

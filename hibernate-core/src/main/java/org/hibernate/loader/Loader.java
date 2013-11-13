@@ -40,7 +40,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -64,6 +63,7 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
+import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -116,7 +116,7 @@ public abstract class Loader {
 	protected static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, Loader.class.getName());
 	protected static final boolean DEBUG_ENABLED = LOG.isDebugEnabled();
 	private final SessionFactoryImplementor factory;
-	private ColumnNameCache columnNameCache;
+	private volatile ColumnNameCache columnNameCache;
 
 	private final boolean referenceCachingEnabled;
 
@@ -2085,9 +2085,7 @@ public abstract class Loader {
 
 	}
 
-	private synchronized ResultSet wrapResultSetIfEnabled(final ResultSet rs, final SessionImplementor session) {
-		// synchronized to avoid multi-thread access issues; defined as method synch to avoid
-		// potential deadlock issues due to nature of code.
+	private ResultSet wrapResultSetIfEnabled(final ResultSet rs, final SessionImplementor session) {
 		if ( session.getFactory().getSettings().isWrapResultSetsEnabled() ) {
 			try {
 				LOG.debugf( "Wrapping result set [%s]", rs );
@@ -2105,12 +2103,15 @@ public abstract class Loader {
 		}
 	}
 
-	private ColumnNameCache retreiveColumnNameToIndexCache(ResultSet rs) throws SQLException {
+	private ColumnNameCache retreiveColumnNameToIndexCache(final ResultSet rs) throws SQLException {
 		if ( columnNameCache == null ) {
-			LOG.trace( "Building columnName -> columnIndex cache" );
-			columnNameCache = new ColumnNameCache( rs.getMetaData().getColumnCount() );
+			synchronized ( this ) {
+				if ( columnNameCache == null ) {
+					LOG.trace( "Building columnName -> columnIndex cache" );
+					columnNameCache = new ColumnNameCache( rs.getMetaData().getColumnCount() );
+				}
+			}
 		}
-
 		return columnNameCache;
 	}
 

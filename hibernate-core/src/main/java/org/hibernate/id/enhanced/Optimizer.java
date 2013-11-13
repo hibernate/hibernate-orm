@@ -44,6 +44,9 @@ public interface Optimizer {
 	/**
 	 * Generate an identifier value accounting for this specific optimization.
 	 *
+	 * All known implementors are synchronized. Consider carefully if a new
+	 * implementation could drop this requirement.
+	 *
 	 * @param callback Callback to access the underlying value source.
 	 * @return The generated identifier value.
 	 */

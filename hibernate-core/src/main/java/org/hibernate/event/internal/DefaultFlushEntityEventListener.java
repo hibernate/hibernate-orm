@@ -257,7 +257,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private boolean scheduleUpdate(final FlushEntityEvent event) {
-
 		final EntityEntry entry = event.getEntityEntry();
 		final EventSource session = event.getSession();
 		final Object entity = event.getEntity();
@@ -527,41 +526,48 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		if ( dirtyProperties==null ) {
 			// Interceptor returned null, so do the dirtycheck ourself, if possible
-			interceptorHandledDirtyCheck = false;
+			try {
+				session.getSessionEventsManager().dirtyCalculationStart();
 
-			cannotDirtyCheck = loadedState==null; // object loaded by update()
-			if ( !cannotDirtyCheck ) {
-				// dirty check against the usual snapshot of the entity
-				dirtyProperties = persister.findDirty( values, loadedState, entity, session );
-			}
-			else if ( entry.getStatus() == Status.DELETED && ! event.getEntityEntry().isModifiableEntity() ) {
-				// A non-modifiable (e.g., read-only or immutable) entity needs to be have
-				// references to transient entities set to null before being deleted. No other
-				// fields should be updated.
-				if ( values != entry.getDeletedState() ) {
-					throw new IllegalStateException(
-							"Entity has status Status.DELETED but values != entry.getDeletedState"
-					);
+				interceptorHandledDirtyCheck = false;
+				// object loaded by update()
+				cannotDirtyCheck = loadedState==null;
+				if ( !cannotDirtyCheck ) {
+					// dirty check against the usual snapshot of the entity
+					dirtyProperties = persister.findDirty( values, loadedState, entity, session );
 				}
-				// Even if loadedState == null, we can dirty-check by comparing currentState and
-				// entry.getDeletedState() because the only fields to be updated are those that
-				// refer to transient entities that are being set to null.
-				// - currentState contains the entity's current property values.
-				// - entry.getDeletedState() contains the entity's current property values with
-				//   references to transient entities set to null.
-				// - dirtyProperties will only contain properties that refer to transient entities
-				final Object[] currentState = persister.getPropertyValues( event.getEntity() );
-				dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
-				cannotDirtyCheck = false;
-			}
-			else {
-				// dirty check against the database snapshot, if possible/necessary
-				final Object[] databaseSnapshot = getDatabaseSnapshot(session, persister, id);
-				if ( databaseSnapshot != null ) {
-					dirtyProperties = persister.findModified(databaseSnapshot, values, entity, session);
+				else if ( entry.getStatus() == Status.DELETED && ! event.getEntityEntry().isModifiableEntity() ) {
+					// A non-modifiable (e.g., read-only or immutable) entity needs to be have
+					// references to transient entities set to null before being deleted. No other
+					// fields should be updated.
+					if ( values != entry.getDeletedState() ) {
+						throw new IllegalStateException(
+								"Entity has status Status.DELETED but values != entry.getDeletedState"
+						);
+					}
+					// Even if loadedState == null, we can dirty-check by comparing currentState and
+					// entry.getDeletedState() because the only fields to be updated are those that
+					// refer to transient entities that are being set to null.
+					// - currentState contains the entity's current property values.
+					// - entry.getDeletedState() contains the entity's current property values with
+					//   references to transient entities set to null.
+					// - dirtyProperties will only contain properties that refer to transient entities
+					final Object[] currentState = persister.getPropertyValues( event.getEntity() );
+					dirtyProperties = persister.findDirty( entry.getDeletedState(), currentState, entity, session );
 					cannotDirtyCheck = false;
-					event.setDatabaseSnapshot(databaseSnapshot);
 				}
+				else {
+					// dirty check against the database snapshot, if possible/necessary
+					final Object[] databaseSnapshot = getDatabaseSnapshot(session, persister, id);
+					if ( databaseSnapshot != null ) {
+						dirtyProperties = persister.findModified(databaseSnapshot, values, entity, session);
+						cannotDirtyCheck = false;
+						event.setDatabaseSnapshot(databaseSnapshot);
+					}
+				}
+			}
+			finally {
+				session.getSessionEventsManager().dirtyCalculationEnd( dirtyProperties != null );
 			}
 		}
 		else {

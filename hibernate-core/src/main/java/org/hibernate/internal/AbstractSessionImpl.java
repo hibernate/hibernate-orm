@@ -35,6 +35,7 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
+import org.hibernate.SessionEventsListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.CacheKey;
@@ -259,11 +260,13 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		if ( jdbcConnectionAccess == null ) {
 			if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
+						getSessionEventsManager(),
 						factory.getServiceRegistry().getService( ConnectionProvider.class )
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
+						getSessionEventsManager(),
 						factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class )
 				);
 			}
@@ -281,20 +284,36 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	}
 
 	private static class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+		private final SessionEventsListener listener;
 		private final ConnectionProvider connectionProvider;
 
-		private NonContextualJdbcConnectionAccess(ConnectionProvider connectionProvider) {
+		private NonContextualJdbcConnectionAccess(
+				SessionEventsListener listener,
+				ConnectionProvider connectionProvider) {
+			this.listener = listener;
 			this.connectionProvider = connectionProvider;
 		}
 
 		@Override
 		public Connection obtainConnection() throws SQLException {
-			return connectionProvider.getConnection();
+			try {
+				listener.jdbcConnectionAcquisitionStart();
+				return connectionProvider.getConnection();
+			}
+			finally {
+				listener.jdbcConnectionAcquisitionEnd();
+			}
 		}
 
 		@Override
 		public void releaseConnection(Connection connection) throws SQLException {
-			connectionProvider.closeConnection( connection );
+			try {
+				listener.jdbcConnectionReleaseStart();
+				connectionProvider.closeConnection( connection );
+			}
+			finally {
+				listener.jdbcConnectionReleaseEnd();
+			}
 		}
 
 		@Override
@@ -304,9 +323,13 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	}
 
 	private class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
+		private final SessionEventsListener listener;
 		private final MultiTenantConnectionProvider connectionProvider;
 
-		private ContextualJdbcConnectionAccess(MultiTenantConnectionProvider connectionProvider) {
+		private ContextualJdbcConnectionAccess(
+				SessionEventsListener listener,
+				MultiTenantConnectionProvider connectionProvider) {
+			this.listener = listener;
 			this.connectionProvider = connectionProvider;
 		}
 
@@ -315,7 +338,14 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			if ( tenantIdentifier == null ) {
 				throw new HibernateException( "Tenant identifier required!" );
 			}
-			return connectionProvider.getConnection( tenantIdentifier );
+
+			try {
+				listener.jdbcConnectionAcquisitionStart();
+				return connectionProvider.getConnection( tenantIdentifier );
+			}
+			finally {
+				listener.jdbcConnectionAcquisitionEnd();
+			}
 		}
 
 		@Override
@@ -323,7 +353,14 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 			if ( tenantIdentifier == null ) {
 				throw new HibernateException( "Tenant identifier required!" );
 			}
-			connectionProvider.releaseConnection( tenantIdentifier, connection );
+
+			try {
+				listener.jdbcConnectionReleaseStart();
+				connectionProvider.releaseConnection( tenantIdentifier, connection );
+			}
+			finally {
+				listener.jdbcConnectionReleaseEnd();
+			}
 		}
 
 		@Override

@@ -48,6 +48,7 @@ import org.hibernate.Transaction;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.SessionEventsManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
@@ -58,6 +59,7 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NonFlushedChanges;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.SessionEventsManager;
 import org.hibernate.engine.transaction.internal.TransactionCoordinatorImpl;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.engine.transaction.spi.TransactionEnvironment;
@@ -391,6 +393,40 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 	@Override
 	public String onPrepareStatement(String sql) {
 		return sql;
+	}
+
+	private SessionEventsManagerImpl sessionEventsManager;
+
+	@Override
+	public SessionEventsManager getSessionEventsManager() {
+		if ( sessionEventsManager == null ) {
+			sessionEventsManager = new SessionEventsManagerImpl();
+		}
+		return sessionEventsManager;
+	}
+
+	@Override
+	public void startPrepareStatement() {
+	}
+
+	@Override
+	public void endPrepareStatement() {
+	}
+
+	@Override
+	public void startStatementExecution() {
+	}
+
+	@Override
+	public void endStatementExecution() {
+	}
+
+	@Override
+	public void startBatchExecution() {
+	}
+
+	@Override
+	public void endBatchExecution() {
 	}
 
 	@Override

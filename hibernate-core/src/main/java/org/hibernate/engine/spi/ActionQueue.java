@@ -403,7 +403,7 @@ public class ActionQueue {
 			final String[] spaces = (String[]) executable.getPropertySpaces();
 			if ( spaces != null && spaces.length > 0 ) { //HHH-6286
 				afterTransactionProcesses.addSpacesToInvalidate( spaces );
-				session.getFactory().getUpdateTimestampsCache().preinvalidate( spaces );
+				session.getFactory().getUpdateTimestampsCache().preInvalidate( spaces, session );
 			}
 		}
 		afterTransactionProcesses.register( executable.getAfterTransactionCompletionProcess() );
@@ -795,7 +795,8 @@ public class ActionQueue {
 
 			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
 				session.getFactory().getUpdateTimestampsCache().invalidate(
-						querySpacesToInvalidate.toArray( new String[ querySpacesToInvalidate.size()] )
+						querySpacesToInvalidate.toArray( new String[querySpacesToInvalidate.size()] ) ,
+						session
 				);
 			}
 			querySpacesToInvalidate.clear();

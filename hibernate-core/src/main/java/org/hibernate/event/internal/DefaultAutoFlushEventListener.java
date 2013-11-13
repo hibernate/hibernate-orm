@@ -51,29 +51,41 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	 */
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
-		if ( flushMightBeNeeded(source) ) {
-			// Need to get the number of collection removals before flushing to executions
-			// (because flushing to executions can add collection removal actions to the action queue).
-			final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
-			flushEverythingToExecutions(event);
-			if ( flushIsReallyNeeded(event, source) ) {
-				LOG.trace( "Need to execute flush" );
+		try {
+			source.getSessionEventsManager().partialFlushStart();
 
-				performExecutions(source);
-				postFlush(source);
-				// note: performExecutions() clears all collectionXxxxtion
-				// collections (the collection actions) in the session
+			if ( flushMightBeNeeded(source) ) {
+				// Need to get the number of collection removals before flushing to executions
+				// (because flushing to executions can add collection removal actions to the action queue).
+				final int oldSize = source.getActionQueue().numberOfCollectionRemovals();
+				flushEverythingToExecutions(event);
+				if ( flushIsReallyNeeded(event, source) ) {
+					LOG.trace( "Need to execute flush" );
 
-				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
-					source.getFactory().getStatisticsImplementor().flush();
+					// note: performExecutions() clears all collectionXxxxtion
+					// collections (the collection actions) in the session
+					performExecutions(source);
+					postFlush(source);
+
+					postPostFlush( source );
+
+					if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
+						source.getFactory().getStatisticsImplementor().flush();
+					}
 				}
-			}
-			else {
-				LOG.trace( "Don't need to execute flush" );
-				source.getActionQueue().clearFromFlushNeededCheck( oldSize );
-			}
+				else {
+					LOG.trace( "Don't need to execute flush" );
+					source.getActionQueue().clearFromFlushNeededCheck( oldSize );
+				}
 
-			event.setFlushRequired( flushIsReallyNeeded( event, source ) );
+				event.setFlushRequired( flushIsReallyNeeded( event, source ) );
+			}
+		}
+		finally {
+			source.getSessionEventsManager().partialFlushEnd(
+					event.getNumberOfEntitiesProcessed(),
+					event.getNumberOfEntitiesProcessed()
+			);
 		}
 	}
 

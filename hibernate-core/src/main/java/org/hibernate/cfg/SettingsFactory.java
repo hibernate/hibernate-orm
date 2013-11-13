@@ -32,12 +32,14 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
+import org.hibernate.SessionEventsListener;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.internal.LoggingSessionEventsListener;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -76,6 +78,8 @@ public class SettingsFactory implements Serializable {
 	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) {
 		final boolean debugEnabled =  LOG.isDebugEnabled();
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
+
 		Settings settings = new Settings();
 
 		//SessionFactory name:
@@ -105,7 +109,7 @@ public class SettingsFactory implements Serializable {
 		final MultiTableBulkIdStrategy multiTableBulkIdStrategy = getMultiTableBulkIdStrategy(
 				properties,
 				jdbcServices.getDialect(),
-				serviceRegistry.getService( ClassLoaderService.class )
+				classLoaderService
 		);
 		settings.setMultiTableBulkIdStrategy( multiTableBulkIdStrategy );
 
@@ -286,10 +290,18 @@ public class SettingsFactory implements Serializable {
 
 		// The cache provider is needed when we either have second-level cache enabled
 		// or query cache enabled.  Note that useSecondLevelCache is enabled by default
-		settings.setRegionFactory( createRegionFactory( properties, ( useSecondLevelCache || useQueryCache ), serviceRegistry ) );
+		settings.setRegionFactory(
+				createRegionFactory(
+						properties,
+						(useSecondLevelCache || useQueryCache),
+						serviceRegistry
+				)
+		);
 
 		boolean useMinimalPuts = ConfigurationHelper.getBoolean(
-				AvailableSettings.USE_MINIMAL_PUTS, properties, settings.getRegionFactory().isMinimalPutsEnabledByDefault()
+				AvailableSettings.USE_MINIMAL_PUTS,
+				properties,
+				settings.getRegionFactory().isMinimalPutsEnabledByDefault()
 		);
 		if ( debugEnabled ) {
 			LOG.debugf( "Optimize cache for minimal puts: %s", enabledDisabled(useMinimalPuts) );
@@ -402,8 +414,37 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setJtaTrackByThread( jtaTrackByThread );
 
+		final Class<? extends SessionEventsListener> autoSessionEventsListenerClass = resolveAutoSessionEventListenerClass( properties, classLoaderService );
+		final boolean logSessionMetrics = ConfigurationHelper.getBoolean(
+				AvailableSettings.LOG_SESSION_METRICS,
+				properties,
+				useStatistics
+
+		);
+		settings.setBaselineSessionEventsListenerBuilder(
+				new BaselineSessionEventsListenerBuilder( logSessionMetrics, autoSessionEventsListenerClass )
+		);
+
 		return settings;
 
+	}
+
+	@SuppressWarnings({"unchecked", "ConstantConditions"})
+	private Class<SessionEventsListener> resolveAutoSessionEventListenerClass(
+			Properties properties,
+			ClassLoaderService classLoaderService) {
+		final Object setting = properties.getProperty( AvailableSettings.AUTO_SESSION_EVENTS_LISTENER );
+		if ( setting == null ) {
+			return null;
+		}
+
+		if ( Class.class.isInstance( setting ) ) {
+			return (Class<SessionEventsListener>) setting;
+		}
+		else {
+			final String settingStr = setting.toString();
+			return classLoaderService.classForName( settingStr );
+		}
 	}
 
 	private MultiTableBulkIdStrategy getMultiTableBulkIdStrategy(

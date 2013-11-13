@@ -107,7 +107,15 @@ public class BatchingBatch extends AbstractBatchImpl {
 			for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
 				try {
 					final PreparedStatement statement = entry.getValue();
-					checkRowCounts( statement.executeBatch(), statement );
+					final int[] rowCounts;
+					try {
+						transactionContext().startBatchExecution();
+						rowCounts = statement.executeBatch();
+					}
+					finally {
+						transactionContext().endBatchExecution();
+					}
+					checkRowCounts( rowCounts, statement );
 				}
 				catch ( SQLException e ) {
 					LOG.debug( "SQLException escaped proxy", e );

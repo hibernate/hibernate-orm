@@ -35,6 +35,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Query;
+import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cache.spi.CacheKey;
@@ -43,7 +44,6 @@ import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
-import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
@@ -389,4 +389,6 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * should never be null.
 	 */
 	public LoadQueryInfluencers getLoadQueryInfluencers();
+
+	public SessionEventsManager getSessionEventsManager();
 }

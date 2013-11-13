@@ -33,6 +33,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -67,53 +68,99 @@ public class UpdateTimestampsCache {
         this( settings, props, null );
     }
 
-	@SuppressWarnings({"UnnecessaryBoxing"})
-	public void preinvalidate(Serializable[] spaces) throws CacheException {
+	/**
+	 * Perform pre-invalidation.
+	 *
+	 *
+	 * @param spaces The spaces to pre-invalidate
+	 *
+	 * @param session
+	 * @throws CacheException Indicated problem delegating to underlying region.
+	 */
+	public void preInvalidate(Serializable[] spaces, SessionImplementor session) throws CacheException {
 		final boolean debug = LOG.isDebugEnabled();
-		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
+		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 		final Long ts = region.nextTimestamp() + region.getTimeout();
 
 		for ( Serializable space : spaces ) {
 			if ( debug ) {
 				LOG.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
-			//put() has nowait semantics, is this really appropriate?
-			//note that it needs to be async replication, never local or sync
-			region.put( space, ts );
+
+			try {
+				session.getSessionEventsManager().cachePutStart();
+
+				//put() has nowait semantics, is this really appropriate?
+				//note that it needs to be async replication, never local or sync
+				region.put( space, ts );
+			}
+			finally {
+				session.getSessionEventsManager().cachePutEnd();
+			}
+
 			if ( stats ) {
 				factory.getStatisticsImplementor().updateTimestampsCachePut();
 			}
 		}
 	}
 
-	@SuppressWarnings({"UnnecessaryBoxing"})
-	public void invalidate(Serializable[] spaces) throws CacheException {
-		 final boolean debug = LOG.isDebugEnabled();
-		 final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
+	/**
+	 * Perform invalidation.
+	 *
+	 *
+	 * @param spaces The spaces to pre-invalidate
+	 *
+	 * @param session
+	 * @throws CacheException Indicated problem delegating to underlying region.
+	 */
+	public void invalidate(Serializable[] spaces, SessionImplementor session) throws CacheException {
+		final boolean debug = LOG.isDebugEnabled();
 
-		 final Long ts = region.nextTimestamp();
+		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
+		final Long ts = region.nextTimestamp();
 
 		for (Serializable space : spaces) {
 			if ( debug ) {
 				LOG.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
-			//put() has nowait semantics, is this really appropriate?
-			//note that it needs to be async replication, never local or sync
-			region.put( space, ts );
+
+			try {
+				session.getSessionEventsManager().cachePutStart();
+
+				//put() has nowait semantics, is this really appropriate?
+				//note that it needs to be async replication, never local or sync
+				region.put( space, ts );
+			}
+			finally {
+				session.getSessionEventsManager().cachePutEnd();
+			}
+
 			if ( stats ) {
 				factory.getStatisticsImplementor().updateTimestampsCachePut();
 			}
 		}
 	}
 
-	@SuppressWarnings({"unchecked", "UnnecessaryUnboxing"})
-	public boolean isUpToDate(Set spaces, Long timestamp) throws HibernateException {
+	/**
+	 * Perform an up-to-date check for the given set of query spaces.
+	 *
+	 *
+	 * @param spaces The spaces to check
+	 * @param timestamp The timestamp against which to check.
+	 *
+	 * @param session
+	 * @return Whether all those spaces are up-to-date
+	 *
+	 * @throws CacheException Indicated problem delegating to underlying region.
+	 */
+	public boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SessionImplementor session) throws CacheException {
 		final boolean debug = LOG.isDebugEnabled();
+
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
-		for ( Serializable space : (Set<Serializable>) spaces ) {
-			Long lastUpdate = (Long) region.get( space );
+		for ( Serializable space : spaces ) {
+			final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
 			if ( lastUpdate == null ) {
 				if ( stats ) {
 					factory.getStatisticsImplementor().updateTimestampsCacheMiss();
@@ -140,6 +187,18 @@ public class UpdateTimestampsCache {
 			}
 		}
 		return true;
+	}
+
+	private Long getLastUpdateTimestampForSpace(Serializable space, SessionImplementor session) {
+		Long ts = null;
+		try {
+			session.getSessionEventsManager().cacheGetStart();
+			ts = (Long) region.get( space );
+		}
+		finally {
+			session.getSessionEventsManager().cacheGetEnd( ts != null );
+		}
+		return ts;
 	}
 
 	public void clear() throws CacheException {

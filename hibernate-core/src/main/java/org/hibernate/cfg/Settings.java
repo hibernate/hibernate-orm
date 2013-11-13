@@ -98,6 +98,7 @@ public final class Settings {
 	private boolean directReferenceCacheEntriesEnabled;
 	
 	private boolean jtaTrackByThread;
+	private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;
 
 
 	/**
@@ -517,5 +518,13 @@ public final class Settings {
 
 	public void setJtaTrackByThread(boolean jtaTrackByThread) {
 		this.jtaTrackByThread = jtaTrackByThread;
+	}
+
+	public void setBaselineSessionEventsListenerBuilder(BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder) {
+		this.baselineSessionEventsListenerBuilder = baselineSessionEventsListenerBuilder;
+	}
+
+	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder() {
+		return baselineSessionEventsListenerBuilder;
 	}
 }

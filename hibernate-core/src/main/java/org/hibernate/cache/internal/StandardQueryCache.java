@@ -117,7 +117,14 @@ public class StandardQueryCache implements QueryCache {
 			logCachedResultRowDetails( returnTypes, aResult );
 		}
 
-		cacheRegion.put( key, cacheable );
+		try {
+			session.getSessionEventsManager().cachePutStart();
+			cacheRegion.put( key, cacheable );
+		}
+		finally {
+			session.getSessionEventsManager().cachePutEnd();
+		}
+
 		return true;
 	}
 
@@ -130,7 +137,7 @@ public class StandardQueryCache implements QueryCache {
 			final SessionImplementor session) throws HibernateException {
 		if ( DEBUGGING ) LOG.debugf( "Checking cached query results in region: %s", cacheRegion.getName() );
 
-		List cacheable = (List) cacheRegion.get( key );
+		final List cacheable = getCachedResults( key, session );
 		logCachedResultDetails( key, spaces, returnTypes, cacheable );
 
 		if ( cacheable == null ) {
@@ -138,9 +145,11 @@ public class StandardQueryCache implements QueryCache {
 			return null;
 		}
 
-		Long timestamp = (Long) cacheable.get( 0 );
-		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp ) ) {
-			if ( DEBUGGING ) LOG.debug( "Cached query results were not up-to-date" );
+		final Long timestamp = (Long) cacheable.get( 0 );
+		if ( !isNaturalKeyLookup && !isUpToDate( spaces, timestamp, session ) ) {
+			if ( DEBUGGING ) {
+				LOG.debug( "Cached query results were not up-to-date" );
+			}
 			return null;
 		}
 
@@ -185,9 +194,24 @@ public class StandardQueryCache implements QueryCache {
 		return result;
 	}
 
-	protected boolean isUpToDate(final Set spaces, final Long timestamp) {
-		if ( DEBUGGING ) LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
-		return updateTimestampsCache.isUpToDate( spaces, timestamp );
+	private List getCachedResults(QueryKey key, SessionImplementor session) {
+		List cacheable = null;
+		try {
+			session.getSessionEventsManager().cacheGetStart();
+			cacheable = (List) cacheRegion.get( key );
+		}
+		finally {
+			session.getSessionEventsManager().cacheGetEnd( cacheable != null );
+		}
+		return cacheable;
+	}
+
+
+	protected boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SessionImplementor session) {
+		if ( DEBUGGING ) {
+			LOG.debugf( "Checking query spaces are up-to-date: %s", spaces );
+		}
+		return updateTimestampsCache.isUpToDate( spaces, timestamp, session );
 	}
 
 	public void destroy() {

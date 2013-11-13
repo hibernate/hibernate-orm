@@ -125,17 +125,25 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
         final SessionFactoryImplementor factory = source.getFactory();
 
         final CacheKey ck = source.generateCacheKey( id, persister.getKeyType(), persister.getRole() );
-        Object ce = persister.getCacheAccessStrategy().get(ck, source.getTimestamp());
 
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-            if (ce == null) {
-                factory.getStatisticsImplementor()
-						.secondLevelCacheMiss( persister.getCacheAccessStrategy().getRegion().getName() );
-            }
-			else {
-                factory.getStatisticsImplementor()
-						.secondLevelCacheHit( persister.getCacheAccessStrategy().getRegion().getName() );
-            }
+		Object ce = null;
+		try {
+			source.getSessionEventsManager().cacheGetStart();
+			ce = persister.getCacheAccessStrategy().get(ck, source.getTimestamp());
+
+			if ( factory.getStatistics().isStatisticsEnabled() ) {
+				if (ce == null) {
+					factory.getStatisticsImplementor()
+							.secondLevelCacheMiss( persister.getCacheAccessStrategy().getRegion().getName() );
+				}
+				else {
+					factory.getStatisticsImplementor()
+							.secondLevelCacheHit( persister.getCacheAccessStrategy().getRegion().getName() );
+				}
+			}
+		}
+		finally {
+			source.getSessionEventsManager().cacheGetEnd( ce == null );
 		}
 
         if ( ce == null ) {

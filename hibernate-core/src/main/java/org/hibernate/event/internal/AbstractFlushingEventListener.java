@@ -97,10 +97,13 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// inside this block do not get updated - they
 		// are ignored until the next flush
 
-		persistenceContext.setFlushing(true);
+		persistenceContext.setFlushing( true );
 		try {
-			flushEntities( event, persistenceContext );
-			flushCollections( session, persistenceContext );
+			int entityCount = flushEntities( event, persistenceContext );
+			int collectionCount = flushCollections( session, persistenceContext );
+
+			event.setNumberOfEntitiesProcessed( entityCount );
+			event.setNumberOfCollectionsProcessed( collectionCount );
 		}
 		finally {
 			persistenceContext.setFlushing(false);
@@ -196,14 +199,12 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 	 * 2. schedule any entity updates
 	 * 3. search out any reachable collections
 	 */
-	private void flushEntities(final FlushEvent event, final PersistenceContext persistenceContext) throws HibernateException {
+	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext) throws HibernateException {
 
 		LOG.trace( "Flushing entities and processing referenced collections" );
 
 		final EventSource source = event.getSession();
-		final Iterable<FlushEntityEventListener> flushListeners = source
-				.getFactory()
-				.getServiceRegistry()
+		final Iterable<FlushEntityEventListener> flushListeners = source.getFactory().getServiceRegistry()
 				.getService( EventListenerRegistry.class )
 				.getEventListenerGroup( EventType.FLUSH_ENTITY )
 				.listeners();
@@ -213,14 +214,15 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		// be loaded.
 
 		// So this needs to be safe from concurrent modification problems.
-		// It is safe because of how IdentityMap implements entrySet()
 
-		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
-//		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
+		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
+		final int count = entityEntries.length;
+
+		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
 
 			// Update the status of the object and if necessary, schedule an update
 
-			EntityEntry entry = (EntityEntry) me.getValue();
+			EntityEntry entry = me.getValue();
 			Status status = entry.getStatus();
 
 			if ( status != Status.LOADING && status != Status.GONE ) {
@@ -232,18 +234,25 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 		}
 
 		source.getActionQueue().sortActions();
+
+		return count;
 	}
 
 	/**
 	 * process any unreferenced collections and then inspect all known collections,
 	 * scheduling creates/removes/updates
 	 */
-	private void flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
-
+	@SuppressWarnings("unchecked")
+	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext) throws HibernateException {
 		LOG.trace( "Processing unreferenced collections" );
 
-		for ( Map.Entry<PersistentCollection,CollectionEntry> me :
-				IdentityMap.concurrentEntries( (Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries() )) {
+		final Map.Entry<PersistentCollection,CollectionEntry>[] entries = IdentityMap.concurrentEntries(
+				(Map<PersistentCollection,CollectionEntry>) persistenceContext.getCollectionEntries()
+		);
+
+		final int count = entries.length;
+
+		for ( Map.Entry<PersistentCollection,CollectionEntry> me : entries ) {
 			CollectionEntry ce = me.getValue();
 			if ( !ce.isReached() && !ce.isIgnore() ) {
 				Collections.processUnreachableCollection( me.getKey(), session );
@@ -310,6 +319,7 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 
 		actionQueue.sortCollectionActions();
 
+		return count;
 	}
 
 	/**
@@ -386,7 +396,9 @@ public abstract class AbstractFlushingEventListener implements Serializable {
 			}
 		}
 
-		session.getInterceptor().postFlush( new LazyIterator( persistenceContext.getEntitiesByKey() ) );
+	}
 
+	protected void postPostFlush(SessionImplementor session) {
+		session.getInterceptor().postFlush( new LazyIterator( session.getPersistenceContext().getEntitiesByKey() ) );
 	}
 }

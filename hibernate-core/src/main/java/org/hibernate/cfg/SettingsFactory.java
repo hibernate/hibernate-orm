@@ -34,12 +34,14 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
+import org.hibernate.SessionEventsListener;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
+import org.hibernate.engine.internal.LoggingSessionEventsListener;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -77,6 +79,8 @@ public class SettingsFactory implements Serializable {
 	public Settings buildSettings(Properties props, ServiceRegistry serviceRegistry) {
 		final boolean debugEnabled =  LOG.isDebugEnabled();
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
+
 		Settings settings = new Settings();
 
 		//SessionFactory name:
@@ -103,11 +107,10 @@ public class SettingsFactory implements Serializable {
 		// Transaction settings:
 		settings.setJtaPlatform( serviceRegistry.getService( JtaPlatform.class ) );
 
-		MultiTableBulkIdStrategy multiTableBulkIdStrategy = serviceRegistry.getService( StrategySelector.class )
-				.resolveStrategy(
-						MultiTableBulkIdStrategy.class,
-						properties.getProperty( AvailableSettings.HQL_BULK_ID_STRATEGY )
-				);
+		MultiTableBulkIdStrategy multiTableBulkIdStrategy = strategySelector.resolveStrategy(
+				MultiTableBulkIdStrategy.class,
+				properties.getProperty( AvailableSettings.HQL_BULK_ID_STRATEGY )
+		);
 		if ( multiTableBulkIdStrategy == null ) {
 			multiTableBulkIdStrategy = jdbcServices.getDialect().supportsTemporaryTables()
 					? TemporaryTableBulkIdStrategy.INSTANCE
@@ -411,6 +414,21 @@ public class SettingsFactory implements Serializable {
 			LOG.debugf( "JTA Track by Thread: %s", enabledDisabled(jtaTrackByThread) );
 		}
 		settings.setJtaTrackByThread( jtaTrackByThread );
+
+		final String autoSessionEventsListenerName = properties.getProperty( AvailableSettings.AUTO_SESSION_EVENTS_LISTENER );
+		final Class<? extends SessionEventsListener> autoSessionEventsListener = autoSessionEventsListenerName == null
+				? null
+				: strategySelector.selectStrategyImplementor( SessionEventsListener.class, autoSessionEventsListenerName );
+
+		final boolean logSessionMetrics = ConfigurationHelper.getBoolean(
+				AvailableSettings.LOG_SESSION_METRICS,
+				properties,
+				useStatistics
+
+		);
+		settings.setBaselineSessionEventsListenerBuilder(
+				new BaselineSessionEventsListenerBuilder( logSessionMetrics, autoSessionEventsListener )
+		);
 
 		return settings;
 

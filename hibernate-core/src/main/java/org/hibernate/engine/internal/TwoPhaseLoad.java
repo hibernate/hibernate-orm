@@ -216,16 +216,22 @@ public final class TwoPhaseLoad {
 				);
 			}
 			else {
-				final boolean put = persister.getCacheAccessStrategy().putFromLoad(
-						cacheKey,
-						persister.getCacheEntryStructure().structure( entry ),
-						session.getTimestamp(),
-						version,
-						useMinimalPuts( session, entityEntry )
-				);
+				try {
+					session.getSessionEventsManager().cachePutStart();
+					final boolean put = persister.getCacheAccessStrategy().putFromLoad(
+							cacheKey,
+							persister.getCacheEntryStructure().structure( entry ),
+							session.getTimestamp(),
+							version,
+							useMinimalPuts( session, entityEntry )
+					);
 
-				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-					factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+						factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+					}
+				}
+				finally {
+					session.getSessionEventsManager().cachePutEnd();
 				}
 			}
 		}

@@ -117,4 +117,21 @@ public interface SessionBuilder {
 	 * @return {@code this}, for method chaining
 	 */
 	public SessionBuilder tenantIdentifier(String tenantIdentifier);
+
+	/**
+	 * Apply one or more SessionEventsListener instances to the listeners for the Session to be built.
+	 *
+	 * @param listeners The listeners to incorporate into the built Session
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	public SessionBuilder eventListeners(SessionEventsListener... listeners);
+
+	/**
+	 * Remove all listeners intended for the built Session currently held here, including any auto-apply ones; in other
+	 * words, start with a clean slate.
+	 *
+	 * {@code this}, for method chaining
+	 */
+	public SessionBuilder clearEventListeners();
 }

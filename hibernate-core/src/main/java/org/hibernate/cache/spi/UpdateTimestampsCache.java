@@ -32,6 +32,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -86,11 +87,13 @@ public class UpdateTimestampsCache {
 	/**
 	 * Perform pre-invalidation.
 	 *
+	 *
 	 * @param spaces The spaces to pre-invalidate
 	 *
+	 * @param session
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	public void preinvalidate(Serializable[] spaces) throws CacheException {
+	public void preInvalidate(Serializable[] spaces, SessionImplementor session) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		final Long ts = region.nextTimestamp() + region.getTimeout();
@@ -99,9 +102,18 @@ public class UpdateTimestampsCache {
 			if ( DEBUG_ENABLED ) {
 				LOG.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
-			//put() has nowait semantics, is this really appropriate?
-			//note that it needs to be async replication, never local or sync
-			region.put( space, ts );
+
+			try {
+				session.getSessionEventsManager().cachePutStart();
+
+				//put() has nowait semantics, is this really appropriate?
+				//note that it needs to be async replication, never local or sync
+				region.put( space, ts );
+			}
+			finally {
+				session.getSessionEventsManager().cachePutEnd();
+			}
+
 			if ( stats ) {
 				factory.getStatisticsImplementor().updateTimestampsCachePut();
 			}
@@ -111,11 +123,13 @@ public class UpdateTimestampsCache {
 	/**
 	 * Perform invalidation.
 	 *
+	 *
 	 * @param spaces The spaces to pre-invalidate
 	 *
+	 * @param session
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	public void invalidate(Serializable[] spaces) throws CacheException {
+	public void invalidate(Serializable[] spaces, SessionImplementor session) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		final Long ts = region.nextTimestamp();
@@ -124,9 +138,18 @@ public class UpdateTimestampsCache {
 			if ( DEBUG_ENABLED ) {
 				LOG.debugf( "Invalidating space [%s], timestamp: %s", space, ts );
 			}
-			//put() has nowait semantics, is this really appropriate?
-			//note that it needs to be async replication, never local or sync
-			region.put( space, ts );
+
+			try {
+				session.getSessionEventsManager().cachePutStart();
+
+				//put() has nowait semantics, is this really appropriate?
+				//note that it needs to be async replication, never local or sync
+				region.put( space, ts );
+			}
+			finally {
+				session.getSessionEventsManager().cachePutEnd();
+			}
+
 			if ( stats ) {
 				factory.getStatisticsImplementor().updateTimestampsCachePut();
 			}
@@ -136,18 +159,20 @@ public class UpdateTimestampsCache {
 	/**
 	 * Perform an up-to-date check for the given set of query spaces.
 	 *
+	 *
 	 * @param spaces The spaces to check
 	 * @param timestamp The timestamp against which to check.
 	 *
+	 * @param session
 	 * @return Whether all those spaces are up-to-date
 	 *
 	 * @throws CacheException Indicated problem delegating to underlying region.
 	 */
-	public boolean isUpToDate(Set<Serializable> spaces, Long timestamp) throws CacheException {
+	public boolean isUpToDate(Set<Serializable> spaces, Long timestamp, SessionImplementor session) throws CacheException {
 		final boolean stats = factory != null && factory.getStatistics().isStatisticsEnabled();
 
 		for ( Serializable space : spaces ) {
-			final Long lastUpdate = (Long) region.get( space );
+			final Long lastUpdate = getLastUpdateTimestampForSpace( space, session );
 			if ( lastUpdate == null ) {
 				if ( stats ) {
 					factory.getStatisticsImplementor().updateTimestampsCacheMiss();
@@ -174,6 +199,18 @@ public class UpdateTimestampsCache {
 			}
 		}
 		return true;
+	}
+
+	private Long getLastUpdateTimestampForSpace(Serializable space, SessionImplementor session) {
+		Long ts = null;
+		try {
+			session.getSessionEventsManager().cacheGetStart();
+			ts = (Long) region.get( space );
+		}
+		finally {
+			session.getSessionEventsManager().cacheGetEnd( ts != null );
+		}
+		return ts;
 	}
 
 	/**

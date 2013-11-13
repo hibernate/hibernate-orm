@@ -1098,4 +1098,11 @@ public interface Session extends SharedSessionContract {
 		 */
 		void lock(Object object);
 	}
+
+	/**
+	 * Add one or more listeners to the Session
+	 *
+	 * @param listeners The listener(s) to add
+	 */
+	public void addEventsListeners(SessionEventsListener... listeners);
 }

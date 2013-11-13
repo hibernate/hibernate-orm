@@ -119,4 +119,28 @@ public class TransactionContextImpl implements TransactionContext {
 	public String onPrepareStatement(String sql) {
 		return sql;
 	}
+
+	@Override
+	public void startPrepareStatement() {
+	}
+
+	@Override
+	public void endPrepareStatement() {
+	}
+
+	@Override
+	public void startStatementExecution() {
+	}
+
+	@Override
+	public void endStatementExecution() {
+	}
+
+	@Override
+	public void startBatchExecution() {
+	}
+
+	@Override
+	public void endBatchExecution() {
+	}
 }

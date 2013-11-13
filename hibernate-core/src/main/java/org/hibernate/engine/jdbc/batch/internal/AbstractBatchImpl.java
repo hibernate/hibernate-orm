@@ -34,8 +34,10 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -53,6 +55,10 @@ public abstract class AbstractBatchImpl implements Batch {
 	private final BatchKey key;
 	private final JdbcCoordinator jdbcCoordinator;
 
+	private final TransactionContext transactionContext;
+	private final SqlStatementLogger sqlStatementLogger;
+	private final SqlExceptionHelper sqlExceptionHelper;
+
 	private LinkedHashMap<String,PreparedStatement> statements = new LinkedHashMap<String,PreparedStatement>();
 	private LinkedHashSet<BatchObserver> observers = new LinkedHashSet<BatchObserver>();
 
@@ -65,6 +71,11 @@ public abstract class AbstractBatchImpl implements Batch {
 		}
 		this.key = key;
 		this.jdbcCoordinator = jdbcCoordinator;
+
+		this.transactionContext = jdbcCoordinator.getTransactionCoordinator().getTransactionContext();
+		final JdbcServices jdbcServices = transactionContext.getTransactionEnvironment().getJdbcServices();
+		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
+		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 	}
 
 	/**
@@ -75,17 +86,17 @@ public abstract class AbstractBatchImpl implements Batch {
 	 */
 	protected abstract void doExecuteBatch();
 
+	public TransactionContext transactionContext() {
+		return transactionContext;
+	}
+
 	/**
 	 * Convenience access to the SQLException helper.
 	 *
 	 * @return The underlying SQLException helper.
 	 */
 	protected SqlExceptionHelper sqlExceptionHelper() {
-		return jdbcCoordinator.getTransactionCoordinator()
-				.getTransactionContext()
-				.getTransactionEnvironment()
-				.getJdbcServices()
-				.getSqlExceptionHelper();
+		return sqlExceptionHelper;
 	}
 
 	/**
@@ -94,11 +105,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	 * @return The underlying JDBC services.
 	 */
 	protected SqlStatementLogger sqlStatementLogger() {
-		return jdbcCoordinator.getTransactionCoordinator()
-				.getTransactionContext()
-				.getTransactionEnvironment()
-				.getJdbcServices()
-				.getSqlStatementLogger();
+		return sqlStatementLogger;
 	}
 
 	protected void abortBatch() {

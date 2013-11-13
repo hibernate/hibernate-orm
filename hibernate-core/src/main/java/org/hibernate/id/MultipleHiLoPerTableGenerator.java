@@ -41,6 +41,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.spi.SessionEventsManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.AccessCallback;
 import org.hibernate.id.enhanced.LegacyHiLoAlgorithmOptimizer;
@@ -142,29 +143,32 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 	}
 
 	public synchronized Serializable generate(final SessionImplementor session, Object obj) {
+		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getSqlStatementLogger();
+		final SessionEventsManager statsCollector = session.getSessionEventsManager();
+
 		final WorkExecutorVisitable<IntegralDataTypeHolder> work = new AbstractReturningWork<IntegralDataTypeHolder>() {
 			@Override
 			public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
 				IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( returnClass );
-				SqlStatementLogger statementLogger = session
-						.getFactory()
-						.getServiceRegistry()
-						.getService( JdbcServices.class )
-						.getSqlStatementLogger();
+
 				int rows;
 				do {
-					statementLogger.logStatement( query, FormatStyle.BASIC.getFormatter() );
-					PreparedStatement qps = connection.prepareStatement( query );
-					PreparedStatement ips = null;
+					final PreparedStatement queryPreparedStatement = prepareStatement( connection, query, statementLogger, statsCollector );
 					try {
-						ResultSet rs = qps.executeQuery();
+						final ResultSet rs = executeQuery( queryPreparedStatement, statsCollector );
 						boolean isInitialized = rs.next();
 						if ( !isInitialized ) {
 							value.initialize( 0 );
-							statementLogger.logStatement( insert, FormatStyle.BASIC.getFormatter() );
-							ips = connection.prepareStatement( insert );
-							value.bind( ips, 1 );
-							ips.execute();
+							final PreparedStatement insertPreparedStatement = prepareStatement( connection, insert, statementLogger, statsCollector );
+							try {
+								value.bind( insertPreparedStatement, 1 );
+								executeUpdate( insertPreparedStatement, statsCollector );
+							}
+							finally {
+								insertPreparedStatement.close();
+							}
 						}
 						else {
 							value.initialize( rs, 0 );
@@ -176,25 +180,23 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 						throw sqle;
 					}
 					finally {
-						if (ips != null) {
-							ips.close();
-						}
-						qps.close();
+						queryPreparedStatement.close();
 					}
 
-					statementLogger.logStatement( update, FormatStyle.BASIC.getFormatter() );
-					PreparedStatement ups = connection.prepareStatement( update );
+
+					final PreparedStatement updatePreparedStatement = prepareStatement( connection, update, statementLogger, statsCollector );
 					try {
-						value.copy().increment().bind( ups, 1 );
-						value.bind( ups, 2 );
-						rows = ups.executeUpdate();
+						value.copy().increment().bind( updatePreparedStatement, 1 );
+						value.bind( updatePreparedStatement, 2 );
+
+						rows = executeUpdate( updatePreparedStatement, statsCollector );
 					}
 					catch (SQLException sqle) {
 						LOG.error( LOG.unableToUpdateHiValue( tableName ), sqle );
 						throw sqle;
 					}
 					finally {
-						ups.close();
+						updatePreparedStatement.close();
 					}
 				} while ( rows==0 );
 
@@ -227,6 +229,42 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					}
 				}
 		);
+	}
+
+	private PreparedStatement prepareStatement(
+			Connection connection,
+			String sql,
+			SqlStatementLogger statementLogger,
+			SessionEventsManager statsCollector) throws SQLException {
+		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		try {
+			statsCollector.jdbcPrepareStatementStart();
+			return connection.prepareStatement( sql );
+		}
+		finally {
+			statsCollector.jdbcPrepareStatementEnd();
+		}
+	}
+
+	private int executeUpdate(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+		try {
+			statsCollector.jdbcExecuteStatementStart();
+			return ps.executeUpdate();
+		}
+		finally {
+			statsCollector.jdbcExecuteStatementEnd();
+		}
+
+	}
+
+	private ResultSet executeQuery(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+		try {
+			statsCollector.jdbcExecuteStatementStart();
+			return ps.executeQuery();
+		}
+		finally {
+			statsCollector.jdbcExecuteStatementEnd();
+		}
 	}
 
 	public void configure(Type type, Properties params, Dialect dialect) throws MappingException {

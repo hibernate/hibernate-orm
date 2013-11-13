@@ -73,6 +73,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
+import org.hibernate.SessionEventsListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
@@ -83,6 +84,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
+import org.hibernate.engine.internal.SessionEventsManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -352,10 +354,10 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			throw new SessionException( "Session was already closed" );
 		}
 
-
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().closeSession();
 		}
+		getSessionEventsManager().end();
 
 		try {
 			if ( !isTransactionCoordinatorShared ) {
@@ -633,6 +635,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 
+		getSessionEventsManager().transactionCompletion( successful );
+
 		try {
 			interceptor.afterTransactionCompletion( hibernateTransaction );
 		}
@@ -653,6 +657,52 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			throw new AssertionFailure( "Interceptor.onPrepareStatement() returned null or empty string." );
 		}
 		return sql;
+	}
+
+	private SessionEventsManagerImpl sessionEventsManager;
+
+	@Override
+	public SessionEventsManagerImpl getSessionEventsManager() {
+		if ( sessionEventsManager == null ) {
+			sessionEventsManager = new SessionEventsManagerImpl();
+		}
+
+		return sessionEventsManager;
+	}
+
+	@Override
+	public void addEventsListeners(SessionEventsListener... listeners) {
+		getSessionEventsManager().addListener( listeners );
+	}
+
+	@Override
+	public void startPrepareStatement() {
+		getSessionEventsManager().jdbcPrepareStatementStart();
+	}
+
+	@Override
+	public void endPrepareStatement() {
+		getSessionEventsManager().jdbcPrepareStatementEnd();
+	}
+
+	@Override
+	public void startStatementExecution() {
+		getSessionEventsManager().jdbcExecuteStatementStart();
+	}
+
+	@Override
+	public void endStatementExecution() {
+		getSessionEventsManager().jdbcExecuteStatementEnd();
+	}
+
+	@Override
+	public void startBatchExecution() {
+		getSessionEventsManager().jdbcExecuteBatchStart();
+	}
+
+	@Override
+	public void endBatchExecution() {
+		getSessionEventsManager().jdbcExecuteBatchEnd();
 	}
 
 	/**
@@ -2389,6 +2439,18 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		@Override
 		public SharedSessionBuilder flushBeforeCompletion(boolean flushBeforeCompletion) {
 			return (SharedSessionBuilder) super.flushBeforeCompletion( flushBeforeCompletion );
+		}
+
+		@Override
+		public SharedSessionBuilder eventListeners(SessionEventsListener... listeners) {
+			super.eventListeners( listeners );
+			return this;
+		}
+
+		@Override
+		public SessionBuilder clearEventListeners() {
+			super.clearEventListeners();
+			return this;
 		}
 	}
 

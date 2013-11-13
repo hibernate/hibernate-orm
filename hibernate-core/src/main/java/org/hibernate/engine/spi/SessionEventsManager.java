@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,34 +21,12 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.event.spi;
+package org.hibernate.engine.spi;
+
+import org.hibernate.SessionEventsListener;
 
 /**
- * Defines an event class for the flushing of a session.
- *
  * @author Steve Ebersole
  */
-public class FlushEvent extends AbstractEvent {
-	private int numberOfEntitiesProcessed;
-	private int numberOfCollectionsProcessed;
-
-	public FlushEvent(EventSource source) {
-		super( source );
-	}
-
-	public int getNumberOfEntitiesProcessed() {
-		return numberOfEntitiesProcessed;
-	}
-
-	public void setNumberOfEntitiesProcessed(int numberOfEntitiesProcessed) {
-		this.numberOfEntitiesProcessed = numberOfEntitiesProcessed;
-	}
-
-	public int getNumberOfCollectionsProcessed() {
-		return numberOfCollectionsProcessed;
-	}
-
-	public void setNumberOfCollectionsProcessed(int numberOfCollectionsProcessed) {
-		this.numberOfCollectionsProcessed = numberOfCollectionsProcessed;
-	}
+public interface SessionEventsManager extends SessionEventsListener {
 }

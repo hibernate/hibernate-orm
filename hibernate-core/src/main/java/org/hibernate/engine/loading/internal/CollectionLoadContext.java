@@ -348,16 +348,23 @@ public class CollectionLoadContext {
 
 		final CollectionCacheEntry entry = new CollectionCacheEntry( lce.getCollection(), persister );
 		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister.getKeyType(), persister.getRole() );
-		final boolean put = persister.getCacheAccessStrategy().putFromLoad(
-				cacheKey,
-				persister.getCacheEntryStructure().structure( entry ),
-				session.getTimestamp(),
-				version,
-				factory.getSettings().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
-		);
 
-		if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+		try {
+			session.getSessionEventsManager().cachePutStart();
+			final boolean put = persister.getCacheAccessStrategy().putFromLoad(
+					cacheKey,
+					persister.getCacheEntryStructure().structure( entry ),
+					session.getTimestamp(),
+					version,
+					factory.getSettings().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
+			);
+
+			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+				factory.getStatisticsImplementor().secondLevelCachePut( persister.getCacheAccessStrategy().getRegion().getName() );
+			}
+		}
+		finally {
+			session.getSessionEventsManager().cachePutEnd();
 		}
 	}
 

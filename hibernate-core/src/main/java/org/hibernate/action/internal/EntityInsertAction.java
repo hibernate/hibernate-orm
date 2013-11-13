@@ -131,8 +131,9 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 			);
 			cacheEntry = persister.getCacheEntryStructure().structure( ce );
 			final CacheKey ck = session.generateCacheKey( id, persister.getIdentifierType(), persister.getRootEntityName() );
-			final boolean put = persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
-			
+
+			final boolean put = cacheInsert( persister, ck );
+
 			if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 				factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 			}
@@ -143,11 +144,20 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		postInsert();
 
 		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
-			factory.getStatisticsImplementor()
-					.insertEntity( getPersister().getEntityName() );
+			factory.getStatisticsImplementor().insertEntity( getPersister().getEntityName() );
 		}
 
 		markExecuted();
+	}
+
+	private boolean cacheInsert(EntityPersister persister, CacheKey ck) {
+		try {
+			getSession().getSessionEventsManager().cachePutStart();
+			return persister.getCacheAccessStrategy().insert( ck, cacheEntry, version );
+		}
+		finally {
+			getSession().getSessionEventsManager().cachePutEnd();
+		}
 	}
 
 	private void postInsert() {
@@ -203,11 +213,17 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final CacheKey ck = getSession().generateCacheKey( getId(), persister.getIdentifierType(), persister.getRootEntityName() );
-			final boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
-			
-			if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-				getSession().getFactory().getStatisticsImplementor()
-						.secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
+			try {
+				getSession().getSessionEventsManager().cachePutStart();
+				final boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
+
+				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
+					getSession().getFactory().getStatisticsImplementor()
+							.secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
+				}
+			}
+			finally {
+				getSession().getSessionEventsManager().cachePutEnd();
 			}
 		}
 		postCommitInsert();

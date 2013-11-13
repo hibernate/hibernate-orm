@@ -99,6 +99,7 @@ public final class Settings {
 	private boolean directReferenceCacheEntriesEnabled;
 	
 	private boolean jtaTrackByThread;
+	private BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder;
 
 
 	/**
@@ -526,5 +527,13 @@ public final class Settings {
 
 	public void setAutoEvictCollectionCache(boolean autoEvictCollectionCache) {
 		this.autoEvictCollectionCache = autoEvictCollectionCache;
+	}
+
+	public void setBaselineSessionEventsListenerBuilder(BaselineSessionEventsListenerBuilder baselineSessionEventsListenerBuilder) {
+		this.baselineSessionEventsListenerBuilder = baselineSessionEventsListenerBuilder;
+	}
+
+	public BaselineSessionEventsListenerBuilder getBaselineSessionEventsListenerBuilder() {
+		return baselineSessionEventsListenerBuilder;
 	}
 }

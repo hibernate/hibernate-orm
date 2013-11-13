@@ -37,6 +37,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.engine.spi.SessionEventsManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -113,8 +114,17 @@ public class TableStructure implements DatabaseStructure {
 		applyIncrementSizeToSourceValues = optimizer.applyIncrementSizeToSourceValues();
 	}
 
+	private IntegralDataTypeHolder makeValue() {
+		return IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );
+	}
+
 	@Override
 	public AccessCallback buildCallback(final SessionImplementor session) {
+		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
+				.getService( JdbcServices.class )
+				.getSqlStatementLogger();
+		final SessionEventsManager statsCollector = session.getSessionEventsManager();
+
 		return new AccessCallback() {
 			@Override
 			public IntegralDataTypeHolder getNextValue() {
@@ -122,20 +132,12 @@ public class TableStructure implements DatabaseStructure {
 						new AbstractReturningWork<IntegralDataTypeHolder>() {
 							@Override
 							public IntegralDataTypeHolder execute(Connection connection) throws SQLException {
-								final SqlStatementLogger statementLogger = session
-										.getFactory()
-										.getServiceRegistry()
-										.getService( JdbcServices.class )
-										.getSqlStatementLogger();
-								final IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder(
-										numberType
-								);
+								final IntegralDataTypeHolder value = makeValue();
 								int rows;
 								do {
-									statementLogger.logStatement( selectQuery, FormatStyle.BASIC.getFormatter() );
-									PreparedStatement selectStatement = connection.prepareStatement( selectQuery );
+									final PreparedStatement selectStatement = prepareStatement( connection, selectQuery, statementLogger, statsCollector );
 									try {
-										final ResultSet selectRS = selectStatement.executeQuery();
+										final ResultSet selectRS = executeQuery( selectStatement, statsCollector );
 										if ( !selectRS.next() ) {
 											final String err = "could not read a hi value - you need to populate the table: " + tableName;
 											LOG.error( err );
@@ -152,14 +154,14 @@ public class TableStructure implements DatabaseStructure {
 										selectStatement.close();
 									}
 
-									statementLogger.logStatement( updateQuery, FormatStyle.BASIC.getFormatter() );
-									final PreparedStatement updatePS = connection.prepareStatement( updateQuery );
+
+									final PreparedStatement updatePS = prepareStatement( connection, updateQuery, statementLogger, statsCollector );
 									try {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
 										updateValue.bind( updatePS, 1 );
 										value.bind( updatePS, 2 );
-										rows = updatePS.executeUpdate();
+										rows = executeUpdate( updatePS, statsCollector );
 									}
 									catch (SQLException e) {
 										LOG.unableToUpdateQueryHiValue( tableName, e );
@@ -184,6 +186,42 @@ public class TableStructure implements DatabaseStructure {
 				return session.getTenantIdentifier();
 			}
 		};
+	}
+
+	private PreparedStatement prepareStatement(
+			Connection connection,
+			String sql,
+			SqlStatementLogger statementLogger,
+			SessionEventsManager statsCollector) throws SQLException {
+		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		try {
+			statsCollector.jdbcPrepareStatementStart();
+			return connection.prepareStatement( sql );
+		}
+		finally {
+			statsCollector.jdbcPrepareStatementEnd();
+		}
+	}
+
+	private int executeUpdate(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+		try {
+			statsCollector.jdbcExecuteStatementStart();
+			return ps.executeUpdate();
+		}
+		finally {
+			statsCollector.jdbcExecuteStatementEnd();
+		}
+
+	}
+
+	private ResultSet executeQuery(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+		try {
+			statsCollector.jdbcExecuteStatementStart();
+			return ps.executeQuery();
+		}
+		finally {
+			statsCollector.jdbcExecuteStatementEnd();
+		}
 	}
 
 	@Override

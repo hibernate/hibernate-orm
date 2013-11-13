@@ -29,6 +29,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityEssentials;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -82,11 +83,11 @@ public final class MessageHelper {
 	 *
 	 * @param persister The persister for the entity
 	 * @param id The entity id value
-	 * @param factory The session factory
+	 * @param factory The session factory - Could be null!
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityPersister persister, 
+			EntityEssentials persister,
 			Object id, 
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();
@@ -110,7 +111,12 @@ public final class MessageHelper {
 				s.append( id );
 			}
 			else {
-				s.append( idType.toLoggableString( id, factory ) );
+				if ( factory != null ) {
+					s.append( idType.toLoggableString( id, factory ) );
+				}
+				else {
+					s.append( "<not loggable>" );
+				}
 			}
 		}
 		s.append( ']' );

@@ -325,7 +325,7 @@ public abstract class AbstractSessionImpl
 
 	@Override
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
-		return new EntityKey( id, persister, getTenantIdentifier() );
+		return new EntityKey( id, persister );
 	}
 
 	@Override

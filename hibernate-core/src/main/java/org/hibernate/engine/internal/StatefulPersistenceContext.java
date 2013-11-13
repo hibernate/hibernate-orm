@@ -1654,8 +1654,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
 		final boolean tracing = LOG.isTraceEnabled();
-		if ( tracing ) LOG.trace("Serializing persistent-context");
-		StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
+		if ( tracing ) {
+			LOG.trace( "Serializing persistent-context" );
+		}
+		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
+		SessionFactoryImplementor sfi = session==null ? null : session.getFactory();
 
 		// during deserialization, we need to reconnect all proxies and
 		// collections to this session, as well as the EntityEntry and
@@ -1671,7 +1674,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entitiesByKey entries");
 			rtn.entitiesByKey = new HashMap<EntityKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
-				rtn.entitiesByKey.put( EntityKey.deserialize( ois, session ), ois.readObject() );
+				rtn.entitiesByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
 
 			count = ois.readInt();
@@ -1693,8 +1696,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 					null
 			);
 			for ( int i = 0; i < count; i++ ) {
-				EntityKey ek = EntityKey.deserialize( ois, session );
-				Object proxy = ois.readObject();
+				final EntityKey ek = EntityKey.deserialize( ois, sfi );
+				final Object proxy = ois.readObject();
 				if ( proxy instanceof HibernateProxy ) {
 					( ( HibernateProxy ) proxy ).getHibernateLazyInitializer().setSession( session );
 					rtn.proxiesByKey.put( ek, proxy );
@@ -1708,7 +1711,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] entitySnapshotsByKey entries");
 			rtn.entitySnapshotsByKey = new HashMap<EntityKey,Object>( count < INIT_COLL_SIZE ? INIT_COLL_SIZE : count );
 			for ( int i = 0; i < count; i++ ) {
-				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, session ), ois.readObject() );
+				rtn.entitySnapshotsByKey.put( EntityKey.deserialize( ois, sfi ), ois.readObject() );
 			}
 
 			rtn.entityEntryContext = EntityEntryContext.deserialize( ois, rtn );
@@ -1749,7 +1752,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			if ( tracing ) LOG.trace("Starting deserialization of [" + count + "] nullifiableEntityKey entries");
 			rtn.nullifiableEntityKeys = new HashSet<EntityKey>();
 			for ( int i = 0; i < count; i++ ) {
-				rtn.nullifiableEntityKeys.add( EntityKey.deserialize( ois, session ) );
+				rtn.nullifiableEntityKeys.add( EntityKey.deserialize( ois, sfi ) );
 			}
 
 		}

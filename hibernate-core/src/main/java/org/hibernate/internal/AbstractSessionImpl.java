@@ -245,7 +245,7 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 
 	@Override
 	public EntityKey generateEntityKey(Serializable id, EntityPersister persister) {
-		return new EntityKey( id, persister, getTenantIdentifier() );
+		return new EntityKey( id, persister );
 	}
 
 	@Override

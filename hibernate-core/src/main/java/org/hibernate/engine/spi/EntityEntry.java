@@ -194,7 +194,7 @@ public final class EntityEntry implements Serializable {
 			if ( getId() == null ) {
 				throw new IllegalStateException( "cannot generate an EntityKey when id is null.");
 			}
-			cachedEntityKey = new EntityKey( getId(), getPersister(), tenantId );
+			cachedEntityKey = new EntityKey( getId(), getPersister() );
 		}
 		return cachedEntityKey;
 	}

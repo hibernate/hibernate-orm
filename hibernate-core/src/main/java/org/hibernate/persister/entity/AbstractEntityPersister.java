@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jboss.logging.Logger;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
@@ -44,7 +46,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyAccessException;
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
@@ -92,7 +93,6 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.entity.BatchingEntityLoader;
 import org.hibernate.loader.entity.BatchingEntityLoaderBuilder;
 import org.hibernate.loader.entity.CascadeEntityLoader;
 import org.hibernate.loader.entity.EntityLoader;
@@ -130,7 +130,6 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
-import org.jboss.logging.Logger;
 
 /**
  * Basic functionality for persisting an entity via JDBC
@@ -140,10 +139,9 @@ import org.jboss.logging.Logger;
  */
 public abstract class AbstractEntityPersister
 		implements OuterJoinLoadable, Queryable, ClassMetadata, UniqueKeyLoadable,
-				   SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
+		SQLLoadable, LazyPropertyInitializer, PostInsertIdentityPersister, Lockable {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       AbstractEntityPersister.class.getName());
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, AbstractEntityPersister.class.getName() );
 
 	public static final String ENTITY_CLASS = "class";
 
@@ -2145,19 +2143,18 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyNameClosure;
 	}
 
-    @Override
-    public int[] resolveAttributeIndexes(Set<String> properties) {
-        Iterator<String> iter = properties.iterator();
-        int[] fields = new int[properties.size()];
-        int counter = 0;
-        while(iter.hasNext()) {
-            Integer index = entityMetamodel.getPropertyIndexOrNull(iter.next());
-            if(index != null)
-                fields[counter++] = index;
-        }
-
-        return fields;
-    }
+	@Override
+	public int[] resolveAttributeIndexes(Set<String> properties) {
+		Iterator<String> iter = properties.iterator();
+		int[] fields = new int[properties.size()];
+		int counter = 0;
+		while(iter.hasNext()) {
+			Integer index = entityMetamodel.getPropertyIndexOrNull( iter.next() );
+			if ( index != null )
+				fields[counter++] = index;
+		}
+		return fields;
+	}
 
 	protected String[] getSubclassPropertySubclassNameClosure() {
 		return subclassPropertySubclassNameClosure;
@@ -2631,8 +2628,8 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean checkVersion(final boolean[] includeProperty) {
-        return includeProperty[ getVersionProperty() ] ||
-				entityMetamodel.getPropertyUpdateGenerationInclusions()[ getVersionProperty() ] != ValueInclusion.NONE;
+        return includeProperty[ getVersionProperty() ] 
+				|| entityMetamodel.getPropertyUpdateGenerationInclusions()[ getVersionProperty() ] != ValueInclusion.NONE;
 	}
 
 	protected String generateInsertString(boolean[] includeProperty, int j) {
@@ -2781,15 +2778,15 @@ public abstract class AbstractEntityPersister
 	 */
 	protected int dehydrate(
 			final Serializable id,
-	        final Object[] fields,
-	        final Object rowId,
-	        final boolean[] includeProperty,
-	        final boolean[][] includeColumns,
-	        final int j,
-	        final PreparedStatement ps,
-	        final SessionImplementor session,
-	        int index,
-	        boolean isUpdate ) throws SQLException, HibernateException {
+			final Object[] fields,
+			final Object rowId,
+			final boolean[] includeProperty,
+			final boolean[][] includeColumns,
+			final int j,
+			final PreparedStatement ps,
+			final SessionImplementor session,
+			int index,
+			boolean isUpdate ) throws SQLException, HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Dehydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
@@ -2829,7 +2826,7 @@ public abstract class AbstractEntityPersister
 			final Serializable id,
 			final Object rowId,
 			final PreparedStatement ps,
-	        final SessionImplementor session,
+			final SessionImplementor session,
 			int index ) throws SQLException {
 		if ( rowId != null ) {
 			ps.setObject( index, rowId );
@@ -2848,12 +2845,12 @@ public abstract class AbstractEntityPersister
 	 */
 	public Object[] hydrate(
 			final ResultSet rs,
-	        final Serializable id,
-	        final Object object,
-	        final Loadable rootLoadable,
-	        final String[][] suffixedPropertyColumns,
-	        final boolean allProperties,
-	        final SessionImplementor session) throws SQLException, HibernateException {
+			final Serializable id,
+			final Object object,
+			final Loadable rootLoadable,
+			final String[][] suffixedPropertyColumns,
+			final boolean allProperties,
+			final SessionImplementor session) throws SQLException, HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Hydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
@@ -2966,10 +2963,10 @@ public abstract class AbstractEntityPersister
 	 */
 	protected Serializable insert(
 			final Object[] fields,
-	        final boolean[] notNull,
-	        String sql,
-	        final Object object,
-	        final SessionImplementor session) throws HibernateException {
+			final boolean[] notNull,
+			String sql,
+			final Object object,
+			final SessionImplementor session) throws HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Inserting entity: {0} (native id)", getEntityName() );
@@ -3017,12 +3014,12 @@ public abstract class AbstractEntityPersister
 	 */
 	protected void insert(
 			final Serializable id,
-	        final Object[] fields,
-	        final boolean[] notNull,
-	        final int j,
-	        final String sql,
-	        final Object object,
-	        final SessionImplementor session) throws HibernateException {
+			final Object[] fields,
+			final boolean[] notNull,
+			final int j,
+			final String sql,
+			final Object object,
+			final SessionImplementor session) throws HibernateException {
 
 		if ( isInverseTable( j ) ) {
 			return;
@@ -3113,15 +3110,15 @@ public abstract class AbstractEntityPersister
 	 */
 	protected void updateOrInsert(
 			final Serializable id,
-	        final Object[] fields,
-	        final Object[] oldFields,
-	        final Object rowId,
-	        final boolean[] includeProperty,
-	        final int j,
-	        final Object oldVersion,
-	        final Object object,
-	        final String sql,
-	        final SessionImplementor session) throws HibernateException {
+			final Object[] fields,
+			final Object[] oldFields,
+			final Object rowId,
+			final boolean[] includeProperty,
+			final int j,
+			final Object oldVersion,
+			final Object object,
+			final String sql,
+			final SessionImplementor session) throws HibernateException {
 
 		if ( !isInverseTable( j ) ) {
 
@@ -3156,15 +3153,15 @@ public abstract class AbstractEntityPersister
 
 	protected boolean update(
 			final Serializable id,
-	        final Object[] fields,
-	        final Object[] oldFields,
-	        final Object rowId,
-	        final boolean[] includeProperty,
-	        final int j,
-	        final Object oldVersion,
-	        final Object object,
-	        final String sql,
-	        final SessionImplementor session) throws HibernateException {
+			final Object[] fields,
+			final Object[] oldFields,
+			final Object rowId,
+			final boolean[] includeProperty,
+			final int j,
+			final Object oldVersion,
+			final Object object,
+			final String sql,
+			final SessionImplementor session) throws HibernateException {
 
 		final Expectation expectation = Expectations.appropriateExpectation( updateResultCheckStyles[j] );
 		final boolean useBatch = j == 0 && expectation.canBeBatched() && isBatchable(); //note: updates to joined tables can't be batched...
@@ -3401,14 +3398,14 @@ public abstract class AbstractEntityPersister
 	 */
 	public void update(
 			final Serializable id,
-	        final Object[] fields,
-	        final int[] dirtyFields,
-	        final boolean hasDirtyCollection,
-	        final Object[] oldFields,
-	        final Object oldVersion,
-	        final Object object,
-	        final Object rowId,
-	        final SessionImplementor session) throws HibernateException {
+			final Object[] fields,
+			final int[] dirtyFields,
+			final boolean hasDirtyCollection,
+			final Object[] oldFields,
+			final Object oldVersion,
+			final Object object,
+			final Object rowId,
+			final SessionImplementor session) throws HibernateException {
 
 		//note: dirtyFields==null means we had no snapshot, and we couldn't get one using select-before-update
 		//	  oldFields==null just means we had no snapshot to begin with (we might have used select-before-update to get the dirtyFields)

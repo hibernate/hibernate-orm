@@ -109,7 +109,7 @@ public final class EntityEntry implements Serializable {
 			final Status status,
 			final Status previousStatus,
 			final Object[] loadedState,
-	        final Object[] deletedState,
+			final Object[] deletedState,
 			final Object version,
 			final LockMode lockMode,
 			final boolean existsInDatabase,
@@ -206,11 +206,11 @@ public final class EntityEntry implements Serializable {
 	public boolean isBeingReplicated() {
 		return isBeingReplicated;
 	}
-	
+
 	public Object getRowId() {
 		return rowId;
 	}
-	
+
 	/**
 	 * Handle updating the internal state of the entry after actually performing
 	 * the database update.  Specifically we update the snapshot information and
@@ -236,8 +236,8 @@ public final class EntityEntry implements Serializable {
 				interceptor.clearDirty();
 			}
 		}
-        if( entity instanceof SelfDirtinessTracker)
-            ((SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
+		if( entity instanceof SelfDirtinessTracker)
+			((SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
 
 		persistenceContext.getSession()
 				.getFactory()
@@ -254,7 +254,7 @@ public final class EntityEntry implements Serializable {
 		status = Status.GONE;
 		existsInDatabase = false;
 	}
-	
+
 	/**
 	 * After actually inserting a row, record the fact that the instance exists on the 
 	 * database (needed for identity-column key generation)
@@ -262,7 +262,7 @@ public final class EntityEntry implements Serializable {
 	public void postInsert(Object[] insertedState) {
 		existsInDatabase = true;
 	}
-	
+
 	public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
 		return getStatus() == Status.SAVING || (
 				earlyInsert ?
@@ -271,7 +271,7 @@ public final class EntityEntry implements Serializable {
 							.contains( getEntityKey() )
 				);
 	}
-	
+
 	public Object getLoadedValue(String propertyName) {
 		if ( loadedState == null ) {
 			return null;
@@ -303,24 +303,24 @@ public final class EntityEntry implements Serializable {
 	@SuppressWarnings( {"SimplifiableIfStatement"})
 	private boolean isUnequivocallyNonDirty(Object entity) {
 
-        if(entity instanceof SelfDirtinessTracker)
-            return ((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes();
+		if(entity instanceof SelfDirtinessTracker)
+			return ((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes();
 
 		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
 				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
 		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {
 			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
 		}
-		
+
 		if ( getPersister().hasMutableProperties() ) {
 			return false;
 		}
-		
+
 		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
 			// the entity must be instrumented (otherwise we cant check dirty flag) and the dirty flag is false
 			return ! getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty();
 		}
-		
+
 		return false;
 	}
 
@@ -380,7 +380,7 @@ public final class EntityEntry implements Serializable {
 			);
 		}
 	}
-	
+
 	public String toString() {
 		return "EntityEntry" + 
 				MessageHelper.infoString(entityName, id) + 
@@ -431,27 +431,27 @@ public final class EntityEntry implements Serializable {
 	 */
 	public static EntityEntry deserialize(
 			ObjectInputStream ois,
-	        PersistenceContext persistenceContext) throws IOException, ClassNotFoundException {
+			PersistenceContext persistenceContext) throws IOException, ClassNotFoundException {
 		String previousStatusString;
 		return new EntityEntry(
 				// this complexity comes from non-flushed changes, should really look at how that reattaches entries
 				( persistenceContext.getSession() == null ? null : persistenceContext.getSession().getFactory() ),
-		        (String) ois.readObject(),
+				(String) ois.readObject(),
 				( Serializable ) ois.readObject(),
-	            EntityMode.parse( (String) ois.readObject() ),
+				EntityMode.parse( (String) ois.readObject() ),
 				(String) ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
 				( ( previousStatusString = ( String ) ois.readObject() ).length() == 0 ?
 							null :
 							Status.valueOf( previousStatusString )
 				),
-	            ( Object[] ) ois.readObject(),
-	            ( Object[] ) ois.readObject(),
-	            ois.readObject(),
-	            LockMode.valueOf( (String) ois.readObject() ),
-	            ois.readBoolean(),
-	            ois.readBoolean(),
-	            ois.readBoolean(),
+				( Object[] ) ois.readObject(),
+				( Object[] ) ois.readObject(),
+				ois.readObject(),
+				LockMode.valueOf( (String) ois.readObject() ),
+				ois.readBoolean(),
+				ois.readBoolean(),
+				ois.readBoolean(),
 				persistenceContext
 		);
 	}

@@ -95,7 +95,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 
 		if ( isFirstArgColumnLabel( method, args ) ) {
 			try {
-				int columnIndex = findColumn( ( String ) args[0] );
+				final Integer columnIndex = findColumn( (String) args[0] );
 				return invokeMethod(
 						locateCorrespondingColumnIndexMethod( method ), buildColumnIndexMethodArgs( args, columnIndex )
 				);
@@ -125,7 +125,7 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 	 * @return The column index corresponding to the given column name.
 	 * @throws SQLException if the ResultSet object does not contain columnName or a database access error occurs
 	 */
-	private int findColumn(String columnName) throws SQLException {
+	private Integer findColumn(String columnName) throws SQLException {
 		return columnNameCache.getIndexForColumnName( columnName, rs );
 	}
 
@@ -170,10 +170,9 @@ public class ResultSetWrapperProxy implements InvocationHandler {
 		return columnNameMethod.getDeclaringClass().getMethod( columnNameMethod.getName(), actualParameterTypes );
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing"})
-	private Object[] buildColumnIndexMethodArgs(Object[] incomingArgs, int columnIndex) {
-		Object actualArgs[] = new Object[incomingArgs.length];
-		actualArgs[0] = Integer.valueOf( columnIndex );
+	private Object[] buildColumnIndexMethodArgs(Object[] incomingArgs, Integer columnIndex) {
+		final Object[] actualArgs = new Object[incomingArgs.length];
+		actualArgs[0] = columnIndex;
 		System.arraycopy( incomingArgs, 1, actualArgs, 1, incomingArgs.length - 1 );
 		return actualArgs;
 	}

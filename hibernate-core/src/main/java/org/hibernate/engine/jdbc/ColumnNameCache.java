@@ -24,7 +24,6 @@
 package org.hibernate.engine.jdbc;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -32,8 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Steve Ebersole
  */
-public class ColumnNameCache {
-	public static final float LOAD_FACTOR = .75f;
+public final class ColumnNameCache {
+	private static final float LOAD_FACTOR = .75f;
 
 	private final ConcurrentHashMap<String, Integer> columnNameToIndexCache;
 
@@ -42,13 +41,23 @@ public class ColumnNameCache {
 		this.columnNameToIndexCache = new ConcurrentHashMap<String, Integer>( columnCount + (int)( columnCount * LOAD_FACTOR ) + 1, LOAD_FACTOR );
 	}
 
-	public int getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
-		Integer cached = ( Integer ) columnNameToIndexCache.get( columnName );
+	/**
+	 * Resolve the column name/alias to its index
+	 *
+	 * @param columnName The name/alias of the column
+	 * @param rs The ResultSet
+	 *
+	 * @return The index
+	 *
+	 * @throws SQLException INdicates a problems accessing the underlying JDBC ResultSet
+	 */
+	public Integer getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
+		final Integer cached = columnNameToIndexCache.get( columnName );
 		if ( cached != null ) {
 			return cached.intValue();
 		}
 		else {
-			int index = rs.findColumn( columnName );
+			final Integer index = Integer.valueOf( rs.findColumn( columnName ) );
 			columnNameToIndexCache.put( columnName, index);
 			return index;
 		}

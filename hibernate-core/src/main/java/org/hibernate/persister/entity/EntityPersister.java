@@ -773,7 +773,7 @@ public interface EntityPersister extends OptimisticCacheSource, EntityDefinition
 	
 	public FilterAliasGenerator getFilterAliasGenerator(final String rootAlias);
 
-    public int[] resolveAttributeIndexes(Set<String> properties);
+	public int[] resolveAttributeIndexes(Set<String> properties);
 
 	public boolean canUseReferenceCacheEntries();
 }

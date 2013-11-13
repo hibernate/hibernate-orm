@@ -63,7 +63,7 @@ import org.hibernate.type.VersionType;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends OptimisticCacheSource, EntityDefinition {
+public interface EntityPersister extends OptimisticCacheSource, EntityDefinition, EntityEssentials {
 
 	/**
 	 * The property name of the "special" identifier property in HQL

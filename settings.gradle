@@ -11,18 +11,22 @@ include 'hibernate-proxool'
 include 'hibernate-ehcache'
 include 'hibernate-infinispan'
 
+include 'documentation'
+include 'release'
+
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-jpamodelgen'
 
 include 'hibernate-gradle-plugin'
-include 'hibernate-maven-plugin'
+project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")
 
-include 'documentation'
-include 'release'
+include 'hibernate-maven-plugin'
+project(':hibernate-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-maven-plugin")
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()
+    assert project.buildFile.exists()
     assert project.buildFile.isFile()
 }

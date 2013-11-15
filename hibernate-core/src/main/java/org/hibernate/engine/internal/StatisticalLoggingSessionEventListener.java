@@ -25,13 +25,13 @@ package org.hibernate.engine.internal;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.EmptySessionEventsListener;
+import org.hibernate.BaseSessionEventListener;
 
 /**
  * @author Steve Ebersole
  */
-public class LoggingSessionEventsListener extends EmptySessionEventsListener {
-	private static final Logger log = Logger.getLogger( LoggingSessionEventsListener.class );
+public class StatisticalLoggingSessionEventListener extends BaseSessionEventListener {
+	private static final Logger log = Logger.getLogger( StatisticalLoggingSessionEventListener.class );
 
 	/**
 	 * Used by SettingsFactory (in conjunction with stats being enabled) to determine whether to apply this listener

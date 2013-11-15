@@ -40,7 +40,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.spi.SessionEventsManager;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.internal.CoreMessageLogger;
@@ -148,7 +148,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();
-		final SessionEventsManager statsCollector = session.getSessionEventsManager();
+		final SessionEventListenerManager listeners = session.getEventListenerManager();
 
 		return session.getTransactionCoordinator().getTransaction().createIsolationDelegate().delegateWork(
 				new AbstractReturningWork<IntegralDataTypeHolder>() {
@@ -160,9 +160,9 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 						// The loop ensures atomicity of the select + update even for no transaction or
 						// read committed isolation level
 						do {
-							final PreparedStatement qps = prepareStatement( connection, query, statementLogger, statsCollector );
+							final PreparedStatement qps = prepareStatement( connection, query, statementLogger, listeners );
 							try {
-								ResultSet rs = executeQuery( qps, statsCollector );
+								ResultSet rs = executeQuery( qps, listeners );
 								if ( !rs.next() ) {
 									String err = "could not read a hi value - you need to populate the table: " + tableName;
 									LOG.error(err);
@@ -179,11 +179,11 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 								qps.close();
 							}
 
-							final PreparedStatement ups = prepareStatement( connection, update, statementLogger, statsCollector );
+							final PreparedStatement ups = prepareStatement( connection, update, statementLogger, listeners );
 							try {
 								value.copy().increment().bind( ups, 1 );
 								value.bind( ups, 2 );
-								rows = executeUpdate( ups, statsCollector );
+								rows = executeUpdate( ups, listeners );
 							}
 							catch (SQLException sqle) {
 								LOG.error(LOG.unableToUpdateHiValue(tableName), sqle);
@@ -205,7 +205,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 			Connection connection,
 			String sql,
 			SqlStatementLogger statementLogger,
-			SessionEventsManager statsCollector) throws SQLException {
+			SessionEventListenerManager statsCollector) throws SQLException {
 		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		try {
 			statsCollector.jdbcPrepareStatementStart();
@@ -216,7 +216,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		}
 	}
 
-	private int executeUpdate(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+	private int executeUpdate(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
@@ -227,7 +227,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	}
 
-	private ResultSet executeQuery(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();

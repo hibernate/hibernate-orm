@@ -57,7 +57,7 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
@@ -1553,7 +1553,7 @@ public final class SessionFactoryImpl
 		private boolean autoJoinTransactions = true;
 		private boolean flushBeforeCompletion;
 		private String tenantIdentifier;
-		private List<SessionEventsListener> listeners;
+		private List<SessionEventListener> listeners;
 
 		SessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
@@ -1594,8 +1594,8 @@ public final class SessionFactoryImpl
 					tenantIdentifier
 			);
 
-			for ( SessionEventsListener listener : listeners ) {
-				session.getSessionEventsManager().addListener( listener );
+			for ( SessionEventListener listener : listeners ) {
+				session.getEventListenerManager().addListener( listener );
 			}
 
 			return session;
@@ -1656,7 +1656,7 @@ public final class SessionFactoryImpl
 		}
 
 		@Override
-		public SessionBuilder eventListeners(SessionEventsListener... listeners) {
+		public SessionBuilder eventListeners(SessionEventListener... listeners) {
 			Collections.addAll( this.listeners, listeners );
 			return this;
 		}

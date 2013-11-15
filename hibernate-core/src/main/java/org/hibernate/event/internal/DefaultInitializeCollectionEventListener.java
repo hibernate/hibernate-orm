@@ -128,7 +128,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 
 		Object ce = null;
 		try {
-			source.getSessionEventsManager().cacheGetStart();
+			source.getEventListenerManager().cacheGetStart();
 			ce = persister.getCacheAccessStrategy().get(ck, source.getTimestamp());
 
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -143,7 +143,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 			}
 		}
 		finally {
-			source.getSessionEventsManager().cacheGetEnd( ce == null );
+			source.getEventListenerManager().cacheGetEnd( ce == null );
 		}
 
         if ( ce == null ) {

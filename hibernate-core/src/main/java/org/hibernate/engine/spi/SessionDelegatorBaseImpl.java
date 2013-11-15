@@ -46,7 +46,7 @@ import org.hibernate.SQLQuery;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
@@ -390,8 +390,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public SessionEventsManager getSessionEventsManager() {
-		return sessionImplementor.getSessionEventsManager();
+	public SessionEventListenerManager getEventListenerManager() {
+		return sessionImplementor.getEventListenerManager();
 	}
 
 	// Delegates to Session
@@ -807,7 +807,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public void addEventsListeners(SessionEventsListener... listeners) {
-		session.addEventsListeners( listeners );
+	public void addEventListeners(SessionEventListener... listeners) {
+		session.addEventListeners( listeners );
 	}
 }

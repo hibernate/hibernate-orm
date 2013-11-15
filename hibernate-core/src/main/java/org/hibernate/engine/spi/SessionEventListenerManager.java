@@ -23,10 +23,10 @@
  */
 package org.hibernate.engine.spi;
 
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 
 /**
  * @author Steve Ebersole
  */
-public interface SessionEventsManager extends SessionEventsListener {
+public interface SessionEventListenerManager extends SessionEventListener {
 }

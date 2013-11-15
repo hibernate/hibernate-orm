@@ -24,13 +24,13 @@
 package org.hibernate;
 
 /**
- * A no-op implementation of SessionEventsListener.  Intended as a convenient base class for developing
- * SessionEventsListener implementations.
+ * A no-op implementation of SessionEventListener.  Intended as a convenient base class for developing
+ * SessionEventListener implementations.
  *
  * @author Steve Ebersole
  */
 @SuppressWarnings("UnusedDeclaration")
-public class EmptySessionEventsListener implements SessionEventsListener {
+public class BaseSessionEventListener implements SessionEventListener {
 	@Override
 	public void transactionCompletion(boolean successful) {
 	}

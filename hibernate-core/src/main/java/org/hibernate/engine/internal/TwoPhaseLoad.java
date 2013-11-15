@@ -217,7 +217,7 @@ public final class TwoPhaseLoad {
 			}
 			else {
 				try {
-					session.getSessionEventsManager().cachePutStart();
+					session.getEventListenerManager().cachePutStart();
 					final boolean put = persister.getCacheAccessStrategy().putFromLoad(
 							cacheKey,
 							persister.getCacheEntryStructure().structure( entry ),
@@ -231,7 +231,7 @@ public final class TwoPhaseLoad {
 					}
 				}
 				finally {
-					session.getSessionEventsManager().cachePutEnd();
+					session.getEventListenerManager().cachePutEnd();
 				}
 			}
 		}

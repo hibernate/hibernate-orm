@@ -34,14 +34,13 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.engine.internal.LoggingSessionEventsListener;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -416,9 +415,9 @@ public class SettingsFactory implements Serializable {
 		settings.setJtaTrackByThread( jtaTrackByThread );
 
 		final String autoSessionEventsListenerName = properties.getProperty( AvailableSettings.AUTO_SESSION_EVENTS_LISTENER );
-		final Class<? extends SessionEventsListener> autoSessionEventsListener = autoSessionEventsListenerName == null
+		final Class<? extends SessionEventListener> autoSessionEventsListener = autoSessionEventsListenerName == null
 				? null
-				: strategySelector.selectStrategyImplementor( SessionEventsListener.class, autoSessionEventsListenerName );
+				: strategySelector.selectStrategyImplementor( SessionEventListener.class, autoSessionEventsListenerName );
 
 		final boolean logSessionMetrics = ConfigurationHelper.getBoolean(
 				AvailableSettings.LOG_SESSION_METRICS,

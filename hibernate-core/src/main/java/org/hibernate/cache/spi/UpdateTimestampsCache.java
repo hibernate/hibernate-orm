@@ -104,14 +104,14 @@ public class UpdateTimestampsCache {
 			}
 
 			try {
-				session.getSessionEventsManager().cachePutStart();
+				session.getEventListenerManager().cachePutStart();
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
 			}
 			finally {
-				session.getSessionEventsManager().cachePutEnd();
+				session.getEventListenerManager().cachePutEnd();
 			}
 
 			if ( stats ) {
@@ -140,14 +140,14 @@ public class UpdateTimestampsCache {
 			}
 
 			try {
-				session.getSessionEventsManager().cachePutStart();
+				session.getEventListenerManager().cachePutStart();
 
 				//put() has nowait semantics, is this really appropriate?
 				//note that it needs to be async replication, never local or sync
 				region.put( space, ts );
 			}
 			finally {
-				session.getSessionEventsManager().cachePutEnd();
+				session.getEventListenerManager().cachePutEnd();
 			}
 
 			if ( stats ) {
@@ -204,11 +204,11 @@ public class UpdateTimestampsCache {
 	private Long getLastUpdateTimestampForSpace(Serializable space, SessionImplementor session) {
 		Long ts = null;
 		try {
-			session.getSessionEventsManager().cacheGetStart();
+			session.getEventListenerManager().cacheGetStart();
 			ts = (Long) region.get( space );
 		}
 		finally {
-			session.getSessionEventsManager().cacheGetEnd( ts != null );
+			session.getEventListenerManager().cacheGetEnd( ts != null );
 		}
 		return ts;
 	}

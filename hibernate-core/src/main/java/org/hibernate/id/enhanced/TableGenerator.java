@@ -45,7 +45,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
-import org.hibernate.engine.spi.SessionEventsManager;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.Configurable;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -529,7 +529,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
 				.getService( JdbcServices.class )
 				.getSqlStatementLogger();
-		final SessionEventsManager statsCollector = session.getSessionEventsManager();
+		final SessionEventListenerManager statsCollector = session.getEventListenerManager();
 
 		return optimizer.generate(
 				new AccessCallback() {
@@ -619,7 +619,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 			Connection connection,
 			String sql,
 			SqlStatementLogger statementLogger,
-			SessionEventsManager statsCollector) throws SQLException {
+			SessionEventListenerManager statsCollector) throws SQLException {
 		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		try {
 			statsCollector.jdbcPrepareStatementStart();
@@ -630,7 +630,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 		}
 	}
 
-	private int executeUpdate(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+	private int executeUpdate(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
@@ -641,7 +641,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	}
 
-	private ResultSet executeQuery(PreparedStatement ps, SessionEventsManager statsCollector) throws SQLException {
+	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager statsCollector) throws SQLException {
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();

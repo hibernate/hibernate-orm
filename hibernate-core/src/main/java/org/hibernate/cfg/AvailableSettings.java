@@ -670,7 +670,7 @@ public interface AvailableSettings {
 	String UNIQUE_CONSTRAINT_SCHEMA_UPDATE_STRATEGY = "hibernate.schema_update.unique_constraint_strategy";
 
 	/**
-	 * A setting to control whether to {@link org.hibernate.engine.internal.LoggingSessionEventsListener} is
+	 * A setting to control whether to {@link org.hibernate.engine.internal.StatisticalLoggingSessionEventListener} is
 	 * enabled on all Sessions (unless explicitly disabled for a given Session).  The default value of this
 	 * setting is determined by the value for {@link #GENERATE_STATISTICS}, meaning that if collection of statistics
 	 * is enabled logging of Session metrics is enabled by default too.

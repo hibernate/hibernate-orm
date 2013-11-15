@@ -408,5 +408,5 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 */
 	SQLQuery createSQLQuery(NamedSQLQueryDefinition namedQueryDefinition);
 
-	public SessionEventsManager getSessionEventsManager();
+	public SessionEventListenerManager getEventListenerManager();
 }

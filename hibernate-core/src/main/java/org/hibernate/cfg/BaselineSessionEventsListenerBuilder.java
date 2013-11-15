@@ -27,19 +27,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.HibernateException;
-import org.hibernate.SessionEventsListener;
-import org.hibernate.engine.internal.LoggingSessionEventsListener;
+import org.hibernate.SessionEventListener;
+import org.hibernate.engine.internal.StatisticalLoggingSessionEventListener;
 
 /**
  * @author Steve Ebersole
  */
 public class BaselineSessionEventsListenerBuilder {
 	private boolean logSessionMetrics;
-	private Class<? extends SessionEventsListener> autoListener;
+	private Class<? extends SessionEventListener> autoListener;
 
 	public BaselineSessionEventsListenerBuilder(
 			boolean logSessionMetrics,
-			Class<? extends SessionEventsListener> autoListener) {
+			Class<? extends SessionEventListener> autoListener) {
 		this.logSessionMetrics = logSessionMetrics;
 		this.autoListener = autoListener;
 	}
@@ -55,19 +55,19 @@ public class BaselineSessionEventsListenerBuilder {
 	}
 
 	@SuppressWarnings("UnusedDeclaration")
-	public Class<? extends SessionEventsListener> getAutoListener() {
+	public Class<? extends SessionEventListener> getAutoListener() {
 		return autoListener;
 	}
 
 	@SuppressWarnings("UnusedDeclaration")
-	public void setAutoListener(Class<? extends SessionEventsListener> autoListener) {
+	public void setAutoListener(Class<? extends SessionEventListener> autoListener) {
 		this.autoListener = autoListener;
 	}
 
-	public List<SessionEventsListener> buildBaselineList() {
-		List<SessionEventsListener> list = new ArrayList<SessionEventsListener>();
-		if ( logSessionMetrics && LoggingSessionEventsListener.isLoggingEnabled() ) {
-			list.add( new LoggingSessionEventsListener() );
+	public List<SessionEventListener> buildBaselineList() {
+		List<SessionEventListener> list = new ArrayList<SessionEventListener>();
+		if ( logSessionMetrics && StatisticalLoggingSessionEventListener.isLoggingEnabled() ) {
+			list.add( new StatisticalLoggingSessionEventListener() );
 		}
 		if ( autoListener != null ) {
 			try {
@@ -75,7 +75,7 @@ public class BaselineSessionEventsListenerBuilder {
 			}
 			catch (Exception e) {
 				throw new HibernateException(
-						"Unable to instantiate specified auto SessionEventsListener : " + autoListener.getName(),
+						"Unable to instantiate specified auto SessionEventListener : " + autoListener.getName(),
 						e
 				);
 			}

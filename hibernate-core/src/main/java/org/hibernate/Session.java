@@ -1104,5 +1104,5 @@ public interface Session extends SharedSessionContract {
 	 *
 	 * @param listeners The listener(s) to add
 	 */
-	public void addEventsListeners(SessionEventsListener... listeners);
+	public void addEventListeners(SessionEventListener... listeners);
 }

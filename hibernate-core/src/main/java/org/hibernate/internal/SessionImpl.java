@@ -73,7 +73,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.SimpleNaturalIdLoadAccess;
@@ -84,7 +84,7 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
-import org.hibernate.engine.internal.SessionEventsManagerImpl;
+import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -212,6 +212,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private final transient boolean isTransactionCoordinatorShared;
 	private transient TransactionObserver transactionObserver;
+
+	private SessionEventListenerManagerImpl sessionEventsManager = new SessionEventListenerManagerImpl();
 
 	/**
 	 * Constructor used for openSession(...) processing, as well as construction
@@ -357,7 +359,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		if ( factory.getStatistics().isStatisticsEnabled() ) {
 			factory.getStatisticsImplementor().closeSession();
 		}
-		getSessionEventsManager().end();
+		getEventListenerManager().end();
 
 		try {
 			if ( !isTransactionCoordinatorShared ) {
@@ -635,7 +637,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		persistenceContext.afterTransactionCompletion();
 		actionQueue.afterTransactionCompletion( successful );
 
-		getSessionEventsManager().transactionCompletion( successful );
+		getEventListenerManager().transactionCompletion( successful );
 
 		try {
 			interceptor.afterTransactionCompletion( hibernateTransaction );
@@ -659,50 +661,44 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return sql;
 	}
 
-	private SessionEventsManagerImpl sessionEventsManager;
-
 	@Override
-	public SessionEventsManagerImpl getSessionEventsManager() {
-		if ( sessionEventsManager == null ) {
-			sessionEventsManager = new SessionEventsManagerImpl();
-		}
-
+	public SessionEventListenerManagerImpl getEventListenerManager() {
 		return sessionEventsManager;
 	}
 
 	@Override
-	public void addEventsListeners(SessionEventsListener... listeners) {
-		getSessionEventsManager().addListener( listeners );
+	public void addEventListeners(SessionEventListener... listeners) {
+		getEventListenerManager().addListener( listeners );
 	}
 
 	@Override
 	public void startPrepareStatement() {
-		getSessionEventsManager().jdbcPrepareStatementStart();
+		getEventListenerManager().jdbcPrepareStatementStart();
 	}
 
 	@Override
 	public void endPrepareStatement() {
-		getSessionEventsManager().jdbcPrepareStatementEnd();
+		getEventListenerManager().jdbcPrepareStatementEnd();
 	}
 
 	@Override
 	public void startStatementExecution() {
-		getSessionEventsManager().jdbcExecuteStatementStart();
+		getEventListenerManager().jdbcExecuteStatementStart();
 	}
 
 	@Override
 	public void endStatementExecution() {
-		getSessionEventsManager().jdbcExecuteStatementEnd();
+		getEventListenerManager().jdbcExecuteStatementEnd();
 	}
 
 	@Override
 	public void startBatchExecution() {
-		getSessionEventsManager().jdbcExecuteBatchStart();
+		getEventListenerManager().jdbcExecuteBatchStart();
 	}
 
 	@Override
 	public void endBatchExecution() {
-		getSessionEventsManager().jdbcExecuteBatchEnd();
+		getEventListenerManager().jdbcExecuteBatchEnd();
 	}
 
 	/**
@@ -2442,7 +2438,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 
 		@Override
-		public SharedSessionBuilder eventListeners(SessionEventsListener... listeners) {
+		public SharedSessionBuilder eventListeners(SessionEventListener... listeners) {
 			super.eventListeners( listeners );
 			return this;
 		}

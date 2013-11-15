@@ -1693,7 +1693,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 			switch ( source ) {
 				case LOAD: {
-					if ( naturalIdCacheAccessStrategy.get( naturalIdCacheKey, session.getTimestamp() ) != null ) {
+					if ( CacheHelper.fromSharedCache( session, naturalIdCacheKey, naturalIdCacheAccessStrategy ) != null ) {
 						// prevent identical re-cachings
 						return;
 					}
@@ -1763,7 +1763,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 								public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
 									naturalIdCacheAccessStrategy.unlockItem( previousCacheKey, removalLock );
 									if (success) {
-										final boolean put = naturalIdCacheAccessStrategy.afterUpdate( naturalIdCacheKey, id, lock );
+										final boolean put = naturalIdCacheAccessStrategy.afterUpdate(
+												naturalIdCacheKey,
+												id,
+												lock
+										);
 
 										if ( put && factory.getStatistics().isStatisticsEnabled() ) {
 											factory.getStatisticsImplementor()

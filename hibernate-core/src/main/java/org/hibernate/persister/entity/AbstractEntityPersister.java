@@ -64,6 +64,7 @@ import org.hibernate.cache.spi.entry.StructuredCacheEntry;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -1235,10 +1236,10 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( hasCache() ) {
-			CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
-			Object ce = getCacheAccessStrategy().get( cacheKey, session.getTimestamp() );
-			if (ce!=null) {
-				CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);
+			final CacheKey cacheKey = session.generateCacheKey( id, getIdentifierType(), getEntityName() );
+			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, getCacheAccessStrategy() );
+			if ( ce != null ) {
+				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure(ce, factory);
 				if ( !cacheEntry.areLazyPropertiesUnfetched() ) {
 					//note early exit here:
 					return initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
@@ -4489,8 +4490,9 @@ public abstract class AbstractEntityPersister
 
 		// check to see if it is in the second-level cache
 		if ( hasCache() ) {
-			CacheKey ck = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
-			if ( getCacheAccessStrategy().get( ck, session.getTimestamp() ) != null ) {
+			final CacheKey ck = session.generateCacheKey( id, getIdentifierType(), getRootEntityName() );
+			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
+			if ( ce != null ) {
 				return Boolean.FALSE;
 			}
 		}

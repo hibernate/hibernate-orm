@@ -213,20 +213,24 @@ public final class EntityInsertAction extends AbstractEntityInsertAction {
 		final EntityPersister persister = getPersister();
 		if ( success && isCachePutEnabled( persister, getSession() ) ) {
 			final CacheKey ck = getSession().generateCacheKey( getId(), persister.getIdentifierType(), persister.getRootEntityName() );
-			try {
-				getSession().getEventListenerManager().cachePutStart();
-				final boolean put = persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
+			final boolean put = cacheAfterInsert( persister, ck );
 
-				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-					getSession().getFactory().getStatisticsImplementor()
-							.secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
-				}
-			}
-			finally {
-				getSession().getEventListenerManager().cachePutEnd();
+			if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
+				getSession().getFactory().getStatisticsImplementor()
+						.secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 			}
 		}
 		postCommitInsert();
+	}
+
+	private boolean cacheAfterInsert(EntityPersister persister, CacheKey ck) {
+		try {
+			getSession().getEventListenerManager().cachePutStart();
+			return persister.getCacheAccessStrategy().afterInsert( ck, cacheEntry, version );
+		}
+		finally {
+			getSession().getEventListenerManager().cachePutEnd();
+		}
 	}
 
 	@Override

@@ -37,6 +37,7 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.ReferenceCacheEntryImpl;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -547,26 +548,18 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 				persister.getRootEntityName()
 		);
 
-		Object ce = null;
-		try {
-			source.getEventListenerManager().cacheGetStart();
-			ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
-
-			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				if ( ce == null ) {
-					factory.getStatisticsImplementor().secondLevelCacheMiss(
-							persister.getCacheAccessStrategy().getRegion().getName()
-					);
-				}
-				else {
-					factory.getStatisticsImplementor().secondLevelCacheHit(
-							persister.getCacheAccessStrategy().getRegion().getName()
-					);
-				}
+		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
+			if ( ce == null ) {
+				factory.getStatisticsImplementor().secondLevelCacheMiss(
+						persister.getCacheAccessStrategy().getRegion().getName()
+				);
 			}
-		}
-		finally {
-			source.getEventListenerManager().cacheGetEnd( ce == null );
+			else {
+				factory.getStatisticsImplementor().secondLevelCacheHit(
+						persister.getCacheAccessStrategy().getRegion().getName()
+				);
+			}
 		}
 
 		if ( ce == null ) {

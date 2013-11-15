@@ -206,14 +206,9 @@ public final class EntityUpdateAction extends EntityAction {
 				final CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
 
-				try {
-
-					final boolean put = persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
-					}
-				}
-				finally {
+				final boolean put = cacheUpdate( persister, previousVersion, ck );
+				if ( put && factory.getStatistics().isStatisticsEnabled() ) {
+					factory.getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 				}
 			}
 		}
@@ -230,6 +225,16 @@ public final class EntityUpdateAction extends EntityAction {
 
 		if ( factory.getStatistics().isStatisticsEnabled() && !veto ) {
 			factory.getStatisticsImplementor().updateEntity( getPersister().getEntityName() );
+		}
+	}
+
+	private boolean cacheUpdate(EntityPersister persister, Object previousVersion, CacheKey ck) {
+		try {
+			getSession().getEventListenerManager().cachePutStart();
+			return persister.getCacheAccessStrategy().update( ck, cacheEntry, nextVersion, previousVersion );
+		}
+		finally {
+			getSession().getEventListenerManager().cachePutEnd();
 		}
 	}
 
@@ -315,16 +320,10 @@ public final class EntityUpdateAction extends EntityAction {
 			);
 			
 			if ( success && cacheEntry!=null /*!persister.isCacheInvalidationRequired()*/ ) {
-				try {
-					session.getEventListenerManager().cachePutStart();
-					final boolean put = persister.getCacheAccessStrategy().afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
+				final boolean put = cacheAfterUpdate( persister, ck );
 
-					if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
-						getSession().getFactory().getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
-					}
-				}
-				finally {
-					session.getEventListenerManager().cachePutEnd();
+				if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
+					getSession().getFactory().getStatisticsImplementor().secondLevelCachePut( getPersister().getCacheAccessStrategy().getRegion().getName() );
 				}
 			}
 			else {
@@ -332,6 +331,16 @@ public final class EntityUpdateAction extends EntityAction {
 			}
 		}
 		postCommitUpdate();
+	}
+
+	private boolean cacheAfterUpdate(EntityPersister persister, CacheKey ck) {
+		try {
+			getSession().getEventListenerManager().cachePutStart();
+			return persister.getCacheAccessStrategy().afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
+		}
+		finally {
+			getSession().getEventListenerManager().cachePutEnd();
+		}
 	}
 
 }

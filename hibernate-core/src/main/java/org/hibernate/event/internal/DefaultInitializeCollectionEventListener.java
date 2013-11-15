@@ -29,6 +29,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -123,27 +124,18 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
         if (!useCache) return false;
 
         final SessionFactoryImplementor factory = source.getFactory();
-
         final CacheKey ck = source.generateCacheKey( id, persister.getKeyType(), persister.getRole() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
 
-		Object ce = null;
-		try {
-			source.getEventListenerManager().cacheGetStart();
-			ce = persister.getCacheAccessStrategy().get(ck, source.getTimestamp());
-
-			if ( factory.getStatistics().isStatisticsEnabled() ) {
-				if (ce == null) {
-					factory.getStatisticsImplementor()
-							.secondLevelCacheMiss( persister.getCacheAccessStrategy().getRegion().getName() );
-				}
-				else {
-					factory.getStatisticsImplementor()
-							.secondLevelCacheHit( persister.getCacheAccessStrategy().getRegion().getName() );
-				}
+		if ( factory.getStatistics().isStatisticsEnabled() ) {
+			if (ce == null) {
+				factory.getStatisticsImplementor()
+						.secondLevelCacheMiss( persister.getCacheAccessStrategy().getRegion().getName() );
 			}
-		}
-		finally {
-			source.getEventListenerManager().cacheGetEnd( ce == null );
+			else {
+				factory.getStatisticsImplementor()
+						.secondLevelCacheHit( persister.getCacheAccessStrategy().getRegion().getName() );
+			}
 		}
 
         if ( ce == null ) {

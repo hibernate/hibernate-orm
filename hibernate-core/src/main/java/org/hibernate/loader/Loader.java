@@ -61,6 +61,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
 import org.hibernate.dialect.pagination.NoopLimitHandler;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.jdbc.ColumnNameCache;
 import org.hibernate.engine.spi.EntityEntry;
@@ -1594,13 +1595,14 @@ public abstract class Loader {
 
 		// see if the entity defines reference caching, and if so use the cached reference (if one).
 		if ( persister.canUseReferenceCacheEntries() ) {
-			final Object cachedEntry = persister.getCacheAccessStrategy().get(
+			final Object cachedEntry = CacheHelper.fromSharedCache(
+					session,
 					session.generateCacheKey(
 							key.getIdentifier(),
 							persister.getEntityMetamodel().getEntityType(),
 							key.getEntityName()
 					),
-					session.getTimestamp()
+					persister.getCacheAccessStrategy()
 			);
 			if ( cachedEntry != null ) {
 				CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( cachedEntry, factory );

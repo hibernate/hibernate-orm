@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 import org.hibernate.EntityMode;
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -216,12 +217,12 @@ public class BatchFetchQueue {
 
 	private boolean isCached(EntityKey entityKey, EntityPersister persister) {
 		if ( persister.hasCache() ) {
-			CacheKey key = context.getSession().generateCacheKey(
+			final CacheKey key = context.getSession().generateCacheKey(
 					entityKey.getIdentifier(),
 					persister.getIdentifierType(),
 					entityKey.getEntityName()
 			);
-			return persister.getCacheAccessStrategy().get( key, context.getSession().getTimestamp() ) != null;
+			return CacheHelper.fromSharedCache( context.getSession(), key, persister.getCacheAccessStrategy() ) != null;
 		}
 		return false;
 	}
@@ -334,7 +335,7 @@ public class BatchFetchQueue {
 			        persister.getKeyType(),
 			        persister.getRole()
 			);
-			return persister.getCacheAccessStrategy().get( cacheKey, context.getSession().getTimestamp() ) != null;
+			return CacheHelper.fromSharedCache( context.getSession(), cacheKey, persister.getCacheAccessStrategy() ) != null;
 		}
 		return false;
 	}

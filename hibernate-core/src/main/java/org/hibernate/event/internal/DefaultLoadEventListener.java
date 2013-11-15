@@ -549,7 +549,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 
 		Object ce = null;
 		try {
-			source.getSessionEventsManager().cacheGetStart();
+			source.getEventListenerManager().cacheGetStart();
 			ce = persister.getCacheAccessStrategy().get( ck, source.getTimestamp() );
 
 			if ( factory.getStatistics().isStatisticsEnabled() ) {
@@ -566,7 +566,7 @@ public class DefaultLoadEventListener extends AbstractLockUpgradeEventListener i
 			}
 		}
 		finally {
-			source.getSessionEventsManager().cacheGetEnd( ce == null );
+			source.getEventListenerManager().cacheGetEnd( ce == null );
 		}
 
 		if ( ce == null ) {

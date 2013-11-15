@@ -527,7 +527,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		if ( dirtyProperties==null ) {
 			// Interceptor returned null, so do the dirtycheck ourself, if possible
 			try {
-				session.getSessionEventsManager().dirtyCalculationStart();
+				session.getEventListenerManager().dirtyCalculationStart();
 
 				interceptorHandledDirtyCheck = false;
 				// object loaded by update()
@@ -567,7 +567,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				}
 			}
 			finally {
-				session.getSessionEventsManager().dirtyCalculationEnd( dirtyProperties != null );
+				session.getEventListenerManager().dirtyCalculationEnd( dirtyProperties != null );
 			}
 		}
 		else {

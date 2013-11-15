@@ -32,14 +32,13 @@ import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NullPrecedence;
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.RegionFactoryInitiator;
 import org.hibernate.cache.internal.StandardQueryCacheFactory;
 import org.hibernate.cache.spi.QueryCacheFactory;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.internal.LoggingSessionEventsListener;
 import org.hibernate.engine.jdbc.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
@@ -414,7 +413,7 @@ public class SettingsFactory implements Serializable {
 		}
 		settings.setJtaTrackByThread( jtaTrackByThread );
 
-		final Class<? extends SessionEventsListener> autoSessionEventsListenerClass = resolveAutoSessionEventListenerClass( properties, classLoaderService );
+		final Class<? extends SessionEventListener> autoSessionEventsListenerClass = resolveAutoSessionEventListenerClass( properties, classLoaderService );
 		final boolean logSessionMetrics = ConfigurationHelper.getBoolean(
 				AvailableSettings.LOG_SESSION_METRICS,
 				properties,
@@ -430,7 +429,7 @@ public class SettingsFactory implements Serializable {
 	}
 
 	@SuppressWarnings({"unchecked", "ConstantConditions"})
-	private Class<SessionEventsListener> resolveAutoSessionEventListenerClass(
+	private Class<SessionEventListener> resolveAutoSessionEventListenerClass(
 			Properties properties,
 			ClassLoaderService classLoaderService) {
 		final Object setting = properties.getProperty( AvailableSettings.AUTO_SESSION_EVENTS_LISTENER );
@@ -439,7 +438,7 @@ public class SettingsFactory implements Serializable {
 		}
 
 		if ( Class.class.isInstance( setting ) ) {
-			return (Class<SessionEventsListener>) setting;
+			return (Class<SessionEventListener>) setting;
 		}
 		else {
 			final String settingStr = setting.toString();

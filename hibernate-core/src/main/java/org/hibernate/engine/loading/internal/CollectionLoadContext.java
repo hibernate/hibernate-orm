@@ -335,7 +335,7 @@ public class CollectionLoadContext {
 		final CacheKey cacheKey = session.generateCacheKey( lce.getKey(), persister.getKeyType(), persister.getRole() );
 
 		try {
-			session.getSessionEventsManager().cachePutStart();
+			session.getEventListenerManager().cachePutStart();
 			final boolean put = persister.getCacheAccessStrategy().putFromLoad(
 					cacheKey,
 					persister.getCacheEntryStructure().structure( entry ),
@@ -349,7 +349,7 @@ public class CollectionLoadContext {
 			}
 		}
 		finally {
-			session.getSessionEventsManager().cachePutEnd();
+			session.getEventListenerManager().cachePutEnd();
 		}
 	}
 

@@ -52,7 +52,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		try {
-			source.getSessionEventsManager().partialFlushStart();
+			source.getEventListenerManager().partialFlushStart();
 
 			if ( flushMightBeNeeded(source) ) {
 				// Need to get the number of collection removals before flushing to executions
@@ -82,7 +82,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			}
 		}
 		finally {
-			source.getSessionEventsManager().partialFlushEnd(
+			source.getEventListenerManager().partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),
 					event.getNumberOfEntitiesProcessed()
 			);

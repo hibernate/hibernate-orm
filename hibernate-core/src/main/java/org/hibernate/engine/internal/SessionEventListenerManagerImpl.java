@@ -27,18 +27,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.SessionEventsListener;
-import org.hibernate.engine.spi.SessionEventsManager;
+import org.hibernate.SessionEventListener;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 
 /**
  * @author Steve Ebersole
  */
-public class SessionEventsManagerImpl implements SessionEventsManager, Serializable {
-	private List<SessionEventsListener> listenerList;
+public class SessionEventListenerManagerImpl implements SessionEventListenerManager, Serializable {
+	private List<SessionEventListener> listenerList;
 
-	public void addListener(SessionEventsListener... listeners) {
+	public void addListener(SessionEventListener... listeners) {
 		if ( listenerList == null ) {
-			listenerList = new ArrayList<SessionEventsListener>();
+			listenerList = new ArrayList<SessionEventListener>();
 		}
 
 		java.util.Collections.addAll( listenerList, listeners );
@@ -50,7 +50,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.transactionCompletion( successful );
 		}
 	}
@@ -61,7 +61,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcConnectionAcquisitionStart();
 		}
 	}
@@ -72,7 +72,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcConnectionAcquisitionEnd();
 		}
 	}
@@ -83,7 +83,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcConnectionReleaseStart();
 		}
 	}
@@ -94,7 +94,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}
@@ -105,7 +105,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcPrepareStatementStart();
 		}
 	}
@@ -116,7 +116,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcPrepareStatementEnd();
 		}
 	}
@@ -127,7 +127,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcExecuteStatementStart();
 		}
 	}
@@ -138,7 +138,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcExecuteStatementEnd();
 		}
 	}
@@ -149,7 +149,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcExecuteBatchStart();
 		}
 	}
@@ -160,7 +160,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.jdbcExecuteBatchEnd();
 		}
 	}
@@ -171,7 +171,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.cachePutStart();
 		}
 	}
@@ -182,7 +182,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.cachePutEnd();
 		}
 	}
@@ -193,7 +193,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.cacheGetStart();
 		}
 	}
@@ -204,7 +204,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.cacheGetEnd( hit );
 		}
 	}
@@ -215,7 +215,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.flushStart();
 		}
 	}
@@ -226,7 +226,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.flushEnd( numberOfEntities, numberOfCollections );
 		}
 	}
@@ -237,7 +237,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.partialFlushStart();
 		}
 	}
@@ -248,7 +248,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.partialFlushEnd( numberOfEntities, numberOfCollections );
 		}
 	}
@@ -259,7 +259,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.dirtyCalculationStart();
 		}
 	}
@@ -270,7 +270,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.dirtyCalculationEnd( dirty );
 		}
 	}
@@ -281,7 +281,7 @@ public class SessionEventsManagerImpl implements SessionEventsManager, Serializa
 			return;
 		}
 
-		for ( SessionEventsListener listener : listenerList ) {
+		for ( SessionEventListener listener : listenerList ) {
 			listener.end();
 		}
 	}

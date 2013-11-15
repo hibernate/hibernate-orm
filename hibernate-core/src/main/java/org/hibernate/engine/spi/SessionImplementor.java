@@ -390,5 +390,5 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 */
 	public LoadQueryInfluencers getLoadQueryInfluencers();
 
-	public SessionEventsManager getSessionEventsManager();
+	public SessionEventListenerManager getEventListenerManager();
 }

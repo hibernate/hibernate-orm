@@ -30,7 +30,7 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-public interface SessionEventsListener extends Serializable {
+public interface SessionEventListener extends Serializable {
 	public void transactionCompletion(boolean successful);
 
 	public void jdbcConnectionAcquisitionStart();

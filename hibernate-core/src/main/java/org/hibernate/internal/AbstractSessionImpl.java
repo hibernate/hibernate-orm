@@ -35,7 +35,7 @@ import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.ScrollableResults;
-import org.hibernate.SessionEventsListener;
+import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.CacheKey;
@@ -260,13 +260,13 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 		if ( jdbcConnectionAccess == null ) {
 			if ( MultiTenancyStrategy.NONE == factory.getSettings().getMultiTenancyStrategy() ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
-						getSessionEventsManager(),
+						getEventListenerManager(),
 						factory.getServiceRegistry().getService( ConnectionProvider.class )
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
-						getSessionEventsManager(),
+						getEventListenerManager(),
 						factory.getServiceRegistry().getService( MultiTenantConnectionProvider.class )
 				);
 			}
@@ -284,11 +284,11 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	}
 
 	private static class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
-		private final SessionEventsListener listener;
+		private final SessionEventListener listener;
 		private final ConnectionProvider connectionProvider;
 
 		private NonContextualJdbcConnectionAccess(
-				SessionEventsListener listener,
+				SessionEventListener listener,
 				ConnectionProvider connectionProvider) {
 			this.listener = listener;
 			this.connectionProvider = connectionProvider;
@@ -323,11 +323,11 @@ public abstract class AbstractSessionImpl implements Serializable, SharedSession
 	}
 
 	private class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
-		private final SessionEventsListener listener;
+		private final SessionEventListener listener;
 		private final MultiTenantConnectionProvider connectionProvider;
 
 		private ContextualJdbcConnectionAccess(
-				SessionEventsListener listener,
+				SessionEventListener listener,
 				MultiTenantConnectionProvider connectionProvider) {
 			this.listener = listener;
 			this.connectionProvider = connectionProvider;

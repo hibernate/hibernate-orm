@@ -50,14 +50,14 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 				persistenceContext.getCollectionEntries().size() > 0 ) {
 
 			try {
-				source.getSessionEventsManager().flushStart();
+				source.getEventListenerManager().flushStart();
 
 				flushEverythingToExecutions( event );
 				performExecutions( source );
 				postFlush( source );
 			}
 			finally {
-				source.getSessionEventsManager().flushEnd(
+				source.getEventListenerManager().flushEnd(
 						event.getNumberOfEntitiesProcessed(),
 						event.getNumberOfCollectionsProcessed()
 				);

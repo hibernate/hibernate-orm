@@ -292,7 +292,7 @@ public final class EntityUpdateAction extends EntityAction {
 			
 			if ( success && cacheEntry!=null /*!persister.isCacheInvalidationRequired()*/ ) {
 				try {
-					session.getSessionEventsManager().cachePutStart();
+					session.getEventListenerManager().cachePutStart();
 					final boolean put = persister.getCacheAccessStrategy().afterUpdate( ck, cacheEntry, nextVersion, previousVersion, lock );
 
 					if ( put && getSession().getFactory().getStatistics().isStatisticsEnabled() ) {
@@ -300,7 +300,7 @@ public final class EntityUpdateAction extends EntityAction {
 					}
 				}
 				finally {
-					session.getSessionEventsManager().cachePutEnd();
+					session.getEventListenerManager().cachePutEnd();
 				}
 			}
 			else {

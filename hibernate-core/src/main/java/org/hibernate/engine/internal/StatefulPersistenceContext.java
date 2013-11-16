@@ -1440,7 +1440,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			LOG.trace( "Serializing persistent-context" );
 		}
 		final StatefulPersistenceContext rtn = new StatefulPersistenceContext( session );
-		SessionFactoryImplementor sfi = session==null ? null : session.getFactory();
+		SessionFactoryImplementor sfi = session.getFactory();
 
 		// during deserialization, we need to reconnect all proxies and
 		// collections to this session, as well as the EntityEntry and

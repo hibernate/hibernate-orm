@@ -29,7 +29,6 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.entity.EntityEssentials;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -87,7 +86,7 @@ public final class MessageHelper {
 	 * @return An info string, in the form [FooBar#1]
 	 */
 	public static String infoString(
-			EntityEssentials persister,
+			EntityPersister persister,
 			Object id, 
 			SessionFactoryImplementor factory) {
 		StringBuilder s = new StringBuilder();

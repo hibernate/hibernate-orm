@@ -29,12 +29,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.engine.internal.EssentialEntityPersisterDetails;
 import org.hibernate.internal.util.compare.EqualsHelper;
-import org.hibernate.persister.entity.EntityEssentials;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.type.Type;
 
 /**
  * Uniquely identifies of an entity instance in a particular Session by identifier.
@@ -53,7 +50,7 @@ public final class EntityKey implements Serializable {
 
 	private final Serializable identifier;
 	private final int hashCode;
-	private final EntityEssentials persister;
+	private final EntityPersister persister;
 
 	/**
 	 * Construct a unique identifier for an entity class instance.
@@ -80,11 +77,11 @@ public final class EntityKey implements Serializable {
 	 * and so both equals and hashcode implementations can't be implemented correctly.
 	 *
 	 * @param identifier The identifier value
-	 * @param fakePersister Is a placeholder for the EntityPersister, only providing essential methods needed for this purpose.
+	 * @param persister The EntityPersister
 	 * @param hashCode The hashCode needs to be provided as it can't be calculated correctly without the SessionFactory.
 	 */
-	private EntityKey(Serializable identifier, EntityEssentials fakePersister, int hashCode) {
-		this.persister = fakePersister;
+	private EntityKey(Serializable identifier, EntityPersister persister, int hashCode) {
+		this.persister = persister;
 		if ( identifier == null ) {
 			throw new AssertionFailure( "null identifier" );
 		}
@@ -158,12 +155,8 @@ public final class EntityKey implements Serializable {
 	 * @throws IOException Thrown by Java I/O
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		oos.writeObject( persister.getIdentifierType() );
-		oos.writeBoolean( isBatchLoadable() );
 		oos.writeObject( identifier );
 		oos.writeObject( persister.getEntityName() );
-		oos.writeObject( persister.getRootEntityName() );
-		oos.writeInt( hashCode );
 	}
 
 	/**
@@ -179,20 +172,9 @@ public final class EntityKey implements Serializable {
 	 * @throws ClassNotFoundException Thrown by Java I/O
 	 */
 	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
-		final Type identifierType = (Type) ois.readObject();
-		final boolean isBatchLoadable = ois.readBoolean();
 		final Serializable id = (Serializable) ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final String rootEntityName = (String) ois.readObject();
-		final int hashCode = ois.readInt();
-		if ( sessionFactory != null) {
-			final EntityPersister entityPersister = sessionFactory.getEntityPersister( entityName );
-			return new EntityKey(id, entityPersister);
-		}
-		else {
-			//This version will produce an EntityKey which is technically unable to satisfy the equals contract!
-			final EntityEssentials fakePersister = new EssentialEntityPersisterDetails(identifierType, isBatchLoadable, entityName, rootEntityName);
-			return new EntityKey(id, fakePersister, hashCode);
-		}
+		final EntityPersister entityPersister = sessionFactory.getEntityPersister( entityName );
+		return new EntityKey(id, entityPersister);
 	}
 }

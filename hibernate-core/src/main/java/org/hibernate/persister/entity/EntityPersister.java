@@ -60,7 +60,7 @@ import org.hibernate.type.VersionType;
  *
  * @author Gavin King
  */
-public interface EntityPersister extends OptimisticCacheSource, EntityEssentials {
+public interface EntityPersister extends OptimisticCacheSource {
 
 	/**
 	 * The property name of the "special" identifier property in HQL

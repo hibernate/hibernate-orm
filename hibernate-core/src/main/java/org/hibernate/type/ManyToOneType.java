@@ -187,7 +187,7 @@ public class ManyToOneType extends EntityType {
 		// return the (fully resolved) identifier value, but do not resolve
 		// to the actual referenced entity instance
 		// NOTE: the owner of the association is not really the owner of the id!
-		Serializable id = (Serializable) getIdentifierOrUniqueKeyType( session.getFactory() )
+		final Serializable id = (Serializable) getIdentifierOrUniqueKeyType( session.getFactory() )
 				.nullSafeGet( rs, names, session, null );
 		scheduleBatchLoadIfNeeded( id, session );
 		return id;
@@ -201,9 +201,11 @@ public class ManyToOneType extends EntityType {
 		//cannot batch fetch by unique key (property-ref associations)
 		if ( uniqueKeyPropertyName == null && id != null ) {
 			final EntityPersister persister = session.getFactory().getEntityPersister( getAssociatedEntityName() );
-			final EntityKey entityKey = session.generateEntityKey( id, persister );
-			if ( entityKey.isBatchLoadable() && !session.getPersistenceContext().containsEntity( entityKey ) ) {
-				session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+			if ( persister.isBatchLoadable() ) {
+				final EntityKey entityKey = session.generateEntityKey( id, persister );
+				if ( !session.getPersistenceContext().containsEntity( entityKey ) ) {
+					session.getPersistenceContext().getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+				}
 			}
 		}
 	}

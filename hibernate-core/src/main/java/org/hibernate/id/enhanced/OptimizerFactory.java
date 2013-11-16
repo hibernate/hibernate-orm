@@ -235,16 +235,21 @@ public class OptimizerFactory {
 	/**
 	 * An optimizer that performs no optimization.  The database is hit for
 	 * every request.
+	 *
+	 * @deprecated This is the fallback Optimizer chosen when we fail to instantiate one
+	 * of the proper implementations. Using this implementation is probably a performance
+	 * problem.
 	 */
-	public static class NoopOptimizer extends OptimizerSupport {
-		private IntegralDataTypeHolder lastSourceValue;
+	@Deprecated
+	public static final class NoopOptimizer extends OptimizerSupport {
+		private volatile IntegralDataTypeHolder lastSourceValue;
 
 		public NoopOptimizer(Class returnClass, int incrementSize) {
 			super( returnClass, incrementSize );
 		}
 
 		@Override
-		public Serializable generate(AccessCallback callback) {
+		public synchronized Serializable generate(AccessCallback callback) {
 			// IMPL NOTE : it is incredibly important that the method-local variable be used here to
 			//		avoid concurrency issues.
 			IntegralDataTypeHolder value = null;

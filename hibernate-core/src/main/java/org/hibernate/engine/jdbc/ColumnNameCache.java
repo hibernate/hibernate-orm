@@ -49,12 +49,13 @@ public final class ColumnNameCache {
 	 *
 	 * @return The index
 	 *
-	 * @throws SQLException INdicates a problems accessing the underlying JDBC ResultSet
+	 * @throws SQLException Indicates a problems accessing the underlying JDBC ResultSet
 	 */
+	@SuppressWarnings("UnnecessaryBoxing")
 	public Integer getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
 		final Integer cached = columnNameToIndexCache.get( columnName );
 		if ( cached != null ) {
-			return cached.intValue();
+			return cached;
 		}
 		else {
 			final Integer index = Integer.valueOf( rs.findColumn( columnName ) );

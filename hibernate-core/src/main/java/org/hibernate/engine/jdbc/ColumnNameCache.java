@@ -25,7 +25,6 @@ package org.hibernate.engine.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -33,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Steve Ebersole
  */
-public class ColumnNameCache {
+public final class ColumnNameCache {
 	private static final float LOAD_FACTOR = .75f;
 
 	private final ConcurrentHashMap<String, Integer> columnNameToIndexCache;
@@ -61,13 +60,13 @@ public class ColumnNameCache {
 	 *
 	 * @throws SQLException INdicates a problems accessing the underlying JDBC ResultSet
 	 */
-	public int getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
+	public Integer getIndexForColumnName(String columnName, ResultSet rs) throws SQLException {
 		final Integer cached = columnNameToIndexCache.get( columnName );
 		if ( cached != null ) {
 			return cached;
 		}
 		else {
-			final int index = rs.findColumn( columnName );
+			final Integer index = Integer.valueOf( rs.findColumn( columnName ) );
 			columnNameToIndexCache.put( columnName, index);
 			return index;
 		}

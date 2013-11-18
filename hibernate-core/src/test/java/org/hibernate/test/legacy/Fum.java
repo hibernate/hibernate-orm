@@ -31,7 +31,6 @@ public class Fum implements Lifecycle, Serializable {
 		this.id = id;
 		friends = new HashSet();
 		FumCompositeID fid = new FumCompositeID();
-		fid.setDate( Calendar.getInstance() );
 		fid.setShort( (short) ( id.short_ + 33 ) );
 		fid.setString( id.string_ + "dd" );
 		Fum f = new Fum();

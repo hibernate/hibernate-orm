@@ -306,7 +306,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		if ( parameterStrategy == ParameterStrategy.POSITIONAL ) {
 			throw new QueryException( "Cannot mix named and positional parameters" );
 		}
-		if ( parameterStrategy == null ) {
+		if ( parameterStrategy == ParameterStrategy.UNKNOWN ) {
 			// protect to only do this check once
 			final ExtractedDatabaseMetaData databaseMetaData = getSession().getTransactionCoordinator()
 					.getJdbcCoordinator()

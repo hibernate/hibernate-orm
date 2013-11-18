@@ -141,3 +141,5 @@ tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
 //  - aggregator
 task asciidoctor(type: Task, group: 'Documentation')
 asciidoctor.dependsOn generateRegistryGuideHtml, generateMetamodelgenGuideHtml
+
+buildDocs.dependsOn asciidoctor

@@ -116,6 +116,10 @@ task buildDocumentation(type: Task, dependsOn: [rootProject.project( 'documentat
             from "${rootProject.project( 'documentation' ).buildDir}/docbook/publish"
             into documentationDir
         }
+        copy {
+            from "${rootProject.project( 'documentation' ).buildDir}/asciidoc"
+            into documentationDir
+        }
 
         // now prepare the upload staging directory
         versionedDocumentationDir.mkdirs()

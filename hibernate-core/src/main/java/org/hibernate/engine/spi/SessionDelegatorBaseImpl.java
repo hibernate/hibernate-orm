@@ -285,16 +285,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor, Session {
 	}
 
 	@Override
-	public NonFlushedChanges getNonFlushedChanges() throws HibernateException {
-		return sessionImplementor.getNonFlushedChanges();
-	}
-
-	@Override
-	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException {
-		sessionImplementor.applyNonFlushedChanges( nonFlushedChanges );
-	}
-
-	@Override
 	public CacheMode getCacheMode() {
 		return sessionImplementor.getCacheMode();
 	}

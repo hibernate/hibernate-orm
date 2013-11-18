@@ -56,7 +56,6 @@ import org.hibernate.engine.query.spi.NativeSQLQueryPlan;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.NonFlushedChanges;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -757,16 +756,6 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public void flush() {
-	}
-
-	@Override
-	public NonFlushedChanges getNonFlushedChanges() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override

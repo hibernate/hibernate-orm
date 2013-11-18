@@ -97,7 +97,6 @@ import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.NonFlushedChanges;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -414,129 +413,6 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 		LOG.trace( "Automatically flushing session" );
 		flush();
-	}
-
-	/**
-	 * Return changes to this session and its child sessions that have not been flushed yet.
-	 * <p/>
-	 * @return The non-flushed changes.
-	 */
-	public NonFlushedChanges getNonFlushedChanges() throws HibernateException {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		return new NonFlushedChangesImpl( this );
-	}
-
-	/**
-	 * Apply non-flushed changes from a different session to this session. It is assumed
-	 * that this SessionImpl is "clean" (e.g., has no non-flushed changes, no cached entities,
-	 * no cached collections, no queued actions). The specified NonFlushedChanges object cannot
-	 * be bound to any session.
-	 * <p/>
-	 * @param nonFlushedChanges the non-flushed changes
-	 */
-	public void applyNonFlushedChanges(NonFlushedChanges nonFlushedChanges) throws HibernateException {
-		errorIfClosed();
-		checkTransactionSynchStatus();
-		// todo : why aren't these just part of the NonFlushedChanges API ?
-		replacePersistenceContext( ((NonFlushedChangesImpl) nonFlushedChanges).getPersistenceContext() );
-		replaceActionQueue( ((NonFlushedChangesImpl) nonFlushedChanges).getActionQueue() );
-	}
-
-	private void replacePersistenceContext(StatefulPersistenceContext persistenceContextNew) {
-		if ( persistenceContextNew.getSession() != null ) {
-			throw new IllegalStateException( "new persistence context is already connected to a session " );
-		}
-		persistenceContext.clear();
-		ObjectInputStream ois = null;
-		try {
-			ois = new ObjectInputStream( new ByteArrayInputStream( serializePersistenceContext( persistenceContextNew ) ) );
-			this.persistenceContext = StatefulPersistenceContext.deserialize( ois, this );
-		}
-		catch (IOException ex) {
-			throw new SerializationException( "could not deserialize the persistence context",  ex );
-		}
-		catch (ClassNotFoundException ex) {
-			throw new SerializationException( "could not deserialize the persistence context", ex );
-		}
-		finally {
-			try {
-				if (ois != null) ois.close();
-			}
-			catch (IOException ignore) {
-			}
-		}
-	}
-
-	private static byte[] serializePersistenceContext(StatefulPersistenceContext pc) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream( 512 );
-		ObjectOutputStream oos = null;
-		try {
-			oos = new ObjectOutputStream( baos );
-			( pc ).serialize( oos );
-		}
-		catch (IOException ex) {
-			throw new SerializationException( "could not serialize persistence context", ex );
-		}
-		finally {
-			if ( oos != null ) {
-				try {
-					oos.close();
-				}
-				catch( IOException ignore ) {
-					//ignore
-				}
-			}
-		}
-		return baos.toByteArray();
-	}
-
-	private void replaceActionQueue(ActionQueue actionQueueNew) {
-		if ( actionQueue.hasAnyQueuedActions() ) {
-			throw new IllegalStateException( "cannot replace an ActionQueue with queued actions " );
-		}
-		actionQueue.clear();
-		ObjectInputStream ois = null;
-		try {
-			ois = new ObjectInputStream( new ByteArrayInputStream( serializeActionQueue( actionQueueNew ) ) );
-			actionQueue = ActionQueue.deserialize( ois, this );
-		}
-		catch (IOException ex) {
-			throw new SerializationException( "could not deserialize the action queue",  ex );
-		}
-		catch (ClassNotFoundException ex) {
-			throw new SerializationException( "could not deserialize the action queue", ex );
-		}
-		finally {
-			try {
-				if (ois != null) ois.close();
-			}
-			catch (IOException ignore) {
-			}
-		}
-	}
-
-	private static byte[] serializeActionQueue(ActionQueue actionQueue) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream( 512 );
-		ObjectOutputStream oos = null;
-		try {
-			oos = new ObjectOutputStream( baos );
-			actionQueue.serialize( oos );
-		}
-		catch (IOException ex) {
-			throw new SerializationException( "could not serialize action queue", ex );
-		}
-		finally {
-			if ( oos != null ) {
-				try {
-					oos.close();
-				}
-				catch( IOException ex ) {
-					//ignore
-				}
-			}
-		}
-		return baos.toByteArray();
 	}
 
 	@Override

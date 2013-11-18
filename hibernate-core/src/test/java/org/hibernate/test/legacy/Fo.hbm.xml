@@ -10,7 +10,6 @@
 				<column name="string_" length="20"/>
 			</key-property>
 			<key-property name="short" column="short_"/>
-			<key-property name="date" column="date_" type="calendar"/>
 		</composite-id>
 		<version name="version" type="long"/>
 		<property name="serial" column="serial_"/>

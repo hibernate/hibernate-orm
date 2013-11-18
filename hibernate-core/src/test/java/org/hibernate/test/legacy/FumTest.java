@@ -16,7 +16,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.junit.Test;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.FlushMode;
@@ -312,18 +310,6 @@ public class FumTest extends LegacyTestCase {
 
 	private static FumCompositeID fumKey(String str, boolean aCompositeQueryTest) {
 		FumCompositeID id = new FumCompositeID();
-		if ( getDialect() instanceof MckoiDialect ) {
-			GregorianCalendar now = new GregorianCalendar();
-			GregorianCalendar cal = new GregorianCalendar(
-				now.get(java.util.Calendar.YEAR),
-				now.get(java.util.Calendar.MONTH),
-				now.get(java.util.Calendar.DATE)
-			);
-			id.setDate( cal );
-		}
-		else {
-			id.setDate( Calendar.getInstance() );
-		}
 		id.setString( str );
 
 		if (aCompositeQueryTest) {
@@ -442,40 +428,33 @@ public class FumTest extends LegacyTestCase {
 		fum = (Fum)vList.get(0);
 		assertTrue( "find by composite key query (check fo object)", fum.getId().getString().equals("fo") );
 
-		// Try to find the Fum object "fi" that we inserted searching by the date in the id
+		// Try to find the Fum object "fi" that we inserted
 		vList = s.createQuery( "from Fum fum where fum.id.short = ?" )
 				.setParameter( 0, new Short(fiShort), StandardBasicTypes.SHORT )
 				.list();
 		assertEquals( "find by composite key query (find fi object)", 1, vList.size() );
 		fi = (Fum)vList.get(0);
 		assertEquals( "find by composite key query (check fi object)", "fi", fi.getId().getString() );
-
-		// Make sure we can return all of the objects by searching by the date id
-		vList = s.createQuery( "from Fum fum where fum.id.date <= ? and not fum.fum='FRIEND'" )
-				.setParameter( 0, Calendar.getInstance(), StandardBasicTypes.CALENDAR )
-				.list();
-		assertEquals( "find by composite key query with arguments", 4, vList.size() );
 		s.getTransaction().commit();
 		s.close();
 
 		s = openSession();
 		s.beginTransaction();
 		assertTrue(
-				s.createQuery( "select fum.id.short, fum.id.date, fum.id.string from Fum fum" ).iterate().hasNext()
+				s.createQuery( "select fum.id.short, fum.id.string from Fum fum" ).iterate().hasNext()
 		);
 		assertTrue(
 				s.createQuery( "select fum.id from Fum fum" ).iterate().hasNext()
 		);
-		Query qu = s.createQuery("select fum.fum, fum , fum.fum, fum.id.date from Fum fum");
+		Query qu = s.createQuery("select fum.fum, fum , fum.fum from Fum fum");
 		Type[] types = qu.getReturnTypes();
-		assertTrue(types.length==4);
+		assertTrue(types.length==3);
 		for ( int k=0; k<types.length; k++) {
 			assertTrue( types[k]!=null );
 		}
 		assertTrue(types[0] instanceof StringType);
 		assertTrue(types[1] instanceof EntityType);
 		assertTrue(types[2] instanceof StringType);
-		assertTrue(types[3] instanceof CalendarType);
 		Iterator iter = qu.iterate();
 		int j = 0;
 		while ( iter.hasNext() ) {

@@ -22,7 +22,6 @@
 			<many-to-many class="org.hibernate.test.legacy.Fum">
 				<column name="fum_string" length="10" not-null="true"/>
 				<column name="fum_short" not-null="true"/>
-				<column name="fum_date" not-null="true"/>
 			</many-to-many>
 		</set>
 		<list name="moreFums" lazy="true">

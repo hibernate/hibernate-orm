@@ -101,9 +101,6 @@ subprojects { subProject ->
             jbossLoggingTool {
                 description = "Dependencies for running the JBoss logging AnnotationProcessor tool"
             }
-            hibernateJpaModelGenTool {
-                description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
-            }
             jaxb {
                 description = 'Dependencies for running ant xjc (jaxb class generation)'
             }
@@ -129,8 +126,6 @@ subprojects { subProject ->
             testRuntime( libraries.h2 )
 
             jbossLoggingTool( libraries.logging_processor )
-
-            hibernateJpaModelGenTool( libraries.jpa_modelgen )
 
             jaxb( libraries.jaxb ){
                 exclude group: "javax.xml.stream"

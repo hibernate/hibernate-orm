@@ -2,6 +2,12 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'hibernate-matrix-testing'
 
+configurations {
+    hibernateJpaModelGenTool {
+        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
+    }
+}
+
 dependencies {
     compile( project(':hibernate-core') )
     compile( libraries.dom4j )
@@ -25,6 +31,8 @@ dependencies {
 
     // for testing stored procedure support
     testCompile( libraries.derby )
+
+    hibernateJpaModelGenTool( project( ':hibernate-jpamodelgen' ) )
 }
 
 def pomName() {

@@ -87,7 +87,6 @@ ext {
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
-            jpa_modelgen:    'org.hibernate:hibernate-jpamodelgen:1.1.1.Final',
             shrinkwrap_api:  'org.jboss.shrinkwrap:shrinkwrap-api:1.0.0-beta-6',
             shrinkwrap:      'org.jboss.shrinkwrap:shrinkwrap-impl-base:1.0.0-beta-6',
             validator:       'org.hibernate:hibernate-validator:5.0.1.Final',

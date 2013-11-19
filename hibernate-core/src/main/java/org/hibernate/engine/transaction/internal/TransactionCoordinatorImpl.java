@@ -47,7 +47,8 @@ import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.engine.transaction.synchronization.internal.RegisteredSynchronization;
-import org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorImpl;
+import org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorNonTrackingImpl;
+import org.hibernate.engine.transaction.synchronization.internal.SynchronizationCallbackCoordinatorTrackingImpl;
 import org.hibernate.engine.transaction.synchronization.spi.SynchronizationCallbackCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -74,7 +75,7 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 
 	private transient TransactionImplementor currentHibernateTransaction;
 
-	private transient SynchronizationCallbackCoordinatorImpl callbackCoordinator;
+	private transient SynchronizationCallbackCoordinator callbackCoordinator;
 
 	private transient boolean open = true;
 	private transient boolean synchronizationRegistered;
@@ -261,7 +262,9 @@ public class TransactionCoordinatorImpl implements TransactionCoordinator {
 	@Override
 	public SynchronizationCallbackCoordinator getSynchronizationCallbackCoordinator() {
 		if ( callbackCoordinator == null ) {
-			callbackCoordinator = new SynchronizationCallbackCoordinatorImpl( this );
+			callbackCoordinator = transactionEnvironment.getSessionFactory().getSettings().isJtaTrackByThread()
+					? new SynchronizationCallbackCoordinatorTrackingImpl( this )
+					: new SynchronizationCallbackCoordinatorNonTrackingImpl( this );
 		}
 		return callbackCoordinator;
 	}

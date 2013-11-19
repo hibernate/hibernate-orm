@@ -1637,4 +1637,13 @@ public interface CoreMessageLogger extends BasicLogger {
 			value = "Encountered request for Service by non-primary service role [%s -> %s]; please update usage"
 	)
 	void alternateServiceRole(String requestedRole, String targetRole);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 451,
+			value = "Transaction afterCompletion called by a background thread; " +
+					"delaying afterCompletion processing until the original thread can handle it. [status=%s]"
+	)
+	void rollbackFromBackgroundThread(int status);
+
 }

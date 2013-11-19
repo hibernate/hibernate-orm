@@ -22,7 +22,8 @@ package org.hibernate.osgi;
 
 import java.lang.reflect.Array;
 
-import org.jboss.logging.Logger;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -32,7 +33,7 @@ import org.osgi.util.tracker.ServiceTracker;
  * @author Brett Meyer
  */
 public class OsgiServiceUtil {
-	private static final Logger LOG = Logger.getLogger( OsgiServiceUtil.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OsgiServiceUtil.class );
 
 	/**
 	 * Locate all implementors of the given service contract in the given OSGi buindle context.  Utilizes
@@ -53,7 +54,7 @@ public class OsgiServiceUtil {
 			}
 		}
 		catch ( Exception e ) {
-			LOG.warnf( e, "Exception while discovering OSGi service implementations : %s", contract.getName() );
+			LOG.unableToDiscoverOsgiService( contract.getName(), e );
 		}
 		return (T[]) Array.newInstance(contract, 0);
 	}
@@ -74,7 +75,7 @@ public class OsgiServiceUtil {
 			return (T) serviceTracker.waitForService( 1000 );
 		}
 		catch ( Exception e ) {
-			LOG.warnf( e, "Exception while discovering OSGi service implementations : %s", contract.getName() );
+			LOG.unableToDiscoverOsgiService( contract.getName(), e );
 			return null;
 		}
 	}

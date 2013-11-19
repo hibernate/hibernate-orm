@@ -247,6 +247,7 @@ selectExpr
 	| c:constant { out(c); }
 	| arithmeticExpr
 	| param:PARAM { out(param); }
+	| selectBooleanExpr[false]
 	| sn:SQL_NODE { out(sn); }
 	| { out("("); } selectStatement { out(")"); }
 	;
@@ -304,6 +305,11 @@ booleanOp[ boolean parens ]
 	: #(AND booleanExpr[true] { out(" and "); } booleanExpr[true])
 	| #(OR { if (parens) out("("); } booleanExpr[false] { out(" or "); } booleanExpr[false] { if (parens) out(")"); })
 	| #(NOT { out(" not ("); } booleanExpr[false] { out(")"); } )
+	;
+
+selectBooleanExpr[ boolean parens ]
+	: booleanOp [ parens ]
+	| comparisonExpr [ parens ]
 	;
 
 booleanExpr[ boolean parens ]
@@ -387,6 +393,7 @@ simpleExpr
 	| count
 	| parameter
 	| arithmeticExpr
+	| selectBooleanExpr[false]
 	;
 	
 constant

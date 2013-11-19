@@ -23,6 +23,7 @@
  */
 package org.hibernate.ejb.metamodel;
 import java.util.Collection;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
@@ -58,6 +59,12 @@ public class Customer implements java.io.Serializable {
 	}
 
 	public Customer(String id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
+	// Used by test case for HHH-8699.
+	public Customer(String id, String name, String greeting, Boolean something) {
 		this.id = id;
 		this.name = name;
 	}

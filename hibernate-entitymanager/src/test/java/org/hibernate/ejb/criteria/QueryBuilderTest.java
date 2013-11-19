@@ -23,16 +23,17 @@
  */
 package org.hibernate.ejb.criteria;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
-
-import org.junit.Test;
 
 import org.hibernate.ejb.criteria.predicate.ComparisonPredicate;
 import org.hibernate.ejb.metamodel.Address;
@@ -48,9 +49,10 @@ import org.hibernate.ejb.metamodel.Phone;
 import org.hibernate.ejb.metamodel.Product;
 import org.hibernate.ejb.metamodel.ShelfLife;
 import org.hibernate.ejb.metamodel.Spouse;
+import org.hibernate.ejb.metamodel.Customer_;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
-
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -206,6 +208,26 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 				)
 		);
 		TypedQuery<Customer> tq = em.createQuery(cquery);
+		tq.getResultList();
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8699" )
+	public void testMultiselectWithPredicates() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
+		CriteriaQuery<Customer> cq = cb.createQuery( Customer.class );
+		Root<Customer> r = cq.from( Customer.class );
+		cq.multiselect(
+				r.get( Customer_.id ), r.get( Customer_.name ),
+				cb.concat( "Hello ", r.get( Customer_.name ) ), cb.isNotNull( r.get( Customer_.age ) )
+		);
+		TypedQuery<Customer> tq = em.createQuery( cq );
 		tq.getResultList();
 
 		em.getTransaction().commit();

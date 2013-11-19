@@ -23,8 +23,6 @@
  */
 package org.hibernate.internal;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -155,7 +153,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
-import org.hibernate.type.SerializationException;
 import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
@@ -636,7 +633,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 	
 	private void delayedAfterCompletion() {
-		transactionCoordinator.getSynchronizationCallbackCoordinator().delayedAfterCompletion();
+		transactionCoordinator.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
 	}
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -693,7 +690,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	// update() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public void update(Object obj) throws HibernateException {
-		update(null, obj);
+		update( null, obj );
 	}
 
 	public void update(String entityName, Object object) throws HibernateException {
@@ -722,7 +719,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	public void lock(Object object, LockMode lockMode) throws HibernateException {
-		fireLock( new LockEvent(object, lockMode, this) );
+		fireLock( new LockEvent( object, lockMode, this ) );
 	}
 
 	private void fireLock(String entityName, Object object, LockOptions options) {
@@ -944,7 +941,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 						? LoadEventListener.INTERNAL_LOAD_EAGER
 						: LoadEventListener.INTERNAL_LOAD_LAZY;
 		LoadEvent event = new LoadEvent(id, entityName, true, this);
-		fireLoad(event, type);
+		fireLoad( event, type );
 		if ( !nullable ) {
 			UnresolvableObjectException.throwIfNull( event.getResult(), id, entityName );
 		}

@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -25,9 +25,7 @@ package org.hibernate.engine.transaction.synchronization.internal;
 
 import javax.transaction.SystemException;
 
-import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.cfg.Settings;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
@@ -42,28 +40,19 @@ import org.jboss.logging.Logger;
  * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
  * 
  * @author Steve Ebersole
- * @author Brett Meyer
  */
-public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCallbackCoordinator {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class,
-			SynchronizationCallbackCoordinatorImpl.class.getName() );
+public class SynchronizationCallbackCoordinatorNonTrackingImpl implements SynchronizationCallbackCoordinator {
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class, SynchronizationCallbackCoordinatorNonTrackingImpl.class.getName() );
 
 	private final TransactionCoordinator transactionCoordinator;
-	private final Settings settings;
 
 	private ManagedFlushChecker managedFlushChecker;
 	private AfterCompletionAction afterCompletionAction;
 	private ExceptionMapper exceptionMapper;
 
-	private volatile long registrationThreadId;
-	private final int NO_STATUS = -1;
-	private volatile int delayedCompletionHandlingStatus;
-
-	public SynchronizationCallbackCoordinatorImpl(TransactionCoordinator transactionCoordinator) {
+	public SynchronizationCallbackCoordinatorNonTrackingImpl(TransactionCoordinator transactionCoordinator) {
 		this.transactionCoordinator = transactionCoordinator;
-		this.settings = transactionCoordinator.getTransactionContext()
-				.getTransactionEnvironment().getSessionFactory().getSettings();
 		reset();
 		pulse();
 	}
@@ -72,7 +61,10 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 		managedFlushChecker = STANDARD_MANAGED_FLUSH_CHECKER;
 		exceptionMapper = STANDARD_EXCEPTION_MAPPER;
 		afterCompletionAction = STANDARD_AFTER_COMPLETION_ACTION;
-		delayedCompletionHandlingStatus = NO_STATUS;
+	}
+
+	private TransactionContext transactionContext() {
+		return transactionCoordinator.getTransactionContext();
 	}
 
 	@Override
@@ -92,6 +84,7 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 
 	// sync callbacks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void beforeCompletion() {
 		LOG.trace( "Transaction before completion callback" );
 
@@ -127,39 +120,13 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 		transactionCoordinator.setRollbackOnly();
 	}
 
+	@Override
 	public void afterCompletion(int status) {
-		if ( settings.isJtaTrackByThread() && !isRegistrationThread()
-				&& JtaStatusHelper.isRollback( status ) ) {
-			// The transaction was rolled back by another thread -- not the
-			// original application. Examples of this include a JTA transaction
-			// timeout getting cleaned up by a reaper thread. If this happens,
-			// afterCompletion must be handled by the original thread in order
-			// to prevent non-threadsafe session use. Set the flag here and
-			// check for it in SessionImpl. See HHH-7910.
-			LOG.warnv( "Transaction afterCompletion called by a background thread! Delaying action until the original thread can handle it. [status={0}]", status );
-			delayedCompletionHandlingStatus = status;
-		}
-		else {
-			doAfterCompletion( status );
-		}
-	}
-	
-	public void pulse() {
-		if ( settings.isJtaTrackByThread() ) {
-			registrationThreadId = Thread.currentThread().getId();
-		}
+		doAfterCompletion( status );
 	}
 
-	public void delayedAfterCompletion() {
-		if ( delayedCompletionHandlingStatus != NO_STATUS ) {
-			doAfterCompletion( delayedCompletionHandlingStatus );
-			delayedCompletionHandlingStatus = NO_STATUS;
-			throw new HibernateException("Transaction was rolled back in a different thread!");
-		}
-	}
-
-	private void doAfterCompletion(int status) {
-		LOG.tracev( "Transaction afterCompletion callback [status={0}]", status );
+	protected void doAfterCompletion(int status) {
+		LOG.tracef( "Starting transaction afterCompletion callback [status=%s]", status );
 
 		try {
 			afterCompletionAction.doAction( transactionCoordinator, status );
@@ -174,12 +141,12 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 		}
 	}
 
-	private boolean isRegistrationThread() {
-		return Thread.currentThread().getId() == registrationThreadId;
+	@Override
+	public void pulse() {
 	}
 
-	private TransactionContext transactionContext() {
-		return transactionCoordinator.getTransactionContext();
+	@Override
+	public void processAnyDelayedAfterCompletion() {
 	}
 
 	private static final ManagedFlushChecker STANDARD_MANAGED_FLUSH_CHECKER = new ManagedFlushChecker() {
@@ -193,12 +160,14 @@ public class SynchronizationCallbackCoordinatorImpl implements SynchronizationCa
 	};
 
 	private static final ExceptionMapper STANDARD_EXCEPTION_MAPPER = new ExceptionMapper() {
+		@Override
 		public RuntimeException mapStatusCheckFailure(String message, SystemException systemException) {
 			LOG.error( LOG.unableToDetermineTransactionStatus(), systemException );
 			return new TransactionException( "could not determine transaction status in beforeCompletion()",
 					systemException );
 		}
 
+		@Override
 		public RuntimeException mapManagedFlushFailure(String message, RuntimeException failure) {
 			LOG.unableToPerformManagedFlush( failure.getMessage() );
 			return failure;

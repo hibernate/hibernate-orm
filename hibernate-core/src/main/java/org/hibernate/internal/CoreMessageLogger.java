@@ -1611,13 +1611,21 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void embedXmlAttributesNoLongerSupported();
 
-	// id=447 is used in 4.3
+	// id=447 used in 4.3
 
 	@LogMessage(level = INFO)
 	@Message( value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448 )
 	void multipleValidationModes(String modes);
 
-	// id=449 to 451 is used in 4.3
+	// id=449 & 450 used in 4.3
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 451,
+			value = "Transaction afterCompletion called by a background thread; " +
+					"delaying afterCompletion processing until the original thread can handle it. [status=%s]"
+	)
+	void rollbackFromBackgroundThread(int status);
 	
 	@LogMessage(level = WARN)
 	@Message(value = "Exception while loading a class or resource found during scanning", id = 452)

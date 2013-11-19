@@ -113,19 +113,26 @@ File[] dirList(File dir) {
 
 
 // asciidoctor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-task generateRegistryGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
-    description = 'Generates the ServiceRegistry topical guide in HTML format.'
+task asciidoctor(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
+    description = 'Generates the Asciidoc(tor) topical guides in HTML format.'
     backend = 'html5'
-    sourceDir = file( 'src/main/asciidoc/topical/registries' )
+    sourceDir = file( 'src/main/asciidoc/topical' )
     outputDir = new File("$buildDir/asciidoc/topical/html")
 }
 
-task generateMetamodelgenGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
-    description = 'Generates the Metamodel Generator topical guide in HTML format.'
-    backend = 'html5'
-    sourceDir = file( 'src/main/asciidoc/topical/metamodelgen' )
-    outputDir = new File("$buildDir/asciidoc/topical/html")
-}
+//task generateRegistryGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
+//    description = 'Generates the ServiceRegistry topical guide in HTML format.'
+//    backend = 'html5'
+//    sourceDir = file( 'src/main/asciidoc/topical/registries' )
+//    outputDir = new File("$buildDir/asciidoc/topical/html")
+//}
+//
+//task generateMetamodelgenGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
+//    description = 'Generates the Metamodel Generator topical guide in HTML format.'
+//    backend = 'html5'
+//    sourceDir = file( 'src/main/asciidoc/topical/metamodelgen' )
+//    outputDir = new File("$buildDir/asciidoc/topical/html")
+//}
 
 tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
     options = [
@@ -139,7 +146,7 @@ tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
 }
 
 //  - aggregator
-task asciidoctor(type: Task, group: 'Documentation')
-asciidoctor.dependsOn generateRegistryGuideHtml, generateMetamodelgenGuideHtml
+//task asciidoctor(type: Task, group: 'Documentation')
+//asciidoctor.dependsOn generateRegistryGuideHtml, generateMetamodelgenGuideHtml
 
 buildDocs.dependsOn asciidoctor

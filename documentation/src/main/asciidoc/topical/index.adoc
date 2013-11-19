@@ -1,0 +1,23 @@
+= Topical Guides
+:toc:
+
+Hibernate documentation is organized into several guides that cover specific topics.  Here we link each of those
+guides and try to give some direction on where to look.
+
+
+== User Guides
+
+Coming soon
+
+== Tooling
+
+* See the <<metamodelgen/MetamodelGenerator.adoc#,Metamodel Generator Guide>> for details on generating a JPA "Static Metamodel"
+* Guide on the Gradle plugin coming soon
+* Guide on the Ant tasks coming soon
+* Guide on the Maven plugin coming soon
+
+
+== Integrator Guides
+
+* The <<registries/ServiceRegistries.adoc#,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
+* Others coming soon

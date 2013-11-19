@@ -1611,17 +1611,19 @@ public interface CoreMessageLogger extends BasicLogger {
 	)
 	void embedXmlAttributesNoLongerSupported();
 
-	// id=447 is used in 4.3 code
+	// id=447 is used in 4.3
 
 	@LogMessage(level = INFO)
 	@Message( value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448 )
 	void multipleValidationModes(String modes);
+
+	// id=449 to 451 is used in 4.3
 	
 	@LogMessage(level = WARN)
-	@Message(value = "Exception while loading a class or resource found during scanning", id = 449)
+	@Message(value = "Exception while loading a class or resource found during scanning", id = 452)
 	void unableToLoadScannedClassOrResource(@Cause Exception e);
 	
 	@LogMessage(level = WARN)
-	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 450)
+	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 453)
 	void unableToDiscoverOsgiService(String service, @Cause Exception e);
 }

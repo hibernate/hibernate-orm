@@ -37,6 +37,7 @@ import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
+import org.hibernate.loader.plan2.spi.AnyFetch;
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
@@ -196,6 +197,20 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 				attributeDefinition,
 				fetchStrategy,
 				collectionQuerySpace
+		);
+		addFetch( fetch );
+		return fetch;
+	}
+
+	@Override
+	public AnyFetch buildAnyFetch(
+		AssociationAttributeDefinition attributeDefinition,
+		FetchStrategy fetchStrategy) {
+
+		final AnyFetch fetch = new AnyFetchImpl(
+				this,
+				attributeDefinition,
+				fetchStrategy
 		);
 		addFetch( fetch );
 		return fetch;

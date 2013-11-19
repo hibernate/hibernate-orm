@@ -837,6 +837,12 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		//		1) fetch type is SELECT, timing might be IMMEDIATE or DELAYED depending on whether it was defined as lazy
 		//		2) (because the fetch cannot be a JOIN...) do not push it to the stack
 		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
+		if ( fetchStrategy.getTiming() != FetchTiming.IMMEDIATE ) {
+			return false;
+		}
+
+		final ExpandingFetchSource currentSource = currentSource();
+		currentSource.validateFetchPlan( fetchStrategy, attributeDefinition );
 
 //		final FetchOwner fetchSource = currentFetchOwner();
 //		fetchOwner.validateFetchPlan( fetchStrategy, attributeDefinition );
@@ -869,16 +875,24 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 		final AssociationAttributeDefinition.AssociationNature nature = attributeDefinition.getAssociationNature();
 		if ( nature == AssociationAttributeDefinition.AssociationNature.ANY ) {
+			currentSource.buildAnyFetch(
+					attributeDefinition,
+					fetchStrategy
+			);
 			return false;
 		}
-
-		if ( nature == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
+		else if ( nature == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
 			EntityFetch fetch = currentSource.buildEntityFetch(
 					attributeDefinition,
 					fetchStrategy
 			);
 			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 				pushToStack( (ExpandingFetchSource) fetch );
+				pushedAttributes.add( attributeDefinition );
+				return true;
+			}
+			else {
+				return false;
 			}
 		}
 		else {
@@ -886,12 +900,13 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy );
 			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 				pushToCollectionStack( fetch );
+				pushedAttributes.add( attributeDefinition );
+				return true;
+			}
+			else {
+				return false;
 			}
 		}
-		if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
-			pushedAttributes.add( attributeDefinition );
-		}
-		return fetchStrategy.getStyle() == FetchStyle.JOIN;
 	}
 
 	protected abstract FetchStrategy determineFetchStrategy(AssociationAttributeDefinition attributeDefinition);

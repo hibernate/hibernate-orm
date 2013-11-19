@@ -390,12 +390,18 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 		final Type attributeType = attributeDefinition.getType();
 
+		final boolean isAnyType = attributeType.isAnyType();
 		final boolean isComponentType = attributeType.isComponentType();
 		final boolean isAssociationType = attributeType.isAssociationType();
 		final boolean isBasicType = ! ( isComponentType || isAssociationType );
 
 		if ( isBasicType ) {
 			return true;
+		}
+		else if ( isAnyType ) {
+			// If isAnyType is true, then isComponentType and isAssociationType will also be true
+			// so need to check isAnyType first so that it is handled properly.
+			return handleAnyAttribute( (AssociationAttributeDefinition) attributeDefinition );
 		}
 		else if ( isAssociationType ) {
 			return handleAssociationAttribute( (AssociationAttributeDefinition) attributeDefinition );
@@ -553,7 +559,11 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 	}
 
 	@Override
-	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
+	public void foundAny(AnyMappingDefinition anyDefinition) {
+		// do nothing.
+	}
+
+	protected boolean handleAnyAttribute(AssociationAttributeDefinition attributeDefinition) {
 		// for ANY mappings we need to build a Fetch:
 		//		1) fetch type is SELECT, timing might be IMMEDIATE or DELAYED depending on whether it was defined as lazy
 		//		2) (because the fetch cannot be a JOIN...) do not push it to the stack
@@ -564,10 +574,12 @@ public abstract class AbstractLoadPlanBuilderStrategy implements LoadPlanBuilder
 
 		fetchOwner.buildAnyFetch(
 				attributeDefinition,
-				anyDefinition,
+				attributeDefinition.toAnyDefinition(),
 				fetchStrategy,
 				this
 		);
+
+		return false;
 	}
 
 	protected boolean handleCompositeAttribute(CompositionDefinition attributeDefinition) {

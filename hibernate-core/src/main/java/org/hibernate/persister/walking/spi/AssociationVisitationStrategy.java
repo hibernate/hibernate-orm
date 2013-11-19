@@ -165,7 +165,7 @@ public interface AssociationVisitationStrategy {
 	 */
 	public void finishingAttribute(AttributeDefinition attributeDefinition);
 
-	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition);
+	public void foundAny(AnyMappingDefinition anyDefinition);
 
 	public void associationKeyRegistered(AssociationKey associationKey);
 	public FetchSource registeredFetchSource(AssociationKey associationKey);

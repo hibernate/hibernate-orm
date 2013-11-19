@@ -128,12 +128,12 @@ public class MetamodelGraphWalker {
 			final EncapsulatedEntityIdentifierDefinition idAsEncapsulated = (EncapsulatedEntityIdentifierDefinition) identifierDefinition;
 			final AttributeDefinition idAttr = idAsEncapsulated.getAttributeDefinition();
 			if ( CompositionDefinition.class.isInstance( idAttr ) ) {
-				visitAttributes( (CompositionDefinition) idAttr );
+				visitCompositeDefinition( (CompositionDefinition) idAttr );
 			}
 		}
 		else {
 			// NonEncapsulatedEntityIdentifierDefinition itself is defined as a CompositionDefinition
-			visitAttributes( (NonEncapsulatedEntityIdentifierDefinition) identifierDefinition );
+			visitCompositeDefinition( (NonEncapsulatedEntityIdentifierDefinition) identifierDefinition );
 		}
 
 		strategy.finishingEntityIdentifier( identifierDefinition );
@@ -196,7 +196,7 @@ public class MetamodelGraphWalker {
 
 		final AssociationAttributeDefinition.AssociationNature nature = attribute.getAssociationNature();
 		if ( nature == AssociationAttributeDefinition.AssociationNature.ANY ) {
-			visitAnyDefinition( attribute, attribute.toAnyDefinition() );
+			visitAnyDefinition( attribute.toAnyDefinition() );
 		}
 		else if ( nature == AssociationAttributeDefinition.AssociationNature.COLLECTION ) {
 			visitCollectionDefinition( attribute.toCollectionDefinition() );
@@ -206,8 +206,8 @@ public class MetamodelGraphWalker {
 		}
 	}
 
-	private void visitAnyDefinition(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
-		strategy.foundAny( attributeDefinition, anyDefinition );
+	private void visitAnyDefinition(AnyMappingDefinition anyDefinition) {
+		strategy.foundAny( anyDefinition );
 	}
 
 	private void visitCompositeDefinition(CompositionDefinition compositionDefinition) {
@@ -241,7 +241,7 @@ public class MetamodelGraphWalker {
 		try {
 			final Type collectionIndexType = collectionIndexDefinition.getType();
 			if ( collectionIndexType.isComponentType() ) {
-				visitAttributes( collectionIndexDefinition.toCompositeDefinition() );
+				visitCompositeDefinition( collectionIndexDefinition.toCompositeDefinition() );
 			}
 			else if ( collectionIndexType.isAssociationType() ) {
 				visitEntityDefinition( collectionIndexDefinition.toEntityDefinition() );
@@ -259,7 +259,7 @@ public class MetamodelGraphWalker {
 		strategy.startingCollectionElements( elementDefinition );
 
 		if ( elementDefinition.getType().isComponentType() ) {
-			visitAttributes( elementDefinition.toCompositeElementDefinition() );
+			visitCompositeDefinition( elementDefinition.toCompositeElementDefinition() );
 		}
 		else if ( elementDefinition.getType().isEntityType() ) {
 			if ( ! collectionDefinition.getCollectionPersister().isOneToMany() ) {

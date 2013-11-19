@@ -230,7 +230,7 @@ public class LoggingAssociationVisitationStrategy implements AssociationVisitati
 //	}
 
 	@Override
-	public void foundAny(AssociationAttributeDefinition attributeDefinition, AnyMappingDefinition anyDefinition) {
+	public void foundAny(AnyMappingDefinition anyDefinition) {
 		// nothing to do
 	}
 

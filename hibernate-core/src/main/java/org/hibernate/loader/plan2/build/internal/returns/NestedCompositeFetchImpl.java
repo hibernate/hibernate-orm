@@ -23,29 +23,42 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
+import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.CompositeType;
 
 /**
  * @author Steve Ebersole
  */
-public class NestedCompositeFetchImpl extends AbstractCompositeFetch {
+public class NestedCompositeFetchImpl extends AbstractCompositeFetch implements CompositeAttributeFetch {
 	private final CompositeFetch source;
+	private final AttributeDefinition fetchedAttributeDefinition;
 
 	public NestedCompositeFetchImpl(
 			CompositeFetch source,
-			CompositeType type,
+			AttributeDefinition fetchedAttributeDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace,
-			boolean allowCollectionFetches, PropertyPath propertyPath) {
-		super( type, compositeQuerySpace, allowCollectionFetches, propertyPath );
+			boolean allowCollectionFetches) {
+		super(
+				(CompositeType) fetchedAttributeDefinition.getType(),
+				compositeQuerySpace,
+				allowCollectionFetches,
+				source.getPropertyPath().append( fetchedAttributeDefinition.getName() )
+		);
 		this.source = source;
+		this.fetchedAttributeDefinition = fetchedAttributeDefinition;
 	}
 
 	@Override
 	public FetchSource getSource() {
 		return source;
+	}
+
+	@Override
+	public AttributeDefinition getFetchedAttributeDefinition() {
+		return fetchedAttributeDefinition;
 	}
 }

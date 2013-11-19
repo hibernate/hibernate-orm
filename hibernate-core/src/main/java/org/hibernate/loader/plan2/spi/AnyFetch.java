@@ -26,5 +26,5 @@ package org.hibernate.loader.plan2.spi;
 /**
  * @author Gail Badner
  */
-public interface AnyFetch extends Fetch, FetchSource {
+public interface AnyFetch extends AttributeFetch, FetchSource {
 }

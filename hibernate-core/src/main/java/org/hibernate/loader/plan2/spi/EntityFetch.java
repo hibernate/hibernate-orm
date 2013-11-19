@@ -28,7 +28,7 @@ import org.hibernate.type.EntityType;
 /**
  * @author Steve Ebersole
  */
-public interface EntityFetch extends Fetch, EntityReference {
+public interface EntityFetch extends AttributeFetch, EntityReference {
 	@Override
 	EntityType getFetchedType();
 }

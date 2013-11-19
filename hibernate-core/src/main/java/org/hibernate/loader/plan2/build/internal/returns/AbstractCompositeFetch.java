@@ -89,14 +89,13 @@ public abstract class AbstractCompositeFetch extends AbstractExpandingFetchSourc
 	}
 
 	protected CompositeFetch createCompositeFetch(
-			CompositionDefinition compositionDefinition,
+			AttributeDefinition attributeDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		return new NestedCompositeFetchImpl(
 				this,
-				compositionDefinition.getType(),
+				attributeDefinition,
 				compositeQuerySpace,
-				allowCollectionFetches,
-				getPropertyPath().append( compositionDefinition.getName() )
+				allowCollectionFetches
 		);
 	}
 

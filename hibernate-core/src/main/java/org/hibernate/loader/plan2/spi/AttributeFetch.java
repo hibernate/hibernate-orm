@@ -23,15 +23,13 @@
  */
 package org.hibernate.loader.plan2.spi;
 
-import org.hibernate.type.CollectionType;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 
 /**
- * Models the requested fetching of a persistent collection attribute.
+ * Models a {@link Fetch} that is specifically for an attribute.
  *
- * @author Steve Ebersole
+ * @author Gail Badner
  */
-public interface CollectionFetch extends AttributeFetch, CollectionReference {
-	@Override
-	public CollectionType getFetchedType();
-
+public interface AttributeFetch extends Fetch {
+	public AttributeDefinition getFetchedAttributeDefinition();
 }

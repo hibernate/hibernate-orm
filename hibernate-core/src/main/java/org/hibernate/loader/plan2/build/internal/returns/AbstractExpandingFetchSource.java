@@ -27,8 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.engine.FetchStyle;
-import org.hibernate.engine.FetchTiming;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.internal.spaces.QuerySpaceHelper;
 import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
@@ -46,7 +44,7 @@ import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.EntityType;
 
@@ -158,7 +156,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	}
 
 	protected abstract CompositeFetch createCompositeFetch(
-			CompositionDefinition compositeType,
+			AttributeDefinition compositeType,
 			ExpandingCompositeQuerySpace compositeQuerySpace);
 
 	protected ExpandingQuerySpaces getQuerySpaces() {
@@ -167,7 +165,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 
 	@Override
 	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition) {
+			AttributeDefinition attributeDefinition) {
 		final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
 				expandingQuerySpace(),
 				attributeDefinition,

@@ -25,9 +25,7 @@ package org.hibernate.loader.plan2.build.spi;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.jboss.logging.Logger;
 import org.jboss.logging.MDC;
@@ -42,11 +40,13 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan2.build.internal.returns.CollectionReturnImpl;
 import org.hibernate.loader.plan2.build.internal.returns.EntityReturnImpl;
+import org.hibernate.loader.plan2.spi.AttributeFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
 import org.hibernate.loader.plan2.spi.CollectionReturn;
+import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
@@ -92,8 +92,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
 
 	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
-
-	private final Set<AttributeDefinition> pushedAttributes = new HashSet<AttributeDefinition>(  );
 
 	protected AbstractLoadPlanBuildingAssociationVisitationStrategy(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -155,7 +153,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		propertyPathStack.pop();
 		MDC.remove( MDC_KEY );
 		fetchSourceStack.clear();
-		pushedAttributes.clear();
 	}
 
 
@@ -586,50 +583,58 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			return handleAssociationAttribute( (AssociationAttributeDefinition) attributeDefinition );
 		}
 		else {
-			return handleCompositeAttribute( (CompositionDefinition) attributeDefinition );
+			return handleCompositeAttribute( attributeDefinition );
 		}
 	}
 
 	@Override
 	public void finishingAttribute(AttributeDefinition attributeDefinition) {
-		if ( pushedAttributes.contains( attributeDefinition ) ) {
-			final Type attributeType = attributeDefinition.getType();
-			if ( attributeType.isComponentType() ) {
-				// pop the current fetch owner, and make sure what we just popped represents this composition
-				final ExpandingFetchSource popped = popFromStack();
-				if ( ! CompositeFetch.class.isInstance( popped ) ) {
-					throw new WalkingException( "Mismatched FetchSource from stack on pop" );
-				}
-			}
-			else if ( attributeType.isAssociationType() ) {
-				final AssociationAttributeDefinition associationAttributeDefinition =
-						(AssociationAttributeDefinition) attributeDefinition;
-				if ( attributeType.isCollectionType() ) {
-					popFromCollectionStack( associationAttributeDefinition.toCollectionDefinition() );
-				}
-				else if ( attributeType.isEntityType() ) {
-					popEntityFromStack( associationAttributeDefinition.toEntityDefinition() );
-				}
-				else {
-					throw new WalkingException(
-							String.format(
-									"Unexpected attribute of type [%s] was pushed: %s",
-									associationAttributeDefinition.getType(),
-									associationAttributeDefinition
-							)
-					);
-				}
-			}
-			else {
+		final Type attributeType = attributeDefinition.getType();
+
+		if ( attributeType.isAnyType() ) {
+			// If attributeType.isAnyType() is true, then attributeType.isComponentType() and
+			// attributeType.isAssociationType() will also be true, so need to
+			// check attributeType.isAnyType() first.
+
+			// Nothing to do because AnyFetch does not implement ExpandingFetchSource (i.e., it cannot be pushed/popped).
+		}
+		else if ( attributeType.isComponentType() ) {
+			// CompositeFetch is always pushed, during #startingAttribute(),
+			// so pop the current fetch owner, and make sure what we just popped represents this composition
+			final ExpandingFetchSource popped = popFromStack();
+			if ( !CompositeAttributeFetch.class.isInstance( popped ) ) {
 				throw new WalkingException(
 						String.format(
-								"Unexpected attribute of type [%s] was pushed: %s",
-								attributeDefinition.getType(),
-								attributeDefinition
+								"Mismatched FetchSource from stack on pop; expected: CompositeAttributeFetch; actual: [%s]",
+								popped
 						)
 				);
 			}
-			pushedAttributes.remove( attributeDefinition );
+			final CompositeAttributeFetch poppedAsCompositeAttributeFetch = (CompositeAttributeFetch) popped;
+			if ( !attributeDefinition.equals( poppedAsCompositeAttributeFetch.getFetchedAttributeDefinition() ) ) {
+				throw new WalkingException(
+						String.format(
+								"Mismatched CompositeAttributeFetch from stack on pop; expected fetch for attribute: [%s]; actual: [%s]",
+								attributeDefinition,
+								poppedAsCompositeAttributeFetch.getFetchedAttributeDefinition()
+						)
+				);
+			}
+		}
+		else if ( attributeType.isEntityType() ) {
+			final ExpandingFetchSource source = currentSource();
+			if ( AttributeFetch.class.isInstance( source ) &&
+					attributeDefinition.equals( AttributeFetch.class.cast( source ).getFetchedAttributeDefinition() ) ) {
+				popEntityFromStack( ( (AssociationAttributeDefinition) attributeDefinition ).toEntityDefinition() );
+			}
+		}
+		else if ( attributeType.isCollectionType() ) {
+			final CollectionReference currentCollection = collectionReferenceStack.peekFirst();
+			if ( currentCollection != null &&
+					AttributeFetch.class.isInstance( currentCollection ) &&
+					attributeDefinition.equals( AttributeFetch.class.cast( currentCollection ).getFetchedAttributeDefinition() ) ) {
+				popFromCollectionStack( ( (AssociationAttributeDefinition) attributeDefinition ).toCollectionDefinition() );
+			}
 		}
 
 		log.tracef(
@@ -856,10 +861,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		return false;
 	}
 
-	protected boolean handleCompositeAttribute(CompositionDefinition attributeDefinition) {
+	protected boolean handleCompositeAttribute(AttributeDefinition attributeDefinition) {
 		final CompositeFetch compositeFetch = currentSource().buildCompositeFetch( attributeDefinition );
 		pushToStack( (ExpandingFetchSource) compositeFetch );
-		pushedAttributes.add( attributeDefinition );
 		return true;
 	}
 
@@ -888,7 +892,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			);
 			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 				pushToStack( (ExpandingFetchSource) fetch );
-				pushedAttributes.add( attributeDefinition );
 				return true;
 			}
 			else {
@@ -900,7 +903,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy );
 			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 				pushToCollectionStack( fetch );
-				pushedAttributes.add( attributeDefinition );
 				return true;
 			}
 			else {

@@ -35,6 +35,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.CollectionType;
@@ -117,25 +118,24 @@ public class QuerySpaceHelper {
 
 	public ExpandingCompositeQuerySpace makeCompositeQuerySpace(
 			ExpandingQuerySpace lhsQuerySpace,
-			CompositionDefinition compositionDefinition,
+			AttributeDefinition attributeDefinition,
 			String querySpaceUid,
 			boolean shouldIncludeJoin) {
-		final boolean required = lhsQuerySpace.canJoinsBeRequired() && !compositionDefinition.isNullable();
+		final boolean required = lhsQuerySpace.canJoinsBeRequired() && !attributeDefinition.isNullable();
  		return makeCompositeQuerySpace(
 				 lhsQuerySpace,
 				 new CompositePropertyMapping(
-						 compositionDefinition.getType(),
+						 (CompositeType) attributeDefinition.getType(),
 						 lhsQuerySpace.getPropertyMapping(),
-						 compositionDefinition.getName()
+						 attributeDefinition.getName()
 				 ),
-				 compositionDefinition.getName(),
-				 compositionDefinition.getType(),
+				 attributeDefinition.getName(),
+				 (CompositeType) attributeDefinition.getType(),
 				 querySpaceUid,
 				 required,
 				 shouldIncludeJoin
 		 );
 	}
-
 
 	public ExpandingCompositeQuerySpace makeCompositeQuerySpace(
 			ExpandingQuerySpace lhsQuerySpace,

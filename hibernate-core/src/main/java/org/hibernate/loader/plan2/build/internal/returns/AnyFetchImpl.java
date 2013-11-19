@@ -31,6 +31,7 @@ import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.AnyType;
 
 /**
@@ -121,5 +122,10 @@ public class AnyFetchImpl implements AnyFetch {
 	@Override
 	public EntityReference resolveEntityReference() {
 		return fetchSource.resolveEntityReference();
+	}
+
+	@Override
+	public AttributeDefinition getFetchedAttributeDefinition() {
+		return fetchedAttribute;
 	}
 }

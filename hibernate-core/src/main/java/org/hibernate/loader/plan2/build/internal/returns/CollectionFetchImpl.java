@@ -180,4 +180,9 @@ public class CollectionFetchImpl extends AbstractCollectionReference implements 
 //	private EntityReference findOwnerEntityReference(FetchOwner owner) {
 //		return Helper.INSTANCE.findOwnerEntityReference( owner );
 //	}
+
+	@Override
+	public AttributeDefinition getFetchedAttributeDefinition() {
+		return fetchedAttribute;
+	}
 }

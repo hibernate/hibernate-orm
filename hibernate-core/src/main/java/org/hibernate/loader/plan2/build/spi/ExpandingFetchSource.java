@@ -33,7 +33,6 @@ import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 
 /**
  * Describes the internal contract for things which can contain fetches.  Used to request building
@@ -60,7 +59,7 @@ public interface ExpandingFetchSource extends FetchSource {
 			EntityReference targetEntityReference);
 
 	public CompositeFetch buildCompositeFetch(
-			CompositionDefinition attributeDefinition);
+			AttributeDefinition attributeDefinition);
 
 	public CollectionFetch buildCollectionFetch(
 			AssociationAttributeDefinition attributeDefinition,

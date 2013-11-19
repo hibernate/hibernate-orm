@@ -197,7 +197,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 
 	@Override
 	protected boolean handleCompositeAttribute(
-			final CompositionDefinition attributeDefinition) {
+			final AttributeDefinition attributeDefinition) {
 		return super.handleCompositeAttribute( attributeDefinition );
 	}
 

@@ -92,4 +92,9 @@ public class EntityFetchImpl extends AbstractEntityReference implements EntityFe
 		//		those do cause problems in Loader; question is whether those are indicative of that situation or
 		// 		of Loaders ability to handle it.
 	}
+
+	@Override
+	public AttributeDefinition getFetchedAttributeDefinition() {
+		return fetchedAttribute;
+	}
 }

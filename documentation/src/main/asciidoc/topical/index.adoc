@@ -7,7 +7,8 @@ guides and try to give some direction on where to look.
 
 == User Guides
 
-Coming soon
+* For information on generated (non-identifier) values, see the <<generated/GeneratedValues.adoc#,Generated Values Guide>>
+* Others coming soon
 
 == Tooling
 

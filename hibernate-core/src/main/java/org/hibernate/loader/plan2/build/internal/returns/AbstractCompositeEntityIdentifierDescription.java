@@ -29,6 +29,7 @@ import org.hibernate.loader.plan2.build.spi.ExpandingEntityIdentifierDescription
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
@@ -36,17 +37,19 @@ import org.hibernate.type.CompositeType;
  */
 public abstract class AbstractCompositeEntityIdentifierDescription
 		extends AbstractCompositeFetch
-		implements FetchSource, ExpandingEntityIdentifierDescription {
+		implements ExpandingEntityIdentifierDescription {
 
 	private final EntityReference entityReference;
+	private final CompositeType identifierType;
 
 	protected AbstractCompositeEntityIdentifierDescription(
 			EntityReference entityReference,
 			ExpandingCompositeQuerySpace compositeQuerySpace,
 			CompositeType identifierType,
 			PropertyPath propertyPath) {
-		super( identifierType, compositeQuerySpace, false, propertyPath );
+		super( compositeQuerySpace, false, propertyPath );
 		this.entityReference = entityReference;
+		this.identifierType = identifierType;
 	}
 
 	@Override
@@ -64,4 +67,20 @@ public abstract class AbstractCompositeEntityIdentifierDescription
 		// the source for this (as a Fetch) is the entity reference
 		return entityReference;
 	}
+
+	@Override
+	public Type getFetchedType() {
+		return identifierType;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return false;
+	}
+
+	@Override
+	public EntityReference resolveEntityReference() {
+		return entityReference;
+	}
+
 }

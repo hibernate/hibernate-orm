@@ -30,7 +30,7 @@ import org.hibernate.type.CollectionType;
  *
  * @author Steve Ebersole
  */
-public interface CollectionFetch extends AttributeFetch, CollectionReference {
+public interface CollectionAttributeFetch extends AttributeFetch, CollectionReference {
 	@Override
 	public CollectionType getFetchedType();
 

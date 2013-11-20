@@ -41,7 +41,7 @@ import org.hibernate.loader.plan2.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan2.build.internal.returns.CollectionReturnImpl;
 import org.hibernate.loader.plan2.build.internal.returns.EntityReturnImpl;
 import org.hibernate.loader.plan2.spi.AttributeFetch;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
@@ -467,10 +467,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	public void startingCollectionElements(CollectionElementDefinition elementDefinition) {
 		final Type elementType = elementDefinition.getType();
-		if ( elementType.isAnyType() ) {
-			return;
-		}
-
 		log.tracef(
 				"%s Starting collection element graph : %s",
 				StringHelper.repeat( ">>", fetchSourceStack.size() ),
@@ -487,8 +483,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 								elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				);
 			}
-
-			pushToStack( (ExpandingFetchSource) elementGraph );
+			if ( !elementType.isAnyType() ) {
+				pushToStack( (ExpandingFetchSource) elementGraph );
+			}
 		}
 		else {
 			if ( elementGraph != null ) {
@@ -503,11 +500,11 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	@Override
 	public void finishingCollectionElements(CollectionElementDefinition elementDefinition) {
 		final Type elementType = elementDefinition.getType();
-		if ( elementType.isAnyType() ) {
-			return;
-		}
 
-		if ( elementType.isComponentType() || elementType.isAssociationType()) {
+		if ( elementType.isAnyType() ) {
+			// nothing to do because the element graph was not pushed
+		}
+		else if ( elementType.isComponentType() || elementType.isAssociationType()) {
 			// pop it from the stack
 			final ExpandingFetchSource popped = popFromStack();
 
@@ -862,7 +859,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	}
 
 	protected boolean handleCompositeAttribute(AttributeDefinition attributeDefinition) {
-		final CompositeFetch compositeFetch = currentSource().buildCompositeFetch( attributeDefinition );
+		final CompositeFetch compositeFetch = currentSource().buildCompositeAttributeFetch( attributeDefinition );
 		pushToStack( (ExpandingFetchSource) compositeFetch );
 		return true;
 	}
@@ -879,14 +876,14 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 		final AssociationAttributeDefinition.AssociationNature nature = attributeDefinition.getAssociationNature();
 		if ( nature == AssociationAttributeDefinition.AssociationNature.ANY ) {
-			currentSource.buildAnyFetch(
+			currentSource.buildAnyAttributeFetch(
 					attributeDefinition,
 					fetchStrategy
 			);
 			return false;
 		}
 		else if ( nature == AssociationAttributeDefinition.AssociationNature.ENTITY ) {
-			EntityFetch fetch = currentSource.buildEntityFetch(
+			EntityFetch fetch = currentSource.buildEntityAttributeFetch(
 					attributeDefinition,
 					fetchStrategy
 			);
@@ -900,7 +897,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		}
 		else {
 			// Collection
-			CollectionFetch fetch = currentSource.buildCollectionFetch( attributeDefinition, fetchStrategy );
+			CollectionAttributeFetch fetch = currentSource.buildCollectionAttributeFetch( attributeDefinition, fetchStrategy );
 			if ( fetchStrategy.getStyle() == FetchStyle.JOIN ) {
 				pushToCollectionStack( fetch );
 				return true;

@@ -26,12 +26,11 @@ package org.hibernate.loader.plan2.build.internal.returns;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EncapsulatedEntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.type.CompositeType;
@@ -114,10 +113,10 @@ public abstract class AbstractEntityReference extends AbstractExpandingFetchSour
 		return identifierDescription;
 	}
 
-	protected CompositeFetch createCompositeFetch(
+	protected CompositeAttributeFetch createCompositeAttributeFetch(
 			AttributeDefinition attributeDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
-		return new CompositeFetchImpl(
+		return new CompositeAttributeFetchImpl(
 				this,
 				attributeDefinition,
 				compositeQuerySpace,

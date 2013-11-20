@@ -26,10 +26,8 @@ package org.hibernate.loader.plan2.build.internal.returns;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
-import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
+import org.hibernate.loader.plan2.spi.EntityReference;
+import org.hibernate.loader.plan2.spi.Fetch;
 
 /**
  * Models the index graph of a collection, where the index are composite.  This can only be a Map, where the keys are
@@ -38,8 +36,8 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class CollectionFetchableIndexCompositeGraph
-		extends AbstractCompositeFetch
-		implements CompositeFetch, CollectionFetchableIndex {
+		extends AbstractCompositeReference
+		implements CollectionFetchableIndex {
 
 	private final CollectionReference collectionReference;
 
@@ -47,7 +45,6 @@ public class CollectionFetchableIndexCompositeGraph
 			CollectionReference collectionReference,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		super(
-				(CompositeType) collectionReference.getCollectionPersister().getIndexType(),
 				compositeQuerySpace,
 				false,
 				collectionReference.getPropertyPath().append( "<index>" )
@@ -61,7 +58,9 @@ public class CollectionFetchableIndexCompositeGraph
 	}
 
 	@Override
-	public FetchSource getSource() {
-		return collectionReference.getIndexGraph();
+	public EntityReference resolveEntityReference() {
+		return Fetch.class.isInstance( collectionReference ) ?
+				Fetch.class.cast( collectionReference ).getSource().resolveEntityReference() :
+				null;
 	}
 }

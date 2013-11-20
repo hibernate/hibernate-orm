@@ -36,12 +36,12 @@ import org.hibernate.type.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class EntityFetchImpl extends AbstractEntityReference implements EntityFetch {
+public class EntityAttributeFetchImpl extends AbstractEntityReference implements EntityFetch {
 	private final FetchSource fetchSource;
 	private final AttributeDefinition fetchedAttribute;
 	private final FetchStrategy fetchStrategy;
 
-	public EntityFetchImpl(
+	public EntityAttributeFetchImpl(
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy,

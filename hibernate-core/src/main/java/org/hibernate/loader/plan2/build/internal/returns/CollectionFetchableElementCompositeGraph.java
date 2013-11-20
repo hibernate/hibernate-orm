@@ -26,9 +26,8 @@ package org.hibernate.loader.plan2.build.internal.returns;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionReference;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
-import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.type.CompositeType;
+import org.hibernate.loader.plan2.spi.EntityReference;
+import org.hibernate.loader.plan2.spi.Fetch;
 
 /**
  * Models the element graph of a collection, where the elements are composite
@@ -36,8 +35,8 @@ import org.hibernate.type.CompositeType;
  * @author Steve Ebersole
  */
 public class CollectionFetchableElementCompositeGraph
-		extends AbstractCompositeFetch
-		implements CompositeFetch, CollectionFetchableElement {
+		extends AbstractCompositeReference
+		implements CollectionFetchableElement {
 
 	private final CollectionReference collectionReference;
 
@@ -45,7 +44,6 @@ public class CollectionFetchableElementCompositeGraph
 			CollectionReference collectionReference,
 			ExpandingCompositeQuerySpace compositeQuerySpace) {
 		super(
-				(CompositeType) collectionReference.getCollectionPersister().getElementType(),
 				compositeQuerySpace,
 				false,
 				// these property paths are just informational...
@@ -60,7 +58,9 @@ public class CollectionFetchableElementCompositeGraph
 	}
 
 	@Override
-	public FetchSource getSource() {
-		return collectionReference.getElementGraph();
+	public EntityReference resolveEntityReference() {
+		return Fetch.class.isInstance( collectionReference ) ?
+				Fetch.class.cast( collectionReference ).getSource().resolveEntityReference() :
+				null;
 	}
 }

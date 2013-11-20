@@ -24,10 +24,10 @@
 package org.hibernate.loader.plan2.build.spi;
 
 import org.hibernate.engine.FetchStrategy;
-import org.hibernate.loader.plan2.spi.AnyFetch;
+import org.hibernate.loader.plan2.spi.AnyAttributeFetch;
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
+import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.FetchSource;
@@ -49,7 +49,7 @@ public interface ExpandingFetchSource extends FetchSource {
 	 */
 	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition);
 
-	public EntityFetch buildEntityFetch(
+	public EntityFetch buildEntityAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy);
 
@@ -58,14 +58,14 @@ public interface ExpandingFetchSource extends FetchSource {
 			FetchStrategy fetchStrategy,
 			EntityReference targetEntityReference);
 
-	public CompositeFetch buildCompositeFetch(
+	public CompositeAttributeFetch buildCompositeAttributeFetch(
 			AttributeDefinition attributeDefinition);
 
-	public CollectionFetch buildCollectionFetch(
+	public CollectionAttributeFetch buildCollectionAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy);
 
-	public AnyFetch buildAnyFetch(
+	public AnyAttributeFetch buildAnyAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy);
 

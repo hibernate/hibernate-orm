@@ -23,22 +23,15 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan2.spi.AnyFetch;
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
-import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.type.AnyType;
 
 /**
- * @author Steve Ebersole
  * @author Gail Badner
  */
-public class AnyFetchImpl implements AnyFetch {
+public abstract class AbstractAnyReference implements FetchSource {
 	/**
 	 * Convenient constant for returning no fetches from {@link #getFetches()}
 	 */
@@ -50,63 +43,15 @@ public class AnyFetchImpl implements AnyFetch {
 	private static final BidirectionalEntityReference[] NO_BIDIRECTIONAL_ENTITY_REFERENCES =
 			new BidirectionalEntityReference[0];
 
-
-	private final FetchSource fetchSource;
-	private final AssociationAttributeDefinition fetchedAttribute;
-	private final FetchStrategy fetchStrategy;
-
 	private final PropertyPath propertyPath;
 
-	public AnyFetchImpl(
-			FetchSource fetchSource,
-			AssociationAttributeDefinition fetchedAttribute,
-			FetchStrategy fetchStrategy) {
-
-		this.fetchSource = fetchSource;
-		this.fetchedAttribute = fetchedAttribute;
-		this.fetchStrategy = fetchStrategy;
-		this.propertyPath = fetchSource.getPropertyPath().append( fetchedAttribute.getName() );
-	}
-
-	@Override
-	public FetchSource getSource() {
-		return fetchSource;
-	}
-
-	@Override
-	public AnyType getFetchedType() {
-		return (AnyType) fetchedAttribute.getType();
-	}
-
-	@Override
-	public boolean isNullable() {
-		return fetchedAttribute.isNullable();
-	}
-
-	@Override
-	public String[] toSqlSelectFragments(String alias) {
-		return new String[0];  //To change body of implemented methods use File | Settings | File Templates.
-	}
-
-	@Override
-	public String getAdditionalJoinConditions() {
-		// only pertinent for HQL...
-		return null;
-	}
-
-	@Override
-	public FetchStrategy getFetchStrategy() {
-		return fetchStrategy;
+	public AbstractAnyReference(PropertyPath propertyPath) {
+		this.propertyPath = propertyPath;
 	}
 
 	@Override
 	public PropertyPath getPropertyPath() {
 		return propertyPath;
-	}
-
-	@Override
-	public String getQuerySpaceUid() {
-		return null;  //To change body of implemented methods use File | Settings | File Templates.
 	}
 
 	@Override
@@ -120,12 +65,8 @@ public class AnyFetchImpl implements AnyFetch {
 	}
 
 	@Override
-	public EntityReference resolveEntityReference() {
-		return fetchSource.resolveEntityReference();
+	public String getQuerySpaceUid() {
+		return null;
 	}
 
-	@Override
-	public AttributeDefinition getFetchedAttributeDefinition() {
-		return fetchedAttribute;
-	}
 }

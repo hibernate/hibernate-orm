@@ -27,6 +27,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.collectionelement.Boy;
 import org.hibernate.test.annotations.collectionelement.Matrix;
@@ -35,7 +36,6 @@ import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProc
 
 //import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
 import org.hibernate.loader.plan2.build.internal.returns.CollectionFetchableElementEntityGraph;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.FetchSource;
@@ -213,7 +213,7 @@ public class LoadPlanStructureAssertionTest extends BaseUnitTestCase {
 
 			// Card should have one fetch, the fields collection
 			assertEquals( 1, cardReturn.getFetches().length );
-			final CollectionFetch fieldsFetch = assertTyping( CollectionFetch.class, cardReturn.getFetches()[0] );
+			final CollectionAttributeFetch fieldsFetch = assertTyping( CollectionAttributeFetch.class, cardReturn.getFetches()[0] );
 			assertNotNull( fieldsFetch.getElementGraph() );
 
 			// the Card.fields collection has entity elements of type CardField...

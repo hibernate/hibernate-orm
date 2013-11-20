@@ -28,7 +28,7 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
 import org.hibernate.loader.plan2.spi.CollectionFetchableIndex;
 import org.hibernate.loader.plan2.spi.CollectionReference;
@@ -183,8 +183,8 @@ public class ReturnGraphTreePrinter {
 			printWriter.println( extractDetails( compositeFetch ) );
 			writeCompositeFetchFetches( compositeFetch, depth+1, printWriter );
 		}
-		else if ( CollectionFetch.class.isInstance( fetch ) ) {
-			final CollectionFetch collectionFetch = (CollectionFetch) fetch;
+		else if ( CollectionAttributeFetch.class.isInstance( fetch ) ) {
+			final CollectionAttributeFetch collectionFetch = (CollectionAttributeFetch) fetch;
 			printWriter.println( extractDetails( collectionFetch ) );
 			writeCollectionReferenceFetches( collectionFetch, depth+1, printWriter );
 		}

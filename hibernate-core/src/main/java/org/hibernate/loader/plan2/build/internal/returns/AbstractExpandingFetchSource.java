@@ -35,10 +35,10 @@ import org.hibernate.loader.plan2.build.spi.ExpandingEntityQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan2.spi.AnyFetch;
+import org.hibernate.loader.plan2.spi.AnyAttributeFetch;
 import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
-import org.hibernate.loader.plan2.spi.CompositeFetch;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
+import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.Fetch;
@@ -116,7 +116,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	}
 
 	@Override
-	public EntityFetch buildEntityFetch(
+	public EntityFetch buildEntityAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
 
@@ -126,7 +126,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 				getQuerySpaces().generateImplicitUid(),
 				fetchStrategy
 		);
-		final EntityFetch fetch = new EntityFetchImpl( this, attributeDefinition, fetchStrategy, entityQuerySpace );
+		final EntityFetch fetch = new EntityAttributeFetchImpl( this, attributeDefinition, fetchStrategy, entityQuerySpace );
 		addFetch( fetch );
 		return fetch;
 	}
@@ -155,7 +155,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 		return bidirectionalEntityReference;
 	}
 
-	protected abstract CompositeFetch createCompositeFetch(
+	protected abstract CompositeAttributeFetch createCompositeAttributeFetch(
 			AttributeDefinition compositeType,
 			ExpandingCompositeQuerySpace compositeQuerySpace);
 
@@ -164,7 +164,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	}
 
 	@Override
-	public CompositeFetch buildCompositeFetch(
+	public CompositeAttributeFetch buildCompositeAttributeFetch(
 			AttributeDefinition attributeDefinition) {
 		final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
 				expandingQuerySpace(),
@@ -173,13 +173,13 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 				true
 		);
 
-		final CompositeFetch fetch = createCompositeFetch( attributeDefinition, compositeQuerySpace );
+		final CompositeAttributeFetch fetch = createCompositeAttributeFetch( attributeDefinition, compositeQuerySpace );
 		addFetch( fetch );
 		return fetch;
 	}
 
 	@Override
-	public CollectionFetch buildCollectionFetch(
+	public CollectionAttributeFetch buildCollectionAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
 
@@ -190,7 +190,7 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 				fetchStrategy
 		);
 
-		final CollectionFetch fetch = new CollectionFetchImpl(
+		final CollectionAttributeFetch fetch = new CollectionAttributeFetchImpl(
 				this,
 				attributeDefinition,
 				fetchStrategy,
@@ -201,11 +201,11 @@ public abstract class AbstractExpandingFetchSource implements ExpandingFetchSour
 	}
 
 	@Override
-	public AnyFetch buildAnyFetch(
-		AssociationAttributeDefinition attributeDefinition,
-		FetchStrategy fetchStrategy) {
+	public AnyAttributeFetch buildAnyAttributeFetch(
+			AssociationAttributeDefinition attributeDefinition,
+			FetchStrategy fetchStrategy) {
 
-		final AnyFetch fetch = new AnyFetchImpl(
+		final AnyAttributeFetch fetch = new AnyAttributeFetchImpl(
 				this,
 				attributeDefinition,
 				fetchStrategy

@@ -38,7 +38,7 @@ import org.hibernate.loader.plan2.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan2.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan2.exec.spi.CollectionReferenceAliases;
 import org.hibernate.loader.plan2.exec.spi.EntityReferenceAliases;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan2.spi.CollectionQuerySpace;
 import org.hibernate.loader.plan2.spi.CompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityFetch;
@@ -439,8 +439,8 @@ public class LoadQueryJoinAndFetchProcessor {
 					fetchStats
 			);
 		}
-		else if ( CollectionFetch.class.isInstance( fetch ) ) {
-			final CollectionFetch collectionFetch = (CollectionFetch) fetch;
+		else if ( CollectionAttributeFetch.class.isInstance( fetch ) ) {
+			final CollectionAttributeFetch collectionFetch = (CollectionAttributeFetch) fetch;
 			processCollectionFetch(
 					selectStatementBuilder,
 					fetchSource,
@@ -519,7 +519,7 @@ public class LoadQueryJoinAndFetchProcessor {
 	private void processCollectionFetch(
 			SelectStatementBuilder selectStatementBuilder,
 			FetchSource fetchSource,
-			CollectionFetch fetch,
+			CollectionAttributeFetch fetch,
 			ReaderCollector readerCollector,
 			FetchStatsImpl fetchStats) {
 		fetchStats.processingFetch( fetch );

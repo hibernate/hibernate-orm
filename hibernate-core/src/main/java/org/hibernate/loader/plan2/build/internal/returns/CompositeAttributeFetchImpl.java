@@ -25,24 +25,25 @@ package org.hibernate.loader.plan2.build.internal.returns;
 
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
+import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.type.CompositeType;
+import org.hibernate.type.Type;
 
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class CompositeFetchImpl extends AbstractCompositeFetch implements CompositeAttributeFetch {
+public class CompositeAttributeFetchImpl extends AbstractCompositeFetch implements CompositeAttributeFetch {
 	private final FetchSource source;
 	private final AttributeDefinition fetchedAttribute;
 
-	protected CompositeFetchImpl(
+	protected CompositeAttributeFetchImpl(
 			FetchSource source,
 			AttributeDefinition attributeDefinition,
 			ExpandingCompositeQuerySpace compositeQuerySpace,
 			boolean allowCollectionFetches) {
 		super(
-				(CompositeType) attributeDefinition.getType(),
 				compositeQuerySpace,
 				allowCollectionFetches,
 				source.getPropertyPath().append( attributeDefinition.getName() )
@@ -59,5 +60,20 @@ public class CompositeFetchImpl extends AbstractCompositeFetch implements Compos
 	@Override
 	public AttributeDefinition getFetchedAttributeDefinition() {
 		return fetchedAttribute;
+	}
+
+	@Override
+	public Type getFetchedType() {
+		return fetchedAttribute.getType();
+	}
+
+	@Override
+	public boolean isNullable() {
+		return fetchedAttribute.isNullable();
+	}
+
+	@Override
+	public EntityReference resolveEntityReference() {
+		return source.resolveEntityReference();
 	}
 }

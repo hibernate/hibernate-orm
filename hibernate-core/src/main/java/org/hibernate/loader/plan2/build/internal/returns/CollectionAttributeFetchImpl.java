@@ -27,7 +27,7 @@ import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.plan2.build.internal.spaces.QuerySpaceHelper;
 import org.hibernate.loader.plan2.build.spi.ExpandingCollectionQuerySpace;
 import org.hibernate.loader.plan2.build.spi.ExpandingFetchSource;
-import org.hibernate.loader.plan2.spi.CollectionFetch;
+import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
@@ -36,12 +36,12 @@ import org.hibernate.type.CollectionType;
 /**
  * @author Steve Ebersole
  */
-public class CollectionFetchImpl extends AbstractCollectionReference implements CollectionFetch {
+public class CollectionAttributeFetchImpl extends AbstractCollectionReference implements CollectionAttributeFetch {
 	private final ExpandingFetchSource fetchSource;
 	private final AttributeDefinition fetchedAttribute;
 	private final FetchStrategy fetchStrategy;
 
-	public CollectionFetchImpl(
+	public CollectionAttributeFetchImpl(
 			ExpandingFetchSource fetchSource,
 			AssociationAttributeDefinition fetchedAttribute,
 			FetchStrategy fetchStrategy,

@@ -21,10 +21,36 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan2.spi;
+package org.hibernate.loader.plan2.build.internal.returns;
+
+import org.hibernate.loader.plan2.spi.CollectionFetchableElement;
+import org.hibernate.loader.plan2.spi.CollectionReference;
+import org.hibernate.loader.plan2.spi.EntityReference;
+import org.hibernate.loader.plan2.spi.Fetch;
 
 /**
  * @author Gail Badner
  */
-public interface AnyFetch extends AttributeFetch, FetchSource {
+public class CollectionFetchableElementAnyGraph extends AbstractAnyReference implements CollectionFetchableElement {
+	private final CollectionReference collectionReference;
+
+	public CollectionFetchableElementAnyGraph(CollectionReference collectionReference) {
+		super(
+				// this property path is just informational...
+				collectionReference.getPropertyPath().append( "<element>" )
+		);
+		this.collectionReference = collectionReference;
+	}
+
+	@Override
+	public CollectionReference getCollectionReference() {
+		return collectionReference;
+	}
+
+	@Override
+	public EntityReference resolveEntityReference() {
+		return Fetch.class.isInstance( collectionReference ) ?
+				Fetch.class.cast( collectionReference ).getSource().resolveEntityReference() :
+				null;
+	}
 }

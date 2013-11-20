@@ -23,10 +23,12 @@
  */
 package org.hibernate.loader.plan2.build.internal.returns;
 
+import org.hibernate.engine.FetchStrategy;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan2.build.spi.ExpandingCompositeQuerySpace;
 import org.hibernate.loader.plan2.spi.EntityReference;
 import org.hibernate.type.CompositeType;
+import org.hibernate.type.Type;
 
 /**
  * Models a composite entity identifier that is non-encapsulated (meaning there is no composite class, no

@@ -84,6 +84,9 @@ public abstract class AbstractCollectionReference implements CollectionReference
 					);
 					return new CollectionFetchableIndexEntityGraph( this, entityQuerySpace );
 				}
+				else if ( type.isAnyType() ) {
+					return new CollectionFetchableIndexAnyGraph( this );
+				}
 			}
 			else if ( type.isComponentType() ) {
 				final ExpandingCompositeQuerySpace compositeQuerySpace = QuerySpaceHelper.INSTANCE.makeCompositeQuerySpace(
@@ -126,6 +129,9 @@ public abstract class AbstractCollectionReference implements CollectionReference
 						shouldIncludeJoins
 				);
 				return new CollectionFetchableElementEntityGraph( this, entityQuerySpace );
+			}
+			else if ( type.isAnyType() ) {
+				return new CollectionFetchableElementAnyGraph( this );
 			}
 		}
 		else if ( type.isComponentType() ) {

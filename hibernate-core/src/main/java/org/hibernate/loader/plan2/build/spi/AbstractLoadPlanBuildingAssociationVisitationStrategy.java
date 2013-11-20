@@ -49,8 +49,8 @@ import org.hibernate.loader.plan2.spi.CollectionReturn;
 import org.hibernate.loader.plan2.spi.CompositeAttributeFetch;
 import org.hibernate.loader.plan2.spi.CompositeFetch;
 import org.hibernate.loader.plan2.spi.EntityFetch;
-import org.hibernate.loader.plan2.spi.EntityIdentifierDescription;
 import org.hibernate.loader.plan2.spi.EntityReference;
+import org.hibernate.loader.plan2.spi.EntityReturn;
 import org.hibernate.loader.plan2.spi.FetchSource;
 import org.hibernate.loader.plan2.spi.Return;
 import org.hibernate.persister.entity.Joinable;
@@ -89,7 +89,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	private final SessionFactoryImplementor sessionFactory;
 	private final QuerySpacesImpl querySpaces;
 
-	//TODO: I don't see propertyPathStack used anywhere. Can it be deleted?
 	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
 
 	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
@@ -201,11 +200,16 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	public void finishingEntity(EntityDefinition entityDefinition) {
-		final boolean isRoot = fetchSourceStack.size() == 1 && collectionReferenceStack.isEmpty();
+		// Only process the entityDefinition if it is for the root return.
+		final FetchSource currentSource = currentSource();
+		final boolean isRoot = EntityReturn.class.isInstance( currentSource ) &&
+				entityDefinition.getEntityPersister().equals( EntityReturn.class.cast( currentSource ).getEntityPersister() );
 		if ( !isRoot ) {
+			// if not, this call should represent a fetch which will be handled in #finishingAttribute
 			return;
 		}
 
+		// if we get here, it is a root
 		popEntityFromStack( entityDefinition );
 	}
 
@@ -260,8 +264,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			);
 		}
 
-		// todo : handle AssociationKeys here?  is that why we get the duplicate joins and fetches?
-
 		if ( ExpandingEntityIdentifierDescription.class.isInstance( entityReference.getIdentifierDescription() ) ) {
 			pushToStack( (ExpandingEntityIdentifierDescription) entityReference.getIdentifierDescription() );
 		}
@@ -269,20 +271,29 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	public void finishingEntityIdentifier(EntityIdentifierDefinition entityIdentifierDefinition) {
-		// peek at the current stack element...
-		final ExpandingFetchSource current = currentSource();
-		if ( ! EntityIdentifierDescription.class.isInstance( current ) ) {
+		// only pop from stack if the current source is ExpandingEntityIdentifierDescription..
+		final ExpandingFetchSource currentSource = currentSource();
+		if ( ! ExpandingEntityIdentifierDescription.class.isInstance( currentSource ) ) {
+			// in this case, the current source should be the entity that owns entityIdentifierDefinition
+			if ( ! EntityReference.class.isInstance( currentSource ) ) {
+				throw new WalkingException( "Unexpected state in FetchSource stack" );
+			}
+			final EntityReference entityReference = (EntityReference) currentSource;
+			if ( entityReference.getEntityPersister().getEntityKeyDefinition() != entityIdentifierDefinition ) {
+				throw new WalkingException(
+						String.format(
+								"Encountered unexpected fetch owner [%s] in stack while processing entity identifier for [%s]",
+								entityReference.getEntityPersister().getEntityName(),
+								entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
+						)
+				);
+			}
 			return;
 		}
 
-		final ExpandingFetchSource popped = popFromStack();
-
-		// perform some stack validation on exit, first on the current stack element we want to pop
-		if ( ! ExpandingEntityIdentifierDescription.class.isInstance( popped ) ) {
-			throw new WalkingException( "Unexpected state in FetchSource stack" );
-		}
-
-		final ExpandingEntityIdentifierDescription identifierDescription = (ExpandingEntityIdentifierDescription) popped;
+		// the current source is ExpandingEntityIdentifierDescription...
+		final ExpandingEntityIdentifierDescription identifierDescription =
+				(ExpandingEntityIdentifierDescription) popFromStack();
 
 		// and then on the node before it (which should be the entity that owns the identifier being described)
 		final ExpandingFetchSource entitySource = currentSource();
@@ -306,8 +317,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				entityIdentifierDefinition.getEntityDefinition().getEntityPersister().getEntityName()
 		);
 	}
-
-
 	// Collections ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private ArrayDeque<CollectionReference> collectionReferenceStack = new ArrayDeque<CollectionReference>();
@@ -352,28 +361,12 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		pushToCollectionStack( collectionReturn );
 		addRootReturn( collectionReturn );
 
-		//if ( collectionDefinition.getCollectionPersister().isOneToMany() ) {
-			associationKeyRegistered(
-					new AssociationKey(
-							( (Joinable) collectionDefinition.getCollectionPersister() ).getTableName(),
-							( (Joinable) collectionDefinition.getCollectionPersister() ).getKeyColumnNames()
-					)
-			);
-		//}
-
-		// also add an AssociationKey for the root so we can later on recognize circular references back to the root.
-		// for a collection, the circularity would always be to an entity element...
-		/*
-		if ( collectionReturn.getElementGraph() != null ) {
-			if ( EntityReference.class.isInstance( collectionReturn.getElementGraph() ) ) {
-				final EntityReference entityReference = (EntityReference) collectionReturn.getElementGraph();
-				final Joinable entityPersister = (Joinable) entityReference.getEntityPersister();
-				associationKeyRegistered(
-						new AssociationKey( entityPersister.getTableName(), entityPersister.getKeyColumnNames() )
-				);
-			}
-		}
-		*/
+		associationKeyRegistered(
+				new AssociationKey(
+						( (Joinable) collectionDefinition.getCollectionPersister() ).getTableName(),
+						( (Joinable) collectionDefinition.getCollectionPersister() ).getKeyColumnNames()
+				)
+		);
 	}
 
 	protected boolean supportsRootCollectionReturns() {
@@ -533,9 +526,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( fetchSourceStack.isEmpty() && collectionReferenceStack.isEmpty() ) {
 			throw new HibernateException( "A component cannot be the root of a walk nor a graph" );
 		}
-
-		//final CompositeFetch compositeFetch = currentSource().buildCompositeFetch( compositionDefinition );
-		//pushToStack( (ExpandingFetchSource) compositeFetch );
 	}
 
 	@Override
@@ -564,7 +554,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 		final Type attributeType = attributeDefinition.getType();
 
-		final boolean isAnyType = attributeType.isAnyType();
 		final boolean isComponentType = attributeType.isComponentType();
 		final boolean isAssociationType = attributeType.isAssociationType();
 		final boolean isBasicType = ! ( isComponentType || isAssociationType );
@@ -572,12 +561,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( isBasicType ) {
 			return true;
 		}
-		else if ( isAnyType ) {
-			// If isAnyType is true, then isComponentType and isAssociationType will also be true
-			// so need to check isAnyType first so that it is handled properly.
-			return handleAnyAttribute( (AssociationAttributeDefinition) attributeDefinition );
-		}
 		else if ( isAssociationType ) {
+			// also handles any type attributes...
 			return handleAssociationAttribute( (AssociationAttributeDefinition) attributeDefinition );
 		}
 		else {
@@ -700,11 +685,11 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 			}
 		}
 		else {
-			// Collection
-			//currentSource().buildCollectionFetch( attributeDefinition, fetchStrategy, this );
+			// Do nothing for collection
 		}
 	}
 
+// TODO: is the following still useful???
 //	@Override
 //	public void foundCircularAssociationKey(AssociationKey associationKey, AttributeDefinition attributeDefinition) {
 //		// use this information to create the bi-directional EntityReference (as EntityFetch) instances
@@ -835,30 +820,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		// do nothing.
 	}
 
-	protected boolean handleAnyAttribute(AssociationAttributeDefinition attributeDefinition) {
-		// for ANY mappings we need to build a Fetch:
-		//		1) fetch type is SELECT, timing might be IMMEDIATE or DELAYED depending on whether it was defined as lazy
-		//		2) (because the fetch cannot be a JOIN...) do not push it to the stack
-		final FetchStrategy fetchStrategy = determineFetchStrategy( attributeDefinition );
-		if ( fetchStrategy.getTiming() != FetchTiming.IMMEDIATE ) {
-			return false;
-		}
-
-		final ExpandingFetchSource currentSource = currentSource();
-		currentSource.validateFetchPlan( fetchStrategy, attributeDefinition );
-
-//		final FetchOwner fetchSource = currentFetchOwner();
-//		fetchOwner.validateFetchPlan( fetchStrategy, attributeDefinition );
-//
-//		fetchOwner.buildAnyFetch(
-//				attributeDefinition,
-//				anyDefinition,
-//				fetchStrategy,
-//				this
-//		);
-		return false;
-	}
-
 	protected boolean handleCompositeAttribute(AttributeDefinition attributeDefinition) {
 		final CompositeFetch compositeFetch = currentSource().buildCompositeAttributeFetch( attributeDefinition );
 		pushToStack( (ExpandingFetchSource) compositeFetch );
@@ -877,6 +838,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 		final AssociationAttributeDefinition.AssociationNature nature = attributeDefinition.getAssociationNature();
 		if ( nature == AssociationAttributeDefinition.AssociationNature.ANY ) {
+			// for ANY mappings we need to build a Fetch:
+			//		1) fetch type is SELECT
+			//		2) (because the fetch cannot be a JOIN...) do not push it to the stack
 			currentSource.buildAnyAttributeFetch(
 					attributeDefinition,
 					fetchStrategy
@@ -919,12 +883,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		return false;
 	}
 
-//	protected abstract EntityReturn buildRootEntityReturn(EntityDefinition entityDefinition);
-//
-//	protected abstract CollectionReturn buildRootCollectionReturn(CollectionDefinition collectionDefinition);
-
-
-
 	// LoadPlanBuildingContext impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -936,8 +894,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	 * Maintains stack information for the property paths we are processing for logging purposes.  Because of the
 	 * recursive calls it is often useful (while debugging) to be able to see the "property path" as part of the
 	 * logging output.
-	 *
-	 * TODO: I don't see PropertyPathStack used anywhere. Can it be deleted?
 	 */
 	public static class PropertyPathStack {
 		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();

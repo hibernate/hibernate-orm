@@ -169,12 +169,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	@Override
 	public void startingEntity(EntityDefinition entityDefinition) {
-		log.tracef(
-				"%s Starting entity : %s",
-				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-				entityDefinition.getEntityPersister().getEntityName()
-		);
-
 		// see if the EntityDefinition is a root...
 		final boolean isRoot = fetchSourceStack.isEmpty();
 		if ( ! isRoot ) {
@@ -183,6 +177,13 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		}
 
 		// if we get here, it is a root
+
+		log.tracef(
+				"%s Starting root entity : %s",
+				StringHelper.repeat( ">>", fetchSourceStack.size() ),
+				entityDefinition.getEntityPersister().getEntityName()
+		);
+
 		if ( !supportsRootEntityReturns() ) {
 			throw new HibernateException( "This strategy does not support root entity returns" );
 		}
@@ -210,13 +211,18 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		}
 
 		// if we get here, it is a root
-		popEntityFromStack( entityDefinition );
+		final ExpandingFetchSource popped = popFromStack();
+		checkPoppedEntity( popped, entityDefinition );
+
+		log.tracef(
+				"%s Finished root entity : %s",
+				StringHelper.repeat( "<<", fetchSourceStack.size() ),
+				entityDefinition.getEntityPersister().getEntityName()
+		);
 	}
 
-	private void popEntityFromStack(EntityDefinition entityDefinition) {
-		// pop the current fetch owner, and make sure what we just popped represents this entity
-		final ExpandingFetchSource fetchSource = popFromStack();
-
+	private void checkPoppedEntity(ExpandingFetchSource fetchSource, EntityDefinition entityDefinition) {
+		// make sure what we just fetchSource represents entityDefinition
 		if ( ! EntityReference.class.isInstance( fetchSource ) ) {
 			throw new WalkingException(
 					String.format(
@@ -232,12 +238,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( ! entityReference.getEntityPersister().equals( entityDefinition.getEntityPersister() ) ) {
 			throw new WalkingException( "Mismatched FetchSource from stack on pop" );
 		}
-
-		log.tracef(
-				"%s Finished entity : %s",
-				StringHelper.repeat( "<<", fetchSourceStack.size() ),
-				entityDefinition.getEntityPersister().getEntityName()
-		);
 	}
 
 
@@ -337,20 +337,24 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		return last;
 	}
 
+	private CollectionReference currentCollection() {
+		return collectionReferenceStack.peekFirst();
+	}
+
 	@Override
 	public void startingCollection(CollectionDefinition collectionDefinition) {
-		log.tracef(
-				"%s Starting collection : %s",
-				StringHelper.repeat( ">>", fetchSourceStack.size() ),
-				collectionDefinition.getCollectionPersister().getRole()
-		);
-
 		// see if the EntityDefinition is a root...
 		final boolean isRoot = fetchSourceStack.isEmpty();
 		if ( ! isRoot ) {
 			// if not, this call should represent a fetch which should have been handled in #startingAttribute
 			return;
 		}
+
+		log.tracef(
+				"%s Starting root collection : %s",
+				StringHelper.repeat( ">>", fetchSourceStack.size() ),
+				collectionDefinition.getCollectionPersister().getRole()
+		);
 
 		// if we get here, it is a root
 		if ( ! supportsRootCollectionReturns() ) {
@@ -377,40 +381,37 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	public void finishingCollection(CollectionDefinition collectionDefinition) {
 		final boolean isRoot = fetchSourceStack.isEmpty() && collectionReferenceStack.size() == 1;
 		if ( !isRoot ) {
+			// if not, this call should represent a fetch which will be handled in #finishingAttribute
 			return;
 		}
 
-		popFromCollectionStack( collectionDefinition );
-	}
-
-	private void popFromCollectionStack(CollectionDefinition collectionDefinition) {
-		// pop the current fetch owner, and make sure what we just popped represents this collection
-		final CollectionReference collectionReference = popFromCollectionStack();
-		if ( ! collectionReference.getCollectionPersister().equals( collectionDefinition.getCollectionPersister() ) ) {
-			throw new WalkingException( "Mismatched CollectionReference from stack on pop" );
-		}
+		final CollectionReference popped = popFromCollectionStack();
+		checkedPoppedCollection( popped, collectionDefinition );
 
 		log.tracef(
-				"%s Finished collection : %s",
+				"%s Finished root collection : %s",
 				StringHelper.repeat( "<<", fetchSourceStack.size() ),
 				collectionDefinition.getCollectionPersister().getRole()
 		);
 	}
 
+	private void checkedPoppedCollection(CollectionReference poppedCollectionReference, CollectionDefinition collectionDefinition) {
+		// make sure what we just poppedCollectionReference represents collectionDefinition.
+		if ( ! poppedCollectionReference.getCollectionPersister().equals( collectionDefinition.getCollectionPersister() ) ) {
+			throw new WalkingException( "Mismatched CollectionReference from stack on pop" );
+		}
+	}
+
 	@Override
 	public void startingCollectionIndex(CollectionIndexDefinition indexDefinition) {
 		final Type indexType = indexDefinition.getType();
-		if ( indexType.isAnyType() ) {
-			return;
-		}
-
 		log.tracef(
 				"%s Starting collection index graph : %s",
 				StringHelper.repeat( ">>", fetchSourceStack.size() ),
 				indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 		);
 
-		final CollectionReference collectionReference = collectionReferenceStack.peekFirst();
+		final CollectionReference collectionReference = currentCollection();
 		final CollectionFetchableIndex indexGraph = collectionReference.getIndexGraph();
 
 		if ( indexType.isEntityType() || indexType.isComponentType() ) {
@@ -420,7 +421,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 								indexDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 				);
 			}
-			pushToStack( (ExpandingFetchSource) indexGraph );
+			if ( !indexType.isAnyType() ) {
+				pushToStack( (ExpandingFetchSource) indexGraph );
+			}
 		}
 		else {
 			if ( indexGraph != null ) {
@@ -437,10 +440,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final Type indexType = indexDefinition.getType();
 
 		if ( indexType.isAnyType() ) {
-			return;
+			// nothing to do because the index graph was not pushed in #startingCollectionIndex.
 		}
-
-		if ( indexType.isEntityType() || indexType.isComponentType() ) {
+		else if ( indexType.isEntityType() || indexType.isComponentType() ) {
 			// todo : validate the stack?
 			final ExpandingFetchSource fetchSource = popFromStack();
 			if ( !CollectionFetchableIndex.class.isInstance( fetchSource ) ) {
@@ -467,7 +469,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				elementDefinition.getCollectionDefinition().getCollectionPersister().getRole()
 		);
 
-		final CollectionReference collectionReference = collectionReferenceStack.peekFirst();
+		final CollectionReference collectionReference = currentCollection();
 		final CollectionFetchableElement elementGraph = collectionReference.getElementGraph();
 
 		if ( elementType.isAssociationType() || elementType.isComponentType() ) {
@@ -496,7 +498,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final Type elementType = elementDefinition.getType();
 
 		if ( elementType.isAnyType() ) {
-			// nothing to do because the element graph was not pushed
+			// nothing to do because the element graph was not pushed in #startingCollectionElement..
 		}
 		else if ( elementType.isComponentType() || elementType.isAssociationType()) {
 			// pop it from the stack
@@ -526,16 +528,22 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		if ( fetchSourceStack.isEmpty() && collectionReferenceStack.isEmpty() ) {
 			throw new HibernateException( "A component cannot be the root of a walk nor a graph" );
 		}
+
+		// No need to push anything here; it should have been pushed by
+		// #startingAttribute, #startingCollectionElements, #startingCollectionIndex, or #startingEntityIdentifier
+		final FetchSource currentSource = currentSource();
+		if ( !CompositeFetch.class.isInstance( currentSource ) &&
+				!CollectionFetchableElement.class.isInstance( currentSource ) &&
+				!CollectionFetchableIndex.class.isInstance( currentSource ) &&
+				!ExpandingEntityIdentifierDescription.class.isInstance( currentSource ) ) {
+			throw new WalkingException( "Mismatched FetchSource from stack on pop" );
+		}
 	}
 
 	@Override
 	public void finishingComposite(CompositionDefinition compositionDefinition) {
-		// pop the current fetch owner, and make sure what we just popped represents this composition
-		//final ExpandingFetchSource popped = popFromStack();
-
-		//if ( ! CompositeFetch.class.isInstance( popped ) ) {
-		//	throw new WalkingException( "Mismatched FetchSource from stack on pop" );
-		//}
+		// No need to pop anything here; it will be popped by
+		// #finishingAttribute, #finishingCollectionElements, #finishingCollectionIndex, or #finishingEntityIdentifier
 
 		log.tracef(
 				"%s Finishing composite : %s",
@@ -543,7 +551,9 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 				compositionDefinition.getName()
 		);
 	}
+
 	protected PropertyPath currentPropertyPath = new PropertyPath( "" );
+
 	@Override
 	public boolean startingAttribute(AttributeDefinition attributeDefinition) {
 		log.tracef(
@@ -574,12 +584,34 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	public void finishingAttribute(AttributeDefinition attributeDefinition) {
 		final Type attributeType = attributeDefinition.getType();
 
-		if ( attributeType.isAnyType() ) {
-			// If attributeType.isAnyType() is true, then attributeType.isComponentType() and
-			// attributeType.isAssociationType() will also be true, so need to
-			// check attributeType.isAnyType() first.
-
-			// Nothing to do because AnyFetch does not implement ExpandingFetchSource (i.e., it cannot be pushed/popped).
+		if ( attributeType.isAssociationType() ) {
+			final AssociationAttributeDefinition associationAttributeDefinition =
+					(AssociationAttributeDefinition) attributeDefinition;
+			if ( attributeType.isAnyType() ) {
+				// Nothing to do because AnyFetch does not implement ExpandingFetchSource (i.e., it cannot be pushed/popped).
+			}
+			else if ( attributeType.isEntityType() ) {
+				final ExpandingFetchSource source = currentSource();
+				// One way to find out if the fetch was pushed is to check the fetch strategy; rather than recomputing
+				// the fetch strategy, simply check if current source's fetched attribute definition matches
+				// associationAttributeDefinition.
+				if ( AttributeFetch.class.isInstance( source ) &&
+						associationAttributeDefinition.equals( AttributeFetch.class.cast( source ).getFetchedAttributeDefinition() ) ) {
+					final ExpandingFetchSource popped = popFromStack();
+					checkPoppedEntity( popped, associationAttributeDefinition.toEntityDefinition() );
+				}
+			}
+			else if ( attributeType.isCollectionType() ) {
+				final CollectionReference currentCollection = currentCollection();
+				// One way to find out if the fetch was pushed is to check the fetch strategy; rather than recomputing
+				// the fetch strategy, simply check if current collection's fetched attribute definition matches
+				// associationAttributeDefinition.
+				if ( AttributeFetch.class.isInstance( currentCollection ) &&
+						associationAttributeDefinition.equals( AttributeFetch.class.cast( currentCollection ).getFetchedAttributeDefinition() ) ) {
+					final CollectionReference popped = popFromCollectionStack();
+					checkedPoppedCollection( popped, associationAttributeDefinition.toCollectionDefinition() );
+				}
+			}
 		}
 		else if ( attributeType.isComponentType() ) {
 			// CompositeFetch is always pushed, during #startingAttribute(),
@@ -602,21 +634,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 								poppedAsCompositeAttributeFetch.getFetchedAttributeDefinition()
 						)
 				);
-			}
-		}
-		else if ( attributeType.isEntityType() ) {
-			final ExpandingFetchSource source = currentSource();
-			if ( AttributeFetch.class.isInstance( source ) &&
-					attributeDefinition.equals( AttributeFetch.class.cast( source ).getFetchedAttributeDefinition() ) ) {
-				popEntityFromStack( ( (AssociationAttributeDefinition) attributeDefinition ).toEntityDefinition() );
-			}
-		}
-		else if ( attributeType.isCollectionType() ) {
-			final CollectionReference currentCollection = collectionReferenceStack.peekFirst();
-			if ( currentCollection != null &&
-					AttributeFetch.class.isInstance( currentCollection ) &&
-					attributeDefinition.equals( AttributeFetch.class.cast( currentCollection ).getFetchedAttributeDefinition() ) ) {
-				popFromCollectionStack( ( (AssociationAttributeDefinition) attributeDefinition ).toCollectionDefinition() );
 			}
 		}
 

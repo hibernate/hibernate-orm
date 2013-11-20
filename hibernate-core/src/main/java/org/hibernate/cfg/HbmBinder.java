@@ -2095,21 +2095,41 @@ public final class HbmBinder {
 				}
 			}
 			else {
-				// use old (HB 2.1) defaults if outer-join is specified
-				String eoj = jfNode.getValue();
-				if ( "auto".equals( eoj ) ) {
-					fetchStyle = FetchMode.DEFAULT;
+				if ( "many-to-many".equals( node.getName() ) ) {
+					//NOTE <many-to-many outer-join="..." is deprecated.:
+					// Default to join and non-lazy for the "second join"
+					// of the many-to-many
+					LOG.deprecatedManyToManyOuterJoin();
+					lazy = false;
+					fetchStyle = FetchMode.JOIN;
 				}
 				else {
-					boolean join = "true".equals( eoj );
-					fetchStyle = join ? FetchMode.JOIN : FetchMode.SELECT;
+					// use old (HB 2.1) defaults if outer-join is specified
+					String eoj = jfNode.getValue();
+					if ( "auto".equals( eoj ) ) {
+						fetchStyle = FetchMode.DEFAULT;
+					}
+					else {
+						boolean join = "true".equals( eoj );
+						fetchStyle = join ? FetchMode.JOIN : FetchMode.SELECT;
+					}
 				}
 			}
 		}
 		else {
-			boolean join = "join".equals( fetchNode.getValue() );
-			//lazy = !join;
-			fetchStyle = join ? FetchMode.JOIN : FetchMode.SELECT;
+			if ( "many-to-many".equals( node.getName() ) ) {
+				//NOTE <many-to-many fetch="..." is deprecated.:
+				// Default to join and non-lazy for the "second join"
+				// of the many-to-many
+				LOG.deprecatedManyToManyFetch();
+				lazy = false;
+				fetchStyle = FetchMode.JOIN;
+			}
+			else {
+				boolean join = "join".equals( fetchNode.getValue() );
+				//lazy = !join;
+				fetchStyle = join ? FetchMode.JOIN : FetchMode.SELECT;
+			}
 		}
 		model.setFetchMode( fetchStyle );
 		model.setLazy(lazy);

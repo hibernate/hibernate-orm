@@ -1654,4 +1654,12 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 453)
 	void unableToDiscoverOsgiService(String service, @Cause Exception e);
 
+	@LogMessage(level = WARN)
+	@Message(value = "The outer-join attribute on <many-to-many> has been deprecated. Instead of outer-join=\"false\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 454)
+	void deprecatedManyToManyOuterJoin();
+
+	@LogMessage(level = WARN)
+	@Message(value = "The fetch attribute on <many-to-many> has been deprecated. Instead of fetch=\"select\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 455)
+	void deprecatedManyToManyFetch();
+
 }

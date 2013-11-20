@@ -4808,8 +4808,7 @@ public class FooBarTest extends LegacyTestCase {
 		s.close();
 	}
 
-	@Test
-	@FailureExpected( jiraKey = "HHH-8662")
+	@TestForIssue( jiraKey = "HHH-8662" )
 	public void testProxiesInCollections() throws Exception {
 		Session s = openSession();
 		s.beginTransaction();
@@ -4847,7 +4846,8 @@ public class FooBarTest extends LegacyTestCase {
 		BarProxy b1 = (BarProxy) i.next();
 		BarProxy b2 = (BarProxy) i.next();
 		assertTrue( ( b1==barprox && !(b2 instanceof HibernateProxy) ) || ( b2==barprox && !(b1 instanceof HibernateProxy) ) ); //one-to-many
-		assertTrue( baz.getFooArray()[0] instanceof HibernateProxy ); //many-to-many
+		// <many-to-many fetch="select" is deprecated by HHH-8662; so baz.getFooArray()[0] should not be a HibernateProxy.
+		assertFalse( baz.getFooArray()[0] instanceof HibernateProxy ); //many-to-many
 		assertTrue( baz.getFooArray()[1]==bar2prox );
 		if ( !isOuterJoinFetchingDisabled() ) assertTrue( !(baz.getFooBag().iterator().next() instanceof HibernateProxy) ); //many-to-many outer-join="true"
 		assertTrue( !(baz.getFooSet().iterator().next() instanceof HibernateProxy) ); //one-to-many

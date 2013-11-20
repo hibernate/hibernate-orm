@@ -46,15 +46,15 @@ public interface CollectionElementDefinition {
 
 	/**
 	 * If the element type returned by {@link #getType()} is an
-	 * {@link org.hibernate.type.EntityType}, then the entity
+	 * {@link org.hibernate.type.AnyType}, then the any mapping
 	 * definition for the collection element is returned;
 	 * otherwise, IllegalStateException is thrown.
 	 *
-	 * @return the entity definition for the collection element.
+	 * @return the any mapping definition for the collection element.
 	 *
 	 * @throws IllegalStateException if the collection element type
 	 * returned by {@link #getType()} is not of type
-	 * {@link org.hibernate.type.EntityType}.
+	 * {@link org.hibernate.type.AnyType}.
 	 */
 	public AnyMappingDefinition toAnyMappingDefinition();
 

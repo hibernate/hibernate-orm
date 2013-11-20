@@ -2012,8 +2012,8 @@ public abstract class AbstractCollectionPersister
 
 			@Override
 			public EntityDefinition toEntityDefinition() {
-				if ( getType().isComponentType() ) {
-					throw new IllegalStateException( "Cannot treat composite collection index type as entity" );
+				if ( !getType().isEntityType() ) {
+					throw new IllegalStateException( "Cannot treat collection index type as entity" );
 				}
 				return (EntityPersister) ( (AssociationType) getIndexType() ).getAssociatedJoinable( getFactory() );
 			}
@@ -2021,7 +2021,7 @@ public abstract class AbstractCollectionPersister
 			@Override
 			public CompositionDefinition toCompositeDefinition() {
 				if ( ! getType().isComponentType() ) {
-					throw new IllegalStateException( "Cannot treat entity collection index type as composite" );
+					throw new IllegalStateException( "Cannot treat collection index type as composite" );
 				}
 				return new CompositeCollectionElementDefinition() {
 					@Override
@@ -2056,6 +2056,15 @@ public abstract class AbstractCollectionPersister
 					}
 				};
 			}
+
+			@Override
+			public AnyMappingDefinition toAnyMappingDefinition() {
+				final Type type = getType();
+				if ( ! type.isAnyType() ) {
+					throw new IllegalStateException( "Cannot treat collection index type as ManyToAny" );
+				}
+				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
+			}
 		};
 	}
 
@@ -2076,15 +2085,15 @@ public abstract class AbstractCollectionPersister
 			public AnyMappingDefinition toAnyMappingDefinition() {
 				final Type type = getType();
 				if ( ! type.isAnyType() ) {
-					throw new WalkingException( "Cannot treat collection element type as ManyToAny" );
+					throw new IllegalStateException( "Cannot treat collection element type as ManyToAny" );
 				}
 				return new StandardAnyTypeDefinition( (AnyType) type, isLazy() || isExtraLazy() );
 			}
 
 			@Override
 			public EntityDefinition toEntityDefinition() {
-				if ( getType().isComponentType() ) {
-					throw new WalkingException( "Cannot treat composite collection element type as entity" );
+				if ( !getType().isEntityType() ) {
+					throw new IllegalStateException( "Cannot treat collection element type as entity" );
 				}
 				return getElementPersister();
 			}
@@ -2093,7 +2102,7 @@ public abstract class AbstractCollectionPersister
 			public CompositeCollectionElementDefinition toCompositeElementDefinition() {
 
 				if ( ! getType().isComponentType() ) {
-					throw new WalkingException( "Cannot treat entity collection element type as composite" );
+					throw new IllegalStateException( "Cannot treat entity collection element type as composite" );
 				}
 
 				return new CompositeCollectionElementDefinition() {

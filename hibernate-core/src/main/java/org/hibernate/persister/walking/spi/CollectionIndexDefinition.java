@@ -65,4 +65,18 @@ public interface CollectionIndexDefinition {
 	 * {@link org.hibernate.type.CompositeType}.
 	 */
 	public CompositionDefinition toCompositeDefinition();
+
+	/**
+	 * If the index type returned by {@link #getType()} is an
+	 * {@link org.hibernate.type.AnyType}, then the any mapping
+	 * definition for the collection index is returned;
+	 * otherwise, IllegalStateException is thrown.
+	 *
+	 * @return the any mapping definition for the collection index.
+	 *
+	 * @throws IllegalStateException if the collection index type
+	 * returned by {@link #getType()} is not of type
+	 * {@link org.hibernate.type.AnyType}.
+	 */
+	public AnyMappingDefinition toAnyMappingDefinition();
 }

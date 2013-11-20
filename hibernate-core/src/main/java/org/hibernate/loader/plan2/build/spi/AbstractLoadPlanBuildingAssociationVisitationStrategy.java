@@ -89,6 +89,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	private final SessionFactoryImplementor sessionFactory;
 	private final QuerySpacesImpl querySpaces;
 
+	//TODO: I don't see propertyPathStack used anywhere. Can it be deleted?
 	private final PropertyPathStack propertyPathStack = new PropertyPathStack();
 
 	private final ArrayDeque<ExpandingFetchSource> fetchSourceStack = new ArrayDeque<ExpandingFetchSource>();
@@ -935,6 +936,8 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 	 * Maintains stack information for the property paths we are processing for logging purposes.  Because of the
 	 * recursive calls it is often useful (while debugging) to be able to see the "property path" as part of the
 	 * logging output.
+	 *
+	 * TODO: I don't see PropertyPathStack used anywhere. Can it be deleted?
 	 */
 	public static class PropertyPathStack {
 		private ArrayDeque<PropertyPath> pathStack = new ArrayDeque<PropertyPath>();

@@ -39,7 +39,7 @@ import org.hibernate.type.Type;
  * Implements metamodel graph walking.  In layman terms, we are walking the graph of the users domain model as
  * defined/understood by mapped associations.
  * <p/>
- * Initially grew as a part of the re-implementation of the legacy JoinWalker functional to instead build LoadPlans.
+ * Initially grew as a part of the re-implementation of the legacy JoinWalker functionality to instead build LoadPlans.
  * But this is really quite simple walking.  Interesting events are handled by calling out to
  * implementations of {@link AssociationVisitationStrategy} which really provide the real functionality of what we do
  * as we walk.
@@ -240,7 +240,10 @@ public class MetamodelGraphWalker {
 
 		try {
 			final Type collectionIndexType = collectionIndexDefinition.getType();
-			if ( collectionIndexType.isComponentType() ) {
+			if ( collectionIndexType.isAnyType() ) {
+				visitAnyDefinition( collectionIndexDefinition.toAnyMappingDefinition() );
+			}
+			else if ( collectionIndexType.isComponentType() ) {
 				visitCompositeDefinition( collectionIndexDefinition.toCompositeDefinition() );
 			}
 			else if ( collectionIndexType.isAssociationType() ) {
@@ -258,10 +261,14 @@ public class MetamodelGraphWalker {
 		final CollectionElementDefinition elementDefinition = collectionDefinition.getElementDefinition();
 		strategy.startingCollectionElements( elementDefinition );
 
-		if ( elementDefinition.getType().isComponentType() ) {
+		final Type collectionElementType = elementDefinition.getType();
+		if ( collectionElementType.isAnyType() ) {
+			visitAnyDefinition( elementDefinition.toAnyMappingDefinition() );
+		}
+		else if ( collectionElementType.isComponentType() ) {
 			visitCompositeDefinition( elementDefinition.toCompositeElementDefinition() );
 		}
-		else if ( elementDefinition.getType().isEntityType() ) {
+		else if ( collectionElementType.isEntityType() ) {
 			if ( ! collectionDefinition.getCollectionPersister().isOneToMany() ) {
 				final QueryableCollection queryableCollection = (QueryableCollection) collectionDefinition.getCollectionPersister();
 				addAssociationKey(

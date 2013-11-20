@@ -1,9 +1,10 @@
 = Topical Guides
 :toc:
 
-Hibernate documentation is organized into several guides that cover specific topics.  Here we link each of those
-guides and try to give some direction on where to look.
+Hibernate documentation is organized into several guides that cover specific topics.  This guide provides links to
+all the guides to give some direction on where to look for information.
 
+NOTE: This is still very much a work in progress. <<helping,Help>> is definitely welcome!
 
 == User Guides
 
@@ -22,3 +23,16 @@ guides and try to give some direction on where to look.
 
 * The <<registries/ServiceRegistries.adoc#,Service Registries Guide>> discusses Hibernate Service and ServiceRegistry contracts.
 * Others coming soon
+
+
+[[helping]]
+== Helping
+
+* These "topical guides" are developed using Asciidoctor.  Meanwhile the legacy Hibernate reference manuals are
+written in  DocBook.  The conversion of knowledge into the "topical guide" format will take time and is an
+ongoing process.  A huge way to help would be to create topical guide(s) and pull over the relevant information
+from the corresponding reference information.  See the https://hibernate.atlassian.net/browse/HHH-8606[Jira task] for
+a list of ideas
+* Reporting/fixing problems.  Report any typos or inaccurate information to the
+https://hibernate.atlassian.net/browse/HHH[Hibernate ORM Jira] using the +documentation+ component.  Follow the same
+guidelines for contributing fixes and improvements as for contributing source code.

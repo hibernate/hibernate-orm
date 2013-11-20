@@ -24,7 +24,7 @@
 package org.hibernate.test.loadplans.walking;
 
 import org.hibernate.annotations.common.util.StringHelper;
-import org.hibernate.loader.plan2.spi.FetchSource;
+import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AssociationKey;

@@ -43,22 +43,18 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import org.hibernate.LockMode;
-import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.graph.internal.EntityGraphImpl;
-import org.hibernate.jpa.graph.internal.SubgraphImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.loader.plan2.build.internal.FetchGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan2.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan2.build.internal.LoadGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan2.build.spi.AbstractLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan2.build.spi.LoadPlanTreePrinter;
-import org.hibernate.loader.plan2.build.spi.MetamodelDrivenLoadPlanBuilder;
-import org.hibernate.loader.plan2.exec.internal.AliasResolutionContextImpl;
-import org.hibernate.loader.plan2.spi.Join;
-import org.hibernate.loader.plan2.spi.LoadPlan;
-import org.hibernate.loader.plan2.spi.QuerySpace;
+import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
+import org.hibernate.loader.plan.build.spi.AbstractLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan.spi.Join;
+import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

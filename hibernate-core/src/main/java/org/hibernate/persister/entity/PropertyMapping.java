@@ -37,7 +37,7 @@ import org.hibernate.type.Type;
  * <p/>
  * Note, the methods here are generally ascribed to accept "property paths".  That is a historical necessity because
  * of how Hibernate originally understood composites (embeddables) internally.  That is in the process of changing
- * as Hibernate has added {@link org.hibernate.loader.plan2.build.internal.spaces.CompositePropertyMapping}
+ * as Hibernate has added {@link org.hibernate.loader.plan.build.internal.spaces.CompositePropertyMapping}
  *
  * @author Gavin King
  * @author Steve Ebersole

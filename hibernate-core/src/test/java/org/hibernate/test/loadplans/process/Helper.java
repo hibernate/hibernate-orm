@@ -27,11 +27,11 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.loader.plan2.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
-import org.hibernate.loader.plan2.build.spi.MetamodelDrivenLoadPlanBuilder;
-import org.hibernate.loader.plan2.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan2.exec.spi.EntityLoadQueryDetails;
-import org.hibernate.loader.plan2.spi.LoadPlan;
+import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**

@@ -26,20 +26,20 @@ package org.hibernate.test.loadplans.plans;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.loader.plan2.spi.BidirectionalEntityReference;
-import org.hibernate.loader.plan2.spi.CollectionAttributeFetch;
+import org.hibernate.loader.plan.spi.BidirectionalEntityReference;
+import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.collectionelement.Boy;
 import org.hibernate.test.annotations.collectionelement.Matrix;
 import org.hibernate.test.annotations.collectionelement.TestCourse;
 import org.hibernate.test.loadplans.process.EncapsulatedCompositeIdResultSetProcessorTest;
 
-//import org.hibernate.loader.plan2.spi.BidirectionalEntityFetch;
-import org.hibernate.loader.plan2.build.internal.returns.CollectionFetchableElementEntityGraph;
-import org.hibernate.loader.plan2.spi.EntityFetch;
-import org.hibernate.loader.plan2.spi.EntityReturn;
-import org.hibernate.loader.plan2.spi.FetchSource;
-import org.hibernate.loader.plan2.spi.LoadPlan;
+//import org.hibernate.loader.plan.spi.BidirectionalEntityFetch;
+import org.hibernate.loader.plan.build.internal.returns.CollectionFetchableElementEntityGraph;
+import org.hibernate.loader.plan.spi.EntityFetch;
+import org.hibernate.loader.plan.spi.EntityReturn;
+import org.hibernate.loader.plan.spi.FetchSource;
+import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
 import org.junit.Test;

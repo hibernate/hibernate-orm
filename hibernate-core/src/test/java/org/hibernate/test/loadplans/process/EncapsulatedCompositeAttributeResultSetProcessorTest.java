@@ -54,11 +54,11 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.entity.EntityJoinWalker;
-import org.hibernate.loader.plan2.exec.process.spi.ResultSetProcessor;
-import org.hibernate.loader.plan2.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.plan2.exec.spi.EntityLoadQueryDetails;
-import org.hibernate.loader.plan2.exec.spi.LoadQueryDetails;
-import org.hibernate.loader.plan2.spi.LoadPlan;
+import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
+import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
+import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 

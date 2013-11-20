@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping>
+<class
+    name="org.hibernate.test.propertyref.basic.EntityClass"
+    table="table1" lazy="false">
+    <id
+        name="key"
+        type="java.lang.Long"
+        column="column1"/>
+
+	<properties name="refkey">
+		<property name="field1" type="java.lang.String" column="column3" not-null="true" length="20" />
+		<property name="field2" type="java.lang.String" column="column4" not-null="true" />
+    </properties>
+
+</class>
+</hibernate-mapping>

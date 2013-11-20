@@ -31,7 +31,7 @@ buildscript {
     }
 }
 
-ext.hibernateTargetVersion = '4.3.0.CR1'
+ext.hibernateTargetVersion = '4.3.0.CR2'
 ext.javaLanguageLevel = "1.6"
 
 idea {

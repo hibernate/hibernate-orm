@@ -5,6 +5,84 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.0.CR1 (2013.11.20)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/14750
+
+** Sub-task
+    * [HHH-8483] - Move JPA Metamodelgen Annotation processor into ORM codebase
+    * [HHH-8528] - Support starting/stopping persistence unit client bundles during OSGi runtime
+    * [HHH-8607] - Start Topical Guide - Service Registries
+    * [HHH-8627] - Support EntityGraphs through JPA Query hints
+    * [HHH-8692] - Document value generation feature
+    * [HHH-8720] - Create an index for the topical guides
+
+** Bug
+    * [HHH-6484] - Replacing an entity on a one-to-one delete-orphan association with a new instance does not delete the previous one
+    * [HHH-6859] - Typo in AbstractEntityManagerImpl.determineCacheStoreMode(Map)
+    * [HHH-7539] - Interceptor.afterTransactionCompletion not called when transaction completes via JTA sync
+    * [HHH-7927] - Enabling globally_quoted_identifiers breaks hbm2ddl validation if TableGenerator is used
+    * [HHH-8032] - Create OptimisticLockException with message of the wrapped StaleObjectStateException
+    * [HHH-8074] - CascadeAction.REFRESH doesn't pass an entityName
+    * [HHH-8497] - AuditReader.find() causes SQL error ORA-00932 with oracle when using ClassicQueryTranslatorFactory
+    * [HHH-8567] - AuditProperty.property('id') does not reference original id, it references generated composite id of AUD instead
+    * [HHH-8573] - PropertyAccessException when instance of a subclass gets to cache via lazy not cascading association
+    * [HHH-8579] - toLowerCase() in Turkish locale converts to non-ascii lowercase character
+    * [HHH-8605] - ManyToManyTest.testManyToManyWithFormula fails on mssql2008R2, mssql2012, sybase157
+    * [HHH-8611] - DelayedPostInsertIdentifier needs to implement Comparable
+    * [HHH-8612] - FumTest hangs on oracle12c
+    * [HHH-8613] - ClassCastException in AbstractLoadPlanBuildingAssociationVisitationStrategy
+    * [HHH-8617] - Unexpected (changed) behavior of @Temporal(TemporalType.DATE) columns
+    * [HHH-8621] - NPE in BasicConnectionCreator
+    * [HHH-8625] - Wrong warning about deprecated persistence provider
+    * [HHH-8633] - OsgiJtaPlatform does not register synchronization
+    * [HHH-8636] - Wrap all exceptions into PersistenceExceptions in HibernatePersistenceProvider
+    * [HHH-8637] - Downcasting with TREAT operator should also filter results by the specified Type
+    * [HHH-8647] - hibernate.cache.use_reference_entries + queries
+    * [HHH-8660] - NamedEntityGraphDefinition built too early
+    * [HHH-8671] - WithClauseTest.testWithClause fails on all QA databases
+    * [HHH-8684] - Named output parameters don't work for stored procedure call
+    * [HHH-8686] - FumTest hangs on mysql55
+    * [HHH-8688] - EntityGraph should add AttributeNode's for basic NamedAttributeNode
+
+** Deprecation
+    * [HHH-8662] - Deprecate functionality for initialized many-to-many collections of proxies
+
+** Improvement
+    * [HHH-6004] - StructuredCacheEntry shall pass correct expected map size and loadFactor for HashMap constructor
+    * [HHH-6167] - "Mixing nullable" Error Message Correction
+    * [HHH-6838] - PreparedStatement paramater binding should delineate bind value
+    * [HHH-8228] - Support for SAP HANA
+    * [HHH-8272] - Redesign Loader
+    * [HHH-8321] - Test case to check bytecode enhancer.
+    * [HHH-8619] - Account for "shadow" services as part of ServiceRegistry impls
+    * [HHH-8646] - OsgiServiceUtil#getServiceImpls should be replaced by or using ServiceTracker
+    * [HHH-8654] - Ability to get notified of interesting Session events
+    * [HHH-8679] - Relax synchronized block in Loader#wrapResultSetIfEnabled
+    * [HHH-8680] - Relax synchronized block in TableGenerator#generate
+    * [HHH-8681] - NonNullableTransientDependencies should initialize identityMap lazily
+    * [HHH-8682] - org.hibernate.engine.spi.EntityKey consumes a lot of memory
+    * [HHH-8698] - ColumnNameCache wraps and unwraps int to Integer multiple times
+    * [HHH-8703] - Remove NonFlushedChanges api
+    * [HHH-8704] - ManyToOneType#scheduleBatchLoadIfNeeded creates EntityKey instances even if absolutely not necessary
+    * [HHH-8709] - SynchronizationCallbackCoordinator is calling Thread.currentThread way too often
+
+** New Feature
+    * [HHH-2907] - ability to apply 'generation strategy' to generated properties
+    * [HHH-8505] - Auditon of dynamic-component properties
+
+** Task
+    * [HHH-8285] - Implement JPA 2.1 entity graph support
+    * [HHH-8597] - Rename org.hibernate.loader.plan2 as org.hibernate.loader.plan
+    * [HHH-8629] - Integrate LoadPlans into collection initializers
+    * [HHH-8693] - asciidoc is not integrated into release workflow
+    * [HHH-8694] - Move hibernate-maven-plugin and hibernate-gradle-plugin under tooling sub directory
+    * [HHH-8700] - Update ORM modules using JPA metamodel generator to use the new module
+    * [HHH-8721] - CoreMessageLogger conflicts
+    * [HHH-8722] - Add support for AnyType attributes, collection elements and indexes to load plans
+    * [HHH-8723] - Reorganize how AbstractLoadPlanBuildingAssociationVisitationStrategy pushes to and pops from internal stacks
+
+
 Changes in version 4.3.0.Beta5 (2013.10.09)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/14250

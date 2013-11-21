@@ -42,6 +42,11 @@ libraries = [
         jaxb:           'com.sun.xml.bind:jaxb-xjc:2.1.6',
         jaxb2_basics:   'org.jvnet.jaxb2_commons:jaxb2-basics:0.6.0',
         jaxb2_ant:      'org.jvnet.jaxb2_commons:jaxb2-basics-ant:0.6.0',
+ 
+        //Maven plugin framework
+        maven_plugin: 'org.apache.maven:maven-plugin-api:3.0.5',
+        maven_plugin_tools: 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.2',
+
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~ testing
 
         // logging for testing

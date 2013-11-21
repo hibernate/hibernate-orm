@@ -2,17 +2,19 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply from: "./libraries.gradle"
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.7'
-}
-
 allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
 
-        mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
-        mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
+        maven {
+            name 'jboss-nexus'
+            url "http://repository.jboss.org/nexus/content/groups/public/"
+        }
+        maven {
+            name "jboss-snapshots"
+            url "http://snapshots.jboss.org/maven2/"
+        }
     }
 }
 
@@ -21,8 +23,14 @@ buildscript {
         mavenCentral()
         mavenLocal()
 
-        mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
-        mavenRepo name: "jboss-snapshots", url: "http://snapshots.jboss.org/maven2/"
+        maven {
+            name 'jboss-nexus'
+            url "http://repository.jboss.org/nexus/content/groups/public/"
+        }
+        maven {
+            name "jboss-snapshots"
+            url "http://snapshots.jboss.org/maven2/"
+        }
     }
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
@@ -31,8 +39,15 @@ buildscript {
     }
 }
 
-ext.hibernateTargetVersion = '4.3.0-SNAPSHOT'
-ext.javaLanguageLevel = "1.6"
+ext {
+    expectedGradleVersion = '1.9'
+    hibernateTargetVersion = '4.3.0-SNAPSHOT'
+    javaLanguageLevel = '1.6'
+
+    // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final"
+    // todo  : brett - what about Alpha, Beta, CR, SP, etc?
+    osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", "" ).replaceAll( ".Final", "" );
+}
 
 idea {
     project {
@@ -73,9 +88,7 @@ subprojects { subProject ->
 
     group = 'org.hibernate'
     version = rootProject.hibernateTargetVersion
-    // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final"
-    exportPackageVersion = version.replaceAll("-SNAPSHOT", "");
-    exportPackageVersion = exportPackageVersion.replaceAll(".Final", "");
+    ext.exportPackageVersion = rootProject.osgiExportVersion
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
@@ -472,8 +485,10 @@ subprojects { subProject ->
                     }
                 }
             }
+        }
 
-            generatePomFileForMavenJavaPublication {
+        model {
+            tasks.generatePomFileForMavenJavaPublication {
                 destination = file("$buildDir/generated-pom.xml")
             }
         }
@@ -487,3 +502,7 @@ subprojects { subProject ->
 }
 
 task release(type: Task, dependsOn: 'release:release')
+
+task wrapper(type: Wrapper) {
+    gradleVersion = expectedGradleVersion
+}

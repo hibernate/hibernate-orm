@@ -23,19 +23,22 @@
  */
 package org.hibernate.bytecode.enhance.plugins
  
-import org.hibernate.bytecode.enhance.spi.Enhancer
-import org.hibernate.bytecode.enhance.spi.EnhancementContext
 import javassist.ClassPool
 import javassist.CtClass
 import javassist.CtField
-import javax.persistence.Transient
+
+import javax.persistence.ElementCollection
 import javax.persistence.Entity
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import javax.persistence.ManyToMany
+import javax.persistence.OneToMany
+import javax.persistence.Transient
+
 import org.gradle.api.DefaultTask
-import org.gradle.api.plugins.Convention 
-import org.gradle.api.tasks.TaskAction
 import org.gradle.api.file.FileTree
+import org.gradle.api.plugins.Convention
+import org.gradle.api.tasks.TaskAction
+import org.hibernate.bytecode.enhance.spi.EnhancementContext
+import org.hibernate.bytecode.enhance.spi.Enhancer
 
 /**
 * Plugin to enhance Entities using the context(s) to determine
@@ -136,12 +139,23 @@ public class EnhanceTask extends DefaultTask implements EnhancementContext {
         return false;
       }
     public boolean doDirtyCheckingInline(CtClass classDescriptor) {
-        return false;
+        return true;
     }
 
     public CtField[] order(CtField[] fields) {
         // TODO: load ordering from configuration.
         return fields;
+    }
+
+    public boolean isMappedCollection(CtField field) {
+        try {
+            return (field.getAnnotation(OneToMany.class) != null ||
+                    field.getAnnotation(ManyToMany.class) != null ||
+                    field.getAnnotation(ElementCollection.class) != null);
+        }
+        catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public boolean isPersistentField(CtField ctField) {

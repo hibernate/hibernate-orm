@@ -45,7 +45,7 @@ sourceSets.test {
     ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
     java.srcDir generatedJpaMetamodelSrcDir
 }
-task generateTestJpaMetamodelClasses(type: Compile) {
+task generateTestJpaMetamodelClasses(type: JavaCompile) {
     classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
     source = sourceSets.test.originalJavaSrcDirs
     destinationDir = aptDumpDir

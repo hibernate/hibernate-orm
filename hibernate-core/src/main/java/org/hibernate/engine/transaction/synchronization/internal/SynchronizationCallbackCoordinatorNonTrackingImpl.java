@@ -57,7 +57,6 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	public SynchronizationCallbackCoordinatorNonTrackingImpl(TransactionCoordinator transactionCoordinator) {
 		this.transactionCoordinator = transactionCoordinator;
 		reset();
-		pulse();
 	}
 
 	public void reset() {
@@ -152,7 +151,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 	}
 
 	@Override
-	public void pulse() {
+	public void synchronizationRegistered() {
 	}
 
 	@Override

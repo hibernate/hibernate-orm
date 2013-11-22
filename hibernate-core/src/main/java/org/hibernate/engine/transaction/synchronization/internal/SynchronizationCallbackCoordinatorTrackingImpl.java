@@ -92,11 +92,8 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 	}
 
 	@Override
-	public void pulse() {
-		// If this is the first call to pulse since an earlier call to reset, capture the current thread id
-		if ( registrationThreadId == NO_THREAD_ID ) {
-			registrationThreadId = Thread.currentThread().getId();
-		}
+	public void synchronizationRegistered() {
+		registrationThreadId = Thread.currentThread().getId();
 	}
 
 	@Override

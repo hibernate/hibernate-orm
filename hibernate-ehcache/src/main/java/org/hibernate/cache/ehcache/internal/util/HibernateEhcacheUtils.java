@@ -74,7 +74,8 @@ public final class HibernateEhcacheUtils {
 			return null;
 		}
 		
-		if ( config.getDefaultCacheConfiguration().isTerracottaClustered() ) {
+		if ( config.getDefaultCacheConfiguration() != null
+				&& config.getDefaultCacheConfiguration().isTerracottaClustered() ) {
 			if ( ValueMode.IDENTITY
 					.equals( config.getDefaultCacheConfiguration().getTerracottaConfiguration().getValueMode() ) ) {
 				LOG.incompatibleCacheValueMode();

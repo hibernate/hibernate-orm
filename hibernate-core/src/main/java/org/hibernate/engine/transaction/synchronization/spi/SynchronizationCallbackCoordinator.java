@@ -32,6 +32,14 @@ public interface SynchronizationCallbackCoordinator extends Synchronization {
 	public void setExceptionMapper(ExceptionMapper exceptionMapper);
 	public void setManagedFlushChecker(ManagedFlushChecker managedFlushChecker);
 	public void setAfterCompletionAction(AfterCompletionAction afterCompletionAction);
-	public void pulse();
+
+	/**
+	 * A callback whenever a JTA Synchronization is registered
+	 */
+	public void synchronizationRegistered();
+
+	/**
+	 * A callback to perform any delayed afterCompletion processes
+	 */
 	public void processAnyDelayedAfterCompletion();
 }

@@ -41,7 +41,6 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 
 	// magic numbers :(
 	private static final int NO_STATUS = -1;
-	private static final long NO_THREAD_ID = Long.MIN_VALUE;
 
 	private volatile long registrationThreadId;
 	private volatile int delayedCompletionHandlingStatus;
@@ -58,11 +57,8 @@ public class SynchronizationCallbackCoordinatorTrackingImpl extends Synchronizat
 		// 		1) on initialization, and
 		// 		2) after "after completion" handling is finished.
 		//
-		// Here we use that to "clear out" all 'delayed after-completion" state.  The registrationThreadId will
-		// "lazily" be re-populated on the next pulse call to allow for the potential of the next Session transaction
-		// occurring on a different thread (though that transaction would need to completely operate on that thread).
+		// Here we use that to "clear out" all 'delayed after-completion" state.
 		delayedCompletionHandlingStatus = NO_STATUS;
-		registrationThreadId = NO_THREAD_ID;
 	}
 
 	@Override

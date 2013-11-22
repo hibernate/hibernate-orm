@@ -170,51 +170,43 @@ subprojects { subProject ->
         }
 
         sourceSets.all {
-            ext.originalJavaSrcDirs = java.srcDirs
-            ext.generatedLoggingSrcDir = file( "${buildDir}/generated-src/logging/${name}" )
-            java.srcDir generatedLoggingSrcDir
+            ext.aptGeneratedSourceDir = file( "${buildDir}/generated-src/apt/${name}" )
+            if ( !aptGeneratedSourceDir.exists() ) {
+                aptGeneratedSourceDir.mkdirs()
+            }
         }
 
-        task generateMainLoggingClasses(type: JavaCompile) {
-            ext.aptDumpDir = subProject.file( "${buildDir}/tmp/apt/logging" )
-            classpath = compileJava.classpath + configurations.jbossLoggingTool
-            source = sourceSets.main.originalJavaSrcDirs
-            destinationDir = aptDumpDir
-            options.define(
+        tasks.withType( JavaCompile.class ).all { task->
+            task.options.define(
                     compilerArgs: [
                             "-nowarn",
-                            "-proc:only",
                             "-encoding", "UTF-8",
-                            "-processor", "org.jboss.logging.processor.apt.LoggingToolsProcessor",
-                            "-s", "$sourceSets.main.generatedLoggingSrcDir.absolutePath",
-//                            "-AloggingVersion=3.0",
-                            "-Adebug=true",
-                            "-AskipTranslations=true",
                             "-source", rootProject.javaLanguageLevel,
                             "-target", rootProject.javaLanguageLevel,
-                            "-AtranslationFilesPath=${project.rootDir}/src/main/resources"
-
                     ]
-            );
-            outputs.dir sourceSets.main.generatedLoggingSrcDir;
-            doFirst {
-//                source = sourceSets.main.originalJavaSrcDirs
-                sourceSets.main.generatedLoggingSrcDir.mkdirs()
-            }
-            doLast {
-                aptDumpDir.delete()
-            }
+            )
         }
 
-        // for the time being eat the annoying output from running the annotation processors
-        generateMainLoggingClasses.logging.captureStandardError(LogLevel.INFO)
+        // alter the compileJava (src/main/java javac task) to add JBoss Logging AP hooks
+        compileJava {
+            classpath += configurations.jbossLoggingTool
+
+            options.compilerArgs += [
+                    "-s", "$sourceSets.main.aptGeneratedSourceDir.absolutePath",
+                    "-Adebug=true",
+                    "-AskipTranslations=true",
+                    "-AtranslationFilesPath=${project.rootDir}/src/main/resources"
+            ]
+        }
+
+        // alter the compileTestJava (src/test/java javac task) to add AP hooks
+        compileTestJava {
+            options.compilerArgs += [
+                    "-s", "$sourceSets.test.aptGeneratedSourceDir.absolutePath"
+            ]
+        }
 
         task generateSources( type: Task )
-        generateSources.dependsOn generateMainLoggingClasses
-
-        compileJava.dependsOn generateMainLoggingClasses
-        compileJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
-        compileTestJava.options.define(compilerArgs: ["-proc:none", "-encoding", "UTF-8"])
 
         jar {
             Set<String> exportPackages = new HashSet<String>()
@@ -362,7 +354,7 @@ subprojects { subProject ->
             checkstyleClasspath = checkstyleMain.checkstyleClasspath
             classpath = checkstyleMain.classpath
             configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-            source subProject.sourceSets.main.originalJavaSrcDirs
+            source subProject.sourceSets.main.java.srcDirs
             // exclude generated sources
             exclude '**/generated-src/**'
             // because cfg package is a mess mainly from annotation stuff
@@ -489,7 +481,7 @@ subprojects { subProject ->
 
         model {
             tasks.generatePomFileForMavenJavaPublication {
-                destination = file("$buildDir/generated-pom.xml")
+                destination = file( "$project.buildDir/generated-pom.xml" )
             }
         }
 

@@ -68,41 +68,10 @@ jar {
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JPA model-gen set up
-////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-sourceSets.test {
-    originalJavaSrcDirs = java.srcDirs
-    ext.generatedJpaMetamodelSrcDir = file( "${buildDir}/generated-src/jpamodelgen/${name}" )
-    java.srcDir generatedJpaMetamodelSrcDir
+compileTestJava {
+    classpath += configurations.hibernateJpaModelGenTool
 }
-task generateTestJpaMetamodelClasses(type: JavaCompile) {
-    ext.aptDumpDir = file( "${buildDir}/tmp/apt/jpamodelgen" )
-    classpath = compileTestJava.classpath + configurations.hibernateJpaModelGenTool
-    source = sourceSets.test.originalJavaSrcDirs
-    destinationDir = aptDumpDir
-    options.define(
-            compilerArgs: [
-                    "-proc:only",
-                    "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
-                    "-s", "$sourceSets.test.generatedJpaMetamodelSrcDir.absolutePath"
-            ]
-    );
-    outputs.dir sourceSets.test.generatedJpaMetamodelSrcDir;
-    doFirst {
-        sourceSets.test.generatedJpaMetamodelSrcDir.mkdirs()
-    }
-    doLast {
-        aptDumpDir.delete()
-    }
-}
-// for the time being eat the annoying output from running the annotation processors
-generateTestJpaMetamodelClasses.logging.captureStandardError(LogLevel.INFO)
-compileTestJava.dependsOn generateTestJpaMetamodelClasses
-compileTestJava.options.define(compilerArgs: ["-proc:none"])
-
-generateSources.dependsOn generateTestJpaMetamodelClasses
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

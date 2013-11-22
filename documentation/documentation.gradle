@@ -13,50 +13,158 @@ buildscript {
         jcenter()
     }
     dependencies {
-//        classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.1"
-        classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.2-SNAPSHOT"
+        classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.2"
         classpath 'org.asciidoctor:asciidoctor-gradle-plugin:0.7.0'
     }
 }
 
 apply plugin: "java"
 apply plugin: "jdocbook"
+apply from: "../utilities.gradle"
 
-ext.pressgangVersion = '3.0.0'
+defaultTasks 'buildDocs'
+
+configurations {
+    asciidoclet {
+        description = 'Dependencies for Asciidoclet (the javadoc doclet tool for using Asciidoc)'
+    }
+}
 
 dependencies {
+    ext.pressgangVersion = '3.0.0'
+
+    asciidoclet 'org.asciidoctor:asciidoclet:0.+'
+
     jdocbookXsl "org.jboss.pressgang:pressgang-xslt-ns:${pressgangVersion}"
     jdocbookXsl "org.jboss.pressgang:pressgang-fonts:${pressgangVersion}"
     jdocbookStyles "org.jboss.pressgang:pressgang-jdocbook-style:${pressgangVersion}"
 }
 
-defaultTasks 'buildDocs'
+
+task buildDocs {
+    group 'Documentation'
+    description 'Grouping task for performing all documentation building tasks'
+}
+
+
+
+// aggregated JavaDoc ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) );
+
+/**
+ * Builds the JavaDocs aggregated (unified) across all the sub-projects
+ */
+task aggregateJavadocs(type: Javadoc) {
+    description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
+    options.docletpath = configurations.asciidoclet.files.asType(List)
+    options.doclet = 'org.asciidoctor.Asciidoclet'
+
+    final int copyrightYear = new GregorianCalendar().get( Calendar.YEAR );
+
+    // exclude any generated sources (this is not working: http://forums.gradle.org/gradle/topics/excluding_generated_source_from_javadoc)
+    exclude "**/generated-src/**"
+
+    // process each project, building up:
+    //      1) appropriate sources
+    //      2) classpath
+    //      3) the package list for groups
+    Set<String> apiPackages = new HashSet<String>()
+    Set<String> spiPackages = new HashSet<String>()
+    Set<String> internalPackages = new HashSet<String>()
+    parent.subprojects.each{ Project subProject->
+        // skip certain sub-projects
+        if ( ! ['release','documentation'].contains( subProject.name ) ) {
+            subProject.sourceSets.each { sourceSet ->
+                // skip certain source sets
+                if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
+                    source sourceSet.java
+
+                    if( classpath ) {
+                        classpath += sourceSet.output + sourceSet.compileClasspath
+                    }
+                    else {
+                        classpath = sourceSet.output + sourceSet.compileClasspath
+                    }
+
+                    sourceSet.java.each { javaFile ->
+                        final String packageName = determinePackageName( sourceSet.java, javaFile );
+                        if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+                            internalPackages.add( packageName );
+                        }
+                        else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+                            spiPackages.add( packageName );
+                        }
+                        else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+                            // do nothing as testing support is already handled...
+                        }
+                        else {
+                            apiPackages.add( packageName );
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // apply standard config
+    maxMemory = '512m'
+    destinationDir = javadocDir
+    configure( options ) {
+        overview = rootProject.file( 'shared/javadoc/overview.html' )
+        stylesheetFile = rootProject.file( 'shared/javadoc/stylesheet.css' )
+        windowTitle = 'Hibernate JavaDocs'
+        docTitle = "Hibernate JavaDoc ($project.version)"
+        bottom = "Copyright &copy; 2001-$copyrightYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+        use = true
+        links = [ 'http://download.oracle.com/javase/6/docs/api/', 'http://download.oracle.com/javaee/6/api/' ]
+        group( 'API', apiPackages.asList() )
+        group( 'SPI', spiPackages.asList() )
+        group( 'Internal', internalPackages.asList() )
+        group ( 'Testing Support', ['org.hibernate.testing*'] )
+// ugh, http://issues.gradle.org/browse/GRADLE-1563
+//        tags ["todo:X"]
+// work around:
+        addStringOption( "tag", "todo:X" )
+    }
+
+    doLast {
+        copy {
+            from rootProject.file( 'shared/javadoc/images' )
+            into new File( javadocDir, "/images" )
+        }
+    }
+}
+
+buildDocs.dependsOn aggregateJavadocs
+
+
+// jDocBook ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 jdocbook {
-  // apply shared formatting config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  format('html_single') {
-		finalName = "index.html"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
-	 }
+    // shared config
+    format('html_single') {
+        finalName = "index.html"
+        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml-single.xsl"
+    }
+    format('html') {
+        finalName = "index.html"
+        stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
+    }
 
-  format('html') {
-		finalName = "index.html"
-		stylesheet = "classpath:/xslt/org/hibernate/jdocbook/xslt/xhtml.xsl"
-	 }
+    // book-specific config
+    quickstart {
+        masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
+    }
 
-  // book-specific config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  quickstart {
-    masterSourceDocumentName = 'Hibernate_Getting_Started_Guide.xml'
-  }
+    devguide {
+        masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
+        useRelativeImageUris = false
+    }
 
-	devguide {
-		masterSourceDocumentName = 'Hibernate_Development_Guide.xml'
-		useRelativeImageUris = false
-	}
-
-	manual {
-		masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
-	}
+    manual {
+        masterSourceDocumentName = 'HIBERNATE_-_Relational_Persistence_for_Idiomatic_Java.xml'
+    }
 }
 
 // todo : make this part of gradle-jdocbook.
@@ -73,14 +181,12 @@ stageStyles_devguide.doLast {
 }
 
 [ 'devguide', 'manual', 'quickstart' ].each { bookName ->
-	tasks[ "stageStyles_$bookName" ].doLast {
-		logger.lifecycle( "Staging local style resources")
-		copy {
-			into project.file( "target/docbook/stage/$bookName" )
-			from project.file( 'src/main/style' )
-			includeEmptyDirs = false
-		}
-	}
+    task "stageLocalStyles_$bookName"(type: Copy) {
+        into project.file( "target/docbook/stage/$bookName" )
+        from project.file( 'src/main/style' )
+        includeEmptyDirs = false
+    }
+	tasks[ "stageStyles_$bookName" ].dependsOn "stageLocalStyles_$bookName"
 }
 
 task buildTutorialZip(type: Zip) {
@@ -117,26 +223,13 @@ File[] dirList(File dir) {
 
 
 // asciidoctor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 task asciidoctor(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
     description = 'Generates the Asciidoc(tor) topical guides in HTML format.'
     backend = 'html5'
     sourceDir = file( 'src/main/asciidoc/topical' )
     outputDir = new File("$buildDir/asciidoc/topical/html")
 }
-
-//task generateRegistryGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
-//    description = 'Generates the ServiceRegistry topical guide in HTML format.'
-//    backend = 'html5'
-//    sourceDir = file( 'src/main/asciidoc/topical/registries' )
-//    outputDir = new File("$buildDir/asciidoc/topical/html")
-//}
-//
-//task generateMetamodelgenGuideHtml(type: org.asciidoctor.gradle.AsciidoctorTask, group: 'Documentation') {
-//    description = 'Generates the Metamodel Generator topical guide in HTML format.'
-//    backend = 'html5'
-//    sourceDir = file( 'src/main/asciidoc/topical/metamodelgen' )
-//    outputDir = new File("$buildDir/asciidoc/topical/html")
-//}
 
 tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
     options = [
@@ -148,9 +241,5 @@ tasks.withType(org.asciidoctor.gradle.AsciidoctorTask) { docTask ->
             ]
     ]
 }
-
-//  - aggregator
-//task asciidoctor(type: Task, group: 'Documentation')
-//asciidoctor.dependsOn generateRegistryGuideHtml, generateMetamodelgenGuideHtml
 
 buildDocs.dependsOn asciidoctor

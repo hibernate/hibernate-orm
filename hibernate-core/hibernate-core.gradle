@@ -88,7 +88,6 @@ jar {
 sourceSets.main {
     ext.jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
     java.srcDir jaxbTargetDir
-	originalJavaSrcDirs = java.srcDirs
 }
 
 // resources inherently exclude sources
@@ -159,8 +158,8 @@ task jaxb {
 
 }
 
-generateMainLoggingClasses.dependsOn jaxb
-generateMainLoggingClasses.dependsOn generateGrammarSource
+//generateMainLoggingClasses.dependsOn jaxb
+//generateMainLoggingClasses.dependsOn generateGrammarSource
 
 generateSources.dependsOn jaxb
 generateSources.dependsOn generateGrammarSource

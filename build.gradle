@@ -171,9 +171,6 @@ subprojects { subProject ->
 
         sourceSets.all {
             ext.aptGeneratedSourceDir = file( "${buildDir}/generated-src/apt/${name}" )
-            if ( !aptGeneratedSourceDir.exists() ) {
-                aptGeneratedSourceDir.mkdirs()
-            }
         }
 
         tasks.withType( JavaCompile.class ).all { task->
@@ -197,6 +194,12 @@ subprojects { subProject ->
                     "-AskipTranslations=true",
                     "-AtranslationFilesPath=${project.rootDir}/src/main/resources"
             ]
+
+            doFirst {
+                if ( !sourceSets.main.aptGeneratedSourceDir.exists() ) {
+                    sourceSets.main.aptGeneratedSourceDir.mkdirs()
+                }
+            }
         }
 
         // alter the compileTestJava (src/test/java javac task) to add AP hooks
@@ -204,9 +207,15 @@ subprojects { subProject ->
             options.compilerArgs += [
                     "-s", "$sourceSets.test.aptGeneratedSourceDir.absolutePath"
             ]
+
+            doFirst {
+                if ( !sourceSets.test.aptGeneratedSourceDir.exists() ) {
+                    sourceSets.test.aptGeneratedSourceDir.mkdirs()
+                }
+            }
         }
 
-        task generateSources( type: Task )
+        task generateSources(type: Task)
 
         jar {
             Set<String> exportPackages = new HashSet<String>()

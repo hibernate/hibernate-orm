@@ -43,7 +43,7 @@ sourceSets {
     }
 }
 
-compileTestJava {
+compileJava {
     classpath += configurations.hibernateJpaModelGenTool
 }
 

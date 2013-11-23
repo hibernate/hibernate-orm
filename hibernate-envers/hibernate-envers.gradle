@@ -32,8 +32,10 @@ def pomDescription() {
 
 sourceSets {
     test {
-        ext.enversDemoJavaDir = file( "src/demo/java" )
-        ext.enversDemoResourcesDir = file( "src/demo/resources" )
+        ext {
+            enversDemoJavaDir = file( "src/demo/java" )
+            enversDemoResourcesDir = file( "src/demo/resources" )
+        }
         java {
             srcDir enversDemoJavaDir
         }
@@ -45,6 +47,11 @@ sourceSets {
 
 compileJava {
     classpath += configurations.hibernateJpaModelGenTool
+
+
+    options.compilerArgs += [
+            "-processor", "$jbossLoggingToolClass,org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor"
+    ]
 }
 
 jar {

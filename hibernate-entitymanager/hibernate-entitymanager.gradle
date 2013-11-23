@@ -74,6 +74,7 @@ compileTestJava {
     classpath += configurations.hibernateJpaModelGenTool
 
     options.compilerArgs += [
+            "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
             "-s", "$sourceSets.test.aptGeneratedSourceDir.absolutePath"
     ]
 

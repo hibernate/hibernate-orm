@@ -173,22 +173,27 @@ subprojects { subProject ->
             ext.aptGeneratedSourceDir = file( "${buildDir}/generated-src/apt/${name}" )
         }
 
+        ext.standardJavacOptions = [
+                "-nowarn",
+                "-encoding", "UTF-8",
+                "-source", rootProject.javaLanguageLevel,
+                "-target", rootProject.javaLanguageLevel
+        ]
+
         tasks.withType( JavaCompile.class ).all { task->
             task.options.define(
-                    compilerArgs: [
-                            "-nowarn",
-                            "-encoding", "UTF-8",
-                            "-source", rootProject.javaLanguageLevel,
-                            "-target", rootProject.javaLanguageLevel,
-                    ]
+                    compilerArgs: standardJavacOptions
             )
         }
+
+        ext.jbossLoggingToolClass = "org.jboss.logging.processor.apt.LoggingToolsProcessor"
 
         // alter the compileJava (src/main/java javac task) to add JBoss Logging AP hooks
         compileJava {
             classpath += configurations.jbossLoggingTool
 
             options.compilerArgs += [
+                    "-processor", jbossLoggingToolClass,
                     "-s", "$sourceSets.main.aptGeneratedSourceDir.absolutePath",
                     "-Adebug=true",
                     "-AskipTranslations=true",

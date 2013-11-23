@@ -37,16 +37,15 @@ import antlr.ASTPair;
 import antlr.MismatchedTokenException;
 import antlr.RecognitionException;
 import antlr.Token;
-import antlr.TokenStream;
 import antlr.TokenStreamException;
 import antlr.collections.AST;
-import org.jboss.logging.Logger;
 
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlBaseParser;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 
@@ -57,10 +56,7 @@ import org.hibernate.internal.util.StringHelper;
  * @author Joshua Davis (pgmjsd@sourceforge.net)
  */
 public final class HqlParser extends HqlBaseParser {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			HqlParser.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( HqlParser.class );
 
 	private final ParseErrorHandler parseErrorHandler;
 	private final ASTPrinter printer = getASTPrinter();
@@ -91,7 +87,7 @@ public final class HqlParser extends HqlBaseParser {
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private int traceDepth = 0;
+	private int traceDepth;
 
 	@Override
 	public void traceIn(String ruleName) {
@@ -157,8 +153,7 @@ public final class HqlParser extends HqlBaseParser {
 					token.setType( HqlTokenTypes.WEIRD_IDENT );
 					astFactory.addASTChild( currentAST, astFactory.create( token ) );
 					consume();
-					AST identifierAST = currentAST.root;
-					return identifierAST;
+					return currentAST.root;
 				}
 			} // if
 		} // if

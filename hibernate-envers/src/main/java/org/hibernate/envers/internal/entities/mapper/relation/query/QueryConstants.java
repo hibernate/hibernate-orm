@@ -28,7 +28,10 @@ package org.hibernate.envers.internal.entities.mapper.relation.query;
  *
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class QueryConstants {
+public final class QueryConstants {
+	private QueryConstants() {
+	}
+
 	public static final String REFERENCED_ENTITY_ALIAS = "e__";
 	public static final String REFERENCED_ENTITY_ALIAS_DEF_AUD_STR = "e2__";
 

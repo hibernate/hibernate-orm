@@ -49,8 +49,8 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	private Object jtaDataSource;
 	private String providerClassName;
 	private PersistenceUnitTransactionType transactionType;
-	private boolean useQuotedIdentifiers = false;
-	private boolean excludeUnlistedClasses = false;
+	private boolean useQuotedIdentifiers;
+	private boolean excludeUnlistedClasses;
 	private ValidationMode validationMode;
 	private SharedCacheMode sharedCacheMode;
 

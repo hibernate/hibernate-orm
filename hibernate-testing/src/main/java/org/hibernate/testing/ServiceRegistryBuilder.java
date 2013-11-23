@@ -33,7 +33,10 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 /**
  * @author Steve Ebersole
  */
-public class ServiceRegistryBuilder {
+public final class ServiceRegistryBuilder {
+	private ServiceRegistryBuilder() {
+	}
+
 	public static StandardServiceRegistryImpl buildServiceRegistry() {
 		return buildServiceRegistry( Environment.getProperties() );
 	}

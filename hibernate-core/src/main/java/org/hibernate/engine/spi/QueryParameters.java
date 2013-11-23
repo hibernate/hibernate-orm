@@ -68,8 +68,8 @@ public final class QueryParameters {
 	private Serializable optionalId;
 	private boolean isReadOnlyInitialized;
 	private boolean readOnly;
-	private boolean callable = false;
-	private boolean autodiscovertypes = false;
+	private boolean callable;
+	private boolean autodiscovertypes;
 	private boolean isNaturalKeyLookup;
 
 	private final ResultTransformer resultTransformer; // why is all others non final ?

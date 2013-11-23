@@ -39,6 +39,7 @@ public class OriginalIdPropertyName implements PropertyNameGetter {
 		this.idPropertyName = idPropertyName;
 	}
 
+	@Override
 	public String get(AuditConfiguration auditCfg) {
 		return auditCfg.getAuditEntCfg().getOriginalIdPropName() + "." + idPropertyName;
 	}

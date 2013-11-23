@@ -41,7 +41,7 @@ public class QuerySelect {
 	private StringBuilder orderBy = new StringBuilder();
 	private StringBuilder having = new StringBuilder();
 	private String comment;
-	private boolean distinct=false;
+	private boolean distinct;
 
 	private static final HashSet DONT_SPACE_TOKENS = new HashSet();
 	static {

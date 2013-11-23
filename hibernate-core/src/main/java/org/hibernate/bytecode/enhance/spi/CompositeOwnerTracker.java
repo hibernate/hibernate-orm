@@ -34,7 +34,7 @@ public class CompositeOwnerTracker {
 
     private String[] names;
     private CompositeOwner[] owners;
-    private int size = 0;
+    private int size;
 
     public CompositeOwnerTracker() {
         names = new String[1];

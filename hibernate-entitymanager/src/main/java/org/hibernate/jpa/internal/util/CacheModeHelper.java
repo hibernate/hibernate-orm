@@ -34,7 +34,10 @@ import org.hibernate.CacheMode;
  *
  * @author Steve Ebersole
  */
-public class CacheModeHelper {
+public final class CacheModeHelper {
+	private CacheModeHelper() {
+	}
+
 	public static final CacheMode DEFAULT_LEGACY_MODE = CacheMode.NORMAL;
 	public static final CacheStoreMode DEFAULT_STORE_MODE = CacheStoreMode.USE;
 	public static final CacheRetrieveMode DEFAULT_RETRIEVE_MODE = CacheRetrieveMode.USE;

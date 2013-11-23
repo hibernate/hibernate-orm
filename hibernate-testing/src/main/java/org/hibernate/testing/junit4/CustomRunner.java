@@ -79,7 +79,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 		return testClassMetadata;
 	}
 
-    private Boolean isAllTestsIgnored = null;
+    private Boolean isAllTestsIgnored;
 
     private boolean isAllTestsIgnored() {
         if ( isAllTestsIgnored == null ) {

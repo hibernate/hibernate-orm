@@ -44,9 +44,11 @@ import org.hibernate.testing.SkipForDialects;
  *
  * @author Steve Ebersole
  */
-public class Helper {
+public final class Helper {
 	public static final String VALIDATE_FAILURE_EXPECTED = "hibernate.test.validatefailureexpected";
 
+	private Helper() {
+	}
 
 	/**
 	 * Standard string content checking.

@@ -49,10 +49,11 @@ import org.hibernate.type.Type;
  * @author josh
  */
 public class IdentNode extends FromReferenceNode implements SelectExpression {
-
-	private static final int UNKNOWN = 0;
-	private static final int PROPERTY_REF = 1;
-	private static final int COMPONENT_REF = 2;
+	private static enum DereferenceType {
+		UNKNOWN,
+		PROPERTY_REF,
+		COMPONENT_REF
+	}
 
 	private boolean nakedPropertyRef = false;
 
@@ -120,12 +121,12 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 				}
 			}
 			else {
-				int result = resolveAsNakedPropertyRef();
-				if (result == PROPERTY_REF) {
+				DereferenceType result = resolveAsNakedPropertyRef();
+				if (result == DereferenceType.PROPERTY_REF) {
 					// we represent a naked (simple) prop-ref
 					setResolved();
 				}
-				else if (result == COMPONENT_REF) {
+				else if (result == DereferenceType.COMPONENT_REF) {
 					// EARLY EXIT!!!  return so the resolve call explicitly coming from DotNode can
 					// resolve this...
 					return;
@@ -210,28 +211,28 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		try {
 			propertyType = fromElement.getPropertyType(property, property);
 		}
-		catch (Throwable t) {
+		catch (Throwable ignore) {
 		}
 		return propertyType;
 	}
 
-	private int resolveAsNakedPropertyRef() {
+	private DereferenceType resolveAsNakedPropertyRef() {
 		FromElement fromElement = locateSingleFromElement();
 		if (fromElement == null) {
-			return UNKNOWN;
+			return DereferenceType.UNKNOWN;
 		}
 		Queryable persister = fromElement.getQueryable();
 		if (persister == null) {
-			return UNKNOWN;
+			return DereferenceType.UNKNOWN;
 		}
 		Type propertyType = getNakedPropertyType(fromElement);
 		if (propertyType == null) {
 			// assume this ident's text does *not* refer to a property on the given persister
-			return UNKNOWN;
+			return DereferenceType.UNKNOWN;
 		}
 
 		if ((propertyType.isComponentType() || propertyType.isAssociationType() )) {
-			return COMPONENT_REF;
+			return DereferenceType.COMPONENT_REF;
 		}
 
 		setFromElement(fromElement);
@@ -247,7 +248,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		super.setDataType(propertyType);
 		nakedPropertyRef = true;
 
-		return PROPERTY_REF;
+		return DereferenceType.PROPERTY_REF;
 	}
 
 	private boolean resolveAsNakedComponentPropertyRefLHS(DotNode parent) {
@@ -264,7 +265,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 			throw new QueryException("Property '" + getOriginalText() + "' is not a component.  Use an alias to reference associations or collections.");
 		}
 
-		Type propertyType = null;  // used to set the type of the parent dot node
+		Type propertyType;
 		String propertyPath = getText() + "." + getNextSibling().getText();
 		try {
 			// check to see if our "propPath" actually
@@ -289,7 +290,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 			return false;
 		}
 
-		Type propertyType = null;
+		Type propertyType;
 		String propertyPath = parent.getLhs().getText() + "." + getText();
 		try {
 			// check to see if our "propPath" actually
@@ -373,7 +374,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 			buf.append("}");
 		}
 		else {
-			buf.append("{originalText=" + getOriginalText()).append("}");
+			buf.append( "{originalText=" ).append( getOriginalText() ).append( "}" );
 		}
 		return buf.toString();
 	}

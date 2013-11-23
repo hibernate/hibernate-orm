@@ -44,6 +44,7 @@ import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryScalarReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.BasicLoader;
 import org.hibernate.loader.CollectionAliases;
@@ -81,9 +82,7 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class SQLQueryReturnProcessor {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       SQLQueryReturnProcessor.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SQLQueryReturnProcessor.class );
 
 	private NativeSQLQueryReturn[] queryReturns;
 
@@ -111,8 +110,8 @@ public class SQLQueryReturnProcessor {
 //	private List collectionPersisters = new ArrayList();
 //	private List collectionResults = new ArrayList();
 
-	private int entitySuffixSeed = 0;
-	private int collectionSuffixSeed = 0;
+	private int entitySuffixSeed;
+	private int collectionSuffixSeed;
 
 
 	public SQLQueryReturnProcessor(NativeSQLQueryReturn[] queryReturns, SessionFactoryImplementor factory) {

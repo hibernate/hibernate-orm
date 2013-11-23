@@ -51,7 +51,7 @@ import org.hibernate.type.Type;
 public class MapEntryNode extends AbstractMapComponentNode implements AggregatedSelectExpression {
 	private static class LocalAliasGenerator implements AliasGenerator {
 		private final int base;
-		private int counter = 0;
+		private int counter;
 
 		private LocalAliasGenerator(int base) {
 			this.base = base;

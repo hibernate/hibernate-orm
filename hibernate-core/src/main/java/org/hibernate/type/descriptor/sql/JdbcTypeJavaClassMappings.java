@@ -53,16 +53,18 @@ import org.hibernate.mapping.Array;
 public class JdbcTypeJavaClassMappings {
 	private static final Logger log = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 
-	private static final ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap = buildJdbcJavaClassMappings();
-	private static final ConcurrentHashMap<Integer, Class> jdbcTypeCodeToJavaClassMap = transpose( javaClassToJdbcTypeCodeMap );
-
 	public static final JdbcTypeJavaClassMappings INSTANCE = new JdbcTypeJavaClassMappings();
 
+	private final ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap;
+	private final ConcurrentHashMap<Integer, Class> jdbcTypeCodeToJavaClassMap;
+
 	private JdbcTypeJavaClassMappings() {
+		javaClassToJdbcTypeCodeMap = buildJdbcJavaClassMappings();
+		jdbcTypeCodeToJavaClassMap = transpose( javaClassToJdbcTypeCodeMap );
 	}
 
 	public int determineJdbcTypeCodeForJavaClass(Class cls) {
-		Integer typeCode = JdbcTypeJavaClassMappings.javaClassToJdbcTypeCodeMap.get( cls );
+		Integer typeCode = javaClassToJdbcTypeCodeMap.get( cls );
 		if ( typeCode != null ) {
 			return typeCode;
 		}
@@ -74,8 +76,8 @@ public class JdbcTypeJavaClassMappings {
 		return specialCode;
 	}
 
-	public Class determineJavaClassForJdbcTypeCode(int typeCode) {
-		Class cls = jdbcTypeCodeToJavaClassMap.get( Integer.valueOf( typeCode ) );
+	public Class determineJavaClassForJdbcTypeCode(Integer typeCode) {
+		Class cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
 		if ( cls != null ) {
 			return cls;
 		}
@@ -85,6 +87,10 @@ public class JdbcTypeJavaClassMappings {
 				typeCode
 		);
 		return Object.class;
+	}
+
+	public Class determineJavaClassForJdbcTypeCode(int typeCode) {
+		return determineJavaClassForJdbcTypeCode( Integer.valueOf( typeCode ) );
 	}
 
 

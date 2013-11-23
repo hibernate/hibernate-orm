@@ -1,15 +1,23 @@
 package org.hibernate.envers.internal.tools;
 
-import javassist.*;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.envers.internal.entities.PropertyData;
-
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtConstructor;
+import javassist.CtField;
+import javassist.CtMethod;
+import javassist.CtNewConstructor;
+import javassist.NotFoundException;
+
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.envers.internal.entities.PropertyData;
 
 import static org.hibernate.envers.internal.tools.StringTools.capitalizeFirst;
 import static org.hibernate.envers.internal.tools.StringTools.getLastComponent;
@@ -17,9 +25,11 @@ import static org.hibernate.envers.internal.tools.StringTools.getLastComponent;
 /**
  * @author Lukasz Zuchowski (author at zuchos dot com)
  */
-public class MapProxyTool {
+public final class MapProxyTool {
+	private MapProxyTool() {
+	}
 
-    /**
+	/**
      * @param className               Name of the class to construct (should be unique within class loader)
      * @param map                instance that will be proxied by java bean
      * @param propertyDatas      properties that should java bean declare

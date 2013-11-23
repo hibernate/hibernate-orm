@@ -264,7 +264,7 @@ public final class CollectionEntry implements Serializable {
 		return snapshot;
 	}
 
-	private boolean fromMerge = false;
+	private boolean fromMerge;
 
 	/**
 	 * Reset the stored snapshot for both the persistent collection and this collection entry. 

@@ -67,9 +67,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 public class SchemaValidatorTask extends MatchingTask {
 
 	private List fileSets = new LinkedList();
-	private File propertiesFile = null;
-	private File configurationFile = null;
-	private String namingStrategy = null;
+	private File propertiesFile;
+	private File configurationFile;
+	private String namingStrategy;
 
 	public void addFileset(FileSet set) {
 		fileSets.add(set);

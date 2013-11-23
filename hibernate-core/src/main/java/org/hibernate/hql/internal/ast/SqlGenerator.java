@@ -31,7 +31,6 @@ import java.util.List;
 
 import antlr.RecognitionException;
 import antlr.collections.AST;
-import org.jboss.logging.Logger;
 
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
@@ -45,6 +44,7 @@ import org.hibernate.hql.internal.ast.tree.Node;
 import org.hibernate.hql.internal.ast.tree.ParameterContainer;
 import org.hibernate.hql.internal.ast.tree.ParameterNode;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
@@ -58,10 +58,9 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SqlGenerator.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SqlGenerator.class.getName());
-
-	public static boolean REGRESSION_STYLE_CROSS_JOINS = false;
+	public static boolean REGRESSION_STYLE_CROSS_JOINS;
 
 	/**
 	 * all append invocations on the buf should go through this Output instance variable.
@@ -81,7 +80,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private int traceDepth = 0;
+	private int traceDepth;
 
 	@Override
 	public void traceIn(String ruleName, AST tree) {
@@ -247,6 +246,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 		private int argInd;
 		private final List<String> args = new ArrayList<String>(3);
 
+		@Override
 		public void clause(String clause) {
 			if ( argInd == args.size() ) {
 				args.add( clause );
@@ -256,6 +256,7 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 			}
 		}
 
+		@Override
 		public void commaBetweenParameters(String comma) {
 			++argInd;
 		}
@@ -269,10 +270,12 @@ public class SqlGenerator extends SqlGeneratorBase implements ErrorReporter {
 	 * The default SQL writer.
 	 */
 	class DefaultWriter implements SqlWriter {
+		@Override
 		public void clause(String clause) {
 			getStringBuilder().append( clause );
 		}
 
+		@Override
 		public void commaBetweenParameters(String comma) {
 			getStringBuilder().append( comma );
 		}

@@ -46,6 +46,7 @@ public class RelatedAuditExpression implements AuditCriterion {
 		this.equals = equals;
 	}
 
+	@Override
 	public void addToQuery(
 			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
 			QueryBuilder qb, Parameters parameters) {

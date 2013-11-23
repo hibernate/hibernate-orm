@@ -33,7 +33,10 @@ import org.hibernate.internal.util.LockModeConverter;
  *
  * @author Steve Ebersole
  */
-public class LockModeTypeHelper {
+public final class LockModeTypeHelper {
+	private LockModeTypeHelper() {
+	}
+
 	public static LockModeType getLockModeType(LockMode lockMode) {
 		return LockModeConverter.convertToLockModeType( lockMode );
 	}

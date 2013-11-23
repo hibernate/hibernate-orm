@@ -29,7 +29,10 @@ import java.math.BigInteger;
 /**
  * @author Steve Ebersole
  */
-public class ImplicitNumericExpressionTypeDeterminer {
+public final class ImplicitNumericExpressionTypeDeterminer {
+	private ImplicitNumericExpressionTypeDeterminer() {
+	}
+
 	/**
 	 * Determine the appropriate runtime result type for a numeric expression according to
 	 * section "6.5.7.1 Result Types of Expressions" of the JPA spec.

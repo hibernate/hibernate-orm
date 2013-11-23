@@ -31,6 +31,7 @@ import org.hibernate.envers.configuration.spi.AuditConfiguration;
  * @author Adam Warski (adam at warski dot org)
  */
 public class RevisionTypePropertyName implements PropertyNameGetter {
+	@Override
 	public String get(AuditConfiguration auditCfg) {
 		return auditCfg.getAuditEntCfg().getRevisionTypePropName();
 	}

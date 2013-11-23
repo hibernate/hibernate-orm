@@ -28,9 +28,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -38,9 +37,9 @@ import org.hibernate.internal.CoreMessageLogger;
  *
  * @author Steve Ebersole
  */
-public class JdbcTypeNameMapper {
+public final class JdbcTypeNameMapper {
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JdbcTypeNameMapper.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JdbcTypeNameMapper.class.getName());
 	private static Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
 
 	private static Map<Integer, String> buildJdbcTypeMap() {
@@ -104,4 +103,8 @@ public class JdbcTypeNameMapper {
 		}
 		return name;
 	}
+
+	private JdbcTypeNameMapper() {
+	}
+
 }

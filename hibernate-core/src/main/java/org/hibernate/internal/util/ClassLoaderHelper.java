@@ -27,9 +27,11 @@ package org.hibernate.internal.util;
  * 
  * @author Brett Meyer
  */
-public class ClassLoaderHelper {
-	
-	public static ClassLoader overridenClassLoader = null;
+public final class ClassLoaderHelper {
+	private ClassLoaderHelper() {
+	}
+
+	public static ClassLoader overridenClassLoader;
 	
 	public static ClassLoader getContextClassLoader() {
 		return overridenClassLoader != null ?

@@ -34,7 +34,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 /**
  * @author Steve Ebersole
  */
-public class CacheHelper {
+public final class CacheHelper {
+	private CacheHelper() {
+	}
 
 	public static Serializable fromSharedCache(
 			SessionImplementor session,

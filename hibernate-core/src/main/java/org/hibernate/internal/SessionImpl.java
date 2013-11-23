@@ -181,7 +181,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, SessionImpl.class.getName());
 
-   private static final boolean tracing = LOG.isTraceEnabled();
+   private static final boolean TRACE_ENABLED = LOG.isTraceEnabled();
 
 	private transient long timestamp;
 
@@ -202,7 +202,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	private transient boolean flushBeforeCompletionEnabled;
 	private transient boolean autoCloseSessionEnabled;
 
-	private transient int dontFlushFromFind = 0;
+	private transient int dontFlushFromFind;
 
 	private transient LoadQueryInfluencers loadQueryInfluencers;
 
@@ -314,7 +314,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			factory.getStatisticsImplementor().openSession();
 		}
 
-      if (tracing)
+      if ( TRACE_ENABLED )
 		   LOG.tracef( "Opened session at timestamp: %s", timestamp );
 	}
 

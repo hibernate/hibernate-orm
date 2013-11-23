@@ -53,7 +53,10 @@ import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractorInitiator;
  * 
  * @author Steve Ebersole
  */
-public class StandardServiceInitiators {
+public final class StandardServiceInitiators {
+	private StandardServiceInitiators() {
+	}
+
 	public static List<StandardServiceInitiator> LIST = buildStandardServiceInitiatorList();
 
 	private static List<StandardServiceInitiator> buildStandardServiceInitiatorList() {

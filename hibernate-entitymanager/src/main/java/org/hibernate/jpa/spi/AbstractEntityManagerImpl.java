@@ -147,15 +147,15 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
     private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
                                                                            AbstractEntityManagerImpl.class.getName());
 
-	private static final List<String> entityManagerSpecificProperties = new ArrayList<String>();
+	private static final List<String> ENTITY_MANAGER_SPECIFIC_PROPERTIES = new ArrayList<String>();
 
 	static {
-		entityManagerSpecificProperties.add( AvailableSettings.LOCK_SCOPE );
-		entityManagerSpecificProperties.add( AvailableSettings.LOCK_TIMEOUT );
-		entityManagerSpecificProperties.add( AvailableSettings.FLUSH_MODE );
-		entityManagerSpecificProperties.add( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
-		entityManagerSpecificProperties.add( AvailableSettings.SHARED_CACHE_STORE_MODE );
-		entityManagerSpecificProperties.add( QueryHints.SPEC_HINT_TIMEOUT );
+		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( AvailableSettings.LOCK_SCOPE );
+		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( AvailableSettings.LOCK_TIMEOUT );
+		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( AvailableSettings.FLUSH_MODE );
+		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( AvailableSettings.SHARED_CACHE_RETRIEVE_MODE );
+		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( AvailableSettings.SHARED_CACHE_STORE_MODE );
+		ENTITY_MANAGER_SPECIFIC_PROPERTIES.add( QueryHints.SPEC_HINT_TIMEOUT );
 	}
 
 	private EntityManagerFactoryImpl entityManagerFactory;
@@ -177,7 +177,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 		this.lockOptions = new LockOptions();
 		this.properties = new HashMap<String, Object>();
-		for ( String key : entityManagerSpecificProperties ) {
+		for ( String key : ENTITY_MANAGER_SPECIFIC_PROPERTIES ) {
 			if ( entityManagerFactory.getProperties().containsKey( key ) ) {
 				this.properties.put( key, entityManagerFactory.getProperties().get( key ) );
 			}
@@ -1319,7 +1319,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public void setProperty(String s, Object o) {
 		checkOpen();
 
-		if ( entityManagerSpecificProperties.contains( s ) ) {
+		if ( ENTITY_MANAGER_SPECIFIC_PROPERTIES.contains( s ) ) {
 			properties.put( s, o );
 			applyProperties();
         }

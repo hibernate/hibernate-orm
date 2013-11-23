@@ -46,38 +46,31 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class UUIDHexGenerator extends AbstractUUIDGenerator implements Configurable {
-
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, UUIDHexGenerator.class.getName());
 
-	private static boolean warned = false;
+	private static boolean WARNED;
 
 	private String sep = "";
 
 	public UUIDHexGenerator() {
-		if ( ! warned ) {
-			warned = true;
-            LOG.usingUuidHexGenerator(this.getClass().getName(), UUIDGenerator.class.getName());
+		if ( !WARNED ) {
+			WARNED = true;
+            LOG.usingUuidHexGenerator( this.getClass().getName(), UUIDGenerator.class.getName() );
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void configure(Type type, Properties params, Dialect d) {
 		sep = ConfigurationHelper.getString( "separator", params, "" );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Serializable generate(SessionImplementor session, Object obj) {
-		return new StringBuilder( 36 )
-				.append( format( getIP() ) ).append( sep )
-				.append( format( getJVM() ) ).append( sep )
-				.append( format( getHiTime() ) ).append( sep )
-				.append( format( getLoTime() ) ).append( sep )
-				.append( format( getCount() ) )
-				.toString();
+		return format( getIP() ) + sep
+				+ format( getJVM() ) + sep
+				+ format( getHiTime() ) + sep
+				+ format( getLoTime() ) + sep
+				+ format( getCount() );
 	}
 
 	protected String format(int intValue) {

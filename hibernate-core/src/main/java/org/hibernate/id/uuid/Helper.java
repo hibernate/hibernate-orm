@@ -33,7 +33,9 @@ import org.hibernate.internal.util.BytesHelper;
  *
  * @author Steve Ebersole
  */
-public class Helper {
+public final class Helper {
+	private Helper() {
+	}
 
 	// IP ADDRESS ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -46,7 +46,7 @@ import javax.xml.stream.events.XMLEvent;
  */
 public abstract class FilteringXMLEventReader extends BaseXMLEventReader {
 	private final Deque<QName> prunedElements = new LinkedList<QName>();
-	private XMLEvent peekedEvent = null;
+	private XMLEvent peekedEvent;
 
 	public FilteringXMLEventReader(XMLEventReader reader) {
 		super(reader);

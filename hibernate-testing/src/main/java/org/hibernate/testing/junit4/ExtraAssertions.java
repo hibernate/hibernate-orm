@@ -36,7 +36,10 @@ import static org.junit.Assert.fail;
 /**
  * @author Steve Ebersole
  */
-public class ExtraAssertions {
+public final class ExtraAssertions {
+	private ExtraAssertions() {
+	}
+
 	public static void assertClassAssignability(Class expected, Class actual) {
 		if ( ! expected.isAssignableFrom( actual ) ) {
 			Assert.fail(

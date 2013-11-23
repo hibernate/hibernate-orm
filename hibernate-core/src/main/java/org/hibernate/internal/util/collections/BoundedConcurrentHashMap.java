@@ -993,7 +993,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		private final int maximumSize ;
 
 		/** The actual number of hot entries. */
-		private int hotSize = 0;
+		private int hotSize;
 
 
 

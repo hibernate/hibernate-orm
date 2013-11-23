@@ -98,7 +98,7 @@ public class EventType<T> {
 	 * Maintain a map of {@link EventType} instances keyed by name for lookup by name as well as {@link #values()}
 	 * resolution.
 	 */
-	public static final Map<String,EventType> eventTypeByNameMap = AccessController.doPrivileged(
+	private static final Map<String,EventType> EVENT_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
 			new PrivilegedAction<Map<String, EventType>>() {
 				@Override
 				public Map<String, EventType> run() {
@@ -132,7 +132,7 @@ public class EventType<T> {
 		if ( eventName == null ) {
 			throw new HibernateException( "event name to resolve cannot be null" );
 		}
-		final EventType eventType = eventTypeByNameMap.get( eventName );
+		final EventType eventType = EVENT_TYPE_BY_NAME_MAP.get( eventName );
 		if ( eventType == null ) {
 			throw new HibernateException( "Unable to locate proper event type for event name [" + eventName + "]" );
 		}
@@ -145,7 +145,7 @@ public class EventType<T> {
 	 * @return All {@link EventType} instances
 	 */
 	public static Collection<EventType> values() {
-		return eventTypeByNameMap.values();
+		return EVENT_TYPE_BY_NAME_MAP.values();
 	}
 
 

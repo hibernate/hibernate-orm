@@ -36,7 +36,7 @@ import org.hibernate.engine.jndi.JndiException;
 public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
 	public static final String AS7_TM_NAME = "java:jboss/TransactionManager";
 	public static final String AS4_TM_NAME = "java:/TransactionManager";
-	public static final String JBOSS__UT_NAME = "java:jboss/UserTransaction";
+	public static final String JBOSS_UT_NAME = "java:jboss/UserTransaction";
 	public static final String UT_NAME = "java:comp/UserTransaction";
 
 	@Override
@@ -67,7 +67,7 @@ public class JBossAppServerJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected UserTransaction locateUserTransaction() {
 		try {
-			return (UserTransaction) jndiService().locate( JBOSS__UT_NAME );
+			return (UserTransaction) jndiService().locate( JBOSS_UT_NAME );
 		}
 		catch (JndiException jndiException) {
 			try {

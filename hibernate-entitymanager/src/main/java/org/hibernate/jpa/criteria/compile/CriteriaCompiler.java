@@ -67,8 +67,8 @@ public class CriteriaCompiler implements Serializable {
 		final List<ImplicitParameterBinding> implicitParameterBindings = new ArrayList<ImplicitParameterBinding>();
 
 		RenderingContext renderingContext = new RenderingContext() {
-			private int aliasCount = 0;
-			private int explicitParameterCount = 0;
+			private int aliasCount;
+			private int explicitParameterCount;
 
 			public String generateAlias() {
 				return "generatedAlias" + aliasCount++;

@@ -66,7 +66,10 @@ import org.hibernate.type.VersionType;
  *
  * @author Steve Ebersole
  */
-public class PropertyFactory {
+public final class PropertyFactory {
+	private PropertyFactory() {
+	}
+
 	/**
 	 * Generates the attribute representation of the identifier for a given entity mapping.
 	 *

@@ -36,7 +36,10 @@ import org.hibernate.persister.walking.spi.MetamodelGraphWalker;
  *
  * @see org.hibernate.persister.walking.spi.MetamodelGraphWalker
  */
-public class MetamodelDrivenLoadPlanBuilder {
+public final class MetamodelDrivenLoadPlanBuilder {
+	private MetamodelDrivenLoadPlanBuilder() {
+	}
+
 	/**
 	 * Coordinates building a LoadPlan that defines just a single root entity return (may have fetches).
 	 * <p/>

@@ -37,7 +37,9 @@ import org.hibernate.type.Type;
 /**
  * @author Gail Badner
  */
-public class EntityIdentifierDefinitionHelper {
+public final class EntityIdentifierDefinitionHelper {
+	private EntityIdentifierDefinitionHelper() {
+	}
 
 	public static EntityIdentifierDefinition buildSimpleEncapsulatedIdentifierDefinition(final AbstractEntityPersister entityPersister) {
 		return new EncapsulatedEntityIdentifierDefinition() {

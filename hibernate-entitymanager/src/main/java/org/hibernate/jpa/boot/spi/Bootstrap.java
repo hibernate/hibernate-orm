@@ -37,6 +37,9 @@ import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
  * @author Brett Meyer
  */
 public final class Bootstrap {
+	private Bootstrap() {
+	}
+
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitDescriptor persistenceUnitDescriptor,
 			Map integration) {

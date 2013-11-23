@@ -45,6 +45,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -57,9 +58,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class DefaultFlushEntityEventListener implements FlushEntityEventListener {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultFlushEntityEventListener.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultFlushEntityEventListener.class );
 
 	/**
 	 * make sure user didn't mangle the id
@@ -499,7 +498,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
             else {
                 // see if the custom dirtiness strategy can tell us...
                 class DirtyCheckContextImpl implements CustomEntityDirtinessStrategy.DirtyCheckContext {
-                    int[] found = null;
+                    int[] found;
                     @Override
                     public void doDirtyChecking(CustomEntityDirtinessStrategy.AttributeChecker attributeChecker) {
                         found = new DirtyCheckAttributeInfoImpl( event ).visitAttributes( attributeChecker );
@@ -588,7 +587,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		private final FlushEntityEvent event;
 		private final EntityPersister persister;
 		private final int numberOfAttributes;
-		private int index = 0;
+		private int index;
 
 		private DirtyCheckAttributeInfoImpl(FlushEntityEvent event) {
 			this.event = event;

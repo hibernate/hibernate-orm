@@ -40,8 +40,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Sanne Grinovero
  */
 public class DelayedPostInsertIdentifier implements Serializable, Comparable<DelayedPostInsertIdentifier> {
-
-	private static final AtomicLong sequence = new AtomicLong( 0 );
+	private static final AtomicLong SEQUENCE = new AtomicLong( 0 );
 
 	private final long identifier;
 
@@ -49,12 +48,12 @@ public class DelayedPostInsertIdentifier implements Serializable, Comparable<Del
 	 * Constructs a DelayedPostInsertIdentifier
 	 */
 	public DelayedPostInsertIdentifier() {
-		long value = sequence.incrementAndGet();
+		long value = SEQUENCE.incrementAndGet();
 		if ( value < 0 ) {
-			synchronized ( sequence ) {
-				value = sequence.incrementAndGet();
+			synchronized (SEQUENCE) {
+				value = SEQUENCE.incrementAndGet();
 				if ( value < 0 ) {
-					sequence.set( 0 );
+					SEQUENCE.set( 0 );
 					value = 0;
 				}
 			}

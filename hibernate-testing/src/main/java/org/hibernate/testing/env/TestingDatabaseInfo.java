@@ -31,7 +31,7 @@ import org.hibernate.dialect.H2Dialect;
 /**
  * @author Steve Ebersole
  */
-public class TestingDatabaseInfo {
+public final class TestingDatabaseInfo {
 	public static volatile String DRIVER = "org.h2.Driver";
 	public static volatile String URL = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;MVCC=TRUE";
 	public static volatile String USER = "sa";
@@ -46,5 +46,8 @@ public class TestingDatabaseInfo {
 				.setProperty( Environment.USER, USER )
 				.setProperty( Environment.PASS, PASS )
 				.setProperty( Environment.DIALECT, DIALECT.getClass().getName() );
+	}
+
+	private TestingDatabaseInfo() {
 	}
 }

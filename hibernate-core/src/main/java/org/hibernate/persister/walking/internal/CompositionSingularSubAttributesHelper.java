@@ -25,7 +25,6 @@ package org.hibernate.persister.walking.internal;
 
 import java.util.Iterator;
 
-import org.hibernate.FetchMode;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -63,7 +62,9 @@ import org.hibernate.type.Type;
  *
  * @author Gail Badner
  */
-public class CompositionSingularSubAttributesHelper {
+public final class CompositionSingularSubAttributesHelper {
+	private CompositionSingularSubAttributesHelper() {
+	}
 
 	/**
 	 * Get composite ID sub-attribute definitions.
@@ -123,8 +124,8 @@ public class CompositionSingularSubAttributesHelper {
 			public Iterator<AttributeDefinition> iterator() {
 				return new Iterator<AttributeDefinition>() {
 					private final int numberOfAttributes = compositeType.getSubtypes().length;
-					private int currentSubAttributeNumber = 0;
-					private int currentColumnPosition = 0;
+					private int currentSubAttributeNumber;
+					private int currentColumnPosition;
 
 					@Override
 					public boolean hasNext() {

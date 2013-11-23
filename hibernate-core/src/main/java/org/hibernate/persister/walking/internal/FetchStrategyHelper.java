@@ -37,12 +37,14 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.EntityType;
 
 /**
  * @author Steve Ebersole
  */
-public class FetchStrategyHelper {
+public final class FetchStrategyHelper {
+	private FetchStrategyHelper() {
+	}
+
 	/**
 	 * Determine the fetch-style (if one) explicitly set for this association via fetch profiles.
 	 * <p/>

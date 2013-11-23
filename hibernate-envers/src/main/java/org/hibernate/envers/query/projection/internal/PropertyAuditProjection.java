@@ -42,6 +42,7 @@ public class PropertyAuditProjection implements AuditProjection {
 		this.distinct = distinct;
 	}
 
+	@Override
 	public Triple<String, String, Boolean> getData(AuditConfiguration auditCfg) {
 		String propertyName = propertyNameGetter.get( auditCfg );
 

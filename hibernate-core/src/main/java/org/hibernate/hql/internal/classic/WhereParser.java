@@ -173,15 +173,15 @@ public class WhereParser implements Parser {
 	// foo.Bar.Baz + a.B.C          (maps to: bar.Baz + b.C and foo.Bar = bar.id and a.B = b.id)
 	// ( foo.Bar.Baz + 1.0 ) < 2.0  (maps to: ( bar.Baz + 1.0 ) < 2.0 and foo.Bar = bar.id)
 
-	private boolean betweenSpecialCase = false;       //Inside a BETWEEN ... AND ... expression
-	private boolean negated = false;
+	private boolean betweenSpecialCase;       //Inside a BETWEEN ... AND ... expression
+	private boolean negated;
 
-	private boolean inSubselect = false;
-	private int bracketsSinceSelect = 0;
+	private boolean inSubselect;
+	private int bracketsSinceSelect;
 	private StringBuilder subselect;
 
-	private boolean expectingPathContinuation = false;
-	private int expectingIndex = 0;
+	private boolean expectingPathContinuation;
+	private int expectingIndex;
 
 	// The following variables are stacks that keep information about each subexpression
 	// in the list of nested subexpressions we are currently processing.

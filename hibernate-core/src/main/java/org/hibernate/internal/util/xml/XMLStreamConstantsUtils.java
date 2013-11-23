@@ -35,7 +35,10 @@ import javax.xml.stream.XMLStreamConstants;
  *
  * @author Eric Dalquist
  */
-public class XMLStreamConstantsUtils {
+public final class XMLStreamConstantsUtils {
+	private XMLStreamConstantsUtils() {
+	}
+
 	/**
 	 * Get the human readable event name for the numeric event id
 	 */

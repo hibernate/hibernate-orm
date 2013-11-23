@@ -35,6 +35,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
@@ -47,8 +48,7 @@ import org.hibernate.type.CompositeType;
  * @author Muga Nishizawa
  */
 public class JavassistLazyInitializer extends BasicLazyInitializer implements MethodHandler {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, JavassistLazyInitializer.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JavassistLazyInitializer.class );
 
 	private static final MethodFilter FINALIZE_FILTER = new MethodFilter() {
 		public boolean isHandled(Method m) {
@@ -58,7 +58,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 	};
 
 	private Class[] interfaces;
-	private boolean constructed = false;
+	private boolean constructed;
 
 	private JavassistLazyInitializer(
 			final String entityName,

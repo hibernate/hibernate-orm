@@ -73,7 +73,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 	/**
 	 * getter for the revision entity field annotated with @RevisionTimestamp
 	 */
-	private Getter revisionTimestampGetter = null;
+	private Getter revisionTimestampGetter;
 
 	private final SessionCacheCleaner sessionCacheCleaner;
 

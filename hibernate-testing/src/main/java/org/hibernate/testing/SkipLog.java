@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class SkipLog {
+public final class SkipLog {
 	private static final Logger log = Logger.getLogger( SkipLog.class );
 
 	public static void reportSkip(String message) {
@@ -39,5 +39,8 @@ public class SkipLog {
 
 	public static void reportSkip(String reason, String testDescription) {
 		reportSkip( testDescription + " : " + reason  );
+	}
+
+	private SkipLog() {
 	}
 }

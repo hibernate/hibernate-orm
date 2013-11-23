@@ -102,9 +102,9 @@ public class SchemaExport {
 	private Formatter formatter;
 	private ImportSqlCommandExtractor importSqlCommandExtractor = ImportSqlCommandExtractorInitiator.DEFAULT_EXTRACTOR;
 
-	private String outputFile = null;
+	private String outputFile;
 	private String delimiter;
-	private boolean haltOnError = false;
+	private boolean haltOnError;
 
 	public SchemaExport(ServiceRegistry serviceRegistry, Configuration configuration) {
 		this.connectionHelper = new SuppliedConnectionProviderConnectionHelper(

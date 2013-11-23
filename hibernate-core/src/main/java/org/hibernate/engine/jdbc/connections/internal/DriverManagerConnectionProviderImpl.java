@@ -109,7 +109,7 @@ public class DriverManagerConnectionProviderImpl
 		executorService = Executors.newSingleThreadScheduledExecutor();
 		executorService.scheduleWithFixedDelay(
 				new Runnable() {
-					private boolean primed = false;
+					private boolean primed;
 					@Override
 					public void run() {
 						int size = connections.size();

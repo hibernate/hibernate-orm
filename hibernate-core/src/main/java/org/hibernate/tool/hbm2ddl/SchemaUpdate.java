@@ -72,9 +72,9 @@ public class SchemaUpdate {
 
 	private Formatter formatter;
 
-	private boolean haltOnError = false;
+	private boolean haltOnError;
 	private boolean format = true;
-	private String outputFile = null;
+	private String outputFile;
 	private String delimiter;
 
 	public SchemaUpdate(Configuration cfg) throws HibernateException {

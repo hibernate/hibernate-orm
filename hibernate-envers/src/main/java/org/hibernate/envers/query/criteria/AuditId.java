@@ -39,15 +39,16 @@ import org.hibernate.envers.query.projection.internal.PropertyAuditProjection;
 @SuppressWarnings({"JavaDoc"})
 public class AuditId<T> extends AuditProperty<T> {
 	public static final String IDENTIFIER_PLACEHOLDER = "$$id$$";
-	private static final PropertyNameGetter identifierPropertyGetter = new EntityPropertyName( IDENTIFIER_PLACEHOLDER );
+	private static final PropertyNameGetter IDENTIFIER_PROPERTY_GETTER = new EntityPropertyName( IDENTIFIER_PLACEHOLDER );
 
 	public AuditId() {
-		super( identifierPropertyGetter );
+		super( IDENTIFIER_PROPERTY_GETTER );
 	}
 
 	/**
 	 * Apply an "equal" constraint
 	 */
+	@Override
 	public AuditCriterion eq(Object id) {
 		return new IdentifierEqAuditExpression( id, true );
 	}
@@ -55,6 +56,7 @@ public class AuditId<T> extends AuditProperty<T> {
 	/**
 	 * Apply a "not equal" constraint
 	 */
+	@Override
 	public AuditCriterion ne(Object id) {
 		return new IdentifierEqAuditExpression( id, false );
 	}

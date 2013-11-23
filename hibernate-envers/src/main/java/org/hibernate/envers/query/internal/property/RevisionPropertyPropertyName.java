@@ -37,6 +37,7 @@ public class RevisionPropertyPropertyName implements PropertyNameGetter {
 		this.propertyName = propertyName;
 	}
 
+	@Override
 	public String get(AuditConfiguration auditCfg) {
 		return auditCfg.getAuditEntCfg().getRevisionPropPath( propertyName );
 	}

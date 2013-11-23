@@ -67,7 +67,7 @@ public abstract class AbstractManagedType<X>
 		return superType;
 	}
 
-	private boolean locked = false;
+	private boolean locked;
 
 	public Builder<X> getBuilder() {
 		if ( locked ) {

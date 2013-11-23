@@ -22,15 +22,15 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -39,20 +39,18 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Joseph Fifield
  */
 public class GUIDGenerator implements IdentifierGenerator {
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( GUIDGenerator.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, GUIDGenerator.class.getName());
-	private static boolean warned = false;
+	private static boolean WARNED;
 
 	public GUIDGenerator() {
-		if ( ! warned ) {
-			warned = true;
-            LOG.deprecatedUuidGenerator(UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName());
+		if ( !WARNED ) {
+			WARNED = true;
+            LOG.deprecatedUuidGenerator( UUIDGenerator.class.getName(), UUIDGenerationStrategy.class.getName() );
 		}
 	}
 
-	public Serializable generate(SessionImplementor session, Object obj)
-	throws HibernateException {
-
+	public Serializable generate(SessionImplementor session, Object obj) throws HibernateException {
 		final String sql = session.getFactory().getDialect().getSelectGUIDString();
 		try {
 			PreparedStatement st = session.getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );

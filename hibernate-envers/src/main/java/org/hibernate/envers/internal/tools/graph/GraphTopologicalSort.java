@@ -31,7 +31,10 @@ import java.util.Map;
 /**
  * @author Adam Warski (adam at warski dot org)
  */
-public class GraphTopologicalSort {
+public final class GraphTopologicalSort {
+	private GraphTopologicalSort() {
+	}
+
 	/**
 	 * Sorts a graph topologically.
 	 *

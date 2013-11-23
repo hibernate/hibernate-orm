@@ -65,7 +65,7 @@ public class Table implements RelationalModel, Serializable {
 	private String rowId;
 	private String subselect;
 	private boolean isAbstract;
-	private boolean hasDenormalizedTables = false;
+	private boolean hasDenormalizedTables;
 	private String comment;
 	
 	static class ForeignKeyKey implements Serializable {

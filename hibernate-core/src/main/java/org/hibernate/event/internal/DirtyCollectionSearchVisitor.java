@@ -39,7 +39,7 @@ import org.hibernate.type.CollectionType;
  */
 public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
-	private boolean dirty = false;
+	private boolean dirty;
 	private boolean[] propertyVersionability;
 
 	DirtyCollectionSearchVisitor(EventSource session, boolean[] propertyVersionability) {

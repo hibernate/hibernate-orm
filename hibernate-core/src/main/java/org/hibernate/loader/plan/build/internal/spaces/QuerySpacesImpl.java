@@ -77,9 +77,9 @@ public class QuerySpacesImpl implements ExpandingQuerySpaces {
 		return space;
 	}
 
-// ExpandingQuerySpaces impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ExpandingQuerySpaces impl ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private int implicitUidBase = 0;
+	private int implicitUidBase;
 
 	@Override
 	public String generateImplicitUid() {

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,11 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.internal.classic;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.QueryException;
@@ -33,13 +32,13 @@ import org.hibernate.QueryException;
  * Parses the Hibernate query into its constituent clauses.
  */
 public class ClauseParser implements Parser {
-
 	private Parser child;
-	private List selectTokens;
-	private boolean cacheSelectTokens = false;
-	private boolean byExpected = false;
-	private int parenCount = 0;
+	private List<String> selectTokens;
+	private boolean cacheSelectTokens;
+	private boolean byExpected;
+	private int parenCount;
 
+	@Override
 	public void token(String token, QueryTranslatorImpl q) throws QueryException {
 		String lcToken = token.toLowerCase();
 
@@ -58,7 +57,7 @@ public class ClauseParser implements Parser {
 
 		if ( isClauseStart ) {
 			if ( lcToken.equals( "select" ) ) {
-				selectTokens = new ArrayList();
+				selectTokens = new ArrayList<String>();
 				cacheSelectTokens = true;
 			}
 			else if ( lcToken.equals( "from" ) ) {
@@ -122,17 +121,18 @@ public class ClauseParser implements Parser {
 		}
 	}
 
+	@Override
 	public void start(QueryTranslatorImpl q) {
 	}
 
+	@Override
 	public void end(QueryTranslatorImpl q) throws QueryException {
 		endChild( q );
 		if ( selectTokens != null ) {
 			child = new SelectParser();
 			child.start( q );
-			Iterator iter = selectTokens.iterator();
-			while ( iter.hasNext() ) {
-				token( ( String ) iter.next(), q );
+			for ( String selectToken : selectTokens ) {
+				token( selectToken, q );
 			}
 			child.end( q );
 		}
@@ -142,10 +142,3 @@ public class ClauseParser implements Parser {
 	}
 
 }
-
-
-
-
-
-
-

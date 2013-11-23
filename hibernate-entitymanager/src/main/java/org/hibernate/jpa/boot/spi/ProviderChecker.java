@@ -37,7 +37,7 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
  *
  * @author Steve Ebersole
  */
-public class ProviderChecker {
+public final class ProviderChecker {
 	private static final Logger log = Logger.getLogger( ProviderChecker.class );
 
 	@SuppressWarnings("deprecation")
@@ -127,5 +127,8 @@ public class ProviderChecker {
 	private static String extractProviderName(PersistenceUnitDescriptor persistenceUnit) {
 		final String persistenceUnitRequestedProvider = persistenceUnit.getProviderClassName();
 		return persistenceUnitRequestedProvider == null ? null : persistenceUnitRequestedProvider.trim();
+	}
+
+	private ProviderChecker() {
 	}
 }

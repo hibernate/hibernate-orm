@@ -124,7 +124,7 @@ public final class StringHelper {
 		return replace( template, placeholder, replacement, false );
 	}
 
-	public static String[] replace(String templates[], String placeholder, String replacement) {
+	public static String[] replace(String[] templates, String placeholder, String replacement) {
 		String[] result = new String[templates.length];
 		for ( int i =0; i<templates.length; i++ ) {
 			result[i] = replace( templates[i], placeholder, replacement );

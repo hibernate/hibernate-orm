@@ -28,7 +28,10 @@ package org.hibernate.internal.util.type;
  *
  * @author Steve Ebersole
  */
-public class PrimitiveWrapperHelper {
+public final class PrimitiveWrapperHelper {
+	private PrimitiveWrapperHelper() {
+	}
+
 	/**
 	 * Describes a particular primitive/wrapper combo
 	 */

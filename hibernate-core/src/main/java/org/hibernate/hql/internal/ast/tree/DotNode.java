@@ -24,10 +24,9 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import java.util.Set;
-
 import antlr.SemanticException;
 import antlr.collections.AST;
+
 import org.jboss.logging.Logger;
 
 import org.hibernate.QueryException;
@@ -60,8 +59,8 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	//
 	// todo : obviously get rid of all this junk ;)
 	///////////////////////////////////////////////////////////////////////////
-	public static boolean useThetaStyleImplicitJoins = false;
-	public static boolean REGRESSION_STYLE_JOIN_SUPPRESSION = false;
+	public static boolean useThetaStyleImplicitJoins;
+	public static boolean REGRESSION_STYLE_JOIN_SUPPRESSION;
 	public static interface IllegalCollectionDereferenceExceptionBuilder {
 		public QueryException buildIllegalCollectionDereferenceException(String collectionPropertyName, FromReferenceNode lhs);
 	}
@@ -76,13 +75,15 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
     private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, DotNode.class.getName());
 
-	private static final int DEREF_UNKNOWN = 0;
-	private static final int DEREF_ENTITY = 1;
-	private static final int DEREF_COMPONENT = 2;
-	private static final int DEREF_COLLECTION = 3;
-	private static final int DEREF_PRIMITIVE = 4;
-	private static final int DEREF_IDENTIFIER = 5;
-	private static final int DEREF_JAVA_CONSTANT = 6;
+	public static enum DereferenceType {
+		UNKNOWN,
+		ENTITY,
+		COMPONENT,
+		COLLECTION,
+		PRIMITIVE,
+		IDENTIFIER,
+		JAVA_CONSTANT
+	}
 
 	/**
 	 * The identifier that is the name of the property.
@@ -113,9 +114,9 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private boolean fetch = false;
 
 	/**
-	 * The type of dereference that hapened (DEREF_xxx).
+	 * The type of dereference that hapened
 	 */
-	private int dereferenceType = DEREF_UNKNOWN;
+	private DereferenceType dereferenceType = DereferenceType.UNKNOWN;
 
 	private FromElement impliedJoin;
 
@@ -143,7 +144,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		StringBuilder buf = new StringBuilder();
 		FromElement fromElement = getFromElement();
 		buf.append( "{propertyName=" ).append( propertyName );
-		buf.append( ",dereferenceType=" ).append( getWalker().getASTPrinter().getTokenTypeName( dereferenceType ) );
+		buf.append( ",dereferenceType=" ).append( dereferenceType.name() );
 		buf.append( ",getPropertyPath=" ).append( propertyPath );
 		buf.append( ",path=" ).append( getPath() );
 		if ( fromElement != null ) {
@@ -248,7 +249,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			if ( ! CollectionProperties.isAnyCollectionProperty( propertyName ) ) {
 				checkLhsIsNotCollection();
 			}
-			dereferenceType = DEREF_PRIMITIVE;
+			dereferenceType = DereferenceType.PRIMITIVE;
 			initText();
 		}
 		setResolved();
@@ -272,7 +273,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private void dereferenceCollection(CollectionType collectionType, boolean implicitJoin, boolean indexed, String classAlias, AST parent)
 	throws SemanticException {
 
-		dereferenceType = DEREF_COLLECTION;
+		dereferenceType = DereferenceType.COLLECTION;
 		String role = collectionType.getRole();
 
 		//foo.bars.size (also handles deprecated stuff like foo.bars.maxelement for backwardness)
@@ -405,12 +406,16 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	private void dereferenceEntityJoin(String classAlias, EntityType propertyType, boolean impliedJoin, AST parent)
 	throws SemanticException {
-		dereferenceType = DEREF_ENTITY;
-        if (LOG.isDebugEnabled()) LOG.debugf("dereferenceEntityJoin() : generating join for %s in %s (%s) parent = %s",
-                                             propertyName,
-                                             getFromElement().getClassName(),
-                                             classAlias == null ? "<no alias>" : classAlias,
-                                             ASTUtil.getDebugString(parent));
+		dereferenceType = DereferenceType.ENTITY;
+        if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"dereferenceEntityJoin() : generating join for %s in %s (%s) parent = %s",
+					propertyName,
+					getFromElement().getClassName(),
+					classAlias == null ? "<no alias>" : classAlias,
+					ASTUtil.getDebugString(parent)
+			);
+		}
 		// Create a new FROM node for the referenced class.
 		String associatedEntityName = propertyType.getAssociatedEntityName();
 		String tableAlias = getAliasGenerator().createName( associatedEntityName );
@@ -575,7 +580,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		}
 	}
 	private void dereferenceComponent(AST parent) {
-		dereferenceType = DEREF_COMPONENT;
+		dereferenceType = DereferenceType.COMPONENT;
 		setPropertyNameAndPath( parent );
 	}
 
@@ -592,7 +597,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		setPropertyNameAndPath( dotParent ); // Set the unresolved path in this node and the parent.
 		// Set the text for the parent.
 		if ( dotParent != null ) {
-			dotParent.dereferenceType = DEREF_IDENTIFIER;
+			dotParent.dereferenceType = DereferenceType.IDENTIFIER;
 			dotParent.setText( getText() );
 			dotParent.columns = getColumns();
 		}
@@ -706,7 +711,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 
 	public void setResolvedConstant(String text) {
 		path = text;
-		dereferenceType = DEREF_JAVA_CONSTANT;
+		dereferenceType = DereferenceType.JAVA_CONSTANT;
 		setResolved(); // Don't resolve the node again.
 	}
 

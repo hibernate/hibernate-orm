@@ -127,7 +127,7 @@ public class SelectFragment {
 		return addFormula( tableAlias, columnTemplate, columnAlias );
 	}
 
-	public SelectFragment addColumnTemplates(String tableAlias, String[] columnTemplates, String columnAliases[]) {
+	public SelectFragment addColumnTemplates(String tableAlias, String[] columnTemplates, String[] columnAliases) {
 		// In this context, there's no difference between a column template and a formula.
 		return addFormulas( tableAlias, columnTemplates, columnAliases );
 	}

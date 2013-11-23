@@ -40,7 +40,9 @@ import org.hibernate.mapping.Selectable;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  * @author Michal Skowronek (mskowr at o2 dot pl)
  */
-public class MetadataTools {
+public final class MetadataTools {
+	private MetadataTools() {
+	}
 
 	public static Element addNativelyGeneratedId(
 			Element parent, String name, String type,
@@ -415,7 +417,7 @@ public class MetadataTools {
 
 	public static ColumnNameIterator getColumnNameIterator(final JoinColumn[] joinColumns) {
 		return new ColumnNameIterator() {
-			int counter = 0;
+			int counter;
 
 			public boolean hasNext() {
 				return counter < joinColumns.length;

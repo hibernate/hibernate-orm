@@ -40,6 +40,7 @@ public class PropertyAuditOrder implements AuditOrder {
 		this.asc = asc;
 	}
 
+	@Override
 	public Pair<String, Boolean> getData(AuditConfiguration auditCfg) {
 		return Pair.make( propertyNameGetter.get( auditCfg ), asc );
 	}

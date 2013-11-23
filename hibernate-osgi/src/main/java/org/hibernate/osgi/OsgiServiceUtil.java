@@ -32,7 +32,7 @@ import org.osgi.util.tracker.ServiceTracker;
  *
  * @author Brett Meyer
  */
-public class OsgiServiceUtil {
+public final class OsgiServiceUtil {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OsgiServiceUtil.class );
 
 	/**
@@ -78,5 +78,8 @@ public class OsgiServiceUtil {
 			LOG.unableToDiscoverOsgiService( contract.getName(), e );
 			return null;
 		}
+	}
+
+	private OsgiServiceUtil() {
 	}
 }

@@ -31,7 +31,7 @@ import org.hibernate.cfg.Environment;
 /**
  * @author Steve Ebersole
  */
-public class TestingJtaBootstrap {
+public final class TestingJtaBootstrap {
 	public static final TestingJtaBootstrap INSTANCE = new TestingJtaBootstrap();
 
 	@SuppressWarnings("unchecked")
@@ -41,4 +41,6 @@ public class TestingJtaBootstrap {
 		configValues.put( "javax.persistence.transactionType", "JTA" );
 	}
 
+	private TestingJtaBootstrap() {
+	}
 }

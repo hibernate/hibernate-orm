@@ -43,8 +43,7 @@ import antlr.collections.AST;
  * @author josh
  */
 public class SelectClause extends SelectExpressionList {
-
-	private boolean prepared = false;
+	private boolean prepared;
 	private boolean scalarSelect;
 
 	private List fromElementsForLoad = new ArrayList();
@@ -338,7 +337,7 @@ public class SelectClause extends SelectExpressionList {
 		finishInitialization( queryReturnTypeList );
 	}
 	
-	public static boolean VERSION2_SQL = false;
+	public static boolean VERSION2_SQL;
 
 	private void addCollectionFromElement(FromElement fromElement) {
 		if ( fromElement.isFetch() ) {

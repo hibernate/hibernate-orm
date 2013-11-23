@@ -71,7 +71,7 @@ public class HibernateEnhancementMojo extends AbstractMojo implements Enhancemen
 	private static final String CLASS_EXTENSION = ".class";
 
 	@Parameter(property="dir", defaultValue="${project.build.outputDirectory}")
-	private String dir = null;
+	private String dir;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info( "Started enhance plugin....." );

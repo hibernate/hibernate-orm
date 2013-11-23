@@ -35,7 +35,10 @@ import org.hibernate.TransactionException;
  *
  * @author Steve Ebersole
  */
-public class JtaStatusHelper {
+public final class JtaStatusHelper {
+	private JtaStatusHelper() {
+	}
+
 	/**
 	 * Extract the status code from a {@link UserTransaction}
 	 *

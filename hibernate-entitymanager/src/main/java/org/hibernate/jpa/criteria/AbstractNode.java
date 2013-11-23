@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jpa.criteria;
+
 import java.io.Serializable;
 
 /**
@@ -30,7 +31,7 @@ import java.io.Serializable;
  *
  * @author Steve Ebersole
  */
-public class AbstractNode implements Serializable {
+public abstract class AbstractNode implements Serializable {
 	private final CriteriaBuilderImpl criteriaBuilder;
 
 	public AbstractNode(CriteriaBuilderImpl criteriaBuilder) {

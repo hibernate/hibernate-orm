@@ -41,6 +41,7 @@ public class RevisionTypeAuditExpression implements AuditCriterion {
 		this.op = op;
 	}
 
+	@Override
 	public void addToQuery(
 			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
 			QueryBuilder qb, Parameters parameters) {

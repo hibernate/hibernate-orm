@@ -34,7 +34,10 @@ import org.hibernate.LockMode;
  *
  * @author Steve Ebersole
  */
-public class LockModeConverter {
+public final class LockModeConverter {
+	private LockModeConverter() {
+	}
+
 	/**
 	 * Convert from the Hibernate specific LockMode to the JPA defined LockModeType.
 	 *

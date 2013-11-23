@@ -33,6 +33,7 @@ public class EntitiesModifiedAtRevisionQuery extends AbstractAuditQuery {
 		this.revision = revision;
 	}
 
+	@Override
 	@SuppressWarnings({"unchecked"})
 	public List list() {
 		/*

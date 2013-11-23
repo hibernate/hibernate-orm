@@ -31,6 +31,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -44,10 +45,9 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public class WrapVisitor extends ProxyVisitor {
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, WrapVisitor.class.getName());
-
-	boolean substitute = false;
+	boolean substitute;
 
 	boolean isSubstitutionRequired() {
 		return substitute;

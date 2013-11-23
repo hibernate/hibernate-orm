@@ -34,7 +34,10 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public class StreamCopier {
+public final class StreamCopier {
+	private StreamCopier() {
+	}
+
 	public static final int BUFFER_SIZE = 1024 * 4;
 	public static final byte[] BUFFER = new byte[ BUFFER_SIZE ];
 

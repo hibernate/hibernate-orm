@@ -44,7 +44,9 @@ import org.hibernate.engine.jdbc.BinaryStream;
  *
  * @author Steve Ebersole
  */
-public class DataHelper {
+public final class DataHelper {
+	private DataHelper() {
+	}
 
 	/** The size of the buffer we will use to deserialize larger streams */
 	private static final int BUFFER_SIZE = 1024 * 4;

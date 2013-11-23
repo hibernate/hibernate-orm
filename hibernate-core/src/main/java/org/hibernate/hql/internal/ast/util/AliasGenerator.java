@@ -33,7 +33,7 @@ import org.hibernate.internal.util.StringHelper;
  * generated aliases are unique.
  */
 public class AliasGenerator {
-	private int next = 0;
+	private int next;
 
 	private int nextCount() {
 		return next++;

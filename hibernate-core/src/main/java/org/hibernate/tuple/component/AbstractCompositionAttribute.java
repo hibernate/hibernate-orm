@@ -81,7 +81,7 @@ public abstract class AbstractCompositionAttribute
 			public Iterator<AttributeDefinition> iterator() {
 				return new Iterator<AttributeDefinition>() {
 					private final int numberOfAttributes = getType().getSubtypes().length;
-					private int currentSubAttributeNumber = 0;
+					private int currentSubAttributeNumber;
 					private int currentColumnPosition = columnStartPosition;
 
 					@Override

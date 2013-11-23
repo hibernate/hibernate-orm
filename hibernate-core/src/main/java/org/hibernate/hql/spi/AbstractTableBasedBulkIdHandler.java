@@ -48,7 +48,7 @@ import org.hibernate.sql.SelectValues;
 /**
  * @author Steve Ebersole
  */
-public class AbstractTableBasedBulkIdHandler {
+public abstract class AbstractTableBasedBulkIdHandler {
 	private final SessionFactoryImplementor sessionFactory;
 	private final HqlSqlWalker walker;
 

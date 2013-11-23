@@ -72,16 +72,16 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 public class SchemaExportTask extends MatchingTask {
 
 	private List fileSets = new LinkedList();
-	private File propertiesFile = null;
-	private File configurationFile = null;
-	private File outputFile = null;
-	private boolean quiet = false;
-	private boolean text = false;
-	private boolean drop = false;
-	private boolean create = false;
-	private boolean haltOnError = false;
-	private String delimiter = null;
-	private String namingStrategy = null;
+	private File propertiesFile;
+	private File configurationFile;
+	private File outputFile;
+	private boolean quiet;
+	private boolean text;
+	private boolean drop;
+	private boolean create;
+	private boolean haltOnError;
+	private String delimiter;
+	private String namingStrategy;
 
 	public void addFileset(FileSet set) {
 		fileSets.add(set);

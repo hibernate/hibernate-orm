@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,8 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.internal.ast.tree;
-
 
 /**
  * Represents a FROM element implied by a path expression or a collection reference.
@@ -35,12 +33,12 @@ public class ImpliedFromElement extends FromElement {
 	 * True if this from element was implied from a path in the FROM clause, but not
 	 * explicitly declard in the from clause.
 	 */
-	private boolean impliedInFromClause = false;
+	private boolean impliedInFromClause;
 
 	/**
 	 * True if this implied from element should be included in the projection list.
 	 */
-	private boolean inProjectionList = false;
+	private boolean inProjectionList;
 
 	public boolean isImplied() {
 		return true;

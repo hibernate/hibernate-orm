@@ -59,7 +59,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private Boolean readOnlyBeforeAttachedToSession;
 
 	private String sessionFactoryUuid;
-	private boolean specjLazyLoad = false;
+	private boolean specjLazyLoad;
 
 	/**
 	 * For serialization from the non-pojo initializers (HHH-3309)

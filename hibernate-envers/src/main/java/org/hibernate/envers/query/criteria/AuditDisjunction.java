@@ -41,11 +41,13 @@ public class AuditDisjunction implements AuditCriterion, ExtendableCriterion {
 		criterions = new ArrayList<AuditCriterion>();
 	}
 
+	@Override
 	public AuditDisjunction add(AuditCriterion criterion) {
 		criterions.add( criterion );
 		return this;
 	}
 
+	@Override
 	public void addToQuery(
 			AuditConfiguration verCfg, AuditReaderImplementor versionsReader, String entityName,
 			QueryBuilder qb, Parameters parameters) {

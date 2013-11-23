@@ -33,7 +33,10 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ToOneEntityLoader {
+public final class ToOneEntityLoader {
+	private ToOneEntityLoader() {
+	}
+
 	/**
 	 * Immediately loads historical entity or its current state when excluded from audit process. Returns {@code null}
 	 * reference if entity has not been found in the database.

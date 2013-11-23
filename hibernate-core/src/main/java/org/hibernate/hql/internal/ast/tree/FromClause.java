@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -33,11 +34,11 @@ import java.util.Set;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
-import org.jboss.logging.Logger;
 
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
@@ -46,8 +47,8 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author josh
  */
 public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, DisplayableNode {
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FromClause.class );
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromClause.class.getName());
 	public static final int ROOT_LEVEL = 1;
 
 	private int level = ROOT_LEVEL;
@@ -72,7 +73,7 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 	/**
 	 * Counts the from elements as they are added.
 	 */
-	private int fromElementCounter = 0;
+	private int fromElementCounter;
 	/**
 	 * Implied FROM elements to add onto the end of the FROM clause.
 	 */

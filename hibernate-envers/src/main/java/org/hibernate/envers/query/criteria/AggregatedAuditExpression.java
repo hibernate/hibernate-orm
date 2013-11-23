@@ -40,7 +40,8 @@ import org.hibernate.envers.query.internal.property.PropertyNameGetter;
 public class AggregatedAuditExpression implements AuditCriterion, ExtendableCriterion {
 	private PropertyNameGetter propertyNameGetter;
 	private AggregatedMode mode;
-	private boolean correlate = false; // Correlate subquery with outer query by entity id.
+	// Correlate subquery with outer query by entity id.
+	private boolean correlate;
 	private List<AuditCriterion> criterions;
 
 	public AggregatedAuditExpression(PropertyNameGetter propertyNameGetter, AggregatedMode mode) {
@@ -54,11 +55,13 @@ public class AggregatedAuditExpression implements AuditCriterion, ExtendableCrit
 		MIN
 	}
 
+	@Override
 	public AggregatedAuditExpression add(AuditCriterion criterion) {
 		criterions.add( criterion );
 		return this;
 	}
 
+	@Override
 	public void addToQuery(
 			AuditConfiguration auditCfg, AuditReaderImplementor versionsReader, String entityName,
 			QueryBuilder qb, Parameters parameters) {

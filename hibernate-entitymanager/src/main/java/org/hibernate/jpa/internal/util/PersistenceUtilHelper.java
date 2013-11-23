@@ -31,7 +31,10 @@ import org.hibernate.proxy.LazyInitializer;
  * @author Hardy Ferentschik
  * @author Steve Ebersole
  */
-public class PersistenceUtilHelper {
+public final class PersistenceUtilHelper {
+	private PersistenceUtilHelper() {
+	}
+
 	/**
 	 * Determine if the given object reference represents loaded state.  The reference may be to an entity or a
 	 * persistent collection.
@@ -364,7 +367,7 @@ public class PersistenceUtilHelper {
 	 */
 	private static Method getMethod(Class<?> clazz, String attributeName) {
 		try {
-			char string[] = attributeName.toCharArray();
+			char[] string = attributeName.toCharArray();
 			string[0] = Character.toUpperCase( string[0] );
 			String casedAttributeName = new String( string );
 			try {

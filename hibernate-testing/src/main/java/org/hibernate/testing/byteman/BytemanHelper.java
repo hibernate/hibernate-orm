@@ -36,7 +36,7 @@ import org.jboss.logging.Logger;
 public class BytemanHelper extends Helper {
 	private static final Logger log = Logger.getLogger( BytemanHelper.class );
 
-	public static final AtomicInteger counter = new AtomicInteger();
+	public static final AtomicInteger COUNTER = new AtomicInteger();
 
 	protected BytemanHelper(Rule rule) {
 		super( rule );
@@ -60,10 +60,10 @@ public class BytemanHelper extends Helper {
 
 	public void countInvocation() {
 		log.debug( "Increment call count" );
-		counter.incrementAndGet();
+		COUNTER.incrementAndGet();
 	}
 
 	public static int getAndResetInvocationCount() {
-		return counter.getAndSet( 0 );
+		return COUNTER.getAndSet( 0 );
 	}
 }

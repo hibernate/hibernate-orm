@@ -37,11 +37,10 @@ import java.util.Set;
  * rather than <tt>equals()</tt>.
  */
 public final class IdentityMap<K,V> implements Map<K,V> {
-
 	private final Map<IdentityKey<K>,V> map;
 	@SuppressWarnings( {"unchecked"})
 	private transient Entry<IdentityKey<K>,V>[] entryArray = new Entry[0];
-	private transient boolean dirty = false;
+	private transient boolean dirty;
 
 	/**
 	 * Return a new instance of this class, with iteration
@@ -226,7 +225,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	public static final class IdentityKey<K> implements Serializable {
 
 		private final K key;
-		private int hash = 0;
+		private int hash;
 
 		IdentityKey(K key) {
 			this.key = key;

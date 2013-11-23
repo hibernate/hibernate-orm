@@ -27,7 +27,7 @@ package org.hibernate.envers.internal.tools;
  * @author Adam Warski (adam at warski dot org)
  */
 public class MutableInteger {
-	private int value = 0;
+	private int value;
 
 	public MutableInteger() {
 	}

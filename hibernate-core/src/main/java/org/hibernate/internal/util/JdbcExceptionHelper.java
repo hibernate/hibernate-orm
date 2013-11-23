@@ -5,7 +5,10 @@ import java.sql.SQLException;
 /**
  * @author Steve Ebersole
  */
-public class JdbcExceptionHelper {
+public final class JdbcExceptionHelper {
+	private JdbcExceptionHelper() {
+	}
+
 	/**
 	 * For the given SQLException, locates the vendor-specific error code.
 	 *

@@ -167,7 +167,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	}
 
 	@Override
-	public Object transformTuple(Object[] tuple, String aliases[]) {
+	public Object transformTuple(Object[] tuple, String[] aliases) {
 		if ( aliases != null && aliases.length != tupleLength ) {
 			throw new IllegalStateException(
 					"aliases expected length is " + tupleLength +
@@ -199,7 +199,7 @@ public class CacheableResultTransformer implements ResultTransformer {
 	@SuppressWarnings( {"unchecked"})
 	public List retransformResults(
 			List transformedResults,
-			String aliases[],
+			String[] aliases,
 			ResultTransformer transformer,
 			boolean[] includeInTuple) {
 		if ( transformer == null ) {

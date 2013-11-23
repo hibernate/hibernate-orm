@@ -245,9 +245,8 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory {
 	 * Retrieves the SqlExceptionHelper in effect for this SessionFactory.
 	 *
 	 * @return The SqlExceptionHelper for this SessionFactory.
-	 *
 	 */
-    public SqlExceptionHelper getSQLExceptionHelper();
+	public SqlExceptionHelper getSQLExceptionHelper();
 
 	public Settings getSettings();
 

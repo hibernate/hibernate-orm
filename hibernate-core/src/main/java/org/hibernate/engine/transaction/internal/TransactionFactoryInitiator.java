@@ -25,15 +25,14 @@ package org.hibernate.engine.transaction.internal;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionFactory;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.boot.registry.selector.spi.StrategySelector;
-import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
@@ -44,21 +43,18 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 public class TransactionFactoryInitiator<T extends TransactionImplementor>
 		implements StandardServiceInitiator<TransactionFactory> {
 
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			TransactionFactoryInitiator.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( TransactionFactoryInitiator.class );
 
 	public static final TransactionFactoryInitiator INSTANCE = new TransactionFactoryInitiator();
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public Class<TransactionFactory> getServiceInitiated() {
 		return TransactionFactory.class;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked"})
+	@SuppressWarnings({"unchecked"})
 	public TransactionFactory initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
 		final Object strategy = configurationValues.get( AvailableSettings.TRANSACTION_STRATEGY );
 

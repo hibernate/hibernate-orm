@@ -23,8 +23,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -40,12 +38,12 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
- * Wrap collections in a Hibernate collection
- * wrapper.
+ * Wrap collections in a Hibernate collection wrapper.
+ *
  * @author Gavin King
  */
 public class WrapVisitor extends ProxyVisitor {
-    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( WrapVisitor.class );
 
 	boolean substitute;
 
@@ -54,35 +52,35 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	WrapVisitor(EventSource session) {
-		super(session);
+		super( session );
 	}
 
 	@Override
-    Object processCollection(Object collection, CollectionType collectionType)
-	throws HibernateException {
+	Object processCollection(Object collection, CollectionType collectionType)
+			throws HibernateException {
 
-		if ( collection!=null && (collection instanceof PersistentCollection) ) {
+		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
 
 			final SessionImplementor session = getSession();
 			PersistentCollection coll = (PersistentCollection) collection;
-			if ( coll.setCurrentSession(session) ) {
+			if ( coll.setCurrentSession( session ) ) {
 				reattachCollection( coll, collectionType );
 			}
 			return null;
 
 		}
 		else {
-			return processArrayOrNewCollection(collection, collectionType);
+			return processArrayOrNewCollection( collection, collectionType );
 		}
 
 	}
 
 	final Object processArrayOrNewCollection(Object collection, CollectionType collectionType)
-	throws HibernateException {
+			throws HibernateException {
 
 		final SessionImplementor session = getSession();
 
-		if (collection==null) {
+		if ( collection == null ) {
 			//do nothing
 			return null;
 		}
@@ -93,19 +91,21 @@ public class WrapVisitor extends ProxyVisitor {
 			//TODO: move into collection type, so we can use polymorphism!
 			if ( collectionType.hasHolder() ) {
 
-				if (collection==CollectionType.UNFETCHED_COLLECTION) return null;
+				if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
+					return null;
+				}
 
-				PersistentCollection ah = persistenceContext.getCollectionHolder(collection);
-				if (ah==null) {
-					ah = collectionType.wrap(session, collection);
+				PersistentCollection ah = persistenceContext.getCollectionHolder( collection );
+				if ( ah == null ) {
+					ah = collectionType.wrap( session, collection );
 					persistenceContext.addNewCollection( persister, ah );
-					persistenceContext.addCollectionHolder(ah);
+					persistenceContext.addCollectionHolder( ah );
 				}
 				return null;
 			}
 			else {
 
-				PersistentCollection persistentCollection = collectionType.wrap(session, collection);
+				PersistentCollection persistentCollection = collectionType.wrap( session, collection );
 				persistenceContext.addNewCollection( persister, persistentCollection );
 
 				if ( LOG.isTraceEnabled() ) {
@@ -121,30 +121,28 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-    void processValue(int i, Object[] values, Type[] types) {
+	void processValue(int i, Object[] values, Type[] types) {
 		Object result = processValue( values[i], types[i] );
-		if (result!=null) {
+		if ( result != null ) {
 			substitute = true;
 			values[i] = result;
 		}
 	}
 
 	@Override
-    Object processComponent(Object component, CompositeType componentType)
-	throws HibernateException {
-
-		if (component!=null) {
+	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+		if ( component != null ) {
 			Object[] values = componentType.getPropertyValues( component, getSession() );
 			Type[] types = componentType.getSubtypes();
 			boolean substituteComponent = false;
-			for ( int i=0; i<types.length; i++ ) {
+			for ( int i = 0; i < types.length; i++ ) {
 				Object result = processValue( values[i], types[i] );
-				if (result!=null) {
+				if ( result != null ) {
 					values[i] = result;
 					substituteComponent = true;
 				}
 			}
-			if (substituteComponent) {
+			if ( substituteComponent ) {
 				componentType.setPropertyValues( component, values, EntityMode.POJO );
 			}
 		}
@@ -153,7 +151,7 @@ public class WrapVisitor extends ProxyVisitor {
 	}
 
 	@Override
-    void process(Object object, EntityPersister persister) throws HibernateException {
+	void process(Object object, EntityPersister persister) throws HibernateException {
 		final Object[] values = persister.getPropertyValues( object );
 		final Type[] types = persister.getPropertyTypes();
 		processEntityPropertyValues( values, types );

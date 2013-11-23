@@ -40,27 +40,20 @@ import org.hibernate.sql.JoinFragment;
  * @author josh
  */
 public final class CollectionSubqueryFactory {
-
-	//TODO: refactor to .sql package
-
 	private CollectionSubqueryFactory() {
 	}
 
 	public static String createCollectionSubquery(
 			JoinSequence joinSequence,
-	        Map enabledFilters,
-	        String[] columns) {
+			Map enabledFilters,
+			String[] columns) {
 		try {
 			JoinFragment join = joinSequence.toJoinFragment( enabledFilters, true );
-			return new StringBuilder( "select " )
-					.append( StringHelper.join( ", ", columns ) )
-					.append( " from " )
-					.append( join.toFromFragmentString().substring( 2 ) )// remove initial ", "
-					.append( " where " )
-					.append( join.toWhereFragmentString().substring( 5 ) )// remove initial " and "
-					.toString();
+			return "select " + StringHelper.join( ", ", columns )
+					+ " from " + join.toFromFragmentString().substring( 2 )
+					+ " where " + join.toWhereFragmentString().substring( 5 );
 		}
-		catch ( MappingException me ) {
+		catch (MappingException me) {
 			throw new QueryException( me );
 		}
 	}

@@ -39,8 +39,8 @@ import org.hibernate.type.Type;
  * Uniqueing information consists of the entity-name, the referenced
  * property name, and the referenced property value.
  *
- * @see EntityKey
  * @author Gavin King
+ * @see EntityKey
  */
 public class EntityUniqueKey implements Serializable {
 	private final String uniqueKeyName;
@@ -52,18 +52,17 @@ public class EntityUniqueKey implements Serializable {
 
 	public EntityUniqueKey(
 			final String entityName,
-	        final String uniqueKeyName,
-	        final Object semiResolvedKey,
-	        final Type keyType,
-	        final EntityMode entityMode,
-	        final SessionFactoryImplementor factory
-	) {
+			final String uniqueKeyName,
+			final Object semiResolvedKey,
+			final Type keyType,
+			final EntityMode entityMode,
+			final SessionFactoryImplementor factory) {
 		this.uniqueKeyName = uniqueKeyName;
 		this.entityName = entityName;
 		this.key = semiResolvedKey;
-		this.keyType = keyType.getSemiResolvedType(factory);
+		this.keyType = keyType.getSemiResolvedType( factory );
 		this.entityMode = entityMode;
-		this.hashCode = generateHashCode(factory);
+		this.hashCode = generateHashCode( factory );
 	}
 
 	public String getEntityName() {
@@ -82,23 +81,26 @@ public class EntityUniqueKey implements Serializable {
 		int result = 17;
 		result = 37 * result + entityName.hashCode();
 		result = 37 * result + uniqueKeyName.hashCode();
-		result = 37 * result + keyType.getHashCode(key, factory);
+		result = 37 * result + keyType.getHashCode( key, factory );
 		return result;
 	}
 
+	@Override
 	public int hashCode() {
 		return hashCode;
 	}
 
+	@Override
 	public boolean equals(Object other) {
 		EntityUniqueKey that = (EntityUniqueKey) other;
-		return that.entityName.equals(entityName) &&
-		       that.uniqueKeyName.equals(uniqueKeyName) &&
-		       keyType.isEqual(that.key, key );
+		return that.entityName.equals( entityName )
+				&& that.uniqueKeyName.equals( uniqueKeyName )
+				&& keyType.isEqual( that.key, key );
 	}
 
+	@Override
 	public String toString() {
-		return "EntityUniqueKey" + MessageHelper.infoString(entityName, uniqueKeyName, key);
+		return "EntityUniqueKey" + MessageHelper.infoString( entityName, uniqueKeyName, key );
 	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {
@@ -110,10 +112,10 @@ public class EntityUniqueKey implements Serializable {
 		// The unique property value represented here may or may not be
 		// serializable, so we do an explicit check here in order to generate
 		// a better error message
-		if ( key != null && ! Serializable.class.isAssignableFrom( key.getClass() ) ) {
+		if ( key != null && !Serializable.class.isAssignableFrom( key.getClass() ) ) {
 			throw new IllegalStateException(
 					"Cannot serialize an EntityUniqueKey which represents a non " +
-					"serializable property value [" + entityName + "." + uniqueKeyName + "]"
+							"serializable property value [" + entityName + "." + uniqueKeyName + "]"
 			);
 		}
 	}
@@ -123,6 +125,7 @@ public class EntityUniqueKey implements Serializable {
 	 * Session/PersistenceContext for increased performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
+	 *
 	 * @throws IOException
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
@@ -140,20 +143,22 @@ public class EntityUniqueKey implements Serializable {
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param session The session being deserialized.
+	 *
 	 * @return The deserialized EntityEntry
+	 *
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
 	public static EntityUniqueKey deserialize(
 			ObjectInputStream ois,
-	        SessionImplementor session) throws IOException, ClassNotFoundException {
+			SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new EntityUniqueKey(
-				( String ) ois.readObject(),
-		        ( String ) ois.readObject(),
-		        ois.readObject(),
-		        ( Type ) ois.readObject(),
-		        ( EntityMode ) ois.readObject(),
-		        session.getFactory()
+				(String) ois.readObject(),
+				(String) ois.readObject(),
+				ois.readObject(),
+				(Type) ois.readObject(),
+				(EntityMode) ois.readObject(),
+				session.getFactory()
 		);
 	}
 }

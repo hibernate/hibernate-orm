@@ -52,7 +52,7 @@ import org.hibernate.type.AssociationType;
  * @see JoinFragment
  */
 public class JoinSequence {
-    private final SessionFactoryImplementor factory;
+	private final SessionFactoryImplementor factory;
 
 	private final StringBuilder conditions = new StringBuilder();
 	private final List<Join> joins = new ArrayList<Join>();

@@ -27,7 +27,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.CoreLogging;
 
 /**
  * Centralize logging for SQL statements.
@@ -35,8 +35,7 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Steve Ebersole
  */
 public class SqlStatementLogger {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, "org.hibernate.SQL");
+	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
 
 	private boolean logToStdout;
 	private boolean format;

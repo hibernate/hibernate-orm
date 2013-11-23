@@ -33,20 +33,20 @@ import org.hibernate.type.Type;
 /**
  * A FilterDefinition defines the global attributes of a dynamic filter.  This
  * information includes its name as well as its defined parameters (name and type).
- * 
+ *
  * @author Steve Ebersole
  */
 public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
-	private final Map<String,Type> parameterTypes = new HashMap<String,Type>();
+	private final Map<String, Type> parameterTypes = new HashMap<String, Type>();
 
 	/**
 	 * Construct a new FilterDefinition instance.
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, Map<String,Type> parameterTypes) {
+	public FilterDefinition(String name, String defaultCondition, Map<String, Type> parameterTypes) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		this.parameterTypes.putAll( parameterTypes );
@@ -71,20 +71,21 @@ public class FilterDefinition implements Serializable {
 	}
 
 	/**
-	 * Retreive the type of the named parameter defined for this filter.
+	 * Retrieve the type of the named parameter defined for this filter.
 	 *
 	 * @param parameterName The name of the filter parameter for which to return the type.
+	 *
 	 * @return The type of the named parameter.
 	 */
-    public Type getParameterType(String parameterName) {
-	    return parameterTypes.get(parameterName);
-    }
+	public Type getParameterType(String parameterName) {
+		return parameterTypes.get( parameterName );
+	}
 
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
 	}
 
-	public Map<String,Type> getParameterTypes() {
+	public Map<String, Type> getParameterTypes() {
 		return parameterTypes;
 	}
 

@@ -36,7 +36,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 
@@ -47,8 +47,7 @@ import org.hibernate.pretty.MessageHelper;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionEntry.class.getName());
+    private static final Logger LOG = CoreLogging.logger( CollectionEntry.class );
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 
@@ -152,9 +151,9 @@ public final class CollectionEntry implements Serializable {
 	 */
 	private CollectionEntry(
 			String role,
-	        Serializable snapshot,
-	        Serializable loadedKey,
-	        SessionFactoryImplementor factory) {
+			Serializable snapshot,
+			Serializable loadedKey,
+			SessionFactoryImplementor factory) {
 		this.role = role;
 		this.snapshot = snapshot;
 		this.loadedKey = loadedKey;
@@ -378,10 +377,10 @@ public final class CollectionEntry implements Serializable {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		String result = "CollectionEntry" +
 				MessageHelper.collectionInfoString( loadedPersister.getRole(), loadedKey );
-		if (currentPersister!=null) {
+		if ( currentPersister != null ) {
 			result += "->" +
 					MessageHelper.collectionInfoString( currentPersister.getRole(), currentKey );
 		}
@@ -429,18 +428,20 @@ public final class CollectionEntry implements Serializable {
 	 *
 	 * @param ois The stream from which to read the entry.
 	 * @param session The session being deserialized.
+	 *
 	 * @return The deserialized CollectionEntry
+	 *
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
 	public static CollectionEntry deserialize(
 			ObjectInputStream ois,
-	        SessionImplementor session) throws IOException, ClassNotFoundException {
+			SessionImplementor session) throws IOException, ClassNotFoundException {
 		return new CollectionEntry(
-				( String ) ois.readObject(),
-		        ( Serializable ) ois.readObject(),
-		        ( Serializable ) ois.readObject(),
-		        ( session == null ? null : session.getFactory() )
+				(String) ois.readObject(),
+				(Serializable) ois.readObject(),
+				(Serializable) ois.readObject(),
+				(session == null ? null : session.getFactory())
 		);
 	}
 }

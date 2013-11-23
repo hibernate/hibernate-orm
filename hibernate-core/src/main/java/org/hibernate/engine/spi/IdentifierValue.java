@@ -27,7 +27,7 @@ import java.io.Serializable;
 
 import org.jboss.logging.Logger;
 
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.CoreLogging;
 
 /**
  * A strategy for determining if an identifier value is an identifier of
@@ -38,8 +38,7 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Gavin King
  */
 public class IdentifierValue implements UnsavedValueStrategy {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, IdentifierValue.class.getName());
+	private static final Logger LOG = CoreLogging.logger( IdentifierValue.class );
 
 	private final Serializable value;
 
@@ -52,10 +51,12 @@ public class IdentifierValue implements UnsavedValueStrategy {
 			LOG.trace( "ID unsaved-value strategy ANY" );
 			return Boolean.TRUE;
 		}
+
 		@Override
 		public Serializable getDefaultValue(Object currentValue) {
 			return (Serializable) currentValue;
 		}
+
 		@Override
 		public String toString() {
 			return "SAVE_ANY";
@@ -71,10 +72,12 @@ public class IdentifierValue implements UnsavedValueStrategy {
 			LOG.trace( "ID unsaved-value strategy NONE" );
 			return Boolean.FALSE;
 		}
+
 		@Override
 		public Serializable getDefaultValue(Object currentValue) {
 			return (Serializable) currentValue;
 		}
+
 		@Override
 		public String toString() {
 			return "SAVE_NONE";
@@ -89,12 +92,14 @@ public class IdentifierValue implements UnsavedValueStrategy {
 		@Override
 		public final Boolean isUnsaved(Object id) {
 			LOG.trace( "ID unsaved-value strategy NULL" );
-			return id==null;
+			return id == null;
 		}
+
 		@Override
 		public Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
+
 		@Override
 		public String toString() {
 			return "SAVE_NULL";
@@ -110,10 +115,12 @@ public class IdentifierValue implements UnsavedValueStrategy {
 			LOG.trace( "ID unsaved-value strategy UNDEFINED" );
 			return null;
 		}
+
 		@Override
 		public Serializable getDefaultValue(Object currentValue) {
 			return null;
 		}
+
 		@Override
 		public String toString() {
 			return "UNDEFINED";
@@ -135,11 +142,13 @@ public class IdentifierValue implements UnsavedValueStrategy {
 	/**
 	 * Does the given identifier belong to a new instance?
 	 */
+	@Override
 	public Boolean isUnsaved(Object id) {
 		LOG.tracev( "ID unsaved-value: {0}", value );
-		return id==null || id.equals(value);
+		return id == null || id.equals( value );
 	}
 
+	@Override
 	public Serializable getDefaultValue(Object currentValue) {
 		return value;
 	}

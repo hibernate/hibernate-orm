@@ -27,9 +27,8 @@ package org.hibernate.engine.spi;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public interface CompositeOwner {
-
-    /**
-     * @param attributeName to be added to the dirty list
-     */
-    void $$_hibernate_trackChange(String attributeName);
+	/**
+	 * @param attributeName to be added to the dirty list
+	 */
+	void $$_hibernate_trackChange(String attributeName);
 }

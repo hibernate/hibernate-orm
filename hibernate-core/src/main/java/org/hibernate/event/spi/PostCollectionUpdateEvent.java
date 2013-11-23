@@ -32,12 +32,16 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Gail Badner
  */
 public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
-
-	public PostCollectionUpdateEvent(CollectionPersister collectionPersister,
-									 PersistentCollection collection,
-									 EventSource source) {
-		super( collectionPersister, collection, source,
+	public PostCollectionUpdateEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection collection,
+			EventSource source) {
+		super(
+				collectionPersister,
+				collection,
+				source,
 				getLoadedOwnerOrNull( collection, source ),
-				getLoadedOwnerIdOrNull( collection, source ) );
+				getLoadedOwnerIdOrNull( collection, source )
+		);
 	}
 }

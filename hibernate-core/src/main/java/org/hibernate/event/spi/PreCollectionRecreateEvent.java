@@ -33,11 +33,16 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public class PreCollectionRecreateEvent extends AbstractCollectionEvent {
 
-	public PreCollectionRecreateEvent(CollectionPersister collectionPersister,
-									  PersistentCollection collection,
-									  EventSource source) {
-		super( collectionPersister, collection, source,
+	public PreCollectionRecreateEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection collection,
+			EventSource source) {
+		super(
+				collectionPersister,
+				collection,
+				source,
 				collection.getOwner(),
-				getOwnerIdOrNull( collection.getOwner(), source ) );
+				getOwnerIdOrNull( collection.getOwner(), source )
+		);
 	}
 }

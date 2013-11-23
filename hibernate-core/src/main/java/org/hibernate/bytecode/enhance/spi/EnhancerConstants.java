@@ -65,7 +65,7 @@ public class EnhancerConstants {
 
 	/**
 	 * Name of the field used to hold the previous {@link org.hibernate.engine.spi.ManagedEntity}.
-	 *
+	 * <p/>
 	 * Together, previous/next are used to define a "linked list"
 	 *
 	 * @see #NEXT_FIELD_NAME
@@ -88,7 +88,7 @@ public class EnhancerConstants {
 
 	/**
 	 * Name of the field used to hold the previous {@link org.hibernate.engine.spi.ManagedEntity}.
-	 *
+	 * <p/>
 	 * Together, previous/next are used to define a "linked list"
 	 *
 	 * @see #PREVIOUS_FIELD_NAME
@@ -128,53 +128,53 @@ public class EnhancerConstants {
 	 */
 	public static final String INTERCEPTOR_SETTER_NAME = "$$_hibernate_setInterceptor";
 
-    /**
-     * Name of tracker field
-     */
-    public static final String TRACKER_FIELD_NAME = "$$_hibernate_tracker";
+	/**
+	 * Name of tracker field
+	 */
+	public static final String TRACKER_FIELD_NAME = "$$_hibernate_tracker";
 
-    /**
-     * Name of method that add changed fields
-     */
-    public static final String TRACKER_CHANGER_NAME = "$$_hibernate_trackChange";
+	/**
+	 * Name of method that add changed fields
+	 */
+	public static final String TRACKER_CHANGER_NAME = "$$_hibernate_trackChange";
 
-    /**
-     * Name of method to see if any fields has changed
-     */
-    public static final String TRACKER_HAS_CHANGED_NAME = "$$_hibernate_hasDirtyAttributes";
+	/**
+	 * Name of method to see if any fields has changed
+	 */
+	public static final String TRACKER_HAS_CHANGED_NAME = "$$_hibernate_hasDirtyAttributes";
 
-    /**
-     * Name of method to fetch dirty attributes
-     */
-    public static final String TRACKER_GET_NAME = "$$_hibernate_getDirtyAttributes";
+	/**
+	 * Name of method to fetch dirty attributes
+	 */
+	public static final String TRACKER_GET_NAME = "$$_hibernate_getDirtyAttributes";
 
-    /**
-     * Name of method to clear stored dirty attributes
-     */
-    public static final String TRACKER_CLEAR_NAME = "$$_hibernate_clearDirtyAttributes";
+	/**
+	 * Name of method to clear stored dirty attributes
+	 */
+	public static final String TRACKER_CLEAR_NAME = "$$_hibernate_clearDirtyAttributes";
 
-    /**
-     * Name of method to check if collection fields are dirty
-     */
-    public static final String TRACKER_COLLECTION_CHANGED_NAME = "$$_hibernate_areCollectionFieldsDirty";
+	/**
+	 * Name of method to check if collection fields are dirty
+	 */
+	public static final String TRACKER_COLLECTION_CHANGED_NAME = "$$_hibernate_areCollectionFieldsDirty";
 
-    public static final String TRACKER_COLLECTION_NAME = "$$_hibernate_collectionTracker";
-    /**
-     * Name of method to get dirty collection field names
-     */
-    public static final String TRACKER_COLLECTION_CHANGED_FIELD_NAME = "$$_hibernate_getCollectionFieldDirtyNames";
+	public static final String TRACKER_COLLECTION_NAME = "$$_hibernate_collectionTracker";
+	/**
+	 * Name of method to get dirty collection field names
+	 */
+	public static final String TRACKER_COLLECTION_CHANGED_FIELD_NAME = "$$_hibernate_getCollectionFieldDirtyNames";
 
-    public static final String TRACKER_COLLECTION_CLEAR_NAME = "$$_hibernate_clearDirtyCollectionNames";
+	public static final String TRACKER_COLLECTION_CLEAR_NAME = "$$_hibernate_clearDirtyCollectionNames";
 
-    public static final String TRACKER_COMPOSITE_DIRTY_CHECK = "$$_hibernate_areCompositeFieldsDirty";
+	public static final String TRACKER_COMPOSITE_DIRTY_CHECK = "$$_hibernate_areCompositeFieldsDirty";
 
-    public static final String TRACKER_COMPOSITE_DIRTY_FIELDS_GETTER = "$$_hibernate_getCompositeDirtyFields";
+	public static final String TRACKER_COMPOSITE_DIRTY_FIELDS_GETTER = "$$_hibernate_getCompositeDirtyFields";
 
-    public static final String TRACKER_COMPOSITE_FIELD_NAME = "$$_hibernate_compositeOwners";
+	public static final String TRACKER_COMPOSITE_FIELD_NAME = "$$_hibernate_compositeOwners";
 
-    public static final String TRACKER_COMPOSITE_SET_OWNER = "$$_hibernate_setOwner";
+	public static final String TRACKER_COMPOSITE_SET_OWNER = "$$_hibernate_setOwner";
 
-    public static final String TRACKER_COMPOSITE_CLEAR_OWNER = "$$_hibernate_clearOwner";
+	public static final String TRACKER_COMPOSITE_CLEAR_OWNER = "$$_hibernate_clearOwner";
 
 	private EnhancerConstants() {
 	}

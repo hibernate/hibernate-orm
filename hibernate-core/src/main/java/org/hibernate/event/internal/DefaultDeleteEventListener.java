@@ -45,13 +45,13 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.DeleteEvent;
 import org.hibernate.event.spi.DeleteEventListener;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.jboss.logging.Logger;
 
 /**
  * Defines the default delete event listener used by hibernate for deleting entities
@@ -60,9 +60,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class DefaultDeleteEventListener implements DeleteEventListener {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultDeleteEventListener.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultDeleteEventListener.class );
 
 	/**
 	 * Handle the given delete event.
@@ -125,7 +123,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 
 			entityEntry = persistenceContext.addEntity(
 					entity,
-					( persister.isMutable() ? Status.MANAGED : Status.READ_ONLY ),
+					(persister.isMutable() ? Status.MANAGED : Status.READ_ONLY),
 					persister.getPropertyValues( entity ),
 					key,
 					version,
@@ -159,8 +157,15 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			return;
 		}
 
-		deleteEntity( source, entity, entityEntry, event.isCascadeDeleteEnabled(),
-				event.isOrphanRemovalBeforeUpdates(), persister, transientEntities );
+		deleteEntity(
+				source,
+				entity,
+				entityEntry,
+				event.isCascadeDeleteEnabled(),
+				event.isOrphanRemovalBeforeUpdates(),
+				persister,
+				transientEntities
+		);
 
 		if ( source.getFactory().getSettings().isIdentifierRollbackEnabled() ) {
 			persister.resetIdentifier( entity, id, version, source );
@@ -233,7 +238,10 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			final Set transientEntities) {
 
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Deleting {0}", MessageHelper.infoString( persister, entityEntry.getId(), session.getFactory() ) );
+			LOG.tracev(
+					"Deleting {0}",
+					MessageHelper.infoString( persister, entityEntry.getId(), session.getFactory() )
+			);
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -241,7 +249,8 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		final Object version = entityEntry.getVersion();
 
 		final Object[] currentState;
-		if ( entityEntry.getLoadedState() == null ) { //ie. the entity came in from update()
+		if ( entityEntry.getLoadedState() == null ) {
+			//ie. the entity came in from update()
 			currentState = persister.getPropertyValues( entity );
 		}
 		else {
@@ -270,7 +279,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		new Nullability( session ).checkNullability( entityEntry.getDeletedState(), persister, true );
 		persistenceContext.getNullifiableEntityKeys().add( key );
 
-		if (isOrphanRemovalBeforeUpdates) {
+		if ( isOrphanRemovalBeforeUpdates ) {
 			// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
 			// ordering is improved.
 			session.getActionQueue().addAction(
@@ -321,7 +330,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	protected boolean invokeDeleteLifecycle(EventSource session, Object entity, EntityPersister persister) {
 		if ( persister.implementsLifecycle() ) {
 			LOG.debug( "Calling onDelete()" );
-			if ( ( ( Lifecycle ) entity ).onDelete( session ) ) {
+			if ( ( (Lifecycle) entity ).onDelete( session ) ) {
 				LOG.debug( "Deletion vetoed by onDelete()" );
 				return true;
 			}

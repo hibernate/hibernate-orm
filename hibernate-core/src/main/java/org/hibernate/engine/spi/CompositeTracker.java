@@ -28,7 +28,7 @@ package org.hibernate.engine.spi;
  */
 public interface CompositeTracker {
 
-    void $$_hibernate_setOwner(String name, CompositeOwner tracker);
+	void $$_hibernate_setOwner(String name, CompositeOwner tracker);
 
-    void $$_hibernate_clearOwner(String name);
+	void $$_hibernate_clearOwner(String name);
 }

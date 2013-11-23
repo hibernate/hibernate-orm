@@ -34,55 +34,56 @@ import org.hibernate.HibernateException;
  */
 public interface LoadEventListener extends Serializable {
 
-	/** 
+	/**
 	 * Handle the given load event.
-     *
-     * @param event The load event to be handled.
-     * @throws HibernateException
-     */
+	 *
+	 * @param event The load event to be handled.
+	 *
+	 * @throws HibernateException
+	 */
 	public void onLoad(LoadEvent event, LoadType loadType) throws HibernateException;
 
-	public static final LoadType RELOAD = new LoadType("GET")
-			.setAllowNulls(false)
-			.setAllowProxyCreation(false)
-			.setCheckDeleted(true)
-			.setNakedEntityReturned(false);
+	public static final LoadType RELOAD = new LoadType( "GET" )
+			.setAllowNulls( false )
+			.setAllowProxyCreation( false )
+			.setCheckDeleted( true )
+			.setNakedEntityReturned( false );
 
-	public static final LoadType GET = new LoadType("GET")
-			.setAllowNulls(true)
-			.setAllowProxyCreation(false)
-			.setCheckDeleted(true)
-			.setNakedEntityReturned(false);
-	
-	public static final LoadType LOAD = new LoadType("LOAD")
-			.setAllowNulls(false)
-			.setAllowProxyCreation(true)
-			.setCheckDeleted(true)
-			.setNakedEntityReturned(false);
-	
-	public static final LoadType IMMEDIATE_LOAD = new LoadType("IMMEDIATE_LOAD")
-			.setAllowNulls(true)
-			.setAllowProxyCreation(false)
-			.setCheckDeleted(false)
-			.setNakedEntityReturned(true);
-	
-	public static final LoadType INTERNAL_LOAD_EAGER = new LoadType("INTERNAL_LOAD_EAGER")
-			.setAllowNulls(false)
-			.setAllowProxyCreation(false)
-			.setCheckDeleted(false)
-			.setNakedEntityReturned(false);
-	
-	public static final LoadType INTERNAL_LOAD_LAZY = new LoadType("INTERNAL_LOAD_LAZY")
-			.setAllowNulls(false)
-			.setAllowProxyCreation(true)
-			.setCheckDeleted(false)
-			.setNakedEntityReturned(false);
-	
-	public static final LoadType INTERNAL_LOAD_NULLABLE = new LoadType("INTERNAL_LOAD_NULLABLE")
-			.setAllowNulls(true)
-			.setAllowProxyCreation(false)
-			.setCheckDeleted(false)
-			.setNakedEntityReturned(false);
+	public static final LoadType GET = new LoadType( "GET" )
+			.setAllowNulls( true )
+			.setAllowProxyCreation( false )
+			.setCheckDeleted( true )
+			.setNakedEntityReturned( false );
+
+	public static final LoadType LOAD = new LoadType( "LOAD" )
+			.setAllowNulls( false )
+			.setAllowProxyCreation( true )
+			.setCheckDeleted( true )
+			.setNakedEntityReturned( false );
+
+	public static final LoadType IMMEDIATE_LOAD = new LoadType( "IMMEDIATE_LOAD" )
+			.setAllowNulls( true )
+			.setAllowProxyCreation( false )
+			.setCheckDeleted( false )
+			.setNakedEntityReturned( true );
+
+	public static final LoadType INTERNAL_LOAD_EAGER = new LoadType( "INTERNAL_LOAD_EAGER" )
+			.setAllowNulls( false )
+			.setAllowProxyCreation( false )
+			.setCheckDeleted( false )
+			.setNakedEntityReturned( false );
+
+	public static final LoadType INTERNAL_LOAD_LAZY = new LoadType( "INTERNAL_LOAD_LAZY" )
+			.setAllowNulls( false )
+			.setAllowProxyCreation( true )
+			.setCheckDeleted( false )
+			.setNakedEntityReturned( false );
+
+	public static final LoadType INTERNAL_LOAD_NULLABLE = new LoadType( "INTERNAL_LOAD_NULLABLE" )
+			.setAllowNulls( true )
+			.setAllowProxyCreation( false )
+			.setCheckDeleted( false )
+			.setNakedEntityReturned( false );
 
 	public static final class LoadType {
 		private String name;
@@ -92,9 +93,9 @@ public interface LoadEventListener extends Serializable {
 		private boolean checkDeleted;
 		private boolean allowProxyCreation;
 
-        private LoadType(String name) {
-	        this.name = name;
-        }
+		private LoadType(String name) {
+			this.name = name;
+		}
 
 		public boolean isAllowNulls() {
 			return allowNulls;
@@ -135,7 +136,8 @@ public interface LoadEventListener extends Serializable {
 		public String getName() {
 			return name;
 		}
-		
+
+		@Override
 		public String toString() {
 			return name;
 		}

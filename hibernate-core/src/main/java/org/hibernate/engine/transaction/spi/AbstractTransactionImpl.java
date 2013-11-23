@@ -30,8 +30,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.internal.CoreLogging;
 
 /**
  * Abstract support for creating {@link TransactionImplementor transaction} implementations
@@ -39,9 +39,7 @@ import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
  * @author Steve Ebersole
  */
 public abstract class AbstractTransactionImpl implements TransactionImplementor {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       AbstractTransactionImpl.class.getName());
+	private static final Logger LOG = CoreLogging.logger( AbstractTransactionImpl.class );
 
 	private final TransactionCoordinator transactionCoordinator;
 
@@ -81,9 +79,13 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 	protected abstract void doRollback();
 
 	protected abstract void afterTransactionBegin();
+
 	protected abstract void beforeTransactionCommit();
+
 	protected abstract void beforeTransactionRollBack();
+
 	protected abstract void afterTransactionCompletion(int status);
+
 	protected abstract void afterAfterCompletion();
 
 	/**
@@ -145,7 +147,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 
 	@Override
 	public void begin() throws HibernateException {
-		if ( ! valid ) {
+		if ( !valid ) {
 			throw new TransactionException( "Transaction instance is no longer valid" );
 		}
 		if ( localStatus == LocalStatus.ACTIVE ) {
@@ -179,7 +181,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 			localStatus = LocalStatus.COMMITTED;
 			afterTransactionCompletion( Status.STATUS_COMMITTED );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			localStatus = LocalStatus.FAILED_COMMIT;
 			afterTransactionCompletion( Status.STATUS_UNKNOWN );
 			throw new TransactionException( "commit failed", e );
@@ -210,7 +212,7 @@ public abstract class AbstractTransactionImpl implements TransactionImplementor 
 				localStatus = LocalStatus.ROLLED_BACK;
 				afterTransactionCompletion( Status.STATUS_ROLLEDBACK );
 			}
-			catch ( Exception e ) {
+			catch (Exception e) {
 				afterTransactionCompletion( Status.STATUS_UNKNOWN );
 				throw new TransactionException( "rollback failed", e );
 			}

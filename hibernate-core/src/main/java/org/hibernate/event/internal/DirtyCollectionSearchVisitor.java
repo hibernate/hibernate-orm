@@ -43,7 +43,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	private boolean[] propertyVersionability;
 
 	DirtyCollectionSearchVisitor(EventSource session, boolean[] propertyVersionability) {
-		super(session);
+		super( session );
 		this.propertyVersionability = propertyVersionability;
 	}
 
@@ -51,16 +51,12 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 		return dirty;
 	}
 
-	Object processCollection(Object collection, CollectionType type)
-		throws HibernateException {
-
-		if (collection!=null) {
-
-			SessionImplementor session = getSession();
-
+	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+		if ( collection != null ) {
+			final SessionImplementor session = getSession();
 			final PersistentCollection persistentCollection;
 			if ( type.isArrayType() ) {
-				 persistentCollection = session.getPersistenceContext().getCollectionHolder(collection);
+				persistentCollection = session.getPersistenceContext().getCollectionHolder( collection );
 				// if no array holder we found an unwrappered array (this can't occur,
 				// because we now always call wrap() before getting to here)
 				// return (ah==null) ? true : searchForDirtyCollections(ah, type);
@@ -74,7 +70,7 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 			}
 
 			if ( persistentCollection.isDirty() ) { //we need to check even if it was not initialized, because of delayed adds!
-				dirty=true;
+				dirty = true;
 				return null; //NOTE: EARLY EXIT!
 			}
 		}
@@ -83,6 +79,6 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	}
 
 	boolean includeEntityProperty(Object[] values, int i) {
-		return propertyVersionability[i] && super.includeEntityProperty(values, i);
+		return propertyVersionability[i] && super.includeEntityProperty( values, i );
 	}
 }

@@ -32,13 +32,11 @@ import org.hibernate.persister.collection.CollectionPersister;
  * @author Gail Badner
  */
 public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
-
-	public PostCollectionRemoveEvent(CollectionPersister collectionPersister,
-									 PersistentCollection collection,
-									 EventSource source,
-									 Object loadedOwner ) {
-		super( collectionPersister, collection, source,
-				loadedOwner,
-				getOwnerIdOrNull( loadedOwner, source ) );
+	public PostCollectionRemoveEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection collection,
+			EventSource source,
+			Object loadedOwner) {
+		super( collectionPersister, collection, source, loadedOwner, getOwnerIdOrNull( loadedOwner, source ) );
 	}
 }

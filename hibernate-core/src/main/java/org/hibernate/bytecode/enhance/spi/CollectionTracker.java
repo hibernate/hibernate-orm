@@ -30,22 +30,23 @@ import java.util.Map;
  * @author <a href="mailto:stale.pedersen@jboss.org">Ståle W. Pedersen</a>
  */
 public class CollectionTracker {
+	private Map<String, Integer> tracker;
 
-    private Map<String, Integer> tracker;
+	public CollectionTracker() {
+		tracker = new HashMap<String, Integer>();
+	}
 
-    public CollectionTracker() {
-        tracker = new HashMap<String, Integer>();
-    }
+	public void add(String name, int size) {
+		tracker.put( name, size );
+	}
 
-    public void add(String name, int size) {
-        tracker.put(name, size);
-    }
-
-    public int getSize(String name) {
-        Integer size = tracker.get(name);
-        if(size == null)
-            return -1;
-        else
-            return size;
-    }
+	public int getSize(String name) {
+		Integer size = tracker.get( name );
+		if ( size == null ) {
+			return -1;
+		}
+		else {
+			return size;
+		}
+	}
 }

@@ -109,7 +109,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Disable automatic transaction joining.  The really only has any effect for CMT transactions.  The default
 	 * Hibernate behavior is to auto join any active JTA transaction (register {@link javax.transaction.Synchronization}).
 	 * JPA however defines an explicit join transaction operation.
-	 *
+	 * <p/>
 	 * See javax.persistence.EntityManager#joinTransaction
 	 */
 	public void disableTransactionAutoJoin();
@@ -124,22 +124,22 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Initialize the collection (if not already initialized)
 	 */
 	public void initializeCollection(PersistentCollection collection, boolean writing)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Load an instance without checking if it was deleted.
-	 *
+	 * <p/>
 	 * When <tt>nullable</tt> is disabled this method may create a new proxy or
 	 * return an existing proxy; if it does not exist, throw an exception.
-	 *
+	 * <p/>
 	 * When <tt>nullable</tt> is enabled, the method does not create new proxies
 	 * (but might return an existing proxy); if it does not exist, return
 	 * <tt>null</tt>.
-	 *
+	 * <p/>
 	 * When <tt>eager</tt> is enabled, the object is eagerly fetched
 	 */
 	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Load an instance immediately. This method is only called when lazily initializing a proxy.
@@ -151,6 +151,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * System time before the start of the transaction
 	 */
 	public long getTimestamp();
+
 	/**
 	 * Get the creating <tt>SessionFactoryImplementor</tt>
 	 */
@@ -160,18 +161,22 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Execute a <tt>find()</tt> query
 	 */
 	public List list(String query, QueryParameters queryParameters) throws HibernateException;
+
 	/**
 	 * Execute an <tt>iterate()</tt> query
 	 */
 	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException;
+
 	/**
 	 * Execute a <tt>scroll()</tt> query
 	 */
 	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException;
+
 	/**
 	 * Execute a criteria query
 	 */
 	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode);
+
 	/**
 	 * Execute a criteria query
 	 */
@@ -181,13 +186,16 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Execute a filter
 	 */
 	public List listFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
+
 	/**
 	 * Iterate a filter
 	 */
-	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters) throws HibernateException;
+	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
+			throws HibernateException;
 
 	/**
 	 * Get the <tt>EntityPersister</tt> for any instance
+	 *
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
@@ -224,67 +232,77 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Execute an SQL Query
 	 */
 	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Execute an SQL Query
 	 */
 	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Execute a native SQL query, and return the results as a fully built list.
 	 *
 	 * @param spec The specification of the native SQL query to execute.
 	 * @param queryParameters The parameters by which to perform the execution.
+	 *
 	 * @return The result list.
+	 *
 	 * @throws HibernateException
 	 */
 	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Execute a native SQL query, and return the results as a scrollable result.
 	 *
 	 * @param spec The specification of the native SQL query to execute.
 	 * @param queryParameters The parameters by which to perform the execution.
+	 *
 	 * @return The resulting scrollable result.
+	 *
 	 * @throws HibernateException
 	 */
 	public ScrollableResults scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-	throws HibernateException;
+			throws HibernateException;
 
 	/**
 	 * Retreive the currently set value for a filter parameter.
 	 *
 	 * @param filterParameterName The filter parameter name in the format
 	 * {FILTER_NAME.PARAMETER_NAME}.
+	 *
 	 * @return The filter parameter value.
+	 *
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	@Deprecated
-    public Object getFilterParameterValue(String filterParameterName);
+	public Object getFilterParameterValue(String filterParameterName);
 
 	/**
-	 * Retreive the type for a given filter parrameter.
+	 * Retrieve the type for a given filter parameter.
 	 *
 	 * @param filterParameterName The filter parameter name in the format
 	 * {FILTER_NAME.PARAMETER_NAME}.
+	 *
 	 * @return The filter param type
+	 *
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	@Deprecated
-    public Type getFilterParameterType(String filterParameterName);
+	public Type getFilterParameterType(String filterParameterName);
 
 	/**
 	 * Return the currently enabled filters.  The filter map is keyed by filter
 	 * name, with values corresponding to the {@link org.hibernate.internal.FilterImpl}
 	 * instance.
+	 *
 	 * @return The currently enabled filters.
+	 *
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	@Deprecated
-    public Map getEnabledFilters();
+	public Map getEnabledFilters();
 
 	public int getDontFlushFromFind();
 
@@ -303,24 +321,33 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	/**
 	 * Execute a native SQL update or delete query
 	 */
-	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters) throws HibernateException;
+	int executeNativeUpdate(NativeSQLQuerySpecification specification, QueryParameters queryParameters)
+			throws HibernateException;
 
 
 	// copied from Session:
 
 	public CacheMode getCacheMode();
+
 	public void setCacheMode(CacheMode cm);
+
 	public boolean isOpen();
+
 	public boolean isConnected();
+
 	public FlushMode getFlushMode();
+
 	public void setFlushMode(FlushMode fm);
+
 	public Connection connection();
+
 	public void flush();
 
 	/**
 	 * Get a Query instance for a named query or named native SQL query
 	 */
 	public Query getNamedQuery(String name);
+
 	/**
 	 * Get a Query instance for a named native SQL query
 	 */
@@ -334,19 +361,21 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Get the <i>internal</i> fetch profile currently associated with this session.
 	 *
 	 * @return The current internal fetch profile, or null if none currently associated.
+	 *
 	 * @deprecated use #getLoadQueryInfluencers instead
 	 */
 	@Deprecated
-    public String getFetchProfile();
+	public String getFetchProfile();
 
 	/**
 	 * Set the current <i>internal</i> fetch profile for this session.
 	 *
 	 * @param name The internal fetch profile name to use
+	 *
 	 * @deprecated use {@link #getLoadQueryInfluencers} instead
 	 */
 	@Deprecated
-    public void setFetchProfile(String name);
+	public void setFetchProfile(String name);
 
 	/**
 	 * Retrieve access to the session's transaction coordinator.
@@ -369,7 +398,7 @@ public interface SessionImplementor extends Serializable, LobCreationContext {
 	 * Get the load query influencers associated with this session.
 	 *
 	 * @return the load query influencers associated with this session;
-	 * should never be null.
+	 *         should never be null.
 	 */
 	public LoadQueryInfluencers getLoadQueryInfluencers();
 

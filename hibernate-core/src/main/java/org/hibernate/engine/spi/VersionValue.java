@@ -27,7 +27,7 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
-import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.CoreLogging;
 
 /**
  * A strategy for determining if a version value is an version of
@@ -38,8 +38,7 @@ import org.hibernate.internal.CoreMessageLogger;
  * @author Gavin King
  */
 public class VersionValue implements UnsavedValueStrategy {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, VersionValue.class.getName());
+	private static final Logger LOG = CoreLogging.logger( VersionValue.class );
 
 	private final Object value;
 	/**
@@ -50,17 +49,20 @@ public class VersionValue implements UnsavedValueStrategy {
 		@Override
 		public final Boolean isUnsaved(Object version) {
 			LOG.trace( "Version unsaved-value strategy NULL" );
-			return version==null;
+			return version == null;
 		}
+
 		@Override
 		public Object getDefaultValue(Object currentValue) {
 			return null;
 		}
+
 		@Override
 		public String toString() {
 			return "VERSION_SAVE_NULL";
 		}
 	};
+
 	/**
 	 * Assume the transient instance is newly instantiated if the version
 	 * is null, otherwise defer to the identifier unsaved-value.
@@ -69,17 +71,20 @@ public class VersionValue implements UnsavedValueStrategy {
 		@Override
 		public final Boolean isUnsaved(Object version) {
 			LOG.trace( "Version unsaved-value strategy UNDEFINED" );
-			return version==null ? Boolean.TRUE : null;
+			return version == null ? Boolean.TRUE : null;
 		}
+
 		@Override
 		public Object getDefaultValue(Object currentValue) {
 			return currentValue;
 		}
+
 		@Override
 		public String toString() {
 			return "VERSION_UNDEFINED";
 		}
 	};
+
 	/**
 	 * Assume the transient instance is newly instantiated if the version
 	 * is negative, otherwise assume it is a detached instance.
@@ -89,18 +94,22 @@ public class VersionValue implements UnsavedValueStrategy {
 		@Override
 		public final Boolean isUnsaved(Object version) throws MappingException {
 			LOG.trace( "Version unsaved-value strategy NEGATIVE" );
-			if (version==null) return Boolean.TRUE;
+			if ( version == null ) {
+				return Boolean.TRUE;
+			}
 			if ( version instanceof Number ) {
-				return ( (Number) version ).longValue() < 0l;
+				return ((Number) version).longValue() < 0l;
 			}
 			throw new MappingException( "unsaved-value NEGATIVE may only be used with short, int and long types" );
 		}
+
 		@Override
 		public Object getDefaultValue(Object currentValue) {
 			return IdentifierGeneratorHelper.getIntegralDataTypeHolder( currentValue.getClass() )
 					.initialize( -1L )
 					.makeValue();
 		}
+
 		@Override
 		public String toString() {
 			return "VERSION_NEGATIVE";
@@ -114,6 +123,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	/**
 	 * Assume the transient instance is newly instantiated if
 	 * its version is null or equal to <tt>value</tt>
+	 *
 	 * @param value value to compare to
 	 */
 	public VersionValue(Object value) {
@@ -121,9 +131,9 @@ public class VersionValue implements UnsavedValueStrategy {
 	}
 
 	@Override
-	public Boolean isUnsaved(Object version) throws MappingException  {
+	public Boolean isUnsaved(Object version) throws MappingException {
 		LOG.tracev( "Version unsaved-value: {0}", value );
-		return version==null || version.equals(value);
+		return version == null || version.equals( value );
 	}
 
 	@Override
@@ -132,7 +142,7 @@ public class VersionValue implements UnsavedValueStrategy {
 	}
 
 	@Override
-    public String toString() {
+	public String toString() {
 		return "version unsaved-value: " + value;
 	}
 }

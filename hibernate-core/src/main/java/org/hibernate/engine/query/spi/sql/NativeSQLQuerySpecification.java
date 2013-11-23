@@ -48,8 +48,8 @@ public class NativeSQLQuerySpecification {
 
 	public NativeSQLQuerySpecification(
 			String queryString,
-	        NativeSQLQueryReturn[] queryReturns,
-	        Collection querySpaces) {
+			NativeSQLQueryReturn[] queryReturns,
+			Collection querySpaces) {
 		this.queryString = queryString;
 		this.queryReturns = queryReturns;
 		if ( querySpaces == null ) {
@@ -83,7 +83,7 @@ public class NativeSQLQuerySpecification {
 	}
 
 	@Override
-    public boolean equals(Object o) {
+	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
 		}
@@ -91,16 +91,15 @@ public class NativeSQLQuerySpecification {
 			return false;
 		}
 
-		final NativeSQLQuerySpecification that = ( NativeSQLQuerySpecification ) o;
+		final NativeSQLQuerySpecification that = (NativeSQLQuerySpecification) o;
 
-		return querySpaces.equals( that.querySpaces ) &&
-		       queryString.equals( that.queryString ) &&
-		       Arrays.equals( queryReturns, that.queryReturns );
+		return querySpaces.equals( that.querySpaces )
+				&& queryString.equals( that.queryString )
+				&& Arrays.equals( queryReturns, that.queryReturns );
 	}
 
-
 	@Override
-    public int hashCode() {
+	public int hashCode() {
 		return hashCode;
 	}
 }

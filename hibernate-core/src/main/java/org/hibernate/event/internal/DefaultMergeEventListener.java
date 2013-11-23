@@ -26,8 +26,6 @@ package org.hibernate.event.internal;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.ObjectDeletedException;
@@ -44,6 +42,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
@@ -58,37 +57,36 @@ import org.hibernate.type.TypeHelper;
  * @author Gavin King
  */
 public class DefaultMergeEventListener extends AbstractSaveEventListener implements MergeEventListener {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       DefaultMergeEventListener.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultMergeEventListener.class );
 
 	@Override
-    protected Map getMergeMap(Object anything) {
-		return ( ( EventCache ) anything ).invertMap();
+	protected Map getMergeMap(Object anything) {
+		return ( (EventCache) anything ).invertMap();
 	}
 
 	/**
 	 * Handle the given merge event.
 	 *
 	 * @param event The merge event to be handled.
+	 *
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event) throws HibernateException {
 		EventCache copyCache = new EventCache( event.getSession() );
 		onMerge( event, copyCache );
 		copyCache.clear();
-		copyCache = null;
 	}
 
 	/**
 	 * Handle the given merge event.
 	 *
 	 * @param event The merge event to be handled.
+	 *
 	 * @throws HibernateException
 	 */
 	public void onMerge(MergeEvent event, Map copiedAlready) throws HibernateException {
 
-		final EventCache copyCache = ( EventCache ) copiedAlready;
+		final EventCache copyCache = (EventCache) copiedAlready;
 		final EventSource source = event.getSession();
 		final Object original = event.getOriginal();
 
@@ -148,22 +146,22 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 					entityState = getEntityState( entity, event.getEntityName(), entry, source );
 				}
 
-				switch (entityState) {
+				switch ( entityState ) {
 					case DETACHED:
-						entityIsDetached(event, copyCache);
+						entityIsDetached( event, copyCache );
 						break;
 					case TRANSIENT:
-						entityIsTransient(event, copyCache);
+						entityIsTransient( event, copyCache );
 						break;
 					case PERSISTENT:
-						entityIsPersistent(event, copyCache);
+						entityIsPersistent( event, copyCache );
 						break;
 					default: //DELETED
 						throw new ObjectDeletedException(
 								"deleted instance passed to merge",
 								null,
 								getLoggableName( event.getEntityName(), entity )
-							);
+						);
 				}
 			}
 
@@ -180,12 +178,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		final EventSource source = event.getSession();
 		final EntityPersister persister = source.getEntityPersister( event.getEntityName(), entity );
 
-		( ( EventCache ) copyCache ).put( entity, entity, true  );  //before cascade!
+		( (EventCache) copyCache ).put( entity, entity, true );  //before cascade!
 
-		cascadeOnMerge(source, persister, entity, copyCache);
-		copyValues(persister, entity, entity, source, copyCache);
+		cascadeOnMerge( source, persister, entity, copyCache );
+		copyValues( persister, entity, entity, source, copyCache );
 
-		event.setResult(entity);
+		event.setResult( entity );
 	}
 
 	protected void entityIsTransient(MergeEvent event, Map copyCache) {
@@ -200,27 +198,27 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 		final Serializable id = persister.hasIdentifierProperty() ?
 				persister.getIdentifier( entity, source ) :
-		        null;
+				null;
 		if ( copyCache.containsKey( entity ) ) {
 			persister.setIdentifier( copyCache.get( entity ), id, source );
 		}
 		else {
-			( ( EventCache ) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
+			( (EventCache) copyCache ).put( entity, source.instantiate( persister, id ), true ); //before cascade!
 		}
 		final Object copy = copyCache.get( entity );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		//cascadeOnMerge(event, persister, entity, copyCache, Cascades.CASCADE_BEFORE_MERGE);
-		super.cascadeBeforeSave(source, persister, entity, copyCache);
-		copyValues(persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT);
+		super.cascadeBeforeSave( source, persister, entity, copyCache );
+		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_FROM_PARENT );
 
 		saveTransientEntity( copy, entityName, event.getRequestedId(), source, copyCache );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
-		super.cascadeAfterSave(source, persister, entity, copyCache);
-		copyValues(persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_TO_PARENT);
+		super.cascadeAfterSave( source, persister, entity, copyCache );
+		copyValues( persister, entity, copy, source, copyCache, ForeignKeyDirection.FOREIGN_KEY_TO_PARENT );
 
 		event.setResult( copy );
 	}
@@ -234,7 +232,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		//this bit is only *really* absolutely necessary for handling
 		//requestedId, but is also good if we merge multiple object
 		//graphs, since it helps ensure uniqueness
-		if (requestedId==null) {
+		if ( requestedId == null ) {
 			saveWithGeneratedId( entity, entityName, copyCache, source, false );
 		}
 		else {
@@ -265,13 +263,13 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		}
 
 		String previousFetchProfile = source.getFetchProfile();
-		source.setFetchProfile("merge");
+		source.setFetchProfile( "merge" );
 		//we must clone embedded composite identifiers, or
 		//we will get back the same instance that we pass in
 		final Serializable clonedIdentifier = (Serializable) persister.getIdentifierType()
 				.deepCopy( id, source.getFactory() );
-		final Object result = source.get(entityName, clonedIdentifier);
-		source.setFetchProfile(previousFetchProfile);
+		final Object result = source.get( entityName, clonedIdentifier );
+		source.setFetchProfile( previousFetchProfile );
 
 		if ( result == null ) {
 			//TODO: we should throw an exception if we really *know* for sure
@@ -281,21 +279,21 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 			// we got here because we assumed that an instance
 			// with an assigned id was detached, when it was
 			// really persistent
-			entityIsTransient(event, copyCache);
+			entityIsTransient( event, copyCache );
 		}
 		else {
-			( ( EventCache ) copyCache ).put( entity, result, true ); //before cascade!
+			( (EventCache) copyCache ).put( entity, result, true ); //before cascade!
 
-			final Object target = source.getPersistenceContext().unproxy(result);
+			final Object target = source.getPersistenceContext().unproxy( result );
 			if ( target == entity ) {
-				throw new AssertionFailure("entity was not detached");
+				throw new AssertionFailure( "entity was not detached" );
 			}
-			else if ( !source.getEntityName(target).equals(entityName) ) {
+			else if ( !source.getEntityName( target ).equals( entityName ) ) {
 				throw new WrongClassException(
 						"class of the given object did not match class of persistent copy",
 						event.getRequestedId(),
 						entityName
-					);
+				);
 			}
 			else if ( isVersionChanged( entity, source, persister, target ) ) {
 				if ( source.getFactory().getStatistics().isStatisticsEnabled() ) {
@@ -307,13 +305,13 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 			// cascade first, so that all unsaved objects get their
 			// copy created before we actually copy
-			cascadeOnMerge(source, persister, entity, copyCache);
-			copyValues(persister, entity, target, source, copyCache);
+			cascadeOnMerge( source, persister, entity, copyCache );
+			copyValues( persister, entity, target, source, copyCache );
 
 			//copyValues works by reflection, so explicitly mark the entity instance dirty
 			markInterceptorDirty( entity, target, persister );
 
-			event.setResult(result);
+			event.setResult( result );
 		}
 
 	}
@@ -328,7 +326,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	}
 
 	private boolean isVersionChanged(Object entity, EventSource source, EntityPersister persister, Object target) {
-		if ( ! persister.isVersioned() ) {
+		if ( !persister.isVersioned() ) {
 			return false;
 		}
 		// for merging of versioned entities, we consider the version having
@@ -341,7 +339,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 		// an entity to be merged during the same transaction
 		// (though during a seperate operation) in which it was
 		// originally persisted/saved
-		boolean changed = ! persister.getVersionType().isSame(
+		boolean changed = !persister.getVersionType().isSame(
 				persister.getVersion( target ),
 				persister.getVersion( entity )
 		);
@@ -431,14 +429,18 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * @param copyCache A cache of already copied instance.
 	 */
 	protected void cascadeOnMerge(
-		final EventSource source,
-		final EntityPersister persister,
-		final Object entity,
-		final Map copyCache
+			final EventSource source,
+			final EntityPersister persister,
+			final Object entity,
+			final Map copyCache
 	) {
 		source.getPersistenceContext().incrementCascadeLevel();
 		try {
-			new Cascade( getCascadeAction(), CascadePoint.BEFORE_MERGE, source ).cascade( persister, entity, copyCache );
+			new Cascade( getCascadeAction(), CascadePoint.BEFORE_MERGE, source ).cascade(
+					persister,
+					entity,
+					copyCache
+			);
 		}
 		finally {
 			source.getPersistenceContext().decrementCascadeLevel();
@@ -447,12 +449,12 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 
 
 	@Override
-    protected CascadingAction getCascadeAction() {
+	protected CascadingAction getCascadeAction() {
 		return CascadingActions.MERGE;
 	}
 
 	@Override
-    protected Boolean getAssumedUnsaved() {
+	protected Boolean getAssumedUnsaved() {
 		return Boolean.FALSE;
 	}
 
@@ -460,15 +462,15 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-    protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, Object anything)
-	throws HibernateException {
+	protected void cascadeAfterSave(EventSource source, EntityPersister persister, Object entity, Object anything)
+			throws HibernateException {
 	}
 
 	/**
 	 * Cascade behavior is redefined by this subclass, disable superclass behavior
 	 */
 	@Override
-    protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, Object anything)
-	throws HibernateException {
+	protected void cascadeBeforeSave(EventSource source, EntityPersister persister, Object entity, Object anything)
+			throws HibernateException {
 	}
 }

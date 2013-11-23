@@ -25,11 +25,10 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
@@ -42,8 +41,7 @@ import org.hibernate.type.Type;
  * @author Gavin King
  */
 public abstract class ReattachVisitor extends ProxyVisitor {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, ReattachVisitor.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ReattachVisitor.class );
 
 	private final Serializable ownerIdentifier;
 	private final Object owner;
@@ -76,7 +74,7 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * {@inheritDoc}
 	 */
 	@Override
-    Object processComponent(Object component, CompositeType componentType) throws HibernateException {
+	Object processComponent(Object component, CompositeType componentType) throws HibernateException {
 		Type[] types = componentType.getSubtypes();
 		if ( component == null ) {
 			processValues( new Object[types.length], types );
@@ -94,12 +92,16 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * @param role The persister representing the collection to be removed.
 	 * @param collectionKey The collection key (differs from owner-id in the case of property-refs).
 	 * @param source The session from which the request originated.
+	 *
 	 * @throws HibernateException
 	 */
-	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source) throws HibernateException {
+	void removeCollection(CollectionPersister role, Serializable collectionKey, EventSource source)
+			throws HibernateException {
 		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Collection dereferenced while transient {0}",
-					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() ) );
+			LOG.tracev(
+					"Collection dereferenced while transient {0}",
+					MessageHelper.collectionInfoString( role, ownerIdentifier, source.getFactory() )
+			);
 		}
 		source.getActionQueue().addAction( new CollectionRemoveAction( owner, role, collectionKey, false, source ) );
 	}
@@ -111,13 +113,14 @@ public abstract class ReattachVisitor extends ProxyVisitor {
 	 * and thus we cannot rely on the owner's EntityEntry snapshot...
 	 *
 	 * @param role The persister for the collection role being processed.
-	 * @return
+	 *
+	 * @return The value from the owner that identifies the grouping into the collection
 	 */
 	final Serializable extractCollectionKeyFromOwner(CollectionPersister role) {
-        if ( role.getCollectionType().useLHSPrimaryKey() ) {
+		if ( role.getCollectionType().useLHSPrimaryKey() ) {
 			return ownerIdentifier;
 		}
-        return (Serializable)role.getOwnerEntityPersister().getPropertyValue(
+		return (Serializable) role.getOwnerEntityPersister().getPropertyValue(
 				owner,
 				role.getCollectionType().getLHSPropertyName()
 		);

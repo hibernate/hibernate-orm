@@ -46,6 +46,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.AbstractBasicQueryContractImpl;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
@@ -67,7 +68,10 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements ProcedureCall, ResultContext {
-	private static final Logger log = Logger.getLogger( ProcedureCallImpl.class );
+	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
+			CoreMessageLogger.class,
+			ProcedureCallImpl.class.getName()
+	);
 
 	private static final NativeSQLQueryReturn[] NO_RETURNS = new NativeSQLQueryReturn[0];
 
@@ -196,7 +200,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 		final List<ProcedureCallMementoImpl.ParameterMemento> storedRegistrations = memento.getParameterDeclarations();
 		if ( storedRegistrations == null ) {
 			// most likely a problem if ParameterStrategy is not UNKNOWN...
-			log.debugf(
+			LOG.debugf(
 					"ParameterStrategy was [%s] on named copy [%s], but no parameters stored",
 					parameterStrategy,
 					procedureName
@@ -314,9 +318,7 @@ public class ProcedureCallImpl extends AbstractBasicQueryContractImpl implements
 					.getJdbcServices()
 					.getExtractedMetaDataSupport();
 			if ( ! databaseMetaData.supportsNamedParameters() ) {
-				throw new NamedParametersNotSupportedException(
-						"Named stored procedure parameters used, but JDBC driver does not support named parameters"
-				);
+				LOG.unsupportedNamedParameters();
 			}
 			parameterStrategy = ParameterStrategy.NAMED;
 		}

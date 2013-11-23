@@ -1662,4 +1662,8 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "The fetch attribute on <many-to-many> has been deprecated. Instead of fetch=\"select\", use lazy=\"extra\" with <map>, <set>, <bag>, <idbag>, or <list>, which will only initialize entities (not as a proxy) as needed.", id = 455)
 	void deprecatedManyToManyFetch();
 
+	@LogMessage(level = WARN)
+	@Message(value = "Named parameters are used for a callable statement, but database metadata indicates named parameters are not supported.", id = 456)
+	void unsupportedNamedParameters();
+
 }

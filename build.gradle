@@ -202,19 +202,6 @@ subprojects { subProject ->
             }
         }
 
-        // alter the compileTestJava (src/test/java javac task) to add AP hooks
-        compileTestJava {
-            options.compilerArgs += [
-                    "-s", "$sourceSets.test.aptGeneratedSourceDir.absolutePath"
-            ]
-
-            doFirst {
-                if ( !sourceSets.test.aptGeneratedSourceDir.exists() ) {
-                    sourceSets.test.aptGeneratedSourceDir.mkdirs()
-                }
-            }
-        }
-
         task generateSources(type: Task)
 
         jar {

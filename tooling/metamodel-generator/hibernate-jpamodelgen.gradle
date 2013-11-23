@@ -30,6 +30,12 @@ sourceSets.main {
     resources.srcDir xsdDir
 }
 
+compileTestJava {
+    options.compilerArgs += [
+            "-proc:none"
+    ]
+}
+
 jar {
 	manifest {
 		attributes 'Implementation-Title'     : '${project.name}', 

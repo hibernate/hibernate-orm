@@ -69,8 +69,19 @@ jar {
 }
 
 
+// alter the compileTestJava (src/test/java javac task) to add AP hooks
 compileTestJava {
     classpath += configurations.hibernateJpaModelGenTool
+
+    options.compilerArgs += [
+            "-s", "$sourceSets.test.aptGeneratedSourceDir.absolutePath"
+    ]
+
+    doFirst {
+        if ( !sourceSets.test.aptGeneratedSourceDir.exists() ) {
+            sourceSets.test.aptGeneratedSourceDir.mkdirs()
+        }
+    }
 }
 
 

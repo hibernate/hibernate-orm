@@ -98,7 +98,7 @@ public class VersionValue implements UnsavedValueStrategy {
 				return Boolean.TRUE;
 			}
 			if ( version instanceof Number ) {
-				return ((Number) version).longValue() < 0l;
+				return ((Number) version).longValue() < 0L;
 			}
 			throw new MappingException( "unsaved-value NEGATIVE may only be used with short, int and long types" );
 		}

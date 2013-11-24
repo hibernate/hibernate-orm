@@ -96,6 +96,9 @@
             <property name="severity" value="warning" />
         </module>
         <module name="EqualsHashCode" />
+        <module name="FinalLocalVariable">
+            <property name="severity" value="warning" />
+        </module>
         <module name="MissingSwitchDefault">
             <property name="severity" value="warning" />
         </module>

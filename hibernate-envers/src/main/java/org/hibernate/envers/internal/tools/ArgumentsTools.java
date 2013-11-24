@@ -34,7 +34,7 @@ public abstract class ArgumentsTools {
 	}
 
 	public static void checkPositive(Number i, String paramName) {
-		if ( i.longValue() <= 0l ) {
+		if ( i.longValue() <= 0L ) {
 			throw new IllegalArgumentException( paramName + " has to be greater than 0." );
 		}
 	}

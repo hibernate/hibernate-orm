@@ -176,10 +176,11 @@
             <!-- Some classes in o.h.metamodel on master violate this -->
             <property name="severity" value="warning" />
         </module>
-        <module name="LocalFinalVariableName" >
+        <module name="LocalFinalVariableName" />
+        <module name="LocalVariableName">
+            <!-- Some classes in o.h.metamodel on master violate this -->
             <property name="severity" value="warning" />
         </module>
-        <module name="LocalVariableName" />
         <module name="MemberName" />
         <!--
         The org.hibernate.engine.spi.ManagedEntity method names (prefixed with '&&_') muck with this

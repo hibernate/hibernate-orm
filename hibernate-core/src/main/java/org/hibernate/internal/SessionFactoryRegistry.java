@@ -38,8 +38,6 @@ import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
 
-import org.jboss.logging.Logger;
-
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.
  *
@@ -48,10 +46,7 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SessionFactoryRegistry {
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			SessionFactoryRegistry.class.getName()
-	);
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( SessionFactoryRegistry.class );
 
 	/**
 	 * Singleton access
@@ -108,7 +103,7 @@ public class SessionFactoryRegistry {
 			jndiService.bind( name, instance );
 			LOG.factoryBoundToJndiName( name );
 			try {
-				jndiService.addListener( name, LISTENER );
+				jndiService.addListener( name, listener );
 			}
 			catch (Exception e) {
 				LOG.couldNotBindJndiListener();
@@ -205,7 +200,7 @@ public class SessionFactoryRegistry {
 	 * Implementation of {@literal JNDI} {@link javax.naming.event.NamespaceChangeListener} contract to listener for context events
 	 * and react accordingly if necessary
 	 */
-	private final NamespaceChangeListener LISTENER = new NamespaceChangeListener() {
+	private final NamespaceChangeListener listener = new NamespaceChangeListener() {
 		@Override
 		public void objectAdded(NamingEvent evt) {
 			LOG.debugf("A factory was successfully bound to name: %s", evt.getNewBinding().getName());

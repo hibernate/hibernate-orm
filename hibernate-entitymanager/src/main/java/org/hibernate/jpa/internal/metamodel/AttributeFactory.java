@@ -37,6 +37,7 @@ import javax.persistence.metamodel.Type;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.internal.HEMLogging;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Map;
@@ -51,8 +52,6 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 
-import org.jboss.logging.Logger;
-
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>
  * <li>{@link #buildAttribute normal attributes}</li>
@@ -64,9 +63,7 @@ import org.jboss.logging.Logger;
  * @author Emmanuel Bernard
  */
 public class AttributeFactory {
-
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
-                                                                           AttributeFactory.class.getName());
+	private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( AttributeFactory.class );
 
 	private final MetadataContext context;
 
@@ -97,7 +94,7 @@ public class AttributeFactory {
         LOG.trace("Building attribute [" + ownerType.getTypeName() + "." + property.getName() + "]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final AttributeMetadata<X,Y> attributeMetadata =
-				determineAttributeMetadata( attributeContext, NORMAL_MEMBER_RESOLVER );
+				determineAttributeMetadata( attributeContext, normalMemberResolver );
         if (attributeMetadata == null) {
 			return null;
 		}
@@ -145,7 +142,9 @@ public class AttributeFactory {
         LOG.trace("Building identifier attribute [" + ownerType.getTypeName() + "." + property.getName() + "]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final SingularAttributeMetadata<X,Y> attributeMetadata =
-				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, IDENTIFIER_MEMBER_RESOLVER );
+				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext,
+																			  identifierMemberResolver
+				);
 		final Type<Y> metaModelType = getMetaModelType( attributeMetadata.getValueContext() );
 		return new SingularAttributeImpl.Identifier(
 				property.getName(),
@@ -171,7 +170,7 @@ public class AttributeFactory {
         LOG.trace("Building version attribute [ownerType.getTypeName()" + "." + "property.getName()]");
 		final AttributeContext<X> attributeContext = wrap( ownerType, property );
 		final SingularAttributeMetadata<X,Y> attributeMetadata =
-				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, VERSION_MEMBER_RESOLVER );
+				(SingularAttributeMetadata<X, Y>) determineAttributeMetadata( attributeContext, versionMemberResolver );
 		final Type<Y> metaModelType = getMetaModelType( attributeMetadata.getValueContext() );
 		return new SingularAttributeImpl.Version(
 				property.getName(),
@@ -912,7 +911,7 @@ public class AttributeFactory {
         return false;
     }
 
-	private final MemberResolver EMBEDDED_MEMBER_RESOLVER = new MemberResolver() {
+	private final MemberResolver embeddedMemberResolver = new MemberResolver() {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final EmbeddableTypeImpl embeddableType = ( EmbeddableTypeImpl<?> ) attributeContext.getOwnerType();
@@ -928,7 +927,7 @@ public class AttributeFactory {
 	};
 
 
-	private final MemberResolver VIRTUAL_IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
+	private final MemberResolver virtualIdentifierMemberResolver = new MemberResolver() {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
             final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
@@ -956,14 +955,14 @@ public class AttributeFactory {
 	/**
 	 * A {@link Member} resolver for normal attributes.
 	 */
-	private final MemberResolver NORMAL_MEMBER_RESOLVER = new MemberResolver() {
+	private final MemberResolver normalMemberResolver = new MemberResolver() {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
 			final AbstractManagedType ownerType = attributeContext.getOwnerType();
 			final Property property = attributeContext.getPropertyMapping();
 			final Type.PersistenceType persistenceType = ownerType.getPersistenceType();
 			if ( Type.PersistenceType.EMBEDDABLE == persistenceType ) {
-				return EMBEDDED_MEMBER_RESOLVER.resolveMember( attributeContext );
+				return embeddedMemberResolver.resolveMember( attributeContext );
 			}
 			else if ( Type.PersistenceType.ENTITY == persistenceType
 					|| Type.PersistenceType.MAPPED_SUPERCLASS == persistenceType ) {
@@ -973,7 +972,7 @@ public class AttributeFactory {
 				final Integer index = entityMetamodel.getPropertyIndexOrNull( propertyName );
 				if ( index == null ) {
 					// just like in #determineIdentifierJavaMember , this *should* indicate we have an IdClass mapping
-					return VIRTUAL_IDENTIFIER_MEMBER_RESOLVER.resolveMember( attributeContext );
+					return virtualIdentifierMemberResolver.resolveMember( attributeContext );
 				}
 				else {
 					final Getter getter = entityMetamodel.getTuplizer().getGetter( index );
@@ -988,7 +987,7 @@ public class AttributeFactory {
 		}
 	};
 
-	private final MemberResolver IDENTIFIER_MEMBER_RESOLVER = new MemberResolver() {
+	private final MemberResolver identifierMemberResolver = new MemberResolver() {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
             final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();
@@ -996,7 +995,7 @@ public class AttributeFactory {
 			if ( ! attributeContext.getPropertyMapping().getName()
 					.equals( entityMetamodel.getIdentifierProperty().getName() ) ) {
 				// this *should* indicate processing part of an IdClass...
-				return VIRTUAL_IDENTIFIER_MEMBER_RESOLVER.resolveMember( attributeContext );
+				return virtualIdentifierMemberResolver.resolveMember( attributeContext );
 			}
 			final Getter getter = entityMetamodel.getTuplizer().getIdentifierGetter();
 			return MapAccessor.MapGetter.class.isInstance( getter )
@@ -1008,7 +1007,7 @@ public class AttributeFactory {
 		}
 	};
 
-	private final MemberResolver VERSION_MEMBER_RESOLVER = new MemberResolver() {
+	private final MemberResolver versionMemberResolver = new MemberResolver() {
 		@Override
 		public Member resolveMember(AttributeContext attributeContext) {
             final AbstractIdentifiableType identifiableType = (AbstractIdentifiableType) attributeContext.getOwnerType();

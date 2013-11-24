@@ -25,7 +25,6 @@
 package org.hibernate.sql;
 
 
-
 /**
  * An old Sybase-style join (before Sybase supported the ANSI style "inner join" etc syntax)
  * This is needed for Sybase 11.9.2 and earlier, using the HQL 2.* syntax with Collections.
@@ -39,26 +38,31 @@ public class Sybase11JoinFragment extends JoinFragment {
 
 	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType) {
 
-		addCrossJoin(tableName, alias);
+		addCrossJoin( tableName, alias );
 
-		for ( int j=0; j<fkColumns.length; j++) {
+		for ( int j = 0; j < fkColumns.length; j++ ) {
 			//full joins are not supported.. yet!
-			if (joinType==JoinType.FULL_JOIN ) throw new UnsupportedOperationException();
+			if ( joinType == JoinType.FULL_JOIN ) {
+				throw new UnsupportedOperationException();
+			}
 
-			afterWhere.append(" and ")
-				.append( fkColumns[j] )
-				.append( " " );
+			afterWhere.append( " and " )
+					.append( fkColumns[j] )
+					.append( " " );
 
-			if (joinType==JoinType.LEFT_OUTER_JOIN ) afterWhere.append("*");
-			afterWhere.append('=');
-			if (joinType==JoinType.RIGHT_OUTER_JOIN ) afterWhere.append("*");
+			if ( joinType == JoinType.LEFT_OUTER_JOIN ) {
+				afterWhere.append( '*' );
+			}
+			afterWhere.append( '=' );
+			if ( joinType == JoinType.RIGHT_OUTER_JOIN ) {
+				afterWhere.append( "*" );
+			}
 
-			afterWhere.append (" ")
-				.append(alias)
-				.append('.')
-				.append( pkColumns[j] );
+			afterWhere.append( " " )
+					.append( alias )
+					.append( '.' )
+					.append( pkColumns[j] );
 		}
-
 	}
 
 	public String toFromFragmentString() {
@@ -70,8 +74,8 @@ public class Sybase11JoinFragment extends JoinFragment {
 	}
 
 	public void addJoins(String fromFragment, String whereFragment) {
-		afterFrom.append(fromFragment);
-		afterWhere.append(whereFragment);
+		afterFrom.append( fromFragment );
+		afterWhere.append( whereFragment );
 	}
 
 	public JoinFragment copy() {
@@ -82,20 +86,20 @@ public class Sybase11JoinFragment extends JoinFragment {
 	}
 
 	public void addCondition(String alias, String[] columns, String condition) {
-		for ( int i=0; i<columns.length; i++ ) {
-			afterWhere.append(" and ")
-				.append(alias)
-				.append('.')
-				.append( columns[i] )
-				.append(condition);
+		for ( String column : columns ) {
+			afterWhere.append( " and " )
+					.append( alias )
+					.append( '.' )
+					.append( column )
+					.append( condition );
 		}
 	}
 
 	public void addCrossJoin(String tableName, String alias) {
-		afterFrom.append(", ")
-			.append(tableName)
-			.append(' ')
-			.append(alias);
+		afterFrom.append( ", " )
+				.append( tableName )
+				.append( ' ' )
+				.append( alias );
 	}
 
 	public void addCondition(String alias, String[] fkColumns, String[] pkColumns) {
@@ -104,18 +108,24 @@ public class Sybase11JoinFragment extends JoinFragment {
 	}
 
 	public boolean addCondition(String condition) {
-		return addCondition(afterWhere, condition);
+		return addCondition( afterWhere, condition );
 	}
 
 
 	public void addFromFragmentString(String fromFragmentString) {
-		afterFrom.append(fromFragmentString);
+		afterFrom.append( fromFragmentString );
 	}
 
 
-	public void addJoin(String tableName, String alias, String[] fkColumns, String[] pkColumns, JoinType joinType, String on) {
-		addJoin(tableName, alias, fkColumns, pkColumns, joinType);
-		addCondition(on);
+	public void addJoin(
+			String tableName,
+			String alias,
+			String[] fkColumns,
+			String[] pkColumns,
+			JoinType joinType,
+			String on) {
+		addJoin( tableName, alias, fkColumns, pkColumns, joinType );
+		addCondition( on );
 	}
 }
 

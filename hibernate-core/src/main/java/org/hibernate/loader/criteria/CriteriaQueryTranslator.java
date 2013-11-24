@@ -220,9 +220,9 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		// initialize the rootProvider first
 		CriteriaInfoProvider rootProvider = new EntityCriteriaInfoProvider(( Queryable ) sessionFactory.getEntityPersister( rootEntityName ) );
 		criteriaInfoMap.put( rootCriteria, rootProvider);
-		nameCriteriaInfoMap.put ( rootProvider.getName(), rootProvider );
+		nameCriteriaInfoMap.put( rootProvider.getName(), rootProvider );
 
-		for(final String key : associationPathCriteriaMap.keySet() ){
+		for ( final String key : associationPathCriteriaMap.keySet() ) {
 			Criteria value = associationPathCriteriaMap.get( key );
 			CriteriaInfoProvider info = getPathInfo( key );
 			criteriaInfoMap.put( value, info );

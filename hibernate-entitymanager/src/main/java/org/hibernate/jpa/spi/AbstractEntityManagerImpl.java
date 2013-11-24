@@ -119,6 +119,7 @@ import org.hibernate.jpa.criteria.compile.CriteriaCompiler;
 import org.hibernate.jpa.criteria.expression.CompoundSelectionImpl;
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.internal.HEMLogging;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.internal.StoredProcedureQueryImpl;
 import org.hibernate.jpa.internal.TransactionImpl;
@@ -144,8 +145,7 @@ import org.jboss.logging.Logger;
 public abstract class AbstractEntityManagerImpl implements HibernateEntityManagerImplementor, Serializable {
 	private static final long serialVersionUID = 78818181L;
 
-    private static final EntityManagerMessageLogger LOG = Logger.getMessageLogger(EntityManagerMessageLogger.class,
-                                                                           AbstractEntityManagerImpl.class.getName());
+    private static final EntityManagerMessageLogger LOG = HEMLogging.messageLogger( AbstractEntityManagerImpl.class );
 
 	private static final List<String> ENTITY_MANAGER_SPECIFIC_PROPERTIES = new ArrayList<String>();
 
@@ -234,7 +234,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 		Object queryTimeout;
 		if ( (queryTimeout = getProperties().get(QueryHints.SPEC_HINT_TIMEOUT)) != null ) {
-			query.setHint ( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
+			query.setHint( QueryHints.SPEC_HINT_TIMEOUT, queryTimeout );
 		}
 		Object lockTimeout;
 		if( (lockTimeout = getProperties().get( AvailableSettings.LOCK_TIMEOUT ))!=null){
@@ -1138,21 +1138,21 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
 		catch ( MappingException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage(), e ) );
+			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( TypeMismatchException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage(), e ) );
+			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( ClassCastException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage(), e ) );
+			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( RuntimeException e ) {
 			throw convert( e, lockOptions );
 		}
 		finally {
 			session.setCacheMode( previousCacheMode );
-			((SessionImplementor)session).getLoadQueryInfluencers().setFetchGraph( null );
-			((SessionImplementor)session).getLoadQueryInfluencers().setLoadGraph( null );
+			( (SessionImplementor) session ).getLoadQueryInfluencers().setFetchGraph( null );
+			( (SessionImplementor) session ).getLoadQueryInfluencers().setLoadGraph( null );
 
 		}
 	}
@@ -1190,7 +1190,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			internalGetSession().persist( entity );
 		}
 		catch ( MappingException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage() ) ) ;
+			throw convert( new IllegalArgumentException( e.getMessage() ) ) ;
 		}
 		catch ( RuntimeException e ) {
 			throw convert( e );
@@ -1205,12 +1205,13 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return ( A ) internalGetSession().merge( entity );
 		}
 		catch ( ObjectDeletedException sse ) {
-			throw convert ( new IllegalArgumentException( sse ) );
+			throw convert( new IllegalArgumentException( sse ) );
 		}
 		catch ( MappingException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage(), e ) );
+			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
-		catch ( RuntimeException e ) { //including HibernateException
+		catch ( RuntimeException e ) {
+			//including HibernateException
 			throw convert( e );
 		}
 	}
@@ -1222,9 +1223,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			internalGetSession().delete( entity );
 		}
 		catch ( MappingException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage(), e ) );
+			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
-		catch ( RuntimeException e ) { //including HibernateException
+		catch ( RuntimeException e ) {
+			//including HibernateException
 			throw convert( e );
 		}
 	}
@@ -1269,10 +1271,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				session.refresh( entity );
 			}
 		}
-		catch ( MappingException e ) {
-			throw convert ( new IllegalArgumentException( e.getMessage(), e ) );
+		catch (MappingException e) {
+			throw convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
 			throw convert( e, lockOptions );
 		}
 		finally {
@@ -1288,14 +1290,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			if ( entity != null
 					&& !( entity instanceof HibernateProxy )
 					&& internalGetSession().getSessionFactory().getClassMetadata( entity.getClass() ) == null ) {
-				throw convert ( new IllegalArgumentException( "Not an entity:" + entity.getClass() ) );
+				throw convert( new IllegalArgumentException( "Not an entity:" + entity.getClass() ) );
 			}
 			return internalGetSession().contains( entity );
 		}
-		catch ( MappingException e ) {
+		catch (MappingException e) {
 			throw new IllegalArgumentException( e.getMessage(), e );
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
 			throw convert( e );
 		}
 	}
@@ -1309,7 +1311,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		}
 
 		if ( !contains( entity ) ) {
-			throw convert (new IllegalArgumentException( "entity not in the persistence context" ) );
+			throw convert( new IllegalArgumentException( "entity not in the persistence context" ) );
 		}
 
 		return getLockModeType( internalGetSession().getCurrentLockMode( entity ) );
@@ -1425,7 +1427,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			internalGetSession().clear();
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
 			throw convert( e );
 		}
 	}
@@ -1436,7 +1438,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 		try {
 			internalGetSession().evict( entity );
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
 			throw convert( e );
 		}
 	}
@@ -1481,7 +1483,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			lockOptions = getLockRequest( lockModeType, properties );
 			internalGetSession().buildLockRequest( lockOptions ).lock( entity );
 		}
-		catch ( RuntimeException e ) {
+		catch (RuntimeException e) {
 			throw convert( e, lockOptions );
 		}
 	}
@@ -1551,7 +1553,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
                         transactionManager.setRollbackOnly();
                     }
 				}
-				catch ( SystemException e ) {
+				catch (SystemException e) {
 					throw new PersistenceException( "Unable to set the JTA transaction as RollbackOnly", e );
 				}
 			}
@@ -1626,7 +1628,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			callbackCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
 			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( session, transactionType ) );
 		}
-		catch ( HibernateException he ) {
+		catch (HibernateException he) {
 			throw convert( he );
 		}
 	}
@@ -1687,7 +1689,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public RuntimeException convert(RuntimeException e) {
 		RuntimeException result = e;
 		if ( e instanceof HibernateException ) {
-			result = convert( ( HibernateException ) e );
+			result = convert( (HibernateException) e );
 		}
 		else {
 			markForRollbackOnly();
@@ -1698,7 +1700,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public RuntimeException convert(RuntimeException e, LockOptions lockOptions) {
 		RuntimeException result = e;
 		if ( e instanceof HibernateException ) {
-			result = convert( ( HibernateException ) e , lockOptions );
+			result = convert( (HibernateException) e , lockOptions );
 		}
 		else {
 			markForRollbackOnly();
@@ -1709,7 +1711,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
 		if ( e instanceof StaleStateException ) {
-			PersistenceException converted = wrapStaleStateException( ( StaleStateException ) e );
+			PersistenceException converted = wrapStaleStateException( (StaleStateException) e );
 			handlePersistenceException( converted );
 			return converted;
 		}
@@ -1729,7 +1731,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.QueryTimeoutException ) {
-			QueryTimeoutException converted = new QueryTimeoutException(e.getMessage(), e);
+			QueryTimeoutException converted = new QueryTimeoutException( e.getMessage(), e );
 			handlePersistenceException( converted );
 			return converted;
 		}

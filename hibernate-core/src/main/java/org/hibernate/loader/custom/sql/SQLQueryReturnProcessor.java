@@ -119,23 +119,23 @@ public class SQLQueryReturnProcessor {
 
 	public class ResultAliasContext {
 		public SQLLoadable getEntityPersister(String alias) {
-			return ( SQLLoadable ) alias2Persister.get( alias );
+			return (SQLLoadable) alias2Persister.get( alias );
 		}
 
 		public SQLLoadableCollection getCollectionPersister(String alias) {
-			return ( SQLLoadableCollection ) alias2CollectionPersister.get( alias );
+			return (SQLLoadableCollection) alias2CollectionPersister.get( alias );
 		}
 
 		public String getEntitySuffix(String alias) {
-			return ( String ) alias2Suffix.get( alias );
+			return (String) alias2Suffix.get( alias );
 		}
 
 		public String getCollectionSuffix(String alias) {
-			return ( String ) alias2CollectionSuffix.get ( alias );
+			return (String) alias2CollectionSuffix.get( alias );
 		}
 
 		public String getOwnerAlias(String alias) {
-			return ( String ) alias2OwnerAlias.get( alias );
+			return (String) alias2OwnerAlias.get( alias );
 		}
 
 		public Map getPropertyResultsMap(String alias) {

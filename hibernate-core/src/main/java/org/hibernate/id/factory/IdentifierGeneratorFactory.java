@@ -46,9 +46,11 @@ public interface IdentifierGeneratorFactory {
 	 * Allow injection of the dialect to use.
 	 *
 	 * @param dialect The dialect
+	 *
 	 * @deprecated The intention is that Dialect should be required to be specified up-front and it would then get
 	 * ctor injected.
 	 */
+	@Deprecated
 	public void setDialect(Dialect dialect);
 
 	/**

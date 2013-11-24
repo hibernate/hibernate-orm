@@ -97,8 +97,10 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 * {@link AbstractEvent}.
 	 *
 	 * @return Value for property 'source'.
+	 *
 	 * @deprecated Use {@link #getSession} instead
 	 */
+	@Deprecated
 	public EventSource getSource() {
 		return getSession();
 	}

@@ -52,6 +52,10 @@ public final class TypedValue implements Serializable {
 				}
 		);
 	}
+
+	/**
+	 * @deprecated explicit entity mode support is deprecated
+	 */
 	@Deprecated
 	public TypedValue(Type type, Object value, EntityMode entityMode) {
 		this(type, value);

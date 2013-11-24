@@ -43,11 +43,20 @@ public final class CollectionHelper {
     public static final int MINIMUM_INITIAL_CAPACITY = 16;
 	public static final float LOAD_FACTOR = 0.75f;
 
-	@Deprecated // use java.util.Collections.EMPTY_LIST instead
+	/**
+	 * @deprecated use  {@link java.util.Collections#EMPTY_LIST} or {@link java.util.Collections#emptyList()}  instead
+	 */
+	@Deprecated
 	public static final List EMPTY_LIST = Collections.EMPTY_LIST;
-	@Deprecated // use java.util.Collections.EMPTY_LIST instead
+	/**
+	 * @deprecated use {@link java.util.Collections#EMPTY_LIST} or {@link java.util.Collections#emptyList()}  instead
+	 */
+	@Deprecated
 	public static final Collection EMPTY_COLLECTION = Collections.EMPTY_LIST;
-	@Deprecated // use java.util.Collections.EMPTY_MAP instead
+	/**
+	 * @deprecated use {@link java.util.Collections#EMPTY_MAP} or {@link java.util.Collections#emptyMap()}  instead
+	 */
+	@Deprecated
 	public static final Map EMPTY_MAP = Collections.EMPTY_MAP;
 
 	private CollectionHelper() {

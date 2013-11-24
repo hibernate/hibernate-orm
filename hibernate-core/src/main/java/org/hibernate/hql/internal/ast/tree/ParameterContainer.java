@@ -38,9 +38,11 @@ import org.hibernate.param.ParameterSpecification;
  * In the interim, this allows us to at least treat these "hidden" parameters properly which is
  * the most pressing need.
  *
- * @deprecated
+ * @deprecated See entire discussion above
+ *
  * @author Steve Ebersole
  */
+@Deprecated
 public interface ParameterContainer {
 	/**
 	 * Set the renderable text of this node.

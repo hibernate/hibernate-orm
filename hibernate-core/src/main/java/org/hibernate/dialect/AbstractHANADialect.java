@@ -306,7 +306,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.NON_CONTEXTUAL_LOB_CREATION, "true" );
 	}
 
-	@Deprecated
 	@Override
 	public boolean bindLimitParametersInReverseOrder() {
 		return true;
@@ -431,7 +430,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		return getForUpdateString( lockMode ) + " of " + aliases;
 	}
 
-	@Deprecated
 	@Override
 	public String getLimitString(final String sql, final boolean hasOffset) {
 		return new StringBuilder( sql.length() + 20 ).append( sql )
@@ -606,7 +604,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		return false;
 	}
 
-	@Deprecated
 	@Override
 	public boolean supportsLimit() {
 		return true;

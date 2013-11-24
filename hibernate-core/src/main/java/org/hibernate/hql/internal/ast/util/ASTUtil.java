@@ -46,6 +46,7 @@ public final class ASTUtil {
 	 *
 	 * @deprecated (tellclovertoignorethis)
 	 */
+	@Deprecated
 	private ASTUtil() {
 	}
 
@@ -62,6 +63,7 @@ public final class ASTUtil {
 	 *
 	 * @deprecated silly
 	 */
+	@Deprecated
 	public static AST create(ASTFactory astFactory, int type, String text) {
 		return astFactory.create( type, text );
 	}
@@ -409,6 +411,7 @@ public final class ASTUtil {
 	 *
 	 * @deprecated Use #getTokenTypeName instead
 	 */
+	@Deprecated
 	public static String getConstantName(Class owner, int value) {
 		return getTokenTypeName( owner, value );
 	}

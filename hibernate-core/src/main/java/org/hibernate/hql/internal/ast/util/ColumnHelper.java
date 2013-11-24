@@ -41,6 +41,7 @@ public final class ColumnHelper {
 	/**
 	 * @deprecated (tell clover to filter this out)
 	 */
+	@Deprecated
 	private ColumnHelper() {
 	}
 

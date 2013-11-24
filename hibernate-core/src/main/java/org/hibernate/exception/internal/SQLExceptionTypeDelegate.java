@@ -44,10 +44,9 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
-import org.hibernate.exception.spi.SQLExceptionConverter;
 
 /**
- * {@link SQLExceptionConverter} implementation that does conversion based on the
+ * {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation that does conversion based on the
  * JDBC 4 defined {@link SQLException} sub-type hierarchy.
  *
  * @author Steve Ebersole
@@ -56,7 +55,6 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 	public SQLExceptionTypeDelegate(ConversionContext conversionContext) {
 		super( conversionContext );
 	}
-
 
 	@Override
 	public JDBCException convert(SQLException sqlException, String message, String sql) {

@@ -25,8 +25,6 @@ package org.hibernate.engine.transaction.synchronization.internal;
 
 import javax.transaction.SystemException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.spi.TransactionContext;

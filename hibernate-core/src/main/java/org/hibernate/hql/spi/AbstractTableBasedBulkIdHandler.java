@@ -32,7 +32,6 @@ import antlr.collections.AST;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.HqlSqlWalker;

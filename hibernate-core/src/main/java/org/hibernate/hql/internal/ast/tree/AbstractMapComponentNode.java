@@ -28,7 +28,6 @@ import java.util.Map;
 import antlr.SemanticException;
 import antlr.collections.AST;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;

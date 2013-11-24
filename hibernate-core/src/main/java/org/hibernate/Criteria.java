@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,12 +20,10 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate;
-import java.util.List;
 
-import javax.persistence.QueryHint;
+import java.util.List;
 
 import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Criterion;
@@ -33,6 +31,7 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
+
 
 /**
  * <tt>Criteria</tt> is a simplified API for retrieving entities
@@ -510,10 +509,10 @@ public interface Criteria extends CriteriaSpecification {
 	
 	  
 	/**
-	 * Add a DB query hint to the SQL.  These differ from JPA's {@link QueryHint}, which is specific to the JPA
-	 * implementation and ignores DB vendor-specific hints.  Instead, these are intended solely for the vendor-specific
-	 * hints, such as Oracle's optimizers.  Multiple query hints are supported; the Dialect will determine
-	 * concatenation and placement.
+	 * Add a DB query hint to the SQL.  These differ from JPA's {@link javax.persistence.QueryHint}, which is specific
+	 * to the JPA implementation and ignores DB vendor-specific hints.  Instead, these are intended solely for the
+	 * vendor-specific hints, such as Oracle's optimizers.  Multiple query hints are supported; the Dialect will
+	 * determine concatenation and placement.
 	 * 
 	 * @param hint The database specific query hint to add.
 	 * @return this (for method chaining)

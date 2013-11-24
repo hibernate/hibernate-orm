@@ -23,14 +23,12 @@
  */
 package org.hibernate.engine.spi;
 
+import javax.persistence.EntityGraph;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import javax.persistence.EntityGraph;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;

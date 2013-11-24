@@ -21,7 +21,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
 package org.hibernate.cache.internal;
 
 import java.io.Serializable;
@@ -30,7 +29,6 @@ import java.util.Set;
 import org.jboss.logging.Logger;
 
 import org.hibernate.cache.spi.CacheKey;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -52,8 +50,8 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistry;
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly
  * managing both sides of the association (ie, the ManyToOne collection is changed w/o properly managing the OneToMany).
  * 
- * For this functionality to be used, {@link AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be enabled.  For
- * performance reasons, it's disabled by default.
+ * For this functionality to be used, {@link org.hibernate.cfg.AvailableSettings#AUTO_EVICT_COLLECTION_CACHE} must be
+ * enabled.  For performance reasons, it's disabled by default.
  * 
  * @author Andreas Berger
  */

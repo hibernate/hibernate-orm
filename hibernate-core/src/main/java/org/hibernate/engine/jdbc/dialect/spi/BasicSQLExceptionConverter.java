@@ -22,9 +22,8 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.dialect.spi;
-import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
+import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.exception.internal.SQLStateConverter;

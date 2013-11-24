@@ -23,9 +23,9 @@
  *
  */
 package org.hibernate.hql.internal.ast.util;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.Stack;
 
 import antlr.collections.AST;
 
@@ -37,7 +37,6 @@ import antlr.collections.AST;
  * @author Strong Liu
  * 
  */
-
 public class NodeTraverser {
 	public static interface VisitationStrategy {
 		public void visit( AST node );

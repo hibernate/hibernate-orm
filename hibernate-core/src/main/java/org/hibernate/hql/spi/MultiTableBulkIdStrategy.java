@@ -26,7 +26,6 @@ package org.hibernate.hql.spi;
 import java.util.Map;
 
 import org.hibernate.cfg.Mappings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;

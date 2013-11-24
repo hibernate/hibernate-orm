@@ -23,15 +23,14 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Iterator;
 import java.util.List;
 
 import antlr.RecognitionException;
 import antlr.SemanticException;
 import antlr.collections.AST;
-import org.jboss.logging.Logger;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
@@ -39,6 +38,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -51,8 +51,7 @@ import org.hibernate.type.Type;
  * @author josh
  */
 public class IndexNode extends FromReferenceNode {
-
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, IndexNode.class.getName() );
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IndexNode.class );
 
 	public void setScalarColumnText(int i) throws SemanticException {
 		throw new UnsupportedOperationException( "An IndexNode cannot generate column text!" );

@@ -132,9 +132,6 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
-
 /**
  * @author <a href="mailto:gavin@hibernate.org">Gavin King</a>
  * @author Emmanuel Bernard
@@ -1549,9 +1546,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 					);
 				}
 				try {
-                    if ( transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION ) {
-                        transactionManager.setRollbackOnly();
-                    }
+					if ( transactionManager.getStatus() != Status.STATUS_NO_TRANSACTION ) {
+						transactionManager.setRollbackOnly();
+					}
 				}
 				catch (SystemException e) {
 					throw new PersistenceException( "Unable to set the JTA transaction as RollbackOnly", e );
@@ -1623,7 +1620,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 
 			// register behavior changes
-			SynchronizationCallbackCoordinator callbackCoordinator = transactionCoordinator.getSynchronizationCallbackCoordinator();
+			final SynchronizationCallbackCoordinator callbackCoordinator = transactionCoordinator.getSynchronizationCallbackCoordinator();
 			callbackCoordinator.setManagedFlushChecker( new ManagedFlushCheckerImpl() );
 			callbackCoordinator.setExceptionMapper( new CallbackExceptionMapperImpl() );
 			callbackCoordinator.setAfterCompletionAction( new AfterCompletionActionImpl( session, transactionType ) );
@@ -1711,47 +1708,47 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	@Override
 	public RuntimeException convert(HibernateException e, LockOptions lockOptions) {
 		if ( e instanceof StaleStateException ) {
-			PersistenceException converted = wrapStaleStateException( (StaleStateException) e );
+			final PersistenceException converted = wrapStaleStateException( (StaleStateException) e );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof LockingStrategyException ) {
-			PersistenceException converted = wrapLockException( e, lockOptions );
+			final PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
-			PersistenceException converted = wrapLockException( e, lockOptions );
+			final PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			PersistenceException converted = wrapLockException( e, lockOptions );
+			final PersistenceException converted = wrapLockException( e, lockOptions );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof org.hibernate.QueryTimeoutException ) {
-			QueryTimeoutException converted = new QueryTimeoutException( e.getMessage(), e );
+			final QueryTimeoutException converted = new QueryTimeoutException( e.getMessage(), e );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof ObjectNotFoundException ) {
-			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+			final EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
         else if ( e instanceof org.hibernate.NonUniqueObjectException ) {
-            EntityExistsException converted = new EntityExistsException( e.getMessage() );
+			final EntityExistsException converted = new EntityExistsException( e.getMessage() );
             handlePersistenceException( converted );
             return converted;
         }
 		else if ( e instanceof org.hibernate.NonUniqueResultException ) {
-			NonUniqueResultException converted = new NonUniqueResultException( e.getMessage() );
+			final NonUniqueResultException converted = new NonUniqueResultException( e.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
 		else if ( e instanceof UnresolvableObjectException ) {
-			EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
+			final EntityNotFoundException converted = new EntityNotFoundException( e.getMessage() );
 			handlePersistenceException( converted );
 			return converted;
 		}
@@ -1769,7 +1766,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
 		else {
-			PersistenceException converted = new PersistenceException( e );
+			final PersistenceException converted = new PersistenceException( e );
 			handlePersistenceException( converted );
 			return converted;
 		}
@@ -1784,11 +1781,11 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public PersistenceException wrapStaleStateException(StaleStateException e) {
 		PersistenceException pe;
 		if ( e instanceof StaleObjectStateException ) {
-			StaleObjectStateException sose = ( StaleObjectStateException ) e;
-			Serializable identifier = sose.getIdentifier();
+			final StaleObjectStateException sose = ( StaleObjectStateException ) e;
+			final Serializable identifier = sose.getIdentifier();
 			if ( identifier != null ) {
 				try {
-					Object entity = internalGetSession().load( sose.getEntityName(), identifier );
+					final Object entity = internalGetSession().load( sose.getEntityName(), identifier );
 					if ( entity instanceof Serializable ) {
 						//avoid some user errors regarding boundary crossing
 						pe = new OptimisticLockException( e.getMessage(), e, entity );
@@ -1821,7 +1818,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			pe = new LockTimeoutException( e.getMessage(), e, null );
 		}
 		else if ( e instanceof PessimisticEntityLockException ) {
-			PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;
+			final PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified
 				pe = new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() );
@@ -1831,7 +1828,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			org.hibernate.PessimisticLockException jdbcLockException = ( org.hibernate.PessimisticLockException ) e;
+			final org.hibernate.PessimisticLockException jdbcLockException = ( org.hibernate.PessimisticLockException ) e;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified
 				pe = new LockTimeoutException( jdbcLockException.getMessage(), jdbcLockException, null );
@@ -1873,9 +1870,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	private static class ManagedFlushCheckerImpl implements ManagedFlushChecker {
 		@Override
 		public boolean shouldDoManagedFlush(TransactionCoordinator coordinator, int jtaStatus) {
-			return ! coordinator.getTransactionContext().isClosed() &&
-					! coordinator.getTransactionContext().isFlushModeNever() &&
-					! JtaStatusHelper.isRollback( jtaStatus );
+			return !coordinator.getTransactionContext().isClosed()
+					&& !coordinator.getTransactionContext().isFlushModeNever()
+					&& !JtaStatusHelper.isRollback( jtaStatus );
 		}
 	}
 

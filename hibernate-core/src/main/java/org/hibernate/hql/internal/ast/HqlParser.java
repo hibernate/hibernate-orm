@@ -374,8 +374,7 @@ public final class HqlParser extends HqlBaseParser {
 		if ( LA( 1 ) == DOT && LA( 2 ) != IDENT ) {
 			// See if the second lookahead token can be an identifier.
 			HqlToken t = (HqlToken) LT( 2 );
-			if ( t.isPossibleID() )
-			{
+			if ( t.isPossibleID() ) {
 				// Set it!
 				LT( 2 ).setType( IDENT );
 				if ( LOG.isDebugEnabled() ) {

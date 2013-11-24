@@ -23,7 +23,7 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import java.awt.*;
+import java.awt.Color;
 
 /**
  * CacheRegionUtils

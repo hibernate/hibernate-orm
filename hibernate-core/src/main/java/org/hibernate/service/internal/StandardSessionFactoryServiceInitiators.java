@@ -50,4 +50,7 @@ public class StandardSessionFactoryServiceInitiators {
 
 		return Collections.unmodifiableList( serviceInitiators );
 	}
+
+	private StandardSessionFactoryServiceInitiators() {
+	}
 }

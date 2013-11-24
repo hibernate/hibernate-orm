@@ -728,8 +728,8 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				int c = count;
 				if ( c++ > threshold ) {// ensure capacity
 					int reduced = rehash();
-					if ( reduced > 0 )  // adjust from possible weak cleanups
-					{
+					if ( reduced > 0 ) {
+						// adjust from possible weak cleanups
 						count = ( c -= reduced ) - 1; // write-volatile
 					}
 				}
@@ -1842,8 +1842,8 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				for ( int i = 0; i < tab.length; ++i ) {
 					for ( HashEntry<K, V> e = tab[i]; e != null; e = e.next ) {
 						K key = e.key();
-						if ( key == null ) // Skip GC'd keys
-						{
+						if ( key == null ) {
+							// Skip GC'd keys
 							continue;
 						}
 

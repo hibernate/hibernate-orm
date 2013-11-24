@@ -20,14 +20,14 @@ versionInjection {
     into( 'org.hibernate.jpamodelgen.Version', 'getVersionString' )
 }
 
-sourceSets.main {
-    ext.jaxbTargetDir = file( "${buildDir}/generated-sources" )
-    java.srcDir jaxbTargetDir
+ext {
+	jaxbTargetDir = file( "${buildDir}/generated-sources/jaxb/main" )
+	xsdDir = file( "${projectDir}/src/main/xsd" )
 }
 
 sourceSets.main {
-    ext.xsdDir = file( "${projectDir}/src/main/xsd" )
-    resources.srcDir xsdDir
+    java.srcDir jaxbTargetDir
+	resources.srcDir xsdDir
 }
 
 compileTestJava {
@@ -44,15 +44,8 @@ jar {
 }
 
 task jaxb {
-    // output directory
-    ext.jaxbTargetDir = file( "${buildDir}/generated-sources" )
-
-    // input schema
-    ext.ormXsd = file( 'src/main/xsd/orm_2_0.xsd')
-    ext.persistenceXsd = file( 'src/main/xsd/persistence_2_0.xsd')
-
     // configure Gradle up-to-date checking
-    inputs.files( [ormXsd, persistenceXsd] )
+    inputs.dir( xsdDir )
     outputs.dir( jaxbTargetDir )
 
     // perform actions
@@ -67,7 +60,7 @@ task jaxb {
                 package: 'org.hibernate.jpamodelgen.xml.jaxb',
                 extension: 'true'
         ) {
-            schema  (dir:"src/main/xsd", includes:"*.xsd")
+            schema  ( dir: xsdDir.path, includes: "*.xsd" )
         }
     }
 }

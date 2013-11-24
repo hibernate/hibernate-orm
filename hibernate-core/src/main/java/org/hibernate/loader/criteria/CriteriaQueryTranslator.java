@@ -176,9 +176,8 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 				// TODO : not so sure this is needed...
 				throw new QueryException( "duplicate association path: " + wholeAssociationPath );
 			}
-			if ( crit.getWithClause() != null )
-			{
-				this.withClauseMap.put(wholeAssociationPath, crit.getWithClause());
+			if ( crit.getWithClause() != null ) {
+				this.withClauseMap.put( wholeAssociationPath, crit.getWithClause() );
 			}
 		}
 	}
@@ -320,8 +319,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			if ( lm != null ) {
 				lockOptions.setAliasSpecificLockMode( getSQLAlias( subcriteria ), lm );
 			}
-			if ( subcriteria.getWithClause() != null )
-			{
+			if ( subcriteria.getWithClause() != null ) {
 				TypedValue[] tv = subcriteria.getWithClause().getTypedValues( subcriteria, this );
 				for ( TypedValue aTv : tv ) {
 					values.add( aTv.getValue() );
@@ -657,17 +655,14 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 		return propertyName;
 	}
 
-	public String getWithClause(String path)
-	{
+	public String getWithClause(String path) {
 		final Criterion crit = withClauseMap.get(path);
 		return crit == null ? null : crit.toSqlString(getCriteria(path), this);
 	}
 
-	public boolean hasRestriction(String path)
-	{
+	public boolean hasRestriction(String path) {
 		final CriteriaImpl.Subcriteria crit = ( CriteriaImpl.Subcriteria ) getCriteria( path );
 		return crit != null && crit.hasRestriction();
 	}
-
 
 }

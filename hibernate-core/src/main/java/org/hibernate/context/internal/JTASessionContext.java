@@ -23,13 +23,11 @@
  */
 package org.hibernate.context.internal;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.transaction.Synchronization;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
@@ -39,6 +37,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * An implementation of {@link org.hibernate.context.spi.CurrentSessionContext} which scopes the notion

@@ -23,14 +23,14 @@
  */
 package org.hibernate.internal.util.jndi;
 
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.Name;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.Properties;
 
 import org.hibernate.engine.jndi.internal.JndiServiceImpl;
 

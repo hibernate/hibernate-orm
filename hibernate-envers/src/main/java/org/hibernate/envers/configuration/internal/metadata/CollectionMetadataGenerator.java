@@ -23,7 +23,6 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import javax.persistence.JoinColumn;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,10 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import org.dom4j.Element;
-
-import org.jboss.logging.Logger;
+import javax.persistence.JoinColumn;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -100,6 +96,10 @@ import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+
+import org.dom4j.Element;
 
 /**
  * Generates metadata for a collection-valued property.

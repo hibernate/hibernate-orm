@@ -28,8 +28,6 @@ import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.TemporalType;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -37,6 +35,8 @@ import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.MappedAttribute;
 import org.hibernate.type.StandardBasicTypes;
+
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

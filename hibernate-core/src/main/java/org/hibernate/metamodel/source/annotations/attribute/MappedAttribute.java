@@ -26,15 +26,15 @@ package org.hibernate.metamodel.source.annotations.attribute;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.mapping.PropertyGeneration;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * Base class for the different types of mapped attributes

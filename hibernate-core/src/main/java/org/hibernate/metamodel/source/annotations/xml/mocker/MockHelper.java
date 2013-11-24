@@ -30,6 +30,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbCascadeType;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
+import org.hibernate.service.ServiceRegistry;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
@@ -38,13 +45,6 @@ import org.jboss.jandex.DotName;
 import org.jboss.jandex.FieldInfo;
 import org.jboss.jandex.MethodInfo;
 import org.jboss.jandex.Type;
-
-import org.hibernate.HibernateException;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbCascadeType;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * @author Strong Liu

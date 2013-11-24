@@ -23,6 +23,10 @@
  */
 package org.hibernate.internal.util.xml;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.net.URL;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
@@ -36,10 +40,11 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.net.URL;
+
+import org.hibernate.InvalidMappingException;
+import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
@@ -47,11 +52,6 @@ import org.dom4j.io.STAXEventReader;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import org.jboss.logging.Logger;
-
-import org.hibernate.InvalidMappingException;
-import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Handles reading mapping documents, both {@code hbm} and {@code orm} varieties.

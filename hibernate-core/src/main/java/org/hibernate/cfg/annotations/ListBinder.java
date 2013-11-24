@@ -25,8 +25,6 @@ package org.hibernate.cfg.annotations;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.OrderBy;
@@ -48,6 +46,8 @@ import org.hibernate.mapping.List;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.SimpleValue;
+
+import org.jboss.logging.Logger;
 
 /**
  * Bind a list to the underlying Hibernate configuration

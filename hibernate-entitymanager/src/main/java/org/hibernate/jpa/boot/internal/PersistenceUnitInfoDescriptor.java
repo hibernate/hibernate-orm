@@ -23,13 +23,13 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import java.net.URL;
+import java.util.List;
+import java.util.Properties;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
-import java.net.URL;
-import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.instrument.InterceptFieldClassFileTransformer;

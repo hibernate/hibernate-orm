@@ -23,9 +23,6 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,12 +32,15 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import org.infinispan.AdvancedCache;
-import org.infinispan.manager.EmbeddedCacheManager;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.InfinispanRegionFactory;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.manager.EmbeddedCacheManager;
 
 /**
  * Encapsulates logic to allow a {@link TransactionalAccessDelegate} to determine

@@ -26,10 +26,7 @@ package org.hibernate.procedure.internal;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockMode;
-import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryRootReturn;
@@ -38,6 +35,8 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.UnknownSqlResultSetMappingException;
+
+import org.jboss.logging.Logger;
 
 /**
  * Utilities used to implement procedure call support.

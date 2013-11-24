@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.internal;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.NoSuchElementException;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
@@ -37,6 +36,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * An implementation of <tt>java.util.Iterator</tt> that is

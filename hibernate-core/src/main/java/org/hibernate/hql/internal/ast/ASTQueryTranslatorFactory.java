@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.ast;
+
 import java.util.Map;
 
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
@@ -31,6 +32,7 @@ import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
 import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**

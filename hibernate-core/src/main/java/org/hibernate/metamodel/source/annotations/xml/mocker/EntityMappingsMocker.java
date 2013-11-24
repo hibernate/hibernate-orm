@@ -27,9 +27,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.Index;
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
@@ -39,6 +36,9 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbMappedSuperclass;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitMetadata;
 import org.hibernate.service.ServiceRegistry;
+
+import org.jboss.jandex.Index;
+import org.jboss.logging.Logger;
 
 /**
  * Parse all {@link org.hibernate.internal.jaxb.mapping.orm.JaxbEntityMappings} generated from orm.xml.

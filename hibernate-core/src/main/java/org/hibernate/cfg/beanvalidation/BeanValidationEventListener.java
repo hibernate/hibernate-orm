@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg.beanvalidation;
+
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
@@ -32,8 +33,6 @@ import javax.validation.TraversableResolver;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.EntityMode;
 import org.hibernate.cfg.Configuration;
@@ -46,6 +45,8 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
+
+import org.jboss.logging.Logger;
 
 /**
  * Event listener used to enable Bean Validation for insert/update/delete events.

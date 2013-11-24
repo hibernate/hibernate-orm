@@ -27,10 +27,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.dom4j.Element;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
@@ -63,6 +59,10 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.OneToOneType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+
+import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)

@@ -23,9 +23,9 @@
  */
 package org.hibernate;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Indicates an attempt to access not-yet-fetched data outside of a session context.

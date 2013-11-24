@@ -28,10 +28,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
@@ -50,6 +46,11 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InFragment;
 import org.hibernate.type.LiteralType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * A delegate that handles literals and constants for HqlSqlWalker, performing the token replacement functions and

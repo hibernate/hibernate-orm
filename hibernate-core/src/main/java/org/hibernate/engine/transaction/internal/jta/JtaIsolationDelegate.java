@@ -23,12 +23,12 @@
  */
 package org.hibernate.engine.transaction.internal.jta;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
-import java.sql.Connection;
-import java.sql.SQLException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;

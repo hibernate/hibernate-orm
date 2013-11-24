@@ -27,9 +27,9 @@ package org.hibernate.metamodel.source.annotations.attribute.type;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * @author Strong Liu

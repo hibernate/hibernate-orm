@@ -23,14 +23,14 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import org.dom4j.Document;
-import org.dom4j.Element;
-
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.revisioninfo.ModifiedEntityNamesReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoGenerator;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)

@@ -23,7 +23,6 @@ package org.hibernate.osgi;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-
 import javax.persistence.PersistenceException;
 
 import org.hibernate.internal.CoreLogging;
@@ -33,7 +32,7 @@ import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
 import org.hibernate.jpa.boot.spi.InputStreamAccess;
 import org.hibernate.jpa.boot.spi.NamedInputStream;
-import org.jboss.logging.Logger;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.wiring.BundleWiring;
 

@@ -23,6 +23,8 @@
  */
 package org.hibernate.cfg;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Convert;
 import javax.persistence.Converts;
 import javax.persistence.Enumerated;
@@ -33,9 +35,6 @@ import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionType;

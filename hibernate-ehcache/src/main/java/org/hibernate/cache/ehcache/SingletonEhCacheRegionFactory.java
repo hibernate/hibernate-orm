@@ -31,11 +31,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.config.Configuration;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
 import org.hibernate.cfg.Settings;
+
+import org.jboss.logging.Logger;
 
 /**
  * A singleton EhCacheRegionFactory implementation.

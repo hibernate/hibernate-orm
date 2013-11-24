@@ -23,13 +23,10 @@
  */
 package org.hibernate.envers.configuration.internal;
 
-import javax.persistence.Column;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Set;
-
-import org.dom4j.Document;
-import org.dom4j.Element;
+import javax.persistence.Column;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -60,6 +57,9 @@ import org.hibernate.internal.util.xml.XMLHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)

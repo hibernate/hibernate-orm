@@ -1,8 +1,8 @@
 package org.hibernate.envers.strategy;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.envers.internal.EnversMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Deprecated Audit strategy class.

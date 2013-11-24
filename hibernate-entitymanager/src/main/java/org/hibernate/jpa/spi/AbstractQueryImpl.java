@@ -23,15 +23,15 @@
  */
 package org.hibernate.jpa.spi;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Set;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;

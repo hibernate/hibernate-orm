@@ -23,22 +23,22 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
+import java.lang.management.ManagementFactory;
+import java.util.Properties;
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import java.lang.management.ManagementFactory;
-import java.util.Properties;
 
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Status;
 import net.sf.ehcache.event.CacheManagerEventListener;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cfg.Environment;
+
+import org.jboss.logging.Logger;
 
 /**
  * Implementation of {@link EhcacheHibernateMBeanRegistration}.

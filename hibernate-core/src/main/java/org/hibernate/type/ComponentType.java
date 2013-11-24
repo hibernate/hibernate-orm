@@ -32,9 +32,6 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.dom4j.Element;
-import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -50,6 +47,9 @@ import org.hibernate.metamodel.relational.Size;
 import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
+
+import org.dom4j.Element;
+import org.dom4j.Node;
 
 /**
  * Handles "component" mappings

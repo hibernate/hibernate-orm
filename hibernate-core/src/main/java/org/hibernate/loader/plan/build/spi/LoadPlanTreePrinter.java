@@ -27,14 +27,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.spi.AliasResolutionContext;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
+
+import org.jboss.logging.Logger;
 
 /**
  * Prints a {@link org.hibernate.loader.plan.spi.QuerySpaces} graph as a tree structure.

@@ -25,8 +25,6 @@ package org.hibernate.secure.spi;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -34,7 +32,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.DuplicationStrategy;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.secure.internal.DisabledJaccServiceImpl;
@@ -45,6 +42,8 @@ import org.hibernate.secure.internal.JaccPreUpdateEventListener;
 import org.hibernate.secure.internal.JaccSecurityListener;
 import org.hibernate.secure.internal.StandardJaccServiceImpl;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
+import org.jboss.logging.Logger;
 
 /**
  * Integrator for setting up JACC integration

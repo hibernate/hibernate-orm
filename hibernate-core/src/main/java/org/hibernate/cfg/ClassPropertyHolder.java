@@ -23,11 +23,11 @@
  */
 package org.hibernate.cfg;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Convert;
 import javax.persistence.Converts;
 import javax.persistence.JoinTable;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.annotations.common.reflection.XClass;

@@ -23,15 +23,17 @@
  *
  */
 package org.hibernate.hql.internal.ast;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import antlr.RecognitionException;
-import org.jboss.logging.Logger;
-
 import org.hibernate.QueryException;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
+
+import antlr.RecognitionException;
 
 /**
  * An error handler that counts parsing errors and warnings.

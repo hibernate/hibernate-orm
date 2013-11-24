@@ -23,6 +23,10 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Properties;
 import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -30,12 +34,6 @@ import javax.persistence.MapKeyEnumerated;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import java.io.Serializable;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Properties;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -71,6 +69,8 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.WrappedMaterializedBlobType;
 import org.hibernate.usertype.DynamicParameterizedType;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

@@ -27,11 +27,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
+
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
-
-import org.hibernate.internal.CoreMessageLogger;
 
 /**
  * Implements an {@link ErrorHandler} that mainly just logs errors/warnings.  However, it does track

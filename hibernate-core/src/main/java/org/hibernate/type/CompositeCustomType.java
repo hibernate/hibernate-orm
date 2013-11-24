@@ -30,9 +30,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.dom4j.Element;
-import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.HibernateException;
@@ -46,6 +43,9 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.relational.Size;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.LoggableUserType;
+
+import org.dom4j.Element;
+import org.dom4j.Node;
 
 /**
  * Adapts {@link CompositeUserType} to the {@link Type} interface

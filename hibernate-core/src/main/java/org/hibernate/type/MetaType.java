@@ -27,10 +27,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-
-import org.dom4j.Node;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -38,6 +35,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.relational.Size;
+
+import org.dom4j.Node;
 
 /**
  * @author Gavin King

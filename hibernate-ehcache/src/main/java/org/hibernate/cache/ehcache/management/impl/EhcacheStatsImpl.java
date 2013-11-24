@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
-import javax.management.MBeanNotificationInfo;
-import javax.management.NotCompliantMBeanException;
-import javax.management.Notification;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import javax.management.MBeanNotificationInfo;
+import javax.management.NotCompliantMBeanException;
+import javax.management.Notification;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;

@@ -22,6 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Converts;
@@ -29,10 +33,6 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.common.reflection.XClass;

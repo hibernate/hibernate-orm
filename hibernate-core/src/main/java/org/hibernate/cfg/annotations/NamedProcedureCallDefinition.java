@@ -23,15 +23,15 @@
  */
 package org.hibernate.cfg.annotations;
 
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureParameter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.NamedStoredProcedureQuery;
+import javax.persistence.ParameterMode;
+import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.ResultSetMappingDefinition;
@@ -40,9 +40,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
-import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.internal.ProcedureCallMementoImpl;
 import org.hibernate.procedure.internal.Util;
+import org.hibernate.procedure.spi.ParameterStrategy;
 
 import static org.hibernate.procedure.internal.ProcedureCallMementoImpl.ParameterMemento;
 

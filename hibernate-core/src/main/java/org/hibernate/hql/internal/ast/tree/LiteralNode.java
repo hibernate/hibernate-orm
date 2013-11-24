@@ -23,11 +23,8 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import javax.persistence.AttributeConverter;
-
 import java.sql.Types;
-
-import antlr.SemanticException;
+import javax.persistence.AttributeConverter;
 
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
@@ -35,6 +32,8 @@ import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+
+import antlr.SemanticException;
 
 /**
  * Represents a literal.

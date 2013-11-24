@@ -23,8 +23,8 @@
  */
 package org.hibernate.jpa.criteria.expression;
 
-import javax.persistence.criteria.Selection;
 import java.util.List;
+import javax.persistence.criteria.Selection;
 
 import org.hibernate.jpa.criteria.ParameterRegistry;
 import org.hibernate.jpa.criteria.ValueHandlerFactory;

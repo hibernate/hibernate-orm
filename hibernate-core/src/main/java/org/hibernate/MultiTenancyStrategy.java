@@ -25,10 +25,10 @@ package org.hibernate;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Describes the methods for multi-tenancy understood by Hibernate.

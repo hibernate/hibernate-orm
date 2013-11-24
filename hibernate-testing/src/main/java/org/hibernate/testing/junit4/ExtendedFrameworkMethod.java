@@ -27,10 +27,9 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.hibernate.testing.FailureExpected;
 import org.junit.Ignore;
 import org.junit.runners.model.FrameworkMethod;
-
-import org.hibernate.testing.FailureExpected;
 
 /**
  * Defines an extension to the standard JUnit {@link FrameworkMethod} information about a test method.

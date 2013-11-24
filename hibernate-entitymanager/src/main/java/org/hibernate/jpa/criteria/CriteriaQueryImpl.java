@@ -42,17 +42,17 @@ import javax.persistence.criteria.Selection;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.criteria.compile.CompilableCriteria;
 import org.hibernate.jpa.criteria.compile.CriteriaInterpretation;
 import org.hibernate.jpa.criteria.compile.CriteriaQueryTypeQueryAdapter;
 import org.hibernate.jpa.criteria.compile.ImplicitParameterBinding;
 import org.hibernate.jpa.criteria.compile.InterpretedParameterMetadata;
 import org.hibernate.jpa.criteria.compile.RenderingContext;
+import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.spi.HibernateEntityManagerImplementor;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * The Hibernate implementation of the JPA {@link CriteriaQuery} contract.  Mostly a set of delegation to its

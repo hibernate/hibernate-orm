@@ -23,11 +23,11 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import javax.persistence.PersistenceException;
 
 import org.jboss.logging.Logger;
 

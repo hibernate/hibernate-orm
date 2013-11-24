@@ -21,11 +21,11 @@
  */
 package org.hibernate.cache.infinispan.timestamp;
 
-import org.infinispan.configuration.cache.Configuration;
-import org.infinispan.eviction.EvictionStrategy;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.TypeOverrides;
+
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.eviction.EvictionStrategy;
 
 /**
  * TimestampTypeOverrides.

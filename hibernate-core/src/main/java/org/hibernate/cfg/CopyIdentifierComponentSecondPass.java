@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -37,6 +36,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

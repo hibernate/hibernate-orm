@@ -38,17 +38,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import javax.persistence.AccessType;
 
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import com.fasterxml.classmate.members.HierarchicType;
-import com.fasterxml.classmate.members.ResolvedMember;
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
@@ -64,6 +53,18 @@ import org.hibernate.metamodel.source.annotations.attribute.AssociationAttribute
 import org.hibernate.metamodel.source.annotations.attribute.AttributeNature;
 import org.hibernate.metamodel.source.annotations.attribute.AttributeOverride;
 import org.hibernate.metamodel.source.annotations.attribute.BasicAttribute;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
+
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
+import com.fasterxml.classmate.members.HierarchicType;
+import com.fasterxml.classmate.members.ResolvedMember;
 
 /**
  * Base class for a configured entity, mapped super class or embeddable

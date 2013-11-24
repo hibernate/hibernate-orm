@@ -28,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.build.spi.ExpandingCollectionQuerySpace;
@@ -40,6 +38,8 @@ import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.loader.plan.spi.QuerySpaceUidNotRegisteredException;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

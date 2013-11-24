@@ -31,9 +31,6 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.Component;
-
 /**
  * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
  * identifiable types as entities or mapped-superclasses.  Basically things to which an

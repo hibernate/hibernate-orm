@@ -23,8 +23,6 @@
  */
 package org.hibernate.loader.plan.build.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStrategy;
@@ -39,6 +37,8 @@ import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
+
+import org.jboss.logging.Logger;
 
 /**
  * LoadPlanBuilderStrategy implementation used for building LoadPlans based on metamodel-defined fetching.  Built

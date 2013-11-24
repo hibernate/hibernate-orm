@@ -23,13 +23,13 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.management.MBeanNotificationInfo;
 import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
-import java.util.ArrayList;
-import java.util.List;
 
 import net.sf.ehcache.hibernate.management.api.HibernateStats;
 

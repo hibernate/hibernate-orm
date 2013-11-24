@@ -32,12 +32,12 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.engine.jdbc.BinaryStream;
+
+import org.jboss.logging.Logger;
 
 /**
  * A help for dealing with BLOB and CLOB data

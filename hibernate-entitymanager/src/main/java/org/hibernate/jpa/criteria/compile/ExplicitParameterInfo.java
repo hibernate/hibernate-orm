@@ -23,9 +23,9 @@
  */
 package org.hibernate.jpa.criteria.compile;
 
-import javax.persistence.Parameter;
 import java.util.Calendar;
 import java.util.Date;
+import javax.persistence.Parameter;
 
 /**
  * @author Steve Ebersole

@@ -23,12 +23,12 @@
  */
 package org.hibernate.type.descriptor.converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.PersistenceException;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.persistence.AttributeConverter;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;

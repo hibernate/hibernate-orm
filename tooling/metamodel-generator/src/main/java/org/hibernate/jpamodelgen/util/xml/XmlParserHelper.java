@@ -42,6 +42,7 @@ import javax.xml.validation.SchemaFactory;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.xml.jaxb.ObjectFactory;
+
 import org.xml.sax.SAXException;
 
 /**

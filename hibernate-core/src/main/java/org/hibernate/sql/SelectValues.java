@@ -25,11 +25,10 @@ package org.hibernate.sql;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Set;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.Dialect;
+
+import org.jboss.logging.Logger;
 
 /**
  * Models a SELECT values lists.  Eventually, rather than Strings, pass in the Column/Formula representations (something

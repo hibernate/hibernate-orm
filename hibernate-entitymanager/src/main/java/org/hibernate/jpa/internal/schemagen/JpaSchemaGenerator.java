@@ -23,7 +23,6 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
 import java.io.File;
 import java.io.Reader;
 import java.io.Writer;
@@ -37,8 +36,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
-import org.jboss.logging.Logger;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -60,6 +58,8 @@ import org.hibernate.jpa.SchemaGenSource;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.ImportSqlCommandExtractor;
+
+import org.jboss.logging.Logger;
 
 /**
  * Class responsible for the JPA-defined schema generation behavior.

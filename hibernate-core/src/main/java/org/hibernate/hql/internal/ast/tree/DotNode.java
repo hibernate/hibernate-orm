@@ -24,9 +24,6 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.CollectionProperties;
@@ -44,6 +41,9 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents a reference to a property or alias expression.  This should duplicate the relevant behaviors in

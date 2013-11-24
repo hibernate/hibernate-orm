@@ -23,12 +23,12 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import antlr.SemanticException;
-
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
 
 /**
  * Nodes which represent binary arithmetic operators.

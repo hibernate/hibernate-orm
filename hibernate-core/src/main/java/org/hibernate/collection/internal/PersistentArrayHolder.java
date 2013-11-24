@@ -32,14 +32,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * A persistent wrapper for an array. Lazy initialization

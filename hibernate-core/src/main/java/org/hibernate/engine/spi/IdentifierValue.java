@@ -25,9 +25,9 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreLogging;
+
+import org.jboss.logging.Logger;
 
 /**
  * A strategy for determining if an identifier value is an identifier of

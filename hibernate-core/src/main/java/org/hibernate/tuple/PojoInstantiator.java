@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
@@ -38,6 +36,8 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.binding.EntityBinding;
+
+import org.jboss.logging.Logger;
 
 /**
  * Defines a POJO-based instantiator for use from the tuplizers.

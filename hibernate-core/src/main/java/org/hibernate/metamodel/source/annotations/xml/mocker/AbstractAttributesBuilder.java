@@ -25,8 +25,6 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 
 import java.util.List;
 
-import org.jboss.jandex.ClassInfo;
-
 import org.hibernate.internal.jaxb.mapping.orm.JaxbBasic;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbElementCollection;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbedded;
@@ -38,6 +36,8 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToMany;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbOneToOne;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTransient;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbVersion;
+
+import org.jboss.jandex.ClassInfo;
 
 /**
  * Abstract Parser to handle {@link org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes JaxbAttributes}

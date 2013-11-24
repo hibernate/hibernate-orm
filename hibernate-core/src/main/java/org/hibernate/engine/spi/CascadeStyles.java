@@ -26,10 +26,10 @@ package org.hibernate.engine.spi;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

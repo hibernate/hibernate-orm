@@ -23,23 +23,23 @@
  */
 package org.hibernate.cache.infinispan.impl;
 
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
-
-import org.infinispan.AdvancedCache;
-import org.infinispan.context.Flag;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Support for Infinispan {@link Region}s. Handles common "utility" methods for an underlying named

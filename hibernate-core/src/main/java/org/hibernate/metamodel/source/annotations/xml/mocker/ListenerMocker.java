@@ -26,11 +26,6 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
-
 import org.hibernate.MappingException;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListener;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityListeners;
@@ -41,6 +36,11 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
 
 /**
  * {@link javax.persistence.EntityListeners @EntityListeners} mocker

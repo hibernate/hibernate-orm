@@ -23,11 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations.entity;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.ResolvedTypeWithMembers;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.Index;
-
 import org.hibernate.cfg.NamingStrategy;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.SourceType;
@@ -38,6 +33,12 @@ import org.hibernate.metamodel.source.MappingDefaults;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.service.ServiceRegistry;
+
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.Index;
+
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.ResolvedTypeWithMembers;
 
 /**
  * Annotation version of a local binding context.

@@ -31,13 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.AccessType;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.FieldInfo;
-import org.jboss.jandex.Index;
-import org.jboss.jandex.MethodInfo;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.binding.InheritanceType;
@@ -47,6 +40,13 @@ import org.hibernate.metamodel.source.annotations.entity.SubclassEntitySourceImp
 import org.hibernate.metamodel.source.binder.EntityHierarchy;
 import org.hibernate.metamodel.source.binder.EntitySource;
 import org.hibernate.metamodel.source.binder.SubclassEntitySource;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.FieldInfo;
+import org.jboss.jandex.Index;
+import org.jboss.jandex.MethodInfo;
 
 /**
  * Given a (jandex) annotation index build processes all classes with JPA relevant annotations and pre-orders

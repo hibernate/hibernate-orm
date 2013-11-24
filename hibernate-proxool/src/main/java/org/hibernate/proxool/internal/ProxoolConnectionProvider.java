@@ -28,13 +28,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.logicalcobwebs.proxool.ProxoolException;
-import org.logicalcobwebs.proxool.ProxoolFacade;
-import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
-import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -44,6 +37,13 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.Stoppable;
+
+import org.jboss.logging.Logger;
+
+import org.logicalcobwebs.proxool.ProxoolException;
+import org.logicalcobwebs.proxool.ProxoolFacade;
+import org.logicalcobwebs.proxool.configuration.JAXPConfigurator;
+import org.logicalcobwebs.proxool.configuration.PropertyConfigurator;
 
 /**
  * A connection provider that uses a Proxool connection pool. Hibernate will use this by

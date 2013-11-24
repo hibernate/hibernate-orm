@@ -26,14 +26,14 @@ package org.hibernate.persister.walking.spi;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Implements metamodel graph walking.  In layman terms, we are walking the graph of the users domain model as

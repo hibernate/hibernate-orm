@@ -23,13 +23,14 @@
  */
 package org.hibernate.internal.util.xml;
 
+import org.hibernate.internal.util.ClassLoaderHelper;
+
 import org.dom4j.DocumentFactory;
 import org.dom4j.Element;
 import org.dom4j.io.DOMReader;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
-import org.hibernate.internal.util.ClassLoaderHelper;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 

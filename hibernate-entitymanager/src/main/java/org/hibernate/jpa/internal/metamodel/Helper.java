@@ -27,12 +27,12 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

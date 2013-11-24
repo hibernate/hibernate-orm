@@ -28,8 +28,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -38,6 +36,8 @@ import org.hibernate.loader.entity.UniqueEntityLoader;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * The base contract for UniqueEntityLoader implementations capable of performing batch-fetch loading of entities

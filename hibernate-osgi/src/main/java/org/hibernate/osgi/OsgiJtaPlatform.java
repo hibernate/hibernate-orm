@@ -29,6 +29,7 @@ import javax.transaction.UserTransaction;
 import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+
 import org.osgi.framework.BundleContext;
 
 /**

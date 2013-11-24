@@ -23,11 +23,11 @@
  */
 package org.hibernate.testing.junit4;
 
-import org.jboss.logging.Logger;
+import org.hibernate.testing.FailureExpected;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
-import org.hibernate.testing.FailureExpected;
+import org.jboss.logging.Logger;
 
 /**
 * @author Steve Ebersole

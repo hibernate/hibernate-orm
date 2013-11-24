@@ -32,8 +32,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.Node;
-
 import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FetchMode;
@@ -53,6 +51,8 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.proxy.LazyInitializer;
+
+import org.dom4j.Node;
 
 /**
  * Handles "any" mappings

@@ -23,11 +23,11 @@
  */
 package org.hibernate.engine.jdbc.spi;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
+
+import org.jboss.logging.Logger;
 
 /**
  * Centralize logging for SQL statements.

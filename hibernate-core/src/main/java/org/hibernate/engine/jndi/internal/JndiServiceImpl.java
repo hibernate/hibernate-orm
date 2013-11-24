@@ -36,13 +36,13 @@ import javax.naming.NamingException;
 import javax.naming.event.EventContext;
 import javax.naming.event.NamespaceChangeListener;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cfg.Environment;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of JNDI services.

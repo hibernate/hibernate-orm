@@ -23,6 +23,14 @@
  */
 package org.hibernate.jpa.boot.internal;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import javax.persistence.PersistenceException;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import javax.xml.XMLConstants;
@@ -34,16 +42,18 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+import org.hibernate.jpa.internal.util.ConfigurationHelper;
+import org.hibernate.metamodel.source.XsdException;
 
 import org.jboss.logging.Logger;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -52,15 +62,6 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
-
-import org.hibernate.jpa.AvailableSettings;
-import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
-import org.hibernate.jpa.internal.util.ConfigurationHelper;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.source.XsdException;
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
 /**
  * Used by Hibernate to parse {@code persistence.xml} files in SE environments.

@@ -23,16 +23,16 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.net.URL;
-
-import org.jboss.logging.Logger;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.jpa.internal.HEMLogging;
+
+import org.jboss.logging.Logger;
 
 /**
  * ScriptTargetOutput implementation for writing to supplied URL references

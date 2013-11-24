@@ -26,14 +26,14 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbGeneratedValue;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
-
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbGeneratedValue;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbId;
 
 /**
  * @author Strong Liu

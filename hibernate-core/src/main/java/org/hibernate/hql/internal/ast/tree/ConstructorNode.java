@@ -28,9 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.ast.DetailedSemanticException;
@@ -41,6 +38,9 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents a constructor (new) in a SELECT.

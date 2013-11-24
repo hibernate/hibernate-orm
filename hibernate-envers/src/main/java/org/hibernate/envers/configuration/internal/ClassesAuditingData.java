@@ -28,14 +28,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.mapping.PersistentClass;
+
+import org.jboss.logging.Logger;
 
 /**
  * A helper class holding auditing meta-data for all persistent classes.

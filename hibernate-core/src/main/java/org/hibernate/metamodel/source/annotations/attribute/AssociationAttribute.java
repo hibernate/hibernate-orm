@@ -30,10 +30,6 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.FetchMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.mapping.PropertyGeneration;
@@ -46,6 +42,10 @@ import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeRe
 import org.hibernate.metamodel.source.annotations.attribute.type.AttributeTypeResolverImpl;
 import org.hibernate.metamodel.source.annotations.attribute.type.CompositeAttributeTypeResolver;
 import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 /**
  * Represents an association attribute.

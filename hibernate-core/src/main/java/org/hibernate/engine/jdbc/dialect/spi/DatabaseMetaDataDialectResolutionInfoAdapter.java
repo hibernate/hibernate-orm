@@ -26,9 +26,6 @@ package org.hibernate.engine.jdbc.dialect.spi;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-
 /**
  * An implementation of DialectResolutionInfo that delegates calls to a wrapped {@link DatabaseMetaData}.
  * <p/>

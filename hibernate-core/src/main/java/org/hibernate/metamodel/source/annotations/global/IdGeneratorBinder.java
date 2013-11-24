@@ -29,9 +29,6 @@ import java.util.Map;
 import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.GenericGenerators;
 import org.hibernate.cfg.AvailableSettings;
@@ -50,6 +47,9 @@ import org.hibernate.metamodel.source.annotations.EnumConversionHelper;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.logging.Logger;
 
 /**
  * Binds {@link SequenceGenerator}, {@link javax.persistence.TableGenerator}, {@link GenericGenerator}, and

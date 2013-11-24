@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.tool.hbm2ddl;
+
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,10 +30,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.ForeignKey;
+
+import org.jboss.logging.Logger;
 
 /**
  * JDBC table metadata

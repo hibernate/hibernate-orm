@@ -49,15 +49,16 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.jboss.logging.Logger;
-import org.xml.sax.SAXException;
-
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.jaxb.Origin;
 import org.hibernate.internal.jaxb.cfg.JaxbHibernateConfiguration;
 import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.XsdException;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+
+import org.jboss.logging.Logger;
+
+import org.xml.sax.SAXException;
 
 /**
  * @author Steve Ebersole

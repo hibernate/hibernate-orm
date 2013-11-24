@@ -24,8 +24,6 @@
  */
 package org.hibernate.loader.entity.plan;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -35,6 +33,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * UniqueEntityLoader implementation that is the main functionality for LoadPlan-based Entity loading.

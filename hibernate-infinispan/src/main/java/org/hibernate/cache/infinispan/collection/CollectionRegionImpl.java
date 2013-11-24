@@ -23,8 +23,6 @@
  */
 package org.hibernate.cache.infinispan.collection;
 
-import org.infinispan.AdvancedCache;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.access.PutFromLoadValidator;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
@@ -33,6 +31,8 @@ import org.hibernate.cache.spi.CollectionRegion;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+
+import org.infinispan.AdvancedCache;
 
 /**
  * Collection region implementation

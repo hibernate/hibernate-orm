@@ -24,7 +24,6 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.util.Map;
-
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;

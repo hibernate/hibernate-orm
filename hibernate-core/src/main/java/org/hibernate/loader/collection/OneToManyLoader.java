@@ -23,7 +23,6 @@
  *
  */
 package org.hibernate.loader.collection;
-import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -31,6 +30,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.JoinWalker;
 import org.hibernate.persister.collection.QueryableCollection;
+
+import org.jboss.logging.Logger;
 
 /**
  * Loads one-to-many associations<br>

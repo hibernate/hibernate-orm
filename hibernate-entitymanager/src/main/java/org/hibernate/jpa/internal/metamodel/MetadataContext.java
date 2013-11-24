@@ -23,10 +23,6 @@
  */
 package org.hibernate.jpa.internal.metamodel;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.MappedSuperclassType;
-import javax.persistence.metamodel.SingularAttribute;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,8 +32,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.jboss.logging.Logger;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.MappedSuperclassType;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -48,6 +46,8 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+
+import org.jboss.logging.Logger;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.

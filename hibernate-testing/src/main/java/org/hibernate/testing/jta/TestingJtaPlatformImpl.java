@@ -28,14 +28,14 @@ import javax.transaction.TransactionManager;
 import javax.transaction.TransactionSynchronizationRegistry;
 import javax.transaction.UserTransaction;
 
-import com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean;
-import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
-import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
-
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.JtaSynchronizationStrategy;
 import org.hibernate.engine.transaction.jta.platform.internal.SynchronizationRegistryAccess;
 import org.hibernate.engine.transaction.jta.platform.internal.SynchronizationRegistryBasedSynchronizationStrategy;
+
+import com.arjuna.ats.arjuna.common.ObjectStoreEnvironmentBean;
+import com.arjuna.ats.internal.arjuna.objectstore.VolatileStore;
+import com.arjuna.common.internal.util.propertyservice.BeanPopulator;
 
 /**
  * A test-specific implementation of the JtaPlatform contract for testing JTA-based functionality.

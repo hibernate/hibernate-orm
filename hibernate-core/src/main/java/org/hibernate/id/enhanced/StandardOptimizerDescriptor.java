@@ -23,9 +23,9 @@
  */
 package org.hibernate.id.enhanced;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Enumeration of the standard Hibernate id generation optimizers.

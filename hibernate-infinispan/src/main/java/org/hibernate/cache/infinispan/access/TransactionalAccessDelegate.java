@@ -23,13 +23,13 @@
  */
 package org.hibernate.cache.infinispan.access;
 
-import org.infinispan.AdvancedCache;
-import org.infinispan.util.logging.Log;
-import org.infinispan.util.logging.LogFactory;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseRegion;
 import org.hibernate.cache.infinispan.util.Caches;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.util.logging.Log;
+import org.infinispan.util.logging.LogFactory;
 
 /**
  * Defines the strategy for transactional access to entity or collection data in a Infinispan instance.

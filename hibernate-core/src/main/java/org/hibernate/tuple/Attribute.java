@@ -23,7 +23,6 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.type.Type;
 
 /**

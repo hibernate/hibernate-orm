@@ -31,8 +31,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 
-import org.dom4j.Node;
-
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
@@ -46,6 +44,8 @@ import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
+
+import org.dom4j.Node;
 
 /**
  * Adapts {@link UserType} to the generic {@link Type} interface, in order

@@ -25,11 +25,11 @@ package org.hibernate.type.descriptor.converter;
 
 import javax.persistence.AttributeConverter;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
+
+import org.jboss.logging.Logger;
 
 /**
  * Adapts the Hibernate Type contract to incorporate JPA AttributeConverter calls.

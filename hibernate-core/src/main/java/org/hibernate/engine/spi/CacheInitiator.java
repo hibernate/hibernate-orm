@@ -24,10 +24,10 @@
 package org.hibernate.engine.spi;
 
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.CacheImpl;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
-import org.hibernate.internal.CacheImpl;
 
 /**
  * @author Strong Liu <stliu@hibernate.org>

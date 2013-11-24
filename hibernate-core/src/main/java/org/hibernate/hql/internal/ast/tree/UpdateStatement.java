@@ -23,13 +23,15 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
 
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
+
+import antlr.collections.AST;
 
 /**
  * Defines a top-level AST node representing an HQL update statement.

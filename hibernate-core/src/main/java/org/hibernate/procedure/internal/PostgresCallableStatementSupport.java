@@ -23,11 +23,11 @@
  */
 package org.hibernate.procedure.internal;
 
-import javax.persistence.ParameterMode;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
+import javax.persistence.ParameterMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;

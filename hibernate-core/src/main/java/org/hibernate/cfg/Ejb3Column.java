@@ -25,8 +25,6 @@ package org.hibernate.cfg;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.ColumnDefault;
@@ -42,6 +40,8 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
+
+import org.jboss.logging.Logger;
 
 /**
  * Wrap state of an EJB3 @Column annotation

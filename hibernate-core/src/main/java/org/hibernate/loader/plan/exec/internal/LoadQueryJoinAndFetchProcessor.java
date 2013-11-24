@@ -23,8 +23,6 @@
  */
 package org.hibernate.loader.plan.exec.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -60,6 +58,8 @@ import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Helper for implementors of entity and collection based query building based on LoadPlans providing common

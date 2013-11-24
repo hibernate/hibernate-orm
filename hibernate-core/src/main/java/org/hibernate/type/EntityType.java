@@ -29,8 +29,6 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.Set;
 
-import org.dom4j.Element;
-import org.dom4j.Node;
 import org.hibernate.AssertionFailure;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -47,6 +45,9 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.tuple.ElementWrapper;
+
+import org.dom4j.Element;
+import org.dom4j.Node;
 
 /**
  * Base for types which map associations to persistent entities.

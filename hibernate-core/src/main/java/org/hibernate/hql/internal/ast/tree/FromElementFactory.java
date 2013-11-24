@@ -24,11 +24,6 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
-import antlr.ASTFactory;
-import antlr.SemanticException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
@@ -47,6 +42,12 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+
+import antlr.ASTFactory;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Encapsulates the creation of FromElements and JoinSequences.

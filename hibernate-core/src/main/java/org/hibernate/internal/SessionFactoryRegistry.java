@@ -24,7 +24,6 @@
 package org.hibernate.internal;
 
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
 import javax.naming.Name;
@@ -34,12 +33,12 @@ import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.spi.ObjectFactory;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.jndi.JndiException;
 import org.hibernate.engine.jndi.JndiNameException;
 import org.hibernate.engine.jndi.spi.JndiService;
+
+import org.jboss.logging.Logger;
 
 /**
  * A registry of all {@link SessionFactory} instances for the same classloader as this class.

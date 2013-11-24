@@ -29,10 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.SemanticException;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
@@ -52,6 +48,10 @@ import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+
+import antlr.SemanticException;
 
 /**
  * Delegate that handles the type and join sequence information for a FromElement.

@@ -30,14 +30,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.TestClass;
-
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
+import org.junit.runners.model.FrameworkMethod;
+import org.junit.runners.model.TestClass;
 
 /**
  * Centralized utility functionality

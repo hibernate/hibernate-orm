@@ -23,13 +23,12 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import antlr.collections.AST;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -39,6 +38,8 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+
+import antlr.collections.AST;
 
 /**
  * Encapsulates the information relating to an individual assignment within the

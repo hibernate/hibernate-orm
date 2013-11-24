@@ -31,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
@@ -50,6 +48,8 @@ import org.hibernate.loader.plan.spi.Fetch;
 import org.hibernate.loader.plan.spi.FetchSource;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.Loadable;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

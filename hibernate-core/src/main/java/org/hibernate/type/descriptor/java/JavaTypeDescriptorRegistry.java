@@ -24,14 +24,13 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.WrapperOptions;
+
+import org.jboss.logging.Logger;
 
 /**
  * Basically a map from {@link Class} -> {@link JavaTypeDescriptor}

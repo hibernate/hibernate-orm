@@ -28,13 +28,13 @@ import java.util.Iterator;
 import java.util.List;
 import javax.persistence.AccessType;
 
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * Contains information about the access and inheritance type for all classes within a class hierarchy.

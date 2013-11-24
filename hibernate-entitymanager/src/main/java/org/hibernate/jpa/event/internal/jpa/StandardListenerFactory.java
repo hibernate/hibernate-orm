@@ -23,8 +23,8 @@
  */
 package org.hibernate.jpa.event.internal.jpa;
 
-import javax.persistence.PersistenceException;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 

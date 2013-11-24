@@ -25,10 +25,7 @@ package org.hibernate.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -39,6 +36,8 @@ import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.NamedSQLQueryDefinition;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.procedure.ProcedureCallMemento;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

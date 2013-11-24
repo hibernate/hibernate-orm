@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
@@ -46,6 +44,8 @@ import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Gavin King

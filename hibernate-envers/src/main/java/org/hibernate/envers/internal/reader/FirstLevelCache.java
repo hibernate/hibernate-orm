@@ -25,10 +25,10 @@ package org.hibernate.envers.internal.reader;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.envers.internal.EnversMessageLogger;
 import org.hibernate.envers.internal.tools.Triple;
+
+import org.jboss.logging.Logger;
 
 import static org.hibernate.envers.internal.tools.Tools.newHashMap;
 import static org.hibernate.envers.internal.tools.Triple.make;

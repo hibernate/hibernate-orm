@@ -23,13 +23,13 @@
  */
 package org.hibernate.jpa.boot.scan.spi;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import javax.persistence.Converter;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ClassFile;

@@ -23,10 +23,12 @@
  */
 package org.hibernate.test.c3p0;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.validator.constraints.NotBlank;
-
-import javax.persistence.*;
 
 /**
  * A testing entity for cases where the entity definition itself is irrelevant (testing JDBC connection semantics, etc).

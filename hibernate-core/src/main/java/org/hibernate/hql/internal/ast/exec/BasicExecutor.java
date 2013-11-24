@@ -23,12 +23,11 @@
  *
  */
 package org.hibernate.hql.internal.ast.exec;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
-
-import antlr.RecognitionException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
@@ -42,6 +41,8 @@ import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import org.hibernate.hql.internal.ast.SqlGenerator;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.Queryable;
+
+import antlr.RecognitionException;
 
 /**
  * Implementation of BasicExecutor.

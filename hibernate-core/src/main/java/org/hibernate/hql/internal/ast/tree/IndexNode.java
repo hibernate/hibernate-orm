@@ -28,10 +28,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-import antlr.RecognitionException;
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
 import org.hibernate.engine.spi.QueryParameters;
@@ -44,6 +40,10 @@ import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.Type;
+
+import antlr.RecognitionException;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents the [] operator and provides it's semantics.

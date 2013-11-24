@@ -28,14 +28,14 @@ import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Centralizes the commonality regarding binding of parameter values into PreparedStatements as this logic is

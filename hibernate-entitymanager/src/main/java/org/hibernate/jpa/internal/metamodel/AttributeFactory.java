@@ -32,11 +32,8 @@ import java.util.Iterator;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.annotations.common.AssertionFailure;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
@@ -53,6 +50,8 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
+
+import org.jboss.logging.Logger;
 
 /**
  * A factory for building {@link Attribute} instances.  Exposes 3 main services for building<ol>

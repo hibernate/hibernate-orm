@@ -31,8 +31,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -51,6 +49,8 @@ import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  *

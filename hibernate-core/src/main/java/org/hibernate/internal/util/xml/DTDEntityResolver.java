@@ -26,12 +26,13 @@ package org.hibernate.internal.util.xml;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
+
+import org.jboss.logging.Logger;
+
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
 
 /**
  * An {@link EntityResolver} implementation which attempts to resolve

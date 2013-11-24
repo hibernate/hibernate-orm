@@ -27,9 +27,6 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
-import antlr.RecognitionException;
-import antlr.collections.AST;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,6 +40,9 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.InsertSelect;
 import org.hibernate.sql.Select;
 import org.hibernate.sql.SelectValues;
+
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 /**
  * @author Steve Ebersole

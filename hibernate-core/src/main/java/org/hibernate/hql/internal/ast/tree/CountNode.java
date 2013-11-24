@@ -23,10 +23,11 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import antlr.SemanticException;
 
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
 
 /**
  * Represents a COUNT expression in a select.

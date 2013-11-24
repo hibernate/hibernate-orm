@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.JDBCException;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -42,9 +40,11 @@ import org.hibernate.loader.custom.CustomQuery;
 import org.hibernate.loader.custom.sql.SQLQueryReturnProcessor;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.result.NoMoreReturnsException;
-import org.hibernate.result.Outputs;
 import org.hibernate.result.Output;
+import org.hibernate.result.Outputs;
 import org.hibernate.result.spi.ResultContext;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

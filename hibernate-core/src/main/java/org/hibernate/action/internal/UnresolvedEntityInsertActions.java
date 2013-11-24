@@ -33,8 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.PropertyValueException;
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
@@ -44,6 +42,8 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.pretty.MessageHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Tracks unresolved entity insert actions.

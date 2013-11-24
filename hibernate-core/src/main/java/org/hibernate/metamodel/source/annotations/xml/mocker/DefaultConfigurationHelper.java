@@ -27,11 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEmbeddable;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
@@ -41,6 +36,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.filter.IndexedAnnotationFilter;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu

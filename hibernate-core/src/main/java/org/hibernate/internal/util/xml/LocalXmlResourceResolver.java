@@ -23,18 +23,15 @@
  */
 package org.hibernate.internal.util.xml;
 
-import javax.xml.stream.XMLResolver;
-import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-
-import org.xml.sax.InputSource;
-
-import org.jboss.logging.Logger;
+import javax.xml.stream.XMLStreamException;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

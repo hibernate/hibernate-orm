@@ -23,12 +23,12 @@
  */
 package org.hibernate.jpa.criteria.path;
 
+import java.io.Serializable;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.Attribute;
-import java.io.Serializable;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.CriteriaSubqueryImpl;

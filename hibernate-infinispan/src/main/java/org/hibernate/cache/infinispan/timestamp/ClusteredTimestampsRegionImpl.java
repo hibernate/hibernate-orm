@@ -22,10 +22,14 @@
  */
 package org.hibernate.cache.infinispan.timestamp;
 
-import javax.transaction.Transaction;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.transaction.Transaction;
+
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.infinispan.util.Caches;
+import org.hibernate.cache.spi.RegionFactory;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;
@@ -34,10 +38,6 @@ import org.infinispan.notifications.cachelistener.annotation.CacheEntryModified;
 import org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved;
 import org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent;
 import org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent;
-
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.infinispan.util.Caches;
-import org.hibernate.cache.spi.RegionFactory;
 
 /**
  * Timestamp cache region for clustered environments.

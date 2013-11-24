@@ -23,12 +23,12 @@
  */
 package org.hibernate.secure.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccService;
 import org.hibernate.secure.spi.PermissibleAction;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

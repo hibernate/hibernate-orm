@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfiles;
@@ -38,6 +36,8 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * Binds fetch profiles found in annotations.

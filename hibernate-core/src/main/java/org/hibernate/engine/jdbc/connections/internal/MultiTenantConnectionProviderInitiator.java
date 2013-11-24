@@ -25,17 +25,17 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.boot.registry.StandardServiceInitiator;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.DataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import org.jboss.logging.Logger;
 
 /**
  * A service initiator for the MultiTenantConnectionProvider service

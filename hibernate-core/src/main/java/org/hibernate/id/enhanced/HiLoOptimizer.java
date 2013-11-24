@@ -27,10 +27,10 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
+
+import org.jboss.logging.Logger;
 
 /**
  * Optimizer which applies a 'hilo' algorithm in memory to achieve

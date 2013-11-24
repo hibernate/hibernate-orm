@@ -23,7 +23,9 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import org.dom4j.Element;
+import java.util.Iterator;
+import java.util.Map;
+
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.mapper.CompositeMapperBuilder;
@@ -32,8 +34,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 
-import java.util.Iterator;
-import java.util.Map;
+import org.dom4j.Element;
 
 /**
  * Generates metadata for components.

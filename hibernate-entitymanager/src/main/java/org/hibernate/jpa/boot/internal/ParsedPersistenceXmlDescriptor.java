@@ -23,14 +23,14 @@
  */
 package org.hibernate.jpa.boot.internal;
 
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import javax.persistence.SharedCacheMode;
+import javax.persistence.ValidationMode;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 
 /**
  * Describes the information gleaned from a {@code <persistence-unit/>} element in a {@code persistence.xml} file

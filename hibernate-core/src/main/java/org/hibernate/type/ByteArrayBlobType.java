@@ -31,14 +31,14 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import org.dom4j.Node;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+
+import org.dom4j.Node;
 
 /**
  * Map a Byte[] into a Blob

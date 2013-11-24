@@ -23,19 +23,6 @@
  */
 package org.hibernate.jpa.spi;
 
-import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
-import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
-import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
-import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
-import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
-import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
-import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
-import static org.hibernate.jpa.QueryHints.HINT_READONLY;
-import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
-import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
-
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -43,7 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.CacheRetrieveMode;
 import javax.persistence.CacheStoreMode;
 import javax.persistence.FlushModeType;
@@ -67,7 +53,21 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
+
 import org.jboss.logging.Logger;
+
+import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
+import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
+import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
+import static org.hibernate.jpa.QueryHints.HINT_COMMENT;
+import static org.hibernate.jpa.QueryHints.HINT_FETCHGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
+import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
+import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
+import static org.hibernate.jpa.QueryHints.HINT_READONLY;
+import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 /**
  * Intended as the base class for all {@link javax.persistence.Query} implementations, including

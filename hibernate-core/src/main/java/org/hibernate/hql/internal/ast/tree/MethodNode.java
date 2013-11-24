@@ -23,11 +23,8 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import java.util.Arrays;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
+import java.util.Arrays;
 
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.CollectionProperties;
@@ -38,6 +35,11 @@ import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents a method call.

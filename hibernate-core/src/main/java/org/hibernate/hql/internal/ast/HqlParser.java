@@ -33,13 +33,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.ASTPair;
-import antlr.MismatchedTokenException;
-import antlr.RecognitionException;
-import antlr.Token;
-import antlr.TokenStreamException;
-import antlr.collections.AST;
-
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlBaseParser;
 import org.hibernate.hql.internal.antlr.HqlTokenTypes;
@@ -48,6 +41,13 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+
+import antlr.ASTPair;
+import antlr.MismatchedTokenException;
+import antlr.RecognitionException;
+import antlr.Token;
+import antlr.TokenStreamException;
+import antlr.collections.AST;
 
 /**
  * Implements the semantic action methods defined in the HQL base parser to keep the grammar

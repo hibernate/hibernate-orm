@@ -28,13 +28,13 @@ import java.util.Comparator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTransactionalDataRegion;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cfg.Settings;
+
+import org.jboss.logging.Logger;
 
 /**
  * Superclass for all Ehcache specific read/write AccessStrategy implementations.

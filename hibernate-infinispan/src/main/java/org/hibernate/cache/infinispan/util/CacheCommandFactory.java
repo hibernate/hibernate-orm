@@ -29,11 +29,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.hibernate.cache.infinispan.impl.BaseRegion;
+
 import org.infinispan.commands.ReplicableCommand;
 import org.infinispan.commands.module.ExtendedModuleCommandFactory;
 import org.infinispan.commands.remote.CacheRpcCommand;
-
-import org.hibernate.cache.infinispan.impl.BaseRegion;
 
 /**
  * Command factory

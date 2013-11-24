@@ -31,13 +31,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.DOMWriter;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -52,6 +45,13 @@ import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.graph.GraphTopologicalSort;
 import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.mapping.PersistentClass;
+
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.DOMWriter;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
 /**
  * @author Adam Warski (adam at warski dot org)

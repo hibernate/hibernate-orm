@@ -22,11 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
@@ -35,6 +34,8 @@ import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Value;
+
+import org.jboss.logging.Logger;
 
 /**
  * Collection second pass

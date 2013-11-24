@@ -23,8 +23,6 @@
  */
 package org.hibernate.testing.junit4;
 
-import static org.junit.Assert.fail;
-
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -62,6 +60,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metamodel.MetadataSources;
 import org.hibernate.metamodel.source.MetadataImplementor;
+
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
@@ -70,6 +69,8 @@ import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.junit.After;
 import org.junit.Before;
+
+import static org.junit.Assert.fail;
 
 /**
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}

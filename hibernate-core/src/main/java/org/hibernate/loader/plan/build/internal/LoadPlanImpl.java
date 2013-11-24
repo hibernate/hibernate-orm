@@ -26,14 +26,14 @@ package org.hibernate.loader.plan.build.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.QuerySpaces;
 import org.hibernate.loader.plan.spi.Return;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

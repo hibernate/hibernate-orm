@@ -23,9 +23,9 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
 import java.io.IOException;
 import java.io.Writer;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.internal.util.StringHelper;
 

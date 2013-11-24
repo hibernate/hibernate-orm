@@ -23,12 +23,12 @@
  */
 package org.hibernate.jpa.boot.spi;
 
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
-import javax.persistence.spi.PersistenceUnitTransactionType;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+import javax.persistence.SharedCacheMode;
+import javax.persistence.ValidationMode;
+import javax.persistence.spi.PersistenceUnitTransactionType;
 
 /**
  * Abstraction for dealing with either {@code <persistence-unit/>} information whether that comes from

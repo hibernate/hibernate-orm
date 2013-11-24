@@ -27,8 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityKey;
@@ -56,6 +54,8 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Handles interpreting a LoadPlan (for loading of an entity) by:<ul>

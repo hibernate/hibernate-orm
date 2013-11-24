@@ -23,14 +23,15 @@
  *
  */
 package org.hibernate.transform;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Distinctions the result tuples in the final result based on the defined

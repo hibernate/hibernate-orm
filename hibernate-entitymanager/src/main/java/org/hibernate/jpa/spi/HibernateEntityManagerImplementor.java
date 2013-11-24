@@ -23,17 +23,16 @@
  */
 package org.hibernate.jpa.spi;
 
+import java.util.List;
+import java.util.Map;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.criteria.Selection;
-import java.util.List;
-import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.StaleStateException;
 import org.hibernate.jpa.HibernateEntityManager;
-import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.criteria.ValueHandlerFactory;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.type.Type;

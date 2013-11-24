@@ -27,9 +27,6 @@ package org.hibernate.hql.internal.ast.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
@@ -50,6 +47,9 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Helper for performing common and/or complex operations with the

@@ -24,7 +24,6 @@
 package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
-
 import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.FIELD;

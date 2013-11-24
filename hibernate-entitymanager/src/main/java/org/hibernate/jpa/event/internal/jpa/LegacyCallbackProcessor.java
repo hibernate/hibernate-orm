@@ -23,6 +23,12 @@
  */
 package org.hibernate.jpa.event.internal.jpa;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.ExcludeDefaultListeners;
@@ -30,21 +36,14 @@ import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
 
-import java.lang.annotation.Annotation;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>

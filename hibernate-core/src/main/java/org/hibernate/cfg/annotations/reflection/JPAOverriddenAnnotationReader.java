@@ -129,10 +129,6 @@ import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.Cascade;
@@ -146,6 +142,11 @@ import org.hibernate.annotations.common.reflection.ReflectionUtil;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
+
+import org.dom4j.Attribute;
+import org.dom4j.Element;
 
 /**
  * Encapsulates the overriding of Java annotations from an EJB 3.0 descriptor.

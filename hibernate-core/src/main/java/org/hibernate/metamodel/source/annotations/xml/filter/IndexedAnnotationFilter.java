@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.filter;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.xml.mocker.IndexBuilder;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu

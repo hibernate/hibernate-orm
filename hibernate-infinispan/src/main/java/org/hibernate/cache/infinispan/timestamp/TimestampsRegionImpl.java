@@ -25,14 +25,14 @@ package org.hibernate.cache.infinispan.timestamp;
 
 import javax.transaction.Transaction;
 
-import org.infinispan.AdvancedCache;
-import org.infinispan.context.Flag;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseGeneralDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.TimestampsRegion;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 
 /**
  * Defines the behavior of the timestamps cache region for Infinispan.

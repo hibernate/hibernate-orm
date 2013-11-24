@@ -26,13 +26,6 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-import org.jboss.jandex.MethodInfo;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.internal.CoreMessageLogger;
@@ -40,6 +33,13 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
+import org.jboss.jandex.MethodInfo;
+import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu

@@ -31,13 +31,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.CacheManager;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.SessionFactoryRegistry;
+
+import org.jboss.logging.Logger;
 
 /**
  * Helper class for registering mbeans for ehcache backed hibernate second level cache

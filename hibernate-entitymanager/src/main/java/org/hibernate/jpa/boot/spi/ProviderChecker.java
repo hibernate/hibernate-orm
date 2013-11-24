@@ -25,11 +25,11 @@ package org.hibernate.jpa.boot.spi;
 
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.ejb.HibernatePersistence;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
+import org.jboss.logging.Logger;
 
 /**
  * Helper for handling checks to see whether Hibernate is the requested

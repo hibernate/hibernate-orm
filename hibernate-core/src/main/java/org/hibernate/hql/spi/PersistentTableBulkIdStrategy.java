@@ -33,8 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.AvailableSettings;
@@ -54,6 +52,8 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.sql.SelectValues;
 import org.hibernate.type.UUIDCharType;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

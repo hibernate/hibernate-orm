@@ -23,9 +23,9 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import javax.persistence.NoResultException;
 import java.io.Serializable;
 import java.util.Map;
+import javax.persistence.NoResultException;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.engine.spi.SessionImplementor;

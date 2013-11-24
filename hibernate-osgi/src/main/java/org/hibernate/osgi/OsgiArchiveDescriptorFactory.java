@@ -24,6 +24,7 @@ import java.net.URL;
 
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
+
 import org.osgi.framework.Bundle;
 
 /**

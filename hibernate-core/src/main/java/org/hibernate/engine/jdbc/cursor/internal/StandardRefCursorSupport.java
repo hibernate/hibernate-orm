@@ -31,12 +31,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.InjectService;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of RefCursorSupport

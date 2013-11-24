@@ -23,9 +23,9 @@
  */
 package org.hibernate.jpa.criteria.compile;
 
-import javax.persistence.criteria.ParameterExpression;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.criteria.ParameterExpression;
 
 /**
  * Represents information about parameters from a compiled criteria query.

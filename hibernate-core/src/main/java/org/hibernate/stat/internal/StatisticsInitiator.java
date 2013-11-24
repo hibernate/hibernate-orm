@@ -23,19 +23,19 @@
  */
 package org.hibernate.stat.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceInitiator;
 import org.hibernate.stat.spi.StatisticsFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

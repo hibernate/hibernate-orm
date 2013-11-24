@@ -23,11 +23,11 @@
  */
 package org.hibernate.engine.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
 
 import org.hibernate.engine.spi.SessionImplementor;
 

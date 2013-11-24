@@ -54,7 +54,6 @@ import javax.persistence.criteria.Subquery;
 
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 import org.hibernate.jpa.criteria.expression.BinaryArithmeticOperation;
 import org.hibernate.jpa.criteria.expression.CoalesceExpression;
 import org.hibernate.jpa.criteria.expression.CompoundSelectionImpl;
@@ -97,6 +96,7 @@ import org.hibernate.jpa.criteria.predicate.IsEmptyPredicate;
 import org.hibernate.jpa.criteria.predicate.LikePredicate;
 import org.hibernate.jpa.criteria.predicate.MemberOfPredicate;
 import org.hibernate.jpa.criteria.predicate.NullnessPredicate;
+import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 
 /**
  * Hibernate implementation of the JPA {@link CriteriaBuilder} contract.

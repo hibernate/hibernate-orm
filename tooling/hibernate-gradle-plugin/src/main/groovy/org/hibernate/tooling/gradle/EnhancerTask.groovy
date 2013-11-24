@@ -23,20 +23,22 @@
  */
 package org.hibernate.tooling.gradle
 
-import javassist.ClassPool
-import javassist.CtClass
-import javassist.CtField
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileTree
-import org.gradle.api.tasks.TaskAction
-import org.hibernate.bytecode.enhance.spi.EnhancementContext
-import org.hibernate.bytecode.enhance.spi.Enhancer
-
 import javax.persistence.ElementCollection
 import javax.persistence.Entity
 import javax.persistence.ManyToMany
 import javax.persistence.OneToMany
 import javax.persistence.Transient
+
+import javassist.ClassPool
+import javassist.CtClass
+import javassist.CtField
+
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.FileTree
+import org.gradle.api.tasks.TaskAction
+
+import org.hibernate.bytecode.enhance.spi.EnhancementContext
+import org.hibernate.bytecode.enhance.spi.Enhancer
 
 /**
  * Gradle Task to apply Hibernate's bytecode Enhancer

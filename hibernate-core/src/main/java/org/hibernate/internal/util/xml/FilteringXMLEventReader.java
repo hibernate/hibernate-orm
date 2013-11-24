@@ -26,7 +26,6 @@ package org.hibernate.internal.util.xml;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
-
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;

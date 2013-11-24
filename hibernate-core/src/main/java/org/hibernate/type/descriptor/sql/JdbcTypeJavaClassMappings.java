@@ -36,9 +36,9 @@ import java.util.Calendar;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.mapping.Array;
+
+import org.jboss.logging.Logger;
 
 /**
  * Presents recommended {@literal JDCB typecode <-> Java Class} mappings.  Currently the mappings contained here come

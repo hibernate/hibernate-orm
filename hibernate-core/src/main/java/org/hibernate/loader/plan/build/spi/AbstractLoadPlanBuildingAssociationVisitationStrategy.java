@@ -27,9 +27,6 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-import org.jboss.logging.MDC;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
@@ -37,9 +34,9 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.PropertyPath;
-import org.hibernate.loader.plan.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan.build.internal.returns.CollectionReturnImpl;
 import org.hibernate.loader.plan.build.internal.returns.EntityReturnImpl;
+import org.hibernate.loader.plan.build.internal.spaces.QuerySpacesImpl;
 import org.hibernate.loader.plan.spi.AttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionFetchableElement;
@@ -66,6 +63,9 @@ import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
+import org.jboss.logging.MDC;
 
 /**
  * A LoadPlanBuilderStrategy is a strategy for building a LoadPlan.  LoadPlanBuilderStrategy is also a

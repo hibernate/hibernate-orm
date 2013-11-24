@@ -42,6 +42,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.beans.BeanInfoHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
 import org.jboss.logging.Logger;
 
 /**

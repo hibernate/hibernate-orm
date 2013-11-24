@@ -23,12 +23,12 @@
  */
 package org.hibernate.jpa.event.internal.jpa;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionTarget;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.jpa.event.spi.jpa.ListenerFactory;
 

@@ -23,17 +23,17 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import javax.persistence.JoinColumn;
 import java.util.Iterator;
-
-import org.dom4j.Attribute;
-import org.dom4j.Document;
-import org.dom4j.Element;
+import javax.persistence.JoinColumn;
 
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Selectable;
+
+import org.dom4j.Attribute;
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 /**
  * @author Adam Warski (adam at warski dot org)

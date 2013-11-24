@@ -23,6 +23,7 @@
  */
 package org.hibernate.jpa.event.internal.jpa;
 
+import java.util.HashMap;
 import javax.persistence.PersistenceException;
 import javax.persistence.PostLoad;
 import javax.persistence.PostPersist;
@@ -31,7 +32,6 @@ import javax.persistence.PostUpdate;
 import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
-import java.util.HashMap;
 
 import org.hibernate.jpa.event.spi.jpa.Callback;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;

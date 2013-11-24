@@ -23,12 +23,11 @@
  */
 package org.hibernate.ejb;
 
+import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.ProviderUtil;
-
-import java.util.Map;
 
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;

@@ -23,11 +23,11 @@
  */
 package org.hibernate.envers.internal;
 
+import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
-
-import org.hibernate.internal.CoreMessageLogger;
 
 import static org.jboss.logging.Logger.Level.WARN;
 

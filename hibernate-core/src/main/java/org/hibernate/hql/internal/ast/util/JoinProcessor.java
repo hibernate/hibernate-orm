@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.StringTokenizer;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.internal.JoinSequence;
@@ -53,6 +51,8 @@ import org.hibernate.param.DynamicFilterParameterSpecification;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Performs the post-processing of the join information gathered during semantic analysis.

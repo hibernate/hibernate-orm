@@ -23,11 +23,11 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 /**
  * Container for the properties defined by {@link javax.persistence.Column}.

@@ -26,10 +26,10 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Emmanuel Bernard

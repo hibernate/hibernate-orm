@@ -23,11 +23,11 @@
  */
 package org.hibernate.dialect;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * A Helper for dealing with the OracleTypes class

@@ -23,9 +23,9 @@
  */
 package org.hibernate.metamodel.source.annotations.attribute;
 
-import org.jboss.jandex.DotName;
-
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+
+import org.jboss.jandex.DotName;
 
 /**
  * An enum defining the type of a mapped attribute.

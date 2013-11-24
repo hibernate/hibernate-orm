@@ -23,12 +23,12 @@
  */
 package org.hibernate.jpa.criteria.predicate;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.ParameterContainer;

@@ -23,12 +23,12 @@
  */
 package org.hibernate.cache.ehcache.management.impl;
 
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.management.MBeanNotificationInfo;
 import javax.management.NotCompliantMBeanException;
 import javax.management.Notification;
 import javax.management.openmbean.TabularData;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.hibernate.management.api.EhcacheHibernateMBean;

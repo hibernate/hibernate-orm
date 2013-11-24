@@ -23,15 +23,15 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
-import org.jboss.logging.Logger;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.engine.jdbc.internal.DDLFormatterImpl;
 import org.hibernate.engine.jdbc.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Defines access to a JDBC Connection for use in Schema generation

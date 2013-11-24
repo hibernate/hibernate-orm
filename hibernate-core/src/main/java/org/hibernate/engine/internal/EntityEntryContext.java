@@ -29,11 +29,11 @@ import java.io.ObjectOutputStream;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.ManagedEntity;
+
+import org.jboss.logging.Logger;
 
 /**
  * Defines a context for maintaining the relation between an entity associated with the Session ultimately owning this

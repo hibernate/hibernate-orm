@@ -23,8 +23,6 @@
  */
 package org.hibernate.type;
 
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
@@ -32,8 +30,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Properties;
-
-import org.jboss.logging.Logger;
+import javax.persistence.Enumerated;
+import javax.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -44,6 +42,8 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.LoggableUserType;
+
+import org.jboss.logging.Logger;
 
 /**
  * Value type mapper for enumerations.

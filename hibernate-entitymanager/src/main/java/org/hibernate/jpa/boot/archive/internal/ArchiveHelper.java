@@ -31,9 +31,9 @@ import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.jpa.boot.archive.spi.ArchiveException;
+
+import org.jboss.logging.Logger;
 
 /**
  * Helper for dealing with archives

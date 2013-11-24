@@ -26,8 +26,6 @@ package org.hibernate.cache.internal;
 import java.io.Serializable;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.spi.CacheKey;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -45,6 +43,8 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
+import org.jboss.logging.Logger;
 
 /**
  * Allows the collection cache to be automatically evicted if an element is inserted/removed/updated *without* properly

@@ -1,11 +1,11 @@
 package org.hibernate.cache.infinispan.impl;
 
-import org.infinispan.AdvancedCache;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.GeneralDataRegion;
 import org.hibernate.cache.spi.RegionFactory;
+
+import org.infinispan.AdvancedCache;
 
 /**
  * Support for Infinispan {@link GeneralDataRegion} implementors.

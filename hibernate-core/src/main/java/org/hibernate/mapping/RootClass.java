@@ -28,14 +28,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
-import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.SingletonIterator;
+
+import org.jboss.logging.Logger;
 
 /**
  * The root class of an inheritance hierarchy

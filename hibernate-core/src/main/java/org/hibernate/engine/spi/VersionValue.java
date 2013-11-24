@@ -23,11 +23,11 @@
  */
 package org.hibernate.engine.spi;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.MappingException;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.internal.CoreLogging;
+
+import org.jboss.logging.Logger;
 
 /**
  * A strategy for determining if a version value is an version of

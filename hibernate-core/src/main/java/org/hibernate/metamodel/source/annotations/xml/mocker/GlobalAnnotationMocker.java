@@ -28,9 +28,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-
 import org.hibernate.internal.jaxb.mapping.orm.JaxbColumnResult;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntityResult;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbFieldResult;
@@ -40,6 +37,9 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbQueryHint;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSequenceGenerator;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbSqlResultSetMapping;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTableGenerator;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
 
 /**
  * @author Strong Liu

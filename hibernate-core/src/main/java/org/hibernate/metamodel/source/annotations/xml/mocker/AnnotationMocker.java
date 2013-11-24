@@ -29,11 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAssociationOverride;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributeOverride;
@@ -46,6 +41,11 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbLob;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbOrderColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPrimaryKeyJoinColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu

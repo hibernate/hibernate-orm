@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.connections.internal;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Map;
@@ -30,8 +31,8 @@ import javax.sql.DataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.engine.jndi.spi.JndiService;
+import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;

@@ -26,13 +26,13 @@ package org.hibernate.type.descriptor.sql;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
+import org.jboss.logging.Logger;
 
 /**
  * Convenience base implementation of {@link ValueBinder}

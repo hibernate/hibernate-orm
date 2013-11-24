@@ -30,10 +30,6 @@ import java.util.Map;
 import javax.persistence.FetchType;
 import javax.persistence.GenerationType;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.internal.util.StringHelper;
@@ -51,6 +47,10 @@ import org.hibernate.metamodel.source.annotations.attribute.type.EnumeratedTypeR
 import org.hibernate.metamodel.source.annotations.attribute.type.LobTypeResolver;
 import org.hibernate.metamodel.source.annotations.attribute.type.TemporalTypeResolver;
 import org.hibernate.metamodel.source.annotations.entity.EntityBindingContext;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
 
 /**
  * Represent a basic attribute (explicitly or implicitly mapped).

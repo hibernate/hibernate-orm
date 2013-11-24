@@ -23,9 +23,9 @@
  */
 package org.hibernate.engine.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.BaseSessionEventListener;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

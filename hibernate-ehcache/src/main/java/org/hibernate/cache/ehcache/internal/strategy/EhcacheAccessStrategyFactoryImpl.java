@@ -23,8 +23,6 @@
  */
 package org.hibernate.cache.ehcache.internal.strategy;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheCollectionRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheEntityRegion;
@@ -33,6 +31,8 @@ import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
 import org.hibernate.cache.spi.access.EntityRegionAccessStrategy;
 import org.hibernate.cache.spi.access.NaturalIdRegionAccessStrategy;
+
+import org.jboss.logging.Logger;
 
 /**
  * Class implementing {@link EhcacheAccessStrategyFactory}

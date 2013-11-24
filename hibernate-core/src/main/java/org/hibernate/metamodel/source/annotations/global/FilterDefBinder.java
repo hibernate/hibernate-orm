@@ -27,9 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
-
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -39,6 +36,9 @@ import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
 import org.hibernate.type.Type;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.logging.Logger;
 
 /**
  * Binds {@link FilterDefs} and {@link FilterDef} annotations.

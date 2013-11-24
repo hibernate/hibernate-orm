@@ -27,9 +27,9 @@ import java.lang.reflect.Method;
 import javax.transaction.TransactionManager;
 import javax.transaction.UserTransaction;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
+
+import org.jboss.logging.Logger;
 
 /**
  * JTA platform implementation for WebSphere (versions 4, 5.0 and 5.1)

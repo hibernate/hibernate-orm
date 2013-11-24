@@ -23,8 +23,6 @@
  */
 package org.hibernate.envers.event.spi;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,6 +34,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
+
+import org.jboss.logging.Logger;
 
 /**
  * Provides integration for Envers into Hibernate, which mainly means registering the proper event listeners.

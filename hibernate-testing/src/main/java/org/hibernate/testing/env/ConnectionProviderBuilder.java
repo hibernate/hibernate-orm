@@ -28,6 +28,7 @@ import java.util.Properties;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
+
 import org.hibernate.testing.DialectCheck;
 
 /**

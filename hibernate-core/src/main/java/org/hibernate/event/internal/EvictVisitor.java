@@ -23,8 +23,6 @@
  */
 package org.hibernate.event.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -33,6 +31,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.CollectionType;
+
+import org.jboss.logging.Logger;
 
 /**
  * Evict any collections referenced by the object from the session cache.

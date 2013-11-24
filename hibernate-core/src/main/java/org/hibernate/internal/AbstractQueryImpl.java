@@ -67,6 +67,7 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+
 import org.jboss.logging.Logger;
 
 /**

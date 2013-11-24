@@ -33,16 +33,16 @@ import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.jpa.boot.archive.spi.AbstractArchiveDescriptor;
 import org.hibernate.jpa.boot.archive.spi.ArchiveContext;
 import org.hibernate.jpa.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntry;
 import org.hibernate.jpa.boot.archive.spi.ArchiveEntryHandler;
 import org.hibernate.jpa.boot.archive.spi.ArchiveException;
-import org.hibernate.jpa.internal.EntityManagerMessageLogger;
 import org.hibernate.jpa.boot.spi.InputStreamAccess;
+import org.hibernate.jpa.internal.EntityManagerMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * An ArchiveDescriptor implementation leveraging the {@link JarFile} API for processing.

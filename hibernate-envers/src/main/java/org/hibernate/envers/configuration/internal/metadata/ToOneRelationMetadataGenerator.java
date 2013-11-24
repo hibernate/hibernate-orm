@@ -23,8 +23,6 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
-import org.dom4j.Element;
-
 import org.hibernate.MappingException;
 import org.hibernate.envers.configuration.internal.metadata.reader.PropertyAuditingData;
 import org.hibernate.envers.internal.entities.EntityConfiguration;
@@ -39,6 +37,8 @@ import org.hibernate.envers.internal.tools.MappingTools;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+
+import org.dom4j.Element;
 
 /**
  * Generates metadata for to-one relations (reference-valued properties).

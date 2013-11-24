@@ -29,10 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.metamodel.source.annotations.xml.mocker.IndexBuilder;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.metamodel.source.annotations.xml.mocker.IndexBuilder;
 
 /**
  * @author Strong Liu

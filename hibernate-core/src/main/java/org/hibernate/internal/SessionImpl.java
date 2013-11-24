@@ -42,7 +42,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.EntityNotFoundException;
 
 import org.hibernate.AssertionFailure;
@@ -157,6 +156,7 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.type.Type;
+
 import org.jboss.logging.Logger;
 
 /**

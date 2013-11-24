@@ -22,9 +22,9 @@
  */
 package org.hibernate.cache.infinispan.util;
 
+import java.util.concurrent.Callable;
 import javax.transaction.Status;
 import javax.transaction.TransactionManager;
-import java.util.concurrent.Callable;
 
 import org.infinispan.AdvancedCache;
 import org.infinispan.context.Flag;

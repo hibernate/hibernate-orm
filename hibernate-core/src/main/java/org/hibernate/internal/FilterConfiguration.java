@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.Joinable;
 

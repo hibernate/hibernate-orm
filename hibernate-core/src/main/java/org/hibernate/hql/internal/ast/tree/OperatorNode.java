@@ -23,9 +23,10 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import antlr.SemanticException;
 
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
 
 /**
  * Contract for nodes representing operators (logic or arithmetic).

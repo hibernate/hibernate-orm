@@ -25,11 +25,11 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import org.hibernate.cache.CacheException;
+
 import org.infinispan.configuration.cache.Configuration;
 import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.eviction.EvictionStrategy;
-
-import org.hibernate.cache.CacheException;
 
 /**
  * This class represents Infinispan cache parameters that can be configured via hibernate configuration properties

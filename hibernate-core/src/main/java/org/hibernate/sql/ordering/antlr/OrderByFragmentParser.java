@@ -29,15 +29,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import antlr.CommonAST;
-import antlr.TokenStream;
-import antlr.collections.AST;
-
-import org.jboss.logging.Logger;
-
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.Template;
+
+import org.jboss.logging.Logger;
+
+import antlr.CommonAST;
+import antlr.TokenStream;
+import antlr.collections.AST;
 
 /**
  * Extension of the Antlr-generated parser for the purpose of adding our custom parsing behavior

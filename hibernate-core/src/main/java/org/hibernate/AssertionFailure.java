@@ -23,9 +23,9 @@
  */
 package org.hibernate;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Indicates failure of an assertion: a possible bug in Hibernate.

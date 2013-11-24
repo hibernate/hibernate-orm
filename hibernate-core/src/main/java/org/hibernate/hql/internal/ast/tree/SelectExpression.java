@@ -23,9 +23,10 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
-import antlr.SemanticException;
 
 import org.hibernate.type.Type;
+
+import antlr.SemanticException;
 
 /**
  * Represents an element of a projection list, i.e. a select expression.

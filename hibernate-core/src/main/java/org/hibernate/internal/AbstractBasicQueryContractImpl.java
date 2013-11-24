@@ -23,9 +23,6 @@
  */
 package org.hibernate.internal;
 
-import java.io.Serializable;
-import java.util.Map;
-
 import org.hibernate.BasicQueryContract;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

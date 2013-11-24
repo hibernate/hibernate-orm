@@ -140,6 +140,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
 import org.hibernate.type.VersionType;
+
 import org.jboss.logging.Logger;
 
 /**

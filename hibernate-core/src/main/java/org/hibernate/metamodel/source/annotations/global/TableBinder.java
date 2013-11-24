@@ -25,9 +25,6 @@ package org.hibernate.metamodel.source.annotations.global;
 
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -40,6 +37,9 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.logging.Logger;
 
 /**
  * Binds table related information. This binder is called after the entities are bound.

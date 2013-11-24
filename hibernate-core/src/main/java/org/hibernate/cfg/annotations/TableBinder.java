@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import javax.persistence.UniqueConstraint;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.Index;
@@ -55,6 +53,8 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+
+import org.jboss.logging.Logger;
 
 /**
  * Table related operations

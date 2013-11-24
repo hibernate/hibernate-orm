@@ -22,7 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.cfg;
-import javax.persistence.AttributeConverter;
+
 import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;

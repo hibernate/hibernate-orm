@@ -25,8 +25,6 @@ package org.hibernate.engine.internal;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -54,6 +52,8 @@ import org.hibernate.property.BackrefPropertyAccessor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Functionality relating to the Hibernate two-phase loading process, that may be reused by persisters

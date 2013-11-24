@@ -36,11 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.ASTFactory;
-import antlr.RecognitionException;
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.internal.JoinSequence;
@@ -104,6 +99,11 @@ import org.hibernate.type.DbTimestampType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
 import org.hibernate.usertype.UserVersionType;
+
+import antlr.ASTFactory;
+import antlr.RecognitionException;
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Implements methods used by the HQL->SQL tree transform grammar (a.k.a. the second phase).

@@ -22,16 +22,17 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.id;
+
 import java.io.Serializable;
 import java.util.Properties;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * <b>uuid</b><br>

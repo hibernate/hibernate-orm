@@ -35,8 +35,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.transaction.Synchronization;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -48,6 +46,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * A {@link org.hibernate.context.spi.CurrentSessionContext} impl which scopes the notion of current

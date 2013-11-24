@@ -27,9 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.logging.Logger;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.TypeDefs;
 import org.hibernate.internal.CoreMessageLogger;
@@ -39,6 +36,9 @@ import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.logging.Logger;
 
 /**
  * Binds {@link org.hibernate.annotations.TypeDef} and {@link TypeDefs}.

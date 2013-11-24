@@ -1,11 +1,11 @@
 package org.hibernate.metamodel.source.annotations.attribute;
 
-import org.jboss.jandex.AnnotationInstance;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.AnnotationInstance;
 
 /**
  * Contains the information about a single {@link javax.persistence.AttributeOverride}. Instances of this class

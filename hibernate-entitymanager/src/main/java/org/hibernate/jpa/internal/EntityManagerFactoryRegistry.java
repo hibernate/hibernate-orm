@@ -28,11 +28,11 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.persistence.EntityManagerFactory;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * An internal registry of all {@link EntityManagerFactoryImpl} instances for the same

@@ -23,9 +23,9 @@
  */
 package org.hibernate.service.spi;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.service.Service;
+
+import org.jboss.logging.Logger;
 
 /**
  * Models a binding for a particular service

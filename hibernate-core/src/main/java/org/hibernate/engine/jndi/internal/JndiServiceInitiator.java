@@ -25,8 +25,8 @@ package org.hibernate.engine.jndi.internal;
 
 import java.util.Map;
 
-import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.engine.jndi.spi.JndiService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**

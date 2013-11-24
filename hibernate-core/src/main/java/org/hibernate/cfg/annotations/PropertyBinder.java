@@ -25,7 +25,6 @@ package org.hibernate.cfg.annotations;
 
 import java.lang.annotation.Annotation;
 import java.util.Map;
-
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -62,6 +61,7 @@ import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
+
 import org.jboss.logging.Logger;
 
 /**

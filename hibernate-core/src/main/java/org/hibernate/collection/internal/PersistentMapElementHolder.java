@@ -26,13 +26,13 @@ package org.hibernate.collection.internal;
 import java.io.Serializable;
 import java.util.List;
 
-import org.dom4j.Element;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.type.Type;
 import org.hibernate.type.XmlRepresentableType;
+
+import org.dom4j.Element;
 
 /**
  * Wraps a collection of DOM sub-elements as a Map

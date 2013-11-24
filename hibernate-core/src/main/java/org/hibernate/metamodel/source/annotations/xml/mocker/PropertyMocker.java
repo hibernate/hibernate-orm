@@ -26,12 +26,6 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.HibernateException;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEnumType;
@@ -40,6 +34,12 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyClass;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbMapKeyJoinColumn;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbTemporalType;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu

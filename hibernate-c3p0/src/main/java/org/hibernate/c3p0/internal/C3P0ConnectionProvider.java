@@ -32,20 +32,20 @@ import javax.sql.DataSource;
 
 import com.mchange.v2.c3p0.DataSources;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
-import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
-import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import org.jboss.logging.Logger;
 
 /**
  * A connection provider that uses a C3P0 connection pool. Hibernate will use this by

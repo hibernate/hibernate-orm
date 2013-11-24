@@ -27,10 +27,10 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
+
+import org.jboss.logging.Logger;
 
 /**
  * Variation of {@link PooledOptimizer} which interprets the incoming database value as the lo value, rather than

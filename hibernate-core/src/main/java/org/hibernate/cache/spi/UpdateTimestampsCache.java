@@ -27,13 +27,13 @@ import java.io.Serializable;
 import java.util.Properties;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cfg.Settings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Tracks the timestamps of the most recent updates to particular tables. It is

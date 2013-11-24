@@ -23,12 +23,6 @@
  */
 package org.hibernate.secure.internal;
 
-import javax.security.auth.Subject;
-import javax.security.jacc.EJBMethodPermission;
-import javax.security.jacc.PolicyConfiguration;
-import javax.security.jacc.PolicyConfigurationFactory;
-import javax.security.jacc.PolicyContext;
-import javax.security.jacc.PolicyContextException;
 import java.security.AccessController;
 import java.security.CodeSource;
 import java.security.Policy;
@@ -37,8 +31,12 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.util.Map;
 import java.util.Set;
-
-import org.jboss.logging.Logger;
+import javax.security.auth.Subject;
+import javax.security.jacc.EJBMethodPermission;
+import javax.security.jacc.PolicyConfiguration;
+import javax.security.jacc.PolicyConfigurationFactory;
+import javax.security.jacc.PolicyContext;
+import javax.security.jacc.PolicyContextException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
@@ -48,6 +46,8 @@ import org.hibernate.secure.spi.JaccService;
 import org.hibernate.secure.spi.PermissibleAction;
 import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 import org.hibernate.service.spi.Configurable;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole

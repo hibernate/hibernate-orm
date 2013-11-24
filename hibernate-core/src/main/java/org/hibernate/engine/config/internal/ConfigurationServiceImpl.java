@@ -26,14 +26,14 @@ package org.hibernate.engine.config.internal;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
+import org.jboss.logging.Logger;
 
 /**
  * The standard ConfigurationService implementation

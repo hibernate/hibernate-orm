@@ -31,11 +31,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.metamodel.source.annotations.xml.mocker.MockHelper;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.metamodel.source.annotations.xml.mocker.MockHelper;
 
 /**
  * @author Strong Liu

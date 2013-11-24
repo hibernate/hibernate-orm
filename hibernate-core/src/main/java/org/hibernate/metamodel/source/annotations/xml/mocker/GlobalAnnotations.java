@@ -30,11 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationValue;
-import org.jboss.jandex.DotName;
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbEntity;
@@ -48,6 +43,11 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbTableGenerator;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.source.MappingException;
 import org.hibernate.metamodel.source.annotations.JPADotNames;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationValue;
+import org.jboss.jandex.DotName;
+import org.jboss.logging.Logger;
 
 /**
  * @author Strong Liu

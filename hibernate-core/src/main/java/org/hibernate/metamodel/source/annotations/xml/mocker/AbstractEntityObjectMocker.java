@@ -23,11 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.AnnotationTarget;
-import org.jboss.jandex.ClassInfo;
-import org.jboss.jandex.DotName;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
@@ -40,6 +35,11 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.AnnotationTarget;
+import org.jboss.jandex.ClassInfo;
+import org.jboss.jandex.DotName;
 
 /**
  * @author Strong Liu

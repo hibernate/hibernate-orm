@@ -25,8 +25,6 @@ package org.hibernate.event.internal;
 
 import java.io.Serializable;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -38,6 +36,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.TypeHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * A convenience base class for listeners that respond to requests to reassociate an entity

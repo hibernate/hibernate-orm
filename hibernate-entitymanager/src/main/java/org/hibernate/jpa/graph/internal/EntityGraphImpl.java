@@ -23,13 +23,13 @@
  */
 package org.hibernate.jpa.graph.internal;
 
+import java.util.List;
 import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
 import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.IdentifiableType;
-import java.util.List;
 
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.graph.spi.GraphNodeImplementor;

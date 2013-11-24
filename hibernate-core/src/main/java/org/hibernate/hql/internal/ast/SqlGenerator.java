@@ -29,9 +29,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import antlr.RecognitionException;
-import antlr.collections.AST;
-
 import org.hibernate.NullPrecedence;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
@@ -49,6 +46,9 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.Type;
+
+import antlr.RecognitionException;
+import antlr.collections.AST;
 
 /**
  * Generates SQL by overriding callback methods in the base class, which does

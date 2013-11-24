@@ -25,9 +25,9 @@ package org.hibernate.cache.ehcache.internal.nonstop;
 
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Class that takes care of {@link net.sf.ehcache.constructs.nonstop.NonStopCacheException} that happens in hibernate module

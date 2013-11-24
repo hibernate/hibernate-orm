@@ -25,12 +25,12 @@ package org.hibernate.metamodel.source.annotations.entity;
 
 import javax.persistence.AccessType;
 
-import org.jboss.jandex.AnnotationInstance;
-import org.jboss.jandex.ClassInfo;
-
 import org.hibernate.metamodel.source.annotations.AnnotationBindingContext;
 import org.hibernate.metamodel.source.annotations.HibernateDotNames;
 import org.hibernate.metamodel.source.annotations.JandexHelper;
+
+import org.jboss.jandex.AnnotationInstance;
+import org.jboss.jandex.ClassInfo;
 
 /**
  * Represents the information about an entity annotated with {@code @Embeddable}.

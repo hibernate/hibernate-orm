@@ -23,13 +23,14 @@
  */
 package org.hibernate.sql.ordering.antlr;
 
-import antlr.collections.AST;
-import org.jboss.logging.Logger;
-
 import org.hibernate.NullPrecedence;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
+
+import antlr.collections.AST;
 
 /**
  * Extension of the Antlr-generated tree walker for rendering the parsed order-by tree back to String form.

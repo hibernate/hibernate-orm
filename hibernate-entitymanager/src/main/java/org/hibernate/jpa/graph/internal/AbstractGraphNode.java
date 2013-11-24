@@ -23,21 +23,21 @@
  */
 package org.hibernate.jpa.graph.internal;
 
-import javax.persistence.AttributeNode;
-import javax.persistence.metamodel.Attribute;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
+import javax.persistence.AttributeNode;
+import javax.persistence.metamodel.Attribute;
 
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.spi.HibernateEntityManagerFactoryAware;
+
+import org.jboss.logging.Logger;
 
 /**
  * Base class for EntityGraph and Subgraph implementations.

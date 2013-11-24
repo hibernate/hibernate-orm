@@ -30,8 +30,6 @@ import java.util.Properties;
 import java.util.Set;
 import javax.persistence.EntityNotFoundException;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.CacheException;
@@ -44,6 +42,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * The standard implementation of the Hibernate QueryCache interface.  This

@@ -37,6 +37,7 @@ import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
+
 import org.jboss.logging.Logger;
 
 /**

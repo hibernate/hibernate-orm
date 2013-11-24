@@ -23,14 +23,14 @@
  */
 package org.hibernate.event.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreMessageLogger;
+
+import org.jboss.logging.Logger;
 
 /**
  * Defines the default flush event listeners used by hibernate for

@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jmx.internal;
+
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Map;
@@ -30,17 +31,17 @@ import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.service.Service;
 import org.hibernate.jmx.spi.JmxService;
+import org.hibernate.service.Service;
 import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.Stoppable;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of JMX services

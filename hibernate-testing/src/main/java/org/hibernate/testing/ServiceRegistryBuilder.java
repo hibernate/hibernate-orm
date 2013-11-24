@@ -26,9 +26,9 @@ package org.hibernate.testing;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 
 /**
  * @author Steve Ebersole

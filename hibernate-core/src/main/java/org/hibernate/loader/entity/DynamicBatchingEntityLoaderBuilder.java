@@ -30,8 +30,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -46,6 +44,8 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * A BatchingEntityLoaderBuilder that builds UniqueEntityLoader instances capable of dynamically building

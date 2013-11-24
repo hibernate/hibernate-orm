@@ -25,9 +25,6 @@ package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
 
-import org.dom4j.Element;
-import org.dom4j.tree.DefaultElement;
-
 import org.hibernate.MappingException;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
@@ -45,6 +42,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
+
+import org.dom4j.Element;
+import org.dom4j.tree.DefaultElement;
 
 /**
  * Generates metadata for primary identifiers (ids) of versions entities.

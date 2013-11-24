@@ -32,14 +32,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import antlr.SemanticException;
-import antlr.collections.AST;
-
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTIterator;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+
+import antlr.SemanticException;
+import antlr.collections.AST;
 
 /**
  * Represents the 'FROM' part of a query or subquery, containing all mapped class references.

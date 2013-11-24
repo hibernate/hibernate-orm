@@ -28,8 +28,8 @@ import java.net.URL;
 import java.util.zip.ZipEntry;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpa.boot.internal.ByteArrayInputStreamAccess;
 import org.hibernate.jpa.boot.archive.internal.ArchiveHelper;
+import org.hibernate.jpa.boot.internal.ByteArrayInputStreamAccess;
 import org.hibernate.jpa.boot.spi.InputStreamAccess;
 
 /**

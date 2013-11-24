@@ -26,18 +26,13 @@
 
 package org.hibernate.cfg.annotations.reflection;
 
-import javax.persistence.AccessType;
-import javax.persistence.AttributeConverter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.dom4j.Document;
-import org.dom4j.Element;
-
-import org.jboss.logging.Logger;
+import javax.persistence.AccessType;
+import javax.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AttributeConverterDefinition;
@@ -45,6 +40,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
+
+import org.dom4j.Document;
+import org.dom4j.Element;
 
 /**
  * @author Emmanuel Bernard

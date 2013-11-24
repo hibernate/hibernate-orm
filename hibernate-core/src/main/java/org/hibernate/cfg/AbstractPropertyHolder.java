@@ -23,6 +23,8 @@
  */
 package org.hibernate.cfg;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.AssociationOverride;
 import javax.persistence.AssociationOverrides;
 import javax.persistence.AttributeOverride;
@@ -33,10 +35,6 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.MappedSuperclass;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -46,6 +44,8 @@ import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.type.PrimitiveWrapperHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * No idea.

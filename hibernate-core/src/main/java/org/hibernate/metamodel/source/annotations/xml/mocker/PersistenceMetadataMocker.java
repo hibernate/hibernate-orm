@@ -3,14 +3,14 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
+import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.internal.jaxb.mapping.orm.JaxbPersistenceUnitDefaults;
-import org.hibernate.metamodel.source.annotations.xml.PseudoJpaDotNames;
 
 /**
  * @author Strong Liu

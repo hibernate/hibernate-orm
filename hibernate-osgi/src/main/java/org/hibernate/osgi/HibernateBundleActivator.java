@@ -25,13 +25,13 @@ package org.hibernate.osgi;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
-
 import javax.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;

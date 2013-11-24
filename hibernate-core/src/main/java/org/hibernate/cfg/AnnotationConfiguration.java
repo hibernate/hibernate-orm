@@ -28,11 +28,11 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Properties;
 
-import org.dom4j.Document;
-
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.MappingException;
+
+import org.dom4j.Document;
 
 /**
  * Similar to the {@link Configuration} object but handles EJB3 and Hibernate

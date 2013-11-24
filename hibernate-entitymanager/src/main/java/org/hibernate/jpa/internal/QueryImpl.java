@@ -23,10 +23,6 @@
  */
 package org.hibernate.jpa.internal;
 
-import static javax.persistence.TemporalType.DATE;
-import static javax.persistence.TemporalType.TIME;
-import static javax.persistence.TemporalType.TIMESTAMP;
-
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.ParameterMode;
@@ -68,7 +63,12 @@ import org.hibernate.jpa.spi.ParameterBind;
 import org.hibernate.jpa.spi.ParameterRegistration;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.Type;
+
 import org.jboss.logging.Logger;
+
+import static javax.persistence.TemporalType.DATE;
+import static javax.persistence.TemporalType.TIME;
+import static javax.persistence.TemporalType.TIMESTAMP;
 
 /**
  * Hibernate implementation of both the {@link Query} and {@link TypedQuery} contracts.

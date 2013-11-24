@@ -22,11 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.engine.jdbc.connections.internal;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.service.UnknownUnwrapTypeException;
 
 /**
  * An implementation of the {@link ConnectionProvider} interface that simply throws an exception when a connection

@@ -23,12 +23,12 @@
  */
 package org.hibernate.engine.internal;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.VersionType;
+
+import org.jboss.logging.Logger;
 
 /**
  * Utilities for dealing with optimistic locking values.

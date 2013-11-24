@@ -26,14 +26,14 @@ package org.hibernate.metamodel.source.annotations.xml.mocker;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
+import org.hibernate.internal.jaxb.mapping.orm.JaxbUniqueConstraint;
+import org.hibernate.metamodel.source.annotations.JPADotNames;
+
 import org.jboss.jandex.AnnotationInstance;
 import org.jboss.jandex.AnnotationTarget;
 import org.jboss.jandex.AnnotationValue;
 import org.jboss.jandex.DotName;
-
-import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
-import org.hibernate.internal.jaxb.mapping.orm.JaxbUniqueConstraint;
-import org.hibernate.metamodel.source.annotations.JPADotNames;
 
 /**
  * Base class for the mock jandex annotations created from orm.xml.

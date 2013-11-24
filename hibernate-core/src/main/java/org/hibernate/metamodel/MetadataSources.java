@@ -50,7 +50,9 @@ import org.hibernate.metamodel.source.MappingNotFoundException;
 import org.hibernate.metamodel.source.internal.JaxbHelper;
 import org.hibernate.metamodel.source.internal.MetadataBuilderImpl;
 import org.hibernate.service.ServiceRegistry;
+
 import org.jboss.logging.Logger;
+
 import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 

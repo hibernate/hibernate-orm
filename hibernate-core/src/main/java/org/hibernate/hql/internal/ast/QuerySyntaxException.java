@@ -22,9 +22,10 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.hql.internal.ast;
-import antlr.RecognitionException;
 
 import org.hibernate.QueryException;
+
+import antlr.RecognitionException;
 
 /**
  * Exception thrown when there is a syntax error in the HQL.

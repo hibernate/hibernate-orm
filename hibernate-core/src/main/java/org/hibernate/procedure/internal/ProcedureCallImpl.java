@@ -23,7 +23,6 @@
  */
 package org.hibernate.procedure.internal;
 
-import javax.persistence.ParameterMode;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,8 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.jboss.logging.Logger;
+import javax.persistence.ParameterMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
@@ -50,7 +48,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterRegistration;
 import org.hibernate.procedure.ParameterStrategyException;
@@ -61,6 +58,8 @@ import org.hibernate.procedure.spi.ParameterRegistrationImplementor;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}

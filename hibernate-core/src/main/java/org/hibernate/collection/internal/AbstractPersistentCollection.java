@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-
 import javax.naming.NamingException;
 
 import org.hibernate.AssertionFailure;
@@ -54,6 +53,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
+
 import org.jboss.logging.Logger;
 
 /**

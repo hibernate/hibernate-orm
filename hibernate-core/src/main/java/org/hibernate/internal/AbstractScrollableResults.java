@@ -34,10 +34,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -45,6 +42,8 @@ import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.loader.Loader;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Base implementation of the ScrollableResults interface.

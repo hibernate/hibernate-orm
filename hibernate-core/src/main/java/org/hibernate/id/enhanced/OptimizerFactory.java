@@ -25,10 +25,10 @@ package org.hibernate.id.enhanced;
 
 import java.lang.reflect.Constructor;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Factory for {@link Optimizer} instances.

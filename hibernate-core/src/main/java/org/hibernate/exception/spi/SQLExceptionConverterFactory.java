@@ -27,8 +27,6 @@ import java.lang.reflect.Constructor;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.cfg.Environment;
@@ -37,6 +35,8 @@ import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * A factory for building SQLExceptionConverter instances.

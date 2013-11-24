@@ -31,6 +31,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.internal.CoreMessageLogger;
+
 import org.jboss.logging.Logger;
 
 /**

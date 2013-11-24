@@ -26,8 +26,6 @@ package org.hibernate.bytecode.internal.javassist;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.bytecode.buildtime.spi.ClassFilter;
 import org.hibernate.bytecode.buildtime.spi.FieldFilter;
 import org.hibernate.bytecode.instrumentation.internal.javassist.JavassistHelper;
@@ -41,6 +39,8 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Bytecode provider implementation for Javassist.

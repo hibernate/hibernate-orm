@@ -23,13 +23,13 @@
  */
 package org.hibernate.jpa.internal.schemagen;
 
-import javax.persistence.PersistenceException;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-import org.jboss.logging.Logger;
+import javax.persistence.PersistenceException;
 
 import org.hibernate.jpa.SchemaGenAction;
+
+import org.jboss.logging.Logger;
 
 /**
  * GenerationTarget implementation for handling generation directly to the database

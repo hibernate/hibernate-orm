@@ -25,14 +25,14 @@ package org.hibernate.cache.infinispan.query;
 
 import javax.transaction.Transaction;
 
-import org.infinispan.AdvancedCache;
-import org.infinispan.context.Flag;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.infinispan.impl.BaseTransactionalDataRegion;
 import org.hibernate.cache.infinispan.util.Caches;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.RegionFactory;
+
+import org.infinispan.AdvancedCache;
+import org.infinispan.context.Flag;
 
 /**
  * Region for caching query results.

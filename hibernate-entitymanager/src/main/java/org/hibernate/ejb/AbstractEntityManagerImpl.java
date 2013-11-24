@@ -23,11 +23,11 @@
  */
 package org.hibernate.ejb;
 
+import java.io.Serializable;
+import java.util.Map;
 import javax.persistence.PersistenceContextType;
 import javax.persistence.SynchronizationType;
 import javax.persistence.spi.PersistenceUnitTransactionType;
-import java.io.Serializable;
-import java.util.Map;
 
 import org.hibernate.jpa.internal.EntityManagerFactoryImpl;
 

@@ -26,8 +26,6 @@ package org.hibernate.loader.collection.plan;
 
 import java.sql.ResultSet;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -35,6 +33,8 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Superclass for loaders that initialize collections

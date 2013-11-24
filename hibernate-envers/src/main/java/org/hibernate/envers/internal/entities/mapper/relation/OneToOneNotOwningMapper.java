@@ -23,8 +23,8 @@
  */
 package org.hibernate.envers.internal.entities.mapper.relation;
 
-import javax.persistence.OneToOne;
 import java.io.Serializable;
+import javax.persistence.OneToOne;
 
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;

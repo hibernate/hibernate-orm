@@ -25,15 +25,16 @@ package org.hibernate.testing.junit4;
 
 import javax.transaction.SystemException;
 
-import org.jboss.logging.Logger;
+import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
+
+import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
-import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
+import org.jboss.logging.Logger;
 
 /**
  * The base unit test adapter.

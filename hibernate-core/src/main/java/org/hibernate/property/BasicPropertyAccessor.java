@@ -22,13 +22,12 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.property;
+
 import java.beans.Introspector;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Map;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.PropertyAccessException;
@@ -38,6 +37,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+
+import org.jboss.logging.Logger;
 
 /**
  * Accesses property values via a get/set pair, which may be nonpublic.

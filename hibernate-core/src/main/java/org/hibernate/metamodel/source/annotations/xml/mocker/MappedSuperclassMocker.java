@@ -23,8 +23,6 @@
  */
 package org.hibernate.metamodel.source.annotations.xml.mocker;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAccessType;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbAttributes;
@@ -38,6 +36,8 @@ import org.hibernate.internal.jaxb.mapping.orm.JaxbPostUpdate;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPrePersist;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreRemove;
 import org.hibernate.internal.jaxb.mapping.orm.JaxbPreUpdate;
+
+import org.jboss.logging.Logger;
 
 /**
  * Mock <mapped-superclass> to {@link javax.persistence.MappedSuperclass @MappedSuperClass}

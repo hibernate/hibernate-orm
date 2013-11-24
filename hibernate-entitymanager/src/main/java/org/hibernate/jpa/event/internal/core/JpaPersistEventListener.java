@@ -27,8 +27,6 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.CascadingActions;
@@ -37,6 +35,8 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.jpa.event.internal.jpa.CallbackRegistryConsumer;
 import org.hibernate.jpa.event.spi.jpa.CallbackRegistry;
 import org.hibernate.type.CollectionType;
+
+import org.jboss.logging.Logger;
 
 /**
  * Overrides the LifeCycle OnSave call to call the PrePersist operation

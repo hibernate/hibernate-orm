@@ -33,13 +33,13 @@ import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.constructs.nonstop.NonStopCacheException;
 import net.sf.ehcache.util.Timestamper;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.ehcache.EhCacheMessageLogger;
 import org.hibernate.cache.ehcache.internal.nonstop.HibernateNonstopCacheExceptionHandler;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.spi.Region;
+
+import org.jboss.logging.Logger;
 
 /**
  * An Ehcache specific data region implementation.

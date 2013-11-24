@@ -26,10 +26,10 @@ package org.hibernate.sql.ordering.antlr;
 import java.io.StringReader;
 import java.util.Set;
 
-import org.jboss.logging.Logger;
-
 import org.hibernate.HibernateException;
 import org.hibernate.hql.internal.ast.util.ASTPrinter;
+
+import org.jboss.logging.Logger;
 
 /**
  * A translator for order-by mappings, whether specified by hbm.xml files, Hibernate

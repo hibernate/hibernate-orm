@@ -23,14 +23,12 @@
  */
 package org.hibernate.procedure.internal;
 
-import javax.persistence.ParameterMode;
-import javax.persistence.TemporalType;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
-
-import org.jboss.logging.Logger;
+import javax.persistence.ParameterMode;
+import javax.persistence.TemporalType;
 
 import org.hibernate.engine.jdbc.cursor.spi.RefCursorSupport;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -43,6 +41,8 @@ import org.hibernate.type.CalendarTimeType;
 import org.hibernate.type.CalendarType;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.Type;
+
+import org.jboss.logging.Logger;
 
 /**
  * Abstract implementation of ParameterRegistration/ParameterRegistrationImplementor

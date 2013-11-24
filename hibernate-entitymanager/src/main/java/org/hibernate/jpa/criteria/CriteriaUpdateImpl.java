@@ -23,13 +23,13 @@
  */
 package org.hibernate.jpa.criteria;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.SingularAttribute;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.hibernate.jpa.criteria.compile.RenderingContext;
 import org.hibernate.jpa.criteria.path.SingularAttributePath;

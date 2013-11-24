@@ -32,7 +32,9 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
+
 import org.jboss.logging.Logger;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;

@@ -48,6 +48,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	 * Performs the operator node initialization by seeking out any parameter
 	 * nodes and setting their expected type, if possible.
 	 */
+	@Override
 	public void initialize() throws SemanticException {
 		Node lhs = getLeftHandOperand();
 		if ( lhs == null ) {
@@ -139,19 +140,26 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 						? null
 						: ( ( ParameterNode ) getRightHandOperand() ).getHqlParameterSpecification();
 
-		translate( valueElements, comparisonType, comparisonText,
-                lhsElementTexts, rhsElementTexts,
-                lhsEmbeddedCompositeParameterSpecification,
-                rhsEmbeddedCompositeParameterSpecification, this );
+		translate(
+				valueElements,
+				comparisonType,
+				comparisonText,
+				lhsElementTexts,
+				rhsElementTexts,
+				lhsEmbeddedCompositeParameterSpecification,
+				rhsEmbeddedCompositeParameterSpecification,
+				this
+		);
 	}
 
-    protected void translate( int valueElements, int comparisonType,
-            String comparisonText, String[] lhsElementTexts,
-            String[] rhsElementTexts,
-            ParameterSpecification lhsEmbeddedCompositeParameterSpecification,
-            ParameterSpecification rhsEmbeddedCompositeParameterSpecification,
-            AST container ) {
-        for ( int i = valueElements - 1; i > 0; i-- ) {
+	protected void translate(
+			int valueElements, int comparisonType,
+			String comparisonText, String[] lhsElementTexts,
+			String[] rhsElementTexts,
+			ParameterSpecification lhsEmbeddedCompositeParameterSpecification,
+			ParameterSpecification rhsEmbeddedCompositeParameterSpecification,
+			AST container) {
+		for ( int i = valueElements - 1; i > 0; i-- ) {
 			if ( i == 1 ) {
 				AST op1 = getASTFactory().create( comparisonType, comparisonText );
 				AST lhs1 = getASTFactory().create( HqlSqlTokenTypes.SQL_TOKEN, lhsElementTexts[0] );
@@ -168,7 +176,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 
 				// "pass along" our initial embedded parameter node(s) to the first generated
 				// sql fragment so that it can be handled later for parameter binding...
-				SqlFragment fragment = ( SqlFragment ) lhs1;
+				SqlFragment fragment = (SqlFragment) lhs1;
 				if ( lhsEmbeddedCompositeParameterSpecification != null ) {
 					fragment.addEmbeddedParameter( lhsEmbeddedCompositeParameterSpecification );
 				}
@@ -188,7 +196,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 				container = newContainer;
 			}
 		}
-    }
+	}
 
 	protected static String[] extractMutationTexts(Node operand, int count) {
 		if ( operand instanceof ParameterNode ) {

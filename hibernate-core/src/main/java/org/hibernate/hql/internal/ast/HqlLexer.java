@@ -35,12 +35,11 @@ import antlr.Token;
  * in order to keep the grammar source file clean.
  */
 class HqlLexer extends HqlBaseLexer {
-
 	private boolean possibleID;
 
-    public HqlLexer(Reader in) {
-        super(in);
-    }
+	public HqlLexer(Reader in) {
+		super( in );
+	}
 
 	@Override
 	public void setTokenObjectClass(String cl) {
@@ -54,7 +53,7 @@ class HqlLexer extends HqlBaseLexer {
 
 	@Override
 	protected Token makeToken(int i) {
-		HqlToken token = ( HqlToken ) super.makeToken( i );
+		HqlToken token = (HqlToken) super.makeToken( i );
 		token.setPossibleID( possibleID );
 		possibleID = false;
 		return token;
@@ -63,12 +62,12 @@ class HqlLexer extends HqlBaseLexer {
 	@Override
 	public void panic() {
 		//overriden to avoid System.exit
-		panic("CharScanner: panic");
+		panic( "CharScanner: panic" );
 	}
 
 	@Override
 	public void panic(String s) {
 		//overriden to avoid System.exit
-		throw new QueryException(s);
+		throw new QueryException( s );
 	}
 }

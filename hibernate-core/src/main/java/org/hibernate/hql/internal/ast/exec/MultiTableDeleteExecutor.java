@@ -40,11 +40,9 @@ public class MultiTableDeleteExecutor implements StatementExecutor {
 	private final MultiTableBulkIdStrategy.DeleteHandler deleteHandler;
 
 	public MultiTableDeleteExecutor(HqlSqlWalker walker) {
-		MultiTableBulkIdStrategy strategy = walker.getSessionFactoryHelper()
-				.getFactory()
-				.getSettings()
+		final MultiTableBulkIdStrategy strategy = walker.getSessionFactoryHelper().getFactory().getSettings()
 				.getMultiTableBulkIdStrategy();
-		 this.deleteHandler = strategy.buildDeleteHandler( walker.getSessionFactoryHelper().getFactory(), walker );
+		this.deleteHandler = strategy.buildDeleteHandler( walker.getSessionFactoryHelper().getFactory(), walker );
 	}
 
 	public String[] getSqlStatements() {

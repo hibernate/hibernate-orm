@@ -49,7 +49,6 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public class AssignmentSpecification {
-
 	private final Set tableNames;
 	private final ParameterSpecification[] hqlParameters;
 	private final AST eq;
@@ -100,12 +99,12 @@ public class AssignmentSpecification {
 		}
 		else {
 			List parameterList = ASTUtil.collectChildren(
-			        rhs,
-			        new ASTUtil.IncludePredicate() {
-				        public boolean include(AST node) {
-					        return isParam( node );
-			            }
-			        }
+					rhs,
+					new ASTUtil.IncludePredicate() {
+						public boolean include(AST node) {
+							return isParam( node );
+						}
+					}
 			);
 			hqlParameters = new ParameterSpecification[ parameterList.size() ];
 			Iterator itr = parameterList.iterator();

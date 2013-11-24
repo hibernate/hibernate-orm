@@ -31,9 +31,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.spi.FilterTranslator;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.hql.spi.QueryTranslatorFactory;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
-import org.jboss.logging.Logger;
 
 /**
  * Generates translators which uses the Antlr-based parser to perform
@@ -42,34 +41,28 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public class ASTQueryTranslatorFactory implements QueryTranslatorFactory {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class,
-                                                                       ASTQueryTranslatorFactory.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ASTQueryTranslatorFactory.class );
 
 	public ASTQueryTranslatorFactory() {
-        LOG.usingAstQueryTranslatorFactory();
+		LOG.usingAstQueryTranslatorFactory();
 	}
 
-	/**
-	 * @see org.hibernate.hql.spi.QueryTranslatorFactory#createQueryTranslator
-	 */
+	@Override
 	public QueryTranslator createQueryTranslator(
 			String queryIdentifier,
-	        String queryString,
-	        Map filters,
-	        SessionFactoryImplementor factory,
-	        EntityGraphQueryHint entityGraphQueryHint) {
+			String queryString,
+			Map filters,
+			SessionFactoryImplementor factory,
+			EntityGraphQueryHint entityGraphQueryHint) {
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory, entityGraphQueryHint );
 	}
 
-	/**
-	 * @see QueryTranslatorFactory#createFilterTranslator
-	 */
+	@Override
 	public FilterTranslator createFilterTranslator(
 			String queryIdentifier,
-	        String queryString,
-	        Map filters,
-	        SessionFactoryImplementor factory) {
+			String queryString,
+			Map filters,
+			SessionFactoryImplementor factory) {
 		return new QueryTranslatorImpl( queryIdentifier, queryString, filters, factory );
 	}
 }

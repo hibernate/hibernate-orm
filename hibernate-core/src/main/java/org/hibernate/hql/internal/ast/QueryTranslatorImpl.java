@@ -541,8 +541,8 @@ public class QueryTranslatorImpl implements FilterTranslator {
 			// TODO : this is a bit dodgy, come up with a better way to check this (plus see above comment)
 			String [] idColNames = owner.getQueryable().getIdentifierColumnNames();
 			String expectedPrimaryOrderSeq = StringHelper.join(
-			        ", ",
-			        StringHelper.qualify( owner.getTableAlias(), idColNames )
+					", ",
+					StringHelper.qualify( owner.getTableAlias(), idColNames )
 			);
 			if (  !primaryOrdering.getText().startsWith( expectedPrimaryOrderSeq ) ) {
 				throw new HibernateException( "cannot scroll results with collection fetches which are not ordered primarily by the root entity's PK" );
@@ -606,9 +606,11 @@ public class QueryTranslatorImpl implements FilterTranslator {
 		public void visit(AST node) {
 			if ( dotRoot != null ) {
 				// we are already processing a dot-structure
-                if (ASTUtil.isSubtreeChild(dotRoot, node)) return;
-                // we are now at a new tree level
-                dotRoot = null;
+				if ( ASTUtil.isSubtreeChild(dotRoot, node) ) {
+					return;
+				}
+				// we are now at a new tree level
+				dotRoot = null;
 			}
 
 			if ( node.getType() == HqlTokenTypes.DOT ) {

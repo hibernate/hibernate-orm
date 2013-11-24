@@ -47,7 +47,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public final class CollectionEntry implements Serializable {
-    private static final Logger LOG = CoreLogging.logger( CollectionEntry.class );
+	private static final Logger LOG = CoreLogging.logger( CollectionEntry.class );
 
 	//ATTRIBUTES MAINTAINED BETWEEN FLUSH CYCLES
 

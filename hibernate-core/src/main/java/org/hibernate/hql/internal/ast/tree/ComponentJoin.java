@@ -81,14 +81,13 @@ public class ComponentJoin extends FromElement {
 		return componentType;
 	}
 
-
 	@Override
-    public Type getDataType() {
+	public Type getDataType() {
 		return getComponentType();
 	}
 
 	@Override
-    public String getIdentityColumn() {
+	public String getIdentityColumn() {
 		// used to "resolve" the IdentNode when our alias is encountered *by itself* in the query; so
 		//		here we use the component
 		// NOTE : ^^ is true *except for* when encountered by itself in the SELECT clause.  That gets
@@ -103,7 +102,7 @@ public class ComponentJoin extends FromElement {
 	}
 
 	@Override
-    public String getDisplayText() {
+	public String getDisplayText() {
 		return "ComponentJoin{path=" + getComponentPath() + ", type=" + componentType.getReturnedClass() + "}";
 	}
 
@@ -115,37 +114,28 @@ public class ComponentJoin extends FromElement {
 		}
 
 		@Override
-        public Type getDataType() {
+		public Type getDataType() {
 			return getComponentType();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-        public QueryableCollection getQueryableCollection() {
+		public QueryableCollection getQueryableCollection() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-        public PropertyMapping getPropertyMapping(String propertyName) {
+		public PropertyMapping getPropertyMapping(String propertyName) {
 			return propertyMapping;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
-        public Type getPropertyType(String propertyName, String propertyPath) {
+		public Type getPropertyType(String propertyName, String propertyPath) {
 			int index = getComponentType().getPropertyIndex( propertyName );
 			return getComponentType().getSubtypes()[index];
 		}
 
 		@Override
-        public String renderScalarIdentifierSelect(int i) {
+		public String renderScalarIdentifierSelect(int i) {
 			String[] cols = getBasePropertyMapping().toColumns( getTableAlias(), getComponentProperty() );
 			StringBuilder buf = new StringBuilder();
 			// For property references generate <tablealias>.<columnname> as <projectionalias>
@@ -165,10 +155,12 @@ public class ComponentJoin extends FromElement {
 	}
 
 	private final class ComponentPropertyMapping implements PropertyMapping {
+		@Override
 		public Type getType() {
 			return getComponentType();
 		}
 
+		@Override
 		public Type toType(String propertyName) throws QueryException {
 			return getBasePropertyMapping().toType( getPropertyPath( propertyName ) );
 		}
@@ -177,10 +169,12 @@ public class ComponentJoin extends FromElement {
 			return getComponentPath() + '.' + propertyName;
 		}
 
+		@Override
 		public String[] toColumns(String alias, String propertyName) throws QueryException {
 			return getBasePropertyMapping().toColumns( alias, getPropertyPath( propertyName ) );
 		}
 
+		@Override
 		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 			return getBasePropertyMapping().toColumns( getPropertyPath( propertyName ) );
 		}

@@ -37,13 +37,12 @@ import antlr.collections.AST;
  * @author Steve Ebersole
  */
 public abstract class AbstractRestrictableStatement extends AbstractStatement implements RestrictableStatement {
-
 	private FromClause fromClause;
 	private AST whereClause;
 
 	protected abstract int getWhereClauseParentTokenType();
 
-    protected abstract CoreMessageLogger getLog();
+	protected abstract CoreMessageLogger getLog();
 
 	/**
 	 * @see org.hibernate.hql.internal.ast.tree.RestrictableStatement#getFromClause

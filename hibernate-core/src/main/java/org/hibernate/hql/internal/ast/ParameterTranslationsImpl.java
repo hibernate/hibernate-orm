@@ -27,7 +27,6 @@ package org.hibernate.hql.internal.ast;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,14 +45,15 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ParameterTranslationsImpl implements ParameterTranslations {
-
-	private final Map namedParameters;
+	private final Map<String,ParameterInfo> namedParameters;
 	private final ParameterInfo[] ordinalParameters;
 
+	@Override
 	public boolean supportsOrdinalParameterMetadata() {
 		return true;
 	}
 
+	@Override
 	public int getOrdinalParameterCount() {
 		return ordinalParameters.length;
 	}
@@ -63,26 +63,31 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 		return ordinalParameters[ordinalPosition - 1];
 	}
 
+	@Override
 	public int getOrdinalParameterSqlLocation(int ordinalPosition) {
 		return getOrdinalParameterInfo( ordinalPosition ).getSqlLocations()[0];
 	}
 
+	@Override
 	public Type getOrdinalParameterExpectedType(int ordinalPosition) {
 		return getOrdinalParameterInfo( ordinalPosition ).getExpectedType();
 	}
 
+	@Override
 	public Set getNamedParameterNames() {
 		return namedParameters.keySet();
 	}
 
 	public ParameterInfo getNamedParameterInfo(String name) {
-		return ( ParameterInfo ) namedParameters.get( name );
+		return namedParameters.get( name );
 	}
 
+	@Override
 	public int[] getNamedParameterSqlLocations(String name) {
 		return getNamedParameterInfo( name ).getSqlLocations();
 	}
 
+	@Override
 	public Type getNamedParameterExpectedType(String name) {
 		return getNamedParameterInfo( name ).getExpectedType();
 	}
@@ -94,28 +99,27 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 	 * Note: the order in the incoming list denotes the parameter's
 	 * psudeo-position within the resulting sql statement.
 	 *
-	 * @param parameterSpecifications
+	 * @param parameterSpecifications The parameter specifications
 	 */
-	public ParameterTranslationsImpl(List parameterSpecifications) {
-
+	public ParameterTranslationsImpl(List<ParameterSpecification> parameterSpecifications) {
 		class NamedParamTempHolder {
 			String name;
 			Type type;
-			List positions = new ArrayList();
+			List<Integer> positions = new ArrayList<Integer>();
 		}
 
-		int size = parameterSpecifications.size();
-		List ordinalParameterList = new ArrayList();
-		Map namedParameterMap = new HashMap();
+		final int size = parameterSpecifications.size();
+		final List<ParameterInfo> ordinalParameterList = new ArrayList<ParameterInfo>();
+		final Map<String,NamedParamTempHolder> namedParameterMap = new HashMap<String,NamedParamTempHolder>();
 		for ( int i = 0; i < size; i++ ) {
-			final ParameterSpecification spec = ( ParameterSpecification ) parameterSpecifications.get( i );
-			if ( PositionalParameterSpecification.class.isAssignableFrom( spec.getClass() ) ) {
-				PositionalParameterSpecification ordinalSpec = ( PositionalParameterSpecification ) spec;
+			final ParameterSpecification spec = parameterSpecifications.get( i );
+			if ( PositionalParameterSpecification.class.isInstance( spec ) ) {
+				final PositionalParameterSpecification ordinalSpec = (PositionalParameterSpecification) spec;
 				ordinalParameterList.add( new ParameterInfo( i, ordinalSpec.getExpectedType() ) );
 			}
-			else if ( NamedParameterSpecification.class.isAssignableFrom( spec.getClass() ) ) {
-				NamedParameterSpecification namedSpec = ( NamedParameterSpecification ) spec;
-				NamedParamTempHolder paramHolder = ( NamedParamTempHolder ) namedParameterMap.get( namedSpec.getName() );
+			else if ( NamedParameterSpecification.class.isInstance( spec ) ) {
+				final NamedParameterSpecification namedSpec = (NamedParameterSpecification) spec;
+				NamedParamTempHolder paramHolder = namedParameterMap.get( namedSpec.getName() );
 				if ( paramHolder == null ) {
 					paramHolder = new NamedParamTempHolder();
 					paramHolder.name = namedSpec.getName();
@@ -124,24 +128,20 @@ public class ParameterTranslationsImpl implements ParameterTranslations {
 				}
 				paramHolder.positions.add( i );
 			}
-			else {
-				// don't care about other param types here, just those explicitly user-defined...
-			}
+			// don't care about other param types here, just those explicitly user-defined...
 		}
 
-		ordinalParameters = ( ParameterInfo[] ) ordinalParameterList.toArray( new ParameterInfo[ordinalParameterList.size()] );
+		ordinalParameters = ordinalParameterList.toArray( new ParameterInfo[ordinalParameterList.size()] );
 
 		if ( namedParameterMap.isEmpty() ) {
-			namedParameters = java.util.Collections.EMPTY_MAP;
+			namedParameters = java.util.Collections.emptyMap();
 		}
 		else {
-			Map namedParametersBacking = new HashMap( namedParameterMap.size() );
-			Iterator itr = namedParameterMap.values().iterator();
-			while( itr.hasNext() ) {
-				final NamedParamTempHolder holder = ( NamedParamTempHolder ) itr.next();
+			final Map<String,ParameterInfo> namedParametersBacking = new HashMap<String,ParameterInfo>( namedParameterMap.size() );
+			for ( NamedParamTempHolder holder : namedParameterMap.values() ) {
 				namedParametersBacking.put(
 						holder.name,
-				        new ParameterInfo( ArrayHelper.toIntArray( holder.positions ), holder.type )
+						new ParameterInfo( ArrayHelper.toIntArray( holder.positions ), holder.type )
 				);
 			}
 			namedParameters = java.util.Collections.unmodifiableMap( namedParametersBacking );

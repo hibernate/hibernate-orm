@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.query.spi.sql;
+
 import org.hibernate.type.Type;
 
 /**
@@ -41,6 +41,13 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 		this.hashCode = determineHashCode();
 	}
 
+	private int determineHashCode() {
+		int result = type != null ? type.hashCode() : 0;
+		result = 31 * result + ( getClass().getName().hashCode() );
+		result = 31 * result + ( columnAlias != null ? columnAlias.hashCode() : 0 );
+		return result;
+	}
+
 	public String getColumnAlias() {
 		return columnAlias;
 	}
@@ -49,6 +56,8 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 		return type;
 	}
 
+	@Override
+	@SuppressWarnings("RedundantIfStatement")
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -57,8 +66,7 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 			return false;
 		}
 
-		NativeSQLQueryScalarReturn that = ( NativeSQLQueryScalarReturn ) o;
-
+		final NativeSQLQueryScalarReturn that = (NativeSQLQueryScalarReturn) o;
 		if ( columnAlias != null ? !columnAlias.equals( that.columnAlias ) : that.columnAlias != null ) {
 			return false;
 		}
@@ -69,15 +77,9 @@ public class NativeSQLQueryScalarReturn implements NativeSQLQueryReturn {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return hashCode;
-	}
-
-	private int determineHashCode() {
-		int result = type != null ? type.hashCode() : 0;
-		result = 31 * result + ( getClass().getName().hashCode() );
-		result = 31 * result + ( columnAlias != null ? columnAlias.hashCode() : 0 );
-		return result;
 	}
 
 	@Override

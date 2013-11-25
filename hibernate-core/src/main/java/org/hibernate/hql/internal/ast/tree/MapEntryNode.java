@@ -57,6 +57,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 			this.base = base;
 		}
 
+		@Override
 		public String generateAlias(String sqlExpression) {
 			return NameGenerator.scalarName( base, counter++ );
 		}
@@ -77,8 +78,8 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Type resolveType(QueryableCollection collectionPersister) {
-		Type keyType = collectionPersister.getIndexType();
-		Type valueType = collectionPersister.getElementType();
+		final Type keyType = collectionPersister.getIndexType();
+		final Type valueType = collectionPersister.getElementType();
 		types.add( keyType );
 		types.add( valueType );
 		mapEntryBuilder = new MapEntryBuilder();
@@ -96,7 +97,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		String text = "";
 		String[] columns = new String[selections.size()];
 		for ( int i = 0; i < selections.size(); i++ ) {
-			SelectExpression selectExpression = (SelectExpression) selections.get(i);
+			SelectExpression selectExpression = (SelectExpression) selections.get( i );
 			text += ( ", " + selectExpression.getExpression() + " as " + selectExpression.getAlias() );
 			columns[i] = selectExpression.getExpression();
 		}
@@ -113,7 +114,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		Type keyType = collectionPersister.getIndexType();
 		if ( keyType.isAssociationType() ) {
 			EntityType entityType = (EntityType) keyType;
-			Queryable keyEntityPersister = ( Queryable ) sfi().getEntityPersister(
+			Queryable keyEntityPersister = (Queryable) sfi().getEntityPersister(
 					entityType.getAssociatedEntityName( sfi() )
 			);
 			SelectFragment fragment = keyEntityPersister.propertySelectFragmentFragment(
@@ -127,7 +128,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 
 	@SuppressWarnings({"unchecked", "ForLoopReplaceableByForEach"})
 	private void appendSelectExpressions(String[] columnNames, List selections, AliasGenerator aliasGenerator) {
-		 for ( int i = 0; i < columnNames.length; i++ ) {
+		for ( int i = 0; i < columnNames.length; i++ ) {
 			selections.add(
 					new BasicSelectExpression(
 							collectionTableAlias() + '.' + columnNames[i],
@@ -154,7 +155,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		Type valueType = collectionPersister.getElementType();
 		if ( valueType.isAssociationType() ) {
 			EntityType valueEntityType = (EntityType) valueType;
-			Queryable valueEntityPersister = ( Queryable ) sfi().getEntityPersister(
+			Queryable valueEntityPersister = (Queryable) sfi().getEntityPersister(
 					valueEntityType.getAssociatedEntityName( sfi() )
 			);
 			SelectFragment fragment = valueEntityPersister.propertySelectFragmentFragment(
@@ -228,14 +229,14 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 		return true;
 	}
 
-	private List types = new ArrayList(4); // size=4 to prevent resizing
+	private List types = new ArrayList( 4 ); // size=4 to prevent resizing
 
 	@Override
 	public List getAggregatedSelectionTypeList() {
 		return types;
 	}
 
-	private static final String[] ALIASES = { null, null };
+	private static final String[] ALIASES = {null, null};
 
 	@Override
 	public String[] getAggregatedAliases() {
@@ -294,7 +295,7 @@ public class MapEntryNode extends AbstractMapComponentNode implements Aggregated
 			if ( o == null || getClass() != o.getClass() ) {
 				return false;
 			}
-			EntryAdapter that = ( EntryAdapter ) o;
+			EntryAdapter that = (EntryAdapter) o;
 
 			// make sure we have the same types...
 			return ( key == null ? that.key == null : key.equals( that.key ) )

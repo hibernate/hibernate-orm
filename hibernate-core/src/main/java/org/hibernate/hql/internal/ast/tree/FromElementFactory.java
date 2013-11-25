@@ -30,6 +30,7 @@ import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.AliasGenerator;
 import org.hibernate.hql.internal.ast.util.PathHelper;
 import org.hibernate.hql.internal.ast.util.SessionFactoryHelper;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.collection.QueryableCollection;
@@ -43,8 +44,6 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
 import antlr.ASTFactory;
 import antlr.SemanticException;
 import antlr.collections.AST;
@@ -55,8 +54,7 @@ import antlr.collections.AST;
  * @author josh
  */
 public class FromElementFactory implements SqlTokenTypes {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromElementFactory.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FromElementFactory.class );
 
 	private FromClause fromClause;
 	private FromElement origin;
@@ -84,12 +82,12 @@ public class FromElementFactory implements SqlTokenTypes {
 	 * Creates collection from elements.
 	 */
 	public FromElementFactory(
-	        FromClause fromClause,
-	        FromElement origin,
-	        String path,
-	        String classAlias,
-	        String[] columns,
-	        boolean implied) {
+			FromClause fromClause,
+			FromElement origin,
+			String path,
+			String classAlias,
+			String[] columns,
+			boolean implied) {
 		this( fromClause, origin, path );
 		this.classAlias = classAlias;
 		this.columns = columns;
@@ -98,23 +96,25 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	FromElement addFromElement() throws SemanticException {
-		FromClause parentFromClause = fromClause.getParentFromClause();
+		final FromClause parentFromClause = fromClause.getParentFromClause();
 		if ( parentFromClause != null ) {
 			// Look up class name using the first identifier in the path.
-			String pathAlias = PathHelper.getAlias( path );
-			FromElement parentFromElement = parentFromClause.getFromElement( pathAlias );
+			final String pathAlias = PathHelper.getAlias( path );
+			final FromElement parentFromElement = parentFromClause.getFromElement( pathAlias );
 			if ( parentFromElement != null ) {
 				return createFromElementInSubselect( path, pathAlias, parentFromElement, classAlias );
 			}
 		}
 
-		EntityPersister entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( path );
+		final EntityPersister entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( path );
 
-		FromElement elem = createAndAddFromElement( path,
+		final FromElement elem = createAndAddFromElement(
+				path,
 				classAlias,
 				entityPersister,
-				( EntityType ) ( ( Queryable ) entityPersister ).getType(),
-				null );
+				(EntityType) ( (Queryable) entityPersister ).getType(),
+				null
+		);
 
 		// Add to the query spaces.
 		fromClause.getWalker().addQuerySpaces( entityPersister.getQuerySpaces() );
@@ -123,11 +123,12 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private FromElement createFromElementInSubselect(
-	        String path,
-	        String pathAlias,
-	        FromElement parentFromElement,
-	        String classAlias) throws SemanticException {
+			String path,
+			String pathAlias,
+			FromElement parentFromElement,
+			String classAlias) throws SemanticException {
 		LOG.debugf( "createFromElementInSubselect() : path = %s", path );
+
 		// Create an DotNode AST for the path and resolve it.
 		FromElement fromElement = evaluateFromElementPath( path, classAlias );
 		EntityPersister entityPersister = fromElement.getEntityPersister();
@@ -148,11 +149,12 @@ public class FromElementFactory implements SqlTokenTypes {
 		if ( fromElement.getFromClause() != fromClause ) {
 			LOG.debug( "createFromElementInSubselect() : creating a new FROM element..." );
 			fromElement = createFromElement( entityPersister );
-			initializeAndAddFromElement( fromElement,
+			initializeAndAddFromElement(
+					fromElement,
 					path,
 					classAlias,
 					entityPersister,
-					( EntityType ) ( ( Queryable ) entityPersister ).getType(),
+					(EntityType) ( (Queryable) entityPersister ).getType(),
 					tableAlias
 			);
 		}
@@ -162,31 +164,36 @@ public class FromElementFactory implements SqlTokenTypes {
 
 	private FromElement evaluateFromElementPath(String path, String classAlias) throws SemanticException {
 		ASTFactory factory = fromClause.getASTFactory();
-		FromReferenceNode pathNode = ( FromReferenceNode ) PathHelper.parsePath( path, factory );
-		pathNode.recursiveResolve( FromReferenceNode.ROOT_LEVEL, // This is the root level node.
-				false, // Generate an explicit from clause at the root.
+		FromReferenceNode pathNode = (FromReferenceNode) PathHelper.parsePath( path, factory );
+		pathNode.recursiveResolve(
+				// This is the root level node.
+				FromReferenceNode.ROOT_LEVEL,
+				// Generate an explicit from clause at the root.
+				false,
 				classAlias,
-		        null
+				null
 		);
-        if (pathNode.getImpliedJoin() != null) return pathNode.getImpliedJoin();
-        return pathNode.getFromElement();
+		if ( pathNode.getImpliedJoin() != null ) {
+			return pathNode.getImpliedJoin();
+		}
+		return pathNode.getFromElement();
 	}
 
 	FromElement createCollectionElementsJoin(
-	        QueryableCollection queryableCollection,
-	        String collectionName) throws SemanticException {
+			QueryableCollection queryableCollection,
+			String collectionName) throws SemanticException {
 		JoinSequence collectionJoinSequence = fromClause.getSessionFactoryHelper()
-		        .createCollectionJoinSequence( queryableCollection, collectionName );
+				.createCollectionJoinSequence( queryableCollection, collectionName );
 		this.queryableCollection = queryableCollection;
 		return createCollectionJoin( collectionJoinSequence, null );
 	}
 
 	public FromElement createCollection(
-	        QueryableCollection queryableCollection,
-	        String role,
-	        JoinType joinType,
-	        boolean fetchFlag,
-	        boolean indexed)
+			QueryableCollection queryableCollection,
+			String role,
+			JoinType joinType,
+			boolean fetchFlag,
+			boolean indexed)
 			throws SemanticException {
 		if ( !collection ) {
 			throw new IllegalStateException( "FromElementFactory not initialized for collections!" );
@@ -214,14 +221,17 @@ public class FromElementFactory implements SqlTokenTypes {
 		}
 
 		Type elementType = queryableCollection.getElementType();
-		if ( elementType.isEntityType() ) { 			// A collection of entities...
+		if ( elementType.isEntityType() ) {
+			// A collection of entities...
 			elem = createEntityAssociation( role, roleAlias, joinType );
 		}
-		else if ( elementType.isComponentType() ) {		// A collection of components...
+		else if ( elementType.isComponentType() ) {
+			// A collection of components...
 			JoinSequence joinSequence = createJoinSequence( roleAlias, joinType );
 			elem = createCollectionJoin( joinSequence, roleAlias );
 		}
-		else {											// A collection of scalar elements...
+		else {
+			// A collection of scalar elements...
 			JoinSequence joinSequence = createJoinSequence( roleAlias, joinType );
 			elem = createCollectionJoin( joinSequence, roleAlias );
 		}
@@ -234,7 +244,8 @@ public class FromElementFactory implements SqlTokenTypes {
 		}
 
 		if ( explicitSubqueryFromElement ) {
-			elem.setInProjectionList( true );	// Treat explict from elements in sub-queries properly.
+			// Treat explict from elements in sub-queries properly.
+			elem.setInProjectionList( true );
 		}
 
 		if ( fetchFlag ) {
@@ -244,13 +255,13 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	public FromElement createEntityJoin(
-	        String entityClass,
-	        String tableAlias,
-	        JoinSequence joinSequence,
-	        boolean fetchFlag,
-	        boolean inFrom,
-	        EntityType type,
-	        String role,
+			String entityClass,
+			String tableAlias,
+			JoinSequence joinSequence,
+			boolean fetchFlag,
+			boolean inFrom,
+			EntityType type,
+			String role,
 			String joinPath) throws SemanticException {
 		FromElement elem = createJoin( entityClass, tableAlias, joinSequence, type, false );
 		elem.setFetch( fetchFlag );
@@ -280,14 +291,14 @@ public class FromElementFactory implements SqlTokenTypes {
 			//          and 'elem' represents an implicit join
 			if ( elem.getFromClause() != elem.getOrigin().getFromClause() ||
 //			        ( implied && DotNode.useThetaStyleImplicitJoins ) ) {
-			        DotNode.useThetaStyleImplicitJoins ) {
+					DotNode.useThetaStyleImplicitJoins ) {
 				// the "root from-element" in correlated subqueries do need this piece
 				elem.setType( FROM_FRAGMENT );
 				joinSequence.setUseThetaStyle( true );
 				elem.setUseFromFragment( false );
 			}
 		}
-		
+
 		elem.setRole( role );
 
 		return elem;
@@ -322,9 +333,9 @@ public class FromElementFactory implements SqlTokenTypes {
 				associatedEntityName,
 				classAlias,
 				targetEntityPersister,
-				( EntityType ) queryableCollection.getElementType(),
+				(EntityType) queryableCollection.getElementType(),
 				tableAlias
-			);
+		);
 		// If the join is implied, then don't include sub-classes on the element.
 		if ( implied ) {
 			destination.setIncludeSubclasses( false );
@@ -343,59 +354,81 @@ public class FromElementFactory implements SqlTokenTypes {
 
 		// Create the join element under the from element.
 		JoinType joinType = JoinType.INNER_JOIN;
-		JoinSequence joinSequence = sfh.createJoinSequence( implied, elementAssociationType, tableAlias, joinType, targetColumns );
+		JoinSequence joinSequence = sfh.createJoinSequence(
+				implied,
+				elementAssociationType,
+				tableAlias,
+				joinType,
+				targetColumns
+		);
 		elem = initializeJoin( path, destination, joinSequence, targetColumns, origin, false );
-		elem.setUseFromFragment( true );	// The associated entity is implied, but it must be included in the FROM.
-		elem.setCollectionTableAlias( roleAlias );	// The collection alias is the role.
+		elem.setUseFromFragment( true );    // The associated entity is implied, but it must be included in the FROM.
+		elem.setCollectionTableAlias( roleAlias );    // The collection alias is the role.
 		return elem;
 	}
 
-	private FromElement createCollectionJoin(JoinSequence collectionJoinSequence, String tableAlias) throws SemanticException {
+	private FromElement createCollectionJoin(JoinSequence collectionJoinSequence, String tableAlias)
+			throws SemanticException {
 		String text = queryableCollection.getTableName();
 		AST ast = createFromElement( text );
-		FromElement destination = ( FromElement ) ast;
+		FromElement destination = (FromElement) ast;
 		Type elementType = queryableCollection.getElementType();
 		if ( elementType.isCollectionType() ) {
 			throw new SemanticException( "Collections of collections are not supported!" );
 		}
 		destination.initializeCollection( fromClause, classAlias, tableAlias );
-		destination.setType( JOIN_FRAGMENT );		// Tag this node as a JOIN.
-		destination.setIncludeSubclasses( false );	// Don't include subclasses in the join.
-		destination.setCollectionJoin( true );		// This is a clollection join.
+		destination.setType( JOIN_FRAGMENT );        // Tag this node as a JOIN.
+		destination.setIncludeSubclasses( false );    // Don't include subclasses in the join.
+		destination.setCollectionJoin( true );        // This is a clollection join.
 		destination.setJoinSequence( collectionJoinSequence );
 		destination.setOrigin( origin, false );
-		destination.setCollectionTableAlias(tableAlias);
+		destination.setCollectionTableAlias( tableAlias );
 //		origin.addDestination( destination );
 // This was the cause of HHH-242
 //		origin.setType( FROM_FRAGMENT );			// Set the parent node type so that the AST is properly formed.
-		origin.setText( "" );						// The destination node will have all the FROM text.
-		origin.setCollectionJoin( true );			// The parent node is a collection join too (voodoo - see JoinProcessor)
+		origin.setText( "" );                        // The destination node will have all the FROM text.
+		origin.setCollectionJoin( true );            // The parent node is a collection join too (voodoo - see JoinProcessor)
 		fromClause.addCollectionJoinFromElementByPath( path, destination );
 		fromClause.getWalker().addQuerySpaces( queryableCollection.getCollectionSpaces() );
 		return destination;
 	}
 
 	private FromElement createEntityAssociation(
-	        String role,
-	        String roleAlias,
-	        JoinType joinType) throws SemanticException {
+			String role,
+			String roleAlias,
+			JoinType joinType) throws SemanticException {
 		FromElement elem;
-		Queryable entityPersister = ( Queryable ) queryableCollection.getElementPersister();
+		Queryable entityPersister = (Queryable) queryableCollection.getElementPersister();
 		String associatedEntityName = entityPersister.getEntityName();
 		// Get the class name of the associated entity.
 		if ( queryableCollection.isOneToMany() ) {
-			LOG.debugf( "createEntityAssociation() : One to many - path = %s role = %s associatedEntityName = %s",
+			LOG.debugf(
+					"createEntityAssociation() : One to many - path = %s role = %s associatedEntityName = %s",
 					path,
 					role,
-					associatedEntityName );
+					associatedEntityName
+			);
 			JoinSequence joinSequence = createJoinSequence( roleAlias, joinType );
 
-			elem = createJoin( associatedEntityName, roleAlias, joinSequence, ( EntityType ) queryableCollection.getElementType(), false );
+			elem = createJoin(
+					associatedEntityName,
+					roleAlias,
+					joinSequence,
+					(EntityType) queryableCollection.getElementType(),
+					false
+			);
 		}
 		else {
-			LOG.debugf( "createManyToMany() : path = %s role = %s associatedEntityName = %s", path, role, associatedEntityName );
-			elem = createManyToMany( role, associatedEntityName,
-					roleAlias, entityPersister, ( EntityType ) queryableCollection.getElementType(), joinType );
+			LOG.debugf(
+					"createManyToMany() : path = %s role = %s associatedEntityName = %s",
+					path,
+					role,
+					associatedEntityName
+			);
+			elem = createManyToMany(
+					role, associatedEntityName,
+					roleAlias, entityPersister, (EntityType) queryableCollection.getElementType(), joinType
+			);
 			fromClause.getWalker().addQuerySpaces( queryableCollection.getCollectionSpaces() );
 		}
 		elem.setCollectionTableAlias( roleAlias );
@@ -403,28 +436,30 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private FromElement createJoin(
-	        String entityClass,
-	        String tableAlias,
-	        JoinSequence joinSequence,
-	        EntityType type,
-	        boolean manyToMany) throws SemanticException {
+			String entityClass,
+			String tableAlias,
+			JoinSequence joinSequence,
+			EntityType type,
+			boolean manyToMany) throws SemanticException {
 		//  origin, path, implied, columns, classAlias,
 		EntityPersister entityPersister = fromClause.getSessionFactoryHelper().requireClassPersister( entityClass );
-		FromElement destination = createAndAddFromElement( entityClass,
+		FromElement destination = createAndAddFromElement(
+				entityClass,
 				classAlias,
 				entityPersister,
 				type,
-				tableAlias );
+				tableAlias
+		);
 		return initializeJoin( path, destination, joinSequence, getColumns(), origin, manyToMany );
 	}
 
 	private FromElement createManyToMany(
-	        String role,
-	        String associatedEntityName,
-	        String roleAlias,
-	        Queryable entityPersister,
-	        EntityType type,
-	        JoinType joinType) throws SemanticException {
+			String role,
+			String associatedEntityName,
+			String roleAlias,
+			Queryable entityPersister,
+			EntityType type,
+			JoinType joinType) throws SemanticException {
 		FromElement elem;
 		SessionFactoryHelper sfh = fromClause.getSessionFactoryHelper();
 		if ( inElementsFunction /*implied*/ ) {
@@ -440,7 +475,12 @@ public class FromElementFactory implements SqlTokenTypes {
 			String[] secondJoinColumns = sfh.getCollectionElementColumns( role, roleAlias );
 			// Add the second join, the one that ends in the destination table.
 			JoinSequence joinSequence = createJoinSequence( roleAlias, joinType );
-			joinSequence.addJoin( sfh.getElementAssociationType( collectionType ), tableAlias, joinType, secondJoinColumns );
+			joinSequence.addJoin(
+					sfh.getElementAssociationType( collectionType ),
+					tableAlias,
+					joinType,
+					secondJoinColumns
+			);
 			elem = createJoin( associatedEntityName, tableAlias, joinSequence, type, false );
 			elem.setUseFromFragment( true );
 		}
@@ -457,11 +497,11 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private FromElement createAndAddFromElement(
-	        String className,
-	        String classAlias,
-	        EntityPersister entityPersister,
-	        EntityType type,
-	        String tableAlias) {
+			String className,
+			String classAlias,
+			EntityPersister entityPersister,
+			EntityType type,
+			String tableAlias) {
 		if ( !( entityPersister instanceof Joinable ) ) {
 			throw new IllegalArgumentException( "EntityPersister " + entityPersister + " does not implement Joinable!" );
 		}
@@ -471,12 +511,12 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private void initializeAndAddFromElement(
-	        FromElement element,
-	        String className,
-	        String classAlias,
-	        EntityPersister entityPersister,
-	        EntityType type,
-	        String tableAlias) {
+			FromElement element,
+			String className,
+			String classAlias,
+			EntityPersister entityPersister,
+			EntityType type,
+			String tableAlias) {
 		if ( tableAlias == null ) {
 			AliasGenerator aliasGenerator = fromClause.getAliasGenerator();
 			tableAlias = aliasGenerator.createName( entityPersister.getEntityName() );
@@ -485,17 +525,19 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private FromElement createFromElement(EntityPersister entityPersister) {
-		Joinable joinable = ( Joinable ) entityPersister;
+		Joinable joinable = (Joinable) entityPersister;
 		String text = joinable.getTableName();
 		AST ast = createFromElement( text );
-		FromElement element = ( FromElement ) ast;
+		FromElement element = (FromElement) ast;
 		return element;
 	}
 
 	private AST createFromElement(String text) {
-		AST ast = ASTUtil.create( fromClause.getASTFactory(),
+		AST ast = ASTUtil.create(
+				fromClause.getASTFactory(),
 				implied ? IMPLIED_FROM : FROM_FRAGMENT, // This causes the factory to instantiate the desired class.
-				text );
+				text
+		);
 		// Reset the node type, because the rest of the system is expecting FROM_FRAGMENT, all we wanted was
 		// for the factory to create the right sub-class.  This might get reset again later on anyway to make the
 		// SQL generation simpler.
@@ -504,12 +546,12 @@ public class FromElementFactory implements SqlTokenTypes {
 	}
 
 	private FromElement initializeJoin(
-	        String path,
-	        FromElement destination,
-	        JoinSequence joinSequence,
-	        String[] columns,
-	        FromElement origin,
-	        boolean manyToMany) {
+			String path,
+			FromElement destination,
+			JoinSequence joinSequence,
+			String[] columns,
+			FromElement origin,
+			boolean manyToMany) {
 		destination.setType( JOIN_FRAGMENT );
 		destination.setJoinSequence( joinSequence );
 		destination.setColumns( columns );

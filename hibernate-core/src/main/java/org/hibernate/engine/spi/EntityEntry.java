@@ -52,13 +52,15 @@ public final class EntityEntry implements Serializable {
 	private Object[] deletedState;
 	private boolean existsInDatabase;
 	private Object version;
-	private transient EntityPersister persister; // for convenience to save some lookups
+	private transient EntityPersister persister;
 	private final EntityMode entityMode;
 	private final String tenantId;
 	private final String entityName;
-	private transient EntityKey cachedEntityKey; // cached EntityKey (lazy-initialized)
+	// cached EntityKey (lazy-initialized)
+	private transient EntityKey cachedEntityKey;
 	private boolean isBeingReplicated;
-	private boolean loadedWithLazyPropertiesUnfetched; //NOTE: this is not updated when properties are fetched lazily!
+	//NOTE: this is not updated when properties are fetched lazily!
+	private boolean loadedWithLazyPropertiesUnfetched;
 	private final transient Object rowId;
 	private final transient PersistenceContext persistenceContext;
 
@@ -130,7 +132,8 @@ public final class EntityEntry implements Serializable {
 		this.existsInDatabase = existsInDatabase;
 		this.isBeingReplicated = isBeingReplicated;
 		this.loadedWithLazyPropertiesUnfetched = loadedWithLazyPropertiesUnfetched;
-		this.rowId = null; // this is equivalent to the old behavior...
+		// this is equivalent to the old behavior...
+		this.rowId = null;
 		this.persistenceContext = persistenceContext;
 	}
 
@@ -147,8 +150,9 @@ public final class EntityEntry implements Serializable {
 	}
 
 	public void setStatus(Status status) {
-		if (status==Status.READ_ONLY) {
-			loadedState = null; //memory optimization
+		if ( status == Status.READ_ONLY ) {
+			//memory optimization
+			loadedState = null;
 		}
 		if ( this.status != status ) {
 			this.previousStatus = this.status;
@@ -236,8 +240,10 @@ public final class EntityEntry implements Serializable {
 				interceptor.clearDirty();
 			}
 		}
-		if( entity instanceof SelfDirtinessTracker)
+
+		if( entity instanceof SelfDirtinessTracker) {
 			((SelfDirtinessTracker) entity).$$_hibernate_clearDirtyAttributes();
+		}
 
 		persistenceContext.getSession()
 				.getFactory()
@@ -264,12 +270,15 @@ public final class EntityEntry implements Serializable {
 	}
 
 	public boolean isNullifiable(boolean earlyInsert, SessionImplementor session) {
-		return getStatus() == Status.SAVING || (
-				earlyInsert ?
-						!isExistsInDatabase() :
-						session.getPersistenceContext().getNullifiableEntityKeys()
-							.contains( getEntityKey() )
-				);
+		if ( getStatus() == Status.SAVING ) {
+			return true;
+		}
+		else if ( earlyInsert ) {
+			return !isExistsInDatabase();
+		}
+		else {
+			return session.getPersistenceContext().getNullifiableEntityKeys().contains( getEntityKey() );
+		}
 	}
 
 	public Object getLoadedValue(String propertyName) {
@@ -277,8 +286,7 @@ public final class EntityEntry implements Serializable {
 			return null;
 		}
 		else {
-			int propertyIndex = ( (UniqueKeyLoadable) persister )
-					.getPropertyIndex( propertyName );
+			int propertyIndex = ( (UniqueKeyLoadable) persister ).getPropertyIndex( propertyName );
 			return loadedState[propertyIndex];
 		}
 	}
@@ -297,7 +305,7 @@ public final class EntityEntry implements Serializable {
 	 */
 	public boolean requiresDirtyCheck(Object entity) {
 		return isModifiableEntity()
-				&& ( ! isUnequivocallyNonDirty( entity ) );
+				&& ( !isUnequivocallyNonDirty( entity ) );
 	}
 
 	@SuppressWarnings( {"SimplifiableIfStatement"})
@@ -344,14 +352,15 @@ public final class EntityEntry implements Serializable {
 	public void forceLocked(Object entity, Object nextVersion) {
 		version = nextVersion;
 		loadedState[ persister.getVersionProperty() ] = version;
+		// TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
 		//noinspection deprecation
-		setLockMode( LockMode.FORCE );  // TODO:  use LockMode.PESSIMISTIC_FORCE_INCREMENT
+		setLockMode( LockMode.FORCE );
 		persister.setPropertyValue( entity, getPersister().getVersionProperty(), nextVersion );
 	}
 
 	public boolean isReadOnly() {
-		if (status != Status.MANAGED && status != Status.READ_ONLY) {
-			throw new HibernateException("instance was not in a valid state");
+		if ( status != Status.MANAGED && status != Status.READ_ONLY ) {
+			throw new HibernateException( "instance was not in a valid state" );
 		}
 		return status == Status.READ_ONLY;
 	}
@@ -381,10 +390,9 @@ public final class EntityEntry implements Serializable {
 		}
 	}
 
+	@Override
 	public String toString() {
-		return "EntityEntry" + 
-				MessageHelper.infoString(entityName, id) + 
-				'(' + status + ')';
+		return "EntityEntry" + MessageHelper.infoString( entityName, id ) + '(' + status + ')';
 	}
 
 	public boolean isLoadedWithLazyPropertiesUnfetched() {
@@ -434,19 +442,17 @@ public final class EntityEntry implements Serializable {
 			PersistenceContext persistenceContext) throws IOException, ClassNotFoundException {
 		String previousStatusString;
 		return new EntityEntry(
-				// this complexity comes from non-flushed changes, should really look at how that reattaches entries
-				( persistenceContext.getSession() == null ? null : persistenceContext.getSession().getFactory() ),
+				persistenceContext.getSession().getFactory(),
 				(String) ois.readObject(),
-				( Serializable ) ois.readObject(),
+				(Serializable) ois.readObject(),
 				EntityMode.parse( (String) ois.readObject() ),
 				(String) ois.readObject(),
 				Status.valueOf( (String) ois.readObject() ),
-				( ( previousStatusString = ( String ) ois.readObject() ).length() == 0 ?
-							null :
-							Status.valueOf( previousStatusString )
-				),
-				( Object[] ) ois.readObject(),
-				( Object[] ) ois.readObject(),
+				( previousStatusString = (String) ois.readObject() ).length() == 0
+						? null
+						: Status.valueOf( previousStatusString ),
+				(Object[]) ois.readObject(),
+				(Object[]) ois.readObject(),
 				ois.readObject(),
 				LockMode.valueOf( (String) ois.readObject() ),
 				ois.readBoolean(),

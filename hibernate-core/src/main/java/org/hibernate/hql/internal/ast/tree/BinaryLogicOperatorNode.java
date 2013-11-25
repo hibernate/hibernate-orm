@@ -50,11 +50,12 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	 */
 	@Override
 	public void initialize() throws SemanticException {
-		Node lhs = getLeftHandOperand();
+		final Node lhs = getLeftHandOperand();
 		if ( lhs == null ) {
 			throw new SemanticException( "left-hand operand of a binary operator was null" );
 		}
-		Node rhs = getRightHandOperand();
+
+		final Node rhs = getRightHandOperand();
 		if ( rhs == null ) {
 			throw new SemanticException( "right-hand operand of a binary operator was null" );
 		}
@@ -70,10 +71,10 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 		}
 
 		if ( ExpectedTypeAwareNode.class.isAssignableFrom( lhs.getClass() ) ) {
-			( ( ExpectedTypeAwareNode ) lhs ).setExpectedType( rhsType );
+			( (ExpectedTypeAwareNode) lhs ).setExpectedType( rhsType );
 		}
 		if ( ExpectedTypeAwareNode.class.isAssignableFrom( rhs.getClass() ) ) {
-			( ( ExpectedTypeAwareNode ) rhs ).setExpectedType( lhsType );
+			( (ExpectedTypeAwareNode) rhs ).setExpectedType( lhsType );
 		}
 
 		mutateRowValueConstructorSyntaxesIfNecessary( lhsType, rhsType );
@@ -89,7 +90,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 			if ( lhsColumnSpan != getColumnSpan( rhsType, sessionFactory ) ) {
 				throw new TypeMismatchException(
 						"left and right hand sides of a binary logic operator were incompatibile [" +
-						lhsType.getName() + " : "+ rhsType.getName() + "]"
+								lhsType.getName() + " : " + rhsType.getName() + "]"
 				);
 			}
 			if ( lhsColumnSpan > 1 ) {
@@ -105,7 +106,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	private int getColumnSpan(Type type, SessionFactoryImplementor sfi) {
 		int columnSpan = type.getColumnSpan( sfi );
 		if ( columnSpan == 0 && type instanceof OneToOneType ) {
-			columnSpan = ( ( OneToOneType ) type ).getIdentifierOrUniqueKeyType( sfi ).getColumnSpan( sfi );
+			columnSpan = ( (OneToOneType) type ).getIdentifierOrUniqueKeyType( sfi ).getColumnSpan( sfi );
 		}
 		return columnSpan;
 	}
@@ -205,11 +206,11 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 			return rtn;
 		}
 		else if ( operand.getType() == HqlSqlTokenTypes.VECTOR_EXPR ) {
-			String[] rtn = new String[ operand.getNumberOfChildren() ];
+			String[] rtn = new String[operand.getNumberOfChildren()];
 			int x = 0;
 			AST node = operand.getFirstChild();
 			while ( node != null ) {
-				rtn[ x++ ] = node.getText();
+				rtn[x++] = node.getText();
 				node = node.getNextSibling();
 			}
 			return rtn;
@@ -245,7 +246,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	}
 
 	@Override
-    public Type getDataType() {
+	public Type getDataType() {
 		// logic operators by definition resolve to booleans
 		return StandardBasicTypes.BOOLEAN;
 	}
@@ -256,7 +257,7 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	 * @return The left-hand operand
 	 */
 	public Node getLeftHandOperand() {
-		return ( Node ) getFirstChild();
+		return (Node) getFirstChild();
 	}
 
 	/**
@@ -265,6 +266,6 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	 * @return The right-hand operand
 	 */
 	public Node getRightHandOperand() {
-		return ( Node ) getFirstChild().getNextSibling();
+		return (Node) getFirstChild().getNextSibling();
 	}
 }

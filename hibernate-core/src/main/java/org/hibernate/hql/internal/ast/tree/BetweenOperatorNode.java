@@ -36,50 +36,54 @@ import antlr.SemanticException;
 public class BetweenOperatorNode extends SqlNode implements OperatorNode {
 
 	public void initialize() throws SemanticException {
-		Node fixture = getFixtureOperand();
+		final Node fixture = getFixtureOperand();
 		if ( fixture == null ) {
 			throw new SemanticException( "fixture operand of a between operator was null" );
 		}
-		Node low = getLowOperand();
+
+		final Node low = getLowOperand();
 		if ( low == null ) {
 			throw new SemanticException( "low operand of a between operator was null" );
 		}
-		Node high = getHighOperand();
+
+		final Node high = getHighOperand();
 		if ( high == null ) {
 			throw new SemanticException( "high operand of a between operator was null" );
 		}
+
 		check( fixture, low, high );
 		check( low, high, fixture );
 		check( high, fixture, low );
 	}
 
+	@Override
 	public Type getDataType() {
 		// logic operators by definition resolve to boolean.
 		return StandardBasicTypes.BOOLEAN;
 	}
 
 	public Node getFixtureOperand() {
-		return ( Node ) getFirstChild();
+		return (Node) getFirstChild();
 	}
 
 	public Node getLowOperand() {
-		return ( Node ) getFirstChild().getNextSibling();
+		return (Node) getFirstChild().getNextSibling();
 	}
 
 	public Node getHighOperand() {
-		return ( Node ) getFirstChild().getNextSibling().getNextSibling();
+		return (Node) getFirstChild().getNextSibling().getNextSibling();
 	}
 
 	private void check(Node check, Node first, Node second) {
 		if ( ExpectedTypeAwareNode.class.isAssignableFrom( check.getClass() ) ) {
 			Type expectedType = null;
 			if ( SqlNode.class.isAssignableFrom( first.getClass() ) ) {
-				expectedType = ( ( SqlNode ) first ).getDataType();
+				expectedType = ( (SqlNode) first ).getDataType();
 			}
 			if ( expectedType == null && SqlNode.class.isAssignableFrom( second.getClass() ) ) {
-				expectedType = ( ( SqlNode ) second ).getDataType();
+				expectedType = ( (SqlNode) second ).getDataType();
 			}
-			( ( ExpectedTypeAwareNode ) check ).setExpectedType( expectedType );
+			( (ExpectedTypeAwareNode) check ).setExpectedType( expectedType );
 		}
 	}
 }

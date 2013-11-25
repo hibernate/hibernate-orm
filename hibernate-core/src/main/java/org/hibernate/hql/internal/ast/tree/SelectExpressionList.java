@@ -40,7 +40,7 @@ import antlr.collections.AST;
 public abstract class SelectExpressionList extends HqlSqlWalkerNode {
 
 	private List<Integer> parameterPositions = new ArrayList<Integer>();
-	
+
 	/**
 	 * Returns an array of SelectExpressions gathered from the children of the given parent AST node.
 	 *
@@ -50,22 +50,24 @@ public abstract class SelectExpressionList extends HqlSqlWalkerNode {
 		// Get the first child to be considered.  Sub-classes may do this differently in order to skip nodes that
 		// are not select expressions (e.g. DISTINCT).
 		AST firstChild = getFirstSelectExpression();
-		AST parent = this;
-		ArrayList list = new ArrayList( parent.getNumberOfChildren() );
+		ArrayList<SelectExpression> list = new ArrayList<SelectExpression>();
 		int p = 0;
 		for ( AST n = firstChild; n != null; n = n.getNextSibling() ) {
 			if ( n instanceof SelectExpression ) {
-				list.add( n );
+				list.add( (SelectExpression) n );
 			}
-			else if( n instanceof ParameterNode ) {
-				parameterPositions.add(p);
+			else if ( n instanceof ParameterNode ) {
+				parameterPositions.add( p );
 			}
 			else {
-				throw new IllegalStateException( "Unexpected AST: " + n.getClass().getName() + " " + new ASTPrinter( SqlTokenTypes.class ).showAsString( n, "" ) );
+				throw new IllegalStateException(
+						"Unexpected AST: " + n.getClass().getName() + " "
+								+ new ASTPrinter( SqlTokenTypes.class ).showAsString( n, "" )
+				);
 			}
 			p++;
 		}
-		return ( SelectExpression[] ) list.toArray( new SelectExpression[list.size()] );
+		return list.toArray( new SelectExpression[list.size()] );
 	}
 
 	/**

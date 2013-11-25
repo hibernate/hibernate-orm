@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.internal.ast.util;
+
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -34,8 +34,9 @@ import antlr.collections.AST;
  * @author josh
  */
 public class ASTParentsFirstIterator implements Iterator {
-	private AST next, current, tree;
-	private LinkedList parents = new LinkedList();
+	private AST next;
+	private AST tree;
+	private LinkedList<AST> parents = new LinkedList<AST>();
 
 	public void remove() {
 		throw new UnsupportedOperationException( "remove() is not supported" );
@@ -54,15 +55,16 @@ public class ASTParentsFirstIterator implements Iterator {
 	}
 
 	public AST nextNode() {
-		current = next;
+		AST current = next;
 		if ( next != null ) {
 			AST child = next.getFirstChild();
 			if ( child == null ) {
 				AST sibling = next.getNextSibling();
 				if ( sibling == null ) {
 					AST parent = pop();
-					while ( parent != null && parent.getNextSibling() == null )
+					while ( parent != null && parent.getNextSibling() == null ) {
 						parent = pop();
+					}
 					next = ( parent != null ) ? parent.getNextSibling() : null;
 				}
 				else {
@@ -88,7 +90,7 @@ public class ASTParentsFirstIterator implements Iterator {
 			return null;
 		}
 		else {
-			return ( AST ) parents.removeFirst();
+			return parents.removeFirst();
 		}
 	}
 

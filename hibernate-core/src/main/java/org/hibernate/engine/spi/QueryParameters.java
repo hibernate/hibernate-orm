@@ -316,8 +316,8 @@ public final class QueryParameters {
 	}
 
 	public void validateParameters() throws QueryException {
-		int types = positionalParameterTypes == null ? 0 : positionalParameterTypes.length;
-		int values = positionalParameterValues == null ? 0 : positionalParameterValues.length;
+		final int types = positionalParameterTypes == null ? 0 : positionalParameterTypes.length;
+		final int values = positionalParameterValues == null ? 0 : positionalParameterValues.length;
 		if ( types != values ) {
 			throw new QueryException(
 					"Number of positional parameter types:" + types +
@@ -413,7 +413,7 @@ public final class QueryParameters {
 	 * initialized (i.e., isReadOnlyInitialized() == false).
 	 */
 	public boolean isReadOnly() {
-		if ( ! isReadOnlyInitialized() ) {
+		if ( !isReadOnlyInitialized() ) {
 			throw new IllegalStateException( "cannot call isReadOnly() when isReadOnlyInitialized() returns false" );
 		}
 		return readOnly;
@@ -491,13 +491,10 @@ public final class QueryParameters {
 		}
 		else {
 			final Dialect dialect = factory.getDialect();
-			String symbols = new StringBuilder().append( ParserHelper.HQL_SEPARATORS )
-					.append( dialect.openQuote() )
-					.append( dialect.closeQuote() )
-					.toString();
-			StringTokenizer tokens = new StringTokenizer( sql, symbols, true );
-			StringBuilder result = new StringBuilder();
+			final String symbols = ParserHelper.HQL_SEPARATORS + dialect.openQuote() + dialect.closeQuote();
+			final StringTokenizer tokens = new StringTokenizer( sql, symbols, true );
 
+			StringBuilder result = new StringBuilder();
 			List parameters = new ArrayList();
 			List parameterTypes = new ArrayList();
 
@@ -507,13 +504,13 @@ public final class QueryParameters {
 				if ( token.startsWith( ParserHelper.HQL_VARIABLE_PREFIX ) ) {
 					final String filterParameterName = token.substring( 1 );
 					final String[] parts = LoadQueryInfluencers.parseFilterParameterName( filterParameterName );
-					final FilterImpl filter = ( FilterImpl ) filters.get( parts[0] );
+					final FilterImpl filter = (FilterImpl) filters.get( parts[0] );
 					final Object value = filter.getParameter( parts[1] );
 					final Type type = filter.getFilterDefinition().getParameterType( parts[1] );
 					if ( value != null && Collection.class.isAssignableFrom( value.getClass() ) ) {
-						Iterator itr = ( ( Collection ) value ).iterator();
+						Iterator itr = ( (Collection) value ).iterator();
 						while ( itr.hasNext() ) {
-							Object elementValue = itr.next();
+							final Object elementValue = itr.next();
 							result.append( '?' );
 							parameters.add( elementValue );
 							parameterTypes.add( type );

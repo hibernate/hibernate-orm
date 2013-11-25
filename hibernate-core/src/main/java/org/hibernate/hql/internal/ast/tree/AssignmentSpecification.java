@@ -68,21 +68,17 @@ public class AssignmentSpecification {
 		// knows about the property-ref path in the correct format; it is either this, or
 		// recurse over the DotNodes constructing the property path just like DotNode does
 		// internally
-		DotNode lhs = ( DotNode ) eq.getFirstChild();
-		SqlNode rhs = ( SqlNode ) lhs.getNextSibling();
+		final DotNode lhs = (DotNode) eq.getFirstChild();
+		final SqlNode rhs = (SqlNode) lhs.getNextSibling();
 
 		validateLhs( lhs );
 
 		final String propertyPath = lhs.getPropertyPath();
-		Set temp = new HashSet();
+		Set<String> temp = new HashSet<String>();
 		// yuck!
 		if ( persister instanceof UnionSubclassEntityPersister ) {
-			UnionSubclassEntityPersister usep = ( UnionSubclassEntityPersister ) persister;
-			String[] tables = persister.getConstraintOrderedTableNameClosure();
-			int size = tables.length;
-			for ( int i = 0; i < size; i ++ ) {
-				temp.add( tables[i] );
-			}
+			final String[] tables = persister.getConstraintOrderedTableNameClosure();
+			Collections.addAll( temp, tables );
 		}
 		else {
 			temp.add(
@@ -91,11 +87,11 @@ public class AssignmentSpecification {
 		}
 		this.tableNames = Collections.unmodifiableSet( temp );
 
-		if (rhs==null) {
+		if ( rhs == null ) {
 			hqlParameters = new ParameterSpecification[0];
 		}
 		else if ( isParam( rhs ) ) {
-			hqlParameters = new ParameterSpecification[] { ( (ParameterNode) rhs ).getHqlParameterSpecification() };
+			hqlParameters = new ParameterSpecification[] {( (ParameterNode) rhs ).getHqlParameterSpecification()};
 		}
 		else {
 			List parameterList = ASTUtil.collectChildren(
@@ -106,10 +102,10 @@ public class AssignmentSpecification {
 						}
 					}
 			);
-			hqlParameters = new ParameterSpecification[ parameterList.size() ];
+			hqlParameters = new ParameterSpecification[parameterList.size()];
 			Iterator itr = parameterList.iterator();
 			int i = 0;
-			while( itr.hasNext() ) {
+			while ( itr.hasNext() ) {
 				hqlParameters[i++] = ( (ParameterNode) itr.next() ).getHqlParameterSpecification();
 			}
 		}
@@ -127,10 +123,13 @@ public class AssignmentSpecification {
 		if ( sqlAssignmentString == null ) {
 			try {
 				SqlGenerator sqlGenerator = new SqlGenerator( factory );
-				sqlGenerator.comparisonExpr( eq, false );  // false indicates to not generate parens around the assignment
+				sqlGenerator.comparisonExpr(
+						eq,
+						false
+				);  // false indicates to not generate parens around the assignment
 				sqlAssignmentString = sqlGenerator.getSQL();
 			}
-			catch( Throwable t ) {
+			catch (Throwable t) {
 				throw new QueryException( "cannot interpret set-clause assignment" );
 			}
 		}

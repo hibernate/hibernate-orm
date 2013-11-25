@@ -36,7 +36,7 @@ import antlr.collections.AST;
  * @author josh
  */
 public abstract class FromReferenceNode extends AbstractSelectExpression
-        implements ResolvableNode, DisplayableNode, InitializeableNode, PathNode {
+		implements ResolvableNode, DisplayableNode, InitializeableNode, PathNode {
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FromReferenceNode.class );
 
@@ -46,7 +46,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 	public static final int ROOT_LEVEL = 0;
 
 	@Override
-    public FromElement getFromElement() {
+	public FromElement getFromElement() {
 		return fromElement;
 	}
 
@@ -62,6 +62,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 	public void resolveFirstChild() throws SemanticException {
 	}
 
+	@Override
 	public String getPath() {
 		return getOriginalText();
 	}
@@ -77,6 +78,7 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 		}
 	}
 
+	@Override
 	public String getDisplayText() {
 		StringBuilder buf = new StringBuilder();
 		buf.append( "{" ).append( ( fromElement == null ) ? "no fromElement" : fromElement.getDisplayText() );
@@ -88,11 +90,12 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 		recursiveResolve( level, impliedAtRoot, classAlias, this );
 	}
 
-	public void recursiveResolve(int level, boolean impliedAtRoot, String classAlias, AST parent) throws SemanticException {
+	public void recursiveResolve(int level, boolean impliedAtRoot, String classAlias, AST parent)
+			throws SemanticException {
 		AST lhs = getFirstChild();
 		int nextLevel = level + 1;
 		if ( lhs != null ) {
-			FromReferenceNode n = ( FromReferenceNode ) lhs;
+			FromReferenceNode n = (FromReferenceNode) lhs;
 			n.recursiveResolve( nextLevel, impliedAtRoot, null, this );
 		}
 		resolveFirstChild();
@@ -104,18 +107,21 @@ public abstract class FromReferenceNode extends AbstractSelectExpression
 	}
 
 	@Override
-    public boolean isReturnableEntity() throws SemanticException {
+	public boolean isReturnableEntity() throws SemanticException {
 		return !isScalar() && fromElement.isEntity();
 	}
 
+	@Override
 	public void resolveInFunctionCall(boolean generateJoin, boolean implicitJoin) throws SemanticException {
 		resolve( generateJoin, implicitJoin );
 	}
 
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin) throws SemanticException {
 		resolve( generateJoin, implicitJoin, null );
 	}
 
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias) throws SemanticException {
 		resolve( generateJoin, implicitJoin, classAlias, null );
 	}

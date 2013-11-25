@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,7 +20,6 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.internal.ast.util;
 
@@ -58,7 +57,7 @@ public class ASTPrinter {
 	}
 
 	public ASTPrinter(boolean showClassNames) {
-		this( ( Map ) null, showClassNames );
+		this( (Map) null, showClassNames );
 	}
 
 	/**
@@ -120,7 +119,7 @@ public class ASTPrinter {
 	 * @param pw The print writer to which the AST should be written.
 	 */
 	public void showAst(AST ast, PrintWriter pw) {
-		ArrayList parents = new ArrayList();
+		ArrayList<AST> parents = new ArrayList<AST>();
 		showAst( parents, pw, ast );
 		pw.flush();
 	}
@@ -129,6 +128,7 @@ public class ASTPrinter {
 	 * Returns the token type name for the given token type.
 	 *
 	 * @param type The token type.
+	 *
 	 * @return String - The token type name from the token type constant class,
 	 *         or just the integer as a string if none exists.
 	 */
@@ -136,7 +136,7 @@ public class ASTPrinter {
 		final Integer typeInteger = type;
 		String value = null;
 		if ( tokenTypeNameCache != null ) {
-			value = ( String ) tokenTypeNameCache.get( typeInteger );
+			value = (String) tokenTypeNameCache.get( typeInteger );
 		}
 		if ( value == null ) {
 			value = typeInteger.toString();
@@ -144,14 +144,13 @@ public class ASTPrinter {
 		return value;
 	}
 
-	private void showAst(ArrayList parents, PrintWriter pw, AST ast) {
+	private void showAst(ArrayList<AST> parents, PrintWriter pw, AST ast) {
 		if ( ast == null ) {
 			pw.println( "AST is null!" );
 			return;
 		}
 
-		for ( int i = 0; i < parents.size(); i++ ) {
-			AST parent = ( AST ) parents.get( i );
+		for ( AST parent : parents ) {
 			if ( parent.getNextSibling() == null ) {
 
 				pw.print( "   " );
@@ -170,7 +169,7 @@ public class ASTPrinter {
 
 		showNode( pw, ast );
 
-		ArrayList newParents = new ArrayList( parents );
+		ArrayList<AST> newParents = new ArrayList<AST>( parents );
 		newParents.add( ast );
 		for ( AST child = ast.getFirstChild(); child != null; child = child.getNextSibling() ) {
 			showAst( newParents, pw, child );
@@ -193,37 +192,37 @@ public class ASTPrinter {
 			buf.append( StringHelper.unqualify( ast.getClass().getName() ) ).append( ": " );
 		}
 
-        buf.append( "'" );
-        String text = ast.getText();
+		buf.append( "'" );
+		String text = ast.getText();
 		if ( text == null ) {
 			text = "{text:null}";
 		}
-		appendEscapedMultibyteChars(text, buf);
-        buf.append( "'" );
+		appendEscapedMultibyteChars( text, buf );
+		buf.append( "'" );
 		if ( ast instanceof DisplayableNode ) {
-			DisplayableNode displayableNode = ( DisplayableNode ) ast;
+			DisplayableNode displayableNode = (DisplayableNode) ast;
 			// Add a space before the display text.
 			buf.append( " " ).append( displayableNode.getDisplayText() );
 		}
 		return buf.toString();
 	}
 
-    public static void appendEscapedMultibyteChars(String text, StringBuilder buf) {
-        char[] chars = text.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            char aChar = chars[i];
-            if (aChar > 256) {
-                buf.append("\\u");
-                buf.append(Integer.toHexString(aChar));
-            }
-            else
-                buf.append(aChar);
-        }
-    }
+	public static void appendEscapedMultibyteChars(String text, StringBuilder buf) {
+		char[] chars = text.toCharArray();
+		for ( char aChar : chars ) {
+			if ( aChar > 256 ) {
+				buf.append( "\\u" );
+				buf.append( Integer.toHexString( aChar ) );
+			}
+			else {
+				buf.append( aChar );
+			}
+		}
+	}
 
-    public static String escapeMultibyteChars(String text) {
-    	StringBuilder buf = new StringBuilder();
-        appendEscapedMultibyteChars(text,buf);
-        return buf.toString();
-    }
+	public static String escapeMultibyteChars(String text) {
+		StringBuilder buf = new StringBuilder();
+		appendEscapedMultibyteChars( text, buf );
+		return buf.toString();
+	}
 }

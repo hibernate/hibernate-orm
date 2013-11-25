@@ -133,8 +133,8 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Object getFilterParameterValue(String filterParameterName) {
-		String[] parsed = parseFilterParameterName( filterParameterName );
-		FilterImpl filter = ( FilterImpl ) enabledFilters.get( parsed[0] );
+		final String[] parsed = parseFilterParameterName( filterParameterName );
+		final FilterImpl filter = (FilterImpl) enabledFilters.get( parsed[0] );
 		if ( filter == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] currently not enabled" );
 		}
@@ -142,12 +142,12 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Type getFilterParameterType(String filterParameterName) {
-		String[] parsed = parseFilterParameterName( filterParameterName );
-		FilterDefinition filterDef = sessionFactory.getFilterDefinition( parsed[0] );
+		final String[] parsed = parseFilterParameterName( filterParameterName );
+		final FilterDefinition filterDef = sessionFactory.getFilterDefinition( parsed[0] );
 		if ( filterDef == null ) {
 			throw new IllegalArgumentException( "Filter [" + parsed[0] + "] not defined" );
 		}
-		Type type = filterDef.getParameterType( parsed[1] );
+		final Type type = filterDef.getParameterType( parsed[1] );
 		if ( type == null ) {
 			// this is an internal error of some sort...
 			throw new InternalError( "Unable to locate type for filter parameter" );
@@ -160,8 +160,8 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( dot <= 0 ) {
 			throw new IllegalArgumentException( "Invalid filter-parameter name format" );
 		}
-		String filterName = filterParameterName.substring( 0, dot );
-		String parameterName = filterParameterName.substring( dot + 1 );
+		final String filterName = filterParameterName.substring( 0, dot );
+		final String parameterName = filterParameterName.substring( dot + 1 );
 		return new String[] { filterName, parameterName };
 	}
 

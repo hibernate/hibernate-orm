@@ -34,8 +34,8 @@ import antlr.collections.AST;
  * @author josh
  */
 public class ASTIterator implements Iterator {
-	private AST next, current;
-	private LinkedList parents = new LinkedList();
+	private AST next;
+	private LinkedList<AST> parents = new LinkedList<AST>();
 
 	/**
 	 * Constructs an Iterator for depth-first iteration of an AST
@@ -69,7 +69,7 @@ public class ASTIterator implements Iterator {
 	 * @return The next node.
 	 */
 	public AST nextNode() {
-		current = next;
+		AST current = next;
 		if ( next != null ) {
 			AST nextSibling = next.getNextSibling();
 			if ( nextSibling == null ) {
@@ -99,7 +99,7 @@ public class ASTIterator implements Iterator {
 			return null;
 		}
 		else {
-			return ( AST ) parents.removeFirst();
+			return parents.removeFirst();
 		}
 	}
 

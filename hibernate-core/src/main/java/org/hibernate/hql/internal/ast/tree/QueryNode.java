@@ -28,10 +28,9 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.Type;
-
-import org.jboss.logging.Logger;
 
 import antlr.SemanticException;
 import antlr.collections.AST;
@@ -42,34 +41,29 @@ import antlr.collections.AST;
  * @author Joshua Davis
  */
 public class QueryNode extends AbstractRestrictableStatement implements SelectExpression {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, QueryNode.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QueryNode.class );
 
 	private OrderByClause orderByClause;
 	private int scalarColumnIndex = -1;
 
-	/**
-	 * @see Statement#getStatementType()
-	 */
+	@Override
 	public int getStatementType() {
 		return HqlSqlTokenTypes.QUERY;
 	}
 
-	/**
-	 * @see Statement#needsExecutor()
-	 */
+	@Override
 	public boolean needsExecutor() {
 		return false;
 	}
 
 	@Override
-    protected int getWhereClauseParentTokenType() {
+	protected int getWhereClauseParentTokenType() {
 		return SqlTokenTypes.FROM;
 	}
 
 	@Override
-    protected CoreMessageLogger getLog() {
-        return LOG;
+	protected CoreMessageLogger getLog() {
+		return LOG;
 	}
 
 	/**
@@ -86,7 +80,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 		// If it is not found; simply return null...
 		//
 		// Also, do not cache since it gets generated well after we are created.
-		return ( SelectClause ) ASTUtil.findTypeInChildren( this, SqlTokenTypes.SELECT_CLAUSE );
+		return (SelectClause) ASTUtil.findTypeInChildren( this, SqlTokenTypes.SELECT_CLAUSE );
 	}
 
 	public final boolean hasOrderByClause() {
@@ -101,7 +95,7 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 			// if there is no order by, make one
 			if ( orderByClause == null ) {
 				LOG.debug( "getOrderByClause() : Creating a new ORDER BY clause" );
-				orderByClause = ( OrderByClause ) ASTUtil.create( getWalker().getASTFactory(), SqlTokenTypes.ORDER, "ORDER" );
+				orderByClause = (OrderByClause) getWalker().getASTFactory().create( SqlTokenTypes.ORDER, "ORDER" );
 
 				// Find the WHERE; if there is no WHERE, find the FROM...
 				AST prevSibling = ASTUtil.findTypeInChildren( this, SqlTokenTypes.WHERE );
@@ -118,51 +112,60 @@ public class QueryNode extends AbstractRestrictableStatement implements SelectEx
 	}
 
 	private OrderByClause locateOrderByClause() {
-		return ( OrderByClause ) ASTUtil.findTypeInChildren( this, SqlTokenTypes.ORDER );
+		return (OrderByClause) ASTUtil.findTypeInChildren( this, SqlTokenTypes.ORDER );
 	}
 
 
 	private String alias;
 
+	@Override
 	public String getAlias() {
 		return alias;
 	}
 
+	@Override
 	public FromElement getFromElement() {
 		return null;
 	}
 
+	@Override
 	public boolean isConstructor() {
 		return false;
 	}
 
+	@Override
 	public boolean isReturnableEntity() throws SemanticException {
 		return false;
 	}
 
+	@Override
 	public boolean isScalar() throws SemanticException {
 		return true;
 	}
 
+	@Override
 	public void setAlias(String alias) {
 		this.alias = alias;
 	}
 
+	@Override
 	public void setScalarColumn(int i) throws SemanticException {
 		scalarColumnIndex = i;
 		setScalarColumnText( i );
 	}
 
+	@Override
 	public int getScalarColumnIndex() {
 		return scalarColumnIndex;
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 
 	@Override
-    public Type getDataType() {
+	public Type getDataType() {
 		return ( (SelectExpression) getSelectClause().getFirstSelectExpression() ).getDataType();
 	}
 

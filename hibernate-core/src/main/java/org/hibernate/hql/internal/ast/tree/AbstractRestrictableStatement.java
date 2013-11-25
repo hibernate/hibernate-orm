@@ -44,34 +44,28 @@ public abstract class AbstractRestrictableStatement extends AbstractStatement im
 
 	protected abstract CoreMessageLogger getLog();
 
-	/**
-	 * @see org.hibernate.hql.internal.ast.tree.RestrictableStatement#getFromClause
-	 */
+	@Override
 	public final FromClause getFromClause() {
 		if ( fromClause == null ) {
-			fromClause = ( FromClause ) ASTUtil.findTypeInChildren( this, HqlSqlTokenTypes.FROM );
+			fromClause = (FromClause) ASTUtil.findTypeInChildren( this, HqlSqlTokenTypes.FROM );
 		}
 		return fromClause;
 	}
 
-	/**
-	 * @see RestrictableStatement#hasWhereClause
-	 */
+	@Override
 	public final boolean hasWhereClause() {
 		AST whereClause = locateWhereClause();
 		return whereClause != null && whereClause.getNumberOfChildren() > 0;
 	}
 
-	/**
-	 * @see org.hibernate.hql.internal.ast.tree.RestrictableStatement#getWhereClause
-	 */
+	@Override
 	public final AST getWhereClause() {
 		if ( whereClause == null ) {
 			whereClause = locateWhereClause();
 			// If there is no WHERE node, make one.
 			if ( whereClause == null ) {
 				getLog().debug( "getWhereClause() : Creating a new WHERE clause..." );
-				whereClause = ASTUtil.create( getWalker().getASTFactory(), HqlSqlTokenTypes.WHERE, "WHERE" );
+				whereClause = getWalker().getASTFactory().create( HqlSqlTokenTypes.WHERE, "WHERE" );
 				// inject the WHERE after the parent
 				AST parent = ASTUtil.findTypeInChildren( this, getWhereClauseParentTokenType() );
 				whereClause.setNextSibling( parent.getNextSibling() );

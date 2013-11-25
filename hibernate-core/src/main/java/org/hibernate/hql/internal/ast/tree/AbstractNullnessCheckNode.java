@@ -109,14 +109,15 @@ public abstract class AbstractNullnessCheckNode extends UnaryLogicOperatorNode {
 	}
 
 	private static Type extractDataType(Node operand) {
-		Type type = null;
 		if ( operand instanceof SqlNode ) {
-			type = ( ( SqlNode ) operand ).getDataType();
+			return ( (SqlNode) operand ).getDataType();
 		}
-		if ( type == null && operand instanceof ExpectedTypeAwareNode ) {
-			type = ( ( ExpectedTypeAwareNode ) operand ).getExpectedType();
+
+		if ( operand instanceof ExpectedTypeAwareNode ) {
+			return ( (ExpectedTypeAwareNode) operand ).getExpectedType();
 		}
-		return type;
+
+		return null;
 	}
 
 	private static String[] extractMutationTexts(Node operand, int count) {
@@ -128,9 +129,9 @@ public abstract class AbstractNullnessCheckNode extends UnaryLogicOperatorNode {
 			return rtn;
 		}
 		else if ( operand.getType() == HqlSqlTokenTypes.VECTOR_EXPR ) {
-			String[] rtn = new String[ operand.getNumberOfChildren() ];
-			int x = 0;
+			final String[] rtn = new String[ operand.getNumberOfChildren() ];
 			AST node = operand.getFirstChild();
+			int x = 0;
 			while ( node != null ) {
 				rtn[ x++ ] = node.getText();
 				node = node.getNextSibling();

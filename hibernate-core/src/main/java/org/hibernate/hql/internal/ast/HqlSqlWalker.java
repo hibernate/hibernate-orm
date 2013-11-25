@@ -142,7 +142,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	private int parameterCount;
 	private Map namedParameters = new HashMap();
-	private ArrayList parameters = new ArrayList();
+	private ArrayList<ParameterSpecification> parameters = new ArrayList<ParameterSpecification>();
 	private int numberOfParametersInSetClause;
 	private int positionalParameterCount;
 
@@ -1182,7 +1182,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		return printer;
 	}
 
-	public ArrayList getParameters() {
+	public ArrayList<ParameterSpecification> getParameters() {
 		return parameters;
 	}
 

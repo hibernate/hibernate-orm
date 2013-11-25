@@ -42,7 +42,7 @@ public class HqlSqlWalkerNode extends SqlNode implements InitializeableNode {
 	private HqlSqlWalker walker;
 
 	public void initialize(Object param) {
-		walker = ( HqlSqlWalker ) param;
+		walker = (HqlSqlWalker) param;
 	}
 
 	public HqlSqlWalker getWalker() {

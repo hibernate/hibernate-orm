@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.hql.internal.ast.tree;
+
 import org.hibernate.QueryException;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 
@@ -33,16 +34,12 @@ import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
  */
 public class InsertStatement extends AbstractStatement {
 
-	/**
-	 * @see Statement#getStatementType()
-	 */
+	@Override
 	public int getStatementType() {
 		return HqlSqlTokenTypes.INSERT;
 	}
 
-	/**
-	 * @see Statement#needsExecutor()
-	 */
+	@Override
 	public boolean needsExecutor() {
 		return true;
 	}
@@ -57,12 +54,12 @@ public class InsertStatement extends AbstractStatement {
 	}
 
 	/**
-	 * Retreive this insert statement's into-clause.
+	 * Retrieve this insert statement's into-clause.
 	 *
 	 * @return The into-clause
 	 */
 	public IntoClause getIntoClause() {
-		return ( IntoClause ) getFirstChild();
+		return (IntoClause) getFirstChild();
 	}
 
 	/**
@@ -71,7 +68,7 @@ public class InsertStatement extends AbstractStatement {
 	 * @return The select-clause.
 	 */
 	public SelectClause getSelectClause() {
-		return ( ( QueryNode ) getIntoClause().getNextSibling() ).getSelectClause();
+		return ( (QueryNode) getIntoClause().getNextSibling() ).getSelectClause();
 	}
 
 }

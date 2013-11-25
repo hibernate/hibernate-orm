@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,10 +20,7 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
-
-//$Id: UnaryArithmeticNode.java 8407 2005-10-14 17:23:18Z steveebersole $
 package org.hibernate.hql.internal.ast.tree;
 
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
@@ -34,7 +31,7 @@ import antlr.SemanticException;
 public class UnaryArithmeticNode extends AbstractSelectExpression implements UnaryOperatorNode {
 
 	public Type getDataType() {
-		return ( ( SqlNode ) getOperand() ).getDataType();
+		return ( (SqlNode) getOperand() ).getDataType();
 	}
 
 	public void setScalarColumnText(int i) throws SemanticException {
@@ -47,6 +44,6 @@ public class UnaryArithmeticNode extends AbstractSelectExpression implements Una
 	}
 
 	public Node getOperand() {
-		return ( Node ) getFirstChild();
+		return (Node) getFirstChild();
 	}
 }

@@ -53,47 +53,50 @@ import antlr.collections.AST;
 public class IndexNode extends FromReferenceNode {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( IndexNode.class );
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
 		throw new UnsupportedOperationException( "An IndexNode cannot generate column text!" );
 	}
 
 	@Override
-    public void prepareForDot(String propertyName) throws SemanticException {
+	public void prepareForDot(String propertyName) throws SemanticException {
 		FromElement fromElement = getFromElement();
 		if ( fromElement == null ) {
 			throw new IllegalStateException( "No FROM element for index operator!" );
 		}
-		QueryableCollection queryableCollection = fromElement.getQueryableCollection();
-		if ( queryableCollection != null && !queryableCollection.isOneToMany() ) {
 
-			FromReferenceNode collectionNode = ( FromReferenceNode ) getFirstChild();
-			String path = collectionNode.getPath() + "[]." + propertyName;
+		final QueryableCollection queryableCollection = fromElement.getQueryableCollection();
+		if ( queryableCollection != null && !queryableCollection.isOneToMany() ) {
+			final FromReferenceNode collectionNode = (FromReferenceNode) getFirstChild();
+			final String path = collectionNode.getPath() + "[]." + propertyName;
 			LOG.debugf( "Creating join for many-to-many elements for %s", path );
-			FromElementFactory factory = new FromElementFactory( fromElement.getFromClause(), fromElement, path );
+			final FromElementFactory factory = new FromElementFactory( fromElement.getFromClause(), fromElement, path );
 			// This will add the new from element to the origin.
-			FromElement elementJoin = factory.createElementJoin( queryableCollection );
+			final FromElement elementJoin = factory.createElementJoin( queryableCollection );
 			setFromElement( elementJoin );
 		}
 	}
 
+	@Override
 	public void resolveIndex(AST parent) throws SemanticException {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
 	public void resolve(boolean generateJoin, boolean implicitJoin, String classAlias, AST parent)
-	throws SemanticException {
+			throws SemanticException {
 		if ( isResolved() ) {
 			return;
 		}
-		FromReferenceNode collectionNode = ( FromReferenceNode ) getFirstChild();
+		FromReferenceNode collectionNode = (FromReferenceNode) getFirstChild();
 		SessionFactoryHelper sessionFactoryHelper = getSessionFactoryHelper();
-		collectionNode.resolveIndex( this );		// Fully resolve the map reference, create implicit joins.
+		collectionNode.resolveIndex( this );        // Fully resolve the map reference, create implicit joins.
 
 		Type type = collectionNode.getDataType();
 		if ( !type.isCollectionType() ) {
 			throw new SemanticException( "The [] operator cannot be applied to type " + type.toString() );
 		}
-		String collectionRole = ( ( CollectionType ) type ).getRole();
+		String collectionRole = ( (CollectionType) type ).getRole();
 		QueryableCollection queryableCollection = sessionFactoryHelper.requireQueryableCollection( collectionRole );
 		if ( !queryableCollection.hasIndex() ) {
 			throw new QueryException( "unindexed fromElement before []: " + collectionNode.getPath() );
@@ -141,7 +144,7 @@ public class IndexNode extends FromReferenceNode {
 		try {
 			gen.simpleExpr( selector ); //TODO: used to be exprNoParens! was this needed?
 		}
-		catch ( RecognitionException e ) {
+		catch (RecognitionException e) {
 			throw new QueryException( e.getMessage(), e );
 		}
 		String selectorExpression = gen.getSQL();
@@ -149,10 +152,10 @@ public class IndexNode extends FromReferenceNode {
 		List<ParameterSpecification> paramSpecs = gen.getCollectedParameters();
 		if ( paramSpecs != null ) {
 			switch ( paramSpecs.size() ) {
-				case 0 :
+				case 0:
 					// nothing to do
 					break;
-				case 1 :
+				case 1:
 					ParameterSpecification paramSpec = paramSpecs.get( 0 );
 					paramSpec.setExpectedType( queryableCollection.getIndexType() );
 					fromElement.setIndexCollectionSelectorParamSpec( paramSpec );
@@ -183,7 +186,7 @@ public class IndexNode extends FromReferenceNode {
 
 		@Override
 		public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position)
-		throws SQLException {
+				throws SQLException {
 			int bindCount = 0;
 			for ( ParameterSpecification paramSpec : paramSpecs ) {
 				bindCount += paramSpec.bind( statement, qp, session, position + bindCount );
@@ -202,7 +205,7 @@ public class IndexNode extends FromReferenceNode {
 
 		@Override
 		public String renderDisplayInfo() {
-			return "index-selector [" + collectDisplayInfo() + "]" ;
+			return "index-selector [" + collectDisplayInfo() + "]";
 		}
 
 		private String collectDisplayInfo() {

@@ -51,21 +51,20 @@ public class OnReplicateVisitor extends ReattachVisitor {
 		this.isUpdate = isUpdate;
 	}
 
-	Object processCollection(Object collection, CollectionType type)
-			throws HibernateException {
-
+	@Override
+	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {
 			return null;
 		}
 
-		EventSource session = getSession();
-		CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+		final EventSource session = getSession();
+		final CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
 
 		if ( isUpdate ) {
 			removeCollection( persister, extractCollectionKeyFromOwner( persister ), session );
 		}
-		if ( collection != null && ( collection instanceof PersistentCollection ) ) {
-			PersistentCollection wrapper = ( PersistentCollection ) collection;
+		if ( collection != null && collection instanceof PersistentCollection ) {
+			final PersistentCollection wrapper = (PersistentCollection) collection;
 			wrapper.setCurrentSession( session );
 			if ( wrapper.wasInitialized() ) {
 				session.getPersistenceContext().addNewCollection( persister, wrapper );

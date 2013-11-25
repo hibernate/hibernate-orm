@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.query.spi.sql;
+
 import java.util.Map;
 
 import org.hibernate.LockMode;
@@ -46,6 +46,7 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 	 * @param propertyResults Any user-supplied column->property mappings
 	 * @param lockMode The lock mode to apply
 	 */
+	@SuppressWarnings("unchecked")
 	public NativeSQLQueryJoinReturn(
 			String alias,
 			String ownerAlias,
@@ -56,6 +57,13 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 		this.ownerAlias = ownerAlias;
 		this.ownerProperty = ownerProperty;
 		this.hashCode = determineHashCode();
+	}
+
+	private int determineHashCode() {
+		int result = super.hashCode();
+		result = 31 * result + ( ownerAlias != null ? ownerAlias.hashCode() : 0 );
+		result = 31 * result + ( ownerProperty != null ? ownerProperty.hashCode() : 0 );
+		return result;
 	}
 
 	/**
@@ -77,6 +85,8 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 		return ownerProperty;
 	}
 
+	@Override
+	@SuppressWarnings("RedundantIfStatement")
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -88,7 +98,7 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 			return false;
 		}
 
-		NativeSQLQueryJoinReturn that = ( NativeSQLQueryJoinReturn ) o;
+		final NativeSQLQueryJoinReturn that = (NativeSQLQueryJoinReturn) o;
 
 		if ( ownerAlias != null ? !ownerAlias.equals( that.ownerAlias ) : that.ownerAlias != null ) {
 			return false;
@@ -100,14 +110,8 @@ public class NativeSQLQueryJoinReturn extends NativeSQLQueryNonScalarReturn {
 		return true;
 	}
 
+	@Override
 	public int hashCode() {
 		return hashCode;
-	}
-
-	private int determineHashCode() {
-		int result = super.hashCode();
-		result = 31 * result + ( ownerAlias != null ? ownerAlias.hashCode() : 0 );
-		result = 31 * result + ( ownerProperty != null ? ownerProperty.hashCode() : 0 );
-		return result;
 	}
 }

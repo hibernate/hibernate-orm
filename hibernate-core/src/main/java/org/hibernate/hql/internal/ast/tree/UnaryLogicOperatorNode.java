@@ -33,7 +33,7 @@ import org.hibernate.type.Type;
  */
 public class UnaryLogicOperatorNode extends HqlSqlWalkerNode implements UnaryOperatorNode {
 	public Node getOperand() {
-		return ( Node ) getFirstChild();
+		return (Node) getFirstChild();
 	}
 
 	public void initialize() {

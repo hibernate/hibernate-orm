@@ -52,11 +52,9 @@ import antlr.collections.AST;
  * @author Brett Meyer
  */
 public class DeleteExecutor extends BasicExecutor {
-	
 	private static final Logger LOG = Logger.getLogger( DeleteExecutor.class );
-	
+
 	private final List<String> deletes = new ArrayList<String>();
-	
 	private List<ParameterSpecification> parameterSpecifications;
 
 	public DeleteExecutor(HqlSqlWalker walker, Queryable persister) {
@@ -66,10 +64,10 @@ public class DeleteExecutor extends BasicExecutor {
 		final Dialect dialect = factory.getDialect();
 		
 		try {
-			final DeleteStatement deleteStatement = ( DeleteStatement ) walker.getAST();
+			final DeleteStatement deleteStatement = (DeleteStatement) walker.getAST();
 			
 			final String idSubselectWhere;
-			if (deleteStatement.hasWhereClause()) {
+			if ( deleteStatement.hasWhereClause() ) {
 				final AST whereClause = deleteStatement.getWhereClause();
 				final SqlGenerator gen = new SqlGenerator( factory );
 				gen.whereClause( whereClause );
@@ -88,11 +86,13 @@ public class DeleteExecutor extends BasicExecutor {
 					final AbstractCollectionPersister cPersister = (AbstractCollectionPersister) factory
 							.getCollectionPersister( cType.getRole() );
 					if ( cPersister.isManyToMany() ) {
-						if (persister.getIdentifierColumnNames().length > 1
-								&& !dialect.supportsTuplesInSubqueries()) {
-							LOG.warn( "This dialect is unable to cascade the delete into the many-to-many join table" +
+						if ( persister.getIdentifierColumnNames().length > 1
+								&& !dialect.supportsTuplesInSubqueries() ) {
+							LOG.warn(
+									"This dialect is unable to cascade the delete into the many-to-many join table" +
 									" when the entity has multiple primary keys.  Either properly setup cascading on" +
-									" the constraints or manually clear the associations prior to deleting the entities." );
+									" the constraints or manually clear the associations prior to deleting the entities."
+							);
 						}
 						else {
 							final String idSubselect = "(select "

@@ -47,16 +47,17 @@ public class OnLockVisitor extends ReattachVisitor {
 		super( session, key, owner );
 	}
 
-	Object processCollection(Object collection, CollectionType type) throws HibernateException {
-
-		SessionImplementor session = getSession();
-		CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
-
+	@Override
+	public Object processCollection(Object collection, CollectionType type) throws HibernateException {
 		if ( collection == null ) {
-			//do nothing
+			return null;
 		}
-		else if ( collection instanceof PersistentCollection ) {
-			PersistentCollection persistentCollection = ( PersistentCollection ) collection;
+
+		final SessionImplementor session = getSession();
+		final CollectionPersister persister = session.getFactory().getCollectionPersister( type.getRole() );
+
+		if ( collection instanceof PersistentCollection ) {
+			final PersistentCollection persistentCollection = (PersistentCollection) collection;
 			if ( persistentCollection.setCurrentSession( session ) ) {
 				if ( isOwnerUnchanged( persistentCollection, persister, extractCollectionKeyFromOwner( persister ) ) ) {
 					// a "detached" collection that originally belonged to the same entity
@@ -84,7 +85,6 @@ public class OnLockVisitor extends ReattachVisitor {
 		}
 
 		return null;
-
 	}
 
 }

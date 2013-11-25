@@ -32,6 +32,7 @@ import org.hibernate.hql.internal.antlr.SqlTokenTypes;
 import org.hibernate.hql.internal.ast.TypeDiscriminatorMetadata;
 import org.hibernate.hql.internal.ast.util.ASTUtil;
 import org.hibernate.hql.internal.ast.util.ColumnHelper;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.type.Type;
@@ -47,7 +48,7 @@ import antlr.collections.AST;
  * @author josh
  */
 public class MethodNode extends AbstractSelectExpression implements FunctionNode {
-    private static final Logger LOG = Logger.getLogger( MethodNode.class.getName() );
+	private static final Logger LOG = CoreLogging.logger( MethodNode.class );
 
 	private String methodName;
 	private FromElement fromElement;
@@ -107,8 +108,10 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 	public void initializeMethodNode(AST name, boolean inSelect) {
 		name.setType( SqlTokenTypes.METHOD_NAME );
 		String text = name.getText();
-		methodName = text.toLowerCase();	// Use the lower case function name.
-		this.inSelect = inSelect;			// Remember whether we're in a SELECT clause or not.
+		// Use the lower case function name.
+		methodName = text.toLowerCase();
+		// Remember whether we're in a SELECT clause or not.
+		this.inSelect = inSelect;
 	}
 
 	private void typeDiscriminator(AST path) throws SemanticException {
@@ -148,7 +151,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 			throw new SemanticException( "Collection function " + name.getText() + " has no path!" );
 		}
 
-		SqlNode expr = ( SqlNode ) path;
+		SqlNode expr = (SqlNode) path;
 		Type type = expr.getDataType();
 		LOG.debugf( "collectionProperty() :  name=%s type=%s", name, type );
 
@@ -158,7 +161,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 	protected void resolveCollectionProperty(AST expr) throws SemanticException {
 		String propertyName = CollectionProperties.getNormalizedPropertyName( methodName );
 		if ( expr instanceof FromReferenceNode ) {
-			FromReferenceNode collectionNode = ( FromReferenceNode ) expr;
+			FromReferenceNode collectionNode = (FromReferenceNode) expr;
 			// If this is 'elements' then create a new FROM element.
 			if ( CollectionPropertyNames.COLLECTION_ELEMENTS.equals( propertyName ) ) {
 				handleElements( collectionNode, propertyName );
@@ -170,7 +173,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 				selectColumns = fromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 			}
 			if ( collectionNode instanceof DotNode ) {
-				prepareAnyImplicitJoins( ( DotNode ) collectionNode );
+				prepareAnyImplicitJoins( (DotNode) collectionNode );
 			}
 			if ( !inSelect ) {
 				fromElement.setText( "" );
@@ -183,18 +186,18 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		else {
 			throw new SemanticException(
 					"Unexpected expression " + expr +
-					" found for collection function " + propertyName
-				);
+							" found for collection function " + propertyName
+			);
 		}
 	}
 
 	private void prepareAnyImplicitJoins(DotNode dotNode) throws SemanticException {
 		if ( dotNode.getLhs() instanceof DotNode ) {
-			DotNode lhs = ( DotNode ) dotNode.getLhs();
+			DotNode lhs = (DotNode) dotNode.getLhs();
 			FromElement lhsOrigin = lhs.getFromElement();
 			if ( lhsOrigin != null && "".equals( lhsOrigin.getText() ) ) {
 				String lhsOriginText = lhsOrigin.getQueryable().getTableName() +
-				        " " + lhsOrigin.getTableAlias();
+						" " + lhsOrigin.getTableAlias();
 				lhsOrigin.setText( lhsOriginText );
 			}
 			prepareAnyImplicitJoins( lhs );
@@ -217,11 +220,12 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		selectColumns = collectionFromElement.toColumns( fromElement.getTableAlias(), propertyName, inSelect );
 	}
 
+	@Override
 	public void setScalarColumnText(int i) throws SemanticException {
-		if ( selectColumns == null ) { 	// Dialect function
+		if ( selectColumns == null ) {    // Dialect function
 			ColumnHelper.generateSingleScalarColumn( this, i );
 		}
-		else {	// Collection 'property function'
+		else {    // Collection 'property function'
 			ColumnHelper.generateScalarColumns( this, selectColumns, i );
 		}
 	}
@@ -230,7 +234,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 	}
 
 	@Override
-    public FromElement getFromElement() {
+	public FromElement getFromElement() {
 		return fromElement;
 	}
 
@@ -238,7 +242,7 @@ public class MethodNode extends AbstractSelectExpression implements FunctionNode
 		return "{" +
 				"method=" + methodName +
 				",selectColumns=" + ( selectColumns == null ?
-						null : Arrays.asList( selectColumns ) ) +
+				null : Arrays.asList( selectColumns ) ) +
 				",fromElement=" + fromElement.getTableAlias() +
 				"}";
 	}

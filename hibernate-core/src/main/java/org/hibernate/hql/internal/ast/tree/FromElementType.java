@@ -36,6 +36,7 @@ import org.hibernate.hql.internal.CollectionProperties;
 import org.hibernate.hql.internal.CollectionSubqueryFactory;
 import org.hibernate.hql.internal.NameGenerator;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.param.ParameterSpecification;
@@ -49,8 +50,6 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
-import org.jboss.logging.Logger;
-
 import antlr.SemanticException;
 
 /**
@@ -59,8 +58,7 @@ import antlr.SemanticException;
  * @author josh
  */
 class FromElementType {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, FromElementType.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FromElementType.class );
 
 	private FromElement fromElement;
 	private EntityType entityType;
@@ -76,7 +74,7 @@ class FromElementType {
 		this.persister = persister;
 		this.entityType = entityType;
 		if ( persister != null ) {
-			fromElement.setText( ( ( Queryable ) persister ).getTableName() + " " + getTableAlias() );
+			fromElement.setText( ( (Queryable) persister ).getTableName() + " " + getTableAlias() );
 		}
 	}
 
@@ -117,7 +115,9 @@ class FromElementType {
 	}
 
 	public Type getSelectType() {
-		if (entityType==null) return null;
+		if ( entityType == null ) {
+			return null;
+		}
 		boolean shallow = fromElement.getFromClause().getWalker().isShallowQuery();
 		return fromElement.getSessionFactoryHelper()
 				.getFactory()
@@ -131,18 +131,22 @@ class FromElementType {
 	 * @return the Hibernate queryable implementation for the HQL class.
 	 */
 	public Queryable getQueryable() {
-		return ( persister instanceof Queryable ) ? ( Queryable ) persister : null;
+		return ( persister instanceof Queryable ) ? (Queryable) persister : null;
 	}
 
 	/**
 	 * Render the identifier select, but in a 'scalar' context (i.e. generate the column alias).
 	 *
 	 * @param i the sequence of the returned type
+	 *
 	 * @return the identifier select with the column alias.
 	 */
 	String renderScalarIdentifierSelect(int i) {
 		checkInitialized();
-		String[] cols = getPropertyMapping( EntityPersister.ENTITY_ID ).toColumns( getTableAlias(), EntityPersister.ENTITY_ID );
+		String[] cols = getPropertyMapping( EntityPersister.ENTITY_ID ).toColumns(
+				getTableAlias(),
+				EntityPersister.ENTITY_ID
+		);
 		StringBuilder buf = new StringBuilder();
 		// For property references generate <tablealias>.<columnname> as <projectionalias>
 		for ( int j = 0; j < cols.length; j++ ) {
@@ -159,7 +163,8 @@ class FromElementType {
 	 * Returns the identifier select SQL fragment.
 	 *
 	 * @param size The total number of returned types.
-	 * @param k    The sequence of the current returned type.
+	 * @param k The sequence of the current returned type.
+	 *
 	 * @return the identifier select SQL fragment.
 	 */
 	String renderIdentifierSelect(int size, int k) {
@@ -168,19 +173,26 @@ class FromElementType {
 		if ( fromElement.getFromClause().isSubQuery() ) {
 			// TODO: Replace this with a more elegant solution.
 			String[] idColumnNames = ( persister != null ) ?
-					( ( Queryable ) persister ).getIdentifierColumnNames() : new String[0];
+					( (Queryable) persister ).getIdentifierColumnNames() : new String[0];
 			StringBuilder buf = new StringBuilder();
 			for ( int i = 0; i < idColumnNames.length; i++ ) {
 				buf.append( fromElement.getTableAlias() ).append( '.' ).append( idColumnNames[i] );
-				if ( i != idColumnNames.length - 1 ) buf.append( ", " );
+				if ( i != idColumnNames.length - 1 ) {
+					buf.append( ", " );
+				}
 			}
 			return buf.toString();
 		}
 		else {
-			if (persister==null) {
+			if ( persister == null ) {
 				throw new QueryException( "not an entity" );
 			}
-			String fragment = ( ( Queryable ) persister ).identifierSelectFragment( getTableAlias(), getSuffix( size, k ) );
+			String fragment = ( (Queryable) persister ).identifierSelectFragment(
+					getTableAlias(), getSuffix(
+					size,
+					k
+			)
+			);
 			return trimLeadingCommaAndSpaces( fragment );
 		}
 	}
@@ -190,8 +202,7 @@ class FromElementType {
 	}
 
 	private static String generateSuffix(int size, int k) {
-		String suffix = size == 1 ? "" : Integer.toString( k ) + '_';
-		return suffix;
+		return size == 1 ? "" : Integer.toString( k ) + '_';
 	}
 
 	private void checkInitialized() {
@@ -200,8 +211,10 @@ class FromElementType {
 
 	/**
 	 * Returns the property select SQL fragment.
+	 *
 	 * @param size The total number of returned types.
-	 * @param k    The sequence of the current returned type.
+	 * @param k The sequence of the current returned type.
+	 *
 	 * @return the property select SQL fragment.
 	 */
 	String renderPropertySelect(int size, int k, boolean allProperties) {
@@ -210,7 +223,7 @@ class FromElementType {
 			return "";
 		}
 		else {
-			String fragment =  ( ( Queryable ) persister ).propertySelectFragment(
+			String fragment = ( (Queryable) persister ).propertySelectFragment(
 					getTableAlias(),
 					getSuffix( size, k ),
 					allProperties
@@ -240,7 +253,7 @@ class FromElementType {
 			if ( collectionSuffix == null ) {
 				collectionSuffix = generateSuffix( size, k );
 			}
-			String fragment =  queryableCollection.selectFragment( getTableAlias(), collectionSuffix );
+			String fragment = queryableCollection.selectFragment( getTableAlias(), collectionSuffix );
 			return trimLeadingCommaAndSpaces( fragment );
 		}
 	}
@@ -250,6 +263,7 @@ class FromElementType {
 	 * SQL fragment.  :-P
 	 *
 	 * @param fragment An SQL fragment.
+	 *
 	 * @return The fragment, without the leading comma and spaces.
 	 */
 	private static String trimLeadingCommaAndSpaces(String fragment) {
@@ -273,8 +287,11 @@ class FromElementType {
 
 		// Class names in the FROM clause result in a JoinSequence (the old FromParser does this).
 		if ( persister instanceof Joinable ) {
-			Joinable joinable = ( Joinable ) persister;
-			final JoinSequence joinSequence = fromElement.getSessionFactoryHelper().createJoinSequence().setRoot( joinable, getTableAlias() );
+			Joinable joinable = (Joinable) persister;
+			final JoinSequence joinSequence = fromElement.getSessionFactoryHelper().createJoinSequence().setRoot(
+					joinable,
+					getTableAlias()
+			);
 			joinSequence.applyTreatAsDeclarations( treatAsDeclarations );
 			return joinSequence;
 		}
@@ -294,7 +311,9 @@ class FromElementType {
 
 			for ( String treatAsSubclassName : treatAsDeclarations ) {
 				try {
-					EntityPersister subclassPersister = fromElement.getSessionFactoryHelper().requireClassPersister( treatAsSubclassName );
+					EntityPersister subclassPersister = fromElement.getSessionFactoryHelper().requireClassPersister(
+							treatAsSubclassName
+					);
 					this.treatAsDeclarations.add( subclassPersister.getEntityName() );
 				}
 				catch (SemanticException e) {
@@ -327,7 +346,9 @@ class FromElementType {
 	 * Returns the type of a property, given it's name (the last part) and the full path.
 	 *
 	 * @param propertyName The last part of the full path to the property.
+	 *
 	 * @return The type.
+	 *
 	 * @0param getPropertyPath The full property path.
 	 */
 	public Type getPropertyType(String propertyName, String propertyPath) {
@@ -341,14 +362,18 @@ class FromElementType {
 		if ( persister != null && propertyName.equals( propertyPath ) && propertyName.equals( persister.getIdentifierPropertyName() ) ) {
 			type = persister.getIdentifierType();
 		}
-		else {	// Otherwise, use the property mapping.
+		else {    // Otherwise, use the property mapping.
 			PropertyMapping mapping = getPropertyMapping( propertyName );
 			type = mapping.toType( propertyPath );
 		}
 		if ( type == null ) {
-			throw new MappingException( "Property " + propertyName + " does not exist in " +
-					( ( queryableCollection == null ) ? "class" : "collection" ) + " "
-					+ ( ( queryableCollection == null ) ? fromElement.getClassName() : queryableCollection.getRole() ) );
+			throw new MappingException(
+					"Property " + propertyName + " does not exist in " +
+							( ( queryableCollection == null ) ? "class" : "collection" ) + " "
+							+ ( ( queryableCollection == null ) ?
+							fromElement.getClassName() :
+							queryableCollection.getRole() )
+			);
 		}
 		return type;
 	}
@@ -378,43 +403,43 @@ class FromElementType {
 					propertyMapping.toColumns( tableAlias, path )
 			);
 			LOG.debugf( "toColumns(%s,%s) : subquery = %s", tableAlias, path, subquery );
-			return new String[]{"(" + subquery + ")"};
+			return new String[] {"(" + subquery + ")"};
 		}
 
-        if (forceAlias) {
-            return propertyMapping.toColumns(tableAlias, path);
-        }
+		if ( forceAlias ) {
+			return propertyMapping.toColumns( tableAlias, path );
+		}
 
-		if (fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.SELECT) {
-            return propertyMapping.toColumns(tableAlias, path);
-        }
+		if ( fromElement.getWalker().getStatementType() == HqlSqlTokenTypes.SELECT ) {
+			return propertyMapping.toColumns( tableAlias, path );
+		}
 
-		if (fromElement.getWalker().isSubQuery()) {
-            // for a subquery, the alias to use depends on a few things (we
-            // already know this is not an overall SELECT):
-            // 1) if this FROM_ELEMENT represents a correlation to the
-            // outer-most query
-            // A) if the outer query represents a multi-table
-            // persister, we need to use the given alias
-            // in anticipation of one of the multi-table
-            // executors being used (as this subquery will
-            // actually be used in the "id select" phase
-            // of that multi-table executor)
-            // B) otherwise, we need to use the persister's
-            // table name as the column qualification
-            // 2) otherwise (not correlated), use the given alias
-            if (isCorrelation()) {
-                if (isMultiTable()) {
-					return propertyMapping.toColumns(tableAlias, path);
+		if ( fromElement.getWalker().isSubQuery() ) {
+			// for a subquery, the alias to use depends on a few things (we
+			// already know this is not an overall SELECT):
+			// 1) if this FROM_ELEMENT represents a correlation to the
+			// outer-most query
+			// A) if the outer query represents a multi-table
+			// persister, we need to use the given alias
+			// in anticipation of one of the multi-table
+			// executors being used (as this subquery will
+			// actually be used in the "id select" phase
+			// of that multi-table executor)
+			// B) otherwise, we need to use the persister's
+			// table name as the column qualification
+			// 2) otherwise (not correlated), use the given alias
+			if ( isCorrelation() ) {
+				if ( isMultiTable() ) {
+					return propertyMapping.toColumns( tableAlias, path );
 				}
-                return propertyMapping.toColumns(extractTableName(), path);
+				return propertyMapping.toColumns( extractTableName(), path );
 			}
-            return propertyMapping.toColumns(tableAlias, path);
-        }
+			return propertyMapping.toColumns( tableAlias, path );
+		}
 
-		if (fromElement.getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.SELECT) {
-            return propertyMapping.toColumns(tableAlias, path);
-        }
+		if ( fromElement.getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.SELECT ) {
+			return propertyMapping.toColumns( tableAlias, path );
+		}
 
 		if ( isManipulationQuery() && isMultiTable() && inWhereClause() ) {
 			// the actual where-clause will end up being ripped out the update/delete and used in
@@ -431,13 +456,13 @@ class FromElementType {
 	private boolean isCorrelation() {
 		FromClause top = fromElement.getWalker().getFinalFromClause();
 		return fromElement.getFromClause() != fromElement.getWalker().getCurrentFromClause() &&
-	           fromElement.getFromClause() == top;
+				fromElement.getFromClause() == top;
 	}
 
 	private boolean isMultiTable() {
 		// should be safe to only ever expect EntityPersister references here
 		return fromElement.getQueryable() != null &&
-	           fromElement.getQueryable().isMultiTable();
+				fromElement.getQueryable().isMultiTable();
 	}
 
 	private String extractTableName() {
@@ -462,8 +487,8 @@ class FromElementType {
 
 	PropertyMapping getPropertyMapping(String propertyName) {
 		checkInitialized();
-		if ( queryableCollection == null ) {		// Not a collection?
-			return ( PropertyMapping ) persister;	// Return the entity property mapping.
+		if ( queryableCollection == null ) {        // Not a collection?
+			return (PropertyMapping) persister;    // Return the entity property mapping.
 		}
 
 		// indexed, many-to-many collections must be treated specially here if the property to
@@ -493,7 +518,7 @@ class FromElementType {
 		if ( queryableCollection.getElementType().isComponentType() ) {
 			// Collection of components.
 			if ( propertyName.equals( EntityPersister.ENTITY_ID ) ) {
-				return ( PropertyMapping ) queryableCollection.getOwnerEntityPersister();
+				return (PropertyMapping) queryableCollection.getOwnerEntityPersister();
 			}
 		}
 		return queryableCollection;
@@ -524,7 +549,7 @@ class FromElementType {
 		}
 
 		private void validate(String propertyName) {
-			if ( ! ( CollectionPropertyNames.COLLECTION_INDEX.equals( propertyName )
+			if ( !( CollectionPropertyNames.COLLECTION_INDEX.equals( propertyName )
 					|| CollectionPropertyNames.COLLECTION_MAX_INDEX.equals( propertyName )
 					|| CollectionPropertyNames.COLLECTION_MIN_INDEX.equals( propertyName ) ) ) {
 				throw new IllegalArgumentException( "Expecting index-related function call" );
@@ -550,13 +575,13 @@ class FromElementType {
 				if ( cols.length != 1 ) {
 					throw new QueryException( "composite collection index in minIndex()" );
 				}
-				return new String[] { "min(" + cols[0] + ')' };
+				return new String[] {"min(" + cols[0] + ')'};
 			}
 			else {
 				if ( cols.length != 1 ) {
 					throw new QueryException( "composite collection index in maxIndex()" );
 				}
-				return new String[] { "max(" + cols[0] + ')' };
+				return new String[] {"max(" + cols[0] + ')'};
 			}
 		}
 

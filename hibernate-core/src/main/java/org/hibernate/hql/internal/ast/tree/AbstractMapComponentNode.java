@@ -44,7 +44,7 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 	private String[] columns;
 
 	public FromReferenceNode getMapReference() {
-		return ( FromReferenceNode ) getFirstChild();
+		return (FromReferenceNode) getFirstChild();
 	}
 
 	public String[] getColumns() {
@@ -66,19 +66,19 @@ public abstract class AbstractMapComponentNode extends FromReferenceNode impleme
 			throw attemptedDereference();
 		}
 
-		FromReferenceNode mapReference = getMapReference();
+		final FromReferenceNode mapReference = getMapReference();
 		mapReference.resolve( true, true );
 
 		FromElement sourceFromElement = null;
 		if ( isAliasRef( mapReference ) ) {
-			QueryableCollection collectionPersister = mapReference.getFromElement().getQueryableCollection();
+			final QueryableCollection collectionPersister = mapReference.getFromElement().getQueryableCollection();
 			if ( Map.class.isAssignableFrom( collectionPersister.getCollectionType().getReturnedClass() ) ) {
 				sourceFromElement = mapReference.getFromElement();
 			}
 		}
 		else {
 			if ( mapReference.getDataType().isCollectionType() ) {
-				CollectionType collectionType = (CollectionType) mapReference.getDataType();
+				final CollectionType collectionType = (CollectionType) mapReference.getDataType();
 				if ( Map.class.isAssignableFrom( collectionType.getReturnedClass() ) ) {
 					sourceFromElement = mapReference.getFromElement();
 				}

@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.hql.internal;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,8 +53,9 @@ public final class CollectionProperties {
 	private CollectionProperties() {
 	}
 
+	@SuppressWarnings("SimplifiableIfStatement")
 	public static boolean isCollectionProperty(String name) {
-		String key = name.toLowerCase();
+		final String key = name.toLowerCase();
 		// CollectionPropertyMapping processes everything except 'index'.
 		if ( COLLECTION_INDEX_LOWER.equals( key ) ) {
 			return false;
@@ -65,11 +66,11 @@ public final class CollectionProperties {
 	}
 
 	public static String getNormalizedPropertyName(String name) {
-		return ( String ) HQL_COLLECTION_PROPERTIES.get( name );
+		return (String) HQL_COLLECTION_PROPERTIES.get( name );
 	}
 
 	public static boolean isAnyCollectionProperty(String name) {
-		String key = name.toLowerCase();
+		final String key = name.toLowerCase();
 		return HQL_COLLECTION_PROPERTIES.containsKey( key );
 	}
 }

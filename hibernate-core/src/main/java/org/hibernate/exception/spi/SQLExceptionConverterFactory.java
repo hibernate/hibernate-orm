@@ -44,7 +44,6 @@ import org.jboss.logging.Logger;
  * @author Steve Ebersole
  */
 public class SQLExceptionConverterFactory {
-
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, SQLExceptionConverterFactory.class.getName() );
 
 	private SQLExceptionConverterFactory() {
@@ -67,7 +66,7 @@ public class SQLExceptionConverterFactory {
 	public static SQLExceptionConverter buildSQLExceptionConverter(Dialect dialect, Properties properties) throws HibernateException {
 		SQLExceptionConverter converter = null;
 
-		String converterClassName = ( String ) properties.get( Environment.SQL_EXCEPTION_CONVERTER );
+		String converterClassName = (String) properties.get( Environment.SQL_EXCEPTION_CONVERTER );
 		if ( StringHelper.isNotEmpty( converterClassName ) ) {
 			converter = constructConverter( converterClassName, dialect.getViolatedConstraintNameExtracter() );
 		}
@@ -81,7 +80,7 @@ public class SQLExceptionConverterFactory {
 			try {
 				( (Configurable) converter ).configure( properties );
 			}
-			catch ( HibernateException e ) {
+			catch (HibernateException e) {
 				LOG.unableToConfigureSqlExceptionConverter( e );
 				throw e;
 			}
@@ -107,18 +106,17 @@ public class SQLExceptionConverterFactory {
 	private static SQLExceptionConverter constructConverter(String converterClassName, ViolatedConstraintNameExtracter violatedConstraintNameExtracter) {
 		try {
 			LOG.tracev( "Attempting to construct instance of specified SQLExceptionConverter [{0}]", converterClassName );
-			Class converterClass = ReflectHelper.classForName( converterClassName );
+			final Class converterClass = ReflectHelper.classForName( converterClassName );
 
 			// First, try to find a matching constructor accepting a ViolatedConstraintNameExtracter param...
-			Constructor[] ctors = converterClass.getDeclaredConstructors();
-			for ( int i = 0; i < ctors.length; i++ ) {
-				if ( ctors[i].getParameterTypes() != null && ctors[i].getParameterTypes().length == 1 ) {
-					if ( ViolatedConstraintNameExtracter.class.isAssignableFrom( ctors[i].getParameterTypes()[0] ) ) {
+			final Constructor[] ctors = converterClass.getDeclaredConstructors();
+			for ( Constructor ctor : ctors ) {
+				if ( ctor.getParameterTypes() != null && ctor.getParameterTypes().length == 1 ) {
+					if ( ViolatedConstraintNameExtracter.class.isAssignableFrom( ctor.getParameterTypes()[0] ) ) {
 						try {
-							return ( SQLExceptionConverter )
-									ctors[i].newInstance( new Object[]{violatedConstraintNameExtracter} );
+							return (SQLExceptionConverter) ctor.newInstance( violatedConstraintNameExtracter );
 						}
-						catch ( Throwable t ) {
+						catch (Throwable ignore) {
 							// eat it and try next
 						}
 					}
@@ -126,10 +124,10 @@ public class SQLExceptionConverterFactory {
 			}
 
 			// Otherwise, try to use the no-arg constructor
-			return ( SQLExceptionConverter ) converterClass.newInstance();
+			return (SQLExceptionConverter) converterClass.newInstance();
 
 		}
-		catch ( Throwable t ) {
+		catch (Throwable t) {
 			LOG.unableToConstructSqlExceptionConverter( t );
 		}
 

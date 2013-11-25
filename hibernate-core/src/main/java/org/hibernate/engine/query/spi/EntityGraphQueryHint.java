@@ -22,7 +22,6 @@ package org.hibernate.engine.query.spi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.AttributeNode;
@@ -44,28 +43,26 @@ import org.hibernate.type.Type;
  * Encapsulates a JPA EntityGraph provided through a JPQL query hint.  Converts the fetches into a list of AST
  * FromElements.  The logic is kept here as much as possible in order to make it easy to remove this in the future,
  * once our AST is improved and this "hack" is no longer needed.
- * 
+ *
  * @author Brett Meyer
  */
 public class EntityGraphQueryHint {
-	
 	private final EntityGraph<?> originEntityGraph;
-	
-	public EntityGraphQueryHint( EntityGraph<?> originEntityGraph ) {
+
+	public EntityGraphQueryHint(EntityGraph<?> originEntityGraph) {
 		this.originEntityGraph = originEntityGraph;
 	}
-	
+
 	public List<FromElement> toFromElements(FromClause fromClause, HqlSqlWalker walker) {
 		// If a role already has an explicit fetch in the query, skip it in the graph.
 		Map<String, FromElement> explicitFetches = new HashMap<String, FromElement>();
-		Iterator iter = fromClause.getFromElements().iterator();
-		while ( iter.hasNext() ) {
-			final FromElement fromElement = ( FromElement ) iter.next();
-			if (fromElement.getRole() != null) {
+		for ( Object o : fromClause.getFromElements() ) {
+			final FromElement fromElement = (FromElement) o;
+			if ( fromElement.getRole() != null ) {
 				explicitFetches.put( fromElement.getRole(), fromElement );
 			}
 		}
-		
+
 		return getFromElements(
 				originEntityGraph.getAttributeNodes(),
 				fromClause.getFromElement(),
@@ -74,7 +71,7 @@ public class EntityGraphQueryHint {
 				explicitFetches
 		);
 	}
-	
+
 	private List<FromElement> getFromElements(
 			List attributeNodes,
 			FromElement origin,
@@ -82,34 +79,35 @@ public class EntityGraphQueryHint {
 			HqlSqlWalker walker,
 			Map<String, FromElement> explicitFetches) {
 		final List<FromElement> fromElements = new ArrayList<FromElement>();
-		
-		for (Object obj : attributeNodes) {			
+
+		for ( Object obj : attributeNodes ) {
 			final AttributeNode<?> attributeNode = (AttributeNode<?>) obj;
-			
+
 			final String attributeName = attributeNode.getAttributeName();
 			final String className = origin.getClassName();
 			final String role = className + "." + attributeName;
-			
 			final String classAlias = origin.getClassAlias();
-			
 			final String originTableAlias = origin.getTableAlias();
-			
-			Type propertyType = origin.getPropertyType( attributeName, attributeName );
-			
+			final Type propertyType = origin.getPropertyType( attributeName, attributeName );
+
 			try {
 				FromElement fromElement = null;
-				if (!explicitFetches.containsKey( role )) {
+				if ( !explicitFetches.containsKey( role ) ) {
 					if ( propertyType.isEntityType() ) {
 						final EntityType entityType = (EntityType) propertyType;
-						
+
 						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
 						final String tableAlias = walker.getAliasGenerator().createName(
-								entityType.getAssociatedEntityName() );	
-						
-						final FromElementFactory fromElementFactory = new FromElementFactory( fromClause, origin,
-								attributeName, classAlias, columns, false);
+								entityType.getAssociatedEntityName()
+						);
+
+						final FromElementFactory fromElementFactory = new FromElementFactory(
+								fromClause, origin,
+								attributeName, classAlias, columns, false
+						);
 						final JoinSequence joinSequence = walker.getSessionFactoryHelper().createJoinSequence(
-								false, entityType, tableAlias, JoinType.LEFT_OUTER_JOIN, columns );
+								false, entityType, tableAlias, JoinType.LEFT_OUTER_JOIN, columns
+						);
 						fromElement = fromElementFactory.createEntityJoin(
 								entityType.getAssociatedEntityName(),
 								tableAlias,
@@ -121,25 +119,32 @@ public class EntityGraphQueryHint {
 								null
 						);
 					}
-					else if ( propertyType.isCollectionType() ) {					
-						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );		
-						
-						final FromElementFactory fromElementFactory = new FromElementFactory( fromClause, origin,
-								attributeName, classAlias, columns, false);
+					else if ( propertyType.isCollectionType() ) {
+						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
+
+						final FromElementFactory fromElementFactory = new FromElementFactory(
+								fromClause, origin,
+								attributeName, classAlias, columns, false
+						);
 						final QueryableCollection queryableCollection = walker.getSessionFactoryHelper()
 								.requireQueryableCollection( role );
 						fromElement = fromElementFactory.createCollection(
-								queryableCollection, role, JoinType.LEFT_OUTER_JOIN, true, false ) ;
+								queryableCollection, role, JoinType.LEFT_OUTER_JOIN, true, false
+						);
 					}
 				}
-				
-				if (fromElement != null) {
+
+				if ( fromElement != null ) {
 					fromElements.add( fromElement );
-					
+
 					// recurse into subgraphs
-					for (Subgraph<?> subgraph : attributeNode.getSubgraphs().values()) {
-						fromElements.addAll( getFromElements( subgraph.getAttributeNodes(), fromElement,
-								fromClause, walker, explicitFetches ) );
+					for ( Subgraph<?> subgraph : attributeNode.getSubgraphs().values() ) {
+						fromElements.addAll(
+								getFromElements(
+										subgraph.getAttributeNodes(), fromElement,
+										fromClause, walker, explicitFetches
+								)
+						);
 					}
 				}
 			}
@@ -147,7 +152,7 @@ public class EntityGraphQueryHint {
 				throw new QueryException( "Could not apply the EntityGraph to the Query!", e );
 			}
 		}
-		
+
 		return fromElements;
 	}
 }

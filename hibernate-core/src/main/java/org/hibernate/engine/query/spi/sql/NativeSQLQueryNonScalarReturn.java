@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008, Red Hat Middleware LLC or third-party contributors as
+ * Copyright (c) 2008, 2013, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
- * distributed under license by Red Hat Middleware LLC.
+ * distributed under license by Red Hat Inc.
  *
  * This copyrighted material is made available to anyone wishing to use, modify,
  * copy, or redistribute it subject to the terms and conditions of the GNU
@@ -20,9 +20,9 @@
  * Free Software Foundation, Inc.
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
- *
  */
 package org.hibernate.engine.query.spi.sql;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +62,14 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 		this.hashCode = determineHashCode();
 	}
 
+	private int determineHashCode() {
+		int result = alias != null ? alias.hashCode() : 0;
+		result = 31 * result + ( getClass().getName().hashCode() );
+		result = 31 * result + ( lockMode != null ? lockMode.hashCode() : 0 );
+		result = 31 * result + propertyResults.hashCode();
+		return result;
+	}
+
 	/**
 	 * Retrieve the defined result alias
 	 *
@@ -89,18 +97,13 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 		return Collections.unmodifiableMap( propertyResults );
 	}
 
+	@Override
 	public int hashCode() {
 		return hashCode;
 	}
 
-	private int determineHashCode() {
-		int result = alias != null ? alias.hashCode() : 0;
-		result = 31 * result + ( getClass().getName().hashCode() );
-		result = 31 * result + ( lockMode != null ? lockMode.hashCode() : 0 );
-		result = 31 * result + ( propertyResults != null ? propertyResults.hashCode() : 0 );
-		return result;
-	}
-
+	@Override
+	@SuppressWarnings("RedundantIfStatement")
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -109,7 +112,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 			return false;
 		}
 
-		NativeSQLQueryNonScalarReturn that = ( NativeSQLQueryNonScalarReturn ) o;
+		final NativeSQLQueryNonScalarReturn that = (NativeSQLQueryNonScalarReturn) o;
 
 		if ( alias != null ? !alias.equals( that.alias ) : that.alias != null ) {
 			return false;
@@ -117,7 +120,7 @@ public abstract class NativeSQLQueryNonScalarReturn implements NativeSQLQueryRet
 		if ( lockMode != null ? !lockMode.equals( that.lockMode ) : that.lockMode != null ) {
 			return false;
 		}
-		if ( propertyResults != null ? !propertyResults.equals( that.propertyResults ) : that.propertyResults != null ) {
+		if ( !propertyResults.equals( that.propertyResults ) ) {
 			return false;
 		}
 

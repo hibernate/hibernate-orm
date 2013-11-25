@@ -39,7 +39,6 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, SessionFactoryAwareNode {
-
 	private SessionFactoryImplementor factory;
 
 	private String constantExpression;
@@ -49,7 +48,7 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 	private Type expectedType;
 
 	@Override
-    public void setText(String s) {
+	public void setText(String s) {
 		// for some reason the antlr.CommonAST initialization routines force
 		// this method to get called twice.  The first time with an empty string
 		if ( StringHelper.isNotEmpty( s ) ) {
@@ -60,31 +59,35 @@ public class JavaConstantNode extends Node implements ExpectedTypeAwareNode, Ses
 		}
 	}
 
+	@Override
 	public void setExpectedType(Type expectedType) {
 		this.expectedType = expectedType;
 	}
 
+	@Override
 	public Type getExpectedType() {
 		return expectedType;
 	}
 
+	@Override
 	public void setSessionFactory(SessionFactoryImplementor factory) {
 		this.factory = factory;
 	}
 
 	@Override
-    public String getRenderText(SessionFactoryImplementor sessionFactory) {
-		Type type = expectedType == null
+	@SuppressWarnings("unchecked")
+	public String getRenderText(SessionFactoryImplementor sessionFactory) {
+		final Type type = expectedType == null
 				? heuristicType
 				: Number.class.isAssignableFrom( heuristicType.getReturnedClass() )
-						? heuristicType
-						: expectedType;
+				? heuristicType
+				: expectedType;
 		try {
-			LiteralType literalType = ( LiteralType ) type;
-			Dialect dialect = factory.getDialect();
+			final LiteralType literalType = (LiteralType) type;
+			final Dialect dialect = factory.getDialect();
 			return literalType.objectToSQLString( constantValue, dialect );
 		}
-		catch ( Exception t ) {
+		catch (Exception t) {
 			throw new QueryException( QueryTranslator.ERROR_CANNOT_FORMAT_LITERAL + constantExpression, t );
 		}
 	}

@@ -5,7 +5,7 @@ buildscript {
 	  mavenRepo name: 'jboss-nexus', url: "http://repository.jboss.org/nexus/content/groups/public/"
   }
   dependencies {
-      classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.2-SNAPSHOT"
+      classpath "org.jboss.jdocbook:gradle-jdocbook:1.2.2"
   }
 }
 

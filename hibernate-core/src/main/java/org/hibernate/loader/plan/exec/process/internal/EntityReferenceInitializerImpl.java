@@ -140,7 +140,7 @@ public class EntityReferenceInitializerImpl implements EntityReferenceInitialize
 		final EntityKey entityKey = processingState.getEntityKey();
 		if ( entityKey != null ) {
 			log.debugf(
-					"On call to EntityIdentifierReaderImpl#resolve [for %s], EntityKey was already known; " +
+					"On call to EntityIdentifierReaderImpl#resolve, EntityKey was already known; " +
 							"should only happen on root returns with an optional identifier specified"
 			);
 			return;

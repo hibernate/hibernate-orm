@@ -1501,7 +1501,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToCloseSessionButSwallowingError(HibernateException e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "You should set hibernate.transaction.manager_lookup_class if cache is enabled", id = 426)
+	@Message(value = "You should set hibernate.transaction.jta.platform if cache is enabled", id = 426)
 	void setManagerLookupClass();
 
 //	@LogMessage(level = WARN)

@@ -151,8 +151,8 @@ import org.jboss.logging.Logger;
  *   Session</tt> (de)serialization.</td>
  * </tr>
  * <tr>
- *   <td><tt>hibernate.transaction.manager_lookup_class</tt></td>
- *   <td>classname of <tt>org.hibernate.transaction.TransactionManagerLookup</tt>
+ *   <td><tt>hibernate.transaction.jta.platform</tt></td>
+ *   <td>classname of <tt>org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform</tt>
  *   implementor</td>
  * </tr>
  * <tr>

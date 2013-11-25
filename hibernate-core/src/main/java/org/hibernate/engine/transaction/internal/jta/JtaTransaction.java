@@ -156,9 +156,6 @@ public class JtaTransaction extends AbstractTransactionImpl {
 		catch ( Exception e ) {
 			throw new TransactionException( "JTA commit failed: ", e );
 		}
-		finally {
-			isInitiator = false;
-		}
 	}
 
 	@Override
@@ -169,16 +166,21 @@ public class JtaTransaction extends AbstractTransactionImpl {
 	@Override
 	protected void afterAfterCompletion() {
 		// this method is a noop if there is a Synchronization!
-		if ( isDriver ) {
-			if ( !isInitiator ) {
-				LOG.setManagerLookupClass();
+		try {
+			if ( isDriver ) {
+				if ( !isInitiator ) {
+					LOG.setManagerLookupClass();
+				}
+				try {
+					transactionCoordinator().afterTransaction( this, userTransaction.getStatus() );
+				}
+				catch (SystemException e) {
+					throw new TransactionException( "Unable to determine UserTransaction status", e );
+				}
 			}
-			try {
-				transactionCoordinator().afterTransaction( this, userTransaction.getStatus() );
-			}
-			catch (SystemException e) {
-				throw new TransactionException( "Unable to determine UserTransaction status", e );
-			}
+		}
+		finally {
+			isInitiator = false;
 		}
 	}
 

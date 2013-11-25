@@ -1536,7 +1536,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 				TransactionManager transactionManager = sfi().getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager();
 				if ( transactionManager == null ) {
 					throw new PersistenceException(
-							"Using a JTA persistence context wo setting hibernate.transaction.manager_lookup_class"
+							"Using a JTA persistence context wo setting hibernate.transaction.jta.platform"
 					);
 				}
 				try {

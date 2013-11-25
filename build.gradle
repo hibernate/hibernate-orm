@@ -319,7 +319,9 @@ subprojects { subProject ->
         }
 
         // eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-        eclipseClasspath.dependsOn("generateSources")
+        // TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
+        // Gradle plugin).  For now, just compile first in order to get the logging classes.
+        eclipseClasspath.dependsOn("testClasses")
 
 
         // Animal Sniffer ~~~~~~~~~~~~~~~~~~

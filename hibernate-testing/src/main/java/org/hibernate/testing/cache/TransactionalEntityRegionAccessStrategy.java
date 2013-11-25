@@ -11,33 +11,22 @@ class TransactionalEntityRegionAccessStrategy extends BaseEntityRegionAccessStra
 		super( region );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean afterInsert(Object key, Object value, Object version) {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean afterUpdate(Object key, Object value, Object currentVersion, Object previousVersion, SoftLock lock) {
 		return false;
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void remove(Object key) throws CacheException {
 		evict( key );
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean update(Object key, Object value, Object currentVersion,
 						  Object previousVersion) throws CacheException {
 		return insert( key, value, currentVersion );

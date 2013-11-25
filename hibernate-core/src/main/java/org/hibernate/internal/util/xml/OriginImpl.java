@@ -39,16 +39,12 @@ public class OriginImpl implements Origin, Serializable {
 		this.name = name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getType() {
 		return type;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getName() {
 		return name;
 	}

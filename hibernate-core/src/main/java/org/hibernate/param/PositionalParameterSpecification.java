@@ -60,6 +60,7 @@ public class PositionalParameterSpecification extends AbstractExplicitParameterS
 	 *
 	 * @return The number of sql bind positions "eaten" by this bind operation.
 	 */
+	@Override
 	public int bind(PreparedStatement statement, QueryParameters qp, SessionImplementor session, int position) throws SQLException {
 		Type type = qp.getPositionalParameterTypes()[hqlPosition];
 		Object value = qp.getPositionalParameterValues()[hqlPosition];
@@ -68,9 +69,7 @@ public class PositionalParameterSpecification extends AbstractExplicitParameterS
 		return type.getColumnSpan( session.getFactory() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String renderDisplayInfo() {
 		return "ordinal=" + hqlPosition + ", expectedType=" + getExpectedType();
 	}

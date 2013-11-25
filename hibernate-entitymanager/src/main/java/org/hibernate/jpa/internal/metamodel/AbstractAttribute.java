@@ -60,37 +60,27 @@ public abstract class AbstractAttribute<X, Y>
 		this.persistentAttributeType = persistentAttributeType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public ManagedType<X> getDeclaringType() {
 		return declaringType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<Y> getJavaType() {
 		return javaType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Member getJavaMember() {
 		return member;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public PersistentAttributeType getPersistentAttributeType() {
 		return persistentAttributeType;
 	}

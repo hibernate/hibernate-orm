@@ -55,7 +55,7 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 		COMPONENT_REF
 	}
 
-	private boolean nakedPropertyRef = false;
+	private boolean nakedPropertyRef;
 
 	public void resolveIndex(AST parent) throws SemanticException {
 		// An ident node can represent an index expression if the ident

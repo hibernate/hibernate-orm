@@ -35,17 +35,13 @@ import org.hibernate.engine.spi.SessionImplementor;
  * @author Gavin King
  */
 public class MapAccessor implements PropertyAccessor {
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Getter getGetter(Class theClass, String propertyName)
 		throws PropertyNotFoundException {
 		return new MapGetter(propertyName);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Setter getSetter(Class theClass, String propertyName)
 		throws PropertyNotFoundException {
 		return new MapSetter(propertyName);
@@ -58,26 +54,21 @@ public class MapAccessor implements PropertyAccessor {
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
+		@SuppressWarnings("unchecked")
 		public void set(Object target, Object value, SessionFactoryImplementor factory)
 			throws HibernateException {
-			( (Map) target ).put(name, value);
+			( (Map) target ).put( name, value );
 		}
 
 	}
@@ -89,44 +80,32 @@ public class MapAccessor implements PropertyAccessor {
 			this.name = name;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getMember() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object get(Object target) throws HibernateException {
 			return ( (Map) target ).get(name);
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object getForInsert(Object target, Map mergeMap, SessionImplementor session) {
 			return get( target );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class getReturnType() {
 			return Object.class;
 		}

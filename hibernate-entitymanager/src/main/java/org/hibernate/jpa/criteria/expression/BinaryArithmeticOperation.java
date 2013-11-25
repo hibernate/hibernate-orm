@@ -43,48 +43,50 @@ public class BinaryArithmeticOperation<N extends Number>
 
 	public static enum Operation {
 		ADD {
+			@Override
 			String apply(String lhs, String rhs) {
 				return applyPrimitive( lhs, '+', rhs );
 			}
 		},
 		SUBTRACT {
+			@Override
 			String apply(String lhs, String rhs) {
 				return applyPrimitive( lhs, '-', rhs );
 			}
 		},
 		MULTIPLY {
+			@Override
 			String apply(String lhs, String rhs) {
 				return applyPrimitive( lhs, '*', rhs );
 			}
 		},
 		DIVIDE {
+			@Override
 			String apply(String lhs, String rhs) {
 				return applyPrimitive( lhs, '/', rhs );
 			}
 		},
 		QUOT {
+			@Override
 			String apply(String lhs, String rhs) {
 				return applyPrimitive( lhs, '/', rhs );
 			}
 		},
 		MOD {
+			@Override
 			String apply(String lhs, String rhs) {
 //				return lhs + " % " + rhs;
 				return "mod(" + lhs + "," + rhs + ")";
 			}
 		};
+
 		abstract String apply(String lhs, String rhs);
 
 		private static final char LEFT_PAREN = '(';
 		private static final char RIGHT_PAREN = ')';
+
 		private static String applyPrimitive(String lhs, char operator, String rhs) {
-			return new StringBuffer( lhs.length() + rhs.length() + 3 )
-					.append( LEFT_PAREN )
-					.append( lhs )
-					.append( operator )
-					.append( rhs )
-					.append( RIGHT_PAREN )
-					.toString();
+			return String.valueOf( LEFT_PAREN ) + lhs + operator + rhs + RIGHT_PAREN;
 		}
 	}
 
@@ -102,8 +104,7 @@ public class BinaryArithmeticOperation<N extends Number>
 	public static Class<? extends Number> determineResultType(
 			Class<? extends Number> argument1Type,
 			Class<? extends Number> argument2Type,
-			boolean isQuotientOperation
-	) {
+			boolean isQuotientOperation) {
 		if ( isQuotientOperation ) {
 			return Number.class;
 		}
@@ -206,28 +207,23 @@ public class BinaryArithmeticOperation<N extends Number>
 		return operator;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Expression<? extends N> getRightHandOperand() {
 		return rhs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Expression<? extends N> getLeftHandOperand() {
 		return lhs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getRightHandOperand(), registry );
 		Helper.possibleParameter( getLeftHandOperand(), registry );
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return getOperator().apply(
 				( (Renderable) getLeftHandOperand() ).render( renderingContext ),
@@ -235,6 +231,7 @@ public class BinaryArithmeticOperation<N extends Number>
 		);
 	}
 
+	@Override
 	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}

@@ -54,18 +54,13 @@ public final class RootEntityResultTransformer extends BasicTransformerAdapter i
 		return tuple[ tuple.length-1 ];
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
-
 		boolean[] includeInTransform;
 		if ( tupleLength == 1 ) {
 			includeInTransform = ArrayHelper.TRUE;

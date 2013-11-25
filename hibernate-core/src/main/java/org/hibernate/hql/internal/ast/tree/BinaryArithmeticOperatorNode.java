@@ -48,8 +48,8 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 			throw new SemanticException( "right-hand operand of a binary operator was null" );
 		}
 
-		final Type lhType = ( lhs instanceof SqlNode ) ? ( ( SqlNode ) lhs ).getDataType() : null;
-		final Type rhType = ( rhs instanceof SqlNode ) ? ( ( SqlNode ) rhs ).getDataType() : null;
+		final Type lhType = ( lhs instanceof SqlNode ) ? ( (SqlNode) lhs ).getDataType() : null;
+		final Type rhType = ( rhs instanceof SqlNode ) ? ( (SqlNode) rhs ).getDataType() : null;
 
 		if ( ExpectedTypeAwareNode.class.isAssignableFrom( lhs.getClass() ) && rhType != null ) {
 			Type expectedType = null;
@@ -84,7 +84,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 			else {
 				expectedType = lhType;
 			}
-			( ( ExpectedTypeAwareNode ) rhs ).setExpectedType( expectedType );
+			( (ExpectedTypeAwareNode) rhs ).setExpectedType( expectedType );
 		}
 	}
 
@@ -107,8 +107,8 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 		//      makes any sense.
 		Node lhs = getLeftHandOperand();
 		Node rhs = getRightHandOperand();
-		Type lhType = ( lhs instanceof SqlNode ) ? ( ( SqlNode ) lhs ).getDataType() : null;
-		Type rhType = ( rhs instanceof SqlNode ) ? ( ( SqlNode ) rhs ).getDataType() : null;
+		Type lhType = ( lhs instanceof SqlNode ) ? ( (SqlNode) lhs ).getDataType() : null;
+		Type rhType = ( rhs instanceof SqlNode ) ? ( (SqlNode) rhs ).getDataType() : null;
 		if ( isDateTimeType( lhType ) || isDateTimeType( rhType ) ) {
 			return resolveDateTimeArithmeticResultType( lhType, rhType );
 		}
@@ -209,7 +209,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 	 */
 	@Override
 	public Node getLeftHandOperand() {
-		return ( Node ) getFirstChild();
+		return (Node) getFirstChild();
 	}
 
 	/**
@@ -219,7 +219,7 @@ public class BinaryArithmeticOperatorNode extends AbstractSelectExpression imple
 	 */
 	@Override
 	public Node getRightHandOperand() {
-		return ( Node ) getFirstChild().getNextSibling();
+		return (Node) getFirstChild().getNextSibling();
 	}
 
 	@Override

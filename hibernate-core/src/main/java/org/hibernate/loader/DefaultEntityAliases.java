@@ -136,9 +136,7 @@ public class DefaultEntityAliases implements EntityAliases {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[][] getSuffixedPropertyAliases(Loadable persister) {
 		final int size = persister.getPropertyNames().length;
 		final String[][] suffixedPropertyAliases = new String[size][];
@@ -153,37 +151,27 @@ public class DefaultEntityAliases implements EntityAliases {
 		return suffixedPropertyAliases;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] getSuffixedVersionAliases() {
 		return suffixedVersionColumn;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[][] getSuffixedPropertyAliases() {
 		return suffixedPropertyColumns;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getSuffixedDiscriminatorAlias() {
 		return suffixedDiscriminatorColumn;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String[] getSuffixedKeyAliases() {
 		return suffixedKeyColumns;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getRowIdAlias() {
 		return rowIdAlias;
 	}

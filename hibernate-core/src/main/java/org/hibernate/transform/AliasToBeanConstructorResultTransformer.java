@@ -49,6 +49,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	/**
 	 * Wrap the incoming tuples in a call to our configured constructor.
 	 */
+	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		try {
 			return constructor.newInstance( tuple );
@@ -61,9 +62,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public List transformList(List collection) {
 		return collection;
 	}
@@ -73,6 +72,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	 *
 	 * @return Our defined ctor hashCode
 	 */
+	@Override
 	public int hashCode() {
 		return constructor.hashCode();
 	}
@@ -84,6 +84,7 @@ public class AliasToBeanConstructorResultTransformer implements ResultTransforme
 	 * @param other The other instance to check for equality.
 	 * @return True if both have the same defined constuctor; false otherwise.
 	 */
+	@Override
 	public boolean equals(Object other) {
 		return other instanceof AliasToBeanConstructorResultTransformer
 				&& constructor.equals( ( ( AliasToBeanConstructorResultTransformer ) other ).constructor );

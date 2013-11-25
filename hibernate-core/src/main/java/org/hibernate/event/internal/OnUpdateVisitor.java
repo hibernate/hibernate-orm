@@ -47,9 +47,7 @@ public class OnUpdateVisitor extends ReattachVisitor {
 		super( session, key, owner );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
 
 		if ( collection == CollectionType.UNFETCHED_COLLECTION ) {

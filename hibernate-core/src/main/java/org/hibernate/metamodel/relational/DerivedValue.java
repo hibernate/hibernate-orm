@@ -38,16 +38,11 @@ public class DerivedValue extends AbstractSimpleValue {
 		this.expression = expression;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String toLoggableString() {
 		return getTable().toLoggableString() + ".{derived-column}";
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String getAlias(Dialect dialect) {
 		return "formula" + Integer.toString( getPosition() ) + '_';

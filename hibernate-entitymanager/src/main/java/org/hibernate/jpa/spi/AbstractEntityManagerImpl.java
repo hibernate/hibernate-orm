@@ -775,20 +775,14 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 
 		final SessionFactoryImplementor sfi = entityManagerFactory.getSessionFactory();
 
-		// first try as hql/jpql query
-		{
-			final NamedQueryDefinition namedQueryDefinition = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
-			if ( namedQueryDefinition != null ) {
-				return createNamedJpqlQuery( namedQueryDefinition, resultType );
-			}
+		final NamedQueryDefinition jpqlDefinition = sfi.getNamedQueryRepository().getNamedQueryDefinition( name );
+		if ( jpqlDefinition != null ) {
+			return createNamedJpqlQuery( jpqlDefinition, resultType );
 		}
 
-		// then as a native (SQL) query
-		{
-			final NamedSQLQueryDefinition namedQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
-			if ( namedQueryDefinition != null ) {
-				return createNamedSqlQuery( namedQueryDefinition, resultType );
-			}
+		final NamedSQLQueryDefinition nativeQueryDefinition = sfi.getNamedQueryRepository().getNamedSQLQueryDefinition( name );
+		if ( nativeQueryDefinition != null ) {
+			return createNamedSqlQuery( nativeQueryDefinition, resultType );
 		}
 
 		throw convert( new IllegalArgumentException( "No query defined for that name [" + name + "]" ) );
@@ -1247,9 +1241,9 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public void refresh(Object entity, LockModeType lockModeType, Map<String, Object> properties) {
 		checkOpen();
 
-		Session session = internalGetSession();
-		CacheMode previousCacheMode = session.getCacheMode();
-		CacheMode localCacheMode = determineAppropriateLocalCacheMode( properties );
+		final Session session = internalGetSession();
+		final CacheMode previousCacheMode = session.getCacheMode();
+		final CacheMode localCacheMode = determineAppropriateLocalCacheMode( properties );
 		LockOptions lockOptions = null;
 		try {
 			session.setCacheMode( localCacheMode );
@@ -1737,10 +1731,10 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			handlePersistenceException( converted );
 			return converted;
 		}
-        else if ( e instanceof org.hibernate.NonUniqueObjectException ) {
+		else if ( e instanceof org.hibernate.NonUniqueObjectException ) {
 			final EntityExistsException converted = new EntityExistsException( e.getMessage() );
-            handlePersistenceException( converted );
-            return converted;
+			handlePersistenceException( converted );
+			return converted;
         }
 		else if ( e instanceof org.hibernate.NonUniqueResultException ) {
 			final NonUniqueResultException converted = new NonUniqueResultException( e.getMessage() );
@@ -1761,7 +1755,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 			catch ( Exception ne ) {
 				//we do not want the subsequent exception to swallow the original one
-                LOG.unableToMarkForRollbackOnTransientObjectException(ne);
+				LOG.unableToMarkForRollbackOnTransientObjectException( ne );
 			}
 			return new IllegalStateException( e ); //Spec 3.2.3 Synchronization rules
 		}
@@ -1781,7 +1775,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 	public PersistenceException wrapStaleStateException(StaleStateException e) {
 		PersistenceException pe;
 		if ( e instanceof StaleObjectStateException ) {
-			final StaleObjectStateException sose = ( StaleObjectStateException ) e;
+			final StaleObjectStateException sose = (StaleObjectStateException) e;
 			final Serializable identifier = sose.getIdentifier();
 			if ( identifier != null ) {
 				try {
@@ -1828,7 +1822,7 @@ public abstract class AbstractEntityManagerImpl implements HibernateEntityManage
 			}
 		}
 		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			final org.hibernate.PessimisticLockException jdbcLockException = ( org.hibernate.PessimisticLockException ) e;
+			final org.hibernate.PessimisticLockException jdbcLockException = (org.hibernate.PessimisticLockException) e;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified
 				pe = new LockTimeoutException( jdbcLockException.getMessage(), jdbcLockException, null );

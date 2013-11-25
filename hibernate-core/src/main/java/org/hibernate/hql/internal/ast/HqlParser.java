@@ -479,7 +479,7 @@ public final class HqlParser extends HqlBaseParser {
 		return treatMap == null ? Collections.<String, Set<String>>emptyMap() : treatMap;
 	}
 
-	static public void panic() {
+	public static void panic() {
 		//overriden to avoid System.exit
 		throw new QueryException( "Parser: panic" );
 	}

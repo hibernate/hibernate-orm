@@ -40,10 +40,12 @@ public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger>
 		super( BigInteger.class );
 	}
 
+	@Override
 	public String toString(BigInteger value) {
 		return value.toString();
 	}
 
+	@Override
 	public BigInteger fromString(String string) {
 		return new BigInteger( string );
 	}
@@ -58,9 +60,7 @@ public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger>
 		return one == another || ( one != null && another != null && one.compareTo( another ) == 0 );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> X unwrap(BigInteger value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
@@ -93,9 +93,7 @@ public class BigIntegerTypeDescriptor extends AbstractTypeDescriptor<BigInteger>
 		throw unknownUnwrap( type );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public <X> BigInteger wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;

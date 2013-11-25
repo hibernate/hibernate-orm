@@ -22,6 +22,7 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.mapping;
+
 import java.io.Serializable;
 
 import org.hibernate.dialect.Dialect;
@@ -33,7 +34,7 @@ import org.hibernate.sql.Template;
  * @author Gavin King
  */
 public class Formula implements Selectable, Serializable {
-	private static int formulaUniqueInteger=0;
+	private static int formulaUniqueInteger;
 
 	private String formula;
 	private int uniqueInteger;

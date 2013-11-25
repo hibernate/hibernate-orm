@@ -51,9 +51,7 @@ public class OrderedSetType extends SetType {
 		super( typeScope, role, propertyRef );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object instantiate(int anticipatedSize) {
 		return anticipatedSize > 0
 				? new LinkedHashSet( anticipatedSize )

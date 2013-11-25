@@ -41,23 +41,17 @@ public class PassThroughResultTransformer extends BasicTransformerAdapter implem
 	private PassThroughResultTransformer() {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return tuple.length==1 ? tuple[0] : tuple;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isTransformedValueATupleElement(String[] aliases, int tupleLength) {
 		return tupleLength == 1;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
 		boolean[] includeInTransformedResult = new boolean[tupleLength];
 		Arrays.fill( includeInTransformedResult, true );

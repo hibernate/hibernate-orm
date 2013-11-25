@@ -88,9 +88,7 @@ public class FetchProfile {
 		fetches.add( new Fetch( entity, association, style ) );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;
@@ -104,9 +102,7 @@ public class FetchProfile {
 		return name.equals( that.name );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}

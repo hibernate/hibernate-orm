@@ -42,6 +42,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
@@ -59,8 +60,6 @@ import org.hibernate.tuple.Instantiator;
 import org.hibernate.tuple.PojoInstantiator;
 import org.hibernate.type.CompositeType;
 
-import org.jboss.logging.Logger;
-
 /**
  * An {@link EntityTuplizer} specific to the pojo entity mode.
  *
@@ -68,8 +67,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  */
 public class PojoEntityTuplizer extends AbstractEntityTuplizer {
-
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, PojoEntityTuplizer.class.getName());
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( PojoEntityTuplizer.class );
 
 	private final Class mappedClass;
 	private final Class proxyInterface;
@@ -151,9 +149,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     protected ProxyFactory buildProxyFactory(PersistentClass persistentClass, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
@@ -250,9 +245,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 //		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     protected Instantiator buildInstantiator(PersistentClass persistentClass) {
 		if ( optimizer == null ) {
@@ -263,9 +255,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected ProxyFactory buildProxyFactory(EntityBinding entityBinding, Getter idGetter, Setter idSetter) {
 		// determine the id getter and setter methods from the proxy interface (if any)
@@ -354,9 +343,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 //		return getFactory().getSettings().getBytecodeProvider().getProxyFactoryFactory().buildProxyFactory();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected Instantiator buildInstantiator(EntityBinding entityBinding) {
 		if ( optimizer == null ) {
@@ -367,9 +353,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     public void setPropertyValues(Object entity, Object[] values) throws HibernateException {
 		if ( !getEntityMetamodel().hasLazyProperties() && optimizer != null && optimizer.getAccessOptimizer() != null ) {
@@ -380,9 +363,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     public Object[] getPropertyValues(Object entity) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
@@ -393,9 +373,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     public Object[] getPropertyValuesToInsert(Object entity, Map mergeMap, SessionImplementor session) throws HibernateException {
 		if ( shouldGetAllProperties( entity ) && optimizer != null && optimizer.getAccessOptimizer() != null ) {
@@ -414,55 +391,36 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		return optimizer.getAccessOptimizer().getPropertyValues( object );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public EntityMode getEntityMode() {
 		return EntityMode.POJO;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class getMappedClass() {
 		return mappedClass;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     public boolean isLifecycleImplementor() {
 		return lifecycleImplementor;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     protected Getter buildPropertyGetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getGetter( mappedEntity.getMappedClass() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     protected Setter buildPropertySetter(Property mappedProperty, PersistentClass mappedEntity) {
 		return mappedProperty.getSetter( mappedEntity.getMappedClass() );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected Getter buildPropertyGetter(AttributeBinding mappedProperty) {
 		return getGetter( mappedProperty );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected Setter buildPropertySetter(AttributeBinding mappedProperty) {
 		return getSetter( mappedProperty );
@@ -490,18 +448,13 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class getConcreteProxyClass() {
 		return proxyInterface;
 	}
 
     //TODO: need to make the majority of this functionality into a top-level support class for custom impl support
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     public void afterInitialize(Object entity, boolean lazyPropertiesAreUnfetched, SessionImplementor session) {
 		if ( isInstrumented() ) {
@@ -518,9 +471,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
     public boolean hasUninitializedLazyProperties(Object entity) {
 		if ( getEntityMetamodel().hasLazyProperties() ) {
@@ -532,16 +482,12 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isInstrumented() {
 		return isInstrumented;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String determineConcreteSubclassEntityName(Object entityInstance, SessionFactoryImplementor factory) {
 		final Class concreteEntityClass = entityInstance.getClass();
 		if ( concreteEntityClass == getMappedClass() ) {
@@ -559,9 +505,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public EntityNameResolver[] getEntityNameResolvers() {
 		return null;
 	}

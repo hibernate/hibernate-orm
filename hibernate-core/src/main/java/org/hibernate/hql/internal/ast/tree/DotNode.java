@@ -59,7 +59,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	// todo : obviously get rid of all this junk ;)
 	///////////////////////////////////////////////////////////////////////////
 	public static boolean useThetaStyleImplicitJoins;
-	public static boolean REGRESSION_STYLE_JOIN_SUPPRESSION;
+	public static boolean regressionStyleJoinSuppression;
 
 	public static interface IllegalCollectionDereferenceExceptionBuilder {
 		public QueryException buildIllegalCollectionDereferenceException(
@@ -112,7 +112,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	/**
 	 * Fetch join or not.
 	 */
-	private boolean fetch = false;
+	private boolean fetch;
 
 	/**
 	 * The type of dereference that hapened
@@ -367,9 +367,9 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 		// 2) is this a DML statement
 		// 3) we were asked to generate any needed joins (generateJoins==true) *OR*
 		//		we are currently processing a select or from clause
-		// (an additional check is the REGRESSION_STYLE_JOIN_SUPPRESSION check solely intended for the test suite)
+		// (an additional check is the regressionStyleJoinSuppression check solely intended for the test suite)
 		//
-		// The REGRESSION_STYLE_JOIN_SUPPRESSION is an additional check
+		// The regressionStyleJoinSuppression is an additional check
 		// intended solely for use within the test suite.  This forces the
 		// implicit join resolution to behave more like the classic parser.
 		// The underlying issue is that classic translator is simply wrong
@@ -397,7 +397,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			// in non-select queries, the only time we should need to join is if we are in a subquery from clause
 			joinIsNeeded = getWalker().getCurrentStatementType() == SqlTokenTypes.SELECT && getWalker().isInFrom();
 		}
-		else if ( REGRESSION_STYLE_JOIN_SUPPRESSION ) {
+		else if ( regressionStyleJoinSuppression ) {
 			// this is the regression style determination which matches the logic of the classic translator
 			joinIsNeeded = generateJoin && ( !getWalker().isInSelect() || !getWalker().isShallowQuery() );
 		}

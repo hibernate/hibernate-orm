@@ -41,24 +41,16 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * @param sqlTypeDescriptor
-	 * @param javaTypeDescriptor
-	 */
 	public SerializableToBlobType() {
 		super( BlobTypeDescriptor.DEFAULT, new SerializableTypeDescriptor( Serializable.class ) );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getName() {
 		return getClass().getName();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public void setParameterValues(Properties parameters) {
 		ParameterType reader = (ParameterType) parameters.get( PARAMETER_TYPE );

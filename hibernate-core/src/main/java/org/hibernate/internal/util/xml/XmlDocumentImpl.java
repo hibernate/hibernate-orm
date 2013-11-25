@@ -45,16 +45,12 @@ public class XmlDocumentImpl implements XmlDocument, Serializable {
 		this.origin = origin;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Document getDocumentTree() {
 		return documentTree;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Origin getOrigin() {
 		return origin;
 	}

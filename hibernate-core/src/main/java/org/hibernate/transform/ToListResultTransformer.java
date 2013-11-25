@@ -23,6 +23,7 @@
  *
  */
 package org.hibernate.transform;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,7 +32,6 @@ import java.util.List;
  * you end up with is a {@link List} of {@link List Lists}.
  */
 public class ToListResultTransformer extends BasicTransformerAdapter {
-
 	public static final ToListResultTransformer INSTANCE = new ToListResultTransformer();
 
 	/**
@@ -40,9 +40,7 @@ public class ToListResultTransformer extends BasicTransformerAdapter {
 	private ToListResultTransformer() {
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		return Arrays.asList( tuple );
 	}

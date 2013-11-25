@@ -79,9 +79,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		return getEntityName() + '.' + getPropertyName();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void configure(Type type, Properties params, Dialect d) {
 		propertyName = params.getProperty( "property" );
 		entityName = params.getProperty( ENTITY_NAME );
@@ -90,9 +88,7 @@ public class ForeignGenerator implements IdentifierGenerator, Configurable {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Serializable generate(SessionImplementor sessionImplementor, Object object) {
 		Session session = ( Session ) sessionImplementor;
 

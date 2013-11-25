@@ -245,7 +245,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 			final Type type = provider.getType( componentPath );
 			if ( type.isAssociationType() ) {
 				// CollectionTypes are always also AssociationTypes - but there's not always an associated entity...
-				final AssociationType atype = ( AssociationType ) type;
+				final AssociationType atype = (AssociationType) type;
 				final CollectionType ctype = type.isCollectionType() ? (CollectionType)type : null;
 				final Type elementType = (ctype != null) ? ctype.getElementType( sessionFactory ) : null;
 				// is the association a collection of components or value-types? (i.e a colloction of valued types?)
@@ -256,16 +256,19 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 					provider = new ScalarCollectionCriteriaInfoProvider( helper, ctype.getRole() );
 				}
 				else {
-					provider = new EntityCriteriaInfoProvider(( Queryable ) sessionFactory.getEntityPersister(
-											  atype.getAssociatedEntityName( sessionFactory )
-											  ));
+					provider = new EntityCriteriaInfoProvider(
+							(Queryable) sessionFactory.getEntityPersister( atype.getAssociatedEntityName( sessionFactory ) )
+					);
 				}
 				
 				componentPath = "";
 			}
 			else if ( type.isComponentType() ) {
 				if (!tokens.hasMoreTokens()) {
-					throw new QueryException("Criteria objects cannot be created directly on components.  Create a criteria on owning entity and use a dotted property to access component property: "+path);
+					throw new QueryException(
+							"Criteria objects cannot be created directly on components.  Create a criteria on " +
+									"owning entity and use a dotted property to access component property: " + path
+					);
 				}
 				else {
 					componentPath += '.';
@@ -588,14 +591,15 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	public TypedValue getTypedValue(Criteria subcriteria, String propertyName, Object value) throws HibernateException {
 		// Detect discriminator values...
 		if ( value instanceof Class ) {
-			final Class entityClass = ( Class ) value;
+			final Class entityClass = (Class) value;
 			final Queryable q = SessionFactoryHelper.findQueryableUsingImports( sessionFactory, entityClass.getName() );
 			if ( q != null ) {
 				final Type type = q.getDiscriminatorType();
 				String stringValue = q.getDiscriminatorSQLValue();
-				if (stringValue != null && stringValue.length() > 2
+				if ( stringValue != null
+						&& stringValue.length() > 2
 						&& stringValue.startsWith( "'" )
-						&& stringValue.endsWith( "'" )) {
+						&& stringValue.endsWith( "'" ) ) {
 					// remove the single quotes
 					stringValue = stringValue.substring( 1, stringValue.length() - 1 );
 				}
@@ -616,7 +620,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	}
 
 	private PropertyMapping getPropertyMapping(String entityName) throws MappingException {
-		final CriteriaInfoProvider info = nameCriteriaInfoMap.get(entityName);
+		final CriteriaInfoProvider info = nameCriteriaInfoMap.get( entityName );
 		if ( info == null ) {
 			throw new HibernateException( "Unknown entity: " + entityName );
 		}

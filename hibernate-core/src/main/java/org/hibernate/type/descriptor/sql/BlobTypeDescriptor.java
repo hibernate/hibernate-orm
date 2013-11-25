@@ -71,7 +71,8 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 			}
 
 			@Override
-			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
+					throws SQLException {
 				return javaTypeDescriptor.wrap( statement.getBlob( name ), options );
 			}
 		};
@@ -79,76 +80,78 @@ public abstract class BlobTypeDescriptor implements SqlTypeDescriptor {
 
 	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor);
 
+	@Override
 	public <X> BasicBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return getBlobBinder( javaTypeDescriptor );
 	}
 
-	public static final BlobTypeDescriptor DEFAULT =
-			new BlobTypeDescriptor() {
-				{
-					SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
-				}
+	public static final BlobTypeDescriptor DEFAULT = new BlobTypeDescriptor() {
+		{
+			SqlTypeDescriptorRegistry.INSTANCE.addDescriptor( this );
+		}
 
+		@Override
+		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-							BlobTypeDescriptor descriptor = BLOB_BINDING;
-							if ( byte[].class.isInstance( value ) ) {
-								// performance shortcut for binding BLOB data in byte[] format
-								descriptor = PRIMITIVE_ARRAY_BINDING;
-							}
-							else if ( options.useStreamForLobBinding() ) {
-								descriptor = STREAM_BINDING;
-							}
-							descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					BlobTypeDescriptor descriptor = BLOB_BINDING;
+					if ( byte[].class.isInstance( value ) ) {
+						// performance shortcut for binding BLOB data in byte[] format
+						descriptor = PRIMITIVE_ARRAY_BINDING;
+					}
+					else if ( options.useStreamForLobBinding() ) {
+						descriptor = STREAM_BINDING;
+					}
+					descriptor.getBlobBinder( javaTypeDescriptor ).doBind( st, value, index, options );
 				}
 			};
+		}
+	};
 
-	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING =
-			new BlobTypeDescriptor() {
+	public static final BlobTypeDescriptor PRIMITIVE_ARRAY_BINDING = new BlobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-								throws SQLException {
-							st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
-						}
-					};
+				public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setBytes( index, javaTypeDescriptor.unwrap( value, byte[].class, options ) );
 				}
 			};
+		}
+	};
 
-	public static final BlobTypeDescriptor BLOB_BINDING =
-			new BlobTypeDescriptor() {
+	public static final BlobTypeDescriptor BLOB_BINDING = new BlobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-								throws SQLException {
-							st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					st.setBlob( index, javaTypeDescriptor.unwrap( value, Blob.class, options ) );
 				}
 			};
+		}
+	};
 
-	public static final BlobTypeDescriptor STREAM_BINDING =
-			new BlobTypeDescriptor() {
+	public static final BlobTypeDescriptor STREAM_BINDING = new BlobTypeDescriptor() {
+		@Override
+		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
-                public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-					return new BasicBinder<X>( javaTypeDescriptor, this ) {
-						@Override
-						protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
-								throws SQLException {
-							final BinaryStream binaryStream = javaTypeDescriptor.unwrap( value, BinaryStream.class, options );
-							st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
-						}
-					};
+				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
+						throws SQLException {
+					final BinaryStream binaryStream = javaTypeDescriptor.unwrap(
+							value,
+							BinaryStream.class,
+							options
+					);
+					st.setBinaryStream( index, binaryStream.getInputStream(), binaryStream.getLength() );
 				}
 			};
+		}
+	};
 
 }

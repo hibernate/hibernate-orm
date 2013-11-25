@@ -40,9 +40,7 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 		super( org.hibernate.type.descriptor.sql.BlobTypeDescriptor.DEFAULT, BlobTypeDescriptor.INSTANCE );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getName() {
 		return "blob";
 	}

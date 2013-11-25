@@ -52,7 +52,7 @@ import org.hibernate.type.TypeFactory;
  * @author Steve Ebersole
  */
 public class Component extends SimpleValue implements MetaAttributable {
-	private ArrayList properties = new ArrayList();
+	private ArrayList<Property> properties = new ArrayList<Property>();
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
@@ -63,7 +63,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private boolean isKey;
 	private String roleName;
 
-	private java.util.Map tuplizerImpls;
+	private java.util.Map<EntityMode,String> tuplizerImpls;
 
 	public Component(Mappings mappings, PersistentClass owner) throws MappingException {
 		super( mappings, owner.getTable() );
@@ -88,15 +88,21 @@ public class Component extends SimpleValue implements MetaAttributable {
 	public int getPropertySpan() {
 		return properties.size();
 	}
+
 	public Iterator getPropertyIterator() {
 		return properties.iterator();
 	}
+
 	public void addProperty(Property p) {
-		properties.add(p);
+		properties.add( p );
 	}
+
+	@Override
 	public void addColumn(Column column) {
 		throw new UnsupportedOperationException("Cant add a column to a component");
 	}
+
+	@Override
 	public int getColumnSpan() {
 		int n=0;
 		Iterator iter = getPropertyIterator();
@@ -106,6 +112,9 @@ public class Component extends SimpleValue implements MetaAttributable {
 		}
 		return n;
 	}
+
+	@Override
+	@SuppressWarnings("unchecked")
 	public Iterator<Selectable> getColumnIterator() {
 		Iterator[] iters = new Iterator[ getPropertySpan() ];
 		Iterator iter = getPropertyIterator();
@@ -113,10 +122,8 @@ public class Component extends SimpleValue implements MetaAttributable {
 		while ( iter.hasNext() ) {
 			iters[i++] = ( (Property) iter.next() ).getColumnIterator();
 		}
-		return new JoinedIterator(iters);
+		return new JoinedIterator( iters );
 	}
-
-	public void setTypeByReflection(String propertyClass, String propertyName) {}
 
 	public boolean isEmbedded() {
 		return embedded;
@@ -167,6 +174,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		this.dynamic = dynamic;
 	}
 
+	@Override
 	public Type getType() throws MappingException {
 		// TODO : temporary initial step towards HHH-1907
 		final ComponentMetamodel metamodel = new ComponentMetamodel( this );
@@ -174,25 +182,32 @@ public class Component extends SimpleValue implements MetaAttributable {
 		return isEmbedded() ? factory.embeddedComponent( metamodel ) : factory.component( metamodel );
 	}
 
+	@Override
 	public void setTypeUsingReflection(String className, String propertyName)
 		throws MappingException {
 	}
-	
+
+	@Override
 	public java.util.Map getMetaAttributes() {
 		return metaAttributes;
 	}
+
+	@Override
 	public MetaAttribute getMetaAttribute(String attributeName) {
 		return metaAttributes==null?null:(MetaAttribute) metaAttributes.get(attributeName);
 	}
 
+	@Override
 	public void setMetaAttributes(java.util.Map metas) {
 		this.metaAttributes = metas;
 	}
-	
+
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}
-	
+
+	@Override
 	public boolean[] getColumnInsertability() {
 		boolean[] result = new boolean[ getColumnSpan() ];
 		Iterator iter = getPropertyIterator();
@@ -208,6 +223,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 		return result;
 	}
 
+	@Override
 	public boolean[] getColumnUpdateability() {
 		boolean[] result = new boolean[ getColumnSpan() ];
 		Iterator iter = getPropertyIterator();
@@ -245,7 +261,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 
 	public void addTuplizer(EntityMode entityMode, String implClassName) {
 		if ( tuplizerImpls == null ) {
-			tuplizerImpls = new HashMap();
+			tuplizerImpls = new HashMap<EntityMode,String>();
 		}
 		tuplizerImpls.put( entityMode, implClassName );
 	}
@@ -255,9 +271,10 @@ public class Component extends SimpleValue implements MetaAttributable {
 		if ( tuplizerImpls == null ) {
 			return null;
 		}
-		return ( String ) tuplizerImpls.get( mode );
+		return tuplizerImpls.get( mode );
 	}
 
+	@SuppressWarnings("UnusedDeclaration")
 	public Map getTuplizerMap() {
 		if ( tuplizerImpls == null ) {
 			return null;
@@ -284,12 +301,14 @@ public class Component extends SimpleValue implements MetaAttributable {
 		this.roleName = roleName;
 	}
 
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + properties.toString() + ')';
 	}
 
 	private IdentifierGenerator builtIdentifierGenerator;
 
+	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
@@ -396,6 +415,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 			this.entityName = entityName;
 		}
 
+		@Override
 		public Serializable locateGenerationContext(SessionImplementor session, Object incomingObject) {
 			return session.getEntityPersister( entityName, incomingObject ).getIdentifier( incomingObject, session );
 		}
@@ -415,14 +435,13 @@ public class Component extends SimpleValue implements MetaAttributable {
 			this.injector = injector;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void execute(SessionImplementor session, Object incomingObject, Object injectionContext) {
 			final Object generatedValue = subGenerator.generate( session, incomingObject );
 			injector.set( injectionContext, generatedValue, session.getFactory() );
 		}
 
+		@Override
 		public void registerPersistentGenerators(Map generatorMap) {
 			if ( PersistentIdentifierGenerator.class.isInstance( subGenerator ) ) {
 				generatorMap.put( ( (PersistentIdentifierGenerator) subGenerator ).generatorKey(), subGenerator );

@@ -248,7 +248,7 @@ public class Table implements RelationalModel, Serializable {
 		return uniqueKeys;
 	}
 
-	private int sizeOfUniqueKeyMapOnLastCleanse = 0;
+	private int sizeOfUniqueKeyMapOnLastCleanse;
 
 	private void cleanseUniqueKeyMapIfNeeded() {
 		if ( uniqueKeys.size() == sizeOfUniqueKeyMapOnLastCleanse ) {

@@ -541,39 +541,35 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				}
 		);
 
-		{
-			final String cfgXmlResourceName = (String) merged.remove( AvailableSettings.CFG_FILE );
-			if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
-				// it does, so load those properties
-				JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue()
-						.loadConfigXmlResource( cfgXmlResourceName );
-				processHibernateConfigurationElement( configurationElement, merged );
-			}
+		final String cfgXmlResourceName1 = (String) merged.remove( AvailableSettings.CFG_FILE );
+		if ( StringHelper.isNotEmpty( cfgXmlResourceName1 ) ) {
+			// it does, so load those properties
+			JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue()
+					.loadConfigXmlResource( cfgXmlResourceName1 );
+			processHibernateConfigurationElement( configurationElement, merged );
 		}
 
 		// see if integration settings named a Hibernate config file....
-		{
-			final String cfgXmlResourceName = (String) integrationSettings.get( AvailableSettings.CFG_FILE );
-			if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
-				integrationSettings.remove( AvailableSettings.CFG_FILE );
-				// it does, so load those properties
-				JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue().loadConfigXmlResource(
-						cfgXmlResourceName
-				);
-				processHibernateConfigurationElement( configurationElement, merged );
-			}
+		final String cfgXmlResourceName2 = (String) integrationSettings.get( AvailableSettings.CFG_FILE );
+		if ( StringHelper.isNotEmpty( cfgXmlResourceName2 ) ) {
+			integrationSettings.remove( AvailableSettings.CFG_FILE );
+			// it does, so load those properties
+			JaxbHibernateConfiguration configurationElement = configLoaderHolder.getValue().loadConfigXmlResource(
+					cfgXmlResourceName2
+			);
+			processHibernateConfigurationElement( configurationElement, merged );
 		}
 
 		// finally, apply integration-supplied settings (per JPA spec, integration settings should override other sources)
 		merged.putAll( integrationSettings );
 
-		if ( ! merged.containsKey( AvailableSettings.VALIDATION_MODE ) ) {
+		if ( !merged.containsKey( AvailableSettings.VALIDATION_MODE ) ) {
 			if ( persistenceUnit.getValidationMode() != null ) {
 				merged.put( AvailableSettings.VALIDATION_MODE, persistenceUnit.getValidationMode() );
 			}
 		}
 
-		if ( ! merged.containsKey( AvailableSettings.SHARED_CACHE_MODE ) ) {
+		if ( !merged.containsKey( AvailableSettings.SHARED_CACHE_MODE ) ) {
 			if ( persistenceUnit.getSharedCacheMode() != null ) {
 				merged.put( AvailableSettings.SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 			}

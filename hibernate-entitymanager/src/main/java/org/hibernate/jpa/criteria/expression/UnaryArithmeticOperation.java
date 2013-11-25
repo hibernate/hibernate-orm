@@ -61,25 +61,23 @@ public class UnaryArithmeticOperation<T>
 		return operation;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Expression<T> getOperand() {
 		return operand;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void registerParameters(ParameterRegistry registry) {
 		Helper.possibleParameter( getOperand(), registry );
 	}
 
+	@Override
 	public String render(RenderingContext renderingContext) {
 		return ( getOperation() == Operation.UNARY_MINUS ? '-' : '+' )
 				+ ( (Renderable) getOperand() ).render( renderingContext );
 	}
 
+	@Override
 	public String renderProjection(RenderingContext renderingContext) {
 		return render( renderingContext );
 	}

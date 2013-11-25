@@ -95,7 +95,7 @@ public class AssignmentSpecification {
 			hqlParameters = new ParameterSpecification[0];
 		}
 		else if ( isParam( rhs ) ) {
-			hqlParameters = new ParameterSpecification[] { ( ( ParameterNode ) rhs ).getHqlParameterSpecification() };
+			hqlParameters = new ParameterSpecification[] { ( (ParameterNode) rhs ).getHqlParameterSpecification() };
 		}
 		else {
 			List parameterList = ASTUtil.collectChildren(
@@ -110,7 +110,7 @@ public class AssignmentSpecification {
 			Iterator itr = parameterList.iterator();
 			int i = 0;
 			while( itr.hasNext() ) {
-				hqlParameters[i++] = ( ( ParameterNode ) itr.next() ).getHqlParameterSpecification();
+				hqlParameters[i++] = ( (ParameterNode) itr.next() ).getHqlParameterSpecification();
 			}
 		}
 	}

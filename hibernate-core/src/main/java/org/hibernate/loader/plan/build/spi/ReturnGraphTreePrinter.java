@@ -198,21 +198,19 @@ public class ReturnGraphTreePrinter {
 			CollectionReference collectionReference,
 			int depth,
 			PrintWriter printWriter) {
-		{
-			final CollectionFetchableIndex indexGraph = collectionReference.getIndexGraph();
-			if ( indexGraph != null ) {
-				printWriter.print( TreePrinterHelper.INSTANCE.generateNodePrefix( depth ) + "(collection index) " );
+		final CollectionFetchableIndex indexGraph = collectionReference.getIndexGraph();
+		if ( indexGraph != null ) {
+			printWriter.print( TreePrinterHelper.INSTANCE.generateNodePrefix( depth ) + "(collection index) " );
 
-				if ( EntityReference.class.isInstance( indexGraph ) ) {
-					final EntityReference indexGraphAsEntityReference = (EntityReference) indexGraph;
-					printWriter.println( extractDetails( indexGraphAsEntityReference ) );
-					writeEntityReferenceFetches( indexGraphAsEntityReference, depth+1, printWriter );
-				}
-				else if ( CompositeFetch.class.isInstance( indexGraph ) ) {
-					final CompositeFetch indexGraphAsCompositeFetch = (CompositeFetch) indexGraph;
-					printWriter.println( extractDetails( indexGraphAsCompositeFetch ) );
-					writeCompositeFetchFetches( indexGraphAsCompositeFetch, depth+1, printWriter );
-				}
+			if ( EntityReference.class.isInstance( indexGraph ) ) {
+				final EntityReference indexGraphAsEntityReference = (EntityReference) indexGraph;
+				printWriter.println( extractDetails( indexGraphAsEntityReference ) );
+				writeEntityReferenceFetches( indexGraphAsEntityReference, depth+1, printWriter );
+			}
+			else if ( CompositeFetch.class.isInstance( indexGraph ) ) {
+				final CompositeFetch indexGraphAsCompositeFetch = (CompositeFetch) indexGraph;
+				printWriter.println( extractDetails( indexGraphAsCompositeFetch ) );
+				writeCompositeFetchFetches( indexGraphAsCompositeFetch, depth+1, printWriter );
 			}
 		}
 

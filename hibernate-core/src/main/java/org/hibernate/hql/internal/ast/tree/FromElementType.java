@@ -518,9 +518,7 @@ class FromElementType {
 	}
 
 	private class SpecialManyToManyCollectionPropertyMapping implements PropertyMapping {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Type getType() {
 			return queryableCollection.getCollectionType();
 		}
@@ -533,17 +531,13 @@ class FromElementType {
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Type toType(String propertyName) throws QueryException {
 			validate( propertyName );
 			return queryableCollection.getIndexType();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String[] toColumns(String alias, String propertyName) throws QueryException {
 			validate( propertyName );
 			final String joinTableAlias = joinSequence.getFirstJoin().getAlias();
@@ -566,9 +560,7 @@ class FromElementType {
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException {
 			validate( propertyName );
 			return queryableCollection.toColumns( propertyName );

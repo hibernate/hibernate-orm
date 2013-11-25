@@ -103,7 +103,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	protected void prepareTest() throws Exception {
 		super.prepareTest();
 		SelectClause.VERSION2_SQL = true;
-		DotNode.REGRESSION_STYLE_JOIN_SUPPRESSION = true;
+		DotNode.regressionStyleJoinSuppression = true;
 		DotNode.ILLEGAL_COLL_DEREF_EXCP_BUILDER = new DotNode.IllegalCollectionDereferenceExceptionBuilder() {
 			public QueryException buildIllegalCollectionDereferenceException(String propertyName, FromReferenceNode lhs) {
 				throw new QueryException( "illegal syntax near collection: " + propertyName );
@@ -115,7 +115,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@Override
 	protected void cleanupTest() throws Exception {
 		SelectClause.VERSION2_SQL = false;
-		DotNode.REGRESSION_STYLE_JOIN_SUPPRESSION = false;
+		DotNode.regressionStyleJoinSuppression = false;
 		DotNode.ILLEGAL_COLL_DEREF_EXCP_BUILDER = DotNode.DEF_ILLEGAL_COLL_DEREF_EXCP_BUILDER;
 		SqlGenerator.REGRESSION_STYLE_CROSS_JOINS = false;
 		super.cleanupTest();

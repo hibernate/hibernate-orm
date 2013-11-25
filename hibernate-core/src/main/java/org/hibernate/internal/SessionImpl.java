@@ -323,6 +323,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return new SharedSessionBuilderImpl( this );
 	}
 
+	@Override
 	public void clear() {
 		errorIfClosed();
 		// Do not call checkTransactionSynchStatus() here -- if a delayed
@@ -341,11 +342,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public long getTimestamp() {
 		checkTransactionSynchStatus();
 		return timestamp;
 	}
 
+	@Override
 	public Connection close() throws HibernateException {
 		LOG.trace( "Closing session" );
 		if ( isClosed() ) {
@@ -377,6 +380,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public ConnectionReleaseMode getConnectionReleaseMode() {
 		return connectionReleaseMode;
 	}
@@ -386,23 +390,28 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return autoJoinTransactions;
 	}
 
+	@Override
 	public boolean isAutoCloseSessionEnabled() {
 		return autoCloseSessionEnabled;
 	}
 
+	@Override
 	public boolean isOpen() {
 		checkTransactionSynchStatus();
 		return !isClosed();
 	}
 
+	@Override
 	public boolean isFlushModeNever() {
 		return FlushMode.isManualFlushMode( getFlushMode() );
 	}
 
+	@Override
 	public boolean isFlushBeforeCompletionEnabled() {
 		return flushBeforeCompletionEnabled;
 	}
 
+	@Override
 	public void managedFlush() {
 		if ( isClosed() ) {
 			LOG.trace( "Skipping auto-flush due to session closed" );
@@ -425,21 +434,25 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public void managedClose() {
 		LOG.trace( "Automatically closing session" );
 		close();
 	}
 
+	@Override
 	public Connection connection() throws HibernateException {
 		errorIfClosed();
 		return transactionCoordinator.getJdbcCoordinator().getLogicalConnection().getConnection();
 	}
 
+	@Override
 	public boolean isConnected() {
 		checkTransactionSynchStatus();
 		return !isClosed() && transactionCoordinator.getJdbcCoordinator().getLogicalConnection().isOpen();
 	}
 
+	@Override
 	public boolean isTransactionInProgress() {
 		checkTransactionSynchStatus();
 		return !isClosed() && transactionCoordinator.isTransactionInProgress();
@@ -461,6 +474,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		transactionCoordinator.getJdbcCoordinator().getLogicalConnection().manualReconnect( conn );
 	}
 
+	@Override
 	public void setAutoClear(boolean enabled) {
 		errorIfClosed();
 		autoClear = enabled;
@@ -584,6 +598,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		persistenceContext.clear();
 	}
 
+	@Override
 	public LockMode getCurrentLockMode(Object object) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -610,6 +625,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return e.getLockMode();
 	}
 
+	@Override
 	public Object getEntityUsingInterceptor(EntityKey key) throws HibernateException {
 		errorIfClosed();
 		// todo : should this get moved to PersistentContext?
@@ -646,10 +662,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// saveOrUpdate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void saveOrUpdate(Object object) throws HibernateException {
 		saveOrUpdate( null, object );
 	}
 
+	@Override
 	public void saveOrUpdate(String entityName, Object obj) throws HibernateException {
 		fireSaveOrUpdate( new SaveOrUpdateEvent( entityName, obj, this ) );
 	}
@@ -675,10 +693,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// save() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public Serializable save(Object obj) throws HibernateException {
 		return save( null, obj );
 	}
 
+	@Override
 	public Serializable save(String entityName, Object object) throws HibernateException {
 		return fireSave( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
@@ -697,10 +717,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// update() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void update(Object obj) throws HibernateException {
 		update( null, obj );
 	}
 
+	@Override
 	public void update(String entityName, Object object) throws HibernateException {
 		fireUpdate( new SaveOrUpdateEvent( entityName, object, this ) );
 	}
@@ -718,14 +740,17 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// lock() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void lock(String entityName, Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent( entityName, object, lockMode, this ) );
 	}
 
+	@Override
 	public LockRequest buildLockRequest(LockOptions lockOptions) {
 		return new LockRequestImpl(lockOptions);
 	}
 
+	@Override
 	public void lock(Object object, LockMode lockMode) throws HibernateException {
 		fireLock( new LockEvent( object, lockMode, this ) );
 	}
@@ -750,16 +775,18 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// persist() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void persist(String entityName, Object object) throws HibernateException {
 		firePersist( new PersistEvent( entityName, object, this ) );
 	}
 
+	@Override
 	public void persist(Object object) throws HibernateException {
 		persist( null, object );
 	}
 
-	public void persist(String entityName, Object object, Map copiedAlready)
-	throws HibernateException {
+	@Override
+	public void persist(String entityName, Object object, Map copiedAlready) throws HibernateException {
 		firePersist( copiedAlready, new PersistEvent( entityName, object, this ) );
 	}
 
@@ -794,6 +821,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		persist( null, object );
 	}
 
+	@Override
 	public void persistOnFlush(String entityName, Object object, Map copiedAlready)
 			throws HibernateException {
 		firePersistOnFlush( copiedAlready, new PersistEvent( entityName, object, this ) );
@@ -821,14 +849,17 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// merge() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public Object merge(String entityName, Object object) throws HibernateException {
 		return fireMerge( new MergeEvent( entityName, object, this ) );
 	}
 
+	@Override
 	public Object merge(Object object) throws HibernateException {
 		return merge( null, object );
 	}
 
+	@Override
 	public void merge(String entityName, Object object, Map copiedAlready) throws HibernateException {
 		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
 	}
@@ -856,30 +887,25 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// delete() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * Delete a persistent object
-	 */
+	@Override
 	public void delete(Object object) throws HibernateException {
 		fireDelete( new DeleteEvent( object, this ) );
 	}
 
-	/**
-	 * Delete a persistent object (by explicit entity name)
-	 */
+	@Override
 	public void delete(String entityName, Object object) throws HibernateException {
 		fireDelete( new DeleteEvent( entityName, object, this ) );
 	}
 
-	/**
-	 * Delete a persistent object
-	 */
+	@Override
 	public void delete(String entityName, Object object, boolean isCascadeDeleteEnabled, Set transientEntities) throws HibernateException {
 		fireDelete( new DeleteEvent( entityName, object, isCascadeDeleteEnabled, this ), transientEntities );
 	}
-	
-	// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
-	// ordering is improved.
+
+	@Override
 	public void removeOrphanBeforeUpdates(String entityName, Object child) {
+		// TODO: The removeOrphan concept is a temporary "hack" for HHH-6484.  This should be removed once action/task
+		// ordering is improved.
 		fireDelete( new DeleteEvent( entityName, child, false, true, this ) );
 	}
 
@@ -904,23 +930,28 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// load()/get() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void load(Object object, Serializable id) throws HibernateException {
 		LoadEvent event = new LoadEvent(id, object, this);
 		fireLoad( event, LoadEventListener.RELOAD );
 	}
 
+	@Override
 	public Object load(Class entityClass, Serializable id) throws HibernateException {
 		return this.byId( entityClass ).getReference( id );
 	}
 
+	@Override
 	public Object load(String entityName, Serializable id) throws HibernateException {
 		return this.byId( entityName ).getReference( id );
 	}
 
+	@Override
 	public Object get(Class entityClass, Serializable id) throws HibernateException {
 		return this.byId( entityClass ).load( id );
 	}
 
+	@Override
 	public Object get(String entityName, Serializable id) throws HibernateException {
 		return this.byId( entityName ).load( id );
 	}
@@ -930,6 +961,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * This is only called when lazily initializing a proxy.
 	 * Do NOT return a proxy.
 	 */
+	@Override
 	public Object immediateLoad(String entityName, Serializable id) throws HibernateException {
 		if ( LOG.isDebugEnabled() ) {
 			EntityPersister persister = getFactory().getEntityPersister(entityName);
@@ -941,6 +973,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return event.getResult();
 	}
 
+	@Override
 	public Object internalLoad(String entityName, Serializable id, boolean eager, boolean nullable) throws HibernateException {
 		// todo : remove
 		LoadEventListener.LoadType type = nullable
@@ -956,34 +989,42 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return event.getResult();
 	}
 
+	@Override
 	public Object load(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
+	@Override
 	public Object load(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityClass ).with( lockOptions ).getReference( id );
 	}
 
+	@Override
 	public Object load(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).getReference( id );
 	}
 
+	@Override
 	public Object load(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityName ).with( lockOptions ).getReference( id );
 	}
 
+	@Override
 	public Object get(Class entityClass, Serializable id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityClass ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
+	@Override
 	public Object get(Class entityClass, Serializable id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityClass ).with( lockOptions ).load( id );
 	}
 
+	@Override
 	public Object get(String entityName, Serializable id, LockMode lockMode) throws HibernateException {
 		return this.byId( entityName ).with( new LockOptions( lockMode ) ).load( id );
 	}
 
+	@Override
 	public Object get(String entityName, Serializable id, LockOptions lockOptions) throws HibernateException {
 		return this.byId( entityName ).with( lockOptions ).load( id );
 	}
@@ -1039,6 +1080,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// refresh() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void refresh(Object object) throws HibernateException {
 		refresh( null, object );
 	}
@@ -1048,18 +1090,22 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		fireRefresh( new RefreshEvent( entityName, object, this ) );
 	}
 
+	@Override
 	public void refresh(Object object, LockMode lockMode) throws HibernateException {
 		fireRefresh( new RefreshEvent( object, lockMode, this ) );
 	}
 
+	@Override
 	public void refresh(Object object, LockOptions lockOptions) throws HibernateException {
 		refresh( null, object, lockOptions );
 	}
+
 	@Override
 	public void refresh(String entityName, Object object, LockOptions lockOptions) throws HibernateException {
 		fireRefresh( new RefreshEvent( entityName, object, lockOptions, this ) );
 	}
 
+	@Override
 	public void refresh(String entityName, Object object, Map refreshedAlready) throws HibernateException {
 		fireRefresh( refreshedAlready, new RefreshEvent( entityName, object, this ) );
 	}
@@ -1085,10 +1131,12 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// replicate() operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public void replicate(Object obj, ReplicationMode replicationMode) throws HibernateException {
 		fireReplicate( new ReplicateEvent( obj, replicationMode, this ) );
 	}
 
+	@Override
 	public void replicate(String entityName, Object obj, ReplicationMode replicationMode)
 	throws HibernateException {
 		fireReplicate( new ReplicateEvent( entityName, obj, replicationMode, this ) );
@@ -1110,6 +1158,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * remove any hard references to the entity that are held by the infrastructure
 	 * (references held by application or other persistent instances are okay)
 	 */
+	@Override
 	public void evict(Object object) throws HibernateException {
 		fireEvict( new EvictEvent( object, this ) );
 	}
@@ -1140,6 +1189,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return event.isFlushRequired();
 	}
 
+	@Override
 	public boolean isDirty() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1156,6 +1206,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return event.isDirty();
 	}
 
+	@Override
 	public void flush() throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1169,6 +1220,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		delayedAfterCompletion();
 	}
 
+	@Override
 	public void forceFlush(EntityEntry entityEntry) throws HibernateException {
 		errorIfClosed();
 		if ( LOG.isDebugEnabled() ) {
@@ -1187,6 +1239,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		flush();
 	}
 
+	@Override
 	public List list(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1215,6 +1268,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return results;
 	}
 
+	@Override
 	public int executeUpdate(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1235,6 +1289,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return result;
 	}
 
+	@Override
     public int executeNativeUpdate(NativeSQLQuerySpecification nativeQuerySpecification,
             QueryParameters queryParameters) throws HibernateException {
         errorIfClosed();
@@ -1257,6 +1312,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
         return result;
     }
 
+	@Override
 	public Iterator iterate(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1274,6 +1330,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public ScrollableResults scroll(String query, QueryParameters queryParameters) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1289,6 +1346,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public Query createFilter(Object collection, String queryString) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1303,6 +1361,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return filter;
 	}
 
+	@Override
 	public Query getNamedQuery(String queryName) throws MappingException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1311,6 +1370,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return query;
 	}
 
+	@Override
 	public Object instantiate(String entityName, Serializable id) throws HibernateException {
 		return instantiate( factory.getEntityPersister( entityName ), id );
 	}
@@ -1318,6 +1378,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	/**
 	 * give the interceptor an opportunity to override the default instantiation
 	 */
+	@Override
 	public Object instantiate(EntityPersister persister, Serializable id) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1329,6 +1390,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return result;
 	}
 
+	@Override
 	public void setFlushMode(FlushMode flushMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1336,16 +1398,19 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.flushMode = flushMode;
 	}
 
+	@Override
 	public FlushMode getFlushMode() {
 		checkTransactionSynchStatus();
 		return flushMode;
 	}
 
+	@Override
 	public CacheMode getCacheMode() {
 		checkTransactionSynchStatus();
 		return cacheMode;
 	}
 
+	@Override
 	public void setCacheMode(CacheMode cacheMode) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1353,11 +1418,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		this.cacheMode= cacheMode;
 	}
 
+	@Override
 	public Transaction getTransaction() throws HibernateException {
 		errorIfClosed();
 		return transactionCoordinator.getTransaction();
 	}
 
+	@Override
 	public Transaction beginTransaction() throws HibernateException {
 		errorIfClosed();
 		Transaction result = getTransaction();
@@ -1365,6 +1432,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return result;
 	}
 
+	@Override
 	public EntityPersister getEntityPersister(final String entityName, final Object object) {
 		errorIfClosed();
 		if (entityName==null) {
@@ -1391,6 +1459,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	// not for internal use:
+	@Override
 	public Serializable getIdentifier(Object object) throws HibernateException {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1414,6 +1483,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	 * Get the id value for an object that is actually associated with the session. This
 	 * is a bit stricter than getEntityIdentifierIfNotUnsaved().
 	 */
+	@Override
 	public Serializable getContextEntityIdentifier(Object object) {
 		errorIfClosed();
 		if ( object instanceof HibernateProxy ) {
@@ -1479,6 +1549,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return plan;
 	}
 
+	@Override
 	public List listFilter(Object collection, String filter, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
@@ -1500,6 +1571,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return results;
 	}
 
+	@Override
 	public Iterator iterateFilter(Object collection, String filter, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
@@ -1510,30 +1582,35 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return itr;
 	}
 
+	@Override
 	public Criteria createCriteria(Class persistentClass, String alias) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return new CriteriaImpl( persistentClass.getName(), alias, this );
 	}
 
+	@Override
 	public Criteria createCriteria(String entityName, String alias) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return new CriteriaImpl(entityName, alias, this);
 	}
 
+	@Override
 	public Criteria createCriteria(Class persistentClass) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return new CriteriaImpl( persistentClass.getName(), this );
 	}
 
+	@Override
 	public Criteria createCriteria(String entityName) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return new CriteriaImpl(entityName, this);
 	}
 
+	@Override
 	public ScrollableResults scroll(Criteria criteria, ScrollMode scrollMode) {
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
@@ -1559,6 +1636,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public List list(Criteria criteria) throws HibernateException {
 		// TODO: Is this guaranteed to always be CriteriaImpl?
 		CriteriaImpl criteriaImpl = (CriteriaImpl) criteria;
@@ -1680,6 +1758,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return ( OuterJoinLoadable ) persister;
 	}
 
+	@Override
 	public boolean contains(Object object) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1710,12 +1789,14 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return entry != null && entry.getStatus() != Status.DELETED && entry.getStatus() != Status.GONE;
 	}
 
+	@Override
 	public Query createQuery(String queryString) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return super.createQuery( queryString );
 	}
 
+	@Override
 	public SQLQuery createSQLQuery(String sql) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1743,6 +1824,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return super.createStoredProcedureCall( procedureName, resultClasses );
 	}
 
+	@Override
 	public ScrollableResults scrollCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
@@ -1767,6 +1849,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	// basically just an adapted copy of find(CriteriaImpl)
+	@Override
 	public List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)
 	throws HibernateException {
 		errorIfClosed();
@@ -1794,11 +1877,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public SessionFactoryImplementor getSessionFactory() {
 		checkTransactionSynchStatus();
 		return factory;
 	}
 
+	@Override
 	public void initializeCollection(PersistentCollection collection, boolean writing)
 	throws HibernateException {
 		errorIfClosed();
@@ -1810,6 +1895,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		delayedAfterCompletion();
 	}
 
+	@Override
 	public String bestGuessEntityName(Object object) {
 		if (object instanceof HibernateProxy) {
 			LazyInitializer initializer = ( ( HibernateProxy ) object ).getHibernateLazyInitializer();
@@ -1829,6 +1915,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		}
 	}
 
+	@Override
 	public String getEntityName(Object object) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -1853,25 +1940,30 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			);
 	}
 
+	@Override
 	public String guessEntityName(Object object) throws HibernateException {
 		errorIfClosed();
 		return entityNameResolver.resolveEntityName( object );
 	}
 
+	@Override
 	public void cancelQuery() throws HibernateException {
 		errorIfClosed();
 		getTransactionCoordinator().getJdbcCoordinator().cancelLastQuery();
 	}
 
+	@Override
 	public Interceptor getInterceptor() {
 		checkTransactionSynchStatus();
 		return interceptor;
 	}
 
+	@Override
 	public int getDontFlushFromFind() {
 		return dontFlushFromFind;
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder(500)
 			.append( "SessionImpl(" );
@@ -1886,54 +1978,57 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return buf.append(')').toString();
 	}
 
+	@Override
 	public ActionQueue getActionQueue() {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return actionQueue;
 	}
 
+	@Override
 	public PersistenceContext getPersistenceContext() {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return persistenceContext;
 	}
 
+	@Override
 	public SessionStatistics getStatistics() {
 		checkTransactionSynchStatus();
 		return new SessionStatisticsImpl(this);
 	}
 
+	@Override
 	public boolean isEventSource() {
 		checkTransactionSynchStatus();
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isDefaultReadOnly() {
 		return persistenceContext.isDefaultReadOnly();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setDefaultReadOnly(boolean defaultReadOnly) {
 		persistenceContext.setDefaultReadOnly( defaultReadOnly );
 	}
 
+	@Override
 	public boolean isReadOnly(Object entityOrProxy) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return persistenceContext.isReadOnly( entityOrProxy );
 	}
 
+	@Override
 	public void setReadOnly(Object entity, boolean readOnly) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		persistenceContext.setReadOnly( entity, readOnly );
 	}
 
+	@Override
 	public void doWork(final Work work) throws HibernateException {
 		WorkExecutorVisitable<Void> realWork = new WorkExecutorVisitable<Void>() {
 			@Override
@@ -1945,6 +2040,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		doWork( realWork );
 	}
 
+	@Override
 	public <T> T doReturningWork(final ReturningWork<T> work) throws HibernateException {
 		WorkExecutorVisitable<T> realWork = new WorkExecutorVisitable<T>() {
 			@Override
@@ -1959,6 +2055,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return transactionCoordinator.getJdbcCoordinator().coordinateWork( work );
 	}
 
+	@Override
 	public void afterScrollOperation() {
 		// nothing to do in a stateful session
 	}
@@ -1969,59 +2066,48 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		return transactionCoordinator;
 	}
 
+	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
 		return loadQueryInfluencers;
 	}
 
 	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Filter getEnabledFilter(String filterName) {
 		checkTransactionSynchStatus();
 		return loadQueryInfluencers.getEnabledFilter( filterName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Filter enableFilter(String filterName) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return loadQueryInfluencers.enableFilter( filterName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void disableFilter(String filterName) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		loadQueryInfluencers.disableFilter( filterName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object getFilterParameterValue(String filterParameterName) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return loadQueryInfluencers.getFilterParameterValue( filterParameterName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type getFilterParameterType(String filterParameterName) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
 		return loadQueryInfluencers.getFilterParameterType( filterParameterName );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Map getEnabledFilters() {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -2031,17 +2117,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public String getFetchProfile() {
 		checkTransactionSynchStatus();
 		return loadQueryInfluencers.getInternalFetchProfile();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setFetchProfile(String fetchProfile) {
 		errorIfClosed();
 		checkTransactionSynchStatus();
@@ -2051,14 +2133,17 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	@Override
 	public boolean isFetchProfileEnabled(String name) throws UnknownProfileException {
 		return loadQueryInfluencers.isFetchProfileEnabled( name );
 	}
 
+	@Override
 	public void enableFetchProfile(String name) throws UnknownProfileException {
 		loadQueryInfluencers.enableFetchProfile( name );
 	}
 
+	@Override
 	public void disableFetchProfile(String name) throws UnknownProfileException {
 		loadQueryInfluencers.disableFetchProfile( name );
 	}
@@ -2152,9 +2237,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		oos.writeObject( loadQueryInfluencers );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public TypeHelper getTypeHelper() {
 		return getSessionFactory().getTypeHelper();
 	}
@@ -2324,6 +2407,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 	}
 
 	private class CoordinatingEntityNameResolver implements EntityNameResolver {
+		@Override
 		public String resolveEntityName(Object entity) {
 			String entityName = interceptor.getEntityName( entity );
 			if ( entityName != null ) {
@@ -2353,36 +2437,45 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			LockOptions.copy(lo, lockOptions);
 		}
 
+		@Override
 		public LockMode getLockMode() {
 			return lockOptions.getLockMode();
 		}
 
+		@Override
 		public LockRequest setLockMode(LockMode lockMode) {
 			lockOptions.setLockMode(lockMode);
 			return this;
 		}
 
+		@Override
 		public int getTimeOut() {
 			return lockOptions.getTimeOut();
 		}
 
+		@Override
 		public LockRequest setTimeOut(int timeout) {
 			lockOptions.setTimeOut(timeout);
 			return this;
 		}
 
+		@Override
 		public boolean getScope() {
 			return lockOptions.getScope();
 		}
 
+		@Override
 		public LockRequest setScope(boolean scope) {
 			lockOptions.setScope(scope);
 			return this;
 		}
 
+		@Override
 		public void lock(String entityName, Object object) throws HibernateException {
 			fireLock( entityName, object, lockOptions );
 		}
+
+		@Override
 		public void lock(Object object) throws HibernateException {
 			fireLock( object, lockOptions );
 		}

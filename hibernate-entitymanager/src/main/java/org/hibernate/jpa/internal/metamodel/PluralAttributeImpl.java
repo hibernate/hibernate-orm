@@ -154,37 +154,27 @@ public abstract class PluralAttributeImpl<X, C, E>
 		return new Builder<X,C,E,K>(ownerType, attrType, collectionClass, keyType);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Type<E> getElementType() {
 		return elementType;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isAssociation() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isCollection() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public BindableType getBindableType() {
 		return BindableType.PLURAL_ATTRIBUTE;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Class<E> getBindableJavaType() {
 		return elementType.getJavaType();
 	}
@@ -194,9 +184,7 @@ public abstract class PluralAttributeImpl<X, C, E>
 			super( xceBuilder );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public CollectionType getCollectionType() {
 			return CollectionType.SET;
 		}
@@ -207,9 +195,7 @@ public abstract class PluralAttributeImpl<X, C, E>
 			super( xceBuilder );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public CollectionType getCollectionType() {
 			return CollectionType.COLLECTION;
 		}
@@ -220,9 +206,7 @@ public abstract class PluralAttributeImpl<X, C, E>
 			super( xceBuilder );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public CollectionType getCollectionType() {
 			return CollectionType.LIST;
 		}
@@ -236,23 +220,17 @@ public abstract class PluralAttributeImpl<X, C, E>
 			this.keyType = xceBuilder.keyType;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public CollectionType getCollectionType() {
 			return CollectionType.MAP;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class<K> getKeyJavaType() {
 			return keyType.getJavaType();
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Type<K> getKeyType() {
 			return keyType;
 		}

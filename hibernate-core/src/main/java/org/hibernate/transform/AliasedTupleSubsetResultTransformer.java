@@ -24,7 +24,6 @@
  */
 package org.hibernate.transform;
 
-
 /**
  * An implementation of TupleSubsetResultTransformer that ignores a
  * tuple element if its corresponding alias is null.
@@ -35,9 +34,7 @@ public abstract class AliasedTupleSubsetResultTransformer
 		extends BasicTransformerAdapter
 		implements TupleSubsetResultTransformer {
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
 		if ( aliases == null ) {
 			throw new IllegalArgumentException( "aliases cannot be null" );

@@ -87,6 +87,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Soft-lock a cache item.
 	 */
+	@Override
 	public final SoftLock lockItem(Object key, Object version) throws CacheException {
 
 		try {
@@ -110,6 +111,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 	/**
 	 * Soft-unlock a cache item.
 	 */
+	@Override
 	public final void unlockItem(Object key, SoftLock lock) throws CacheException {
 
 		try {
@@ -205,37 +207,27 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 			this.timestamp = timestamp;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isReadable(long txTimestamp) {
 			return txTimestamp > timestamp;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
 			return version != null && versionComparator.compare( version, newVersion ) < 0;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object getValue() {
 			return value;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isUnlockable(SoftLock lock) {
 			return false;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Lock lock(long timeout, UUID uuid, long lockId) {
 			return new Lock( timeout, uuid, lockId, version );
 		}
@@ -267,16 +259,12 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 			this.sourceUuid = sourceUuid;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isReadable(long txTimestamp) {
 			return false;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isWriteable(long txTimestamp, Object newVersion, Comparator versionComparator) {
 			if ( txTimestamp > timeout ) {
 				// if timedout then allow write
@@ -292,23 +280,16 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 			) < 0;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object getValue() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public boolean isUnlockable(SoftLock lock) {
 			return equals( lock );
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		public boolean equals(Object o) {
 			if ( o == this ) {
@@ -322,9 +303,6 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		public int hashCode() {
 			int hash = ( sourceUuid != null ? sourceUuid.hashCode() : 0 );
@@ -342,9 +320,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 			return concurrent;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Lock lock(long timeout, UUID uuid, long lockId) {
 			concurrent = true;
 			multiplicity++;
@@ -361,9 +337,7 @@ abstract class AbstractReadWriteAccessStrategy extends BaseRegionAccessStrategy 
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder( "Lock Source-UUID:" + sourceUuid + " Lock-ID:" + lockId );
 			return sb.toString();

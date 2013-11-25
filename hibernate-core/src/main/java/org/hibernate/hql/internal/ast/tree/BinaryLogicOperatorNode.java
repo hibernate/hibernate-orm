@@ -133,12 +133,12 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 		ParameterSpecification lhsEmbeddedCompositeParameterSpecification =
 				getLeftHandOperand() == null || ( !ParameterNode.class.isInstance( getLeftHandOperand() ) )
 						? null
-						: ( ( ParameterNode ) getLeftHandOperand() ).getHqlParameterSpecification();
+						: ( (ParameterNode) getLeftHandOperand() ).getHqlParameterSpecification();
 
 		ParameterSpecification rhsEmbeddedCompositeParameterSpecification =
 				getRightHandOperand() == null || ( !ParameterNode.class.isInstance( getRightHandOperand() ) )
 						? null
-						: ( ( ParameterNode ) getRightHandOperand() ).getHqlParameterSpecification();
+						: ( (ParameterNode) getRightHandOperand() ).getHqlParameterSpecification();
 
 		translate(
 				valueElements,

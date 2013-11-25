@@ -50,10 +50,12 @@ public class IndexPropertyAccessor implements PropertyAccessor {
 		this.entityName = entityName;
 	}
 
+	@Override
 	public Setter getSetter(Class theClass, String propertyName) {
 		return new IndexSetter();
 	}
 
+	@Override
 	public Getter getGetter(Class theClass, String propertyName) {
 		return new IndexGetter();
 	}
@@ -63,27 +65,20 @@ public class IndexPropertyAccessor implements PropertyAccessor {
 	 * The Setter implementation for index backrefs.
 	 */
 	public static final class IndexSetter implements Setter {
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public void set(Object target, Object value, SessionFactoryImplementor factory) {
 			// do nothing...
 		}
-
 	}
 
 
@@ -91,47 +86,37 @@ public class IndexPropertyAccessor implements PropertyAccessor {
 	 * The Getter implementation for index backrefs.
 	 */
 	public class IndexGetter implements Getter {
+		@Override
 		public Object getForInsert(Object target, Map mergeMap, SessionImplementor session) throws HibernateException {
-			if (session==null) {
+			if ( session == null ) {
 				return BackrefPropertyAccessor.UNKNOWN;
 			}
 			else {
-				return session.getPersistenceContext()
-						.getIndexInOwner(entityName, propertyName, target, mergeMap);
+				return session.getPersistenceContext().getIndexInOwner( entityName, propertyName, target, mergeMap );
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Object get(Object target)  {
 			return BackrefPropertyAccessor.UNKNOWN;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Member getMember() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Method getMethod() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public String getMethodName() {
 			return null;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
+		@Override
 		public Class getReturnType() {
 			return Object.class;
 		}

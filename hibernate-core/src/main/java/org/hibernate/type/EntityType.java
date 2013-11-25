@@ -155,6 +155,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return True.
 	 */
+	@Override
 	public boolean isAssociationType() {
 		return true;
 	}
@@ -164,13 +165,12 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return True.
 	 */
+	@Override
 	public final boolean isEntityType() {
 		return true;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isMutable() {
 		return false;
 	}
@@ -180,6 +180,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return string rep
 	 */
+	@Override
 	public String toString() {
 		return getClass().getName() + '(' + getAssociatedEntityName() + ')';
 	}
@@ -187,6 +188,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * For entity types, the name correlates to the associated entity name.
 	 */
+	@Override
 	public String getName() {
 		return associatedEntityName;
 	}
@@ -201,12 +203,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return referenceToPrimaryKey;
 	}
 
+	@Override
 	public String getRHSUniqueKeyPropertyName() {
 		// Return null if this type references a PK.  This is important for
 		// associations' use of mappedBy referring to a derived ID.
 		return referenceToPrimaryKey ? null : uniqueKeyPropertyName;
 	}
 
+	@Override
 	public String getLHSPropertyName() {
 		return null;
 	}
@@ -230,6 +234,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param factory The session factory, for resolution.
 	 * @return The associated entity name.
 	 */
+	@Override
 	public String getAssociatedEntityName(SessionFactoryImplementor factory) {
 		return getAssociatedEntityName();
 	}
@@ -241,6 +246,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The associated joinable
 	 * @throws MappingException Generally indicates an invalid entity name.
 	 */
+	@Override
 	public Joinable getAssociatedJoinable(SessionFactoryImplementor factory) throws MappingException {
 		return ( Joinable ) factory.getEntityPersister( associatedEntityName );
 	}
@@ -255,6 +261,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return The entiyt class.
 	 */
+	@Override
 	public final Class getReturnedClass() {
 		if ( returnedClass == null ) {
 			returnedClass = determineAssociatedEntityClass();
@@ -273,17 +280,13 @@ public abstract class EntityType extends AbstractType implements AssociationType
         }
     }
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object nullSafeGet(ResultSet rs, String name, SessionImplementor session, Object owner)
-	throws HibernateException, SQLException {
+			throws HibernateException, SQLException {
 		return nullSafeGet( rs, new String[] {name}, session, owner );
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public final Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
@@ -300,27 +303,22 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @param y Another entity instance
 	 * @return True if x == y; false otherwise.
 	 */
+	@Override
 	public final boolean isSame(Object x, Object y) {
 		return x == y;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int compare(Object x, Object y) {
 		return 0; //TODO: entities CAN be compared, by PK, fix this! -> only if/when we can extract the id values....
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object deepCopy(Object value, SessionFactoryImplementor factory) {
 		return value; //special case ... this is the leaf of the containment graph, even though not immutable
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object replace(
 			Object original,
 			Object target,
@@ -357,9 +355,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		EntityPersister persister = factory.getEntityPersister(associatedEntityName);
 		if ( !persister.canExtractIdOutOfEntity() ) {
@@ -429,23 +425,17 @@ public abstract class EntityType extends AbstractType implements AssociationType
 				.isEqual(xid, yid, factory);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isEmbeddedInXML() {
 		return isEmbeddedInXML;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public boolean isXMLElement() {
 		return isEmbeddedInXML;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public Object fromXMLNode(Node xml, Mapping factory) throws HibernateException {
 		if ( !isEmbeddedInXML ) {
 			return getIdentifierType(factory).fromXMLNode(xml, factory);
@@ -455,9 +445,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
 	public void setToXMLNode(Node node, Object value, SessionFactoryImplementor factory) throws HibernateException {
 		if ( !isEmbeddedInXML ) {
 			getIdentifierType(factory).setToXMLNode(node, value, factory);
@@ -490,6 +478,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Resolve an identifier or unique key value
 	 */
+	@Override
 	public Object resolve(Object value, SessionImplementor session, Object owner) throws HibernateException {
 		if ( isNotEmbedded( session ) ) {
 			return value;
@@ -507,6 +496,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return null;
 	}
 
+	@Override
 	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
 		return factory.getEntityPersister( associatedEntityName ).getIdentifierType();
 	}
@@ -555,6 +545,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * @return The loggable string.
 	 * @throws HibernateException Generally some form of resolution problem.
 	 */
+	@Override
 	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";

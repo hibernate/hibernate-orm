@@ -213,36 +213,7 @@ subprojects { subProject ->
         task generateSources(type: Task)
 
         jar {
-			// internal packages that need to temporarily be exported
-			final String[] temporaryExports = [
-					// - org.hibernate.boot.registry.classloading.internal
-					// until EntityManagerFactoryBuilderImpl no longer imports ClassLoaderServiceImpl
-					'org.hibernate.boot.registry.classloading.internal',
-					// - .util for external module use (especially envers)
-					'org.hibernate.internal.util'
-			]
-
-			SortedSet<String> exportPackages = new TreeSet<String>()
-			SortedSet<String> privatePackages = new TreeSet<String>()
-
-			sourceSets.main.java.each { javaFile ->
-				if ( javaFile.name.endsWith( 'package-info.java' ) ) {
-					return;
-				}
-				final String packageName = determinePackageName( sourceSets.main.java, javaFile );
-				if ( ! temporaryExports.contains( packageName )
-						&& ( packageName.endsWith( ".internal" )
-						|| packageName.contains( ".internal." )
-						|| packageName.endsWith( ".test" )
-						|| packageName.contains( ".test." ) ) ) {
-					privatePackages.add( packageName );
-				}
-				else {
-					exportPackages.add( packageName + ";version=\"" + exportPackageVersion + "\"" );
-				}
-			}
-
-            manifest = osgiManifest {
+			manifest = osgiManifest {
                 // GRADLE-1411: Even if we override Imports and Exports
                 // auto-generation with instructions, classesDir and classpath
                 // need to be here (temporarily).
@@ -257,9 +228,6 @@ subprojects { subProject ->
                     // IMPORTANT: Do not include the * in the modules' .gradle files.
                     // If it exists more than once, the manifest will physically contain a *.
                     '*'
-                
-                instruction 'Export-Package', exportPackages.toArray(new String[0])
-                instruction 'Private-Package', privatePackages.toArray(new String[0])
                 
                 instruction 'Bundle-Vendor', 'Hibernate.org'
 				instruction 'Bundle-Description', osgiDescription()

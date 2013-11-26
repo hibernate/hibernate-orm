@@ -53,8 +53,6 @@ jar {
     manifest {
         mainAttributes( 'Main-Class': 'org.hibernate.Version' )
 
-        instruction 'Bundle-Description', 'Hibernate ORM Core'
-
         instructionFirst 'Import-Package',
             'javax.security.auth;resolution:=optional',
             'javax.security.jacc;resolution:=optional',
@@ -77,11 +75,11 @@ jar {
 			'org.apache.tools.ant.taskdefs;resolution:=optional',
 			'org.apache.tools.ant.types;resolution:=optional'
 
-        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
-        // uses ClassLoaderServiceImpl.
-        instruction 'Export-Package',
-            'org.hibernate.boot.registry.classloading.internal',
-            '*'
+//        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
+//        // uses ClassLoaderServiceImpl.
+//        instruction 'Export-Package',
+//            'org.hibernate.boot.registry.classloading.internal',
+//            '*'
     }
 }
 

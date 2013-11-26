@@ -48,9 +48,3 @@ task sourcesTestJar(type: Jar, dependsOn:classes) {
 
 artifacts.archives packageTests
 artifacts.archives sourcesTestJar
-
-jar {
-    manifest {
-        instruction 'Bundle-Description', 'Hibernate ORM Infinispan'
-    }
-}

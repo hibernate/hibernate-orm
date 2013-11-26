@@ -72,7 +72,6 @@ def pomDescription() {
 jar {
 	manifest {
 		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
-		instruction 'Bundle-Description', 'Hibernate ORM OSGi'
 
 		instructionFirst 'Import-Package',
 			// TODO: Shouldn't have to explicitly list this, but the plugin

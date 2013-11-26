@@ -17,9 +17,3 @@ def pomName() {
 def pomDescription() {
     return 'Integration for c3p0 Connection pooling into Hibernate O/RM'
 }
-
-jar {
-    manifest {
-        instruction 'Bundle-Description', 'Hibernate ORM C3P0'
-    }
-}

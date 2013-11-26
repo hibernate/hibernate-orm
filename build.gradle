@@ -44,9 +44,7 @@ ext {
     hibernateTargetVersion = '4.3.0-SNAPSHOT'
     javaLanguageLevel = '1.6'
 
-    // The OSGi manifest exported package versions need to be only the numerical release -- no "SNAPSHOT" or "Final"
-    // todo  : brett - what about Alpha, Beta, CR, SP, etc?
-    osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", "" ).replaceAll( ".Final", "" );
+    osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", ".SNAPSHOT" )
 }
 
 idea {
@@ -77,6 +75,11 @@ def pomName() {
 }
 def pomDescription() {
     return "A module of the Hibernate O/RM project"
+}
+// Used in MANIFEST.MF for OSGi Bundles
+def osgiDescription() {
+	// by default just reuse the pomDescription
+	return pomDescription()
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -210,35 +213,34 @@ subprojects { subProject ->
         task generateSources(type: Task)
 
         jar {
-            Set<String> exportPackages = new HashSet<String>()
-            Set<String> privatePackages = new HashSet<String>()
+			// internal packages that need to temporarily be exported
+			final String[] temporaryExports = [
+					// - org.hibernate.boot.registry.classloading.internal
+					// until EntityManagerFactoryBuilderImpl no longer imports ClassLoaderServiceImpl
+					'org.hibernate.boot.registry.classloading.internal',
+					// - .util for external module use (especially envers)
+					'org.hibernate.internal.util'
+			]
 
-            // TODO: Could more of this be pulled into utilities.gradle?
-            sourceSets.each { sourceSet ->
-                // skip certain source sets
-                if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
-                    sourceSet.java.each { javaFile ->
-                        // - org.hibernate.boot.registry.classloading.internal
-                        // until EntityManagerFactoryBuilderImpl no longer imports ClassLoaderServiceImpl
-                        // - .util for external module use (especially envers)
-                        final String[] temporaryExports = [
-                            'org.hibernate.boot.registry.classloading.internal',
-                            'org.hibernate.internal.util' ]
+			SortedSet<String> exportPackages = new TreeSet<String>()
+			SortedSet<String> privatePackages = new TreeSet<String>()
 
-                        final String packageName = determinePackageName( sourceSet.java, javaFile );
-                        if ( ! temporaryExports.contains( packageName )
-                                && ( packageName.endsWith( ".internal" )
-                                || packageName.contains( ".internal." )
-                                || packageName.endsWith( ".test" )
-                                || packageName.contains( ".test." ) ) ) {
-                            privatePackages.add( packageName );
-                        }
-                        else {
-                            exportPackages.add( packageName + ";version=\"" + exportPackageVersion + "\"" );
-                        }
-                    }
-                }
-            }
+			sourceSets.main.java.each { javaFile ->
+				if ( javaFile.name.endsWith( 'package-info.java' ) ) {
+					return;
+				}
+				final String packageName = determinePackageName( sourceSets.main.java, javaFile );
+				if ( ! temporaryExports.contains( packageName )
+						&& ( packageName.endsWith( ".internal" )
+						|| packageName.contains( ".internal." )
+						|| packageName.endsWith( ".test" )
+						|| packageName.contains( ".test." ) ) ) {
+					privatePackages.add( packageName );
+				}
+				else {
+					exportPackages.add( packageName + ";version=\"" + exportPackageVersion + "\"" );
+				}
+			}
 
             manifest = osgiManifest {
                 // GRADLE-1411: Even if we override Imports and Exports
@@ -260,6 +262,7 @@ subprojects { subProject ->
                 instruction 'Private-Package', privatePackages.toArray(new String[0])
                 
                 instruction 'Bundle-Vendor', 'Hibernate.org'
+				instruction 'Bundle-Description', osgiDescription()
                 instruction 'Implementation-Url', 'http://hibernate.org'
                 instruction 'Implementation-Version', version
                 instruction 'Implementation-Vendor', 'Hibernate.org'

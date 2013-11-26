@@ -10,6 +10,9 @@ dependencies {
     }
 }
 
+// todo : Fold into hibernate-core and publish in separate publications
+// 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved
+
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Testing'

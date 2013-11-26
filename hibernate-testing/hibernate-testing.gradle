@@ -1,0 +1,17 @@
+dependencies {
+    compile project( ':hibernate-core' )
+    compile( libraries.junit )
+    compile( libraries.byteman )
+    compile( libraries.byteman_install )
+    compile( libraries.byteman_bmunit )
+    compile( libraries.xapool )
+    compile ( libraries.jboss_jta ) {
+        transitive=false;
+    }
+}
+
+jar {
+    manifest {
+        instruction 'Bundle-Description', 'Hibernate ORM Testing'
+    }
+}

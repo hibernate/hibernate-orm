@@ -2,7 +2,7 @@ dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.ehcache )
 
-	testCompile( project( path: ':hibernate-core', configuration: 'testing' ) )
+    testCompile project( ':hibernate-testing' )
 }
 
 def pomName() {

@@ -1,7 +1,7 @@
 dependencies {
     compile project( ':hibernate-core' )
     compile( libraries.proxool )
-	testCompile( project( path: ':hibernate-core', configuration: 'testing' ) )
+    testCompile project( ':hibernate-testing' )
 }
 
 def pomName() {

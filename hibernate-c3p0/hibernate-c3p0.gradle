@@ -7,7 +7,7 @@ dependencies {
         // for test runtime
         transitive = true
     }
-	testCompile( project( path: ':hibernate-core', configuration: 'testing' ) )
+    testCompile project( ':hibernate-testing' )
 }
 
 def pomName() {

@@ -180,6 +180,7 @@ task testingJar(type: Jar, dependsOn: compileTestJava) {
 	include 'org/hibernate/testing/**'
 	include 'org/hibernate/testing/*'
 	classifier = 'testing'
+	includeEmptyDirs = false
 }
 
 // allow other modules to use it

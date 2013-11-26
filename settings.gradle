@@ -1,5 +1,4 @@
 include 'hibernate-core'
-include 'hibernate-testing'
 include 'hibernate-entitymanager'
 include 'hibernate-envers'
 

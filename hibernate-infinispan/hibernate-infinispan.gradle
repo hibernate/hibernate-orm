@@ -7,7 +7,7 @@ dependencies {
     compile( libraries.infinispan )
     compile( libraries.rhq )
 
-    testCompile project( ':hibernate-testing' )
+	testCompile( project( path: ':hibernate-core', configuration: 'testing' ) )
     testCompile( libraries.infinispan_test )
     testCompile( libraries.jboss_common_core )
     testCompile( libraries.jnp_client )

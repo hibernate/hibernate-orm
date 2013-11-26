@@ -23,7 +23,6 @@ dependencies {
     provided( libraries.validation )
     provided( libraries.classmate )
 
-    testCompile( project(':hibernate-testing') )
     testCompile( libraries.validation )
     testCompile( libraries.jandex )
     testCompile( libraries.classmate )
@@ -35,6 +34,13 @@ dependencies {
     // for testing stored procedure support
     testCompile( libraries.derby )
 
+	testCompile( libraries.byteman )
+	testCompile( libraries.byteman_install )
+	testCompile( libraries.byteman_bmunit )
+	testCompile( libraries.xapool )
+	testCompile ( libraries.jboss_jta ) {
+		transitive=false;
+	}
 
     testRuntime( 'jaxen:jaxen:1.1' )
     testRuntime( libraries.javassist )
@@ -165,3 +171,34 @@ generateSources.dependsOn generateGrammarSource
 compileJava.dependsOn jaxb
 
 
+// create the testing jar
+task testingJar(type: Jar, dependsOn: compileTestJava) {
+	from sourceSets.test.output
+	// atm none of these work, the jar includes everything from sourceSets.test.output
+	include '**/org/hibernate/testing/**'
+	include '**/org/hibernate/testing/*'
+	include 'org/hibernate/testing/**'
+	include 'org/hibernate/testing/*'
+	classifier = 'testing'
+}
+
+// allow other modules to use it
+configurations {
+	testing {
+		extendsFrom testCompile
+	}
+}
+artifacts {
+	testing testingJar
+}
+
+// publish it so other projects can use it
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifact testingJar {
+				classifier "testing"
+			}
+		}
+	}
+}

@@ -18,8 +18,8 @@ dependencies {
 
     provided( "javax.enterprise:cdi-api:1.1-PFD" )
 
-    testCompile( project(':hibernate-testing') )
-    testCompile( libraries.shrinkwrap_api )
+	testCompile( project( path: ':hibernate-core', configuration: 'testing' ) )
+	testCompile( libraries.shrinkwrap_api )
     testCompile( libraries.shrinkwrap )
     testCompile( libraries.validation )
     testCompile( "org.jboss.weld:weld-core:2.0.0.Beta6" )

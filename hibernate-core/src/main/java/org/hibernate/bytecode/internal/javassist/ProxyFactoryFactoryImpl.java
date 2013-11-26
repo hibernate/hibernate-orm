@@ -28,7 +28,7 @@ import java.util.HashMap;
 
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.ProxyObject;
+import javassist.util.proxy.Proxy;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -86,7 +86,7 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 
 		public Object getProxy() {
 			try {
-				final ProxyObject proxy = (ProxyObject) proxyClass.newInstance();
+				final Proxy proxy = (Proxy) proxyClass.newInstance();
 				proxy.setHandler( new PassThroughHandler( proxy, proxyClass.getName() ) );
 				return proxy;
 			}

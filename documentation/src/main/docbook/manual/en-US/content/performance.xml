@@ -3,7 +3,7 @@
 <chapter xml:id="performance" xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>Improving performance</title>
 
-  <section xml:id="performance-fetching" revision="2">
+  <section xml:id="performance-fetching" revision="3">
     <title>Fetching strategies</title>
 
     <para>Hibernate uses a <emphasis>fetching strategy</emphasis> to retrieve
@@ -72,8 +72,8 @@
 
       <listitem>
         <para><emphasis>Proxy fetching</emphasis>: a single-valued association
-        is fetched when a method other than the identifier getter is invoked
-        upon the associated object.</para>
+        is fetched when any method (except the identifier getter if using property access) 
+        is invoked upon the associated object.</para>
       </listitem>
 
       <listitem>
@@ -216,7 +216,7 @@ Integer accessLevel = (Integer) permissions.get("accounts");  // Error!</program
       use the second-level cache.</para>
     </section>
 
-    <section xml:id="performance-fetching-proxies" revision="2">
+    <section xml:id="performance-fetching-proxies" revision="3">
       <title>Single-ended association proxies</title>
 
       <para>Lazy fetching for collections is implemented using Hibernate's own
@@ -330,7 +330,9 @@ Cat fritz = (Cat) iter.next();</programlisting>
         </listitem>
 
         <listitem>
-          <para>The identifier getter method</para>
+          <para>The identifier getter method, if using property access. 
+          (When using field access, any method invocation will trigger 
+          initialization of the proxy.)</para>
         </listitem>
       </itemizedlist>
 

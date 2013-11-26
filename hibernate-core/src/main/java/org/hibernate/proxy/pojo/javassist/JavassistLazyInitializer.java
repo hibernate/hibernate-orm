@@ -29,9 +29,8 @@ import java.lang.reflect.Method;
 
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.Proxy;
 import javassist.util.proxy.ProxyFactory;
-import javassist.util.proxy.ProxyObject;
-import org.jboss.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -40,6 +39,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.pojo.BasicLazyInitializer;
 import org.hibernate.type.CompositeType;
+import org.jboss.logging.Logger;
 
 /**
  * A Javassist-based lazy initializer proxy.
@@ -102,7 +102,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 			factory.setFilter( FINALIZE_FILTER );
 			Class cl = factory.createClass();
 			final HibernateProxy proxy = ( HibernateProxy ) cl.newInstance();
-			( ( ProxyObject ) proxy ).setHandler( instance );
+			( ( Proxy ) proxy ).setHandler( instance );
 			instance.constructed = true;
 			return proxy;
 		}
@@ -145,7 +145,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 					+ persistentClass.getName(), e
 			);
 		}
-		( ( ProxyObject ) proxy ).setHandler( instance );
+		( ( Proxy ) proxy ).setHandler( instance );
 		instance.constructed = true;
 		return proxy;
 	}

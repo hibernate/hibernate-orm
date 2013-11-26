@@ -174,11 +174,7 @@ compileJava.dependsOn jaxb
 // create the testing jar
 task testingJar(type: Jar, dependsOn: compileTestJava) {
 	from sourceSets.test.output
-	// atm none of these work, the jar includes everything from sourceSets.test.output
 	include '**/org/hibernate/testing/**'
-	include '**/org/hibernate/testing/*'
-	include 'org/hibernate/testing/**'
-	include 'org/hibernate/testing/*'
 	classifier = 'testing'
 	includeEmptyDirs = false
 }

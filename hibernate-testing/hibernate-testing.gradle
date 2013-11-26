@@ -11,10 +11,18 @@ dependencies {
 }
 
 // todo : Fold into hibernate-core and publish in separate publications
-// 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved
+// 		once http://issues.gradle.org/browse/GRADLE-2966 is resolved;
+//		that will allow us to keep the same artifactId and publish the pom
+//		with proper dependencies
 
-jar {
-    manifest {
-        instruction 'Bundle-Description', 'Hibernate ORM Testing'
-    }
+def pomName() {
+	return 'Hibernate ORM Testing'
+}
+
+def pomDescription() {
+	return 'Support for testing Hibernate ORM functionality'
+}
+
+def osgiDescription() {
+	return pomDescription()
 }

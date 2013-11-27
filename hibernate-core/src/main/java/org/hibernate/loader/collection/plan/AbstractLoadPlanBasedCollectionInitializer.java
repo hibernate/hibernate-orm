@@ -48,7 +48,7 @@ import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
 /**
- * A CollectionInitializer implementation based on using LoadPlans
+ * An abstract {@link CollectionInitializer} implementation based on using LoadPlans
  *
  * @author Gail Badner
  */

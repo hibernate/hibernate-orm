@@ -67,15 +67,21 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	// Used to generate unique table aliases
 	private int currentTableAliasSuffix;
 
+	// Mapping from query space UID to entity reference aliases
 	private Map<String,EntityReferenceAliases> entityReferenceAliasesMap;
+
+	// Mapping from query space UID to collection reference aliases
 	private Map<String,CollectionReferenceAliases> collectionReferenceAliasesMap;
+
+	// Mapping from query space UID to SQL table alias
 	private Map<String,String> querySpaceUidToSqlTableAliasMap;
 
+	// Mapping from composite query space UID to SQL table alias
 	private Map<String,String> compositeQuerySpaceUidToSqlTableAliasMap;
 
 	/**
-	 * Constructs a AliasResolutionContextImpl without any source aliases.  This form is used in
-	 * non-query (HQL, criteria, etc) contexts.
+	 * Constructs a {@link AliasResolutionContextImpl} without any source aliases.  This form is used in
+	 * non-query contexts. Example of query contexts are: HQL, criteria, etc.
 	 *
 	 * @param sessionFactory The session factory
 	 */
@@ -85,7 +91,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 
 	/**
 	 * Constructs a AliasResolutionContextImpl without any source aliases.  This form is used in
-	 * non-query (HQL, criteria, etc) contexts.
+	 * non-query contexts. Example of query contexts are: HQL, criteria, etc.
 	 * <p/>
 	 * See the notes on
 	 * {@link org.hibernate.loader.plan.exec.spi.AliasResolutionContext#getSourceAlias} for discussion of
@@ -103,6 +109,30 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 		return sessionFactory;
 	}
 
+	/**
+	 * Generate the entity reference aliases for a particular {@link org.hibernate.loader.plan.spi.EntityReference}
+	 * and register the generated value using the query space UID.
+	 * <p/>
+	 * Once generated, there are two methods that can be used to do look ups by the specified
+	 * query space UID:
+	 * <ul>
+	 * <li>
+	 *     {@link #resolveEntityReferenceAliases(String)} can be used to
+	 *     look up the returned entity reference aliases;
+	 * </li>
+	 * <li>
+	 *     {@link #resolveSqlTableAliasFromQuerySpaceUid(String)} can be used to
+	 *     look up SQL table alias.
+	 * </li>
+	 * </ul>
+	 *
+	 * @param uid The query space UID for the entity reference.
+	 * @param entityPersister The entity persister for entity reference.
+	 * @return the generated entity reference aliases.
+	 *
+	 * @see org.hibernate.loader.plan.spi.EntityReference#getQuerySpaceUid()
+	 * @see org.hibernate.loader.plan.spi.EntityReference#getEntityPersister()
+	 */
 	public EntityReferenceAliases generateEntityReferenceAliases(String uid, EntityPersister entityPersister) {
 		final EntityReferenceAliasesImpl entityReferenceAliases = new EntityReferenceAliasesImpl(
 				createTableAlias( entityPersister ),
@@ -128,6 +158,30 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 		return Integer.toString( currentAliasSuffix++ ) + '_';
 	}
 
+	/**
+	 * Generate the collection reference aliases for a particular {@link org.hibernate.loader.plan.spi.CollectionReference}
+	 * and register the generated value using the query space UID.
+	 * <p/>
+	 * Once generated, there are two methods that can be used to do look ups by the specified
+	 * query space UID:
+	 * <ul>
+	 * <li>
+	 *     {@link ##resolveCollectionReferenceAliases(String)} can be used to
+	 *     look up the returned collection reference aliases;
+	 * </li>
+	 * <li>
+	 *     {@link #resolveSqlTableAliasFromQuerySpaceUid(String)} can be used to
+	 *     look up the SQL collection table alias.
+	 * </li>
+	 * </ul>
+	 *
+	 * @param uid The query space UID for the collection reference.
+	 * @param persister The collection persister for collection reference.
+	 * @return the generated collection reference aliases.
+	 *
+	 * @see org.hibernate.loader.plan.spi.CollectionReference#getQuerySpaceUid()
+	 * @see org.hibernate.loader.plan.spi.CollectionReference#getCollectionPersister()
+	 */
 	public CollectionReferenceAliases generateCollectionReferenceAliases(String uid, CollectionPersister persister) {
 		final String manyToManyTableAlias;
 		final String tableAlias;

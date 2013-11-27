@@ -57,7 +57,10 @@ import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
 /**
- * todo How much of AbstractLoadPlanBasedEntityLoader is actually needed?
+ * A superclass for loader implementations based on using LoadPlans.
+ *
+ * @see org.hibernate.loader.entity.plan.EntityLoader
+ * @see org.hibernate.loader.collection.plan.CollectionLoader
 
  * @author Gail Badner
  */
@@ -68,6 +71,12 @@ public abstract class AbstractLoadPlanBasedLoader {
 
 	private ColumnNameCache columnNameCache;
 
+	/**
+	 * Constructs a {@link AbstractLoadPlanBasedLoader}.
+	 *
+	 * @param factory The session factory
+	 * @see SessionFactoryImplementor
+	 */
 	public AbstractLoadPlanBasedLoader(
 			SessionFactoryImplementor factory) {
 		this.factory = factory;

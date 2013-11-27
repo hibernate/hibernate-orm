@@ -282,7 +282,7 @@ public final class EntityEntry implements Serializable {
 	}
 
 	public Object getLoadedValue(String propertyName) {
-		if ( loadedState == null ) {
+		if ( loadedState == null || propertyName == null ) {
 			return null;
 		}
 		else {

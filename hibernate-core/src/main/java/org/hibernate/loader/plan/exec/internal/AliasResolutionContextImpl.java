@@ -90,12 +90,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	}
 
 	/**
-	 * Constructs a AliasResolutionContextImpl without any source aliases.  This form is used in
-	 * non-query contexts. Example of query contexts are: HQL, criteria, etc.
-	 * <p/>
-	 * See the notes on
-	 * {@link org.hibernate.loader.plan.exec.spi.AliasResolutionContext#getSourceAlias} for discussion of
-	 * "source aliases".  They are not implemented here yet.
+	 * Constructs a AliasResolutionContextImpl with the specified seed for unique alias suffixes.
 	 *
 	 * @param sessionFactory The session factory
 	 * @param suffixSeed The seed value to use for generating the suffix used when generating SQL aliases.
@@ -134,8 +129,15 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	 * @see org.hibernate.loader.plan.spi.EntityReference#getEntityPersister()
 	 */
 	public EntityReferenceAliases generateEntityReferenceAliases(String uid, EntityPersister entityPersister) {
+		return generateEntityReferenceAliases( uid, createTableAlias( entityPersister ), entityPersister );
+	}
+
+	private EntityReferenceAliases generateEntityReferenceAliases(
+			String uid,
+			String tableAlias,
+			EntityPersister entityPersister) {
 		final EntityReferenceAliasesImpl entityReferenceAliases = new EntityReferenceAliasesImpl(
-				createTableAlias( entityPersister ),
+				tableAlias,
 				createEntityAliases( entityPersister )
 		);
 		registerQuerySpaceAliases( uid, entityReferenceAliases );
@@ -211,13 +213,10 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 				tableAlias,
 				manyToManyTableAlias,
 				createCollectionAliases( persister ),
-				createCollectionElementAliases( persister )
+				createCollectionElementAliases( persister, tableAlias, elementQuerySpaceUid )
 		);
 
 		registerQuerySpaceAliases( collectionQuerySpaceUid, collectionAliases );
-		if ( collectionAliases.getEntityElementAliases() != null ) {
-			registerQuerySpaceAliases( elementQuerySpaceUid, collectionAliases.getEntityElementAliases() );
-		}
 		return collectionAliases;
 	}
 
@@ -225,13 +224,20 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 		return new GeneratedCollectionAliases( collectionPersister, createSuffix() );
 	}
 
-	private EntityAliases createCollectionElementAliases(CollectionPersister collectionPersister) {
+	private EntityReferenceAliases createCollectionElementAliases(
+			CollectionPersister collectionPersister,
+			String tableAlias,
+			String elementQuerySpaceUid) {
 		if ( !collectionPersister.getElementType().isEntityType() ) {
 			return null;
 		}
 		else {
 			final EntityType entityElementType = (EntityType) collectionPersister.getElementType();
-			return createEntityAliases( (EntityPersister) entityElementType.getAssociatedJoinable( sessionFactory() ) );
+			return generateEntityReferenceAliases(
+					elementQuerySpaceUid,
+					tableAlias,
+					(EntityPersister) entityElementType.getAssociatedJoinable( sessionFactory() )
+			);
 		}
 	}
 

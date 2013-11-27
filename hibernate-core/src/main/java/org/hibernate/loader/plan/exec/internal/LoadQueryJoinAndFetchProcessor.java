@@ -580,16 +580,10 @@ public class LoadQueryJoinAndFetchProcessor {
 				selectStatementBuilder.appendOrderByFragment( ordering );
 			}
 
-			// add an EntityReferenceInitializer for the collection elements (keys also?)
-			final EntityReferenceAliases entityReferenceAliases = new EntityReferenceAliasesImpl(
-					aliases.getCollectionTableAlias(),
-					aliases.getEntityElementColumnAliases()
-			);
-			aliasResolutionContext.registerQuerySpaceAliases( fetch.getQuerySpaceUid(), entityReferenceAliases );
 			readerCollector.add(
 					new EntityReferenceInitializerImpl(
 							(EntityReference) fetch.getElementGraph(),
-							entityReferenceAliases
+							aliasResolutionContext.resolveEntityReferenceAliases( fetch.getElementGraph().getQuerySpaceUid() )
 					)
 			);
 		}
@@ -611,15 +605,10 @@ public class LoadQueryJoinAndFetchProcessor {
 								aliases.getEntityElementColumnAliases().getSuffix()
 						)
 				);
-				final EntityReferenceAliases entityReferenceAliases = new EntityReferenceAliasesImpl(
-						aliases.getElementTableAlias(),
-						aliases.getEntityElementColumnAliases()
-				);
-				aliasResolutionContext.registerQuerySpaceAliases( fetch.getQuerySpaceUid(), entityReferenceAliases );
 				readerCollector.add(
 						new EntityReferenceInitializerImpl(
 								(EntityReference) fetch.getElementGraph(),
-								entityReferenceAliases
+								aliasResolutionContext.resolveEntityReferenceAliases( fetch.getElementGraph().getQuerySpaceUid() )
 						)
 				);
 			}

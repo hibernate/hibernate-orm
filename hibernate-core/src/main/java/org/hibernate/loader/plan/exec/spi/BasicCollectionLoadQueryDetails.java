@@ -97,7 +97,7 @@ public class BasicCollectionLoadQueryDetails extends CollectionLoadQueryDetails 
 			selectStatementBuilder.appendSelectClauseFragment(
 					elementPersister.selectFragment(
 							getCollectionReferenceAliases().getElementTableAlias(),
-							getCollectionReferenceAliases().getEntityElementColumnAliases().getSuffix()
+							getCollectionReferenceAliases().getEntityElementAliases().getColumnAliases().getSuffix()
 					)
 			);
 		}

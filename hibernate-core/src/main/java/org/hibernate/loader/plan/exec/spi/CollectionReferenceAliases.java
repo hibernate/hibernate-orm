@@ -61,9 +61,9 @@ public interface CollectionReferenceAliases {
 	public CollectionAliases getCollectionColumnAliases();
 
 	/**
-	 * Obtain the column aliases for the element values when the element of the collection is an entity.
+	 * Obtain the entity reference aliases for the element values when the element of the collection is an entity.
 	 *
-	 * @return The column aliases for the entity element; {@code null} if the collection element is not an entity.
+	 * @return The entity reference aliases for the entity element; {@code null} if the collection element is not an entity.
 	 */
-	public EntityAliases getEntityElementColumnAliases();
+	public EntityReferenceAliases getEntityElementAliases();
 }

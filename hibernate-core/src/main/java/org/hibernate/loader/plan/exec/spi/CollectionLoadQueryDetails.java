@@ -29,7 +29,6 @@ import java.sql.SQLException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
-import org.hibernate.loader.plan.exec.internal.EntityReferenceAliasesImpl;
 import org.hibernate.loader.plan.exec.process.internal.CollectionReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.CollectionReturnReader;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
@@ -71,15 +70,16 @@ public abstract class CollectionLoadQueryDetails extends AbstractLoadQueryDetail
 				buildingParameters,
 				( (QueryableCollection) rootReturn.getCollectionPersister() ).getKeyColumnNames(),
 				rootReturn,
-//				collectionReferenceAliases.getCollectionTableAlias(),
-//				collectionReferenceAliases.getCollectionColumnAliases().getSuffix(),
-//				loadPlan.getQuerySpaces().getQuerySpaceByUid( rootReturn.getQuerySpaceUid() ),
-//				(OuterJoinLoadable) rootReturn.getCollectionPersister(),
 				factory
 		);
+		final String elementUid = rootReturn.getCollectionPersister().getElementType().isEntityType() ?
+				rootReturn.getElementGraph().getQuerySpaceUid() :
+				null;
+
 		this.collectionReferenceAliases = aliasResolutionContext.generateCollectionReferenceAliases(
 				rootReturn.getQuerySpaceUid(),
-				rootReturn.getCollectionPersister()
+				rootReturn.getCollectionPersister(),
+				elementUid
 		);
 		this.readerCollector = new CollectionLoaderReaderCollectorImpl(
 				new CollectionReturnReader( rootReturn ),
@@ -87,16 +87,8 @@ public abstract class CollectionLoadQueryDetails extends AbstractLoadQueryDetail
 		);
 		if ( rootReturn.getCollectionPersister().getElementType().isEntityType() ) {
 			final EntityReference elementEntityReference = rootReturn.getElementGraph().resolveEntityReference();
-			final EntityReferenceAliases elementEntityReferenceAliases = new EntityReferenceAliasesImpl(
-					collectionReferenceAliases.getElementTableAlias(),
-					collectionReferenceAliases.getEntityElementColumnAliases()
-			);
-			aliasResolutionContext.registerQuerySpaceAliases(
-					elementEntityReference.getQuerySpaceUid(),
-					elementEntityReferenceAliases
-			);
 			readerCollector.add(
-				new EntityReferenceInitializerImpl( elementEntityReference, elementEntityReferenceAliases )
+				new EntityReferenceInitializerImpl( elementEntityReference, collectionReferenceAliases.getEntityElementAliases() )
 			);
 		}
 		if ( rootReturn.getCollectionPersister().hasIndex() &&

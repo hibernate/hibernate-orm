@@ -150,7 +150,7 @@ public class QuerySpaceTreePrinter {
 							+ StringHelper.join( ", ", collectionReferenceAliases.getCollectionColumnAliases().getSuffixedKeyAliases() )
 							+ "}"
 			);
-			final EntityAliases elementAliases = collectionReferenceAliases.getEntityElementColumnAliases();
+			final EntityAliases elementAliases = collectionReferenceAliases.getEntityElementAliases().getColumnAliases();
 			if ( elementAliases != null ) {
 				printWriter.println(
 						TreePrinterHelper.INSTANCE.generateNodePrefix( depth + detailDepthOffset )

@@ -274,10 +274,6 @@ public class LoadQueryJoinAndFetchProcessor {
 
 	private void renderCollectionJoin(Join join, JoinFragment joinFragment) {
 		final CollectionQuerySpace rightHandSide = (CollectionQuerySpace) join.getRightHandSide();
-		final CollectionReferenceAliases aliases = aliasResolutionContext.generateCollectionReferenceAliases(
-				rightHandSide.getUid(),
-				rightHandSide.getCollectionPersister()
-		);
 
 		// The SQL join to the "collection table" needs to be rendered.
 		//
@@ -319,12 +315,17 @@ public class LoadQueryJoinAndFetchProcessor {
 						)
 				);
 			}
-			aliasResolutionContext.registerQuerySpaceAliases(
-					collectionElementJoin.getRightHandSide().getUid(),
-					new EntityReferenceAliasesImpl(
-							aliases.getElementTableAlias(),
-							aliases.getEntityElementColumnAliases()
-					)
+			aliasResolutionContext.generateCollectionReferenceAliases(
+					rightHandSide.getUid(),
+					rightHandSide.getCollectionPersister(),
+					collectionElementJoin.getRightHandSide().getUid()
+			);
+		}
+		else {
+			aliasResolutionContext.generateCollectionReferenceAliases(
+					rightHandSide.getUid(),
+					rightHandSide.getCollectionPersister(),
+					null
 			);
 		}
 
@@ -554,7 +555,7 @@ public class LoadQueryJoinAndFetchProcessor {
 							elementTableAlias,
 							collectionTableAlias,
 
-							aliases.getEntityElementColumnAliases().getSuffix(),
+							aliases.getEntityElementAliases().getColumnAliases().getSuffix(),
 							aliases.getCollectionColumnAliases().getSuffix(),
 							true
 					)
@@ -565,7 +566,7 @@ public class LoadQueryJoinAndFetchProcessor {
 			selectStatementBuilder.appendSelectClauseFragment(
 					elementPersister.selectFragment(
 							elementTableAlias,
-							aliases.getEntityElementColumnAliases().getSuffix()
+							aliases.getEntityElementAliases().getColumnAliases().getSuffix()
 					)
 			);
 
@@ -602,7 +603,7 @@ public class LoadQueryJoinAndFetchProcessor {
 				selectStatementBuilder.appendSelectClauseFragment(
 						elementPersister.selectFragment(
 								aliases.getElementTableAlias(),
-								aliases.getEntityElementColumnAliases().getSuffix()
+								aliases.getEntityElementAliases().getColumnAliases().getSuffix()
 						)
 				);
 				readerCollector.add(

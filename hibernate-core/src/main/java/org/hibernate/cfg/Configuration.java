@@ -2251,7 +2251,7 @@ public class Configuration implements Serializable {
 			return (RootClass) getClassMapping( clazz );
 		}
 		catch (ClassCastException cce) {
-			throw new MappingException( "You may only specify a cache for root <class> mappings" );
+			throw new MappingException( "You may only specify a cache for root <class> mappings.  Attempted on " + clazz );
 		}
 	}
 

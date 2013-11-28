@@ -67,7 +67,9 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[] {
 				Item.class,
 				Distributor.class,
-				Wallet.class
+				Wallet.class,
+				Employee.class,
+				Contractor.class
 		};
 	}
 
@@ -134,18 +136,18 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testTypeExpression() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
+		final EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
-		em.persist( item );
-		item = new Item( "Computer", "Apple II" );
-		em.persist( item );
-		Query q = em.createQuery( "select i from Item i where TYPE(i) = :itemType" );
-		q.setParameter( "itemType", Item.class );
-		List result = q.getResultList();
+		final Employee employee = new Employee( "Lukasz", 100.0 );
+		em.persist( employee );
+		final Contractor contractor = new Contractor( "Kinga", 100.0, "Microsoft" );
+		em.persist( contractor );
+		final Query q = em.createQuery( "SELECT e FROM Employee e where TYPE(e) <> Contractor" );
+		final List result = q.getResultList();
 		assertNotNull( result );
-		assertEquals( 2, result.size() );
+		assertEquals( Arrays.asList( employee ), result );
 		em.getTransaction().rollback();
 		em.close();
 	}

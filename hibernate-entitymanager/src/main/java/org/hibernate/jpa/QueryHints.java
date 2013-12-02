@@ -101,14 +101,18 @@ public class QueryHints {
 	public static final String HINT_NATIVE_LOCKMODE = NATIVE_LOCKMODE;
 	
 	/**
-	 * Hint providing an EntityGraph.  With JPQL/HQL, the sole functionality is attribute nodes are treated as
-	 * FetchType.EAGER.  Laziness is not affected.
+	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
+	 * FetchType.EAGER (via join fetch or subsequent select).
+	 * 
+	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
+	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
 	 */
 	public static final String HINT_FETCHGRAPH = FETCHGRAPH;
 	
 	/**
-	 * Hint providing an EntityGraph.  With JPQL/HQL, the sole functionality is attribute nodes are treated as
-	 * FetchType.EAGER.  Laziness is not affected.
+	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
+	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
+	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
 	 */
 	public static final String HINT_LOADGRAPH = LOADGRAPH;
 

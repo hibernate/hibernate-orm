@@ -26,7 +26,7 @@ package org.hibernate.test.idgen.enhanced.sequence;
 import org.junit.Test;
 
 import org.hibernate.Session;
-import org.hibernate.id.enhanced.OptimizerFactory;
+import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -49,8 +49,8 @@ public class PooledSequenceTest extends BaseCoreFunctionalTestCase {
 		EntityPersister persister = sessionFactory().getEntityPersister( Entity.class.getName() );
 		assertClassAssignability( SequenceStyleGenerator.class, persister.getIdentifierGenerator().getClass() );
 		SequenceStyleGenerator generator = ( SequenceStyleGenerator ) persister.getIdentifierGenerator();
-		assertClassAssignability( OptimizerFactory.PooledOptimizer.class, generator.getOptimizer().getClass() );
-		OptimizerFactory.PooledOptimizer optimizer = ( OptimizerFactory.PooledOptimizer ) generator.getOptimizer();
+		assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
+		PooledOptimizer optimizer = (PooledOptimizer) generator.getOptimizer();
 
 		int increment = optimizer.getIncrementSize();
 		Entity[] entities = new Entity[ increment + 1 ];

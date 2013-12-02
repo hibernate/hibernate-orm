@@ -255,23 +255,23 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 	}
 
 	private static Optimizer buildNoneOptimizer(long initial, int increment) {
-		return buildOptimizer( OptimizerFactory.StandardOptimizerDescriptor.NONE, initial, increment );
+		return buildOptimizer( StandardOptimizerDescriptor.NONE, initial, increment );
 	}
 
 	private static Optimizer buildHiloOptimizer(long initial, int increment) {
-		return buildOptimizer( OptimizerFactory.StandardOptimizerDescriptor.HILO, initial, increment );
+		return buildOptimizer( StandardOptimizerDescriptor.HILO, initial, increment );
 	}
 
 	private static Optimizer buildPooledOptimizer(long initial, int increment) {
-		return buildOptimizer( OptimizerFactory.StandardOptimizerDescriptor.POOLED, initial, increment );
+		return buildOptimizer( StandardOptimizerDescriptor.POOLED, initial, increment );
 	}
 
 	private static Optimizer buildPooledLoOptimizer(long initial, int increment) {
-		return buildOptimizer( OptimizerFactory.StandardOptimizerDescriptor.POOLED_LO, initial, increment );
+		return buildOptimizer( StandardOptimizerDescriptor.POOLED_LO, initial, increment );
 	}
 
 	private static Optimizer buildOptimizer(
-			OptimizerFactory.StandardOptimizerDescriptor descriptor,
+			StandardOptimizerDescriptor descriptor,
 			long initial,
 			int increment) {
 		return OptimizerFactory.buildOptimizer( descriptor.getExternalName(), Long.class, increment, initial );
@@ -317,6 +317,11 @@ public class OptimizerUnitTest extends BaseUnitTestCase {
 			finally {
 				timesCalled++;
 			}
+		}
+
+		@Override
+		public String getTenantIdentifier() {
+			return null;
 		}
 
 		private void initValue() {

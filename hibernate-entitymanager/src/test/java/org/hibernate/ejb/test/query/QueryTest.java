@@ -23,16 +23,20 @@
  */
 package org.hibernate.ejb.test.query;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
-
-import org.junit.Test;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ejb.test.BaseEntityManagerFunctionalTestCase;
@@ -40,11 +44,7 @@ import org.hibernate.ejb.test.Distributor;
 import org.hibernate.ejb.test.Item;
 import org.hibernate.ejb.test.Wallet;
 import org.hibernate.testing.TestForIssue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
@@ -107,18 +107,18 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
 	public void testTypeExpression() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
+		final EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
-		Item item = new Item( "Mouse", "Micro$oft mouse" );
-		em.persist( item );
-		item = new Item( "Computer", "Apple II" );
-		em.persist( item );
-		Query q = em.createQuery( "select i from Item i where TYPE(i) = :itemType" );
-		q.setParameter( "itemType", Item.class );
-		List result = q.getResultList();
+		final Employee employee = new Employee( "Lukasz", 100.0 );
+		em.persist( employee );
+		final Contractor contractor = new Contractor( "Kinga", 100.0, "Microsoft" );
+		em.persist( contractor );
+		final Query q = em.createQuery( "SELECT e FROM Employee e where TYPE(e) <> Contractor" );
+		final List result = q.getResultList();
 		assertNotNull( result );
-		assertEquals( 2, result.size() );
+		assertEquals( Arrays.asList( employee ), result );
 		em.getTransaction().rollback();
 		em.close();
 	}
@@ -635,7 +635,9 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class[]{
 				Item.class,
 				Distributor.class,
-				Wallet.class
+				Wallet.class,
+				Contractor.class,
+				Employee.class
 		};
 	}
 }

@@ -62,35 +62,33 @@ public class OsgiClassLoader extends ClassLoader {
 	@Override
 	@SuppressWarnings("rawtypes")
 	protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-		synchronized (getClassLoadingLock(name)) {
-			if ( classCache.containsKey( name ) ) {
-				return classCache.get( name );
-			}
-			
-			for ( Bundle bundle : bundles ) {
-				try {
-					final Class clazz = bundle.loadClass( name );
-					if ( clazz != null ) {
-						classCache.put( name, clazz );
-						return clazz;
-					}
-				}
-				catch ( Exception ignore ) {
+		if ( classCache.containsKey( name ) ) {
+			return classCache.get( name );
+		}
+		
+		for ( Bundle bundle : bundles ) {
+			try {
+				final Class clazz = bundle.loadClass( name );
+				if ( clazz != null ) {
+					classCache.put( name, clazz );
+					return clazz;
 				}
 			}
-			
-			for ( ClassLoader classLoader : classLoaders ) {
-				try {
-					final Class clazz = classLoader.loadClass( name );
-					if ( clazz != null ) {
-						classCache.put( name, clazz );
-						return clazz;
-					}
-				}
-				catch ( Exception ignore ) {
+			catch ( Exception ignore ) {
+			}
+		}
+		
+		for ( ClassLoader classLoader : classLoaders ) {
+			try {
+				final Class clazz = classLoader.loadClass( name );
+				if ( clazz != null ) {
+					classCache.put( name, clazz );
+					return clazz;
 				}
 			}
-        }
+			catch ( Exception ignore ) {
+			}
+		}
 
 		throw new ClassNotFoundException( "Could not load requested class : " + name );
 	}

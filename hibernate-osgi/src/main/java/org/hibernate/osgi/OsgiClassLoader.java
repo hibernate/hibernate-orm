@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.hibernate.service.spi.Stoppable;
 import org.osgi.framework.Bundle;
 
 /**
@@ -42,7 +43,7 @@ import org.osgi.framework.Bundle;
  * @author Brett Meyer
  * @author Tim Ward
  */
-public class OsgiClassLoader extends ClassLoader {
+public class OsgiClassLoader extends ClassLoader implements Stoppable {
 	// Leave these as Sets -- addClassLoader or addBundle may be called more
 	// than once if a SF or EMF is closed and re-created.
 	private Set<ClassLoader> classLoaders = new HashSet<ClassLoader>();
@@ -210,10 +211,10 @@ public class OsgiClassLoader extends ClassLoader {
 		bundles.add( bundle );
 	}
 
-	/**
-	 * Clear all resources.
-	 */
-	public void clear() {
+	@Override
+	public void stop() {
+		classLoaders.clear();
+		bundles.clear();
 		classCache.clear();
 		resourceCache.clear();
 	}

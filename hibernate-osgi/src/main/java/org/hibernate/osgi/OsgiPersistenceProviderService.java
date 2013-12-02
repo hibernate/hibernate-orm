@@ -21,7 +21,6 @@
 package org.hibernate.osgi;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 
@@ -35,7 +34,7 @@ import org.osgi.framework.ServiceRegistration;
 public class OsgiPersistenceProviderService implements ServiceFactory {
 	private OsgiClassLoader osgiClassLoader;
 	private OsgiJtaPlatform osgiJtaPlatform;
-	private BundleContext context;
+	private OsgiServiceUtil osgiServiceUtil;
 
 	/**
 	 * Constructs a OsgiPersistenceProviderService
@@ -47,15 +46,15 @@ public class OsgiPersistenceProviderService implements ServiceFactory {
 	public OsgiPersistenceProviderService(
 			OsgiClassLoader osgiClassLoader,
 			OsgiJtaPlatform osgiJtaPlatform,
-			BundleContext context) {
+			OsgiServiceUtil osgiServiceUtil) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
-		this.context = context;
+		this.osgiServiceUtil = osgiServiceUtil;
 	}
 
 	@Override
 	public Object getService(Bundle requestingBundle, ServiceRegistration registration) {
-		return new OsgiPersistenceProvider(osgiClassLoader, osgiJtaPlatform, requestingBundle, context);
+		return new OsgiPersistenceProvider( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil, requestingBundle );
 	}
 
 	@Override

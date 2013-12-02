@@ -30,8 +30,6 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
-import org.osgi.framework.BundleContext;
-
 /**
  * Offers the JTA Platform provided by the OSGi container. The Enterprise
  * OSGi spec requires all containers to register UserTransaction
@@ -42,22 +40,22 @@ import org.osgi.framework.BundleContext;
 public class OsgiJtaPlatform implements JtaPlatform {
 	private static final long serialVersionUID = 1L;
 	
-	private BundleContext bundleContext;
+	private OsgiServiceUtil osgiServiceUtil;
 
 	/**
 	 * Constructs a OsgiJtaPlatform
 	 *
 	 * @param bundleContext The OSGi bundle context
 	 */
-	public OsgiJtaPlatform(BundleContext bundleContext) {
-		this.bundleContext = bundleContext;
+	public OsgiJtaPlatform(OsgiServiceUtil osgiServiceUtil) {
+		this.osgiServiceUtil = osgiServiceUtil;
 	}
 
 	@Override
 	public TransactionManager retrieveTransactionManager() {
 		try {
-			final TransactionManager transactionManager = OsgiServiceUtil.getServiceImpl(
-					TransactionManager.class, bundleContext );
+			final TransactionManager transactionManager = osgiServiceUtil.getServiceImpl(
+					TransactionManager.class );
 			if (transactionManager == null) {
 				throw new TransactionException("Cannot retrieve the TransactionManager OSGi service!");
 			}
@@ -71,8 +69,8 @@ public class OsgiJtaPlatform implements JtaPlatform {
 	@Override
 	public UserTransaction retrieveUserTransaction() {
 		try {
-			final UserTransaction userTransaction = OsgiServiceUtil.getServiceImpl(
-					UserTransaction.class, bundleContext );
+			final UserTransaction userTransaction = osgiServiceUtil.getServiceImpl(
+					UserTransaction.class );
 			if (userTransaction == null) {
 				throw new TransactionException("Cannot retrieve the UserTransaction OSGi service!");
 			}

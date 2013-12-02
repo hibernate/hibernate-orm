@@ -21,66 +21,89 @@
 package org.hibernate.osgi;
 
 import java.lang.reflect.Array;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-
+import org.hibernate.service.spi.Stoppable;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Utilities for dealing with OSGi environments
- *
+ * 
  * @author Brett Meyer
  */
-public final class OsgiServiceUtil {
+public class OsgiServiceUtil implements Stoppable {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( OsgiServiceUtil.class );
 
-	/**
-	 * Locate all implementors of the given service contract in the given OSGi buindle context.  Utilizes
-	 * {@link ServiceTracker} (best practice, automatically handles a lot of boilerplate and error conditions).
-	 *
-	 * @param contract The service contract for which to locate implementors
-	 * @param context The OSGi bundle context
-	 * @param T[] The Java type of the service to locate
-	 *
-	 * @return All know implementors
-	 */
-	public static <T> T[] getServiceImpls(Class<T> contract, BundleContext bundleContext) {
-		final ServiceTracker<T, T> serviceTracker = new ServiceTracker<T, T>( bundleContext, contract, null );
-		try {
-			T[] services = (T[]) serviceTracker.getServices();
-			if (services != null) {
-				return services;
-			}
-		}
-		catch ( Exception e ) {
-			LOG.unableToDiscoverOsgiService( contract.getName(), e );
-		}
-		return (T[]) Array.newInstance(contract, 0);
+	private BundleContext context;
+
+	private Map<String, ServiceTracker> serviceTrackers = new HashMap<String, ServiceTracker>();
+
+	public OsgiServiceUtil(BundleContext context) {
+		this.context = context;
 	}
 
 	/**
-	 * Locate the single implementor of the given service contract in the given OSGi buindle context.  Utilizes
-	 * {@link ServiceTracker#waitForService(long)}
-	 *
+	 * Locate all implementors of the given service contract in the given OSGi buindle context. Utilizes
+	 * {@link ServiceTracker} (best practice, automatically handles a lot of boilerplate and error conditions).
+	 * 
 	 * @param contract The service contract for which to locate implementors
 	 * @param context The OSGi bundle context
 	 * @param T[] The Java type of the service to locate
-	 *
 	 * @return All know implementors
 	 */
-	public static <T> T getServiceImpl(Class<T> contract, BundleContext bundleContext) {
-		final ServiceTracker<T, T> serviceTracker = new ServiceTracker<T, T>( bundleContext, contract, null );
+	public <T> T[] getServiceImpls(Class<T> contract) {
+		final ServiceTracker serviceTracker = getServiceTracker( contract.getName() );
+		try {
+			T[] services = (T[]) serviceTracker.getServices();
+			if ( services != null ) {
+				return services;
+			}
+		}
+		catch (Exception e) {
+			LOG.unableToDiscoverOsgiService( contract.getName(), e );
+		}
+		return (T[]) Array.newInstance( contract, 0 );
+	}
+
+	/**
+	 * Locate the single implementor of the given service contract in the given OSGi buindle context. Utilizes
+	 * {@link ServiceTracker#waitForService(long)}
+	 * 
+	 * @param contract The service contract for which to locate implementors
+	 * @param context The OSGi bundle context
+	 * @param T[] The Java type of the service to locate
+	 * @return All know implementors
+	 */
+	public <T> T getServiceImpl(Class<T> contract) {
+		final ServiceTracker serviceTracker = getServiceTracker( contract.getName() );
 		try {
 			return (T) serviceTracker.waitForService( 1000 );
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOG.unableToDiscoverOsgiService( contract.getName(), e );
 			return null;
 		}
 	}
 
-	private OsgiServiceUtil() {
+	private <T> ServiceTracker getServiceTracker(String contractClassName) {
+		if ( !serviceTrackers.containsKey( contractClassName ) ) {
+			final ServiceTracker<T, T> serviceTracker = new ServiceTracker<T, T>( context, contractClassName, null );
+			serviceTracker.open();
+			serviceTrackers.put( contractClassName, serviceTracker );
+		}
+		return serviceTrackers.get( contractClassName );
+	}
+
+	@Override
+	public void stop() {
+		for (String key : serviceTrackers.keySet()) {
+			serviceTrackers.get( key ).close();
+		}
+		serviceTrackers.clear();
 	}
 }

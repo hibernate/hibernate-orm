@@ -32,11 +32,8 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
-
 import org.jboss.logging.Logger;
-
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.wiring.BundleWiring;
@@ -65,7 +62,7 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 	
 	private OsgiClassLoader osgiClassLoader;
 	private OsgiJtaPlatform osgiJtaPlatform;
-	private BundleContext context;
+	private OsgiServiceUtil osgiServiceUtil;
 
 	/**
 	 * Constructs a OsgiSessionFactoryService
@@ -77,10 +74,10 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 	public OsgiSessionFactoryService(
 			OsgiClassLoader osgiClassLoader,
 			OsgiJtaPlatform osgiJtaPlatform,
-			BundleContext context) {
+			OsgiServiceUtil osgiServiceUtil) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
-		this.context = context;
+		this.osgiServiceUtil = osgiServiceUtil;
 	}
 
 	@Override
@@ -108,18 +105,18 @@ public class OsgiSessionFactoryService implements ServiceFactory {
 		final BootstrapServiceRegistryBuilder builder = new BootstrapServiceRegistryBuilder();
 		builder.with( osgiClassLoader );
 
-		final Integrator[] integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		final Integrator[] integrators = osgiServiceUtil.getServiceImpls( Integrator.class );
 		for ( Integrator integrator : integrators ) {
 			builder.with( integrator );
 		}
 
 		final StrategyRegistrationProvider[] strategyRegistrationProviders
-				= OsgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class, context );
+				= osgiServiceUtil.getServiceImpls( StrategyRegistrationProvider.class );
 		for ( StrategyRegistrationProvider strategyRegistrationProvider : strategyRegistrationProviders ) {
 			builder.withStrategySelectors( strategyRegistrationProvider );
 		}
         
-		final TypeContributor[] typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+		final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls( TypeContributor.class );
 		for ( TypeContributor typeContributor : typeContributors ) {
 			configuration.registerTypeContributor( typeContributor );
 		}

@@ -8,11 +8,12 @@
         <config name="org.apache.aries.transaction">
             aries.transaction.recoverable = true
             aries.transaction.timeout = 600
+            aries.transaction.howl.logFileDir = ${karaf.data}/txlog
             aries.transaction.howl.maxLogFiles = 2
             aries.transaction.howl.maxBlocksPerFile = 512
             aries.transaction.howl.bufferSizeKBytes = 4
         </config>
-        <bundle start-level="30">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+        <bundle dependency="true" start-level="30">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle start-level="30">mvn:org.apache.aries.transaction/org.apache.aries.transaction.blueprint/1.0.0</bundle>
         <bundle start-level="30">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/1.0.1</bundle>
         
@@ -28,6 +29,7 @@
         <bundle start-level="30">mvn:org.apache.aries.jpa/org.apache.aries.jpa.container.context/1.0.2-SNAPSHOT</bundle>
         
 	    <!-- JNDI -->
+        <bundle start-level="30">mvn:org.apache.aries/org.apache.aries.util/1.0.0</bundle>
         <bundle start-level="30">mvn:org.apache.aries.jndi/org.apache.aries.jndi.api/1.0.0</bundle>
         <bundle start-level="30">mvn:org.apache.aries.jndi/org.apache.aries.jndi.core/1.0.0</bundle>
         <bundle start-level="30">mvn:org.apache.aries.jndi/org.apache.aries.jndi.rmi/1.0.0</bundle>

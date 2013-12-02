@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceUnitInfo;
 
@@ -41,9 +42,7 @@ import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.metamodel.spi.TypeContributor;
-
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleReference;
 
 /**
@@ -55,8 +54,8 @@ import org.osgi.framework.BundleReference;
 public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	private OsgiClassLoader osgiClassLoader;
 	private OsgiJtaPlatform osgiJtaPlatform;
+	private OsgiServiceUtil osgiServiceUtil;
 	private Bundle requestingBundle;
-	private BundleContext context;
 
 	/**
 	 * Constructs a OsgiPersistenceProvider
@@ -69,12 +68,12 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 	public OsgiPersistenceProvider(
 			OsgiClassLoader osgiClassLoader,
 			OsgiJtaPlatform osgiJtaPlatform,
-			Bundle requestingBundle,
-			BundleContext context) {
+			OsgiServiceUtil osgiServiceUtil,
+			Bundle requestingBundle) {
 		this.osgiClassLoader = osgiClassLoader;
 		this.osgiJtaPlatform = osgiJtaPlatform;
+		this.osgiServiceUtil = osgiServiceUtil;
 		this.requestingBundle = requestingBundle;
-		this.context = context;
 	}
 
 	// TODO: Does "hibernate.classloaders" and osgiClassLoader need added to the
@@ -122,7 +121,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 
 		settings.put( AvailableSettings.JTA_PLATFORM, osgiJtaPlatform );
 
-		final Integrator[] integrators = OsgiServiceUtil.getServiceImpls( Integrator.class, context );
+		final Integrator[] integrators = osgiServiceUtil.getServiceImpls( Integrator.class );
 		final IntegratorProvider integratorProvider = new IntegratorProvider() {
 			@Override
 			public List<Integrator> getIntegrators() {
@@ -131,8 +130,8 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		};
 		settings.put( EntityManagerFactoryBuilderImpl.INTEGRATOR_PROVIDER, integratorProvider );
 
-		final StrategyRegistrationProvider[] strategyRegistrationProviders = OsgiServiceUtil.getServiceImpls(
-				StrategyRegistrationProvider.class, context );
+		final StrategyRegistrationProvider[] strategyRegistrationProviders = osgiServiceUtil.getServiceImpls(
+				StrategyRegistrationProvider.class );
 		final StrategyRegistrationProviderList strategyRegistrationProviderList = new StrategyRegistrationProviderList() {
 			@Override
 			public List<StrategyRegistrationProvider> getStrategyRegistrationProviders() {
@@ -141,7 +140,7 @@ public class OsgiPersistenceProvider extends HibernatePersistenceProvider {
 		};
 		settings.put( EntityManagerFactoryBuilderImpl.STRATEGY_REGISTRATION_PROVIDERS, strategyRegistrationProviderList );
 
-		final TypeContributor[] typeContributors = OsgiServiceUtil.getServiceImpls( TypeContributor.class, context );
+		final TypeContributor[] typeContributors = osgiServiceUtil.getServiceImpls( TypeContributor.class );
 		final TypeContributorList typeContributorList = new TypeContributorList() {
 			@Override
 			public List<TypeContributor> getTypeContributors() {

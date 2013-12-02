@@ -25,13 +25,13 @@ package org.hibernate.osgi;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+
 import javax.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.internal.util.ClassLoaderHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -61,6 +61,9 @@ import org.osgi.framework.ServiceRegistration;
 @SuppressWarnings("UnusedDeclaration")
 public class HibernateBundleActivator implements BundleActivator {
 	
+	private OsgiClassLoader osgiClassLoader;
+	private OsgiServiceUtil osgiServiceUtil;
+	
 	private ServiceRegistration<?> persistenceProviderService;
 	private ServiceRegistration<?> sessionFactoryService;
 	
@@ -69,31 +72,38 @@ public class HibernateBundleActivator implements BundleActivator {
 	public void start(BundleContext context) throws Exception {
 		// build a ClassLoader that uses all the necessary OSGi bundles, and place it into
 		// a well-known location so internals can access it
-		final OsgiClassLoader osgiClassLoader = new OsgiClassLoader();
+		osgiClassLoader = new OsgiClassLoader();
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( Session.class ) );
 		osgiClassLoader.addBundle( FrameworkUtil.getBundle( HibernatePersistenceProvider.class ) );
 		ClassLoaderHelper.overridenClassLoader = osgiClassLoader;
+		
+		osgiServiceUtil = new OsgiServiceUtil( context );
 
 		// Build a JtaPlatform specific for this OSGi context
-		final OsgiJtaPlatform osgiJtaPlatform = new OsgiJtaPlatform( context );
+		final OsgiJtaPlatform osgiJtaPlatform = new OsgiJtaPlatform( osgiServiceUtil );
 
 		final Dictionary properties = new Hashtable();
 		// In order to support existing persistence.xml files, register using the legacy provider name.
 		properties.put( "javax.persistence.provider", HibernatePersistenceProvider.class.getName() );
 		persistenceProviderService = context.registerService(
 				PersistenceProvider.class.getName(),
-				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, context ),
+				new OsgiPersistenceProviderService( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil ),
 				properties
 		);
 		sessionFactoryService = context.registerService(
 				SessionFactory.class.getName(),
-				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, context ),
+				new OsgiSessionFactoryService( osgiClassLoader, osgiJtaPlatform, osgiServiceUtil ),
 				new Hashtable()
 		);
 	}
 
 	@Override
 	public void stop(BundleContext context) throws Exception {
+		osgiClassLoader.stop();
+		osgiClassLoader = null;
+		osgiServiceUtil.stop();
+		osgiServiceUtil = null;
+		
 		persistenceProviderService.unregister();
 		persistenceProviderService = null;
 		sessionFactoryService.unregister();

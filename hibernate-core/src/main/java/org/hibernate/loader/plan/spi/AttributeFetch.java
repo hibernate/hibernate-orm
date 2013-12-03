@@ -31,5 +31,10 @@ import org.hibernate.persister.walking.spi.AttributeDefinition;
  * @author Gail Badner
  */
 public interface AttributeFetch extends Fetch {
+
+	/**
+	 * Returns the {@link AttributeDefinition} for attribute being fetched.
+	 * @return
+	 */
 	public AttributeDefinition getFetchedAttributeDefinition();
 }

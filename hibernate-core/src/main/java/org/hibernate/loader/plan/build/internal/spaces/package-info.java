@@ -23,6 +23,6 @@
  */
 
 /**
- * Defines the SPI for building a metamodel-driven LoadPlan
+ * Contains the internal implementations of query spaces in a metamodel-driven LoadPlan.
  */
-package org.hibernate.loader.plan.build.spi;
+package org.hibernate.loader.plan.build.internal.spaces;

@@ -24,6 +24,8 @@
 package org.hibernate.loader.plan.spi;
 
 /**
+ * Models the requested fetching of an "any" attribute.
+ *
  * @author Gail Badner
  */
 public interface AnyAttributeFetch extends Fetch, FetchSource {

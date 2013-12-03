@@ -24,7 +24,7 @@
 package org.hibernate.loader.plan.spi;
 
 /**
- * Represents the circular side of a bi-directional entity fetch.  Wraps a reference to an EntityReference
+ * Represents the circular side of a bi-directional entity .  Wraps a reference to an EntityReference
  * as an EntityFetch.  We can use the special type as a trigger in AliasResolutionContext, etc to lookup information
  * based on the wrapped reference.
  * <p/>

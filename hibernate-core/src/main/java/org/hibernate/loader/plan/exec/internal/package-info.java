@@ -23,6 +23,6 @@
  */
 
 /**
- * Defines the SPI for building a metamodel-driven LoadPlan
+ * Provides the internal implementations for generating the load query from the LoadPlan and the ResultSet processor.
  */
-package org.hibernate.loader.plan.build.spi;
+package org.hibernate.loader.plan.exec.internal;

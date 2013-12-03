@@ -36,7 +36,6 @@ buildscript {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
         classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
-		classpath 'org.hibernate.build.gradle:gradle-apt:1.0.0-SNAPSHOT'
     }
 }
 
@@ -118,7 +117,6 @@ subprojects { subProject ->
 	apply plugin: 'osgi'
 
 	apply from: "${rootProject.projectDir}/source-generation.gradle"
-//        apply from: "${rootProject.projectDir}/utilities.gradle"
 
 	apply plugin: 'findbugs'
 	apply plugin: 'checkstyle'

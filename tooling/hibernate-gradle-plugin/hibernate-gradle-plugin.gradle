@@ -9,7 +9,3 @@ dependencies {
    compile gradleApi()
    compile localGroovy()
 }
-
-def boolean needsLoggingGeneration() {
-	return false;
-}

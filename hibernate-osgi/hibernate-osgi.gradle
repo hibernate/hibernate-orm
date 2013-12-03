@@ -73,10 +73,6 @@ def osgiDescription() {
 	return pomDescription()
 }
 
-def boolean needsLoggingGeneration() {
-	return false;
-}
-
 jar {
 	manifest {
 		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'

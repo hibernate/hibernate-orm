@@ -82,14 +82,6 @@ def osgiDescription() {
 	return pomDescription()
 }
 
-def boolean needsLoggingGeneration() {
-	// by default
-	return true;
-}
-
-def SourceSet getMetaGenTargetSourceSet() {
-	return null;
-}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -196,14 +188,7 @@ subprojects { subProject ->
 		]
 	}
 
-	if ( subProject.needsLoggingGeneration() ) {
-		addLoggingProcessor( sourceSets.main )
-	}
-
-	final SourceSet metaGenSourceSet = subProject.getMetaGenTargetSourceSet();
-	if ( metaGenSourceSet != null ) {
-		addMetaGenProcessor( metaGenSourceSet )
-	}
+	addLoggingProcessor( sourceSets.main )
 
 	jar {
 		manifest = osgiManifest {

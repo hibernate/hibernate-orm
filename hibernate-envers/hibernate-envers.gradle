@@ -33,10 +33,6 @@ def osgiDescription() {
 	return pomDescription()
 }
 
-def getMetaGenTargetSourceSet() {
-	return sourceSets.main;
-}
-
 sourceSets {
     test {
         ext {
@@ -52,6 +48,7 @@ sourceSets {
     }
 }
 
+addMetaGenProcessor( sourceSets.main )
 
 jar {
     manifest {

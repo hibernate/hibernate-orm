@@ -165,9 +165,9 @@ class SourceGenerationPluginConvention {
 
 
 		// create a FileTree representation of the APT output dir and add it to the JavaCompile task (so they get compiled)
-		final ConfigurableFileTree outputDirFileTree = project.fileTree( outputDir );
-		outputDirFileTree.builtBy( aptTask );
-		javaCompileTask.getSource().plus( outputDirFileTree );
+//		final ConfigurableFileTree outputDirFileTree = project.fileTree( outputDir );
+//		outputDirFileTree.builtBy( aptTask );
+//		javaCompileTask.getSource().plus( outputDirFileTree );
 
 		// Add the APT output dir to the source set
 		sourceSet.getJava().srcDir( outputDir );

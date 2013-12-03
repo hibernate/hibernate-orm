@@ -68,7 +68,3 @@ runSourceGenerators.dependsOn jaxb
 
 checkstyleMain.exclude '**/jaxb/**'
 
-
-def boolean needsLoggingGeneration() {
-	return false;
-}

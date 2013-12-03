@@ -32,16 +32,16 @@ import org.hibernate.loader.plan.spi.Return;
 /**
  * @author Steve Ebersole
  */
-public class Helper {
+public class RootHelper {
 	/**
 	 * Singleton access
 	 */
-	public static final Helper INSTANCE = new Helper();
+	public static final RootHelper INSTANCE = new RootHelper();
 
 	/**
 	 * Disallow direct instantiation
 	 */
-	private Helper() {
+	private RootHelper() {
 	}
 
 

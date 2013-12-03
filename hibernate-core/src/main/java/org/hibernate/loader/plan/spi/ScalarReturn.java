@@ -31,22 +31,21 @@ import org.hibernate.type.Type;
  * etc) or composite types.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class ScalarReturn extends AbstractPlanNode implements Return {
-	private final String name;
-	private final Type type;
+public interface ScalarReturn extends Return {
 
-	public ScalarReturn(String name, Type type, SessionFactoryImplementor factory) {
-		super( factory );
-		this.name = name;
-		this.type = type;
-	}
+	/**
+	 * Gets the name of the scalar return.
+	 *
+	 * @return The name of the scalar return.
+	 */
+	public String getName();
 
-	public String getName() {
-		return name;
-	}
-
-	public Type getType() {
-		return type;
-	}
+	/**
+	 * Gets the type of the scalar return.
+	 *
+	 * @return The type of the scalar return.
+	 */
+	public Type getType();
 }

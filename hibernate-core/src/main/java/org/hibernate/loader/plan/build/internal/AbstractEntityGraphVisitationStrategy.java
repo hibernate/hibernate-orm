@@ -43,7 +43,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphNodeImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.plan.build.spi.AbstractLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
@@ -348,12 +347,12 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	private static final GraphNodeImplementor NON_EXIST_SUBGRAPH_NODE = new GraphNodeImplementor() {
 		@Override
 		public List<AttributeNodeImplementor<?>> attributeImplementorNodes() {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 
 		@Override
 		public List<AttributeNode<?>> attributeNodes() {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 	};
 }

@@ -32,8 +32,9 @@ import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.entity.EntityJoinWalker;
 import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
+import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
@@ -79,8 +80,9 @@ public class LoadPlanStructureAssertionHelper {
 //		final EntityLoader loader = new EntityLoader( persister, lockMode, sf, influencers );
 
 		LoadPlan plan = buildLoadPlan( sf, persister, influencers, lockMode );
-		EntityLoadQueryDetails details = EntityLoadQueryDetails.makeForBatching(
-				plan, persister.getKeyColumnNames(),
+		LoadQueryDetails details = BatchingLoadQueryDetailsFactory.makeEntityLoadQueryDetails(
+				plan,
+				persister.getKeyColumnNames(),
 				new QueryBuildingParameters() {
 					@Override
 					public LoadQueryInfluencers getQueryInfluencers() {
@@ -124,7 +126,7 @@ public class LoadPlanStructureAssertionHelper {
 		return buildLoadPlan( sf, persister, LoadQueryInfluencers.NONE, LockMode.NONE );
 	}
 
-	private void compare(JoinWalker walker, EntityLoadQueryDetails details) {
+	private void compare(JoinWalker walker, LoadQueryDetails details) {
 		System.out.println( "------ SQL -----------------------------------------------------------------" );
 		System.out.println( "WALKER    : " + walker.getSQLString() );
 		System.out.println( "LOAD-PLAN : " + details.getSqlStatement() );

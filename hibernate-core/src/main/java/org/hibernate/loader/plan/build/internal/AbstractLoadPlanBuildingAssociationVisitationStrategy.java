@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.build.spi;
+package org.hibernate.loader.plan.build.internal;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -37,6 +37,11 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.loader.plan.build.internal.returns.CollectionReturnImpl;
 import org.hibernate.loader.plan.build.internal.returns.EntityReturnImpl;
 import org.hibernate.loader.plan.build.internal.spaces.QuerySpacesImpl;
+import org.hibernate.loader.plan.build.spi.ExpandingEntityIdentifierDescription;
+import org.hibernate.loader.plan.build.spi.ExpandingFetchSource;
+import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
+import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.spi.LoadPlanBuildingContext;
 import org.hibernate.loader.plan.spi.AttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionFetchableElement;
@@ -98,7 +103,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		this.querySpaces = new QuerySpacesImpl( sessionFactory );
 	}
 
-	public SessionFactoryImplementor sessionFactory() {
+	protected SessionFactoryImplementor sessionFactory() {
 		return sessionFactory;
 	}
 
@@ -110,10 +115,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 
 	// stack management ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public static interface FetchStackAware {
-		public void poppedFromStack();
-	}
-
 	private void pushToStack(ExpandingFetchSource fetchSource) {
 		log.trace( "Pushing fetch source to stack : " + fetchSource );
 		propertyPathStack.push( fetchSource.getPropertyPath() );
@@ -124,10 +125,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final ExpandingFetchSource last = fetchSourceStack.removeFirst();
 		log.trace( "Popped fetch owner from stack : " + last );
 		propertyPathStack.pop();
-		if ( FetchStackAware.class.isInstance( last ) ) {
-			( (FetchStackAware) last ).poppedFromStack();
-		}
-
 		return last;
 	}
 
@@ -331,9 +328,6 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		final CollectionReference last = collectionReferenceStack.removeFirst();
 		log.trace( "Popped collection reference from stack : " + last );
 		propertyPathStack.pop();
-		if ( FetchStackAware.class.isInstance( last ) ) {
-			( (FetchStackAware) last ).poppedFromStack();
-		}
 		return last;
 	}
 

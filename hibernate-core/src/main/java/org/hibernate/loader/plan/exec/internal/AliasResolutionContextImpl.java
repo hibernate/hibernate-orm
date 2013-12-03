@@ -228,6 +228,7 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 			CollectionPersister collectionPersister,
 			String tableAlias,
 			String elementQuerySpaceUid) {
+
 		if ( !collectionPersister.getElementType().isEntityType() ) {
 			return null;
 		}

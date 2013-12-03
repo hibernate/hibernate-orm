@@ -48,7 +48,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.plan.build.internal.FetchGraphLoadPlanBuildingStrategy;
 import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrategy;
-import org.hibernate.loader.plan.build.spi.AbstractLoadPlanBuildingAssociationVisitationStrategy;
+import org.hibernate.loader.plan.build.internal.AbstractLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;

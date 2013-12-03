@@ -38,10 +38,11 @@ import org.hibernate.loader.collection.CollectionInitializer;
 import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
+import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.BasicCollectionLoadQueryDetails;
-import org.hibernate.loader.plan.exec.spi.CollectionLoadQueryDetails;
-import org.hibernate.loader.plan.exec.spi.OneToManyLoadQueryDetails;
+import org.hibernate.loader.plan.exec.internal.BasicCollectionLoadQueryDetails;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
+import org.hibernate.loader.plan.exec.internal.OneToManyLoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.pretty.MessageHelper;
@@ -57,8 +58,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( AbstractLoadPlanBasedCollectionInitializer.class );
 
 	private final QueryableCollection collectionPersister;
-	private final LoadPlan plan;
-	private final CollectionLoadQueryDetails staticLoadQuery;
+	private final LoadQueryDetails staticLoadQuery;
 
 	public AbstractLoadPlanBasedCollectionInitializer(
 			QueryableCollection collectionPersister,
@@ -75,18 +75,12 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 								: buildingParameters.getLockOptions().getLockMode()
 		);
 
-		this.plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, collectionPersister );
-		this.staticLoadQuery = collectionPersister.isOneToMany() ?
-				OneToManyLoadQueryDetails.makeForBatching(
-						plan,
-						buildingParameters,
-						collectionPersister.getFactory()
-				) :
-				BasicCollectionLoadQueryDetails.makeForBatching(
-						plan,
-						buildingParameters,
-						collectionPersister.getFactory()
-				);
+		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootCollectionLoadPlan( strategy, collectionPersister );
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.makeCollectionLoadQueryDetails(
+				collectionPersister,
+				plan,
+				buildingParameters
+		);
 	}
 
 	@Override
@@ -131,7 +125,7 @@ public abstract class AbstractLoadPlanBasedCollectionInitializer
 	}
 
 	@Override
-	protected CollectionLoadQueryDetails getStaticLoadQuery() {
+	protected LoadQueryDetails getStaticLoadQuery() {
 		return staticLoadQuery;
 	}
 

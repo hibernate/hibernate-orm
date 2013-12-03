@@ -27,7 +27,6 @@ package org.hibernate.loader.entity.plan;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,15 +45,13 @@ import org.hibernate.loader.plan.build.internal.LoadGraphLoadPlanBuildingStrateg
 import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AbstractLoadPlanBasedLoader;
-import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
+import org.hibernate.loader.plan.exec.internal.BatchingLoadQueryDetailsFactory;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
-import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
-import org.hibernate.loader.spi.AfterLoadAction;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.Type;
 
 /**
@@ -69,8 +66,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	private final Type uniqueKeyType;
 	private final String entityName;
 
-	private final LoadPlan plan;
-	private final EntityLoadQueryDetails staticLoadQuery;
+	private final LoadQueryDetails staticLoadQuery;
 
 	public AbstractLoadPlanBasedEntityLoader(
 			OuterJoinLoadable entityPersister,
@@ -100,8 +96,8 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			);
 		}
 
-		this.plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
-		this.staticLoadQuery = EntityLoadQueryDetails.makeForBatching(
+		final LoadPlan plan = MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, entityPersister );
+		this.staticLoadQuery = BatchingLoadQueryDetailsFactory.makeEntityLoadQueryDetails(
 				plan,
 				uniqueKeyColumnNames,
 				buildingParameters,
@@ -110,7 +106,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 	}
 
 	@Override
-	protected EntityLoadQueryDetails getStaticLoadQuery() {
+	protected LoadQueryDetails getStaticLoadQuery() {
 		return staticLoadQuery;
 	}
 
@@ -236,63 +232,6 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 		}
 
 		throw new HibernateException( "Unable to interpret given query results in terms of a load-entity query" );
-	}
-
-	protected Object doQueryAndLoadEntity(
-			SessionImplementor session,
-			QueryParameters queryParameters,
-			EntityLoadQueryDetails loadQueryDetails,
-			boolean returnProxies,
-			ResultTransformer forcedResultTransformer) throws SQLException {
-
-		final List<AfterLoadAction> afterLoadActions = new ArrayList<AfterLoadAction>();
-
-		final SqlStatementWrapper wrapper = executeQueryStatement( queryParameters, false, afterLoadActions, session );
-
-		try {
-			final List results = loadQueryDetails.getResultSetProcessor().extractResults(
-					wrapper.getResultSet(),
-					session,
-					queryParameters,
-					new NamedParameterContext() {
-						@Override
-						public int[] getNamedParameterLocations(String name) {
-							return AbstractLoadPlanBasedEntityLoader.this.getNamedParameterLocs( name );
-						}
-					},
-					returnProxies,
-					queryParameters.isReadOnly(),
-					forcedResultTransformer,
-					afterLoadActions
-			);
-
-
-			if ( results.size() == 0 ) {
-				return null;
-			}
-			else if ( results.size() == 1 ) {
-				return results.get( 0 );
-			}
-			else {
-				final Object row = results.get( 0 );
-				if ( row.getClass().isArray() ) {
-					// the logical type of the result list is List<Object[]>.  See if the contained
-					// array contains just one element, and return that if so
-					final Object[] rowArray = (Object[]) row;
-					if ( rowArray.length == 1 ) {
-						return rowArray[0];
-					}
-				}
-				else {
-					return row;
-				}
-			}
-
-			throw new HibernateException( "Unable to interpret given query results in terms of a load-entity query" );
-		}
-		finally {
-			session.getTransactionCoordinator().getJdbcCoordinator().release( wrapper.getStatement() );
-		}
 	}
 
 	protected int[] getNamedParameterLocs(String name) {

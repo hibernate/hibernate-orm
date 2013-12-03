@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.exec.spi;
+package org.hibernate.loader.plan.exec.internal;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,19 +32,18 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
-import org.hibernate.loader.plan.exec.internal.Helper;
 import org.hibernate.loader.plan.exec.process.internal.EntityReferenceInitializerImpl;
 import org.hibernate.loader.plan.exec.process.internal.EntityReturnReader;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
 import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessorHelper;
-import org.hibernate.loader.plan.exec.process.spi.AbstractRowReader;
+import org.hibernate.loader.plan.exec.process.internal.AbstractRowReader;
 import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
 import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessingContext;
 import org.hibernate.loader.plan.exec.process.spi.RowReader;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
+import org.hibernate.loader.plan.exec.spi.EntityReferenceAliases;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.QuerySpace;
@@ -64,9 +63,13 @@ import org.jboss.logging.Logger;
  * </ul>
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	private static final Logger log = CoreLogging.logger( EntityLoadQueryDetails.class );
+
+	private final EntityReferenceAliases entityReferenceAliases;
+	private final ReaderCollector readerCollector;
 
 	/**
 	 * Constructs a EntityLoadQueryDetails object from the given inputs.
@@ -76,37 +79,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
-	 *
-	 * @return The EntityLoadQueryDetails
 	 */
-	public static EntityLoadQueryDetails makeForBatching(
-			LoadPlan loadPlan,
-			String[] keyColumnNames,
-			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
-		final int batchSize = buildingParameters.getBatchSize();
-		final boolean shouldUseOptionalEntityInformation = batchSize == 1;
-
-		final EntityReturn rootReturn = Helper.INSTANCE.extractRootReturn( loadPlan, EntityReturn.class );
-		final String[] keyColumnNamesToUse = keyColumnNames != null
-				? keyColumnNames
-				: ( (Queryable) rootReturn.getEntityPersister() ).getIdentifierColumnNames();
-		// Should be just one querySpace (of type EntityQuerySpace) in querySpaces.  Should we validate that?
-		// Should we make it a util method on Helper like we do for extractRootReturn ?
-		final AliasResolutionContextImpl aliasResolutionContext = new AliasResolutionContextImpl( factory );
-		return new EntityLoadQueryDetails(
-				loadPlan,
-				keyColumnNamesToUse,
-				aliasResolutionContext,
-				rootReturn,
-				buildingParameters,
-				factory
-		);
-	}
-
-	private final EntityReferenceAliases entityReferenceAliases;
-	private final ReaderCollector readerCollector;
-
 	protected EntityLoadQueryDetails(
 			LoadPlan loadPlan,
 			String[] keyColumnNames,
@@ -246,7 +219,7 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 		}
 	}
 
-	public static class EntityLoaderRowReader extends AbstractRowReader {
+	private static class EntityLoaderRowReader extends AbstractRowReader {
 		private final EntityReturnReader rootReturnReader;
 
 		public EntityLoaderRowReader(EntityLoaderReaderCollectorImpl entityLoaderReaderCollector) {

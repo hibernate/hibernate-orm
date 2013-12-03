@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.loader.plan.build.spi.ExpandingQuerySpaces;
-import org.hibernate.loader.plan.spi.AbstractPlanNode;
 import org.hibernate.loader.plan.spi.Join;
 import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.loader.plan.spi.QuerySpaces;
@@ -39,7 +38,7 @@ import org.hibernate.loader.plan.spi.QuerySpaces;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractQuerySpace extends AbstractPlanNode implements QuerySpace {
+public abstract class AbstractQuerySpace implements QuerySpace {
 	private final String uid;
 	private final Disposition disposition;
 	private final ExpandingQuerySpaces querySpaces;
@@ -52,7 +51,6 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 			Disposition disposition,
 			ExpandingQuerySpaces querySpaces,
 			boolean canJoinsBeRequired) {
-		super( querySpaces.getSessionFactory() );
 		this.uid = uid;
 		this.disposition = disposition;
 		this.querySpaces = querySpaces;
@@ -60,11 +58,8 @@ public abstract class AbstractQuerySpace extends AbstractPlanNode implements Que
 	}
 
 	protected SessionFactoryImplementor sessionFactory() {
-		return super.sessionFactory();
+		return querySpaces.getSessionFactory();
 	}
-
-	// todo : copy ctor - that depends how graph copying works here...
-
 
 	/**
 	 * Can any joins created from here (with this as the left-hand side) be required joins?

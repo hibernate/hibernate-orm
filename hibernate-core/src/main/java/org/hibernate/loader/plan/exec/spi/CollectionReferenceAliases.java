@@ -24,7 +24,6 @@
 package org.hibernate.loader.plan.exec.spi;
 
 import org.hibernate.loader.CollectionAliases;
-import org.hibernate.loader.EntityAliases;
 
 /**
  * @author Steve Ebersole

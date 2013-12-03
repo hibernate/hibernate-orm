@@ -21,12 +21,10 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.exec.spi;
+package org.hibernate.loader.plan.exec.internal;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
-import org.hibernate.loader.plan.exec.internal.Helper;
 import org.hibernate.loader.plan.exec.query.internal.SelectStatementBuilder;
 import org.hibernate.loader.plan.exec.query.spi.QueryBuildingParameters;
 import org.hibernate.loader.plan.spi.CollectionReturn;
@@ -36,34 +34,17 @@ import org.hibernate.persister.entity.OuterJoinLoadable;
 /**
  * @author Gail Badner
  */
-public class BasicCollectionLoadQueryDetails extends CollectionLoadQueryDetails {
+public class BasicCollectionLoadQueryDetails extends AbstractCollectionLoadQueryDetails {
 
 	/**
-	 * Constructs a EntityLoadQueryDetails object from the given inputs.
+	 * Constructs a BasicCollectionLoadQueryDetails object from the given inputs.
 	 *
 	 * @param loadPlan The load plan
 	 * @param buildingParameters And influencers that would affect the generated SQL (mostly we are concerned with those
 	 * that add additional joins here)
 	 * @param factory The SessionFactory
-	 *
-	 * @return The EntityLoadQueryDetails
 	 */
-	public static CollectionLoadQueryDetails makeForBatching(
-			LoadPlan loadPlan,
-			QueryBuildingParameters buildingParameters,
-			SessionFactoryImplementor factory) {
-		final CollectionReturn rootReturn = Helper.INSTANCE.extractRootReturn( loadPlan, CollectionReturn.class );
-		final AliasResolutionContextImpl aliasResolutionContext = new AliasResolutionContextImpl( factory );
-		return new BasicCollectionLoadQueryDetails(
-						loadPlan,
-						aliasResolutionContext,
-						rootReturn,
-						buildingParameters,
-						factory
-				);
-	}
-
-	protected BasicCollectionLoadQueryDetails(
+	BasicCollectionLoadQueryDetails(
 			LoadPlan loadPlan,
 			AliasResolutionContextImpl aliasResolutionContext,
 			CollectionReturn rootReturn,

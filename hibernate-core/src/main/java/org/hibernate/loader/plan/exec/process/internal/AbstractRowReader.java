@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.exec.process.spi;
+package org.hibernate.loader.plan.exec.process.internal;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -37,8 +37,10 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.loader.plan.exec.process.internal.HydratedEntityRegistration;
-import org.hibernate.loader.plan.exec.process.internal.ResultSetProcessingContextImpl;
+import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
+import org.hibernate.loader.plan.exec.process.spi.EntityReferenceInitializer;
+import org.hibernate.loader.plan.exec.process.spi.ReaderCollector;
+import org.hibernate.loader.plan.exec.process.spi.RowReader;
 import org.hibernate.loader.plan.spi.BidirectionalEntityReference;
 import org.hibernate.loader.plan.spi.CompositeFetch;
 import org.hibernate.loader.plan.spi.EntityFetch;

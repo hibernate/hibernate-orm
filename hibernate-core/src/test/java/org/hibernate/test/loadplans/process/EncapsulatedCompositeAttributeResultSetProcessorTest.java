@@ -56,7 +56,7 @@ import org.hibernate.loader.JoinWalker;
 import org.hibernate.loader.entity.EntityJoinWalker;
 import org.hibernate.loader.plan.exec.process.spi.ResultSetProcessor;
 import org.hibernate.loader.plan.exec.query.spi.NamedParameterContext;
-import org.hibernate.loader.plan.exec.spi.EntityLoadQueryDetails;
+import org.hibernate.loader.plan.exec.internal.EntityLoadQueryDetails;
 import org.hibernate.loader.plan.exec.spi.LoadQueryDetails;
 import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.persister.entity.EntityPersister;
@@ -153,12 +153,12 @@ public class EncapsulatedCompositeAttributeResultSetProcessorTest extends BaseCo
 				influencers
 		);
 
-		final EntityLoadQueryDetails details = Helper.INSTANCE.buildLoadQueryDetails( persister, sf );
+		final LoadQueryDetails details = Helper.INSTANCE.buildLoadQueryDetails( persister, sf );
 
 		compare( walker, details );
 	}
 
-	private void compare(JoinWalker walker, EntityLoadQueryDetails details) {
+	private void compare(JoinWalker walker, LoadQueryDetails details) {
 		System.out.println( "WALKER    : " + walker.getSQLString() );
 		System.out.println( "LOAD-PLAN : " + details.getSqlStatement() );
 		System.out.println();

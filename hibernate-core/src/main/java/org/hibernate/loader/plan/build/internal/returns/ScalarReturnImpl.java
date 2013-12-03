@@ -23,8 +23,27 @@
  */
 package org.hibernate.loader.plan.build.internal.returns;
 
+import org.hibernate.loader.plan.spi.ScalarReturn;
+import org.hibernate.type.Type;
+
 /**
  * @author Steve Ebersole
+ * @author Gail Badner
  */
-public class ScalarReturnImpl {
+public class ScalarReturnImpl implements ScalarReturn {
+	private final String name;
+	private final Type type;
+
+	public ScalarReturnImpl(String name, Type type) {
+		this.name = name;
+		this.type = type;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public Type getType() {
+		return type;
+	}
 }

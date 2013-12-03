@@ -16,3 +16,7 @@ def pomDescription() {
 def osgiDescription() {
 	return pomDescription()
 }
+
+test {
+    forkEvery 1
+}

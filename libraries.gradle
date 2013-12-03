@@ -112,7 +112,7 @@ ext {
 
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~ c3p0
             c3p0:            "com.mchange:c3p0:0.9.2.1",
-            ehcache:         "net.sf.ehcache:ehcache-core:2.4.3",
+            ehcache:         "net.sf.ehcache:ehcache:2.7.5",
             proxool:         "proxool:proxool:0.8.3"
 
         ]

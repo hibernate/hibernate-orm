@@ -97,11 +97,9 @@ public class EhcacheHibernate extends AbstractEmitterBean implements EhcacheHibe
 	@Override
 	public void setStatisticsEnabled(boolean flag) {
 		if ( flag ) {
-			ehcacheStats.enableStats();
 			hibernateStats.enableStats();
 		}
 		else {
-			ehcacheStats.disableStats();
 			hibernateStats.disableStats();
 		}
 		statsEnabled.set( flag );
@@ -121,7 +119,6 @@ public class EhcacheHibernate extends AbstractEmitterBean implements EhcacheHibe
 	 */
 	@Override
 	public void clearStats() {
-		ehcacheStats.clearStats();
 		hibernateStats.clearStats();
 	}
 

@@ -29,9 +29,8 @@ import org.hibernate.test.domain.PhoneNumber;
 import org.hibernate.test.domain.VersionedItem;
 import org.junit.Test;
 
-import org.hamcrest.CoreMatchers;
-
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -169,7 +168,7 @@ public class HibernateCacheTest extends BaseNonConfigCoreFunctionalTestCase {
 		// check the version value in the cache...
 		SecondLevelCacheStatistics slcs = sessionFactory().getStatistics()
 				.getSecondLevelCacheStatistics( REGION_PREFIX + VersionedItem.class.getName() );
-		assertThat( slcs, CoreMatchers.notNullValue() );
+		assertNotNull(slcs);
 		final Map entries = slcs.getEntries();
 		Object entry = entries.get( item.getId() );
 		Long cachedVersionValue;

@@ -19,3 +19,7 @@ mavenPom {
 def osgiDescription() {
 	return mavenPom.description
 }
+
+test {
+    forkEvery 1
+}

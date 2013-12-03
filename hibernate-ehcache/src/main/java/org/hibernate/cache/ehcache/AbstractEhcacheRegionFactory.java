@@ -24,7 +24,6 @@ import org.hibernate.cache.ehcache.internal.regions.EhcacheQueryResultsRegion;
 import org.hibernate.cache.ehcache.internal.regions.EhcacheTimestampsRegion;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactory;
 import org.hibernate.cache.ehcache.internal.strategy.EhcacheAccessStrategyFactoryImpl;
-import org.hibernate.cache.ehcache.internal.util.HibernateEhcacheUtils;
 import org.hibernate.cache.ehcache.management.impl.ProviderMBeanRegistrationHelper;
 import org.hibernate.cache.spi.CacheDataDescription;
 import org.hibernate.cache.spi.CollectionRegion;
@@ -163,7 +162,6 @@ abstract class AbstractEhcacheRegionFactory implements RegionFactory {
 				cache = manager.getEhcache( name );
 				LOG.debug( "started EHCache region: " + name );
 			}
-			HibernateEhcacheUtils.validateEhcache( cache );
 			return cache;
 		}
 		catch (net.sf.ehcache.CacheException e) {

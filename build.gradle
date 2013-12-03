@@ -36,6 +36,7 @@ buildscript {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
         classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:1.0.0-SNAPSHOT'
         classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
+		classpath 'org.hibernate.build.gradle:gradle-apt:1.0.0-SNAPSHOT'
     }
 }
 
@@ -81,6 +82,16 @@ def osgiDescription() {
 	// by default just reuse the pomDescription
 	return pomDescription()
 }
+
+def boolean needsLoggingGeneration() {
+	// by default
+	return true;
+}
+
+def SourceSet getMetaGenTargetSourceSet() {
+	return null;
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 subprojects { subProject ->
@@ -95,376 +106,358 @@ subprojects { subProject ->
 
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
-    if ( ! subProject.name.startsWith( 'release' )  && ! subProject.name.startsWith( 'documentation' ) ) {
-        apply plugin: 'java'
-        apply plugin: 'maven-publish'
-        apply plugin: 'maven-publish-auth'
-        apply plugin: 'maven' // temporary, still needed for install task until bug with publishToMavenLocal task is fixed
-        apply plugin: 'osgi'
 
-        apply from: "${rootProject.projectDir}/utilities.gradle"
+	if ( subProject.name.startsWith( 'release' ) || subProject.name.startsWith( 'documentation' ) ) {
+		return;
+	}
 
-        apply plugin: 'findbugs'
-        apply plugin: 'checkstyle'
-        apply plugin: 'build-dashboard'
-        apply plugin: 'project-report'
+	// everything below here in the closure applies to java projects
+	apply plugin: 'java'
+	apply plugin: 'maven-publish'
+	apply plugin: 'maven-publish-auth'
+	apply plugin: 'osgi'
 
-        configurations {
-            provided {
-                // todo : need to make sure these are non-exported
-                description = 'Non-exported compile-time dependencies.'
-            }
-            jbossLoggingTool {
-                description = "Dependencies for running the JBoss logging AnnotationProcessor tool"
-            }
-            jaxb {
-                description = 'Dependencies for running ant xjc (jaxb class generation)'
-            }
-            configurations {
-                all*.exclude group: 'xml-apis', module: 'xml-apis'
-            }
-            animalSniffer
-            javaApiSignature
-        }
+	apply from: "${rootProject.projectDir}/source-generation.gradle"
+//        apply from: "${rootProject.projectDir}/utilities.gradle"
 
-        // appropriately inject the common dependencies into each sub-project
-        dependencies {
-            compile( libraries.logging )
-            compile( libraries.logging_annotations )
+	apply plugin: 'findbugs'
+	apply plugin: 'checkstyle'
+	apply plugin: 'build-dashboard'
+	apply plugin: 'project-report'
 
-            testCompile( libraries.junit )
-            testCompile( libraries.byteman )
-            testCompile( libraries.byteman_install )
-            testCompile( libraries.byteman_bmunit )
-            
-            testRuntime( libraries.log4j )
-            testRuntime( libraries.javassist )
-            testRuntime( libraries.h2 )
+	configurations {
+		provided {
+			// todo : need to make sure these are non-exported
+			description = 'Non-exported compile-time dependencies.'
+		}
+		jbossLoggingTool {
+			description = "Dependencies for running the JBoss logging AnnotationProcessor tool"
+		}
+		jaxb {
+			description = 'Dependencies for running ant xjc (jaxb class generation)'
+		}
+		configurations {
+			all*.exclude group: 'xml-apis', module: 'xml-apis'
+		}
+		animalSniffer
+		javaApiSignature
+	}
 
-            jbossLoggingTool( libraries.logging_processor )
+	// appropriately inject the common dependencies into each sub-project
+	dependencies {
+		compile( libraries.logging )
+		compile( libraries.logging_annotations )
 
-            jaxb( libraries.jaxb ){
-                exclude group: "javax.xml.stream"
-            }
-            jaxb( libraries.jaxb2_basics )
-            jaxb( libraries.jaxb2_ant )
+		testCompile( libraries.junit )
+		testCompile( libraries.byteman )
+		testCompile( libraries.byteman_install )
+		testCompile( libraries.byteman_bmunit )
 
-            animalSniffer ( libraries.animal_sniffer )
-            javaApiSignature ( libraries.java16_signature )
-        }
+		testRuntime( libraries.log4j )
+		testRuntime( libraries.javassist )
+		testRuntime( libraries.h2 )
 
-        // mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
-        if ( ext.toolsJar.exists() ) {
-            dependencies{
-                testCompile files( toolsJar )
-            }
-        }
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		jbossLoggingTool( libraries.logging_processor )
 
-        targetCompatibility = rootProject.javaLanguageLevel
-        sourceCompatibility = rootProject.javaLanguageLevel
+		jaxb( libraries.jaxb ){
+			exclude group: "javax.xml.stream"
+		}
+		jaxb( libraries.jaxb2_basics )
+		jaxb( libraries.jaxb2_ant )
 
-        task compile
-        compile.dependsOn compileJava, processResources, compileTestJava, processTestResources
+		animalSniffer ( libraries.animal_sniffer )
+		javaApiSignature ( libraries.java16_signature )
+	}
 
-        sourceSets.main {
-            compileClasspath += configurations.provided
-        }
+	// mac-specific stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+	if ( ext.toolsJar.exists() ) {
+		dependencies{
+			testCompile files( toolsJar )
+		}
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        sourceSets.all {
-            ext.aptGeneratedSourceDir = file( "${buildDir}/generated-src/apt/${name}" )
-        }
+	targetCompatibility = rootProject.javaLanguageLevel
+	sourceCompatibility = rootProject.javaLanguageLevel
 
-        ext.standardJavacOptions = [
-                "-nowarn",
-                "-encoding", "UTF-8",
-                "-source", rootProject.javaLanguageLevel,
-                "-target", rootProject.javaLanguageLevel
-        ]
+	task compile
+	compile.dependsOn compileJava, processResources, compileTestJava, processTestResources
 
-        tasks.withType( JavaCompile.class ).all { task->
-            task.options.define(
-                    compilerArgs: standardJavacOptions
-            )
-        }
+	sourceSets.main {
+		compileClasspath += configurations.provided
+	}
 
-        ext.jbossLoggingToolClass = "org.jboss.logging.processor.apt.LoggingToolsProcessor"
+	tasks.withType( JavaCompile.class ).all { task->
+		task.options.compilerArgs += [
+				"-nowarn",
+				"-proc:none",
+				"-encoding", "UTF-8",
+				"-source", rootProject.javaLanguageLevel,
+				"-target", rootProject.javaLanguageLevel
+		]
+	}
 
-        // alter the compileJava (src/main/java javac task) to add JBoss Logging AP hooks
-        compileJava {
-            classpath += configurations.jbossLoggingTool
+	if ( subProject.needsLoggingGeneration() ) {
+		addLoggingProcessor( sourceSets.main )
+	}
 
-            options.compilerArgs += [
-                    "-processor", jbossLoggingToolClass,
-                    "-s", "$sourceSets.main.aptGeneratedSourceDir.absolutePath",
-                    "-Adebug=true",
-                    "-AskipTranslations=true",
-                    "-AtranslationFilesPath=${project.rootDir}/src/main/resources"
-            ]
+	final SourceSet metaGenSourceSet = subProject.getMetaGenTargetSourceSet();
+	if ( metaGenSourceSet != null ) {
+		addMetaGenProcessor( metaGenSourceSet )
+	}
 
-            doFirst {
-                if ( !sourceSets.main.aptGeneratedSourceDir.exists() ) {
-                    sourceSets.main.aptGeneratedSourceDir.mkdirs()
-                }
-            }
-        }
+	jar {
+		manifest = osgiManifest {
+			// GRADLE-1411: Even if we override Imports and Exports
+			// auto-generation with instructions, classesDir and classpath
+			// need to be here (temporarily).
+			classesDir = sourceSets.main.output.classesDir
+			classpath = configurations.runtime
 
-        task generateSources(type: Task)
+			instruction 'Import-Package',
+				// Temporarily support JTA 1.1 -- Karaf and other frameworks still
+				// use it.  Without this, the plugin generates [1.2,2).
+				'javax.transaction;version="[1.1,2)"',
+				// Tell Gradle OSGi to still dynamically import the other packages.
+				// IMPORTANT: Do not include the * in the modules' .gradle files.
+				// If it exists more than once, the manifest will physically contain a *.
+				'*'
 
-        jar {
-			manifest = osgiManifest {
-                // GRADLE-1411: Even if we override Imports and Exports
-                // auto-generation with instructions, classesDir and classpath
-                // need to be here (temporarily).
-                classesDir = sourceSets.main.output.classesDir
-                classpath = configurations.runtime
+			instruction 'Bundle-Vendor', 'Hibernate.org'
+			instruction 'Bundle-Description', subProject.osgiDescription()
+			instruction 'Implementation-Url', 'http://hibernate.org'
+			instruction 'Implementation-Version', version
+			instruction 'Implementation-Vendor', 'Hibernate.org'
+			instruction 'Implementation-Vendor-Id', 'org.hibernate'
+		}
+	}
 
-                instruction 'Import-Package',
-                    // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                    // use it.  Without this, the plugin generates [1.2,2).
-                    'javax.transaction;version="[1.1,2)"',
-                    // Tell Gradle OSGi to still dynamically import the other packages.
-                    // IMPORTANT: Do not include the * in the modules' .gradle files.
-                    // If it exists more than once, the manifest will physically contain a *.
-                    '*'
-                
-                instruction 'Bundle-Vendor', 'Hibernate.org'
-				instruction 'Bundle-Description', osgiDescription()
-                instruction 'Implementation-Url', 'http://hibernate.org'
-                instruction 'Implementation-Version', version
-                instruction 'Implementation-Vendor', 'Hibernate.org'
-                instruction 'Implementation-Vendor-Id', 'org.hibernate'
-            }
-        }
+	test {
+		systemProperties['hibernate.test.validatefailureexpected'] = true
+		systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
+		maxHeapSize = "1024m"
+		// Not strictly needed but useful to attach a profiler:
+		jvmArgs '-XX:MaxPermSize=256m'
+	}
 
-        test {
-            systemProperties['hibernate.test.validatefailureexpected'] = true
-            systemProperties += System.properties.findAll { it.key.startsWith( "hibernate.") }
-            maxHeapSize = "1024m"
-            // Not strictly needed but useful to attach a profiler:
-            jvmArgs '-XX:MaxPermSize=256m'
-        }
+	processTestResources.doLast( {
+		copy {
+			from( sourceSets.test.java.srcDirs ) {
+				include '**/*.properties'
+				include '**/*.xml'
+			}
+			into sourceSets.test.output.classesDir
+		}
+	} )
 
-        processTestResources.doLast( {
-            copy {
-                from( sourceSets.test.java.srcDirs ) {
-                    include '**/*.properties'
-                    include '**/*.xml'
-                }
-                into sourceSets.test.output.classesDir
-            }
-        } )
+	idea {
+		module {
+			iml {
+				beforeMerged { module ->
+					module.dependencies.clear()
+					module.excludeFolders.clear()
+				}
+				whenMerged { module ->
+					module.dependencies*.exported = true
+					module.excludeFolders += module.pathFactory.path(file(".gradle"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/bundles"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/classes"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/dependency-cache"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/libs"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/reports"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/test-results"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/tmp"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/matrix"))
+					module.excludeFolders += module.pathFactory.path(file("$buildDir/resources"))
+					module.excludeFolders -= module.pathFactory.path(file("$buildDir"))
+				}
+			}
+			downloadSources = true
+			scopes.COMPILE.plus += configurations.provided
+		}
+	}
 
-        idea {
-            module {
-                iml {
-                    beforeMerged { module ->
-                        module.dependencies.clear()
-                        module.excludeFolders.clear()
-                    }
-                    whenMerged { module ->
-                        module.dependencies*.exported = true
-                        module.excludeFolders += module.pathFactory.path(file(".gradle"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/bundles"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/classes"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/dependency-cache"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/libs"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/reports"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/test-results"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/tmp"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/matrix"))
-                        module.excludeFolders += module.pathFactory.path(file("$buildDir/resources"))
-                        module.excludeFolders -= module.pathFactory.path(file("$buildDir"))
-                    }
-                }
-                downloadSources = true
-                scopes.COMPILE.plus += configurations.provided
-            }
-        }
+	eclipse {
+		classpath {
+			plusConfigurations.add( configurations.provided )
+		}
+	}
 
-        eclipse {
-            classpath {
-                plusConfigurations.add( configurations.provided )
-            }
-        }
-
-        // eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-        // TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
-        // Gradle plugin).  For now, just compile first in order to get the logging classes.
-        eclipseClasspath.dependsOn("testClasses")
+	// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
+	// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
+	// Gradle plugin).  For now, just compile first in order to get the logging classes.
+	eclipseClasspath.dependsOn generateSources
 
 
-        // Animal Sniffer ~~~~~~~~~~~~~~~~~~
-        //      add animal sniffer Java API checking to the main compile tasks
+	// Animal Sniffer ~~~~~~~~~~~~~~~~~~
+	//      add animal sniffer Java API checking to the main compile tasks
 
-        // copy the resolved Animal Sniffer signature dependency artifact to a known location and name
-        task copyJavaApiSignature(type: Copy) {
-            from configurations.javaApiSignature
-            into "$buildDir/javaApiSignature/"
-            rename '.*signature', 'javaApi.signature'
-        }
+	// copy the resolved Animal Sniffer signature dependency artifact to a known location and name
+	task copyJavaApiSignature(type: Copy) {
+		from configurations.javaApiSignature
+		into "$buildDir/javaApiSignature/"
+		rename '.*signature', 'javaApi.signature'
+	}
 
-        // prepare the Animal Sniffer signature copy every time (before) we compile
-        compileJava.dependsOn copyJavaApiSignature
+	// prepare the Animal Sniffer signature copy every time (before) we compile
+	compileJava.dependsOn copyJavaApiSignature
 
-        // and then after compilation, run the Animal Sniffer tool
-        compileJava.doLast {
-            ant.taskdef(
-                    name: 'animalSniffer',
-                    classname: 'org.codehaus.mojo.animal_sniffer.ant.CheckSignatureTask',
-                    classpath: configurations.animalSniffer.asPath
-            )
+	// and then after compilation, run the Animal Sniffer tool
+	compileJava.doLast {
+		ant.taskdef(
+				name: 'animalSniffer',
+				classname: 'org.codehaus.mojo.animal_sniffer.ant.CheckSignatureTask',
+				classpath: configurations.animalSniffer.asPath
+		)
 
-            ant.animalSniffer(
-                    signature: "$buildDir/javaApiSignature/javaApi.signature",
-                    classpath: sourceSets.main.compileClasspath.asPath) {
-                path( path: sourceSets.main.output.classesDir )
-            }
-        }
+		ant.animalSniffer(
+				signature: "$buildDir/javaApiSignature/javaApi.signature",
+				classpath: sourceSets.main.compileClasspath.asPath) {
+			path( path: sourceSets.main.output.classesDir )
+		}
+	}
 
-        // specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        task checkstylePublicSources(type: Checkstyle) {
-            checkstyleClasspath = checkstyleMain.checkstyleClasspath
-            classpath = checkstyleMain.classpath
-            configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-            source subProject.sourceSets.main.java.srcDirs
-            // exclude generated sources
-            exclude '**/generated-src/**'
-            // because cfg package is a mess mainly from annotation stuff
-            exclude '**/org/hibernate/cfg/**'
-            exclude '**/org/hibernate/cfg/*'
-            // because this should only report on api/spi
-            exclude '**/internal/**'
-            exclude '**/internal/*'
-            ignoreFailures = false
-            showViolations = true
-            reports {
-                xml {
-                    destination "$buildDir/reports/checkstyle/public.xml"
-                }
-            }
-        }
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// specialized API/SPI checkstyle tasks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	task checkstylePublicSources(type: Checkstyle) {
+		checkstyleClasspath = checkstyleMain.checkstyleClasspath
+		classpath = checkstyleMain.classpath
+		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
+		source subProject.sourceSets.main.java.srcDirs
+		// exclude generated sources
+		exclude '**/generated-src/**'
+		// because cfg package is a mess mainly from annotation stuff
+		exclude '**/org/hibernate/cfg/**'
+		exclude '**/org/hibernate/cfg/*'
+		// because this should only report on api/spi
+		exclude '**/internal/**'
+		exclude '**/internal/*'
+		ignoreFailures = false
+		showViolations = true
+		reports {
+			xml {
+				destination "$buildDir/reports/checkstyle/public.xml"
+			}
+		}
+	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        // Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        checkstyle {
-            sourceSets = [ subProject.sourceSets.main ]
-            configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
-            showViolations = false
-            ignoreFailures = true
-        }
-        // exclude generated sources
-        // unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
-        //checkstyleMain.exclude '**/generated-src/**'
-        checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/**'
-        checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/*'
-        checkstyleMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
-        checkstyleMain.exclude '**/*_$logger*'
-        checkstyleMain.exclude '**/org/hibernate/internal/jaxb/**'
-        // because cfg package is a mess mainly from annotation stuff
-        checkstyleMain.exclude '**/org/hibernate/cfg/**'
-        checkstyleMain.exclude '**/org/hibernate/cfg/*'
+	// Report configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	checkstyle {
+		sourceSets = [ subProject.sourceSets.main ]
+		configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )
+		showViolations = false
+		ignoreFailures = true
+	}
+	// exclude generated sources
+	// unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
+	//checkstyleMain.exclude '**/generated-src/**'
+	checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/**'
+	checkstyleMain.exclude '**/org/hibernate/hql/internal/antlr/*'
+	checkstyleMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
+	checkstyleMain.exclude '**/*_$logger*'
+	checkstyleMain.exclude '**/org/hibernate/internal/jaxb/**'
+	// because cfg package is a mess mainly from annotation stuff
+	checkstyleMain.exclude '**/org/hibernate/cfg/**'
+	checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
-        findbugs {
-            sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
-            ignoreFailures = true
-        }
-        // exclude generated sources
-        // unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
-        //findbugsMain.exclude '**/generated-src/**'
-        findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/**'
-        findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/*'
-        findbugsMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
-        findbugsMain.exclude '**/*_$logger*'
-        findbugsMain.exclude '**/org/hibernate/internal/jaxb/**'
+	findbugs {
+		sourceSets = [ subProject.sourceSets.main, subProject.sourceSets.test ]
+		ignoreFailures = true
+	}
+	// exclude generated sources
+	// unfortunately this nice easy approach does not seem to work : http://forums.gradle.org/gradle/topics/specify_excludes_to_checkstyle_task
+	//findbugsMain.exclude '**/generated-src/**'
+	findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/**'
+	findbugsMain.exclude '**/org/hibernate/hql/internal/antlr/*'
+	findbugsMain.exclude '**/org/hibernate/sql/ordering/antlr/*'
+	findbugsMain.exclude '**/*_$logger*'
+	findbugsMain.exclude '**/org/hibernate/internal/jaxb/**'
 
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-        publishing {
-            publications {
-                mavenJava(MavenPublication) {
-                    from components.java
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				from components.java
 
-                    artifact sourcesJar {
-                        classifier "sources"
-                    }
+				artifact sourcesJar {
+					classifier "sources"
+				}
 
-                    pom.withXml {
-                        // append additional metadata
-                        asNode().children().last() + {
-                            resolveStrategy = Closure.DELEGATE_FIRST
+				pom.withXml {
+					// append additional metadata
+					asNode().children().last() + {
+						resolveStrategy = Closure.DELEGATE_FIRST
 
-                            name subProject.pomName()
-                            description subProject.pomDescription()
-                            url 'http://hibernate.org'
-                            organization {
-                                name 'Hibernate.org'
-                                url 'http://hibernate.org'
-                            }
-                            issueManagement {
-                                system 'jira'
-                                url 'https://hibernate.atlassian.net/browse/HHH'
-                            }
-                            scm {
-                                url 'http://github.com/hibernate/hibernate-orm'
-                                connection 'scm:git:http://github.com/hibernate/hibernate-orm.git'
-                                developerConnection 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-                            }
-                            licenses {
-                                license {
-                                    name 'GNU Lesser General Public License'
-                                    url 'http://www.gnu.org/licenses/lgpl-2.1.html'
-                                    comments 'See discussion at http://hibernate.org/license for more details.'
-                                    distribution 'repo'
-                                }
-                            }
-                            developers {
-                                developer {
-                                    id 'hibernate-team'
-                                    name 'The Hibernate Development Team'
-                                    organization 'Hibernate.org'
-                                    organizationUrl 'http://hibernate.org'
-                                }
-                            }
-                        }
+						name subProject.pomName()
+						description subProject.pomDescription()
+						url 'http://hibernate.org'
+						organization {
+							name 'Hibernate.org'
+							url 'http://hibernate.org'
+						}
+						issueManagement {
+							system 'jira'
+							url 'https://hibernate.atlassian.net/browse/HHH'
+						}
+						scm {
+							url 'http://github.com/hibernate/hibernate-orm'
+							connection 'scm:git:http://github.com/hibernate/hibernate-orm.git'
+							developerConnection 'scm:git:git@github.com:hibernate/hibernate-orm.git'
+						}
+						licenses {
+							license {
+								name 'GNU Lesser General Public License'
+								url 'http://www.gnu.org/licenses/lgpl-2.1.html'
+								comments 'See discussion at http://hibernate.org/license for more details.'
+								distribution 'repo'
+							}
+						}
+						developers {
+							developer {
+								id 'hibernate-team'
+								name 'The Hibernate Development Team'
+								organization 'Hibernate.org'
+								organizationUrl 'http://hibernate.org'
+							}
+						}
+					}
 
-                        // TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
-                        //      rather than 'compile'; fix that.
-                        asNode().dependencies[0].dependency.each {
-                            it.scope[0].value = 'compile'
-                        }
-                    }
-                }
-            }
+					// TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
+					//      rather than 'compile'; fix that.
+					asNode().dependencies[0].dependency.each {
+						it.scope[0].value = 'compile'
+					}
+				}
+			}
+		}
 
-            repositories {
-                maven {
-                    if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
-                        name 'jboss-snapshots-repository'
-                        url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-                    }
-                    else {
-                        name 'jboss-releases-repository'
-                        url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
-                    }
-                }
-            }
-        }
+		repositories {
+			maven {
+				if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
+					name 'jboss-snapshots-repository'
+					url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
+				}
+				else {
+					name 'jboss-releases-repository'
+					url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
+				}
+			}
+		}
+	}
 
-        model {
-            tasks.generatePomFileForMavenJavaPublication {
-                destination = file( "$project.buildDir/generated-pom.xml" )
-            }
-        }
+	model {
+		tasks.generatePomFileForMavenJavaPublication {
+			destination = file( "$project.buildDir/generated-pom.xml" )
+		}
+	}
 
-        task sourcesJar(type: Jar, dependsOn: compileJava) {
-            from sourceSets.main.allSource
-            classifier = 'sources'
-        }
-    }
-
+	task sourcesJar(type: Jar, dependsOn: compileJava) {
+		from sourceSets.main.allSource
+		classifier = 'sources'
+	}
 }
 
 task release(type: Task, dependsOn: 'release:release')

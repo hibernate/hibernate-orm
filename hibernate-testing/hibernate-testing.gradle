@@ -26,3 +26,7 @@ def pomDescription() {
 def osgiDescription() {
 	return pomDescription()
 }
+
+def boolean needsLoggingGeneration() {
+	return false;
+}

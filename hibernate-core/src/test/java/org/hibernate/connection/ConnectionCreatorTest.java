@@ -70,7 +70,7 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 						return super.getService( serviceRole );
 					}
 				},
-				"jdbc:h2:???:bad-url",
+				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat",
 				new Properties(),
 				false,
 				null

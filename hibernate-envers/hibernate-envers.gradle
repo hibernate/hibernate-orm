@@ -29,6 +29,13 @@ def pomDescription() {
     return 'Entity versioning support'
 }
 
+def osgiDescription() {
+	return pomDescription()
+}
+
+def getMetaGenTargetSourceSet() {
+	return sourceSets.main;
+}
 
 sourceSets {
     test {
@@ -45,14 +52,6 @@ sourceSets {
     }
 }
 
-compileJava {
-    classpath += configurations.hibernateJpaModelGenTool
-
-
-    options.compilerArgs += [
-            "-processor", "$jbossLoggingToolClass,org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor"
-    ]
-}
 
 jar {
     manifest {

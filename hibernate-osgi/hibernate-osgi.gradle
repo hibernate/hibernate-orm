@@ -69,6 +69,14 @@ def pomDescription() {
 	return 'Support for running Hibernate O/RM in OSGi environments'
 }
 
+def osgiDescription() {
+	return pomDescription()
+}
+
+def boolean needsLoggingGeneration() {
+	return false;
+}
+
 jar {
 	manifest {
 		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'

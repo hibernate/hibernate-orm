@@ -20,7 +20,7 @@ buildscript {
 
 apply plugin: "java"
 apply plugin: "jdocbook"
-apply from: "../utilities.gradle"
+apply from: "${rootProject.projectDir}/utilities.gradle"
 
 defaultTasks 'buildDocs'
 
@@ -74,37 +74,35 @@ task aggregateJavadocs(type: Javadoc) {
     Set<String> internalPackages = new HashSet<String>()
     parent.subprojects.each{ Project subProject->
         // skip certain sub-projects
-        if ( ! ['release','documentation'].contains( subProject.name ) ) {
-            subProject.sourceSets.each { sourceSet ->
-                // skip certain source sets
-                if ( ! ['test','matrix'].contains( sourceSet.name ) ) {
-                    source sourceSet.java
+		if ( ['release','documentation'].contains( subProject.name ) ) {
+			return;
+		}
 
-                    if( classpath ) {
-                        classpath += sourceSet.output + sourceSet.compileClasspath
-                    }
-                    else {
-                        classpath = sourceSet.output + sourceSet.compileClasspath
-                    }
+		// we only care about the main SourceSet...
+		source subProject.sourceSets.main.java
 
-                    sourceSet.java.each { javaFile ->
-                        final String packageName = determinePackageName( sourceSet.java, javaFile );
-                        if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
-                            internalPackages.add( packageName );
-                        }
-                        else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
-                            spiPackages.add( packageName );
-                        }
-                        else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
-                            // do nothing as testing support is already handled...
-                        }
-                        else {
-                            apiPackages.add( packageName );
-                        }
-                    }
-                }
-            }
-        }
+		if( classpath ) {
+			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
+		}
+		else {
+			classpath = subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath
+		}
+
+		subProject.sourceSets.main.java.each { javaFile ->
+			final String packageName = determinePackageName( subProject.sourceSets.main.java, javaFile );
+			if ( packageName.endsWith( ".internal" ) || packageName.contains( ".internal." ) ) {
+				internalPackages.add( packageName );
+			}
+			else if ( packageName.endsWith( ".spi" ) || packageName.contains( ".spi." ) ) {
+				spiPackages.add( packageName );
+			}
+			else if ( packageName.startsWith( "org.hibernate.testing" ) ) {
+				// do nothing as testing support is already handled...
+			}
+			else {
+				apiPackages.add( packageName );
+			}
+		}
     }
 
     // apply standard config

@@ -43,6 +43,14 @@ def pomDescription() {
     return 'Hibernate O/RM implementation of the JPA specification'
 }
 
+def osgiDescription() {
+	return pomDescription()
+}
+
+def getMetaGenTargetSourceSet() {
+	return sourceSets.test;
+}
+
 jar {
     manifest {
         // A cdi-api OSGi bundle does not currently exist.  For now, explicitly
@@ -63,23 +71,6 @@ jar {
             'javax.persistence.criteria;version="2.1.0"',
             'javax.persistence.metamodel;version="2.1.0"',
             'javax.persistence.spi;version="2.1.0"'
-    }
-}
-
-
-// alter the compileTestJava (src/test/java javac task) to add AP hooks
-compileTestJava {
-    classpath += configurations.hibernateJpaModelGenTool
-
-    options.compilerArgs += [
-            "-processor", "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor",
-            "-s", "$sourceSets.test.aptGeneratedSourceDir.absolutePath"
-    ]
-
-    doFirst {
-        if ( !sourceSets.test.aptGeneratedSourceDir.exists() ) {
-            sourceSets.test.aptGeneratedSourceDir.mkdirs()
-        }
     }
 }
 

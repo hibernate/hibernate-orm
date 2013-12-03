@@ -12,3 +12,7 @@ dependencies {
     compile( libraries.jpa )
     compile( libraries.javassist )
 }
+
+def boolean needsLoggingGeneration() {
+	return false;
+}

@@ -64,10 +64,11 @@ task jaxb {
         }
     }
 }
-compileJava.dependsOn jaxb
+runSourceGenerators.dependsOn jaxb
 
 checkstyleMain.exclude '**/jaxb/**'
 
 
-
-
+def boolean needsLoggingGeneration() {
+	return false;
+}

@@ -24,6 +24,10 @@ def pomDescription() {
     return 'Integration for Infinispan into Hibernate as a second-level caching service'
 }
 
+def osgiDescription() {
+	return pomDescription()
+}
+
 test {
    systemProperties['java.net.preferIPv4Stack'] = true
    systemProperties['jgroups.ping.timeout'] = 500

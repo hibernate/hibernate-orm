@@ -1,0 +1,385 @@
+import java.nio.charset.Charset
+import java.util.concurrent.Callable
+import javax.tools.Diagnostic
+import javax.tools.DiagnosticListener
+import javax.tools.JavaCompiler
+import javax.tools.JavaFileObject
+import javax.tools.StandardJavaFileManager
+import javax.tools.ToolProvider
+
+import org.gradle.api.internal.project.ProjectInternal
+import org.gradle.api.internal.tasks.SimpleWorkResult
+import org.gradle.api.internal.tasks.compile.CompilationFailedException
+import org.gradle.api.internal.tasks.compile.Compiler
+import org.gradle.api.internal.tasks.compile.DefaultJavaCompileSpec
+import org.gradle.api.internal.tasks.compile.DefaultJavaCompilerFactory
+import org.gradle.api.internal.tasks.compile.DelegatingJavaCompiler
+import org.gradle.api.internal.tasks.compile.JavaCompileSpec
+import org.gradle.api.internal.tasks.compile.JavaCompilerArgumentsBuilder
+import org.gradle.api.internal.tasks.compile.JavaCompilerFactory
+import org.gradle.api.internal.tasks.compile.daemon.CompilerDaemonManager
+import org.gradle.api.internal.tasks.compile.jdk6.Jdk6JavaCompiler
+import org.gradle.internal.jvm.Jvm
+
+apply plugin: SourceGenerationPlugin
+
+class SourceGenerationPlugin implements Plugin<Project> {
+	public static final String GROUP = "sourceGeneration";
+
+	public static final String GENERATE_SOURCES_TASK_NAME = "generateSources";
+
+	@Override
+	public void apply(Project project) {
+		final JavaPluginConvention javaPluginConvention = project.getConvention().findPlugin( JavaPluginConvention.class );
+		if ( javaPluginConvention == null ) {
+			// something seriously awry
+			return;
+		}
+
+		project.convention.plugins[GROUP] = new SourceGenerationPluginConvention( project );
+
+		// first set up the overall generateSources task
+		Task generateSourcesTask = project.getTasks().findByName( GENERATE_SOURCES_TASK_NAME );
+		if ( generateSourcesTask == null ) {
+			generateSourcesTask = project.getTasks().create( GENERATE_SOURCES_TASK_NAME );
+			generateSourcesTask.setGroup( GROUP );
+			generateSourcesTask.setDescription( "Grouping task for all source generation tasks" );
+		}
+
+		// for each source set, define the specific grouping tasks (and associate with the generateSources as a
+		// task dependency)
+		for ( SourceSet sourceSet : javaPluginConvention.getSourceSets() ) {
+			final ExtraPropertiesExtension extProps = ( (ExtensionAware) sourceSet ).getExtensions().getExtraProperties();
+
+			// find the main javac task for this sourceSet (so we can add dependsOn to it)
+			final JavaCompile javaCompileTask = (JavaCompile) project.getTasks().getByName( sourceSet.getCompileJavaTaskName() );
+
+			// create the pre-apt generation grouping task
+			final String sourceGeneratorsTaskName = sourceSet.getTaskName( "run", "sourceGenerators" );
+			final Task sourceGeneratorsTask = project.getTasks().create( sourceGeneratorsTaskName );
+			sourceGeneratorsTask.setGroup( GROUP );
+			sourceGeneratorsTask.setDescription(
+					String.format(
+							"Grouping task for running all source generation tasks for the %s source-set of the %s project",
+							sourceSet.getName(),
+							project.getName()
+					)
+			);
+			generateSourcesTask.dependsOn( sourceGeneratorsTask );
+			javaCompileTask.dependsOn( sourceGeneratorsTask );
+
+			extProps.set( "sourceGeneratorsTask", sourceGeneratorsTask );
+		}
+	}
+}
+
+class SourceGenerationPluginConvention {
+	public static final String LOGGING_DEPENDENCY_CONFIG_NAME = "jbossLoggingTool";
+	public static final String LOGGING_PROCESSOR_NAME = "org.jboss.logging.processor.apt.LoggingToolsProcessor";
+
+	public static final String METAGEN_DEPENDENCY_CONFIG_NAME = "hibernateJpaModelGenTool";
+	public static final String METAGEN_PROCESSOR_NAME = "org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor";
+
+	private final Project project;
+
+	// practicality says we only ever deal with 2 source-sets:
+	private AnnotationProcessorOnlyTask mainProcOnlyTask;
+	private AnnotationProcessorOnlyTask testProcOnlyTask;
+
+	SourceGenerationPluginConvention(Project project) {
+		this.project = project
+	}
+
+	public void addLoggingProcessor(SourceSet sourceSet) {
+		AnnotationProcessorOnlyTask task = getLocateProcessorOnlyTask( sourceSet )
+		task.processors += LOGGING_PROCESSOR_NAME
+		task.classpath += project.configurations[LOGGING_DEPENDENCY_CONFIG_NAME];
+	}
+
+	private AnnotationProcessorOnlyTask getLocateProcessorOnlyTask(SourceSet sourceSet) {
+		if ( sourceSet.name.equals( "main" ) ) {
+			if ( mainProcOnlyTask == null ) {
+				mainProcOnlyTask = generateProcessorOnlyTask( sourceSet )
+			}
+			return mainProcOnlyTask;
+		}
+		else if ( sourceSet.name.equals( "test" ) ) {
+			if ( testProcOnlyTask == null ) {
+				testProcOnlyTask = generateProcessorOnlyTask( sourceSet )
+			}
+			return testProcOnlyTask;
+		}
+		else {
+			throw new IllegalArgumentException( "SourceSet (" + sourceSet.name + ") not valid for source generation" )
+		}
+	}
+
+	private AnnotationProcessorOnlyTask generateProcessorOnlyTask(SourceSet sourceSet) {
+		// find the main javac task for this sourceSet (we will alter it a bit later on)
+		final JavaCompile javaCompileTask = (JavaCompile) project.getTasks().getByName( sourceSet.getCompileJavaTaskName() );
+
+		final ExtraPropertiesExtension extProps = ( (ExtensionAware) sourceSet ).getExtensions().getExtraProperties();
+
+		// Obtain the output dir reference: generated-src/apt/{sourceSet.name}
+		final File outputDir = new File(
+				new File( project.getBuildDir(), "generated-src/apt/" ),
+				sourceSet.getName()
+		);
+
+		final String aptTaskName = sourceSet.getTaskName( "run", "annotationProcessors" );
+		final AnnotationProcessorOnlyTask aptTask = project.getTasks().create( aptTaskName, AnnotationProcessorOnlyTask.class );
+		aptTask.setGroup( SourceGenerationPlugin.GROUP );
+		aptTask.setDescription(
+				String.format(
+						"Grouping task for running all AnnotationProcessors (javac -proc:only) for the %s sourceSet of the %s project",
+						sourceSet.getName(),
+						project.getName()
+				)
+		);
+
+		// sourceSet.getAllJava() returns a SourceDirectorySet which is a "live view" meaning it keeps expanding
+		// even as we add to it.  The problem is that later on here we will add the output directory of this task
+		// to this SourceDirectorySet; we need to make sure that we use the view of the SourceDirectorySet *before* that
+		// happens as the source for this task.  getSrcDirs() does that
+		aptTask.source( sourceSet.getAllJava().getSrcDirs() )
+		aptTask.destinationDir = outputDir
+		// again for JBoss Logging...
+		aptTask.classesDir = outputDir
+
+		aptTask.setSourceCompatibility( javaCompileTask.getSourceCompatibility() );
+		aptTask.setTargetCompatibility( javaCompileTask.getTargetCompatibility() );
+		aptTask.setDependencyCacheDir( javaCompileTask.getDependencyCacheDir() );
+
+		aptTask.getConventionMapping().map(
+				"classpath",
+				new Callable<FileCollection>() {
+					public FileCollection call() throws Exception {
+						return javaCompileTask.getClasspath()
+					}
+				}
+		);
+
+		aptTask.mustRunAfter( extProps.get( "sourceGeneratorsTask" ) );
+		javaCompileTask.dependsOn( aptTask );
+		project.tasks.findByName( SourceGenerationPlugin.GENERATE_SOURCES_TASK_NAME ).dependsOn( aptTask )
+
+
+		// create a FileTree representation of the APT output dir and add it to the JavaCompile task (so they get compiled)
+		final ConfigurableFileTree outputDirFileTree = project.fileTree( outputDir );
+		outputDirFileTree.builtBy( aptTask );
+		javaCompileTask.getSource().plus( outputDirFileTree );
+
+		// Add the APT output dir to the source set
+		sourceSet.getJava().srcDir( outputDir );
+		return aptTask
+	}
+
+	public void addMetaGenProcessor(SourceSet sourceSet) {
+		AnnotationProcessorOnlyTask task = getLocateProcessorOnlyTask( sourceSet )
+		task.processors += METAGEN_PROCESSOR_NAME
+		task.classpath += project.configurations[METAGEN_DEPENDENCY_CONFIG_NAME]
+	}
+}
+
+class AnnotationProcessorOnlyTask extends AbstractCompile {
+	@Input
+	def List<String> processors = new ArrayList<String>();
+	// todo : support for this?  really only "used" for logging and its use is questionable
+	//private Map<String,String> processorSettings = new HashMap<String, String>();
+
+	def File dependencyCacheDir;
+	def File classesDir;
+
+	private Compiler<JavaCompileSpec> javaCompiler;
+
+	AnnotationProcessorOnlyTask() {
+		// Stolen from Gradle's Compile/JavaCompile
+		org.gradle.internal.Factory<org.gradle.api.AntBuilder> antBuilderFactory = getServices().getFactory( org.gradle.api.AntBuilder.class );
+		JavaCompilerFactory inProcessCompilerFactory = new ExpandedJavaCompilerFactory( getLogger() );
+		ProjectInternal projectInternal = (ProjectInternal) getProject();
+		CompilerDaemonManager compilerDaemonManager = getServices().get( CompilerDaemonManager.class );
+		JavaCompilerFactory defaultCompilerFactory = new DefaultJavaCompilerFactory(
+				projectInternal,
+				antBuilderFactory,
+				inProcessCompilerFactory,
+				compilerDaemonManager
+		);
+
+		// The Gradle IncrementalJavaCompiler cant be used here for various reasons
+		javaCompiler = new DelegatingJavaCompiler( defaultCompilerFactory );
+	}
+
+	@OutputDirectory
+	public File getDependencyCacheDir() {
+		return dependencyCacheDir;
+	}
+
+	public void setDependencyCacheDir(File dependencyCacheDir) {
+		this.dependencyCacheDir = dependencyCacheDir;
+	}
+
+	@Override
+	protected void compile() {
+		// see if the output dir exists
+		if ( !getDestinationDir().exists() ) {
+			// its does not - create it (javac will complain if its not there)
+			makeDirectory( getDestinationDir() );
+		}
+		else {
+			// it does - clean it
+			project.delete( getDestinationDir() )
+			makeDirectory( getDestinationDir() );
+		}
+
+		if ( !getClassesDir().exists() ) {
+			// create classes dir if not there (again, javac will complain if its not there)
+			makeDirectory( getClassesDir() );
+		}
+
+		CompileOptions compileOptions = new CompileOptions();
+
+		Collections.addAll(
+				compileOptions.getCompilerArgs(),
+				"-nowarn",
+				"-proc:only",
+				"-encoding", "UTF-8",
+				"-s", getDestinationDir().getAbsolutePath(),
+				"-processor", processors.join( "," )
+
+		);
+
+		DefaultJavaCompileSpec spec = new DefaultJavaCompileSpec();
+		spec.setSource( getSource() );
+		// jboss logging needs this :(
+		spec.setDestinationDir( getClassesDir() );
+		spec.setClasspath( getClasspath() );
+		spec.setDependencyCacheDir( dependencyCacheDir );
+		spec.setSourceCompatibility( getSourceCompatibility() );
+		spec.setTargetCompatibility( getTargetCompatibility() );
+		spec.setCompileOptions( compileOptions );
+
+		WorkResult result = javaCompiler.execute( spec );
+		setDidWork( result.getDidWork() );
+	}
+
+	@SuppressWarnings("ResultOfMethodCallIgnored")
+	private static void makeDirectory(File directory) {
+		directory.mkdirs();
+	}
+}
+
+/**
+ * Implementation of the Gradle JavaCompilerFactory contract generating {@link ExpandedJdk6JavaCompiler} instances
+ */
+class ExpandedJavaCompilerFactory implements JavaCompilerFactory {
+	private final Logger logger;
+
+	public ExpandedJavaCompilerFactory(Logger logger) {
+		//To change body of created methods use File | Settings | File Templates.
+		this.logger = logger;
+	}
+
+	@Override
+	public Compiler<JavaCompileSpec> create(CompileOptions options) {
+		return new ExpandedJdk6JavaCompiler( logger );
+	}
+}
+
+/**
+ * Extension of Gradle's Jdk6JavaCompiler to add DiagnosticListener for diagnostic message mapping and APT support
+ */
+public class ExpandedJdk6JavaCompiler extends Jdk6JavaCompiler {
+	private final Logger logger;
+
+	public ExpandedJdk6JavaCompiler(Logger logger) {
+		this.logger = logger;
+	}
+
+	public WorkResult execute(JavaCompileSpec spec) {
+		logger.info( "Compiling with JDK Java compiler API." );
+
+		final DiagnosticListenerImpl diagnosticListener = new DiagnosticListenerImpl( logger );
+		final JavaCompiler.CompilationTask task = createCompileTask( spec, diagnosticListener );
+		boolean success = task.call();
+		if ( !success || diagnosticListener.sawError() ) {
+			throw new CompilationFailedException();
+		}
+
+		return new SimpleWorkResult( true );
+	}
+
+	private static JavaCompiler.CompilationTask createCompileTask(
+			JavaCompileSpec spec,
+			DiagnosticListenerImpl diagnosticListener) {
+		List<String> options = new JavaCompilerArgumentsBuilder(spec).build();
+		JavaCompiler compiler = findCompiler();
+		if ( compiler == null ) {
+			throw new RuntimeException("Cannot find System Java Compiler. Ensure that you have installed a JDK (not just a JRE) and configured your JAVA_HOME system variable to point to the according directory.");
+		}
+		CompileOptions compileOptions = spec.getCompileOptions();
+		StandardJavaFileManager fileManager = compiler.getStandardFileManager(
+				null,
+				null,
+				compileOptions.getEncoding() != null
+				? Charset.forName( compileOptions.getEncoding() )
+				: null
+		);
+		Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromFiles(spec.getSource());
+		return compiler.getTask(null, null, diagnosticListener, options, null, compilationUnits);
+	}
+
+
+	private static class DiagnosticListenerImpl implements DiagnosticListener<JavaFileObject> {
+		private final Logger logger;
+
+		public DiagnosticListenerImpl(Logger logger) {
+			this.logger = logger;
+		}
+
+		@Override
+		public void report(Diagnostic<? extends JavaFileObject> diagnostic) {
+			switch ( diagnostic.getKind() ) {
+				case Diagnostic.Kind.ERROR:
+					logger.debug( "[ERROR] : " + diagnostic.toString() );
+					break;
+				case Diagnostic.Kind.WARNING:
+					logger.debug( "[WARNING] : " + diagnostic.toString() );
+					break;
+				case Diagnostic.Kind.MANDATORY_WARNING:
+					logger.debug( "[MANDATORY_WARNING] : " + diagnostic.toString() );
+					break;
+				case Diagnostic.Kind.NOTE:
+					logger.debug( "[NOTE] : " + diagnostic.toString() );
+					break;
+				case Diagnostic.Kind.OTHER:
+					logger.debug( "[OTHER] : " + diagnostic.toString() );
+					break
+				default:
+					logger.debug( "[UNKNOWN] : " + diagnostic.toString() );
+					break;
+			}
+		}
+
+		public boolean sawError() {
+			// technically ERROR diagnostics should end the compile cycle, but since we are just generating
+			// sources here we ignore errors for now (expecting the later compilation task to report them
+			// if still valid)
+			return false;
+		}
+	}
+
+	private static JavaCompiler findCompiler() {
+		File realJavaHome = Jvm.current().getJavaHome();
+		File javaHomeFromToolProvidersPointOfView = new File(System.getProperty("java.home"));
+		if (realJavaHome.equals(javaHomeFromToolProvidersPointOfView)) {
+			return ToolProvider.getSystemJavaCompiler();
+		}
+
+		System.setProperty("java.home", realJavaHome.getAbsolutePath());
+		try {
+			return ToolProvider.getSystemJavaCompiler();
+		} finally {
+			System.setProperty("java.home", javaHomeFromToolProvidersPointOfView.getAbsolutePath());
+		}
+	}
+}

@@ -57,6 +57,11 @@ public class GeoDBValueExtractor<X> extends AbstractJTSGeometryValueExtractor<X>
 		if ( object == null ) {
 			return null;
 		}
+
+		if (object instanceof Geometry) {
+			return (Geometry) object;
+		}
+		
 		try {
 			if ( object instanceof Blob ) {
 				return geometryFromByteArray( toByteArray( (Blob) object ) );

@@ -23,6 +23,7 @@
  */
 package org.hibernate.envers.internal.synchronization;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -45,9 +46,13 @@ public class SessionCacheCleaner {
 	public void scheduleAuditDataRemoval(final Session session, final Object data) {
 		((EventSource) session).getActionQueue().registerProcess(
 				new AfterTransactionCompletionProcess() {
-					public void doAfterTransactionCompletion(boolean success, SessionImplementor session) {
-						if ( !session.isClosed() ) {
-							((Session) session).evict( data );
+					public void doAfterTransactionCompletion(boolean success, SessionImplementor sessionImplementor) {
+						if ( !sessionImplementor.isClosed() ) {
+							try {
+								( (Session) sessionImplementor ).evict( data );
+							}
+							catch ( HibernateException ignore ) {
+							}
 						}
 					}
 				}

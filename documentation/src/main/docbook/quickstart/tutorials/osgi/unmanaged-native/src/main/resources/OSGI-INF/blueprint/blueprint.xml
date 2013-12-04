@@ -24,12 +24,16 @@
   <bean id="dpService" class="org.hibernate.osgitest.DataPointServiceImpl"/>
   <service ref="dpService" interface="org.hibernate.osgitest.DataPointService" />
   
-  <!-- This demonstrates how to register your custom implementations of Hibernate extension points, such as
-       Integrator and TypeContributor. -->
-  <!-- <bean id="integrator" class="your.package.IntegratorImpl"/>
+  <!-- This demonstrates how to register your custom implementations of Hibernate extension points. -->
+            
+  <bean id="integrator" class="org.hibernate.osgitest.TestIntegrator"/>
   <service ref="integrator" interface="org.hibernate.integrator.spi.Integrator"/>
-  <bean id="typeContributor" class="your.package.TypeContributorImpl"/>
-  <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/> -->
+
+  <bean id="strategyRegistrationProvider" class="org.hibernate.osgitest.TestStrategyRegistrationProvider"/>
+  <service ref="strategyRegistrationProvider" interface="org.hibernate.boot.registry.selector.StrategyRegistrationProvider"/>
+            
+  <bean id="typeContributor" class="org.hibernate.osgitest.TestTypeContributor"/>
+  <service ref="typeContributor" interface="org.hibernate.metamodel.spi.TypeContributor"/>
   
   <!-- This bundle makes use of Karaf commands to demonstrate core persistence operations.  Feel free to remove it. -->
   <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">

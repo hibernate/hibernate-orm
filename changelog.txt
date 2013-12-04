@@ -5,6 +5,49 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.2.8 (2013.12.04)
+------------------------------------------------------------------------------------------------------------------------
+
+** Sub-task
+    * [HHH-8528] - Support starting/stopping persistence unit client bundles during OSGi runtime
+
+** Bug
+    * [HHH-7927] - Enabling globally_quoted_identifiers breaks hbm2ddl validation if TableGenerator is used
+    * [HHH-8341] - JtaTransaction logs excessive HHH000426 warning even if cache is disabled
+    * [HHH-8497] - AuditReader.find() causes SQL error ORA-00932 with oracle when using ClassicQueryTranslatorFactory
+    * [HHH-8643] - java.util.Calendar conversion to java.util.Date fails 
+    * [HHH-8647] - hibernate.cache.use_reference_entries + queries
+    * [HHH-8671] - WithClauseTest.testWithClause fails on all QA databases
+    * [HHH-8686] - FumTest hangs on mysql55
+    * [HHH-8689] - Cannot determine java-type from given member [null] with "properties" in Hibernate 4.2
+    * [HHH-8701] - correct JPQL TYPE test
+    * [HHH-8738] - NPE in HibernateUtil if no default ehcache configuration
+    * [HHH-8748] - JavassistLazyInitializer.getProxy ClassCastException
+    * [HHH-8749] - Error flushing with a many-to-many Map defined with unique="true" and cascading orphan delete
+
+** Improvement
+    * [HHH-5065] - Exception thrown by Configuration.getRootClassMapping(String) not helpful
+    * [HHH-6004] - StructuredCacheEntry shall pass correct expected map size and loadFactor for HashMap constructor
+    * [HHH-6167] - "Mixing nullable" Error Message Correction
+    * [HHH-8654] - Ability to get notified of interesting Session events
+    * [HHH-8679] - Relax synchronized block in Loader#wrapResultSetIfEnabled
+    * [HHH-8680] - Relax synchronized block in TableGenerator#generate
+    * [HHH-8681] - NonNullableTransientDependencies should initialize identityMap lazily
+    * [HHH-8682] - org.hibernate.engine.spi.EntityKey consumes a lot of memory
+    * [HHH-8698] - ColumnNameCache wraps and unwraps int to Integer multiple times
+    * [HHH-8703] - Remove NonFlushedChanges api
+    * [HHH-8704] - ManyToOneType#scheduleBatchLoadIfNeeded creates EntityKey instances even if absolutely not necessary
+    * [HHH-8707] - Add support for oracle12c, postgresql92, postgresplus92, db2-10, mssql2012 to DatabaseAllocator
+    * [HHH-8709] - SynchronizationCallbackCoordinator is calling Thread.currentThread way too often
+    * [HHH-8734] - Update to Gradle 1.9
+
+** New Feature
+    * [HHH-8306] - Gradle task for bytecode enhancement
+    * [HHH-8337] - Add Maven plugin for bytecode enhancement.
+
+** Task
+    * [HHH-8721] - CoreMessageLogger conflicts
+
 Changes in version 4.2.7.SP1 (2013.10.23)
 ------------------------------------------------------------------------------------------------------------------------
 

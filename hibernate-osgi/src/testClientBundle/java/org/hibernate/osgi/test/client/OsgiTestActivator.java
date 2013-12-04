@@ -29,8 +29,13 @@ import javax.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.metamodel.spi.TypeContributor;
 import org.hibernate.osgi.test.result.OsgiTestResults;
 import org.hibernate.osgi.test.result.OsgiTestResultsImpl;
+import org.hibernate.service.ServiceRegistry;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -44,15 +49,26 @@ import org.osgi.framework.ServiceReference;
 public class OsgiTestActivator implements BundleActivator {
 
 	private OsgiTestResults testResult = new OsgiTestResultsImpl();
+	
+	private TestIntegrator integrator = new TestIntegrator();
+	private TestStrategyRegistrationProvider strategyRegistrationProvider = new TestStrategyRegistrationProvider();
+	private TestTypeContributor typeContributor = new TestTypeContributor();
 
 	@Override
 	public void start(BundleContext context) throws Exception {
 
+		// register the test result service
 		context.registerService( OsgiTestResults.class, testResult, new Hashtable() );
+		
+		// register example extension point services
+		context.registerService( Integrator.class, integrator, new Hashtable() );
+		context.registerService( StrategyRegistrationProvider.class, strategyRegistrationProvider, new Hashtable() );
+		context.registerService( TypeContributor.class, typeContributor, new Hashtable() );
 
 		testUnmanagedJpa( context );
 		testUnmanagedNative( context );
 		testLazyLoading( context );
+		testExtensionPoints( context );
 	}
 
 	@Override
@@ -183,6 +199,29 @@ public class OsgiTestActivator implements BundleActivator {
 			}
 			s.getTransaction().commit();
 			s.close();
+		}
+		catch ( Exception e ) {
+			testResult.addFailure( "Exception: " + e.getMessage(), e );
+		}
+	}
+	
+	private void testExtensionPoints(BundleContext context) {
+		try {
+			final ServiceReference serviceReference = context.getServiceReference( SessionFactory.class.getName() );
+			final SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) context.getService(
+					serviceReference );
+			final ServiceRegistry serviceRegistry = sessionFactory.getServiceRegistry();
+			
+			// test extension points in the client bundle
+			if (!integrator.passed) {
+				testResult.addFailure( "Could not discover " + integrator.getClass() );
+			}
+			if (!strategyRegistrationProvider.passed) {
+				testResult.addFailure( "Could not discover " + strategyRegistrationProvider.getClass() );
+			}
+			if (!typeContributor.passed) {
+				testResult.addFailure( "Could not discover " + typeContributor.getClass() );
+			}
 		}
 		catch ( Exception e ) {
 			testResult.addFailure( "Exception: " + e.getMessage(), e );

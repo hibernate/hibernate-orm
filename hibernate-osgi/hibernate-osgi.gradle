@@ -49,6 +49,7 @@ dependencies {
 	osgiRuntime( libraries.commons_annotations ) { transitive = false }
 	osgiRuntime( libraries.classmate ) { transitive = false }
 	osgiRuntime( libraries.logging ) { transitive = false }
+	
 	// needed for BND
 	osgiRuntimeBnd( libraries.jandex ) { transitive = false }
 	osgiRuntimeBnd( "javax.enterprise:cdi-api:1.1" ) { transitive = false }
@@ -143,7 +144,18 @@ task testClientBundleJar(type: Jar) {
 					"Bundle-Activator" : "org.hibernate.osgi.test.client.OsgiTestActivator",
 					"Bundle-ManifestVersion" : "2",
 					"Bundle-SymbolicName" : "testClientBundle",
-					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.hibernate,org.hibernate.proxy,org.osgi.framework")
+					"Import-Package" : "javassist.util.proxy,javax.persistence,javax.persistence.spi,org.h2,org.osgi.framework,"
+							+ "org.hibernate,"
+							+ "org.hibernate.boot.registry.selector,"
+							+ "org.hibernate.boot.registry.selector.spi,"
+							+ "org.hibernate.cfg,"
+							+ "org.hibernate.engine.spi,"
+							+ "org.hibernate.integrator.spi,"
+							+ "org.hibernate.metamodel.source,"
+							+ "org.hibernate.metamodel.spi,"
+							+ "org.hibernate.proxy,"
+							+ "org.hibernate.service,"
+							+ "org.hibernate.service.spi")
 	}
 }
 

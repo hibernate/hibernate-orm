@@ -106,6 +106,7 @@ import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.query.spi.ReturnMetadata;
+import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.CacheImplementor;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
@@ -1578,6 +1579,10 @@ public final class SessionFactoryImpl
 			return null;
 		}
 
+		protected ActionQueue.TransactionCompletionProcesses getTransactionCompletionProcesses() {
+			return null;
+		}
+
 		@Override
 		public Session openSession() {
 			log.tracef( "Opening Hibernate Session.  tenant=%s, owner=%s", tenantIdentifier, sessionOwner );
@@ -1586,6 +1591,7 @@ public final class SessionFactoryImpl
 					sessionFactory,
 					sessionOwner,
 					getTransactionCoordinator(),
+					getTransactionCompletionProcesses(),
 					autoJoinTransactions,
 					sessionFactory.settings.getRegionFactory().nextTimestamp(),
 					interceptor,

@@ -34,6 +34,7 @@ import org.hibernate.dialect.DerbyTenFiveDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.InformixDialect;
@@ -177,6 +178,10 @@ public class StandardDialectResolver extends AbstractDialectResolver {
 				default:
                     LOG.unknownOracleVersion(databaseMajorVersion);
 			}
+		}
+
+		if ( databaseName.startsWith( "Firebird" ) ) {
+			return new FirebirdDialect();
 		}
 
 		return null;

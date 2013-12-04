@@ -31,6 +31,7 @@ import org.hibernate.dialect.DerbyTenFiveDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -210,6 +211,10 @@ public class StandardDialectResolver implements DialectResolver {
 		if ( "HDB".equals( databaseName ) ) {
 			// SAP recommends defaulting to column store.
 			return new HANAColumnStoreDialect();
+		}
+
+		if ( databaseName.startsWith( "Firebird" ) ) {
+			return new FirebirdDialect();
 		}
 
 		return null;

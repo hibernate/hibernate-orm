@@ -102,8 +102,9 @@ public class ActionQueue {
 	// an immutable array holding all 7 ExecutionLists in execution order
 	private final List<ExecutableList<?>> executableLists;
 
-	private final AfterTransactionCompletionProcessQueue afterTransactionProcesses;
-	private final BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
+	private transient boolean isTransactionCoordinatorShared;
+	private AfterTransactionCompletionProcessQueue afterTransactionProcesses;
+	private BeforeTransactionCompletionProcessQueue beforeTransactionProcesses;
 
 	/**
 	 * Constructs an action queue bound to the given session.
@@ -140,6 +141,7 @@ public class ActionQueue {
 
 		executableLists = Collections.unmodifiableList( tmp );
 
+		isTransactionCoordinatorShared = false;
 		afterTransactionProcesses = new AfterTransactionCompletionProcessQueue( session );
 		beforeTransactionProcesses = new BeforeTransactionCompletionProcessQueue( session );
 
@@ -370,14 +372,20 @@ public class ActionQueue {
 	 * @param success Was the transaction successful.
 	 */
 	public void afterTransactionCompletion(boolean success) {
-		afterTransactionProcesses.afterTransactionCompletion( success );
+		if ( !isTransactionCoordinatorShared ) {
+			// Execute completion actions only in transaction owner (aka parent session).
+			afterTransactionProcesses.afterTransactionCompletion( success );
+		}
 	}
 
 	/**
 	 * Execute any registered {@link org.hibernate.action.spi.BeforeTransactionCompletionProcess}
 	 */
 	public void beforeTransactionCompletion() {
-		beforeTransactionProcesses.beforeTransactionCompletion();
+		if ( !isTransactionCoordinatorShared ) {
+			// Execute completion actions only in transaction owner (aka parent session).
+			beforeTransactionProcesses.beforeTransactionCompletion();
+		}
 	}
 
 	/**
@@ -542,6 +550,24 @@ public class ActionQueue {
 		return insertions.size();
 	}
 
+	public TransactionCompletionProcesses getTransactionCompletionProcesses() {
+		return new TransactionCompletionProcesses( beforeTransactionProcesses, afterTransactionProcesses );
+	}
+
+	/**
+	 * Bind transaction completion processes to make them shared between primary and secondary session.
+	 * Transaction completion processes are always executed by transaction owner (primary session),
+	 * but can be registered using secondary session too.
+	 *
+	 * @param processes Transaction completion processes.
+	 * @param isTransactionCoordinatorShared Flag indicating shared transaction context.
+	 */
+	public void setTransactionCompletionProcesses(TransactionCompletionProcesses processes, boolean isTransactionCoordinatorShared) {
+		this.isTransactionCoordinatorShared = isTransactionCoordinatorShared;
+		this.beforeTransactionProcesses = processes.beforeTransactionCompletionProcesses;
+		this.afterTransactionProcesses = processes.afterTransactionCompletionProcesses;
+	}
+
 	public void sortCollectionActions() {
 		if ( session.getFactory().getSettings().isOrderUpdatesEnabled() ) {
 			// sort the updates by fk
@@ -575,11 +601,11 @@ public class ActionQueue {
 	}
 
 	public boolean hasAfterTransactionActions() {
-		return !afterTransactionProcesses.processes.isEmpty();
+		return isTransactionCoordinatorShared ? false : afterTransactionProcesses.hasActions();
 	}
 
 	public boolean hasBeforeTransactionActions() {
-		return !beforeTransactionProcesses.processes.isEmpty();
+		return isTransactionCoordinatorShared ? false : beforeTransactionProcesses.hasActions();
 	}
 
 	public boolean hasAnyQueuedActions() {
@@ -645,30 +671,40 @@ public class ActionQueue {
 		return rtn;
 	}
 
-	/**
-	 * Encapsulates behavior needed for after transaction processing
-	 */
-	private static class BeforeTransactionCompletionProcessQueue {
-		private SessionImplementor session;
+	private static abstract class AbstractTransactionCompletionProcessQueue<T> {
+		protected SessionImplementor session;
 		// Concurrency handling required when transaction completion process is dynamically registered
 		// inside event listener (HHH-7478).
-		private Queue<BeforeTransactionCompletionProcess> processes = new ConcurrentLinkedQueue<BeforeTransactionCompletionProcess>();
+		protected Queue<T> processes = new ConcurrentLinkedQueue<T>();
 
-		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
+		private AbstractTransactionCompletionProcessQueue(SessionImplementor session) {
 			this.session = session;
 		}
 
-		public void register(BeforeTransactionCompletionProcess process) {
+		public void register(T process) {
 			if ( process == null ) {
 				return;
 			}
 			processes.add( process );
 		}
 
+		public boolean hasActions() {
+			return !processes.isEmpty();
+		}
+	}
+
+	/**
+	 * Encapsulates behavior needed for before transaction processing
+	 */
+	private static class BeforeTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<BeforeTransactionCompletionProcess> {
+		private BeforeTransactionCompletionProcessQueue(SessionImplementor session) {
+			super( session );
+		}
+
 		public void beforeTransactionCompletion() {
-			for ( BeforeTransactionCompletionProcess process : processes ) {
+			while ( !processes.isEmpty() ) {
 				try {
-					process.doBeforeTransactionCompletion( session );
+					processes.poll().doBeforeTransactionCompletion( session );
 				}
 				catch (HibernateException he) {
 					throw he;
@@ -677,39 +713,27 @@ public class ActionQueue {
 					throw new AssertionFailure( "Unable to perform beforeTransactionCompletion callback", e );
 				}
 			}
-			processes.clear();
 		}
 	}
 
 	/**
 	 * Encapsulates behavior needed for after transaction processing
 	 */
-	private static class AfterTransactionCompletionProcessQueue {
-		private SessionImplementor session;
+	private static class AfterTransactionCompletionProcessQueue extends AbstractTransactionCompletionProcessQueue<AfterTransactionCompletionProcess> {
 		private Set<String> querySpacesToInvalidate = new HashSet<String>();
-		// Concurrency handling required when transaction completion process is dynamically registered
-		// inside event listener (HHH-7478).
-		private Queue<AfterTransactionCompletionProcess> processes = new ConcurrentLinkedQueue<AfterTransactionCompletionProcess>();
 
 		private AfterTransactionCompletionProcessQueue(SessionImplementor session) {
-			this.session = session;
+			super( session );
 		}
 
 		public void addSpaceToInvalidate(String space) {
 			querySpacesToInvalidate.add( space );
 		}
 
-		public void register(AfterTransactionCompletionProcess process) {
-			if ( process == null ) {
-				return;
-			}
-			processes.add( process );
-		}
-
 		public void afterTransactionCompletion(boolean success) {
-			for ( AfterTransactionCompletionProcess process : processes ) {
+			while ( !processes.isEmpty() ) {
 				try {
-					process.doAfterTransactionCompletion( success, session );
+					processes.poll().doAfterTransactionCompletion( success, session );
 				}
 				catch (CacheException ce) {
 					LOG.unableToReleaseCacheLock( ce );
@@ -719,7 +743,6 @@ public class ActionQueue {
 					throw new AssertionFailure( "Exception releasing cache locks", e );
 				}
 			}
-			processes.clear();
 
 			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
 				session.getFactory().getUpdateTimestampsCache().invalidate(
@@ -728,6 +751,21 @@ public class ActionQueue {
 				);
 			}
 			querySpacesToInvalidate.clear();
+		}
+	}
+
+	/**
+	 * Wrapper class allowing to bind the same transaction completion process queues in different sessions.
+	 */
+	public static class TransactionCompletionProcesses {
+		private final BeforeTransactionCompletionProcessQueue beforeTransactionCompletionProcesses;
+		private final AfterTransactionCompletionProcessQueue afterTransactionCompletionProcesses;
+
+		private TransactionCompletionProcesses(
+				BeforeTransactionCompletionProcessQueue beforeTransactionCompletionProcessQueue,
+				AfterTransactionCompletionProcessQueue afterTransactionCompletionProcessQueue) {
+			this.beforeTransactionCompletionProcesses = beforeTransactionCompletionProcessQueue;
+			this.afterTransactionCompletionProcesses = afterTransactionCompletionProcessQueue;
 		}
 	}
 

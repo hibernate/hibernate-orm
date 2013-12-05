@@ -41,7 +41,7 @@ buildscript {
 
 ext {
     expectedGradleVersion = '1.9'
-    hibernateTargetVersion = '4.3.0-SNAPSHOT'
+    hibernateTargetVersion = '4.3.0.CR2'
     javaLanguageLevel = '1.6'
 
     osgiExportVersion = hibernateTargetVersion.replaceAll( "-SNAPSHOT", ".SNAPSHOT" )

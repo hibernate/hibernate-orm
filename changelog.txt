@@ -5,6 +5,37 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.0.CR2 (2013.12.05)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/15150
+
+** Bug
+    * [HHH-8341] - JtaTransaction logs excessive HHH000426 warning even if cache is disabled
+    * [HHH-8623] - After evicting a region, cache statistics not updated and entities not loaded into cache
+    * [HHH-8689] - Cannot determine java-type from given member [null] with "properties" in Hibernate 4.2
+    * [HHH-8701] - correct JPQL TYPE test
+    * [HHH-8738] - NPE in HibernateUtil if no default ehcache configuration
+    * [HHH-8739] - Tracking of JTA Synch registration thread
+    * [HHH-8743] - EntityReferenceInitializerImpl#resolveEntityKey throws Exception in case of entityKey != null
+    * [HHH-8748] - JavassistLazyInitializer.getProxy ClassCastException
+    * [HHH-8749] - Error flushing with a many-to-many Map defined with unique="true" and cascading orphan delete
+    * [HHH-8759] - OsgiClassLoader introduces dependency on Java 7
+    * [HHH-8760] - improve EntityGraph JPQL query hint test
+    * [HHH-8761] - Hibernate OSGi 4.3.0.CR1 can't discover services
+
+** Improvement
+    * [HHH-5065] - Exception thrown by Configuration.getRootClassMapping(String) not helpful
+    * [HHH-8733] - General build cleanup
+    * [HHH-8734] - Update to Gradle 1.9
+    * [HHH-8740] - Log a warning when database metadata indicates named parameters are not supported
+
+** Task
+    * [HHH-8624] - Upgrade to Infinispan 6.0
+    * [HHH-8744] - Add Javadoc for load plans
+    * [HHH-8750] - Move load plan implementations from spi to internal
+
+
+
 Changes in version 4.3.0.CR1 (2013.11.20)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/14750

@@ -27,7 +27,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * Represents a reference to a persistent collection either as a Return or as a Fetch
+ * Represents a reference to a persistent collection either as a Return or as a {@link CollectionAttributeFetch}.
  *
  * @author Steve Ebersole
  */
@@ -41,7 +41,7 @@ public interface CollectionReference {
 	public String getQuerySpaceUid();
 
 	/**
-	 * Retrieves the CollectionPersister describing the collection associated with this Return.
+	 * Retrieves the CollectionPersister describing the collection associated with this CollectionReference.
 	 *
 	 * @return The CollectionPersister.
 	 */
@@ -51,7 +51,7 @@ public interface CollectionReference {
 	 * Retrieve the metadata about the index of this collection *as a FetchSource*.  Will return
 	 * {@code null} when:<ul>
 	 *     <li>the collection is not indexed</li>
-	 *     <li>the index is not a composite or entity (cannot act as a FetchSource)</li>
+	 *     <li>the index is not a composite, entity, or "any" (cannot act as a FetchSource)</li>
 	 * </ul>
 	 * <p/>
 	 * Works only for map keys, since a List index (int type) cannot act as a FetchSource.
@@ -63,7 +63,7 @@ public interface CollectionReference {
 
 	/**
 	 * Retrieve the metadata about the elements of this collection *as a FetchSource*.  Will return
-	 * {@code null} when the element is not a composite or entity (cannot act as a FetchSource).
+	 * {@code null} when the element is not a composite, entity, or "any" (cannot act as a FetchSource).
 	 * Works only for map keys, since a List index cannot be anything other than an int which cannot be a FetchSource.
 	 * <p/>
 	 *

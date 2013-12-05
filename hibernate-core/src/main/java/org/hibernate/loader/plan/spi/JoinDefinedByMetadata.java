@@ -39,5 +39,11 @@ public interface JoinDefinedByMetadata extends Join {
 	 * @return The property name
 	 */
 	public String getJoinedPropertyName();
+
+	/**
+	 * Get the property type of the joined property.
+	 *
+	 * @return The property type.
+	 */
 	public Type getJoinedPropertyType();
 }

@@ -44,19 +44,18 @@ public interface QuerySpace {
 	public String getUid();
 
 	/**
-	 * Get the QuerySpaces object that is our owner.
+	 * Get the {@link QuerySpaces} object that is our owner.
 	 *
 	 * @return The QuerySpaces containing this QuerySpace
 	 */
 	public QuerySpaces getQuerySpaces();
 
 	/**
-	 * Get the PropertyMapping for this QuerySpace.
+	 * Get the {@link PropertyMapping} for this QuerySpace.
 	 *
 	 * @return The PropertyMapping
 	 */
 	public PropertyMapping getPropertyMapping();
-
 
 	/**
 	 * Get the aliased column names for the specified property in the query space..
@@ -71,7 +70,6 @@ public interface QuerySpace {
 	 * Enumeration of the different types of QuerySpaces we can have.
 	 */
 	public static enum Disposition {
-		// todo : account for special distinctions too like COLLECTION INDEX/ELEMENT too?
 		/**
 		 * We have an entity-based QuerySpace.  It is castable to {@link EntityQuerySpace} for more details.
 		 */
@@ -95,11 +93,11 @@ public interface QuerySpace {
 
 	/**
 	 * Obtain all joins which originate from this QuerySpace, in other words, all the joins which this QuerySpace is
-	 * the right-hand-side of.
+	 * the left-hand-side of.
 	 * <p/>
-	 * For all the joins returned here, {@link Join#getRightHandSide()} should point back to this QuerySpace such that
+	 * For all the joins returned here, {@link Join#getLeftHandSide()} should point back to this QuerySpace such that
 	 * <code>
-	 *     space.getJoins().forEach{ join -> join.getRightHandSide() == space }
+	 *     space.getJoins().forEach{ join -> join.getLeftHandSide() == space }
 	 * </code>
 	 * is true for all.
 	 *

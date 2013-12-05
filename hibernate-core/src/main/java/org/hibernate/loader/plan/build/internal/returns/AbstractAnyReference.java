@@ -66,6 +66,7 @@ public abstract class AbstractAnyReference implements FetchSource {
 
 	@Override
 	public String getQuerySpaceUid() {
+		// TODO: should this throw UnsupportedOperationException?
 		return null;
 	}
 

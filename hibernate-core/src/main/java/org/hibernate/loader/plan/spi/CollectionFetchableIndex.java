@@ -24,7 +24,7 @@
 package org.hibernate.loader.plan.spi;
 
 /**
- * A collection index which can be a FetchSource.
+ * A collection index which is a {@link FetchSource}.
  *
  * @author Steve Ebersole
  */

@@ -28,23 +28,51 @@ package org.hibernate.loader.plan.spi;
  * metamodel-driven LoadPlans, this would be joins indicated by the metamodel.
  */
 public interface Join {
-	// todo : would be good to have the SQL alias info here because we know it when we would be building this Join,
-	// and to do it afterwards would require lot of logic to recreate.
-	// But we do want this model to be workable in Search/OGM as well, plus the HQL parser has shown time-and-again
-	// that it is best to put off resolving and injecting physical aliases etc until as-late-as-possible.
-
-	// todo : do we know enough here to declare the "owner" side?  aka, the "fk direction"
-	// and if we do ^^, is that enough to figure out the SQL aliases more easily (see above)?
-
+	/**
+	 * Get the {@link QuerySpace} from the left-hand-side of the join.
+	 *
+	 * @return the query space from the left-hand-side of the join.
+	 */
 	public QuerySpace getLeftHandSide();
 
+	/**
+	 * Get the {@link QuerySpace} from the right-hand-side of the join.
+	 *
+	 * @return the query space from the right-hand-side of the join.
+	 */
 	public QuerySpace getRightHandSide();
 
+	/**
+	 * Indicates if the joined attribute is required to be non-null.
+	 *
+	 * @return true, if the joined attribute is required to be non-null; false, otherwise.
+	 */
 	public boolean isRightHandSideRequired();
 
 	// Ugh!  This part will unfortunately be SQL specific :( ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	/**
+	 * Resolves the column names prefixed by the specified alias on the
+	 * left-hand-side of the join.
+	 *
+	 * @param leftHandSideTableAlias The table alias used to prefix the columns.
+	 * @return the aliased columns on the left-hand-side of the join.
+	 */
 	public String[] resolveAliasedLeftHandSideJoinConditionColumns(String leftHandSideTableAlias);
+
+	/**
+	 * Resolves the raw (unaliased) column names on the right-hand-side of the join.
+	 *
+	 * @return the columns on the right-hand-side of the join.
+	 */
 	public String[] resolveNonAliasedRightHandSideJoinConditionColumns();
+
+	/**
+	 * Gets any additional conditions on the right-hand-side of the join using
+	 * the specified table alias.
+	 *
+	 * @param rhsTableAlias The table alias.
+	 * @return additional conditions on the right-hand-side of the join.
+	 */
 	public String getAnyAdditionalJoinConditions(String rhsTableAlias);
 }

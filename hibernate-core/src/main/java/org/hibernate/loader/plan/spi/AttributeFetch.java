@@ -34,7 +34,8 @@ public interface AttributeFetch extends Fetch {
 
 	/**
 	 * Returns the {@link AttributeDefinition} for attribute being fetched.
-	 * @return
+	 *
+	 * @return The fetched attribute definition.
 	 */
 	public AttributeDefinition getFetchedAttributeDefinition();
 }

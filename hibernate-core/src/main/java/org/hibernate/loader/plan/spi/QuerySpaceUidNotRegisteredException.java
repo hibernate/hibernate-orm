@@ -36,7 +36,7 @@ public class QuerySpaceUidNotRegisteredException extends HibernateException {
 	}
 
 	private static String generateMessage(String uid) {
-		return "Given uid [" + uid + "] could not be resolved to QuerySpace";
+		return "Given uid [" + uid + "] could not be resolved to a QuerySpace";
 	}
 
 	public QuerySpaceUidNotRegisteredException(String uid, Throwable cause) {

@@ -26,7 +26,7 @@ package org.hibernate.loader.plan.spi;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Represents a reference to an entity either as a return or as a fetch
+ * Represents a reference to an entity either as a return, fetch, or collection element or index.
  *
  * @author Steve Ebersole
  */
@@ -48,7 +48,7 @@ public interface EntityReference extends FetchSource {
 	public EntityPersister getEntityPersister();
 
 	/**
-	 * Get the description of this entity's identifier.
+	 * Get the description of this entity's identifier descriptor.
 	 *
 	 * @return The identifier description.
 	 */

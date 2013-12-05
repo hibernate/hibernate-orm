@@ -75,6 +75,8 @@ public interface LoadPlan {
 	 *         {@link org.hibernate.loader.plan.spi.ScalarReturn} elements, but no {@link org.hibernate.loader.plan.spi.CollectionReturn}.
 	 *     </li>
 	 * </ul>
+	 * <p/>
+	 * When generating SQL, the Returns provide columns/formulas used in the "select clause".
 	 *
 	 * @return The Returns for this LoadPlan.
 	 *
@@ -83,11 +85,11 @@ public interface LoadPlan {
 	public List<? extends Return> getReturns();
 
 	/**
-	 * todo : document this...
+	 * Gets the {@link QuerySpaces} for the load plan, which contains a {@link QuerySpace}
+	 * reference for each non-scalar return and for each entity, collection, and composite
+	 * {@link FetchSource}.
 	 * <p/>
-	 * this is the stuff that was added in this plan package...  splitting the "from clause" and "select clause"
-	 * graphs and removing all (started) SQL references.  QuerySpaces represents the "from clause".  The
-	 * "select clause" is represented by {@link #getReturns()}.
+	 * When generating SQL, the query spaces provide data for the "from clause" including joins.
 	 *
 	 * @return The QuerySpaces
 	 */
@@ -131,8 +133,8 @@ public interface LoadPlan {
 		 */
 		COLLECTION_INITIALIZER,
 		/**
-		 * We have a mixed load plan, which will have one or more returns of {@link org.hibernate.loader.plan.spi.EntityReturn} and {@link org.hibernate.loader.plan.spi.ScalarReturn}
-		 * (NOT {@link org.hibernate.loader.plan.spi.CollectionReturn}).
+		 * We have a mixed load plan, which will have one or more returns of {@link org.hibernate.loader.plan.spi.EntityReturn}
+		 * and {@link org.hibernate.loader.plan.spi.ScalarReturn} (NOT {@link org.hibernate.loader.plan.spi.CollectionReturn}).
 		 */
 		MIXED
 	}

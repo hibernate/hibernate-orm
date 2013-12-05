@@ -34,12 +34,17 @@ import org.hibernate.loader.PropertyPath;
 public interface FetchSource {
 
 	/**
-	 * Get the property path to this fetch owner
+	 * Get the property path to this fetch source
 	 *
 	 * @return The property path
 	 */
 	public PropertyPath getPropertyPath();
 
+	/**
+	 * Get the UID for this fetch source's query space.
+	 *
+	 * @return The query space UID.
+	 */
 	public String getQuerySpaceUid();
 
 	/**
@@ -59,73 +64,15 @@ public interface FetchSource {
 	/**
 	 * Resolve the "current" {@link EntityReference}, or null if none.
 	 *
-	 * If this object is an {@link EntityReference}, then this object is returned.
-	 *
-	 * If this object is a {@link CompositeFetch}, then the nearest {@link EntityReference}
-	 * will be resolved from its source, if possible.
+	 * If this object is an {@link EntityReference}, then this object is returned;
+	 * otherwise, if this object is a {@link Fetch}, then the nearest
+	 * {@link EntityReference} will be resolved from its source, if possible.
 	 *
 	 * If no EntityReference can be resolved, null is return.
 	 *
 	 *  @return the "current" EntityReference or null if none.
-	 *  otherwise, if this object is also a {@link Fetch}, then
 	 * .
 	 * @see org.hibernate.loader.plan.spi.Fetch#getSource().
-	 * 	 */
-	public EntityReference resolveEntityReference();
-
-	// Stuff I can hopefully remove ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * The idea of addFetch() below has moved to {@link org.hibernate.loader.plan.build.spi.ExpandingFetchSource}.
-	 * <p/>
-	 * Most of the others are already part of Fetch
 	 */
-
-
-//
-//
-//
-//	/**
-//	 * Returns the type of the specified fetch.
-//	 *
-//	 * @param fetch - the owned fetch.
-//	 *
-//	 * @return the type of the specified fetch.
-//	 */
-//	public Type getType(Fetch fetch);
-//
-//	/**
-//	 * Is the specified fetch nullable?
-//	 *
-//	 * @param fetch - the owned fetch.
-//	 *
-//	 * @return true, if the fetch is nullable; false, otherwise.
-//	 */
-//	public boolean isNullable(Fetch fetch);
-//
-//	/**
-//	 * Generates the SQL select fragments for the specified fetch.  A select fragment is the column and formula
-//	 * references.
-//	 *
-//	 * @param fetch - the owned fetch.
-//	 * @param alias The table alias to apply to the fragments (used to qualify column references)
-//	 *
-//	 * @return the select fragments
-//	 */
-//	public String[] toSqlSelectFragments(Fetch fetch, String alias);
-//
-//	/**
-//	 * Contract to add fetches to this owner.  Care should be taken in calling this method; it is intended
-//	 * for Hibernate usage
-//	 *
-//	 * @param fetch The fetch to add
-//	 */
-//	public void addFetch(Fetch fetch);
-//
-//
-//	public SqlSelectFragmentResolver toSqlSelectFragmentResolver();
-//
-//
-//
-
+	public EntityReference resolveEntityReference();
 }

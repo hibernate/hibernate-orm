@@ -24,7 +24,9 @@
 package org.hibernate.loader.plan.spi;
 
 /**
- * Models the requested fetching of a composite attribute.
+ * Models the requested fetching of a composition (component/embeddable), which may or may not be an attribute.
+ *
+ * @see CompositeAttributeFetch
  *
  * @author Steve Ebersole
  */

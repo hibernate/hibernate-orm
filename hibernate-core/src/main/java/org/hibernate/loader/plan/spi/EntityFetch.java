@@ -26,9 +26,16 @@ package org.hibernate.loader.plan.spi;
 import org.hibernate.type.EntityType;
 
 /**
+ * Models the requested fetching of an entity attribute.
+ *
  * @author Steve Ebersole
  */
 public interface EntityFetch extends AttributeFetch, EntityReference {
+	/**
+	 * Get the Hibernate Type that describes the fetched attribute as an {@link EntityType}.
+	 *
+	 * @return The Type of the fetched attribute
+	 */
 	@Override
 	EntityType getFetchedType();
 }

@@ -73,7 +73,6 @@ public interface Fetch {
 
 
 	// Hoping to make these go away ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 	public String getAdditionalJoinConditions();
 
 	/**

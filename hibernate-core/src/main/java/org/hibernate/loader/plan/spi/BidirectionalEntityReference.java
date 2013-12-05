@@ -24,10 +24,14 @@
 package org.hibernate.loader.plan.spi;
 
 /**
- * Represents the circular side of a bi-directional entity .  Wraps a reference to an EntityReference
- * as an EntityFetch.  We can use the special type as a trigger in AliasResolutionContext, etc to lookup information
- * based on the wrapped reference.
+ * Represents the circular side of a bi-directional entity association. Wraps a reference to the associated
+ * (target) EntityReference.
  * <p/>
+ * The {@link org.hibernate.loader.plan.exec.spi.EntityReferenceAliases} for this object is the same as
+ * for its target EntityReference, and can be looked up via
+ * {@link org.hibernate.loader.plan.exec.spi.AliasResolutionContext#resolveEntityReferenceAliases(String)}
+ * using the value returned by {@link #getQuerySpaceUid()}.
+ *
  * This relies on reference lookups against the EntityReference instances, therefore this allows representation of the
  * circularity but with a little protection against potential stack overflows.  This is unfortunately still a cyclic
  * graph.  An alternative approach is to make the graph acyclic (DAG) would be to follow the process I adopted in the
@@ -45,4 +49,12 @@ public interface BidirectionalEntityReference extends EntityReference {
 	 * @return The targeted EntityReference
 	 */
 	public EntityReference getTargetEntityReference();
+
+	/**
+	 * The query space UID returned using {@link #getQuerySpaceUid()} must
+	 * be the same as returned by {@link #getTargetEntityReference()#getQuerySpaceUid()}
+	 *
+	 * @return The query space UID.
+	 */
+	public String getQuerySpaceUid();
 }

@@ -24,6 +24,8 @@
 package org.hibernate.loader.plan.spi;
 
 /**
+ * Models the requested fetching of a composite attribute.
+ *
  * @author Gail Badner
  */
 public interface CompositeAttributeFetch extends CompositeFetch, AttributeFetch {

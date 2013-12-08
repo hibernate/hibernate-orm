@@ -219,7 +219,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 				? (CompositeType) persistentClass.getIdentifier().getType()
 				: null;
 
-		return buildProxyFactory( idGetter, idSetter, entityIDType, proxyInterfaces, mappedClass );
+		return buildProxyFactory( idGetter, idSetter, entityIDType, proxyInterfaces, mappedClass, proxyInterface );
 	}
 
 	@Override
@@ -291,12 +291,12 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 				.getValueBinding().getHibernateTypeDescriptor().getResolvedTypeMapping()
 				: null;
 
-		return buildProxyFactory( idGetter, idSetter, entityIDType, proxyInterfaces, mappedClass );
+		return buildProxyFactory( idGetter, idSetter, entityIDType, proxyInterfaces, mappedClass, proxyInterface );
 	}
 
 	protected ProxyFactory buildProxyFactory(
 			Getter idGetter, Setter idSetter, CompositeType entityIDType, Set<Class> proxyInterfaces,
-			Class mappedClass) {
+			Class mappedClass, Class proxyIntreface ) {
 		Method idGetterMethod = idGetter == null ? null : idGetter.getMethod();
 		Method idSetterMethod = idSetter == null ? null : idSetter.getMethod();
 

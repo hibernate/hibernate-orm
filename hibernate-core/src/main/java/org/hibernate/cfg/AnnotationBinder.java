@@ -2634,6 +2634,8 @@ public final class AnnotationBinder {
 				column.setUpdatable( false );
 			}
 		}
+		
+		final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 
 		//Make sure that JPA1 key-many-to-one columns are read only tooj
 		boolean hasSpecjManyToOne=false;
@@ -2645,7 +2647,6 @@ public final class AnnotationBinder {
 					columnName = prop.getAnnotation( Column.class ).name();
 				}
 
-				final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 				if ( property.isAnnotationPresent( ManyToOne.class ) && joinColumn != null
 						&& ! BinderHelper.isEmptyAnnotationValue( joinColumn.name() )
 						&& joinColumn.name().equals( columnName )
@@ -2662,11 +2663,15 @@ public final class AnnotationBinder {
 		value.setTypeName( inferredData.getClassOrElementName() );
 		final String propertyName = inferredData.getPropertyName();
 		value.setTypeUsingReflection( propertyHolder.getClassName(), propertyName );
-
-		ForeignKey fk = property.getAnnotation( ForeignKey.class );
-		String fkName = fk != null ?
-				fk.name() :
-				"";
+		
+		String fkName = null;
+		if ( joinColumn != null && joinColumn.foreignKey() != null ) {
+			fkName = joinColumn.foreignKey().name();
+		}
+		if ( BinderHelper.isEmptyAnnotationValue( fkName ) ) {
+			ForeignKey fk = property.getAnnotation( ForeignKey.class );
+			fkName = fk != null ? fk.name() : "";
+		}
 		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) {
 			value.setForeignKeyName( fkName );
 		}

@@ -603,7 +603,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 						.append( ", primary key ( " )
 						.append( segmentColumnName )
 						.append( " ) )" )
-						.append( dialect.getCreateTableString() )
+						.append( dialect.getTableTypeString() )
 						.toString()
 		};
 	}

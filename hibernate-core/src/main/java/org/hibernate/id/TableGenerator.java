@@ -239,7 +239,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 	public String[] sqlCreateStrings(Dialect dialect) throws HibernateException {
 		return new String[] {
-			dialect.getCreateTableString() + " " + tableName + " ( " + columnName + " " + dialect.getTypeName(Types.INTEGER) + " )",
+			dialect.getCreateTableString() + " " + tableName + " ( "
+					+ columnName + " " + dialect.getTypeName(Types.INTEGER) + " )" + dialect.getTableTypeString(),
 			"insert into " + tableName + " values ( 0 )"
 		};
 	}

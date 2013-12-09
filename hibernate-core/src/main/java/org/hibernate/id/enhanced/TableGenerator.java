@@ -657,7 +657,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 				dialect.getCreateTableString() + ' ' + tableName + " ( "
 						+ segmentColumnName + ' ' + dialect.getTypeName( Types.VARCHAR, segmentValueLength, 0, 0 ) + " not null "
 						+ ", " + valueColumnName + ' ' + dialect.getTypeName( Types.BIGINT )
-						+ ", primary key ( " + segmentColumnName + " ) ) "
+						+ ", primary key ( " + segmentColumnName + " ) )" + dialect.getTableTypeString()
 		};
 	}
 

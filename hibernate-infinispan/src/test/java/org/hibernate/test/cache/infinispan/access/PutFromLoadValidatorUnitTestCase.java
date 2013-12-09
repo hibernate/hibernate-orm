@@ -357,8 +357,7 @@ public class PutFromLoadValidatorUnitTestCase {
                boolean lockable = testee.acquirePutFromLoadLock(KEY1);
                try {
                   assertTrue(lockable);
-               }
-               finally {
+               } finally {
                   if (lockable) {
                      testee.releasePutFromLoadLock(KEY1);
                   }
@@ -406,16 +405,14 @@ public class PutFromLoadValidatorUnitTestCase {
                         try {
                            log.trace("Put from load lock acquired for key = " + KEY1);
                            success.incrementAndGet();
-                        }
-                        finally {
+                        } finally {
                            testee.releasePutFromLoadLock(KEY1);
                         }
                      } else {
                         log.trace("Unable to acquired putFromLoad lock for key = " + KEY1);
                      }
                      finishedLatch.countDown();
-                  }
-                  catch (Exception e) {
+                  } catch (Exception e) {
                      e.printStackTrace();
                   }
                }
@@ -456,7 +453,13 @@ public class PutFromLoadValidatorUnitTestCase {
             TestCacheManagerFactory.createCacheManager(false)) {
          @Override
          public void call() {
-            TestValidator testee = new TestValidator(cm, null, 200);
+            // For the test to work, it needs to expect the two invalidation
+            // messages happen close enough in time. That "close enough" is 
+            // defined by the naked put invalidation tieout. If too small it
+            // could happen that timing issues execute the second invalidate
+            // key call after the named put invalidation timeout, leading to
+            // the removal queue having one element less than expected.
+            TestValidator testee = new TestValidator(cm, null, 3000);
             testee.invalidateKey("KEY1");
             testee.invalidateKey("KEY2");
             expectRemovalLenth(2, testee, 60000l);
@@ -478,7 +481,9 @@ public class PutFromLoadValidatorUnitTestCase {
          }
          else {
             if ( System.currentTimeMillis() > timeoutMilestone ) {
-               fail( "condition not reached after " + timeout + " milliseconds. giving up!" );
+               fail( "condition not reached after " + timeout +
+                     " milliseconds, giving up. Expected queue length " + expectedLength +
+                     " but was was: " + queueLength + " !" );
             }
             try {
                Thread.sleep(20);

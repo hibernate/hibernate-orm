@@ -29,6 +29,7 @@ import java.util.Iterator;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -40,11 +41,16 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+/**
+ * @author Brett Meyer
+ */
 public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	private static final int MAX_NAME_LENGTH = 30;
 	
-	private static final String EXPLICIT_FK_NAME = "fk_explicit";
+	private static final String EXPLICIT_FK_NAME_NATIVE = "fk_explicit_native";
+	
+	private static final String EXPLICIT_FK_NAME_JPA = "fk_explicit_jpa";
 	
 	private static final String EXPLICIT_UK_NAME = "uk_explicit";
 	
@@ -78,6 +84,7 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue( jiraKey = "HHH-1904" )
 	public void testConstraintNameLength() {
 		Iterator<org.hibernate.mapping.Table> tableItr = configuration().getTableMappings();
+		int foundCount = 0;
 		while (tableItr.hasNext()) {
 			org.hibernate.mapping.Table table = tableItr.next();
 			
@@ -89,8 +96,13 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 				// ensure the randomly generated constraint name doesn't
 				// happen if explicitly given
 				Column column = fk.getColumn( 0 );
-				if ( column.getName().equals( "explicit" ) ) {
-					assertEquals( fk.getName(), EXPLICIT_FK_NAME );
+				if ( column.getName().equals( "explicit_native" ) ) {
+					foundCount++;
+					assertEquals( fk.getName(), EXPLICIT_FK_NAME_NATIVE );
+				}
+				else if ( column.getName().equals( "explicit_jpa" ) ) {
+					foundCount++;
+					assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA );
 				}
 			}
 			
@@ -103,10 +115,13 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 				// happen if explicitly given
 				Column column = uk.getColumn( 0 );
 				if ( column.getName().equals( "explicit" ) ) {
+					foundCount++;
 					assertEquals( uk.getName(), EXPLICIT_UK_NAME );
 				}
 			}
 		}
+		
+		assertEquals("Could not find the necessary columns.", 3, foundCount);
 	}
 	
 	@Entity
@@ -139,7 +154,12 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		public DataPoint dp;
 		
 		@OneToOne
-		@org.hibernate.annotations.ForeignKey(name = EXPLICIT_FK_NAME)
-		public DataPoint explicit;
+		@org.hibernate.annotations.ForeignKey(name = EXPLICIT_FK_NAME_NATIVE)
+		@JoinColumn(name = "explicit_native")
+		public DataPoint explicit_native;
+		
+		@OneToOne
+		@JoinColumn(name = "explicit_jpa", foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA))
+		public DataPoint explicit_jpa;
 	}
 }

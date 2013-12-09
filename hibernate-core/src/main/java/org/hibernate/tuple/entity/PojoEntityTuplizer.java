@@ -296,7 +296,7 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	protected ProxyFactory buildProxyFactory(
 			Getter idGetter, Setter idSetter, CompositeType entityIDType, Set<Class> proxyInterfaces,
-			Class mappedClass, Class proxyIntreface ) {
+			Class mappedClass, Class proxyInterface ) {
 		Method idGetterMethod = idGetter == null ? null : idGetter.getMethod();
 		Method idSetterMethod = idSetter == null ? null : idSetter.getMethod();
 

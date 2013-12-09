@@ -129,7 +129,8 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 					.append( valueColumnName )
 					.append( ' ' )
 					.append( dialect.getTypeName( Types.INTEGER ) )
-					.append( " ) " )
+					.append( " )" )
+					.append( dialect.getTableTypeString() )
 					.toString()
 		};
 	}

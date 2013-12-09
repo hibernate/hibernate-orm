@@ -602,7 +602,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 						.append( dialect.getTypeName( Types.BIGINT ) )
 						.append( ", primary key ( " )
 						.append( segmentColumnName )
-						.append( " ) ) " )
+						.append( " ) )" )
+						.append( dialect.getCreateTableString() )
 						.toString()
 		};
 	}

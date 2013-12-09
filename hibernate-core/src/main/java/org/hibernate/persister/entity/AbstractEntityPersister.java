@@ -1716,7 +1716,7 @@ public abstract class AbstractEntityPersister
 						final InDatabaseValueGenerationStrategy generationStrategy
 								= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
 						return generationStrategy != null
-								&& generationStrategy.getGenerationTiming() == generationTimingToMatch;
+								&& timingsMatch( generationStrategy.getGenerationTiming(), generationTimingToMatch );
 					}
 				}
 		);
@@ -4899,14 +4899,13 @@ public abstract class AbstractEntityPersister
 	private boolean isReadRequired(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
 		return valueGeneration != null &&
 				valueGeneration.getValueGenerator() == null &&
-				timingsMatch( valueGeneration, matchTiming );
+				timingsMatch( valueGeneration.getGenerationTiming(), matchTiming );
 	}
 
-	private boolean timingsMatch(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
+	private boolean timingsMatch(GenerationTiming timing, GenerationTiming matchTiming) {
 		return
-				(matchTiming == GenerationTiming.INSERT && valueGeneration.getGenerationTiming().includesInsert()) ||
-						(matchTiming == GenerationTiming.ALWAYS && valueGeneration.getGenerationTiming()
-								.includesUpdate());
+				(matchTiming == GenerationTiming.INSERT && timing.includesInsert()) ||
+						(matchTiming == GenerationTiming.ALWAYS && timing.includesUpdate());
 	}
 
 	public String getIdentifierPropertyName() {

@@ -66,6 +66,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		TheEntity theEntity = new TheEntity( 1 );
 		assertNull( theEntity.createdDate );
+		assertNull( theEntity.alwaysDate );
 		assertNull( theEntity.vmCreatedDate );
 		assertNull( theEntity.vmCreatedSqlDate );
 		assertNull( theEntity.vmCreatedSqlTime );
@@ -74,6 +75,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		s.save( theEntity );
 		//TODO: Actually the values should be non-null after save
 		assertNull( theEntity.createdDate );
+		assertNull( theEntity.alwaysDate );
 		assertNull( theEntity.vmCreatedDate );
 		assertNull( theEntity.vmCreatedSqlDate );
 		assertNull( theEntity.vmCreatedSqlTime );
@@ -83,18 +85,21 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertNotNull( theEntity.createdDate );
+		assertNotNull( theEntity.alwaysDate );
 		assertEquals( "Bob", theEntity.name );
 
 		s = openSession();
 		s.beginTransaction();
 		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
 		assertNotNull( theEntity.createdDate );
+		assertNotNull( theEntity.alwaysDate );
 		assertNotNull( theEntity.vmCreatedDate );
 		assertNotNull( theEntity.vmCreatedSqlDate );
 		assertNotNull( theEntity.vmCreatedSqlTime );
 		assertNotNull( theEntity.vmCreatedSqlTimestamp );
 		assertEquals( "Bob", theEntity.name );
 
+		theEntity.lastName = "Smith";
 		s.delete( theEntity );
 		s.getTransaction().commit();
 		s.close();
@@ -131,7 +136,7 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 
-		theEntity = (TheEntity) session.get( TheEntity.class, 1 );
+		theEntity = (TheEntity) s.get( TheEntity.class, 1 );
 
 		assertEquals( "Creation timestamp should not change on update", created, theEntity.vmCreatedSqlTimestamp );
 		assertTrue( "Update timestamp should have changed due to update", theEntity.updated.after( updated ) );
@@ -156,6 +161,11 @@ public class DefaultGeneratedValueTest extends BaseCoreFunctionalTestCase {
 		@ColumnDefault( "CURRENT_TIMESTAMP" )
 		@Column( nullable = false )
 		private Date createdDate;
+
+		@Generated( GenerationTime.ALWAYS )
+		@ColumnDefault( "CURRENT_TIMESTAMP" )
+		@Column( nullable = false )
+		private Calendar alwaysDate;
 
 		@CreationTimestamp
 		private Date vmCreatedDate;

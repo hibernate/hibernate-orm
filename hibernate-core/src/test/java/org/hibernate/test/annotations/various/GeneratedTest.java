@@ -44,7 +44,7 @@ public class GeneratedTest extends BaseCoreFunctionalTestCase {
 		s.persist( antenna );
 		assertNull( antenna.latitude );
 		assertNull( antenna.longitude );
-		tx.rollback();
+		tx.commit();
 		s.close();
 	}
 

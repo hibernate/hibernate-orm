@@ -40,7 +40,6 @@ manifest.mainAttributes(
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Core'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.core'
 
         instruction 'Import-Package',
             'javax.security.auth;resolution:=optional',

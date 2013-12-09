@@ -19,7 +19,6 @@ dependencies {
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM JPA Entity Manager'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.entitymanager'
         
         // A cdi-api OSGi bundle does not currently exist.  For now, explicitly
         // ignore its packages.  This will only cause issues if an app tries

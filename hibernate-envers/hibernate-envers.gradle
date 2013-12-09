@@ -40,7 +40,6 @@ compileJava.dependsOn generateJpaMetamodelClasses
 jar {
     manifest {
         instruction 'Bundle-Description', 'Hibernate ORM Envers'
-        instruction 'Bundle-SymbolicName', 'org.hibernate.envers'
         
         instruction 'Import-Package',
             // optionals

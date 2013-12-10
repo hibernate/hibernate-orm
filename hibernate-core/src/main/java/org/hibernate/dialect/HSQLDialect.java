@@ -292,8 +292,16 @@ public class HSQLDialect extends Dialect {
 		return hsqldbVersion < 20;
 	}
 
+	// Note : HSQLDB actually supports [IF EXISTS] before AND after the <tablename>
+	// But as CASCADE has to be AFTER IF EXISTS in case it's after the tablename, 
+	// We put the IF EXISTS before the tablename to be able to add CASCADE after.
 	@Override
 	public boolean supportsIfExistsAfterTableName() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
 		return true;
 	}
 
@@ -643,5 +651,16 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
+	}
+
+	// Do not drop constraints explicitly, just do this by cascading instead.
+	@Override
+	public boolean dropConstraints() {
+		return false;
+	}
+
+	@Override
+	public String getCascadeConstraintsString() {
+		return " CASCADE ";
 	}
 }

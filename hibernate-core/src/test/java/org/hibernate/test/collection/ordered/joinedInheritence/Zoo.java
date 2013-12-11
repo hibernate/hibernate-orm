@@ -45,6 +45,7 @@ public class Zoo {
 	private String city;
 	private Set<Tiger> tigers = new HashSet<Tiger>();
 	private Set<Lion> lions = new HashSet<Lion>();
+	private Set<Animal> animals = new HashSet<Animal>();
 
 	@Id
 	@GeneratedValue( generator = "increment" )
@@ -73,7 +74,7 @@ public class Zoo {
 		this.city = city;
 	}
 
-	@OneToMany( fetch = FetchType.EAGER ) // eager so that load-by-id queries include this association
+	@OneToMany
 	@JoinColumn
 	@javax.persistence.OrderBy( "weight" )
 	public Set<Tiger> getTigers() {
@@ -84,7 +85,7 @@ public class Zoo {
 		this.tigers = tigers;
 	}
 
-	@OneToMany( fetch = FetchType.EAGER ) // eager so that load-by-id queries include this association
+	@OneToMany
 	@JoinColumn
 	@org.hibernate.annotations.OrderBy( clause = "weight" )
 	public Set<Lion> getLions() {
@@ -93,5 +94,16 @@ public class Zoo {
 
 	public void setLions(Set<Lion> lions) {
 		this.lions = lions;
+	}
+
+	@OneToMany
+	@JoinColumn
+	@javax.persistence.OrderBy( "id asc" ) // HHH-7630 ensure explicitly naming the superclass id works
+	public Set<Animal> getAnimalsById() {
+		return animals;
+	}
+
+	public void setAnimalsById(Set<Animal> animals) {
+		this.animals = animals;
 	}
 }

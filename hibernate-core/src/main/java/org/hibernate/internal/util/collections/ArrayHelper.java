@@ -39,16 +39,14 @@ import org.hibernate.type.Type;
 
 public final class ArrayHelper {
 	
-	/*public static boolean contains(Object[] array, Object object) {
-		for ( int i=0; i<array.length; i++ ) {
-			if ( array[i].equals(object) ) return true;
-		}
-		return false;
-	}*/
+	public static boolean contains(Object[] array, Object object) {
+		return indexOf( array, object ) > -1;
+	}
 	
 	public static int indexOf(Object[] array, Object object) {
-		for ( int i=0; i<array.length; i++ ) {
-			if ( array[i].equals(object) ) return i;
+		for ( int i = 0; i < array.length; i++ ) {
+			if ( array[i].equals( object ) )
+				return i;
 		}
 		return -1;
 	}

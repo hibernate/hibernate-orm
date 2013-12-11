@@ -599,7 +599,7 @@ public final class StringHelper {
 	public static String toLowerCase(String str) {
 		// Important to use Locale.ENGLISH.  See HHH-8579.  #toLowerCase() uses the default Locale.  Certain DBs do not
 		// like non-ascii characters in aliases, etc., so ensure consistency/portability here.
-		return str==null ? null : str.toLowerCase(Locale.ENGLISH);
+		return str == null ? null : str.toLowerCase(Locale.ENGLISH);
 	}
 
 	public static String moveAndToBeginning(String filter) {

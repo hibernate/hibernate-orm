@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
 import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
@@ -177,7 +178,6 @@ import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -2753,11 +2753,11 @@ public final class AnnotationBinder {
 		if ( joinColumn != null && joinColumn.foreignKey() != null ) {
 			fkName = joinColumn.foreignKey().name();
 		}
-		if ( BinderHelper.isEmptyAnnotationValue( fkName ) ) {
+		if ( StringHelper.isEmpty( fkName ) ) {
 			ForeignKey fk = property.getAnnotation( ForeignKey.class );
 			fkName = fk != null ? fk.name() : "";
 		}
-		if ( !BinderHelper.isEmptyAnnotationValue( fkName ) ) {
+		if ( !StringHelper.isEmpty( fkName ) ) {
 			value.setForeignKeyName( fkName );
 		}
 

@@ -32,6 +32,7 @@ import java.util.Map;
 import org.jboss.logging.Logger;
 
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.ForeignKey;
 
 /**
@@ -88,11 +89,11 @@ public class TableMetadata {
 	}
 
 	public ColumnMetadata getColumnMetadata(String columnName) {
-		return (ColumnMetadata) columns.get( columnName.toLowerCase() );
+		return (ColumnMetadata) columns.get( StringHelper.toLowerCase(columnName) );
 	}
 
 	public ForeignKeyMetadata getForeignKeyMetadata(String keyName) {
-		return (ForeignKeyMetadata) foreignKeys.get( keyName.toLowerCase() );
+		return (ForeignKeyMetadata) foreignKeys.get( StringHelper.toLowerCase(keyName) );
 	}
 
 	public ForeignKeyMetadata getForeignKeyMetadata(ForeignKey fk) {
@@ -107,7 +108,7 @@ public class TableMetadata {
 	}
 
 	public IndexMetadata getIndexMetadata(String indexName) {
-		return (IndexMetadata) indexes.get( indexName.toLowerCase() );
+		return (IndexMetadata) indexes.get( StringHelper.toLowerCase(indexName) );
 	}
 
 	private void addForeignKey(ResultSet rs) throws SQLException {
@@ -120,7 +121,7 @@ public class TableMetadata {
 		ForeignKeyMetadata info = getForeignKeyMetadata(fk);
 		if (info == null) {
 			info = new ForeignKeyMetadata(rs);
-			foreignKeys.put( info.getName().toLowerCase(), info );
+			foreignKeys.put( StringHelper.toLowerCase(info.getName()), info );
 		}
 
 		info.addReference( rs );
@@ -136,7 +137,7 @@ public class TableMetadata {
 		IndexMetadata info = getIndexMetadata(index);
 		if (info == null) {
 			info = new IndexMetadata(rs);
-			indexes.put( info.getName().toLowerCase(), info );
+			indexes.put( StringHelper.toLowerCase(info.getName()), info );
 		}
 
 		info.addColumn( getColumnMetadata( rs.getString("COLUMN_NAME") ) );
@@ -151,7 +152,7 @@ public class TableMetadata {
 
 		if ( getColumnMetadata(column) == null ) {
 			ColumnMetadata info = new ColumnMetadata(rs);
-			columns.put( info.getName().toLowerCase(), info );
+			columns.put( StringHelper.toLowerCase(info.getName()), info );
 		}
 	}
 

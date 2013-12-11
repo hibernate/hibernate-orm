@@ -175,7 +175,7 @@ public class DatabaseMetadata {
 					rs = statement.executeQuery(sql);
 
 					while ( rs.next() ) {
-						sequences.add( rs.getString(1).toLowerCase().trim() );
+						sequences.add( StringHelper.toLowerCase(rs.getString(1)).trim() );
 					}
 				}
 				finally {
@@ -190,7 +190,7 @@ public class DatabaseMetadata {
 	public boolean isSequence(Object key) {
 		if (key instanceof String){
 			String[] strings = StringHelper.split(".", (String) key);
-			return sequences.contains( strings[strings.length-1].toLowerCase());
+			return sequences.contains( StringHelper.toLowerCase(strings[strings.length-1]));
 		}
 		return false;
 	}

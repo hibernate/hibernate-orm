@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.Proxy;
+import javassist.util.proxy.ProxyObject;
 import javassist.util.proxy.ProxyFactory;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -140,7 +140,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			factory.setFilter( FINALIZE_FILTER );
 			Class cl = factory.createClass();
 			final HibernateProxy proxy = ( HibernateProxy ) cl.newInstance();
-			( (Proxy) proxy ).setHandler( instance );
+			( (ProxyObject) proxy ).setHandler( instance );
 			return proxy;
 		}
 		catch ( Throwable t ) {

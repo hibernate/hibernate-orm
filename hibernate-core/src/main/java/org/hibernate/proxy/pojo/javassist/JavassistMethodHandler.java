@@ -41,8 +41,8 @@ import java.lang.reflect.Method;
  *
  * @author Aleksander Dukhno
  */
-class JavassistMethodHandler
-		implements MethodHandler {
+class JavassistMethodHandler implements MethodHandler {
+
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( JavassistMethodHandler.class );
 	protected static final Object INVOKE_IMPLEMENTATION = new MarkerObject( "INVOKE_IMPLEMENTATION" );
 

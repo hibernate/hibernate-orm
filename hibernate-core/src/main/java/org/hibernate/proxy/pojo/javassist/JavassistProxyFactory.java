@@ -24,12 +24,11 @@
 package org.hibernate.proxy.pojo.javassist;
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Set;
 
 import javassist.util.proxy.MethodFilter;
 import javassist.util.proxy.MethodHandler;
-import javassist.util.proxy.Proxy;
+import javassist.util.proxy.ProxyObject;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.CoreLogging;
@@ -98,10 +97,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 					+ persistentClass.getName(), e
 			);
 		}
-		if( session == null) {
-			//TODO: retest this!!!
-			throw new RuntimeException( "Session is null" );
-		}
+
 		final BasicLazyInitializer initializer = new JavassistLazyInitializer(
 				entityName,
 				persistentClass,
@@ -113,7 +109,7 @@ public class JavassistProxyFactory implements ProxyFactory, Serializable {
 				overridesEquals
 		);
 		final MethodHandler methodHandler = new JavassistMethodHandler( true, initializer );
-		( (Proxy) proxy ).setHandler( methodHandler );
+		( (ProxyObject) proxy ).setHandler( methodHandler );
 		return proxy;
 	}
 

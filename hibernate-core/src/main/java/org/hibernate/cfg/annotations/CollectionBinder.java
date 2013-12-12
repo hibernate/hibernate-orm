@@ -829,7 +829,6 @@ public abstract class CollectionBinder {
 		String assocClass = oneToMany.getReferencedEntityName();
 		PersistentClass associatedClass = (PersistentClass) persistentClasses.get( assocClass );
 		if ( jpaOrderBy != null ) {
-			final String jpaOrderByFragment = jpaOrderBy.value();
 			final String orderByFragment = buildOrderByClauseFromHql(
 					jpaOrderBy.value(),
 					associatedClass,

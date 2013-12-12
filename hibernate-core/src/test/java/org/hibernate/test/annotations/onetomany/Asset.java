@@ -24,52 +24,55 @@
 package org.hibernate.test.annotations.onetomany;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
 
-/**
- *
- */
 @Entity
-public class Employee2 {
-	/** */
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "employee", orphanRemoval = true)
-	@OrderBy
-	private final List<Asset2> assets = new ArrayList<Asset2>();
-	/** */
+@Inheritance(strategy = InheritanceType.JOINED)
+public class Asset implements Serializable {
+
 	@Id
-	@Column(name = "id")
-	private Integer id;
+	@Column(name = "id_asset")
+	private final Integer idAsset;
 
-	public Employee2() {
+	@Id
+	@Column(name = "id_test")
+	private final Integer test;
 
+	@ManyToOne(cascade = { CascadeType.ALL })
+	@JoinColumn(nullable = false)
+	private Employee employee;
+
+	public Asset() {
+		this.idAsset = 0;
+		this.test = 1;
 	}
 
 	/**
-	 * @param id
+	 * @param idAsset
 	 */
-	public Employee2(Integer id) {
-		this.id = id;
+	public Asset(Integer idAsset) {
+		this.idAsset = idAsset;
+		this.test = 1;
 	}
 
 	/**
 	 * @return the id
 	 */
-	public Integer getId() {
-		return id;
+	public Integer getIdAsset() {
+		return idAsset;
 	}
 
 	/**
-	 * @param id the id to set
+	 * @return the employee
 	 */
-	public void setId(Integer id) {
-		this.id = id;
+	public Employee getEmployee() {
+		return employee;
 	}
 
 	/**
-	 * @return the assets
+	 * @param employee the employee to set
 	 */
-	public List<Asset2> getAssets() {
-		return assets;
+	public void setEmployee(Employee employee) {
+		this.employee = employee;
 	}
 }

@@ -23,45 +23,50 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.PrimaryKeyJoinColumns;
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- *
- */
 @Entity
-@PrimaryKeyJoinColumns({
-		@PrimaryKeyJoinColumn(name = "id_asset"),
-		@PrimaryKeyJoinColumn(name = "id_test")
-})
-public class Computer2
-		extends Asset2 {
-	/** */
-	private String computerName;
+public class Employee {
 
-	public Computer2() {
+	@OneToMany(cascade = CascadeType.ALL, mappedBy = "employee", orphanRemoval = true)
+	@OrderBy // order by PK
+	private final List<Asset> assets = new ArrayList<Asset>();
+
+	@Id
+	@Column(name = "id")
+	private Integer id;
+
+	public Employee() {
 
 	}
 
 	/**
 	 * @param id
 	 */
-	public Computer2(Integer id) {
-		super(id);
+	public Employee(Integer id) {
+		this.id = id;
 	}
 
 	/**
-	 * @return the computerName
+	 * @return the id
 	 */
-	public String getComputerName() {
-		return computerName;
+	public Integer getId() {
+		return id;
 	}
 
 	/**
-	 * @param computerName the computerName to set
+	 * @param id the id to set
 	 */
-	public void setComputerName(String computerName) {
-		this.computerName = computerName;
+	public void setId(Integer id) {
+		this.id = id;
+	}
+
+	/**
+	 * @return the assets
+	 */
+	public List<Asset> getAssets() {
+		return assets;
 	}
 }

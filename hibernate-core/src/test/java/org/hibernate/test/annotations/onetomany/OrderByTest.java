@@ -410,36 +410,36 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		assertEquals( "john", forum.getUsers().get( 0 ).getName() );
 	}
   
-  @Test
+	@Test
 	@TestForIssue(jiraKey = "HHH-8794")
-	public void testOrderByOnJoinedClassEmpty() {
+	public void testOrderByNoElement() {
 
 		final Session s = openSession();
 		s.getTransaction().begin();
 
-		Employee2 employee = new Employee2(1);
+		Employee employee = new Employee( 1 );
 
-		Computer2 computer = new Computer2(1);
-		computer.setComputerName("Bob's computer");
-		computer.setEmployee(employee);
+		Computer computer = new Computer( 1 );
+		computer.setComputerName( "Bob's computer" );
+		computer.setEmployee( employee );
 
-		Computer2 computer2 = new Computer2(2);
-		computer2.setComputerName("Alice's computer");
-		computer2.setEmployee(employee);
+		Computer computer2 = new Computer( 2 );
+		computer2.setComputerName( "Alice's computer" );
+		computer2.setEmployee( employee );
 
-		s.save(employee);
-		s.save(computer2);
-		s.save(computer);
+		s.save( employee );
+		s.save( computer2 );
+		s.save( computer );
 
 		s.flush();
 		s.clear();
 		sessionFactory().getCache().evictEntityRegions();
 
-		employee = (Employee2) s.get(Employee2.class, employee.getId());
+		employee = (Employee) s.get( Employee.class, employee.getId() );
 
-		assertEquals(2, employee.getAssets().size());
-		assertEquals(1, employee.getAssets().get(0).getIdAsset().intValue());
-		assertEquals(2, employee.getAssets().get(1).getIdAsset().intValue());
+		assertEquals( 2, employee.getAssets().size() );
+		assertEquals( 1, employee.getAssets().get( 0 ).getIdAsset().intValue() );
+		assertEquals( 2, employee.getAssets().get( 1 ).getIdAsset().intValue() );
 	}
 
 
@@ -450,7 +450,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 				Monkey.class, Visitor.class, Box.class, Item.class,
 				BankAccount.class, Transaction.class,
 				Comment.class, Forum.class, Post.class, User.class,
-				Asset2.class, Computer2.class, Employee2.class
+				Asset.class, Computer.class, Employee.class
 		};
 	}
 }

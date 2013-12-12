@@ -23,58 +23,38 @@
  */
 package org.hibernate.test.annotations.onetomany;
 
-import javax.persistence.*;
-import java.io.Serializable;
+import javax.persistence.Entity;
+import javax.persistence.PrimaryKeyJoinColumn;
+import javax.persistence.PrimaryKeyJoinColumns;
 
-/**
- *
- */
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public class Asset2 implements Serializable {
-	/** */
-	@Id
-	@Column(name = "id_asset")
-	private final Integer idAsset;
-	@Id
-	@Column(name = "id_test")
-	private final Integer test;
-	/** */
-	@ManyToOne(cascade = {CascadeType.ALL})
-	@JoinColumn(nullable = false)
-	private Employee2 employee;
+@PrimaryKeyJoinColumns({ @PrimaryKeyJoinColumn(name = "id_asset"), @PrimaryKeyJoinColumn(name = "id_test") })
+public class Computer extends Asset {
 
-	public Asset2() {
-		this.idAsset = 0;
-		this.test = 1;
+	private String computerName;
+
+	public Computer() {
+
 	}
 
 	/**
-	 * @param idAsset
+	 * @param id
 	 */
-	public Asset2(Integer idAsset) {
-		this.idAsset = idAsset;
-		this.test = 1;
+	public Computer(Integer id) {
+		super( id );
 	}
 
 	/**
-	 * @return the id
+	 * @return the computerName
 	 */
-	public Integer getIdAsset() {
-		return idAsset;
+	public String getComputerName() {
+		return computerName;
 	}
 
 	/**
-	 * @return the employee
+	 * @param computerName the computerName to set
 	 */
-	public Employee2 getEmployee() {
-		return employee;
-	}
-
-	/**
-	 * @param employee the employee to set
-	 */
-	public void setEmployee(Employee2 employee) {
-		this.employee = employee;
+	public void setComputerName(String computerName) {
+		this.computerName = computerName;
 	}
 }

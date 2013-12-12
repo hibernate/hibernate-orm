@@ -3,4 +3,4 @@
 </property>
 <version name="version" type="integer" insert="false">
     <column name="version" default="0"/>
-</property>
+</version>

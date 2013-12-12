@@ -23,6 +23,10 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
+import org.hibernate.engine.spi.RowSelection;
+
 
 /**
  * Microsoft SQL Server 2012 Dialect
@@ -64,5 +68,10 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select name from sys.sequences";
+	}
+
+	@Override
+	public LimitHandler buildLimitHandler(String sql, RowSelection selection) {
+		return new SQLServer2012LimitHandler( sql, selection );
 	}
 }

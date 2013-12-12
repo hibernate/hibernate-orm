@@ -830,15 +830,13 @@ public abstract class CollectionBinder {
 		PersistentClass associatedClass = (PersistentClass) persistentClasses.get( assocClass );
 		if ( jpaOrderBy != null ) {
 			final String jpaOrderByFragment = jpaOrderBy.value();
-			if ( StringHelper.isNotEmpty( jpaOrderByFragment ) ) {
-				final String orderByFragment = buildOrderByClauseFromHql(
-						jpaOrderBy.value(),
-						associatedClass,
-						collection.getRole()
-				);
-				if ( StringHelper.isNotEmpty( orderByFragment ) ) {
-					collection.setOrderBy( orderByFragment );
-				}
+			final String orderByFragment = buildOrderByClauseFromHql(
+					jpaOrderBy.value(),
+					associatedClass,
+					collection.getRole()
+			);
+			if ( StringHelper.isNotEmpty( orderByFragment ) ) {
+				collection.setOrderBy( orderByFragment );
 			}
 		}
 

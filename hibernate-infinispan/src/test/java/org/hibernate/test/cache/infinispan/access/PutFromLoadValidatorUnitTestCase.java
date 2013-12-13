@@ -441,59 +441,6 @@ public class PutFromLoadValidatorUnitTestCase {
       });
    }
 
-   /**
-    * White box test for ensuring key removals get cleaned up. <b>Note</b>: Since this test is test sensitive, if you
-    * add trace logging, it might fail
-    *
-    * @throws Exception
-    */
-   @Test
-   public void testRemovalCleanup() throws Exception {
-      withCacheManager(new CacheManagerCallable(
-            TestCacheManagerFactory.createCacheManager(false)) {
-         @Override
-         public void call() {
-            // For the test to work, it needs to expect the two invalidation
-            // messages happen close enough in time. That "close enough" is 
-            // defined by the naked put invalidation tieout. If too small it
-            // could happen that timing issues execute the second invalidate
-            // key call after the named put invalidation timeout, leading to
-            // the removal queue having one element less than expected.
-            TestValidator testee = new TestValidator(cm, null, 3000);
-            testee.invalidateKey("KEY1");
-            testee.invalidateKey("KEY2");
-            expectRemovalLenth(2, testee, 60000l);
-            assertEquals(2, testee.getRemovalQueueLength());
-            expectRemovalLenth(2, testee, 60000l);
-            assertEquals(2, testee.getRemovalQueueLength());
-            expectRemovalLenth(2, testee, 60000l);
-         }
-      });
-   }
-
-   private void expectRemovalLenth(int expectedLength, TestValidator testee, long timeout) {
-      long timeoutMilestone = System.currentTimeMillis() + timeout;
-      while ( true ) {
-         int queueLength = testee.getRemovalQueueLength();
-         if ( queueLength == expectedLength ) {
-            //finally it happened
-            return;
-         }
-         else {
-            if ( System.currentTimeMillis() > timeoutMilestone ) {
-               fail( "condition not reached after " + timeout +
-                     " milliseconds, giving up. Expected queue length " + expectedLength +
-                     " but was was: " + queueLength + " !" );
-            }
-            try {
-               Thread.sleep(20);
-            } catch (InterruptedException e) {
-               throw new RuntimeException(e);
-            }
-         }
-      }
-   }
-
    @Test
    public void testInvalidateKeyBlocksForInProgressPut() throws Exception {
       invalidationBlocksForInProgressPutTest(true);

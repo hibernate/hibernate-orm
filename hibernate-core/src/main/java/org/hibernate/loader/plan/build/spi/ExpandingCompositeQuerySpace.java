@@ -26,6 +26,11 @@ package org.hibernate.loader.plan.build.spi;
 import org.hibernate.loader.plan.spi.CompositeQuerySpace;
 
 /**
+ * Describes a composite query space that allows adding joins with other
+ * query spaces; used while building a {@link CompositeQuerySpace}.
+ *
+ * @see org.hibernate.loader.plan.spi.Join
+
  * @author Gail Badner
  */
 public interface ExpandingCompositeQuerySpace extends CompositeQuerySpace, ExpandingQuerySpace {

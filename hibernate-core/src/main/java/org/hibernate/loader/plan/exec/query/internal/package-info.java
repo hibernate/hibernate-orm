@@ -21,23 +21,8 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.loader.plan.exec.query.spi;
 
 /**
- * The context for named parameters.
- * <p/>
- * NOTE : the hope with the SQL-redesign stuff is that this whole concept goes away, the idea being that
- * the parameters are encoded into the query tree and "bind themselves"; see {@link org.hibernate.param.ParameterSpecification}.
- *
- * @author Steve Ebersole
+ * Provides the internal implementation for generating the load query for the LoadPlan.
  */
-public interface NamedParameterContext {
-	/**
-	 * Returns the locations of all occurrences of the named parameter.
-	 *
-	 * @param name The named parameter.
-	 *
-	 * @return the array of locations.
-	 */
-	public int[] getNamedParameterLocations(String name);
-}
+package org.hibernate.loader.plan.exec.query.internal;

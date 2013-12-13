@@ -27,7 +27,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.sql.SelectFragment;
 
 /**
  * Largely a copy of the {@link org.hibernate.sql.Select} class, but changed up slightly to better meet needs
@@ -52,6 +51,11 @@ public class SelectStatementBuilder {
 
 	private int guesstimatedBufferSize = 20;
 
+	/**
+	 * Constructs a select statement builder object.
+	 *
+	 * @param dialect The dialect.
+	 */
 	public SelectStatementBuilder(Dialect dialect) {
 		this.dialect = dialect;
 	}
@@ -70,10 +74,11 @@ public class SelectStatementBuilder {
 		this.guesstimatedBufferSize += selection.length();
 	}
 
-	public void appendSelectClauseFragment(SelectFragment selectFragment) {
-		appendSelectClauseFragment( selectFragment.toFragmentString().substring( 2 ) );
-	}
-
+	/**
+	 * Appends the from clause fragment.
+	 *
+	 * @param fragment The from cause fragment.
+	 */
 	public void appendFromClauseFragment(String fragment) {
 		if ( this.fromClause.length() > 0 ) {
 			this.fromClause.append( ", " );
@@ -83,10 +88,24 @@ public class SelectStatementBuilder {
 		this.guesstimatedBufferSize += fragment.length();
 	}
 
+	/**
+	 * Appends the specified table name and alias as a from clause fragment.
+	 *
+	 * @param tableName The table name.
+	 * @param alias The table alias.
+	 */
 	public void appendFromClauseFragment(String tableName, String alias) {
 		appendFromClauseFragment( tableName + ' ' + alias );
 	}
 
+	/**
+	 * Appends the specified restrictions after "cleaning" the specified value
+	 * (by trimming and removing 'and ' from beginning and ' and' from the end).
+	 * If the where clause already exists, this method ensure that ' and '
+	 * prefixes the cleaned restrictions.
+	 *
+	 * @param restrictions The restrictions.
+	 */
 	public void appendRestrictions(String restrictions) {
 		final String cleaned = cleanRestrictions( restrictions );
 		if ( StringHelper.isEmpty( cleaned ) ) {
@@ -116,34 +135,12 @@ public class SelectStatementBuilder {
 		return restrictions;
 	}
 
-//	public void appendOuterJoins(String outerJoinsAfterFrom, String outerJoinsAfterWhere) {
-//		appendOuterJoinsAfterFrom( outerJoinsAfterFrom );
-//		appendOuterJoinsAfterWhere( outerJoinsAfterWhere );
-//	}
-//
-//	private void appendOuterJoinsAfterFrom(String outerJoinsAfterFrom) {
-//		if ( this.outerJoinsAfterFrom == null ) {
-//			this.outerJoinsAfterFrom = new StringBuilder( outerJoinsAfterFrom );
-//		}
-//		else {
-//			this.outerJoinsAfterFrom.append( ' ' ).append( outerJoinsAfterFrom );
-//		}
-//	}
-//
-//	private void appendOuterJoinsAfterWhere(String outerJoinsAfterWhere) {
-//		final String cleaned = cleanRestrictions( outerJoinsAfterWhere );
-//
-//		if ( this.outerJoinsAfterWhere == null ) {
-//			this.outerJoinsAfterWhere = new StringBuilder( cleaned );
-//		}
-//		else {
-//			this.outerJoinsAfterWhere.append( " and " ).append( cleaned );
-//			this.guesstimatedBufferSize += 5;
-//		}
-//
-//		this.guesstimatedBufferSize += cleaned.length();
-//	}
-
+	/**
+	 * Sets the outer join fragments to be added to the "from" and "where" clauses.
+	 *
+	 * @param outerJoinsAfterFrom The outer join fragment to be appended to the "from" clause.
+	 * @param outerJoinsAfterWhere The outer join fragment to be appended to the "where" clause.
+	 */
 	public void setOuterJoins(String outerJoinsAfterFrom, String outerJoinsAfterWhere) {
 		this.outerJoinsAfterFrom = outerJoinsAfterFrom;
 
@@ -153,6 +150,12 @@ public class SelectStatementBuilder {
 		this.guesstimatedBufferSize += outerJoinsAfterFrom.length() + cleanRestrictions.length();
 	}
 
+	/**
+	 * Appends the "order by" fragment, prefixed by a comma if the "order by" fragment already
+	 * exists.
+	 *
+	 * @param ordering The "order by" fragment to append.
+	 */
 	public void appendOrderByFragment(String ordering) {
 		if ( this.orderByClause == null ) {
 			this.orderByClause = new StringBuilder();
@@ -164,21 +167,38 @@ public class SelectStatementBuilder {
 		this.orderByClause.append( ordering );
 	}
 
+	/**
+	 * Sets the comment for the select statement.
+	 *
+	 * @param comment The comment.
+	 */
 	public void setComment(String comment) {
 		this.comment = comment;
 		this.guesstimatedBufferSize += comment.length();
 	}
 
+	/**
+	 * Sets the lock mode for the select statement.
+	 *
+	 * @param lockMode The lock mode.
+	 */
 	public void setLockMode(LockMode lockMode) {
 		this.lockOptions.setLockMode( lockMode );
 	}
 
+	/**
+	 * Sets the lock options for the select statement.
+	 *
+	 * @param lockOptions The lock options.
+	 */
 	public void setLockOptions(LockOptions lockOptions) {
 		LockOptions.copy( lockOptions, this.lockOptions );
 	}
 
 	/**
-	 * Construct an SQL <tt>SELECT</tt> statement from the given clauses
+	 * Construct an SQL <tt>SELECT</tt> statement from the given clauses.
+	 *
+	 * @return the SQL <tt>SELECT</tt> statement.
 	 */
 	public String toStatementString() {
 		final StringBuilder buf = new StringBuilder( guesstimatedBufferSize );

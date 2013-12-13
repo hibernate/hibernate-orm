@@ -37,7 +37,8 @@ import org.hibernate.loader.plan.spi.Return;
 import org.jboss.logging.Logger;
 
 /**
- * Prints a {@link org.hibernate.loader.plan.spi.QuerySpaces} graph as a tree structure.
+ * Prints a {@link org.hibernate.loader.plan.spi.LoadPlan} graph and its
+ * {@link org.hibernate.loader.plan.spi.QuerySpaces} graph as tree structures.
  * <p/>
  * Intended for use in debugging, logging, etc.
  * <p/>
@@ -53,8 +54,22 @@ public class LoadPlanTreePrinter {
 	 */
 	public static final LoadPlanTreePrinter INSTANCE = new LoadPlanTreePrinter();
 
-	private String toString(LoadPlan loadPlan) {
-		return toString( loadPlan, null );
+	private LoadPlanTreePrinter() {
+	}
+
+	/**
+	 * Logs the specified {@link org.hibernate.loader.plan.spi.LoadPlan} graph and its
+	 * {@link org.hibernate.loader.plan.spi.QuerySpaces} graph as tree structures.
+	 *
+	 * @param loadPlan The load plan.
+	 * @param aliasResolutionContext The context for resolving table and column aliases/
+	 */
+	public void logTree(LoadPlan loadPlan, AliasResolutionContext aliasResolutionContext) {
+		if ( ! log.isDebugEnabled() ) {
+			return;
+		}
+
+		log.debug( toString( loadPlan, aliasResolutionContext ) );
 	}
 
 	private String toString(LoadPlan loadPlan, AliasResolutionContext aliasResolutionContext) {
@@ -68,22 +83,6 @@ public class LoadPlanTreePrinter {
 		printStream.flush();
 
 		return new String( byteArrayOutputStream.toByteArray() );
-	}
-
-	public void logTree(LoadPlan loadPlan, AliasResolutionContext aliasResolutionContext) {
-		if ( ! log.isDebugEnabled() ) {
-			return;
-		}
-
-		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		final PrintStream printStream = new PrintStream( byteArrayOutputStream );
-		final PrintWriter printWriter = new PrintWriter( printStream );
-
-		logTree( loadPlan, aliasResolutionContext, printWriter );
-
-		printWriter.flush();
-		printStream.flush();
-		log.debug( new String( byteArrayOutputStream.toByteArray() ) );
 	}
 
 	private void logTree(

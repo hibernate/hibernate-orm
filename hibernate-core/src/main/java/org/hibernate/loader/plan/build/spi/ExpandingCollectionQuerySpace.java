@@ -26,6 +26,11 @@ package org.hibernate.loader.plan.build.spi;
 import org.hibernate.loader.plan.spi.CollectionQuerySpace;
 
 /**
+ * Describes a collection query space that allows adding joins with other
+ * query spaces; used while building a {@link CollectionQuerySpace}.
+ *
+ * @see org.hibernate.loader.plan.spi.Join
+ *
  * @author Gail Badner
  */
 public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace, ExpandingQuerySpace {

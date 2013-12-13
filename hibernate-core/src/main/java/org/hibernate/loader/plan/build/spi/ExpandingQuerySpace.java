@@ -27,12 +27,22 @@ import org.hibernate.loader.plan.spi.Join;
 import org.hibernate.loader.plan.spi.QuerySpace;
 
 /**
+ * Describes a query space that allows adding joins with other
+ * query spaces; used while building a {@link QuerySpace}.
+ *
+ * @see org.hibernate.loader.plan.spi.Join
+ *
  * @author Steve Ebersole
  */
 public interface ExpandingQuerySpace extends QuerySpace {
 
 	public boolean canJoinsBeRequired();
 
+	/**
+	 * Adds a join with another query space.
+	 *
+	 * @param join The join to add.
+	 */
 	public void addJoin(Join join);
 
 	public ExpandingQuerySpaces getExpandingQuerySpaces();

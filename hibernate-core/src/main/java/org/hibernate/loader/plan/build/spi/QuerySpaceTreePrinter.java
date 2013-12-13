@@ -53,10 +53,39 @@ public class QuerySpaceTreePrinter {
 	 */
 	public static final QuerySpaceTreePrinter INSTANCE = new QuerySpaceTreePrinter();
 
+	private QuerySpaceTreePrinter() {
+	}
+
+	/**
+	 * Returns a String containing the {@link QuerySpaces} graph as a tree structure.
+	 *
+	 * @param spaces The {@link QuerySpaces} object.
+	 * @param aliasResolutionContext The context for resolving table and column aliases
+	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
+	 *        table and column aliases are not included in returned value..
+	 * @return the String containing the {@link QuerySpaces} graph as a tree structure.
+	 */
 	public String asString(QuerySpaces spaces, AliasResolutionContext aliasResolutionContext) {
 		return asString( spaces, 0, aliasResolutionContext );
 	}
 
+	/**
+	 * Returns a String containing the {@link QuerySpaces} graph as a tree structure, starting
+	 * at a particular depth.
+	 *
+	 * The value for depth indicates the number of indentations that will
+	 * prefix all lines in the returned String. Root query spaces will be written with depth + 1
+	 * and the depth will be further incremented as joined query spaces are traversed.
+	 *
+	 * An indentation is defined as the number of characters defined by {@link TreePrinterHelper#INDENTATION}.
+	 *
+	 * @param spaces The {@link QuerySpaces} object.
+	 * @param depth The intial number of indentations
+	 * @param aliasResolutionContext The context for resolving table and column aliases
+	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
+	 *        table and column aliases are not included in returned value..
+	 * @return the String containing the {@link QuerySpaces} graph as a tree structure.
+	 */
 	public String asString(QuerySpaces spaces, int depth, AliasResolutionContext aliasResolutionContext) {
 		final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		final PrintStream printStream = new PrintStream( byteArrayOutputStream );
@@ -65,6 +94,23 @@ public class QuerySpaceTreePrinter {
 		return new String( byteArrayOutputStream.toByteArray() );
 	}
 
+	/**
+	 * Returns a String containing the {@link QuerySpaces} graph as a tree structure, starting
+	 * at a particular depth.
+	 *
+	 * The value for depth indicates the number of indentations that will
+	 * prefix all lines in the returned String. Root query spaces will be written with depth + 1
+	 * and the depth will be further incremented as joined query spaces are traversed.
+	 *
+	 * An indentation is defined as the number of characters defined by {@link TreePrinterHelper#INDENTATION}.
+	 *
+	 * @param spaces The {@link QuerySpaces} object.
+	 * @param depth The intial number of indentations
+	 * @param aliasResolutionContext The context for resolving table and column aliases
+	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
+	 *        table and column aliases are not included in returned value.
+	 * @param printStream The print stream for writing.
+	 */
 	public void write(
 			QuerySpaces spaces,
 			int depth,
@@ -73,6 +119,23 @@ public class QuerySpaceTreePrinter {
 		write( spaces, depth, aliasResolutionContext, new PrintWriter( printStream ) );
 	}
 
+	/**
+	 * Returns a String containing the {@link QuerySpaces} graph as a tree structure, starting
+	 * at a particular depth.
+	 *
+	 * The value for depth indicates the number of indentations that will
+	 * prefix all lines in the returned String. Root query spaces will be written with depth + 1
+	 * and the depth will be further incremented as joined query spaces are traversed.
+	 *
+	 * An indentation is defined as the number of characters defined by {@link TreePrinterHelper#INDENTATION}.
+	 *
+	 * @param spaces The {@link QuerySpaces} object.
+	 * @param depth The intial number of indentations
+	 * @param aliasResolutionContext The context for resolving table and column aliases
+	 *        for the {@link QuerySpace} references in <code>spaces</code>; if null,
+	 *        table and column aliases are not included in returned value.
+	 * @param printWriter The print writer for writing.
+	 */
 	public void write(
 			QuerySpaces spaces,
 			int depth,
@@ -182,6 +245,17 @@ public class QuerySpaceTreePrinter {
 		}
 	}
 
+	/**
+	 * Returns a String containing high-level details about the {@link QuerySpace}, such as:
+	 * <ul>
+	 *     <li>query space class name</li>
+	 *     <li>unique ID</li>
+	 *     <li>entity name (for {@link EntityQuerySpace}</li>
+	 *     <li>collection role (for {@link CollectionQuerySpace}</li>	 *
+	 * </ul>
+	 * @param space The query space
+	 * @return a String containing details about the {@link QuerySpace}
+	 */
 	public String extractDetails(QuerySpace space) {
 		if ( EntityQuerySpace.class.isInstance( space ) ) {
 			final EntityQuerySpace entityQuerySpace = (EntityQuerySpace) space;

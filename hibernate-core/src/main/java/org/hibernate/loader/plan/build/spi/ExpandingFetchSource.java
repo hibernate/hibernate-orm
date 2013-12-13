@@ -44,29 +44,63 @@ public interface ExpandingFetchSource extends FetchSource {
 	/**
 	 * Is the asserted plan valid from this owner to a fetch?
 	 *
-	 * @param fetchStrategy The type of fetch to validate
-	 * @param attributeDefinition The attribute to be fetched
+	 * @param fetchStrategy The type of fetch to validate.
+	 * @param attributeDefinition The attribute to be fetched.
 	 */
 	public void validateFetchPlan(FetchStrategy fetchStrategy, AttributeDefinition attributeDefinition);
 
+	/**
+	 * Builds a fetch for an entity attribute.
+	 *
+	 * @param attributeDefinition The entity attribute.
+	 * @param fetchStrategy The fetch strategy for the attribute.
+	 * @return The entity fetch.
+	 */
 	public EntityFetch buildEntityAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy);
 
+	/**
+	 * Builds a bidirectional entity reference for an entity attribute.
+	 *
+	 * @param attributeDefinition The attribute definition.
+	 * @param fetchStrategy The fetch strategy for the attribute.
+	 * @param targetEntityReference The associated (target) entity reference.
+	 * @return The bidirectional entity reference.
+	 */
 	public BidirectionalEntityReference buildBidirectionalEntityReference(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy,
 			EntityReference targetEntityReference);
 
+	/**
+	 * Builds a fetch for a composite attribute.
+	 *
+	 * @param attributeDefinition The attribute definition.
+	 * @return The composite attribute fetch.
+	 */
 	public CompositeAttributeFetch buildCompositeAttributeFetch(
 			AttributeDefinition attributeDefinition);
 
+	/**
+	 * Builds a fetch for a collection attribute.
+	 *
+	 * @param attributeDefinition The attribute definition.
+	 * @param fetchStrategy The fetch strategy for the attribute.
+	 * @return The collection attribute fetch.
+	 */
 	public CollectionAttributeFetch buildCollectionAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy);
 
+	/**
+	 * Builds a fetch for an "any" attribute.
+	 *
+	 * @param attributeDefinition The attribute definition.
+	 * @param fetchStrategy The fetch strategy for the attibute.
+	 * @return The "any" attribute fetch.
+	 */
 	public AnyAttributeFetch buildAnyAttributeFetch(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy);
-
 }

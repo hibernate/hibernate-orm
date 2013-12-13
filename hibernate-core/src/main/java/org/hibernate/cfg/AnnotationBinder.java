@@ -40,6 +40,7 @@ import javax.persistence.Basic;
 import javax.persistence.Cacheable;
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorType;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
@@ -97,6 +98,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.DiscriminatorOptions;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchProfile;
@@ -635,11 +637,26 @@ public final class AnnotationBinder {
 		Ejb3JoinColumn[] inheritanceJoinedColumns = makeInheritanceJoinColumns(
 				clazzToProcess, mappings, inheritanceState, superEntity
 		);
-		Ejb3DiscriminatorColumn discriminatorColumn = null;
+
+		final Ejb3DiscriminatorColumn discriminatorColumn;
 		if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-			discriminatorColumn = processDiscriminatorProperties(
-					clazzToProcess, mappings, inheritanceState, entityBinder
+			discriminatorColumn = processSingleTableDiscriminatorProperties(
+					clazzToProcess,
+					mappings,
+					inheritanceState,
+					entityBinder
 			);
+		}
+		else if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) ) {
+			discriminatorColumn = processJoinedDiscriminatorProperties(
+					clazzToProcess,
+					mappings,
+					inheritanceState,
+					entityBinder
+			);
+		}
+		else {
+			discriminatorColumn = null;
 		}
 
 		entityBinder.setProxy( clazzToProcess.getAnnotation( Proxy.class ) );
@@ -685,46 +702,71 @@ public final class AnnotationBinder {
 
 		OnDelete onDeleteAnn = clazzToProcess.getAnnotation( OnDelete.class );
 		boolean onDeleteAppropriate = false;
-		if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) && inheritanceState.hasParents() ) {
-			onDeleteAppropriate = true;
-			final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
-			SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
-			jsc.setKey( key );
-			ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
-			if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
-				key.setForeignKeyName( fk.name() );
-			}
-			if ( onDeleteAnn != null ) {
-				key.setCascadeDeleteEnabled( OnDeleteAction.CASCADE.equals( onDeleteAnn.action() ) );
-			}
-			else {
-				key.setCascadeDeleteEnabled( false );
-			}
-			//we are never in a second pass at that stage, so queue it
-			SecondPass sp = new JoinedSubclassFkSecondPass( jsc, inheritanceJoinedColumns, key, mappings );
-			mappings.addSecondPass( sp );
-			mappings.addSecondPass( new CreateKeySecondPass( jsc ) );
 
+		// todo : sucks that this is separate from RootClass distinction
+		final boolean isInheritanceRoot = !inheritanceState.hasParents();
+		final boolean hasSubclasses = inheritanceState.hasSiblings();
+
+		if ( InheritanceType.JOINED.equals( inheritanceState.getType() ) ) {
+			if ( inheritanceState.hasParents() ) {
+				onDeleteAppropriate = true;
+				final JoinedSubclass jsc = ( JoinedSubclass ) persistentClass;
+				SimpleValue key = new DependantValue( mappings, jsc.getTable(), jsc.getIdentifier() );
+				jsc.setKey( key );
+				ForeignKey fk = clazzToProcess.getAnnotation( ForeignKey.class );
+				if ( fk != null && !BinderHelper.isEmptyAnnotationValue( fk.name() ) ) {
+					key.setForeignKeyName( fk.name() );
+				}
+				if ( onDeleteAnn != null ) {
+					key.setCascadeDeleteEnabled( OnDeleteAction.CASCADE.equals( onDeleteAnn.action() ) );
+				}
+				else {
+					key.setCascadeDeleteEnabled( false );
+				}
+				//we are never in a second pass at that stage, so queue it
+				SecondPass sp = new JoinedSubclassFkSecondPass( jsc, inheritanceJoinedColumns, key, mappings );
+				mappings.addSecondPass( sp );
+				mappings.addSecondPass( new CreateKeySecondPass( jsc ) );
+			}
+
+			if ( isInheritanceRoot ) {
+				// the class we are processing is the root of the hierarchy, see if we had a discriminator column
+				// (it is perfectly valid for joined subclasses to not have discriminators).
+				if ( discriminatorColumn != null ) {
+					// we have a discriminator column
+					if ( hasSubclasses || !discriminatorColumn.isImplicit() ) {
+						bindDiscriminatorColumnToRootPersistentClass(
+								(RootClass) persistentClass,
+								discriminatorColumn,
+								entityBinder.getSecondaryTables(),
+								propertyHolder,
+								mappings
+						);
+						//bind it again since the type might have changed
+						entityBinder.bindDiscriminatorValue();
+					}
+				}
+			}
 		}
 		else if ( InheritanceType.SINGLE_TABLE.equals( inheritanceState.getType() ) ) {
-			if ( ! inheritanceState.hasParents() ) {
-				if ( inheritanceState.hasSiblings() || !discriminatorColumn.isImplicit() ) {
-					//need a discriminator column
-					bindDiscriminatorToPersistentClass(
-							( RootClass ) persistentClass,
+			if ( isInheritanceRoot ) {
+				if ( hasSubclasses || !discriminatorColumn.isImplicit() ) {
+					bindDiscriminatorColumnToRootPersistentClass(
+							(RootClass) persistentClass,
 							discriminatorColumn,
 							entityBinder.getSecondaryTables(),
 							propertyHolder,
 							mappings
 					);
-					entityBinder.bindDiscriminatorValue();//bind it again since the type might have changed
+					//bind it again since the type might have changed
+					entityBinder.bindDiscriminatorValue();
 				}
 			}
 		}
-		else if ( InheritanceType.TABLE_PER_CLASS.equals( inheritanceState.getType() ) ) {
-			//nothing to do
+
+        if ( onDeleteAnn != null && !onDeleteAppropriate ) {
+			LOG.invalidOnDeleteAnnotation(propertyHolder.getEntityName());
 		}
-        if (onDeleteAnn != null && !onDeleteAppropriate) LOG.invalidOnDeleteAnnotation(propertyHolder.getEntityName());
 
 		// try to find class level generators
 		HashMap<String, IdGenerator> classGenerators = buildLocalGenerators( clazzToProcess, mappings );
@@ -782,32 +824,43 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( tabAnn );
 	}
 
-	// parse everything discriminator column relevant in case of single table inheritance
-	private static Ejb3DiscriminatorColumn processDiscriminatorProperties(XClass clazzToProcess, Mappings mappings, InheritanceState inheritanceState, EntityBinder entityBinder) {
+	/**
+	 * Process all discriminator-related metadata per rules for "single table" inheritance
+	 */
+	private static Ejb3DiscriminatorColumn processSingleTableDiscriminatorProperties(
+			XClass clazzToProcess,
+			Mappings mappings,
+			InheritanceState inheritanceState,
+			EntityBinder entityBinder) {
+		final boolean isRoot = !inheritanceState.hasParents();
+
 		Ejb3DiscriminatorColumn discriminatorColumn = null;
 		javax.persistence.DiscriminatorColumn discAnn = clazzToProcess.getAnnotation(
 				javax.persistence.DiscriminatorColumn.class
 		);
-		DiscriminatorType discriminatorType = discAnn != null ?
-				discAnn.discriminatorType() :
-				DiscriminatorType.STRING;
+		DiscriminatorType discriminatorType = discAnn != null
+				? discAnn.discriminatorType()
+				: DiscriminatorType.STRING;
 
 		org.hibernate.annotations.DiscriminatorFormula discFormulaAnn = clazzToProcess.getAnnotation(
 				org.hibernate.annotations.DiscriminatorFormula.class
 		);
-		if ( !inheritanceState.hasParents() ) {
+		if ( isRoot ) {
 			discriminatorColumn = Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
-					discriminatorType, discAnn, discFormulaAnn, mappings
+					discriminatorType,
+					discAnn,
+					discFormulaAnn,
+					mappings
 			);
 		}
-		if ( discAnn != null && inheritanceState.hasParents() ) {
+		if ( discAnn != null && !isRoot ) {
 			LOG.invalidDiscriminatorAnnotation( clazzToProcess.getName() );
 		}
 
-		String discrimValue = clazzToProcess.isAnnotationPresent( DiscriminatorValue.class ) ?
-				clazzToProcess.getAnnotation( DiscriminatorValue.class ).value() :
-				null;
-		entityBinder.setDiscriminatorValue( discrimValue );
+		final String discriminatorValue = clazzToProcess.isAnnotationPresent( DiscriminatorValue.class )
+				? clazzToProcess.getAnnotation( DiscriminatorValue.class ).value()
+				: null;
+		entityBinder.setDiscriminatorValue( discriminatorValue );
 
 		DiscriminatorOptions discriminatorOptions = clazzToProcess.getAnnotation( DiscriminatorOptions.class );
 		if ( discriminatorOptions != null) {
@@ -816,6 +869,53 @@ public final class AnnotationBinder {
 		}
 
 		return discriminatorColumn;
+	}
+
+	/**
+	 * Process all discriminator-related metadata per rules for "joined" inheritance
+	 */
+	private static Ejb3DiscriminatorColumn processJoinedDiscriminatorProperties(
+			XClass clazzToProcess,
+			Mappings mappings,
+			InheritanceState inheritanceState,
+			EntityBinder entityBinder) {
+		if ( clazzToProcess.isAnnotationPresent( DiscriminatorFormula.class ) ) {
+			throw new MappingException( "@DiscriminatorFormula on joined inheritance not supported at this time" );
+		}
+
+
+		// DiscriminatorValue handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		final DiscriminatorValue discriminatorValueAnnotation = clazzToProcess.getAnnotation( DiscriminatorValue.class );
+		final String discriminatorValue = discriminatorValueAnnotation != null
+				? clazzToProcess.getAnnotation( DiscriminatorValue.class ).value()
+				: null;
+		entityBinder.setDiscriminatorValue( discriminatorValue );
+
+
+		// DiscriminatorColumn handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+		final DiscriminatorColumn discriminatorColumnAnnotation = clazzToProcess.getAnnotation( DiscriminatorColumn.class );
+		if ( !inheritanceState.hasParents() ) {
+			if ( discriminatorColumnAnnotation != null || mappings.useImplicitDiscriminatorColumnForJoinedInheritance() ) {
+				final DiscriminatorType discriminatorType = discriminatorColumnAnnotation != null
+						? discriminatorColumnAnnotation.discriminatorType()
+						: DiscriminatorType.STRING;
+				return Ejb3DiscriminatorColumn.buildDiscriminatorColumn(
+						discriminatorType,
+						discriminatorColumnAnnotation,
+						null,
+						mappings
+				);
+			}
+		}
+		else {
+			if ( discriminatorColumnAnnotation != null ) {
+				LOG.invalidDiscriminatorAnnotation( clazzToProcess.getName() );
+			}
+		}
+
+		return null;
 	}
 
 	private static void processIdPropertiesIfNotAlready(
@@ -1375,7 +1475,7 @@ public final class AnnotationBinder {
 	}
 
 
-	private static void bindDiscriminatorToPersistentClass(
+	private static void bindDiscriminatorColumnToRootPersistentClass(
 			RootClass rootClass,
 			Ejb3DiscriminatorColumn discriminatorColumn,
 			Map<String, Join> secondaryTables,
@@ -1387,10 +1487,10 @@ public final class AnnotationBinder {
 			}
 			discriminatorColumn.setJoins( secondaryTables );
 			discriminatorColumn.setPropertyHolder( propertyHolder );
-			SimpleValue discrim = new SimpleValue( mappings, rootClass.getTable() );
-			rootClass.setDiscriminator( discrim );
-			discriminatorColumn.linkWithValue( discrim );
-			discrim.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
+			SimpleValue discriminatorColumnBinding = new SimpleValue( mappings, rootClass.getTable() );
+			rootClass.setDiscriminator( discriminatorColumnBinding );
+			discriminatorColumn.linkWithValue( discriminatorColumnBinding );
+			discriminatorColumnBinding.setTypeName( discriminatorColumn.getDiscriminatorTypeName() );
 			rootClass.setPolymorphic( true );
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Setting discriminator for entity {0}", rootClass.getEntityName() );

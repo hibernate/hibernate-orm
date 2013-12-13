@@ -604,6 +604,21 @@ public interface AvailableSettings {
 
 	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
 
+	/**
+	 * The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need
+	 * the discriminator...).  However, some JPA providers do need the discriminator for handling joined inheritance.
+	 * In the interest of portability this capability has been added to Hibernate too.
+	 * <p/>
+	 * However, we want to make sure that legacy applications continue to work as well.  Which puts us in a bind in
+	 * terms of how to handle "implicit" discriminator mappings.  The solution is to assume that the absence of
+	 * discriminator metadata means to follow the legacy behavior *unless* this setting is enabled.  With this setting
+	 * enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA
+	 * defined defaults for these absent annotations.
+	 *
+	 * See Hibernate Jira issue HHH-6911 for additional background info,
+	 */
+	String IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.implicit_for_joined";
+
     String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 
 	String HQL_BULK_ID_STRATEGY = "hibernate.hql.bulk_id_strategy";
@@ -678,4 +693,5 @@ public interface AvailableSettings {
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
 
 	String AUTO_SESSION_EVENTS_LISTENER = "hibernate.session.events.auto";
+
 }

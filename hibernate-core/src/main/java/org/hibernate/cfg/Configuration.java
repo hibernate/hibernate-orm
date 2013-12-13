@@ -3400,6 +3400,19 @@ public class Configuration implements Serializable {
 		}
 
 
+		private Boolean ignoreExplicitDiscriminatorColumnForJoinedInheritance;
+
+		@Override
+		public boolean ignoreExplicitDiscriminatorColumnForJoinedInheritance() {
+			if ( ignoreExplicitDiscriminatorColumnForJoinedInheritance == null ) {
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS );
+				ignoreExplicitDiscriminatorColumnForJoinedInheritance = Boolean.valueOf( booleanName );
+			}
+			return ignoreExplicitDiscriminatorColumnForJoinedInheritance;
+		}
+
+
 		private Boolean useNationalizedCharacterData;
 
 		@Override

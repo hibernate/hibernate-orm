@@ -798,15 +798,25 @@ public interface Mappings {
 	public boolean useNewGeneratorMappings();
 
 	/**
-	 * Should we handle discriminators for joined inheritance per legacy Hibernate rules, or
-	 * Should we use the new generator strategy mappings.  This is controlled by the
-	 * {@link AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS} setting.
+	 * Should we handle absent DiscriminatorColumn mappings for joined inheritance by implicitly mapping a
+	 * discriminator column?
 	 *
-	 * @return True if the new generators should be used, false otherwise.
+	 * @return {@code true} indicates we should infer DiscriminatorColumn implicitly (aka, map to a discriminator
+	 * column even without a DiscriminatorColumn annotation); {@code false} (the default) indicates that we should not.
 	 *
 	 * @see AvailableSettings#IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	public boolean useImplicitDiscriminatorColumnForJoinedInheritance();
+
+	/**
+	 * Should we ignore explicit DiscriminatorColumn annotations when combined with joined inheritance?
+	 *
+	 * @return {@code true} indicates we should ignore explicit DiscriminatorColumn annotations; {@code false} (the
+	 * default) indicates we should not ignore them
+	 *
+	 * @see AvailableSettings#IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
+	 */
+	public boolean ignoreExplicitDiscriminatorColumnForJoinedInheritance();
 
 	/**
 	 * Should we use nationalized variants of character data by default?  This is controlled by the

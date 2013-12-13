@@ -614,10 +614,27 @@ public interface AvailableSettings {
 	 * discriminator metadata means to follow the legacy behavior *unless* this setting is enabled.  With this setting
 	 * enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA
 	 * defined defaults for these absent annotations.
+	 * <p/>
+	 * See Hibernate Jira issue HHH-6911 for additional background info.
 	 *
-	 * See Hibernate Jira issue HHH-6911 for additional background info,
+	 * @see #IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
 	 */
 	String IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.implicit_for_joined";
+
+	/**
+	 * The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need
+	 * the discriminator...).  However, some JPA providers do need the discriminator for handling joined inheritance.
+	 * In the interest of portability this capability has been added to Hibernate too.
+	 * <p/>
+	 * Existing applications rely (implicitly or explicitly) on Hibernate ignoring any DiscriminatorColumn declarations
+	 * on joined inheritance hierarchies.  This setting allows these applications to maintain the legacy behavior
+	 * of DiscriminatorColumn annotations being ignored when paired with joined inheritance.
+	 * <p/>
+	 * See Hibernate Jira issue HHH-6911 for additional background info.
+	 *
+	 * @see #IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
+	 */
+	String IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS = "hibernate.discriminator.ignore_explicit_for_joined";
 
     String ENABLE_LAZY_LOAD_NO_TRANS = "hibernate.enable_lazy_load_no_trans";
 

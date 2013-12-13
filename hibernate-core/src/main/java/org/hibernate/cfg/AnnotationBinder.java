@@ -897,7 +897,11 @@ public final class AnnotationBinder {
 
 		final DiscriminatorColumn discriminatorColumnAnnotation = clazzToProcess.getAnnotation( DiscriminatorColumn.class );
 		if ( !inheritanceState.hasParents() ) {
-			if ( discriminatorColumnAnnotation != null || mappings.useImplicitDiscriminatorColumnForJoinedInheritance() ) {
+			// we want to process the discriminator column if either:
+			//		1) There is an explicit DiscriminatorColumn annotation && we are not told to ignore them
+			//		2) There is not an explicit DiscriminatorColumn annotation && we are told to create them implicitly
+			if ( ( discriminatorColumnAnnotation != null && !mappings.ignoreExplicitDiscriminatorColumnForJoinedInheritance() )
+					|| ( discriminatorColumnAnnotation == null && mappings.useImplicitDiscriminatorColumnForJoinedInheritance() ) ) {
 				final DiscriminatorType discriminatorType = discriminatorColumnAnnotation != null
 						? discriminatorColumnAnnotation.discriminatorType()
 						: DiscriminatorType.STRING;

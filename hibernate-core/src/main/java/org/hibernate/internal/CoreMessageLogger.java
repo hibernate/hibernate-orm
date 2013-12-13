@@ -1665,4 +1665,13 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Named parameters are used for a callable statement, but database metadata indicates named parameters are not supported.", id = 456)
 	void unsupportedNamedParameters();
 
+	@LogMessage(level = WARN)
+	@Message(
+			id = 457,
+			value = "Joined inheritance hierarchy [%1$s] defined explicit @DiscriminatorColumn.  Legacy Hibernate behavior " +
+					"was to ignore the @DiscriminatorColumn.  However, as part of issue HHH-6911 we now apply the " +
+					"explicit @DiscriminatorColumn.  If you would prefer the legacy behavior, enable the `%2$s` setting " +
+					"(%2$s=true)"
+	)
+	void applyingExplicitDiscriminatorColumnForJoined(String className, String overrideSetting);
 }

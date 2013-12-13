@@ -900,8 +900,32 @@ public final class AnnotationBinder {
 			// we want to process the discriminator column if either:
 			//		1) There is an explicit DiscriminatorColumn annotation && we are not told to ignore them
 			//		2) There is not an explicit DiscriminatorColumn annotation && we are told to create them implicitly
-			if ( ( discriminatorColumnAnnotation != null && !mappings.ignoreExplicitDiscriminatorColumnForJoinedInheritance() )
-					|| ( discriminatorColumnAnnotation == null && mappings.useImplicitDiscriminatorColumnForJoinedInheritance() ) ) {
+			final boolean generateDiscriminatorColumn;
+			if ( discriminatorColumnAnnotation != null ) {
+				if ( mappings.ignoreExplicitDiscriminatorColumnForJoinedInheritance() ) {
+					LOG.debugf( "Ignoring explicit DiscriminatorColumn annotation on ", clazzToProcess.getName() );
+					generateDiscriminatorColumn = false;
+				}
+				else {
+					LOG.applyingExplicitDiscriminatorColumnForJoined(
+							clazzToProcess.getName(),
+							AvailableSettings.IGNORE_EXPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS
+					);
+					generateDiscriminatorColumn = true;
+				}
+			}
+			else {
+				if ( mappings.useImplicitDiscriminatorColumnForJoinedInheritance() ) {
+					LOG.debug( "Applying implicit DiscriminatorColumn using DiscriminatorColumn defaults" );
+					generateDiscriminatorColumn = true;
+				}
+				else {
+					LOG.debug( "Ignoring implicit (absent) DiscriminatorColumn" );
+					generateDiscriminatorColumn = false;
+				}
+			}
+
+			if ( generateDiscriminatorColumn ) {
 				final DiscriminatorType discriminatorType = discriminatorColumnAnnotation != null
 						? discriminatorColumnAnnotation.discriminatorType()
 						: DiscriminatorType.STRING;

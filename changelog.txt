@@ -5,6 +5,11 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.0.Final (2013.12.16)
+------------------------------------------------------------------------------------------------------------------------
+- 4.3.0.Final was a re-tagging of 4.3.0.CR2
+
+
 Changes in version 4.3.0.CR2 (2013.12.05)
 ------------------------------------------------------------------------------------------------------------------------
 https://hibernate.atlassian.net/browse/HHH/fixforversion/15150

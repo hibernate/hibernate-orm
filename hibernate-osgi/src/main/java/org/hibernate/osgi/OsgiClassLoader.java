@@ -51,9 +51,17 @@ public class OsgiClassLoader extends ClassLoader {
 	private Map<String, Class<?>> classCache = new HashMap<String, Class<?>>();
 	
 	private Map<String, URL> resourceCache = new HashMap<String, URL>();
+	
+	public OsgiClassLoader() {
+		// DO NOT use ClassLoader#parent, which is typically the SystemClassLoader for most containers.  Instead,
+		// allow the ClassNotFoundException to be thrown.  ClassLoaderServiceImpl will check the SystemClassLoader
+		// later on.  This is especially important for embedded OSGi containers, etc.
+		super( null );
+	}
 
 	/**
-	 * Load the class and break on first found match.
+	 * Load the class and break on first found match.  
+	 * 
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */
@@ -93,6 +101,7 @@ public class OsgiClassLoader extends ClassLoader {
 
 	/**
 	 * Load the class and break on first found match.
+	 * 
 	 * TODO: Should this throw a different exception or warn if multiple
 	 * classes were found? Naming collisions can and do happen in OSGi...
 	 */

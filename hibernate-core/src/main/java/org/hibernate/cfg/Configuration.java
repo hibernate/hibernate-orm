@@ -3161,6 +3161,7 @@ public class Configuration implements Serializable {
 		private Boolean useNewGeneratorMappings;
 
 		@SuppressWarnings({ "UnnecessaryUnboxing" })
+		@Override
 		public boolean useNewGeneratorMappings() {
 			if ( useNewGeneratorMappings == null ) {
 				final String booleanName = getConfigurationProperties()
@@ -3169,6 +3170,20 @@ public class Configuration implements Serializable {
 			}
 			return useNewGeneratorMappings.booleanValue();
 		}
+
+
+		private Boolean implicitDiscriminatorColumnForJoinedInheritance;
+
+		@Override
+		public boolean useImplicitDiscriminatorColumnForJoinedInheritance() {
+			if ( implicitDiscriminatorColumnForJoinedInheritance == null ) {
+				final String booleanName = getConfigurationProperties()
+						.getProperty( AvailableSettings.IMPLICIT_DISCRIMINATOR_COLUMNS_FOR_JOINED_SUBCLASS );
+				implicitDiscriminatorColumnForJoinedInheritance = Boolean.valueOf( booleanName );
+			}
+			return implicitDiscriminatorColumnForJoinedInheritance;
+		}
+
 
 		private Boolean useNationalizedCharacterData;
 

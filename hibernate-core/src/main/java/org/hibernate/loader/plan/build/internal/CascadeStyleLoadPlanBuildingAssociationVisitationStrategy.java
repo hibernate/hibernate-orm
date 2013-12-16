@@ -45,6 +45,15 @@ public class CascadeStyleLoadPlanBuildingAssociationVisitationStrategy
 
 	private final CascadingAction cascadeActionToMatch;
 
+	/**
+	 * Constructs a CascadeStyleLoadPlanBuildingAssociationVisitationStrategy.
+	 *
+	 * @param cascadeActionToMatch The particular cascading action that an attribute definition must match
+	 *                             to eagerly fetch that attribute.
+	 * @param sessionFactory The session factory
+	 * @param loadQueryInfluencers The options which can influence the SQL query needed to perform the load.
+	 * @param lockMode The lock mode.
+	 */
 	public CascadeStyleLoadPlanBuildingAssociationVisitationStrategy(
 			CascadingAction cascadeActionToMatch,
 			SessionFactoryImplementor sessionFactory,

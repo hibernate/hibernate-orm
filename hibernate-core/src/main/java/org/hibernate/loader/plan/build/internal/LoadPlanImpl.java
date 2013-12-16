@@ -30,6 +30,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
+import org.hibernate.loader.plan.spi.QuerySpace;
 import org.hibernate.loader.plan.spi.QuerySpaces;
 import org.hibernate.loader.plan.spi.Return;
 
@@ -61,6 +62,9 @@ public class LoadPlanImpl implements LoadPlan {
 	 * Creates a {@link Disposition#ENTITY_LOADER} LoadPlan.
 	 *
 	 * @param rootReturn The EntityReturn representation of the entity being loaded.
+	 * @param querySpaces The QuerySpaces containing all the {@link QuerySpace} references
+	 *                    required for <code>rootReturn</code> and joined entity, collection,
+	 *                    and composite references.
 	 */
 	public LoadPlanImpl(EntityReturn rootReturn, QuerySpaces querySpaces) {
 		this( Collections.singletonList( rootReturn ), querySpaces, Disposition.ENTITY_LOADER, false );
@@ -70,6 +74,9 @@ public class LoadPlanImpl implements LoadPlan {
 	 * Creates a {@link Disposition#COLLECTION_INITIALIZER} LoadPlan.
 	 *
 	 * @param rootReturn The CollectionReturn representation of the collection being initialized.
+	 * @param querySpaces The QuerySpaces containing all the {@link QuerySpace} references
+	 *                    required for <code>rootReturn</code> and joined entity, collection,
+	 *                    and composite references.
 	 */
 	public LoadPlanImpl(CollectionReturn rootReturn, QuerySpaces querySpaces) {
 		this( Collections.singletonList( rootReturn ), querySpaces, Disposition.COLLECTION_INITIALIZER, false );
@@ -79,6 +86,9 @@ public class LoadPlanImpl implements LoadPlan {
 	 * Creates a {@link Disposition#MIXED} LoadPlan.
 	 *
 	 * @param returns The mixed Return references
+	 * @param querySpaces The QuerySpaces containing all the {@link QuerySpace} references
+	 *                    required for <code>rootReturn</code> and joined entity, collection,
+	 *                    and composite references.
 	 * @param areLazyAttributesForceFetched Should lazy attributes (bytecode enhanced laziness) be fetched also?  This
 	 * effects the eventual SQL SELECT-clause which is why we have it here.  Currently this is "all-or-none"; you
 	 * can request that all lazy properties across all entities in the loadplan be force fetched or none.  There is

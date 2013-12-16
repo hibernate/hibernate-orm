@@ -31,6 +31,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
+import org.hibernate.loader.plan.build.spi.LoadPlanBuildingAssociationVisitationStrategy;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityReturn;
 import org.hibernate.loader.plan.spi.LoadPlan;
@@ -40,7 +41,7 @@ import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.jboss.logging.Logger;
 
 /**
- * LoadPlanBuilderStrategy implementation used for building LoadPlans based on metamodel-defined fetching.  Built
+ * {@link LoadPlanBuildingAssociationVisitationStrategy} implementation used for building LoadPlans based on metamodel-defined fetching.  Built
  * LoadPlans contain a single root return object, either an {@link EntityReturn} or a {@link CollectionReturn}.
  *
  * @author Steve Ebersole
@@ -54,6 +55,13 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 
 	private Return rootReturn;
 
+	/**
+	 * Constructs a FetchStyleLoadPlanBuildingAssociationVisitationStrategy.
+	 *
+	 * @param sessionFactory The session factory
+	 * @param loadQueryInfluencers The options which can influence the SQL query needed to perform the load.
+	 * @param lockMode The lock mode.
+	 */
 	public FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
 			SessionFactoryImplementor sessionFactory,
 			LoadQueryInfluencers loadQueryInfluencers,
@@ -106,6 +114,14 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 		return fetchStrategy;
 	}
 
+	/**
+	 * If required by this strategy, returns a different {@link FetchStrategy} from what is specified
+	 * for the given association attribute.
+	 *
+	 * @param attributeDefinition The association attribute definition.
+	 * @param fetchStrategy The fetch strategy for <code>attributeDefinition</code>.
+	 * @return the {@link FetchStrategy}, possibly adjusted by this strategy.
+	 */
 	protected FetchStrategy adjustJoinFetchIfNeeded(
 			AssociationAttributeDefinition attributeDefinition,
 			FetchStrategy fetchStrategy) {
@@ -130,26 +146,4 @@ public class FetchStyleLoadPlanBuildingAssociationVisitationStrategy
 	protected boolean isTooManyCollections() {
 		return CollectionReturn.class.isInstance( rootReturn );
 	}
-
-//	@Override
-//	protected EntityReturn buildRootEntityReturn(EntityDefinition entityDefinition) {
-//		final String entityName = entityDefinition.getEntityPersister().getEntityName();
-//		return new EntityReturn(
-//				sessionFactory(),
-//				LockMode.NONE, // todo : for now
-//				entityName
-//		);
-//	}
-//
-//	@Override
-//	protected CollectionReturn buildRootCollectionReturn(CollectionDefinition collectionDefinition) {
-//		final CollectionPersister persister = collectionDefinition.getCollectionPersister();
-//		final String collectionRole = persister.getRole();
-//		return new CollectionReturn(
-//				sessionFactory(),
-//				LockMode.NONE, // todo : for now
-//				persister.getOwnerEntityPersister().getEntityName(),
-//				StringHelper.unqualify( collectionRole )
-//		);
-//	}
 }

@@ -1617,7 +1617,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message( value = "'javax.persistence.validation.mode' named multiple values : %s", id = 448 )
 	void multipleValidationModes(String modes);
 
-	// id=449 & 450 used in 4.3
+	// id=449-450 used in 4.3
 
 	@LogMessage(level = WARN)
 	@Message(
@@ -1634,4 +1634,16 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 453)
 	void unableToDiscoverOsgiService(String service, @Cause Exception e);
+
+	// id=454-456 used in 4.3
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 457,
+			value = "Joined inheritance hierarchy [%1$s] defined explicit @DiscriminatorColumn.  Legacy Hibernate behavior " +
+					"was to ignore the @DiscriminatorColumn.  However, as part of issue HHH-6911 we now apply the " +
+					"explicit @DiscriminatorColumn.  If you would prefer the legacy behavior, enable the `%2$s` setting " +
+					"(%2$s=true)"
+	)
+	void applyingExplicitDiscriminatorColumnForJoined(String className, String overrideSetting);
 }

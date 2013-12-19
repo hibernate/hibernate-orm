@@ -31,6 +31,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.CtField;
+
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
@@ -38,16 +43,13 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Execute;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 
@@ -55,9 +57,11 @@ import org.hibernate.bytecode.enhance.spi.Enhancer;
  * This plugin will enhance Entity objects.
  * 
  * @author Jeremy Whiting
+ * @phase "compile"
  */
-@Mojo(name = "enhance")
-public class HibernateEnhancementMojo extends AbstractMojo implements EnhancementContext {
+@Mojo ( name="enhance", defaultPhase = LifecyclePhase.COMPILE )
+@Execute ( goal ="enhance" , phase = LifecyclePhase.COMPILE )
+public class MavenEnhancePlugin extends AbstractMojo implements EnhancementContext {
 
 	/**
 	 * The contexts to use during enhancement.
@@ -69,7 +73,7 @@ public class HibernateEnhancementMojo extends AbstractMojo implements Enhancemen
 	private static final String CLASS_EXTENSION = ".class";
 
 	@Parameter(property="dir", defaultValue="${project.build.outputDirectory}")
-	private String dir;
+	private String dir = null;
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		getLog().info( "Started enhance plugin....." );
@@ -142,6 +146,7 @@ public class HibernateEnhancementMojo extends AbstractMojo implements Enhancemen
 
     private void processEntityClassFile(File javaClassFile, CtClass ctClass ) {
         try {
+            getLog().info( String.format("Processing Entity class file [%1$s].", ctClass.getName()) );
             byte[] result = enhancer.enhance( ctClass.getName(), ctClass.toBytecode() );
             if(result != null)
                 writeEnhancedClass(javaClassFile, result);
@@ -154,6 +159,7 @@ public class HibernateEnhancementMojo extends AbstractMojo implements Enhancemen
 
     private void processCompositeClassFile(File javaClassFile, CtClass ctClass) {
         try {
+            getLog().info( String.format("Processing Composite class file [%1$s].", ctClass.getName()) );
             byte[] result = enhancer.enhanceComposite(ctClass.getName(), ctClass.toBytecode());
             if(result != null)
                 writeEnhancedClass(javaClassFile, result);

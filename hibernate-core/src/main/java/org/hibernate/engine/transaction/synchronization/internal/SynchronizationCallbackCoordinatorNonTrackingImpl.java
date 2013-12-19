@@ -104,6 +104,7 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 					"could not determine transaction status in beforeCompletion()", se );
 		}
 
+		RuntimeException primaryException = null;
 		try {
 			if ( flush ) {
 				LOG.trace( "Automatically flushing session" );
@@ -112,11 +113,21 @@ public class SynchronizationCallbackCoordinatorNonTrackingImpl implements Synchr
 		}
 		catch ( RuntimeException re ) {
 			setRollbackOnly();
-			throw exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
+			primaryException = exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
+			throw primaryException;
 		}
 		finally {
-			transactionCoordinator.sendBeforeTransactionCompletionNotifications( null );
-			transactionCoordinator.getTransactionContext().beforeTransactionCompletion( null );
+			try {
+				transactionCoordinator.sendBeforeTransactionCompletionNotifications( null );
+				transactionCoordinator.getTransactionContext().beforeTransactionCompletion( null );
+			} catch ( RuntimeException re ) {
+				RuntimeException exceptionWithinFinally = exceptionMapper.mapManagedFlushFailure( "error during managed flush", re );
+				if (primaryException != null) {
+					primaryException.addSuppressed(exceptionWithinFinally);
+					throw primaryException;
+				}
+				throw exceptionWithinFinally;
+			}
 		}
 	}
 

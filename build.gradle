@@ -363,87 +363,78 @@ subprojects { subProject ->
 
 
 	publishing {
-		publications {
-			mavenJava(MavenPublication) {
-				from components.java
+        publications {
+            mavenJava(MavenPublication) {
+                from components.java
 
-				artifact sourcesJar {
-					classifier "sources"
-				}
+                artifact sourcesJar {
+                    classifier "sources"
+                }
 
-				pom.withXml {
-					// append additional metadata
-					asNode().children().last() + {
-						resolveStrategy = Closure.DELEGATE_FIRST
+                pom.withXml {
+                    // append additional metadata
+                    asNode().children().last() + {
+                        resolveStrategy = Closure.DELEGATE_FIRST
 
-						name subProject.pomName()
-						description subProject.pomDescription()
-						url 'http://hibernate.org'
-						organization {
-							name 'Hibernate.org'
-							url 'http://hibernate.org'
-						}
-						issueManagement {
-							system 'jira'
-							url 'https://hibernate.atlassian.net/browse/HHH'
-						}
-						scm {
-							url 'http://github.com/hibernate/hibernate-orm'
-							connection 'scm:git:http://github.com/hibernate/hibernate-orm.git'
-							developerConnection 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-						}
-						licenses {
-							license {
-								name 'GNU Lesser General Public License'
-								url 'http://www.gnu.org/licenses/lgpl-2.1.html'
-								comments 'See discussion at http://hibernate.org/license for more details.'
-								distribution 'repo'
-							}
-						}
-						developers {
-							developer {
-								id 'hibernate-team'
-								name 'The Hibernate Development Team'
-								organization 'Hibernate.org'
-								organizationUrl 'http://hibernate.org'
-							}
-						}
-					}
+                        name subProject.pomName()
+                        description subProject.pomDescription()
+                        url 'http://hibernate.org'
+                        organization {
+                            name 'Hibernate.org'
+                            url 'http://hibernate.org'
+                        }
+                        issueManagement {
+                            system 'jira'
+                            url 'https://www.hibernatespatial.org/jira'
+                        }
+                        scm {
+                            url 'http://github.com/maesenka/hibernate-orm'
+                            connection 'scm:git:http://github.com/maesenka/hibernate-orm.git'
+                            developerConnection 'scm:git:git@github.com:maesenka/hibernate-orm.git'
+                        }
+                        licenses {
+                            license {
+                                name 'GNU Lesser General Public License'
+                                url 'http://www.gnu.org/licenses/lgpl-2.1.html'
+                                comments 'See discussion at http://hibernate.org/license for more details.'
+                                distribution 'repo'
+                            }
+                        }
+                        developers {
+                            developer {
+                                id 'hibernate-spatial-team'
+                                name 'The Hibernate Development Team'
+                                organization 'Hibernate.org'
+                                organizationUrl 'http://hibernate.org'
+                            }
+                        }
+                    }
 
-					// TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
-					//      rather than 'compile'; fix that.
-					asNode().dependencies[0].dependency.each {
-						it.scope[0].value = 'compile'
-					}
-				}
-			}
-		}
-
-<<<<<<< HEAD
-		repositories {
-			maven {
-				if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
-					name 'jboss-snapshots-repository'
-					url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-				}
-				else {
-					name 'jboss-releases-repository'
-					url 'https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/'
-				}
-			}
-		}
-	}
-=======
-        uploadArchives {
-            repositories.mavenDeployer {
-                name = 'HSDeployer'
-                configuration = configurations.deployerJars
-                pom.project pomConfig
-                repository(id: "hs-releases-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository")
-                snapshotRepository(id: "hs-snapshots-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository")
+                    // TEMPORARY : currently Gradle Publishing feature is exporting dependencies as 'runtime' scope,
+                    //      rather than 'compile'; fix that.
+                    asNode().dependencies[0].dependency.each {
+                        it.scope[0].value = 'compile'
+                    }
+                }
             }
         }
->>>>>>> Rebased to Hibernate 4.1 branch
+
+
+        repositories {
+            maven {
+                if ( subProject.version.endsWith( 'SNAPSHOT' ) ) {
+                    name 'hs-snapshots-repository'
+                    url 'scp://www.hibernatespatial.org:/var/maven/repository'
+                    //url 'http://www.hibernatespatial.org/repository'
+                }
+                else {
+                    name 'hs-releases-repository'
+                    url 'htpp://www.hibernatespatial.org/repository'
+                }
+            }
+        }
+    }
+
 
 	model {
 		tasks.generatePomFileForMavenJavaPublication {

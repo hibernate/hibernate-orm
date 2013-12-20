@@ -39,7 +39,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final GeoDBValueExtractor decoder = new GeoDBValueExtractor();
+	private final GeoDBValueExtractor decoder = new GeoDBValueExtractor(null, null);
 
 	public GeoDBExpectationsFactory(GeoDBDataSourceUtils dataSourceUtils) {
 		super(dataSourceUtils);

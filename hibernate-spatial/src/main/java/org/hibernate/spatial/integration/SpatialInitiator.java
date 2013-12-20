@@ -3,12 +3,12 @@ package org.hibernate.spatial.integration;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.classloading.spi.ClassLoaderService;
-import org.hibernate.service.config.spi.ConfigurationService;
-import org.hibernate.service.jdbc.dialect.spi.DialectFactory;
-import org.hibernate.service.spi.BasicServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.spatial.HibernateSpatialConfiguration;
 import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
@@ -17,7 +17,7 @@ import org.hibernate.spatial.dialect.oracle.ConnectionFinder;
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 8/23/13
  */
-public class SpatialInitiator implements BasicServiceInitiator {
+public class SpatialInitiator implements StandardServiceInitiator {
 
 	@Override
 	public Class getServiceInitiated() {

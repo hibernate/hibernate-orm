@@ -40,7 +40,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 @Deprecated //Class no longer used. Remove.
 public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final GeoDBValueExtractor decoder = new GeoDBValueExtractor();
+	private final GeoDBValueExtractor decoder = new GeoDBValueExtractor(null, null);
 
 	public GeoDBNoSRIDExpectationsFactory(GeoDBDataSourceUtils dataSourceUtils) {
 		super(dataSourceUtils);

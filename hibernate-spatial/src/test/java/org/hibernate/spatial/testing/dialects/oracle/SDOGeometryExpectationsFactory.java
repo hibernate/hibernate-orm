@@ -36,7 +36,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor();
+	private final SDOGeometryValueExtractor decoder = new SDOGeometryValueExtractor(null, null);
 
 	public SDOGeometryExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		super(dataSourceUtils);

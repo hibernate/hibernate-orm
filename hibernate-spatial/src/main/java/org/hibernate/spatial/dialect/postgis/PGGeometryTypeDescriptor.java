@@ -21,12 +21,12 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
+import java.sql.Types;
+
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import java.sql.Types;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -54,6 +54,6 @@ public class PGGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new PGGeometryValueExtractor();
+		return (ValueExtractor<X>) new PGGeometryValueExtractor( javaTypeDescriptor, this );
 	}
 }

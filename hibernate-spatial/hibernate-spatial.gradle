@@ -20,9 +20,9 @@
  */
 
 apply plugin: 'java'
-apply plugin: org.hibernate.build.gradle.testing.matrix.MatrixTestingPlugin
+apply plugin: 'hibernate-matrix-testing'
 
-version = '4.0'
+version = '4.3-SNAPSHOT'
 
 dependencies {
 
@@ -74,15 +74,4 @@ dependencies {
     deployerJars "org.apache.maven.wagon:wagon-ssh:1.0-beta-2"
 }
 
-repositories {
-    mavenRepo name:"hibernate-spatial", urls:"http:://www.hibernatespatial.org/repository"
-}
-
-uploadArchives {
-    repositories.mavenDeployer {
-        name = 'sshDeployer' // optional
-        configuration = configurations.deployerJars
-        repository(url: "scp://www.hibernatespatial.org/var/maven/repository/")
-    }
-}
 

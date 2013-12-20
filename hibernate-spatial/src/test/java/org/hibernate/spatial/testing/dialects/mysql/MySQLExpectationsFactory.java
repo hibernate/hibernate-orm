@@ -37,7 +37,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
 
 public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 
-	protected final MySQLGeometryValueExtractor decoder = new MySQLGeometryValueExtractor();
+	protected final MySQLGeometryValueExtractor decoder = new MySQLGeometryValueExtractor(null, null);
 
 	public MySQLExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		super(dataSourceUtils);

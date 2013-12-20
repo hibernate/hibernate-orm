@@ -57,7 +57,7 @@ public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new SDOGeometryValueExtractor();
+		return (ValueExtractor<X>) new SDOGeometryValueExtractor( javaTypeDescriptor, this );
 	}
 
 

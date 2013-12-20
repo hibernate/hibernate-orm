@@ -21,12 +21,12 @@
 
 package org.hibernate.spatial.dialect.mysql;
 
+import java.sql.Types;
+
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import java.sql.Types;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -53,6 +53,6 @@ public class MySQLGeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new MySQLGeometryValueExtractor();
+		return (ValueExtractor<X>) new MySQLGeometryValueExtractor( javaTypeDescriptor, this );
 	}
 }

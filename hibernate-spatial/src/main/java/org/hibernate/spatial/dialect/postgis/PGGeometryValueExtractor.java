@@ -23,17 +23,31 @@ package org.hibernate.spatial.dialect.postgis;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
+import org.postgis.GeometryCollection;
+import org.postgis.MultiLineString;
+import org.postgis.MultiPoint;
+import org.postgis.MultiPolygon;
+import org.postgis.PGboxbase;
+import org.postgis.PGgeometry;
+import org.postgis.Point;
+import org.postgis.Polygon;
+
 import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
 import org.hibernate.spatial.jts.mgeom.MCoordinate;
 import org.hibernate.spatial.jts.mgeom.MLineString;
-import org.postgis.*;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 7/27/11
  */
-public class PGGeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
+public class PGGeometryValueExtractor<X> extends AbstractJTSGeometryValueExtractor<X> {
 
+
+	public PGGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlDescriptor) {
+		super( javaDescriptor, sqlDescriptor );
+	}
 
 	public Geometry toJTS(Object object) {
 		if (object == null) {

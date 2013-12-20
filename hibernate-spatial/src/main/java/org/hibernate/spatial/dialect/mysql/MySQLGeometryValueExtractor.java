@@ -24,14 +24,20 @@ package org.hibernate.spatial.dialect.mysql;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKBReader;
 import org.hibernate.spatial.dialect.AbstractJTSGeometryValueExtractor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 1/19/12
  */
-public class MySQLGeometryValueExtractor extends AbstractJTSGeometryValueExtractor {
+public class MySQLGeometryValueExtractor<X> extends AbstractJTSGeometryValueExtractor<X> {
 
 	private static final int SRIDLEN = 4;
+
+	public MySQLGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlDescriptor) {
+		super( javaDescriptor, sqlDescriptor );
+	}
 
 	/**
 	 * Converts the native geometry object to a JTS <code>Geometry</code>.

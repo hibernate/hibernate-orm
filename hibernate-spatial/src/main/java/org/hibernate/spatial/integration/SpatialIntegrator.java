@@ -23,11 +23,11 @@ package org.hibernate.spatial.integration;
 
 import java.lang.reflect.Field;
 
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.service.ServiceRegistryBuilder;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.spatial.GeometryType;
 import org.hibernate.type.TypeResolver;
@@ -56,7 +56,7 @@ public class SpatialIntegrator implements ServiceContributingIntegrator {
 	}
 
 	@Override
-	public void prepareServices(ServiceRegistryBuilder serviceRegistryBuilder) {
+	public void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder) {
 		serviceRegistryBuilder.addInitiator( new SpatialInitiator() );
 	}
 

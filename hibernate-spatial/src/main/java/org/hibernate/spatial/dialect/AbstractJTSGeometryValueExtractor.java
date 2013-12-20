@@ -21,25 +21,43 @@
 
 package org.hibernate.spatial.dialect;
 
-import com.vividsolutions.jts.geom.Geometry;
-import org.hibernate.spatial.jts.JTS;
-import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
-
+import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import com.vividsolutions.jts.geom.Geometry;
+
+import org.hibernate.spatial.jts.JTS;
+import org.hibernate.spatial.jts.mgeom.MGeometryFactory;
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.sql.BasicExtractor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  *         creation-date: 1/19/12
  */
-public abstract class AbstractJTSGeometryValueExtractor implements ValueExtractor<Geometry> {
+public abstract class AbstractJTSGeometryValueExtractor<X> extends BasicExtractor<X> {
+
+
+	public AbstractJTSGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, SqlTypeDescriptor sqlDescriptor) {
+		super( javaDescriptor, sqlDescriptor );
+	}
 
 	@Override
-	public Geometry extract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
-		Object geomObj = rs.getObject(name);
-		return toJTS(geomObj);
+	protected X doExtract(ResultSet rs, String name, WrapperOptions options) throws SQLException {
+		return getJavaDescriptor().wrap( toJTS( rs.getObject( name ) ), options );
+	}
+
+	@Override
+	protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+		return getJavaDescriptor().wrap( toJTS( statement.getObject( index ) ), options );
+	}
+
+	@Override
+	protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+		return getJavaDescriptor().wrap( toJTS( statement.getObject( name ) ), options );
 	}
 
 	protected MGeometryFactory getGeometryFactory() {

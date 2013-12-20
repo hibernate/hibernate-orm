@@ -21,12 +21,12 @@
 
 package org.hibernate.spatial.dialect.sqlserver;
 
+import java.sql.Types;
+
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
-
-import java.sql.Types;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -53,7 +53,7 @@ public class SqlServer2008GeometryTypeDescriptor implements SqlTypeDescriptor {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return (ValueExtractor<X>) new SqlServer2008GeometryValueExtractor();
+		return (ValueExtractor<X>) new SqlServer2008GeometryValueExtractor( javaTypeDescriptor, this );
 	}
 
 }

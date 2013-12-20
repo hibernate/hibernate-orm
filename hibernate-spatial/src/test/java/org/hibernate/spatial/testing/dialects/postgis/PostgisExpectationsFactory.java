@@ -35,7 +35,7 @@ import org.hibernate.spatial.testing.NativeSQLStatement;
  */
 public class PostgisExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final PGGeometryValueExtractor decoder = new PGGeometryValueExtractor();
+	private final PGGeometryValueExtractor decoder = new PGGeometryValueExtractor(null, null);
 
 	public PostgisExpectationsFactory(DataSourceUtils utils) {
 		super(utils);

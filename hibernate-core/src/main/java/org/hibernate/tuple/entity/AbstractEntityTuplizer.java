@@ -392,7 +392,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 	private final MappedIdentifierValueMarshaller mappedIdentifierValueMarshaller;
 
-	private static MappedIdentifierValueMarshaller buildMappedIdentifierValueMarshaller(
+	private MappedIdentifierValueMarshaller buildMappedIdentifierValueMarshaller(
 			ComponentType mappedIdClassComponentType,
 			ComponentType virtualIdComponent) {
 		// so basically at this point we know we have a "mapped" composite identifier
@@ -509,6 +509,15 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			return id;
 		}
 
+		private Iterable<PersistEventListener> persistEventListeners(SessionImplementor session) {
+			return session
+					.getFactory()
+					.getServiceRegistry()
+					.getService( EventListenerRegistry.class )
+					.getEventListenerGroup( EventType.PERSIST )
+					.listeners();
+		}
+
 		@Override
 		public void setIdentifier(Object entity, Serializable id, EntityMode entityMode, SessionImplementor session) {
 			final Object[] extractedValues = mappedIdentifierType.getPropertyValues( id, entityMode );
@@ -544,15 +553,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		}
 	}
 
-	private static Iterable<PersistEventListener> persistEventListeners(SessionImplementor session) {
-		return session
-				.getFactory()
-				.getServiceRegistry()
-				.getService( EventListenerRegistry.class )
-				.getEventListenerGroup( EventType.PERSIST )
-				.listeners();
-	}
-
 	@Override
 	public void resetIdentifier(Object entity, Serializable currentId, Object currentVersion) {
 		// 99% of the time the session is not needed.  Its only needed for certain brain-dead
@@ -566,9 +566,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			Serializable currentId,
 			Object currentVersion,
 			SessionImplementor session) {
-		if ( entityMetamodel.getIdentifierProperty().getIdentifierGenerator() instanceof Assigned ) {
-		}
-		else {
+		if ( !(entityMetamodel.getIdentifierProperty().getIdentifierGenerator() instanceof Assigned ) ) {
 			//reset the id
 			Serializable result = entityMetamodel.getIdentifierProperty()
 					.getUnsavedValue()

@@ -139,7 +139,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		}
 	}
 
-	private static EntityKey generateEntityKeyOrNull(Serializable id, SessionImplementor s, String entityName) {
+	private EntityKey generateEntityKeyOrNull(Serializable id, SessionImplementor s, String entityName) {
 		if ( id == null || s == null || entityName == null ) {
 			return null;
 		}
@@ -305,7 +305,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 *
 	 * @return Value for property 'target'.
 	 */
-	protected final Object getTarget() {
+	public final Object getTarget() {
 		return target;
 	}
 

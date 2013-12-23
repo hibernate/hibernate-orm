@@ -52,6 +52,8 @@ import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.TestForIssue;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -208,6 +210,26 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 				)
 		);
 		TypedQuery<Customer> tq = em.createQuery(cquery);
+		tq.getResultList();
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-8699" )
+	public void testMultiselectWithPredicates() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		CriteriaBuilderImpl cb = (CriteriaBuilderImpl) em.getCriteriaBuilder();
+		CriteriaQuery<Customer> cq = cb.createQuery( Customer.class );
+		Root<Customer> r = cq.from( Customer.class );
+		cq.multiselect(
+				r.get( Customer_.id ), r.get( Customer_.name ),
+				cb.concat( "Hello ", r.get( Customer_.name ) ), cb.isNotNull( r.get( Customer_.age ) )
+		);
+		TypedQuery<Customer> tq = em.createQuery( cq );
 		tq.getResultList();
 
 		em.getTransaction().commit();

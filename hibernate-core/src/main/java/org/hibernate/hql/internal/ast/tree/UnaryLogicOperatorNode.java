@@ -23,6 +23,9 @@
  */
 package org.hibernate.hql.internal.ast.tree;
 
+import antlr.SemanticException;
+
+import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -31,7 +34,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public class UnaryLogicOperatorNode extends HqlSqlWalkerNode implements UnaryOperatorNode {
+public class UnaryLogicOperatorNode extends AbstractSelectExpression implements UnaryOperatorNode {
 	public Node getOperand() {
 		return (Node) getFirstChild();
 	}
@@ -44,5 +47,9 @@ public class UnaryLogicOperatorNode extends HqlSqlWalkerNode implements UnaryOpe
 	public Type getDataType() {
 		// logic operators by definition resolve to booleans
 		return StandardBasicTypes.BOOLEAN;
+	}
+
+	public void setScalarColumnText(int i) throws SemanticException {
+		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 }

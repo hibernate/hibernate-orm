@@ -289,7 +289,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	protected String getCreateSequenceString(String sequenceName) {
-		return "create sequence " + sequenceName;
+		return "create sequence " + sequenceName + " start with 1";
 	}
 
 	protected String getDropSequenceString(String sequenceName) {

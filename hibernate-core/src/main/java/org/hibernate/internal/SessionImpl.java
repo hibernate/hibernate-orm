@@ -232,6 +232,7 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			final SessionFactoryImpl factory,
 			final SessionOwner sessionOwner,
 			final TransactionCoordinatorImpl transactionCoordinator,
+			final ActionQueue.TransactionCompletionProcesses transactionCompletionProcesses,
 			final boolean autoJoinTransactions,
 			final long timestamp,
 			final Interceptor interceptor,
@@ -266,6 +267,9 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 			this.transactionCoordinator = transactionCoordinator;
 			this.isTransactionCoordinatorShared = true;
 			this.autoJoinTransactions = false;
+			if ( transactionCompletionProcesses != null ) {
+				actionQueue.setTransactionCompletionProcesses( transactionCompletionProcesses, true );
+			}
 			if ( autoJoinTransactions ) {
 				LOG.debug(
 						"Session creation specified 'autoJoinTransactions', which is invalid in conjunction " +
@@ -365,8 +369,8 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 				return transactionCoordinator.close();
 			}
 			else {
-				if ( getActionQueue().hasAfterTransactionActions() ){
-					LOG.warn( "On close, shared Session had after transaction actions that have not yet been processed" );
+				if ( getActionQueue().hasBeforeTransactionActions() || getActionQueue().hasAfterTransactionActions() ) {
+					LOG.warn( "On close, shared Session had before / after transaction actions that have not yet been processed" );
 				}
 				else {
 					transactionCoordinator.removeObserver( transactionObserver );
@@ -2316,6 +2320,13 @@ public final class SessionImpl extends AbstractSessionImpl implements EventSourc
 		@Override
 		protected TransactionCoordinatorImpl getTransactionCoordinator() {
 			return shareTransactionContext ? session.transactionCoordinator : super.getTransactionCoordinator();
+		}
+
+		@Override
+		protected ActionQueue.TransactionCompletionProcesses getTransactionCompletionProcesses() {
+			return shareTransactionContext ?
+					session.getActionQueue().getTransactionCompletionProcesses() :
+					super.getTransactionCompletionProcesses();
 		}
 
 		@Override

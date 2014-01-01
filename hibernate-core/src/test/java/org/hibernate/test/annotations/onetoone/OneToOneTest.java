@@ -23,25 +23,25 @@
  */
 package org.hibernate.test.annotations.onetoone;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.hibernate.EmptyInterceptor;
+import org.hibernate.MappingException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metamodel.spi.binding.EntityBinding;
 import org.hibernate.metamodel.spi.relational.TableSpecification;
-
-import org.hibernate.testing.FailureExpectedWithNewMetamodel;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.test.annotations.Customer;
 import org.hibernate.test.annotations.Discount;
 import org.hibernate.test.annotations.Passport;
 import org.hibernate.test.annotations.Ticket;
+import org.hibernate.testing.FailureExpectedWithNewMetamodel;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Emmanuel Bernard
@@ -396,53 +396,58 @@ public class OneToOneTest extends BaseCoreFunctionalTestCase {
 	protected String[] getXmlFiles() {
 		return new String[] { "org/hibernate/test/annotations/onetoone/orm.xml" };
 	}
-}
-
-
-/**
- * Verifies that generated 'select' statement has desired number of joins
- *
- * @author Sharath Reddy
- */
-class JoinCounter extends EmptyInterceptor {
-
-	private static final long serialVersionUID = -3689681272273261051L;
-
-	private int expectedNumberOfJoins = 0;
-
-	public JoinCounter(int val) {
-		super();
-		this.expectedNumberOfJoins = val;
-	}
-
-	public String onPrepareStatement(String sql) {
-		int numberOfJoins = 0;
-		if ( sql.startsWith( "select" ) & !sql.contains( "nextval" ) ) {
-			numberOfJoins = count( sql, "join" );
-			assertEquals( expectedNumberOfJoins, numberOfJoins );
-		}
-
-		return sql;
-	}
 
 	/**
-	 * Count the number of instances of substring within a string.
+	 * Verifies that generated 'select' statement has desired number of joins 
+	 * @author Sharath Reddy
 	 *
-	 * @param string String to look for substring in.
-	 * @param substring Sub-string to look for.
-	 *
-	 * @return Count of substrings in string.
 	 */
-	private int count(final String string, final String substring) {
-		int count = 0;
-		int idx = 0;
+	class JoinCounter extends EmptyInterceptor {
+	     
+	    private static final long serialVersionUID = -3689681272273261051L;
+	    
+	    private int expectedNumberOfJoins = 0;
+	    private String nextValString;
+	            
+	    public JoinCounter(int val) {
+	        super();
+	        this.expectedNumberOfJoins = val;
+	        try {
+	            nextValString = getDialect().getSequenceNextValString("");
+	        } catch (MappingException ex) {
+	            nextValString = "nextval";
+	        }
+	    }
 
-		while ( ( idx = string.indexOf( substring, idx ) ) != -1 ) {
-			idx++;
-			count++;
-		}
+	    public String onPrepareStatement(String sql) {
+	        int numberOfJoins = 0;
+	        if (sql.startsWith("select") & !sql.contains(nextValString)) {
+	             numberOfJoins = count(sql, "join");
+	             assertEquals( sql,  expectedNumberOfJoins, numberOfJoins );
+	        }
+	                        
+	        return sql;
+	     }
+	    
+	     /**
+	       * Count the number of instances of substring within a string.
+	       *
+	       * @param string     String to look for substring in.
+	       * @param substring  Sub-string to look for.
+	       * @return           Count of substrings in string.
+	       */
+	      private int count(final String string, final String substring)
+	      {
+	         int count = 0;
+	         int idx = 0;
 
-		return count;
+	         while ((idx = string.indexOf(substring, idx)) != -1)
+	         {
+	            idx++;
+	            count++;
+	         }
+
+	         return count;
+	      }
 	}
-
 }

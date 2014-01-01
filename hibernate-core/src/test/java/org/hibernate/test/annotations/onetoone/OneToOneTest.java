@@ -32,6 +32,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
@@ -431,9 +432,9 @@ class JoinCounter extends EmptyInterceptor {
 
 	public String onPrepareStatement(String sql) {
 		int numberOfJoins = 0;
-		if (sql.startsWith("select") & !sql.contains("nextval")) {
+		if (sql.startsWith("select") & !sql.contains(Dialect.getDialect().getSequenceNextValString(""))) {
 			 numberOfJoins = count(sql, "join");
-			 assertEquals( expectedNumberOfJoins, numberOfJoins );
+			 assertEquals( sql,  expectedNumberOfJoins, numberOfJoins );
 		}
 						
 		return sql;

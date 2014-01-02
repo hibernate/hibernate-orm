@@ -936,7 +936,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	@Override
 	public List list(SessionImplementor session, QueryParameters queryParameters)
 			throws HibernateException {
-		return list( session, queryParameters, getQuerySpaces(), actualReturnTypes );
+		return list( session, queryParameters, getQuerySpaces() );
 	}
 
 	/**
@@ -1172,7 +1172,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 		HolderInstantiator hi = HolderInstantiator.createClassicHolderInstantiator(
 				holderConstructor, queryParameters.getResultTransformer()
 		);
-		return scroll( queryParameters, returnTypes, hi, session );
+		return scroll( queryParameters, hi, session );
 	}
 
 	@Override

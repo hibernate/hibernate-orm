@@ -63,14 +63,37 @@ public class Forest { ... }</programlisting>
       <title>Using <classname>@FilterJoinTable</classname> for filterting on
       the association table</title>
 
-      <programlisting language="JAVA" role="JAVA">    @OneToMany
-    @JoinTable
-    //filter on the target entity table
-    @Filter(name="betweenLength", condition=":minLength &lt;= length and :maxLength &gt;= length")
-    //filter on the association table
-    @FilterJoinTable(name="security", condition=":userlevel &gt;= requredLevel")
-    public Set&lt;Forest&gt; getForests() { ... }</programlisting>
+      <programlisting language="JAVA" role="JAVA">@OneToMany
+@JoinTable
+//filter on the target entity table
+@Filter(name="betweenLength", condition=":minLength &lt;= length and :maxLength &gt;= length")
+//filter on the association table
+@FilterJoinTable(name="security", condition=":userlevel &gt;= requredLevel")
+public Set&lt;Forest&gt; getForests() { ... }</programlisting>
     </example>
+
+    <para>By default, Hibernate attempts to automatically determine all points within the
+    <literal>@Filter</literal> SQL condition fragment that an alias should be injected.  To control the alias injection,
+    set <literal>deduceAliasInjectionPoints</literal> to <literal>false</literal> within the
+    <literal>@Filter</literal>.  Injection points are then marked using <literal>@SqlFragmentAlias</literal> annotations or
+    within the SQL's condition fragment using <literal>{alias}</literal>.</para>
+    
+    <para>In addition to allowing explicit alias control, <literal>deduceAliasInjectionPoints</literal>
+    provides an out when Hibernate assumes an ANSI SQL reserved keyword is a column and incorrectly aliases it.</para>
+
+	<example>
+		<title>@Filter annotation, disabling deduceAliasInjectionPoints</title>
+
+		<programlisting language="JAVA" role="JAVA">@Entity
+@Table(name="T_TREE")
+@Filters({
+	@Filter(name="isTall", condition="{alias}.LENGTH &gt;= 100", deduceAliasInjectionPoints = false),
+	@Filter(name="isOak", condition="{t}.WOODTYPE like 'oak'", deduceAliasInjectionPoints = false,
+		aliases={@SqlFragmentAlias(alias="t", table="T_TREE")})
+})
+public class Tree { ... }
+		</programlisting>
+	</example>
 
     <para>Using Hibernate mapping files for defining filters the situtation is
     very similar. The filters must first be defined and then attached to the

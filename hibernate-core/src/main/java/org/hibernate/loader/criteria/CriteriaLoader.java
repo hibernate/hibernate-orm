@@ -112,16 +112,20 @@ public class CriteriaLoader extends OuterJoinLoader {
 
 	}
 	
+	protected Type[] getReturnTypes() {
+		return resultTypes;
+	}
+	
 	public ScrollableResults scroll(SessionImplementor session, ScrollMode scrollMode) 
 	throws HibernateException {
 		QueryParameters qp = translator.getQueryParameters();
 		qp.setScrollMode(scrollMode);
-		return scroll(qp, resultTypes, null, session);
+		return scroll(qp, null, session);
 	}
 
 	public List list(SessionImplementor session) 
 	throws HibernateException {
-		return list( session, translator.getQueryParameters(), querySpaces, resultTypes );
+		return list( session, translator.getQueryParameters(), querySpaces );
 
 	}
 

@@ -333,9 +333,13 @@ public class CustomLoader extends Loader {
     protected int[] getOwners() {
 		return entiytOwners;
 	}
+	
+	protected Type[] getReturnTypes() {
+		return resultTypes;
+	}
 
 	public List list(SessionImplementor session, QueryParameters queryParameters) throws HibernateException {
-		return list( session, queryParameters, querySpaces, resultTypes );
+		return list( session, queryParameters, querySpaces );
 	}
 
 	@Override
@@ -372,7 +376,6 @@ public class CustomLoader extends Loader {
 			final SessionImplementor session) throws HibernateException {
 		return scroll(
 				queryParameters,
-				resultTypes,
 				getHolderInstantiator( queryParameters.getResultTransformer(), getReturnAliasesForTransformer() ),
 				session
 		);

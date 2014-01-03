@@ -124,10 +124,11 @@ public abstract class AbstractQueryImpl<X> extends BaseQueryImpl implements Type
 			throw new IllegalStateException( "Illegal attempt to set lock mode on a native SQL query" );
 		}
 
-		if ( ! isSelectQuery() ) {
-			throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
+		if ( ! LockModeType.NONE.equals(lockModeType)) {
+			if ( ! isSelectQuery() ) {
+				throw new IllegalStateException( "Illegal attempt to set lock mode on a non-SELECT query" );
+			}
 		}
-
 		if ( ! canApplyAliasSpecificLockModeHints() ) {
 			throw new IllegalStateException( "Not a JPAQL/Criteria query" );
 		}

@@ -492,11 +492,7 @@ public class QueryLoader extends BasicLoader {
 			SessionImplementor session,
 			QueryParameters queryParameters) throws HibernateException {
 		checkQuery( queryParameters );
-		return list( session, queryParameters, queryTranslator.getQuerySpaces() );
-	}
-	
-	protected Type[] getReturnTypes() {
-		return queryReturnTypes;
+		return list( session, queryParameters, queryTranslator.getQuerySpaces(), queryReturnTypes );
 	}
 
 	private void checkQuery(QueryParameters queryParameters) {
@@ -560,6 +556,7 @@ public class QueryLoader extends BasicLoader {
 		checkQuery( queryParameters );
 		return scroll( 
 				queryParameters,
+				queryReturnTypes,
 				buildHolderInstantiator( queryParameters.getResultTransformer() ),
 				session
 		);

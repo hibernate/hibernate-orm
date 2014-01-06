@@ -40,6 +40,8 @@ import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
+import org.hibernate.cache.spi.QueryCache;
+import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitHelper;
@@ -333,13 +335,9 @@ public class CustomLoader extends Loader {
     protected int[] getOwners() {
 		return entiytOwners;
 	}
-	
-	protected Type[] getReturnTypes() {
-		return resultTypes;
-	}
 
 	public List list(SessionImplementor session, QueryParameters queryParameters) throws HibernateException {
-		return list( session, queryParameters, querySpaces );
+		return list( session, queryParameters, querySpaces, resultTypes );
 	}
 
 	@Override
@@ -376,6 +374,7 @@ public class CustomLoader extends Loader {
 			final SessionImplementor session) throws HibernateException {
 		return scroll(
 				queryParameters,
+				resultTypes,
 				getHolderInstantiator( queryParameters.getResultTransformer(), getReturnAliasesForTransformer() ),
 				session
 		);
@@ -643,6 +642,28 @@ public class CustomLoader extends Loader {
 		catch ( SQLException e ) {
 			throw new HibernateException( "Exception while trying to autodiscover types.", e );
 		}
+	}
+	
+	/**
+	 * {@link #resultTypes} can be overridden by {@link #autoDiscoverTypes(ResultSet)},
+	 * *after* {@link #list(SessionImplementor, QueryParameters)} has already been called.  It's a bit of a
+	 * chicken-and-the-egg issue since {@link #autoDiscoverTypes(ResultSet)} needs the {@link ResultSet}.
+	 * 
+	 * As a hacky workaround, override
+	 * {@link #putResultInQueryCache(SessionImplementor, QueryParameters, Type[], QueryCache, QueryKey, List)} here
+	 * and provide the {@link #resultTypes}.
+	 * 
+	 * @see HHH-3051
+	 */
+	@Override
+	protected void putResultInQueryCache(
+			final SessionImplementor session,
+			final QueryParameters queryParameters,
+			final Type[] resultTypes,
+			final QueryCache queryCache,
+			final QueryKey key,
+			final List result) {
+		super.putResultInQueryCache( session, queryParameters, this.resultTypes, queryCache, key, result );
 	}
 
 	private static class Metadata {

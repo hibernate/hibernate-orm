@@ -21,6 +21,7 @@
 
 apply plugin: 'java'
 apply plugin: 'hibernate-matrix-testing'
+apply plugin: 'maven'
 
 version = '4.3-SNAPSHOT'
 
@@ -73,5 +74,21 @@ configurations {
 dependencies {
     deployerJars "org.apache.maven.wagon:wagon-ssh:1.0-beta-2"
 }
+
+
+uploadArchives {
+    repositories.mavenDeployer {
+        name = 'HSDeployer'
+        configuration = configurations.deployerJars
+        repository( id: "hs-releases-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository" )
+        snapshotRepository( id: "hs-snapshots-repository", url: "scp://www.hibernatespatial.org:/var/maven/repository" )
+    }
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+uploadArchives.dependsOn sourcesJar
 
 

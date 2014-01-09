@@ -23,6 +23,12 @@
  */
 package org.hibernate.annotations;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.util.Comparator;
 
 /**
@@ -38,6 +44,8 @@ import java.util.Comparator;
  *
  * @author Steve Ebersole
  */
+@Target({METHOD, FIELD})
+@Retention(RUNTIME)
 public @interface SortComparator {
 	/**
 	 * Specifies the comparator class to use.

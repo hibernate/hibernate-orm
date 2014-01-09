@@ -157,6 +157,7 @@ public abstract class AbstractLoadPlanBasedLoader {
 							wrapper.getResultSet(),
 							wrapper.getStatement()
 					);
+					session.getTransactionCoordinator().getJdbcCoordinator().release( wrapper.getStatement() );
 				}
 				persistenceContext.afterLoad();
 			}

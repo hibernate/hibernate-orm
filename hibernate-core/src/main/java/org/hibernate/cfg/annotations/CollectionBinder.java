@@ -1451,8 +1451,9 @@ public abstract class CollectionBinder {
 			BinderHelper.createSyntheticPropertyReference(
 					joinColumns, collValue.getOwner(), collectionEntity, collValue, false, mappings
 			);
-		} catch(RecoverableException ex) {
-			throw new RecoverableException("Unable to map collection property " + property.getName() + "of class " + collectionEntity.getClassName(), ex);
+		}
+		catch (AnnotationException ex) {
+			throw new AnnotationException( "Unable to map collection " + collectionEntity.getClassName() + "." + property.getName(), ex );
 		}
 		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, mappings );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {

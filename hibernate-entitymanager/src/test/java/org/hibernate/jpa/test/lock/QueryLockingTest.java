@@ -23,8 +23,16 @@
  */
 package org.hibernate.jpa.test.lock;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Id;
@@ -32,22 +40,14 @@ import javax.persistence.LockModeType;
 import javax.persistence.Query;
 import javax.persistence.Table;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
-
 import org.hibernate.LockMode;
+import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.QueryImpl;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.internal.SessionImpl;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -92,7 +92,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-8756" )
-	public void testLockModeSetToNoneForNonSelectQueryShouldBeAllowed() {
+	public void testNoneLockModeForNonSelectQueryAllowed() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		QueryImpl jpaQuery = em.createQuery( "delete from Lockable l" ).unwrap( QueryImpl.class );
@@ -103,24 +103,27 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		jpaQuery.setLockMode( LockModeType.NONE );
 
 		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test( expected = IllegalStateException.class )
-	@TestForIssue( jiraKey = "HHH-8756" )
-	public void testLockModeSetToValueOtherThanNoneForNonSelectQueryIsNotAllowed() {
-		EntityManager em = getOrCreateEntityManager();
+		em.clear();
+		
+		// ensure other modes still throw the exception
 		em.getTransaction().begin();
-		QueryImpl jpaQuery = em.createQuery( "delete from Lockable l" ).unwrap( QueryImpl.class );
+		jpaQuery = em.createQuery( "delete from Lockable l" ).unwrap( QueryImpl.class );
 
-		org.hibernate.internal.QueryImpl hqlQuery = (org.hibernate.internal.QueryImpl) jpaQuery.getHibernateQuery();
+		hqlQuery = (org.hibernate.internal.QueryImpl) jpaQuery.getHibernateQuery();
 		assertEquals( LockMode.NONE, hqlQuery.getLockOptions().getLockMode() );
 
-		// Throws IllegalStateException
-		jpaQuery.setLockMode( LockModeType.PESSIMISTIC_WRITE );
-
-		em.getTransaction().commit();
-		em.close();
+		try {
+			// Throws IllegalStateException
+			jpaQuery.setLockMode( LockModeType.PESSIMISTIC_WRITE );
+			fail( "IllegalStateException should have been thrown." );
+		}
+		catch (IllegalStateException e) {
+			// expected
+		}
+		finally {
+			em.getTransaction().rollback();
+			em.close();
+		}
 	}
 
 	@Test

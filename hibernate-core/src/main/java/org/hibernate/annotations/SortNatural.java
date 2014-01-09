@@ -23,6 +23,13 @@
  */
 package org.hibernate.annotations;
 
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 /**
  * Specifies in-memory Set/Map sorting using natural sorting.
  *
@@ -36,5 +43,7 @@ package org.hibernate.annotations;
  *
  * @author Steve Ebersole
  */
+@Target({METHOD, FIELD})
+@Retention(RUNTIME)
 public @interface SortNatural {
 }

@@ -59,12 +59,13 @@ public class NonClassFileArchiveEntryHandler implements ArchiveEntryHandler {
 
 	@SuppressWarnings("SimplifiableIfStatement")
 	private boolean acceptAsMappingFile(ArchiveEntry entry, ArchiveContext context) {
-		if ( entry.getName().endsWith( "hbm.xml" ) ) {
+		if ( entry.getNameWithinArchive().endsWith( "hbm.xml" ) ) {
 			return scanOptions.canDetectHibernateMappingFiles();
 		}
 
 		// todo : should really do this case-insensitively
-		if ( entry.getName().endsWith( "META-INF/orm.xml" ) ) {
+		// use getNameWithinArchive, not getName -- ensure paths are normalized (Windows, etc.)
+		if ( entry.getNameWithinArchive().endsWith( "META-INF/orm.xml" ) ) {
 			if ( context.getPersistenceUnitDescriptor().getMappingFileNames().contains( "META-INF/orm.xml" ) ) {
 				// if the user explicitly listed META-INF/orm.xml, only except the root one
 				//

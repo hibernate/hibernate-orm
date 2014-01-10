@@ -118,9 +118,14 @@ public final class IdentifierGeneratorHelper {
 				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
 			}
 		}
-
+		int columnCount = 1;
+		try{
+			columnCount = rs.getMetaData().getColumnCount();
+		}catch(Exception e){
+			//Oracle driver will throw NPE
+		}
 		Class clazz = type.getReturnedClass();
-		if (rs.getMetaData().getColumnCount() == 1) {
+		if (columnCount == 1) {
 			if ( clazz == Long.class ) {
 				return rs.getLong( 1 );
 			}

@@ -132,9 +132,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 			if (argType != Object.class && argType != entityClass) {
 				continue;
 			}
-			if (!method.isAccessible()) {
-				method.setAccessible( true );
-			}
+			method.setAccessible( true );
 
 			return new ListenerCallback( listenerInstance, method );
 		}
@@ -151,7 +149,7 @@ public class CallbackProcessorImpl implements CallbackProcessor {
 		for (Method method : callbackClass.getDeclaredMethods()) {
 			if (!method.getName().equals(methodName)) continue;
 			if (method.getParameterTypes().length != 0) continue;
-			if (!method.isAccessible()) method.setAccessible(true);
+			method.setAccessible(true);
 			return new EntityCallback(method);
 		}
 		return null;

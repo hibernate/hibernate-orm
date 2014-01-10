@@ -42,6 +42,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
@@ -195,6 +196,8 @@ public class StandardDialectResolver implements DialectResolver {
 			final int majorVersion = info.getDatabaseMajorVersion();
 
 			switch ( majorVersion ) {
+				case 12:
+					return new Oracle12cDialect();
 				case 11:
 					return new Oracle10gDialect();
 				case 10:

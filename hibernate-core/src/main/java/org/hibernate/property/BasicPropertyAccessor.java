@@ -266,7 +266,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		Method method = setterMethod(theClass, propertyName);
 
 		if (method!=null) {
-			if ( !ReflectHelper.isPublic(theClass, method) ) method.setAccessible(true);
+			method.setAccessible(true);
 			return new BasicSetter(theClass, method, propertyName);
 		}
 		else {
@@ -331,9 +331,7 @@ public class BasicPropertyAccessor implements PropertyAccessor {
 		Method method = getterMethod(theClass, propertyName);
 
 		if (method!=null) {
-			if ( !ReflectHelper.isPublic( theClass, method ) ) {
-				method.setAccessible(true);
-			}
+			method.setAccessible(true);
 			return new BasicGetter(theClass, method, propertyName);
 		}
 		else {

@@ -192,9 +192,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 						returnValue = thisMethod.invoke( target, args );
 					}
 					else {
-						if ( !thisMethod.isAccessible() ) {
-							thisMethod.setAccessible( true );
-						}
+						thisMethod.setAccessible( true );
 						returnValue = thisMethod.invoke( target, args );
 					}
 					

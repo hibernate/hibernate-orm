@@ -227,14 +227,11 @@ public class EntityTuplizerFactory implements Serializable {
 		Constructor<? extends EntityTuplizer> constructor = null;
 		try {
 			constructor = clazz.getDeclaredConstructor( constructorArgs );
-			if ( ! ReflectHelper.isPublic( constructor ) ) {
-				try {
-					// found a constructor, but it was not publicly accessible so try to request accessibility
-					constructor.setAccessible( true );
-				}
-				catch ( SecurityException e ) {
-					constructor = null;
-				}
+			try {
+				constructor.setAccessible( true );
+			}
+			catch ( SecurityException e ) {
+				constructor = null;
 			}
 		}
 		catch ( NoSuchMethodException ignore ) {

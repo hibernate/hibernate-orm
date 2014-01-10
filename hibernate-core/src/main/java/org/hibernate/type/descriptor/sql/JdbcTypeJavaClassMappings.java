@@ -26,7 +26,6 @@ package org.hibernate.type.descriptor.sql;
 import java.math.BigDecimal;
 import java.sql.Blob;
 import java.sql.Clob;
-import java.sql.Date;
 import java.sql.Ref;
 import java.sql.Struct;
 import java.sql.Time;
@@ -108,7 +107,7 @@ public class JdbcTypeJavaClassMappings {
 		jdbcJavaClassMappings.put( Float.class, Types.REAL );
 		jdbcJavaClassMappings.put( Double.class, Types.DOUBLE );
 		jdbcJavaClassMappings.put( byte[].class, Types.LONGVARBINARY );
-		jdbcJavaClassMappings.put( Date.class, Types.DATE );
+		jdbcJavaClassMappings.put( java.sql.Date.class, Types.DATE );
 		jdbcJavaClassMappings.put( Time.class, Types.TIME );
 		jdbcJavaClassMappings.put( Timestamp.class, Types.TIMESTAMP );
 		jdbcJavaClassMappings.put( Blob.class, Types.BLOB );
@@ -123,7 +122,7 @@ public class JdbcTypeJavaClassMappings {
 		jdbcJavaClassMappings.put( char[].class, Types.VARCHAR );
 		jdbcJavaClassMappings.put( Character[].class, Types.VARCHAR );
 		jdbcJavaClassMappings.put( Byte[].class, Types.LONGVARBINARY );
-		jdbcJavaClassMappings.put( Date.class, Types.TIMESTAMP );
+		jdbcJavaClassMappings.put( java.util.Date.class, Types.TIMESTAMP );
 		jdbcJavaClassMappings.put( Calendar.class, Types.TIMESTAMP );
 
 		return jdbcJavaClassMappings;

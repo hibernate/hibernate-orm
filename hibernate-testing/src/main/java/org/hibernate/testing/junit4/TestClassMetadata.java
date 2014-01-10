@@ -83,13 +83,11 @@ public class TestClassMetadata {
 	}
 
 	private void ensureAccessibility(Method method) {
-		if ( !method.isAccessible() ) {
-			try {
-				method.setAccessible( true );
-			}
-			catch (Exception ignored) {
-				// ignore for now
-			}
+		try {
+			method.setAccessible( true );
+		}
+		catch (Exception ignored) {
+			// ignore for now
 		}
 	}
 
@@ -141,17 +139,15 @@ public class TestClassMetadata {
 					)
 			);
 		}
-		if ( !method.isAccessible() ) {
-			try {
-				method.setAccessible( true );
-			}
-			catch (Exception e) {
-				errors.add(
-						new InvalidMethodForAnnotationException(
-								type.buildTypeMarker() + " attached to inaccessible method and unable to make accessible"
-						)
-				);
-			}
+		try {
+			method.setAccessible( true );
+		}
+		catch (Exception e) {
+			errors.add(
+					new InvalidMethodForAnnotationException(
+							type.buildTypeMarker() + " attached to inaccessible method and unable to make accessible"
+					)
+			);
 		}
 	}
 

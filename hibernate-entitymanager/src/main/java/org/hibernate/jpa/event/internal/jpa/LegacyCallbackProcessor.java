@@ -104,7 +104,7 @@ public class LegacyCallbackProcessor implements CallbackProcessor {
 												.getName() + " - " + xMethod
 								);
 							}
-							if (!method.isAccessible()) method.setAccessible(true);
+							method.setAccessible(true);
 							log.debugf("Adding %s as %s callback for entity %s",
 									   methodName,
 									   annotation.getSimpleName(),

@@ -157,7 +157,7 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 		catch (NoSuchFieldException nsfe) {
 			field = getField( clazz, clazz.getSuperclass(), name );
 		}
-		if ( !ReflectHelper.isPublic(clazz, field) ) field.setAccessible(true);
+		field.setAccessible(true);
 		return field;
 	}
 
@@ -172,7 +172,7 @@ public class DirectPropertyAccessor implements PropertyAccessor {
 		catch (NoSuchFieldException nsfe) {
 			field = getField( root, clazz.getSuperclass(), name );
 		}
-		if ( !ReflectHelper.isPublic(clazz, field) ) field.setAccessible(true);
+		field.setAccessible(true);
 		return field;
 	}
 

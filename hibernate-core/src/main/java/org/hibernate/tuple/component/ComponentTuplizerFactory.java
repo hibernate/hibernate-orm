@@ -135,14 +135,11 @@ public class ComponentTuplizerFactory implements Serializable {
 		Constructor<? extends ComponentTuplizer> constructor = null;
 		try {
 			constructor = clazz.getDeclaredConstructor( COMPONENT_TUP_CTOR_SIG );
-			if ( ! ReflectHelper.isPublic( constructor ) ) {
-				try {
-					// found a constructor, but it was not publicly accessible so try to request accessibility
-					constructor.setAccessible( true );
-				}
-				catch ( SecurityException e ) {
-					constructor = null;
-				}
+			try {
+				constructor.setAccessible( true );
+			}
+			catch ( SecurityException e ) {
+				constructor = null;
 			}
 		}
 		catch ( NoSuchMethodException ignore ) {

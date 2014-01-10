@@ -14,12 +14,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 /**
  * @author Emmanuel Bernard
  */
 @Entity
-@Table(name = "`User`")
+@Table(name = "`User`", uniqueConstraints = @UniqueConstraint(columnNames = { "house3" }))
 public class User implements Serializable {
 
 	@Id
@@ -39,6 +40,9 @@ public class User implements Serializable {
 	private Long house1;
 	@Column(name = "`house`", insertable = false, updatable = false )
 	private Long house2;
+	@ManyToOne
+	@JoinColumn(name = "house3")
+	private House house3; // test UK on FK w/ global quoting -- see HHH-8638
 
 	public long getId() {
 		return id;
@@ -78,5 +82,13 @@ public class User implements Serializable {
 
 	public void setHouse2(Long house2) {
 		this.house2 = house2;
+	}
+
+	public House getHouse3() {
+		return house;
+	}
+
+	public void setHouse3(House house3) {
+		this.house3 = house3;
 	}
 }

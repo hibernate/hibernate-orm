@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -22,6 +21,8 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQL5Dialect;
+import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
+import org.hibernate.engine.spi.NamedSQLQueryDefinitionBuilder;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.test.sql.hand.Dimension;
 import org.hibernate.test.sql.hand.Employment;
@@ -140,6 +141,28 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 			s.getTransaction().rollback();
 			s.close();
 		}
+	}
+	
+	@Test
+	public void testRegisteredNamedSQLQueryWithScalar()
+	{
+		final NamedSQLQueryDefinitionBuilder builder = new NamedSQLQueryDefinitionBuilder();
+		builder.setName("namedQuery");
+		builder.setQuery("select count(*) AS count from organization");
+		builder.setQueryReturns(new NativeSQLQueryReturn[1]);
+		
+		sessionFactory().registerNamedSQLQueryDefinition("namedQuery", builder.createNamedQueryDefinition());
+
+		final Session s = openSession();
+		s.beginTransaction();
+		final SQLQuery query = (SQLQuery) s.getNamedQuery("namedQuery");
+		query.addScalar("count");
+		final Object result = query.uniqueResult();
+ 		s.getTransaction().commit();
+		s.close();
+		
+		assertNotNull(result);
+		assertEquals(BigInteger.valueOf(0), result);
 	}
 
 	@Test

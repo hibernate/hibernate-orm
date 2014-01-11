@@ -28,7 +28,7 @@ package org.hibernate.dialect;
  * 
  * @author edalquist
  */
-public class PostgreSQL9Dialect extends PostgreSQL81Dialect {
+public class PostgreSQL9Dialect extends PostgreSQL82Dialect {
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
 		return true;

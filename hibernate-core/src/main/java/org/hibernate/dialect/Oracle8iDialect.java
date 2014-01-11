@@ -44,6 +44,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.id.SequenceIdentityGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
@@ -207,11 +208,6 @@ public class Oracle8iDialect extends Dialect {
 	protected void registerDefaultProperties() {
 		getDefaultProperties().setProperty( Environment.USE_STREAMS_FOR_BINARY, "true" );
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
-		// Oracle driver reports to support getGeneratedKeys(), but they only
-		// support the version taking an array of the names of the columns to
-		// be returned (via its RETURNING clause).  No other driver seems to
-		// support this overloaded version.
-		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
 	}
 
 	@Override
@@ -619,5 +615,10 @@ public class Oracle8iDialect extends Dialect {
 	public CallableStatementSupport getCallableStatementSupport() {
 		// Oracle supports returning cursors
 		return StandardCallableStatementSupport.REF_CURSOR_INSTANCE;
+	}
+	
+	@Override
+	public Class<?> getNativeIdentifierGeneratorClass() {
+		return SequenceIdentityGenerator.class;
 	}
 }

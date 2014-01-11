@@ -24,6 +24,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.cfg.Environment;
+import org.hibernate.id.SequenceIdentityGenerator;
 import org.hibernate.sql.ANSIJoinFragment;
 import org.hibernate.sql.JoinFragment;
 
@@ -41,7 +43,16 @@ public class Oracle10gDialect extends Oracle9iDialect {
 	 */
 	public Oracle10gDialect() {
 		super();
+		getDefaultProperties().setProperty( Environment.USE_GET_GENERATED_KEYS, "false" );
 	}
+	
+	
+
+	@Override
+	public Class<?> getNativeIdentifierGeneratorClass() {
+		return SequenceIdentityGenerator.class;
+	}
+
 
 	@Override
 	public JoinFragment createOuterJoinFragment() {

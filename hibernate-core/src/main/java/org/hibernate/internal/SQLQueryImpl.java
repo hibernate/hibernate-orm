@@ -89,10 +89,10 @@ public class SQLQueryImpl extends AbstractQueryImpl implements SQLQuery {
 						queryDef.getResultSetRef()
 					);
 			}
-			this.queryReturns = Arrays.asList( definition.getQueryReturns() );
+			this.queryReturns = new ArrayList<NativeSQLQueryReturn>(Arrays.asList( definition.getQueryReturns() ));
 		}
 		else if ( queryDef.getQueryReturns() != null && queryDef.getQueryReturns().length > 0 ) {
-			this.queryReturns = Arrays.asList( queryDef.getQueryReturns() );
+			this.queryReturns = new ArrayList<NativeSQLQueryReturn>(Arrays.asList( queryDef.getQueryReturns()));
 		}
 		else {
 			this.queryReturns = new ArrayList<NativeSQLQueryReturn>();

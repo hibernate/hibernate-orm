@@ -84,10 +84,12 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	private TransactionCoordinator transactionCoordinator;
 	private PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
+	private long timestamp;
 
-	StatelessSessionImpl(Connection connection, String tenantIdentifier, SessionFactoryImpl factory) {
+	StatelessSessionImpl(Connection connection, String tenantIdentifier, SessionFactoryImpl factory, long timestamp) {
 		super( factory, tenantIdentifier );
 		this.transactionCoordinator = new TransactionCoordinatorImpl( connection, this );
+		this.timestamp = timestamp;
 	}
 
 	// TransactionContext ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -532,7 +534,7 @@ public class StatelessSessionImpl extends AbstractSessionImpl implements Statele
 
 	@Override
 	public long getTimestamp() {
-		throw new UnsupportedOperationException();
+		return timestamp;
 	}
 
 	@Override

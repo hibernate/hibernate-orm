@@ -1718,7 +1718,7 @@ public final class SessionFactoryImpl
 
 		@Override
 		public StatelessSession openStatelessSession() {
-			return new StatelessSessionImpl( connection, tenantIdentifier, sessionFactory );
+			return new StatelessSessionImpl( connection, tenantIdentifier, sessionFactory, sessionFactory.settings.getRegionFactory().nextTimestamp() );
 		}
 
 		@Override

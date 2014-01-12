@@ -30,10 +30,8 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
-import javax.persistence.Table;
 
 @Entity
-@Table(name = "VYA6CPP")
 public class SecondEntityWithCompositePK implements Serializable {
 
 	@EmbeddedId

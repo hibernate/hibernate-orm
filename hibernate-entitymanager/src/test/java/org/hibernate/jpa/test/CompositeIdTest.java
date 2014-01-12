@@ -31,6 +31,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import org.hibernate.testing.TestForIssue;
+
 public class CompositeIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -44,6 +46,7 @@ public class CompositeIdTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-6638" )
 	public void testCompositeId() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

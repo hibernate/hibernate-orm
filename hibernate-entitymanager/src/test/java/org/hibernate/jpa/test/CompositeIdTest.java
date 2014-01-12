@@ -46,7 +46,7 @@ public class CompositeIdTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-6638" )
+	@TestForIssue(jiraKey = "HHH-6638")
 	public void testCompositeId() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -64,12 +64,12 @@ public class CompositeIdTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
-		Query query = em.createQuery("select fewc from FirstEntityWithCompositePK fewc");
-		query.setMaxResults(10);
+		Query query = em.createQuery( "select fewc from FirstEntityWithCompositePK fewc" );
+		query.setMaxResults( 10 );
 		List<FirstEntityWithCompositePK> listFEWC = query.getResultList();
 
-		query = em.createQuery("select sewc from SecondEntityWithCompositePK sewc");
-		query.setMaxResults(10);
+		query = em.createQuery( "select sewc from SecondEntityWithCompositePK sewc" );
+		query.setMaxResults( 10 );
 		List<SecondEntityWithCompositePK> listSEWC = query.getResultList();
 		em.getTransaction().commit();
 	}

@@ -44,9 +44,10 @@ public class FirstEntityWithCompositePK implements Serializable {
 
 	// bi-directional one-to-one association to SecondEntityWithCompositePK
 	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumns( {
-			@JoinColumn(name = "STRINGVALUE1", referencedColumnName = "VALUE1"),
-			@JoinColumn(name = "STRINGVALUE2", referencedColumnName = "VALUE2") })
+	@JoinColumns({
+						 @JoinColumn(name = "STRINGVALUE1", referencedColumnName = "VALUE1"),
+						 @JoinColumn(name = "STRINGVALUE2", referencedColumnName = "VALUE2")
+				 })
 	private SecondEntityWithCompositePK secondEntityWithCompositePK;
 
 	public FirstCompositePK getId() {

@@ -44,6 +44,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
+import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.SequenceIdentityGenerator;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
@@ -61,7 +62,6 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-@SuppressWarnings("deprecation")
 public class Oracle8iDialect extends Dialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
@@ -619,6 +619,6 @@ public class Oracle8iDialect extends Dialect {
 	
 	@Override
 	public Class<?> getNativeIdentifierGeneratorClass() {
-		return SequenceIdentityGenerator.class;
+		return supportsIdentityColumns() ? IdentityGenerator.class: SequenceIdentityGenerator.class;
 	}
 }

@@ -67,6 +67,7 @@ public final class QueryParameters {
 	private Object optionalObject;
 	private String optionalEntityName;
 	private Serializable optionalId;
+	private boolean optionalObjectIsOneOfMany;
 	private boolean isReadOnlyInitialized;
 	private boolean readOnly;
 	private boolean callable;
@@ -383,6 +384,14 @@ public final class QueryParameters {
 		this.optionalObject = optionalObject;
 	}
 
+	public boolean isOptionalObjectIsOneOfMany() {
+		return optionalObjectIsOneOfMany;
+	}
+
+	public void setOptionalObjectIsOneOfMany(boolean optionalObjectIsOneOfMany) {
+		this.optionalObjectIsOneOfMany = optionalObjectIsOneOfMany;
+	}
+
 	/**
 	 * Has the read-only/modifiable mode been explicitly set?
 	 * @see QueryParameters#setReadOnly(boolean)
@@ -584,6 +593,7 @@ public final class QueryParameters {
 				this.optionalId,
 				this.resultTransformer
 		);
+		copy.optionalObjectIsOneOfMany = this.optionalObjectIsOneOfMany;
 		copy.processedSQL = this.processedSQL;
 		copy.processedPositionalParameterTypes = this.processedPositionalParameterTypes;
 		copy.processedPositionalParameterValues = this.processedPositionalParameterValues;

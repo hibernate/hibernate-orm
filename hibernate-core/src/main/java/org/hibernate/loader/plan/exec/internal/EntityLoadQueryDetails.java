@@ -233,7 +233,8 @@ public class EntityLoadQueryDetails extends AbstractLoadQueryDetails {
 					rootReturnReader.getIdentifierResolutionContext( context );
 			// if the entity reference we are hydrating is a Return, it is possible that its EntityKey is
 			// supplied by the QueryParameter optional entity information
-			if ( context.shouldUseOptionalEntityInformation() && context.getQueryParameters().getOptionalId() != null ) {
+			if ( context.shouldUseOptionalEntityInformation() && context.getQueryParameters().getOptionalId() != null &&
+					!context.getQueryParameters().isOptionalObjectIsOneOfMany()) {
 				EntityKey entityKey = ResultSetProcessorHelper.getOptionalObjectKey(
 						context.getQueryParameters(),
 						context.getSession()

@@ -141,6 +141,10 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			qp.setPositionalParameterTypes( types );
 			qp.setPositionalParameterValues( ids );
 			qp.setLockOptions( lockOptions );
+			qp.setOptionalObject( optionalObject );
+			qp.setOptionalEntityName( optionalEntityName );
+			qp.setOptionalId( optionalId );
+			qp.setOptionalObjectIsOneOfMany( optionalId != null );
 
 			result = executeLoad(
 					session,

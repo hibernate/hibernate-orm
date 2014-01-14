@@ -25,11 +25,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Iterator;
+import java.util.Set;
 
+import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -37,6 +43,7 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.UniqueKey;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
@@ -48,11 +55,18 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	
 	private static final int MAX_NAME_LENGTH = 30;
 	
-	private static final String EXPLICIT_FK_NAME_NATIVE = "fk_explicit_native";
+	private static final String EXPLICIT_UK_NAME = "EXPLICIT_UK_NAME";
 	
-	private static final String EXPLICIT_FK_NAME_JPA = "fk_explicit_jpa";
-	
-	private static final String EXPLICIT_UK_NAME = "uk_explicit";
+	private static final String EXPLICIT_COLUMN_NAME_NATIVE = "EXPLICIT_COLUMN_NAME_NATIVE";
+	private static final String EXPLICIT_FK_NAME_NATIVE = "EXPLICIT_FK_NAME_NATIVE";
+	private static final String EXPLICIT_COLUMN_NAME_JPA_O2O = "EXPLICIT_COLUMN_NAME_JPA_O2O";
+	private static final String EXPLICIT_FK_NAME_JPA_O2O = "EXPLICIT_FK_NAME_JPA_O2O";
+	private static final String EXPLICIT_COLUMN_NAME_JPA_M2O = "EXPLICIT_COLUMN_NAME_JPA_M2O";
+	private static final String EXPLICIT_FK_NAME_JPA_M2O = "EXPLICIT_FK_NAME_JPA_M2O";
+	private static final String EXPLICIT_COLUMN_NAME_JPA_M2M = "EXPLICIT_COLUMN_NAME_JPA_M2M";
+	private static final String EXPLICIT_FK_NAME_JPA_M2M = "EXPLICIT_FK_NAME_JPA_M2M";
+	private static final String EXPLICIT_COLUMN_NAME_JPA_ELEMENT = "EXPLICIT_COLUMN_NAME_JPA_ELEMENT";
+	private static final String EXPLICIT_FK_NAME_JPA_ELEMENT = "EXPLICIT_FK_NAME_JPA_ELEMENT";
 	
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -81,8 +95,8 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 	}
 	
 	@Test
-	@TestForIssue( jiraKey = "HHH-1904" )
-	public void testConstraintNameLength() {
+	@FailureExpected(jiraKey = "HHH-8862")
+	public void testConstraintNames() {
 		Iterator<org.hibernate.mapping.Table> tableItr = configuration().getTableMappings();
 		int foundCount = 0;
 		while (tableItr.hasNext()) {
@@ -95,14 +109,29 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 				
 				// ensure the randomly generated constraint name doesn't
 				// happen if explicitly given
-				Column column = fk.getColumn( 0 );
-				if ( column.getName().equals( "explicit_native" ) ) {
-					foundCount++;
-					assertEquals( fk.getName(), EXPLICIT_FK_NAME_NATIVE );
-				}
-				else if ( column.getName().equals( "explicit_jpa" ) ) {
-					foundCount++;
-					assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA );
+				Iterator<Column> cItr = fk.columnIterator();
+				while (cItr.hasNext()) {
+					Column column = cItr.next();
+					if ( column.getName().equals( EXPLICIT_COLUMN_NAME_NATIVE ) ) {
+						foundCount++;
+						assertEquals( fk.getName(), EXPLICIT_FK_NAME_NATIVE );
+					}
+					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_O2O ) ) {
+						foundCount++;
+						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_O2O );
+					}
+					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_M2O ) ) {
+						foundCount++;
+						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_M2O );
+					}
+					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_M2M ) ) {
+						foundCount++;
+						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_M2M );
+					}
+					else if ( column.getName().equals( EXPLICIT_COLUMN_NAME_JPA_ELEMENT ) ) {
+						foundCount++;
+						assertEquals( fk.getName(), EXPLICIT_FK_NAME_JPA_ELEMENT );
+					}
 				}
 			}
 			
@@ -121,7 +150,7 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 			}
 		}
 		
-		assertEquals("Could not find the necessary columns.", 3, foundCount);
+		assertEquals("Could not find the necessary columns.", 5, foundCount);
 	}
 	
 	@Entity
@@ -155,11 +184,31 @@ public class ConstraintTest extends BaseCoreFunctionalTestCase {
 		
 		@OneToOne
 		@org.hibernate.annotations.ForeignKey(name = EXPLICIT_FK_NAME_NATIVE)
-		@JoinColumn(name = "explicit_native")
+		@JoinColumn(name = EXPLICIT_COLUMN_NAME_NATIVE)
 		public DataPoint explicit_native;
 		
 		@OneToOne
-		@JoinColumn(name = "explicit_jpa", foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA))
-		public DataPoint explicit_jpa;
+		@JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_O2O,
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_O2O))
+		public DataPoint explicit_jpa_o2o;
+		
+		@ManyToOne
+		@JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2O,
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2O))
+		private DataPoint explicit_jpa_m2o;
+		
+		@ManyToMany
+		@JoinTable(joinColumns = @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_M2M),
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_M2M))
+		private Set<DataPoint> explicit_jpa_m2m;
+		
+		@ElementCollection
+		@CollectionTable(joinColumns =  @JoinColumn(name = EXPLICIT_COLUMN_NAME_JPA_ELEMENT),
+				foreignKey = @javax.persistence.ForeignKey(name = EXPLICIT_FK_NAME_JPA_ELEMENT))
+		private Set<String> explicit_jpa_element;
+	}
+	
+	public static enum SimpleEnum {
+		FOO1, FOO2, FOO3;
 	}
 }

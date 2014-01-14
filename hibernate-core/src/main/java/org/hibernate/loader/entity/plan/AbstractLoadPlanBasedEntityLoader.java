@@ -144,7 +144,7 @@ public abstract class AbstractLoadPlanBasedEntityLoader extends AbstractLoadPlan
 			qp.setOptionalObject( optionalObject );
 			qp.setOptionalEntityName( optionalEntityName );
 			qp.setOptionalId( optionalId );
-			qp.setOptionalObjectIsOneOfMany( optionalId != null );
+			qp.setOptionalObjectInBatch( optionalId != null );
 
 			result = executeLoad(
 					session,

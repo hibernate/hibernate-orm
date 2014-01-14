@@ -67,7 +67,7 @@ public final class QueryParameters {
 	private Object optionalObject;
 	private String optionalEntityName;
 	private Serializable optionalId;
-	private boolean optionalObjectIsOneOfMany;
+	private boolean optionalObjectInBatch;
 	private boolean isReadOnlyInitialized;
 	private boolean readOnly;
 	private boolean callable;
@@ -384,12 +384,12 @@ public final class QueryParameters {
 		this.optionalObject = optionalObject;
 	}
 
-	public boolean isOptionalObjectIsOneOfMany() {
-		return optionalObjectIsOneOfMany;
+	public boolean isOptionalObjectInBatch() {
+		return optionalObjectInBatch;
 	}
 
-	public void setOptionalObjectIsOneOfMany(boolean optionalObjectIsOneOfMany) {
-		this.optionalObjectIsOneOfMany = optionalObjectIsOneOfMany;
+	public void setOptionalObjectInBatch(boolean optionalObjectInBatch) {
+		this.optionalObjectInBatch = optionalObjectInBatch;
 	}
 
 	/**
@@ -593,7 +593,7 @@ public final class QueryParameters {
 				this.optionalId,
 				this.resultTransformer
 		);
-		copy.optionalObjectIsOneOfMany = this.optionalObjectIsOneOfMany;
+		copy.optionalObjectInBatch = this.optionalObjectInBatch;
 		copy.processedSQL = this.processedSQL;
 		copy.processedPositionalParameterTypes = this.processedPositionalParameterTypes;
 		copy.processedPositionalParameterValues = this.processedPositionalParameterValues;

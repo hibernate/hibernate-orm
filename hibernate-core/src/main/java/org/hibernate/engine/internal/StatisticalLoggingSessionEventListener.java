@@ -266,7 +266,7 @@ public class StatisticalLoggingSessionEventListener extends BaseSessionEventList
 		partialFlushCount++;
 		partialFlushEntityCount += numberOfEntities;
 		partialFlushCollectionCount += numberOfCollections;
-		partialFlushTime += ( System.nanoTime() - flushStart );
+		partialFlushTime += ( System.nanoTime() - partialFlushStart );
 		partialFlushStart = -1;
 	}
 

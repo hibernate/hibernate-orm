@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AttributeNode;
 import javax.persistence.EntityGraph;
 import javax.persistence.Subgraph;
@@ -36,6 +37,7 @@ import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.FromElementFactory;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.sql.JoinType;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -85,6 +87,8 @@ public class EntityGraphQueryHint {
 
 			final String attributeName = attributeNode.getAttributeName();
 			final String className = origin.getClassName();
+			// TODO: This is ignored by collection types and probably wrong for entity types.  Presumably it screws
+			// with inheritance.
 			final String role = className + "." + attributeName;
 			final String classAlias = origin.getClassAlias();
 			final String originTableAlias = origin.getTableAlias();
@@ -120,6 +124,7 @@ public class EntityGraphQueryHint {
 						);
 					}
 					else if ( propertyType.isCollectionType() ) {
+						CollectionType collectionType = (CollectionType) propertyType;
 						final String[] columns = origin.toColumns( originTableAlias, attributeName, false );
 
 						final FromElementFactory fromElementFactory = new FromElementFactory(
@@ -127,9 +132,9 @@ public class EntityGraphQueryHint {
 								attributeName, classAlias, columns, false
 						);
 						final QueryableCollection queryableCollection = walker.getSessionFactoryHelper()
-								.requireQueryableCollection( role );
+								.requireQueryableCollection( collectionType.getRole() );
 						fromElement = fromElementFactory.createCollection(
-								queryableCollection, role, JoinType.LEFT_OUTER_JOIN, true, false
+								queryableCollection, collectionType.getRole(), JoinType.LEFT_OUTER_JOIN, true, false
 						);
 					}
 				}

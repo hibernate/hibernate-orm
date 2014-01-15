@@ -21,8 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.graphs.find;
+package org.hibernate.jpa.test.graphs;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -35,36 +36,38 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 /**
  * @author Christian Bauer
+ * @author Brett Meyer
  */
-public class FindEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
+public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Foo.class, Bar.class, Baz.class };
+		return new Class[] { Foo.class, Bar.class, Baz.class,
+				Company.class, Employee.class, Manager.class, Location.class };
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-8857")
 	public void loadMultipleAssociations() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 
 		Bar bar = new Bar();
-		bar.name = "bar";
 		em.persist( bar );
 
 		Baz baz = new Baz();
-		baz.name = "baz";
 		em.persist( baz );
 
 		Foo foo = new Foo();
-		foo.name = "foo";
 		foo.bar = bar;
 		foo.baz = baz;
 		em.persist( foo );
@@ -90,14 +93,64 @@ public class FindEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	/**
+	 * JPA 2.1 spec: "Add a node to the graph that corresponds to a managed type with inheritance. This allows for
+	 * multiple subclass subgraphs to be defined for this node of the entity graph. Subclass subgraphs will
+	 * automatically include the specified attributes of superclass subgraphs."
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-8640")
+	public void inheritanceTest() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		Manager manager = new Manager();
+		em.persist( manager );
+		Employee employee = new Employee();
+		employee.friends.add( manager );
+		employee.managers.add( manager );
+		em.persist( employee );
+		Company company = new Company();
+		company.employees.add( employee );
+		company.employees.add( manager );
+		em.persist( company );
+
+		em.getTransaction().commit();
+		em.clear();
+
+		em.getTransaction().begin();
+
+		EntityGraph<Company> entityGraph = em.createEntityGraph( Company.class );
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+		subgraph.addAttributeNodes( "managers" );
+		subgraph.addAttributeNodes( "friends" );
+		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+		subSubgraph.addAttributeNodes( "managers" );
+		subSubgraph.addAttributeNodes( "friends" );
+
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.loadgraph", entityGraph );
+
+		Company result = em.find( Company.class, company.id, properties );
+
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.employees ) );
+		assertEquals( result.employees.size(), 2 );
+		for (Employee resultEmployee : result.employees) {
+			assertTrue( Hibernate.isInitialized( resultEmployee.managers ) );
+			assertTrue( Hibernate.isInitialized( resultEmployee.friends ) );
+		}
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
 	@Entity
-	public static class Foo {
+	private static class Foo {
 
 		@Id
 		@GeneratedValue
 		public Integer id;
-
-		public String name;
 
 		@ManyToOne(fetch = FetchType.LAZY)
 		public Bar bar;
@@ -107,23 +160,19 @@ public class FindEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
-	public static class Bar {
+	private static class Bar {
 
 		@Id
 		@GeneratedValue
-		public Integer id;
-
-		public String name;
+		private Integer id;
 	}
 
 	@Entity
-	public static class Baz {
+	private static class Baz {
 
 		@Id
 		@GeneratedValue
-		public Integer id;
-
-		public String name;
+		private Integer id;
 	}
 
 }

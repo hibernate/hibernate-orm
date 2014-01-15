@@ -35,6 +35,8 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -51,12 +53,15 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
 /**
+ * Jira HHH-8812 claims that explicit {@link javax.persistence.Convert} annotations are not processed when a orm.xml
+ * file is used - specifically that the mixed case is not handled properly.
+ *
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-8807" )
-public class ExplicitDateConvertersTest {
+@TestForIssue( jiraKey = "HHH-8812" )
+public class XmlWithExplicitConvertAnnotationsTest {
 
-	// NOTE : initially unable to reproduce the reported problem
+	// NOTE : essentially the same exact test as ExplicitDateConvertersTest, but here we will mix annotations and xml
 
 	static int callsToConverter = 0;
 
@@ -92,12 +97,25 @@ public class ExplicitDateConvertersTest {
 		}
 	}
 
+	public static class TestEntityListener {
+		@PrePersist
+		@PreUpdate
+		private void listen(Object entity) {
+			System.out.println( "@PrePersist @PreUpdate listener event fired" );
+		}
+	}
+
 	@Test
 	public void testSimpleConvertUsage() throws MalformedURLException {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override
 			public List<String> getManagedClassNames() {
 				return Arrays.asList( Entity1.class.getName() );
+			}
+
+			@Override
+			public List<String> getMappingFileNames() {
+				return Arrays.asList( "org/hibernate/jpa/test/convert/mixed.xml" );
 			}
 		};
 
@@ -137,4 +155,5 @@ public class ExplicitDateConvertersTest {
 			emf.close();
 		}
 	}
+
 }

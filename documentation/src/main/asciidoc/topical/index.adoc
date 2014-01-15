@@ -9,6 +9,7 @@ NOTE: This is still very much a work in progress. <<helping,Help>> is definitely
 == User Guides
 
 * For information on generated (non-identifier) values, see the <<generated/GeneratedValues.adoc#,Generated Values Guide>>
+* For information on logging, see <<logging/Logging.adoc#,Logging Guide>>
 * Others coming soon
 
 == Tooling

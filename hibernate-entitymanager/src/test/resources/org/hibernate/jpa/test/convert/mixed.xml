@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
 
 <!--
   ~ Hibernate, Relational Persistence for Idiomatic Java
   ~
-  ~ Copyright (c) 2013, Red Hat Inc. or third-party contributors as
+  ~ Copyright (c) 2014, Red Hat Inc. or third-party contributors as
   ~ indicated by the @author tags or express copyright attribution
   ~ statements applied by the authors.  All third-party contributions are
   ~ distributed under license by Red Hat Inc.
@@ -23,14 +22,21 @@
   ~ 51 Franklin Street, Fifth Floor
   ~ Boston, MA  02110-1301  USA
   -->
-<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm http://xmlns.jcp.org/xml/ns/persistence/orm/orm_2_1.xsd"
-                 version="2.1">
-    <!-- Intended for use in org.hibernate.jpa.test.convert.SimpleXmlOverriddenTest -->
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+                 version="2.0">
 
-    <package>org.hibernate.jpa.test.convert</package>
-    <entity class="org.hibernate.jpa.test.convert.SimpleXmlOverriddenTest$TheEntity2">
-        <convert attribute-name="it" disable-conversion="true"/>
-    </entity>
+    <!-- Intended for use in org.hibernate.jpa.test.convert.XmlWithExplicitConvertAnnotationsTest -->
+
+    <persistence-unit-metadata>
+        <persistence-unit-defaults>
+
+            <entity-listeners>
+                <entity-listener class="org.hibernate.jpa.test.convert.XmlWithExplicitConvertAnnotationsTest$TestEntityListener"/>
+            </entity-listeners>
+
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+
 </entity-mappings>

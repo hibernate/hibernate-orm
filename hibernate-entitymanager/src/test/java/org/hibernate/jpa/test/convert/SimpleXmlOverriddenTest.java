@@ -23,33 +23,28 @@
  */
 package org.hibernate.jpa.test.convert;
 
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.Convert;
+import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
+import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.fail;
 
 /**
  * Test simple application of Convert annotation via XML.
@@ -57,12 +52,15 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
+	/**
+	 * A baseline test, with an explicit @Convert annotation that should be in effect
+	 */
 	@Test
 	public void baseline() {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override
 			public List<String> getManagedClassNames() {
-				return Arrays.asList( Super.class.getName(), Sub.class.getName() );
+				return Arrays.asList( TheEntity.class.getName() );
 			}
 
 			// No mapping file should mean that the converter is applied
@@ -74,15 +72,43 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 
 		final SessionFactoryImplementor sfi = emf.unwrap( SessionFactoryImplementor.class );
 		try {
-			final EntityPersister ep = sfi.getEntityPersister( Sub.class.getName() );
+			final EntityPersister ep = sfi.getEntityPersister( TheEntity.class.getName() );
 
 			Type type = ep.getPropertyType( "it" );
-			try {
-				assertTyping( StringType.class, type );
-				fail( "Expected AttributeConverter to be applied" );
+			AttributeConverterTypeAdapter adapter = assertTyping( AttributeConverterTypeAdapter.class, type );
+			assertTyping( SillyStringConverter.class, adapter.getAttributeConverter() );
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	/**
+	 * Test outcome of applying overrides via orm.xml, specifically at the attribute level
+	 */
+	@Test
+	public void testDefinitionAtAttributeLevel() {
+		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
+			@Override
+			public List<String> getManagedClassNames() {
+				return Arrays.asList( TheEntity.class.getName() );
 			}
-			catch (AssertionError expected) {
+
+			@Override
+			public List<String> getMappingFileNames() {
+				return Arrays.asList( "org/hibernate/jpa/test/convert/simple-override.xml" );
 			}
+		};
+
+		final Map settings = new HashMap();
+		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();
+
+		final SessionFactoryImplementor sfi = emf.unwrap( SessionFactoryImplementor.class );
+		try {
+			final EntityPersister ep = sfi.getEntityPersister( TheEntity.class.getName() );
+
+			Type type = ep.getPropertyType( "it" );
+			assertTyping( StringType.class, type );
 		}
 		finally {
 			emf.close();
@@ -97,41 +123,7 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override
 			public List<String> getManagedClassNames() {
-				return Arrays.asList( Super.class.getName(), Sub.class.getName() );
-			}
-
-			@Override
-			public List<String> getMappingFileNames() {
-				return Arrays.asList( "org/hibernate/jpa/test/convert/simple-override.xml" );
-			}
-		};
-
-		final Map settings = new HashMap();
-//		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-
-		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();
-
-		final SessionFactoryImplementor sfi = emf.unwrap( SessionFactoryImplementor.class );
-		try {
-			final EntityPersister ep = sfi.getEntityPersister( Sub.class.getName() );
-
-			Type type = ep.getPropertyType( "it" );
-			assertTyping( StringType.class, type );
-		}
-		finally {
-			emf.close();
-		}
-	}
-
-	/**
-	 * Test outcome of applying overrides via orm.xml, specifically at the entity level
-	 */
-	@Test
-	public void testDefinitionAtAttributeLevel() {
-		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
-			@Override
-			public List<String> getManagedClassNames() {
-				return Arrays.asList( Super.class.getName(), Sub.class.getName() );
+				return Arrays.asList( TheEntity2.class.getName() );
 			}
 
 			@Override
@@ -141,13 +133,11 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 		};
 
 		final Map settings = new HashMap();
-//		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();
 
 		final SessionFactoryImplementor sfi = emf.unwrap( SessionFactoryImplementor.class );
 		try {
-			final EntityPersister ep = sfi.getEntityPersister( Sub.class.getName() );
+			final EntityPersister ep = sfi.getEntityPersister( TheEntity2.class.getName() );
 
 			Type type = ep.getPropertyType( "it" );
 			assertTyping( StringType.class, type );
@@ -157,18 +147,19 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 		}
 	}
 
-	@MappedSuperclass
-	public static class Super {
+	@Entity(name="TheEntity")
+	public static class TheEntity {
 		@Id
 		public Integer id;
 		@Convert(converter = SillyStringConverter.class)
 		public String it;
 	}
 
-	@Entity(name = "Sub")
-	// the xml disabled conversion on the Sub#it attribute
-	// Essentially the same test as org.hibernate.jpa.test.convert.SimpleOverriddenConverterTest, but through XML
-	//@Convert( attributeName = "it", disableConversion = true )
-	public static class Sub extends Super {
+	@Entity(name="TheEntity2")
+	@Convert( attributeName = "it", converter = SillyStringConverter.class )
+	public static class TheEntity2 {
+		@Id
+		public Integer id;
+		public String it;
 	}
 }

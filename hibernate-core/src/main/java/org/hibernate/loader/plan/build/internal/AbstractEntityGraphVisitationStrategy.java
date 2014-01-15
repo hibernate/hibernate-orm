@@ -49,10 +49,8 @@ import org.hibernate.loader.plan.spi.LoadPlan;
 import org.hibernate.loader.plan.spi.Return;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
 import org.jboss.logging.Logger;
@@ -73,6 +71,7 @@ import org.jboss.logging.Logger;
  * it is not, then depends on which property is used to apply this entity graph.
  *
  * @author Strong Liu <stliu@hibernate.org>
+ * @author Brett Meyer
  */
 public abstract class AbstractEntityGraphVisitationStrategy
 		extends AbstractLoadPlanBuildingAssociationVisitationStrategy {
@@ -87,10 +86,14 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	protected static final FetchStrategy DEFAULT_EAGER = new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.JOIN );
 	protected static final FetchStrategy DEFAULT_LAZY = new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT );
 	protected final LoadQueryInfluencers loadQueryInfluencers;
-	protected final ArrayDeque<GraphNodeImplementor> graphStack = new ArrayDeque<GraphNodeImplementor>();
-	protected final ArrayDeque<AttributeNodeImplementor> attributeStack = new ArrayDeque<AttributeNodeImplementor>();
-	//the attribute nodes defined in the current graph node (entity graph or subgraph) we're working on
-	protected Map<String, AttributeNodeImplementor> attributeNodeImplementorMap = Collections.emptyMap();
+	// Queue containing entity/sub graphs to be visited.
+	private final ArrayDeque<GraphNodeImplementor> graphStack = new ArrayDeque<GraphNodeImplementor>();
+	// Queue containing attributes being visited, used eventually to determine the fetch strategy.
+	private final ArrayDeque<AttributeNodeImplementor> attributeStack = new ArrayDeque<AttributeNodeImplementor>();
+	// Queue of maps containing the current graph node's attributes.  Used for fast lookup, instead of iterating
+	// over graphStack.peekLast().attributeImplementorNodes().
+	private final ArrayDeque<Map<String, AttributeNodeImplementor>> attributeMapStack
+			= new ArrayDeque<Map<String, AttributeNodeImplementor>>();
 	private EntityReturn rootEntityReturn;
 	private final LockMode lockMode;
 
@@ -106,24 +109,21 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	public void start() {
 		super.start();
 		graphStack.addLast( getRootEntityGraph() );
-		attributeNodeImplementorMap = buildAttributeNodeMap();
 	}
 
 	@Override
 	public void finish() {
 		super.finish();
 		graphStack.removeLast();
-		attributeNodeImplementorMap = Collections.emptyMap();
 		//applying a little internal stack checking
-		if ( !graphStack.isEmpty() || !attributeStack.isEmpty() || !attributeNodeImplementorMap.isEmpty() ) {
+		if ( !graphStack.isEmpty() || !attributeStack.isEmpty() || !attributeMapStack.isEmpty() ) {
 			throw new WalkingException( "Internal stack error" );
 		}
 	}
 
 	@Override
 	public void startingEntity(final EntityDefinition entityDefinition) {
-		//TODO check if the passed in entity definition is the same as the root entity graph (a.k.a they are came from same entity class)?
-		//this maybe the root entity graph or a sub graph.
+		attributeMapStack.addLast( buildAttributeNodeMap() );
 		super.startingEntity( entityDefinition );
 	}
 
@@ -143,6 +143,12 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		return attributeNodeImplementorMap;
 	}
 
+	@Override
+	public void finishingEntity(final EntityDefinition entityDefinition) {
+		attributeMapStack.removeLast();
+		super.finishingEntity( entityDefinition );
+	}
+
 	/**
 	 * I'm using NULL-OBJECT pattern here, for attributes that not existing in the EntityGraph,
 	 * a predefined NULL-ATTRIBUTE-NODE is pushed to the stack.
@@ -156,12 +162,13 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	 */
 	@Override
 	public boolean startingAttribute(AttributeDefinition attributeDefinition) {
+		Map<String, AttributeNodeImplementor> attributeMap = attributeMapStack.peekLast();
 		final String attrName = attributeDefinition.getName();
 		AttributeNodeImplementor attributeNode = NON_EXIST_ATTRIBUTE_NODE;
 		GraphNodeImplementor subGraphNode = NON_EXIST_SUBGRAPH_NODE;
 		//the attribute is in the EntityGraph, so, let's continue
-		if ( attributeNodeImplementorMap.containsKey( attrName ) ) {
-			attributeNode = attributeNodeImplementorMap.get( attrName );
+		if ( attributeMap.containsKey( attrName ) ) {
+			attributeNode = attributeMap.get( attrName );
 			//here we need to check if there is a subgraph (or sub key graph if it is an indexed attribute )
 			Map<Class, Subgraph> subGraphs = attributeNode.getSubgraphs();
 			Class javaType = attributeDefinition.getType().getReturnedClass();
@@ -183,45 +190,18 @@ public abstract class AbstractEntityGraphVisitationStrategy
 		super.finishingAttribute( attributeDefinition );
 	}
 
-	@Override
-	protected boolean handleAssociationAttribute(
-			final AssociationAttributeDefinition attributeDefinition) {
-		return super.handleAssociationAttribute( attributeDefinition );
-	}
-
-	@Override
-	protected boolean handleCompositeAttribute(
-			final AttributeDefinition attributeDefinition) {
-		return super.handleCompositeAttribute( attributeDefinition );
-	}
-
-
-	@Override
-	public void startingComposite(final CompositionDefinition compositionDefinition) {
-		super.startingComposite( compositionDefinition );
-	}
-
-
-	@Override
-	public void finishingComposite(final CompositionDefinition compositionDefinition) {
-		super.finishingComposite( compositionDefinition );
-	}
-
-
-	@Override
-	public void startingCollection(final CollectionDefinition collectionDefinition) {
-		super.startingCollection( collectionDefinition );
-	}
-
-	@Override
-	public void finishingCollection(final CollectionDefinition collectionDefinition) {
-		super.finishingCollection( collectionDefinition );
-	}
-
 
 	@Override
 	public void startingCollectionElements(
 			final CollectionElementDefinition elementDefinition) {
+		AttributeNodeImplementor attributeNode = attributeStack.peekLast();
+		GraphNodeImplementor subGraphNode = NON_EXIST_SUBGRAPH_NODE;
+		Map<Class, Subgraph> subGraphs = attributeNode.getSubgraphs();
+		Class javaType = elementDefinition.getType().getReturnedClass();
+		if ( !subGraphs.isEmpty() && subGraphs.containsKey( javaType ) ) {
+			subGraphNode = (GraphNodeImplementor) subGraphs.get( javaType );
+		}
+		graphStack.addLast( subGraphNode );
 		super.startingCollectionElements( elementDefinition );
 	}
 
@@ -229,6 +209,7 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	public void finishingCollectionElements(
 			final CollectionElementDefinition elementDefinition) {
 		super.finishingCollectionElements( elementDefinition );
+		graphStack.removeLast();
 	}
 
 

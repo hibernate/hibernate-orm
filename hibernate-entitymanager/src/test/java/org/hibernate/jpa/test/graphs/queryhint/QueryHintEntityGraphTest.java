@@ -23,27 +23,21 @@ package org.hibernate.jpa.test.graphs.queryhint;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Query;
 import javax.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.jpa.test.graphs.Company;
+import org.hibernate.jpa.test.graphs.Employee;
+import org.hibernate.jpa.test.graphs.Location;
+import org.hibernate.jpa.test.graphs.Manager;
+import org.hibernate.jpa.test.graphs.Market;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,10 +75,13 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		
-		Subgraph<Employee> subgraph1 = entityGraph.addSubgraph( "employees" );
-		subgraph1.addAttributeNodes( "managers" );
-		Subgraph<Employee> subgraph2 = subgraph1.addSubgraph( "managers" );
-		subgraph2.addAttributeNodes( "managers" );
+		Subgraph<Employee> subgraph = entityGraph.addSubgraph( "employees" );
+		subgraph.addAttributeNodes( "managers" );
+		subgraph.addAttributeNodes( "friends" );
+		Subgraph<Manager> subSubgraph = subgraph.addSubgraph( "managers", Manager.class );
+		subSubgraph.addAttributeNodes( "managers" );
+		subSubgraph.addAttributeNodes( "friends" );
+		
 		query = entityManager.createQuery( "from " + Company.class.getName() );
 		query.setHint( QueryHints.HINT_LOADGRAPH, entityGraph );
 		company = (Company) query.getSingleResult();
@@ -104,10 +101,14 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		while (employeeItr.hasNext()) {
 			Employee employee = employeeItr.next();
 			assertTrue( Hibernate.isInitialized( employee.managers ) );
-			Iterator<Employee> managerItr =  employee.managers.iterator();
+			assertTrue( Hibernate.isInitialized( employee.friends ) );
+			// test 1 more level
+			Iterator<Manager> managerItr =  employee.managers.iterator();
 			while (managerItr.hasNext()) {
 				foundManager = true;
-				assertTrue( Hibernate.isInitialized( managerItr.next().managers ) );
+				Manager manager = managerItr.next();
+				assertTrue( Hibernate.isInitialized( manager.managers ) );
+				assertTrue( Hibernate.isInitialized( manager.friends ) );
 			}
 		}
 		assertTrue(foundManager);
@@ -144,16 +145,14 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		EntityManager entityManager = getOrCreateEntityManager();
 		entityManager.getTransaction().begin();
 		
-		Employee manager1 = new Employee();
+		Manager manager1 = new Manager();
 		entityManager.persist( manager1 );
 		
-		Employee manager2 = new Employee();
-		manager2.managers = new HashSet<Employee>();
+		Manager manager2 = new Manager();
 		manager2.managers.add( manager1 );
 		entityManager.persist( manager2 );
 		
 		Employee employee = new Employee();
-		employee.managers = new HashSet<Employee>();
 		employee.managers.add( manager1 );
 		entityManager.persist( employee );
 		
@@ -163,15 +162,12 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 		entityManager.persist( location );
 		
 		Company company = new Company();
-		company.employees = new HashSet<Employee>();
 		company.employees.add( employee );
 		company.employees.add( manager1 );
 		company.employees.add( manager2 );
 		company.location = location;
-		company.markets = new HashSet<Market>();
 		company.markets.add( Market.SERVICES );
 		company.markets.add( Market.TECHNOLOGY );
-		company.phoneNumbers = new HashSet<String>();
 		company.phoneNumbers.add( "012-345-6789" );
 		company.phoneNumbers.add( "987-654-3210" );
 		entityManager.persist( company );
@@ -182,49 +178,6 @@ public class QueryHintEntityGraphTest extends BaseEntityManagerFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Company.class, Employee.class, Location.class };
-	}
-	
-	@Entity
-	private static class Company implements Serializable {
-		@Id @GeneratedValue
-		public long id;
-		
-		@OneToMany
-		public Set<Employee> employees;
-		
-		@OneToOne(fetch = FetchType.LAZY)
-		public Location location;
-		
-		@ElementCollection
-		public Set<Market> markets;
-		
-		@ElementCollection(fetch = FetchType.EAGER)
-		public Set<String> phoneNumbers;
-	}
-	
-	@Entity
-	private static class Employee {
-		@Id @GeneratedValue
-		public long id;
-		
-		@ManyToMany
-		public Set<Employee> managers;
-	}
-	
-	@Entity
-	private static class Location {
-		public Location() { }
-		
-		@Id @GeneratedValue
-		public long id;
-		
-		public String address;
-		
-		public int zip;
-	}
-	
-	private static enum Market {
-		SERVICES, TECHNOLOGY, INDUSTRIAL;
+		return new Class<?>[] { Company.class, Employee.class, Manager.class, Location.class };
 	}
 }

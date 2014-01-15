@@ -122,7 +122,7 @@ public class SubgraphImpl<T> extends AbstractGraphNode<T> implements Subgraph<T>
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Attribute<T,?> resolveAttribute(String attributeName) {
-		final Attribute<T,?> attribute = managedType.getDeclaredAttribute( attributeName );
+		final Attribute<T,?> attribute = managedType.getAttribute( attributeName );
 		if ( attribute == null ) {
 			throw new IllegalArgumentException(
 					String.format(

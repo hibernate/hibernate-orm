@@ -23,101 +23,107 @@
  */
 package org.hibernate.jpa.test.graphs.find;
 
-import org.hibernate.Hibernate;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
-import javax.persistence.*;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import javax.persistence.Entity;
+import javax.persistence.EntityGraph;
+import javax.persistence.EntityManager;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+import org.hibernate.Hibernate;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.junit.Test;
 
 /**
  * @author Christian Bauer
  */
 public class FindEntityGraphTests extends BaseEntityManagerFunctionalTestCase {
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class[]{Foo.class, Bar.class, Baz.class};
-    }
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] { Foo.class, Bar.class, Baz.class };
+	}
 
-    @Test
-    public void loadParallelManyToOne() {
-        EntityManager em = getOrCreateEntityManager();
-        em.getTransaction().begin();
+	@Test
+	public void loadMultipleAssociations() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
 
-        Bar bar = new Bar();
-        bar.id = 1;
-        bar.name = "bar";
-        em.persist(bar);
+		Bar bar = new Bar();
+		bar.name = "bar";
+		em.persist( bar );
 
-        Baz baz = new Baz();
-        baz.id = 2;
-        baz.name = "baz";
-        em.persist(baz);
+		Baz baz = new Baz();
+		baz.name = "baz";
+		em.persist( baz );
 
-        Foo foo = new Foo();
-        foo.id = 3;
-        foo.name = "foo";
-        foo.bar = bar;
-        foo.baz = baz;
-        em.persist(foo);
+		Foo foo = new Foo();
+		foo.name = "foo";
+		foo.bar = bar;
+		foo.baz = baz;
+		em.persist( foo );
 
-        em.getTransaction().commit();
-        em.close();
+		em.getTransaction().commit();
+		em.clear();
 
-        em = getOrCreateEntityManager();
-        em.getTransaction().begin();
+		em.getTransaction().begin();
 
-        EntityGraph<Foo> fooGraph = em.createEntityGraph(Foo.class);
-        fooGraph.addAttributeNodes("bar", "baz");
+		EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
+		fooGraph.addAttributeNodes( "bar", "baz" );
 
-        Map<String, Object> properties = new HashMap<String, Object>();
-        properties.put("javax.persistence.loadgraph", fooGraph);
+		Map<String, Object> properties = new HashMap<String, Object>();
+		properties.put( "javax.persistence.loadgraph", fooGraph );
 
-        Foo result = em.find(Foo.class, foo.id, properties);
+		Foo result = em.find( Foo.class, foo.id, properties );
 
-        assertTrue(Hibernate.isInitialized(result));
-        assertTrue(Hibernate.isInitialized(result.bar));
-        assertTrue(Hibernate.isInitialized(result.baz));
+		assertTrue( Hibernate.isInitialized( result ) );
+		assertTrue( Hibernate.isInitialized( result.bar ) );
+		assertTrue( Hibernate.isInitialized( result.baz ) );
 
-        em.getTransaction().commit();
-        em.close();
-    }
+		em.getTransaction().commit();
+		em.close();
+	}
 
-    @Entity
-    public static class Foo {
+	@Entity
+	public static class Foo {
 
-        @Id
-        public Integer id;
+		@Id
+		@GeneratedValue
+		public Integer id;
 
-        public String name;
+		public String name;
 
-        @ManyToOne(fetch = FetchType.LAZY)
-        public Bar bar;
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Bar bar;
 
-        @ManyToOne(fetch = FetchType.LAZY)
-        public Baz baz;
-    }
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Baz baz;
+	}
 
-    @Entity
-    public static class Bar {
+	@Entity
+	public static class Bar {
 
-        @Id
-        public Integer id;
+		@Id
+		@GeneratedValue
+		public Integer id;
 
-        public String name;
-    }
+		public String name;
+	}
 
-    @Entity
-    public static class Baz {
+	@Entity
+	public static class Baz {
 
-        @Id
-        public Integer id;
+		@Id
+		@GeneratedValue
+		public Integer id;
 
-        public String name;
-    }
+		public String name;
+	}
 
 }

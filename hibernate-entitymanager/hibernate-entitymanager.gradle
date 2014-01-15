@@ -32,6 +32,8 @@ dependencies {
     // for testing stored procedure support
     testCompile( libraries.derby )
 
+	testCompile( 'joda-time:joda-time:2.3' )
+
     hibernateJpaModelGenTool( project( ':hibernate-jpamodelgen' ) )
 }
 

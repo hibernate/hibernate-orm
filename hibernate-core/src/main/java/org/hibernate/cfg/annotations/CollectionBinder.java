@@ -92,6 +92,7 @@ import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.PropertyPreloadedData;
+import org.hibernate.cfg.RecoverableException;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.CoreMessageLogger;
@@ -1446,9 +1447,14 @@ public abstract class CollectionBinder {
 			boolean cascadeDeleteEnabled,
 			XProperty property,
 			Mappings mappings) {
-		BinderHelper.createSyntheticPropertyReference(
-				joinColumns, collValue.getOwner(), collectionEntity, collValue, false, mappings
-		);
+		try {
+			BinderHelper.createSyntheticPropertyReference(
+					joinColumns, collValue.getOwner(), collectionEntity, collValue, false, mappings
+			);
+		}
+		catch (AnnotationException ex) {
+			throw new AnnotationException( "Unable to map collection " + collectionEntity.getClassName() + "." + property.getName(), ex );
+		}
 		SimpleValue key = buildCollectionKey( collValue, joinColumns, cascadeDeleteEnabled, property, mappings );
 		if ( property.isAnnotationPresent( ElementCollection.class ) && joinColumns.length > 0 ) {
 			joinColumns[0].setJPA2ElementCollection( true );

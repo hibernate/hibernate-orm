@@ -29,6 +29,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
+import org.hibernate.hql.internal.ast.util.ColumnHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.type.OneToOneType;
@@ -43,7 +44,7 @@ import antlr.collections.AST;
  *
  * @author Steve Ebersole
  */
-public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryOperatorNode {
+public class BinaryLogicOperatorNode extends AbstractSelectExpression implements BinaryOperatorNode {
 	/**
 	 * Performs the operator node initialization by seeking out any parameter
 	 * nodes and setting their expected type, if possible.
@@ -267,5 +268,9 @@ public class BinaryLogicOperatorNode extends HqlSqlWalkerNode implements BinaryO
 	 */
 	public Node getRightHandOperand() {
 		return (Node) getFirstChild().getNextSibling();
+	}
+
+	public void setScalarColumnText(int i) throws SemanticException {
+		ColumnHelper.generateSingleScalarColumn( this, i );
 	}
 }

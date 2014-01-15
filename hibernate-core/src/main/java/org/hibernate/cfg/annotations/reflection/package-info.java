@@ -1,7 +1,7 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * Copyright (c) 2008-2011, Red Hat Inc. or third-party contributors as
+ * Copyright (c) 2014, Red Hat Inc. or third-party contributors as
  * indicated by the @author tags or express copyright attribution
  * statements applied by the authors.  All third-party contributions are
  * distributed under license by Red Hat Inc.
@@ -21,35 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.hql.internal.ast.tree;
-
-import antlr.SemanticException;
-
-import org.hibernate.hql.internal.ast.util.ColumnHelper;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.Type;
 
 /**
- * Represents a unary operator node.
- *
- * @author Steve Ebersole
+ * Defines the capability to merge mapping information from both annotations and orm.xml sources into a unified set of
+ * metadata in the Hibernate commons-annotations model.
  */
-public class UnaryLogicOperatorNode extends AbstractSelectExpression implements UnaryOperatorNode {
-	public Node getOperand() {
-		return (Node) getFirstChild();
-	}
-
-	public void initialize() {
-		// nothing to do; even if the operand is a parameter, no way we could
-		// infer an appropriate expected type here
-	}
-
-	public Type getDataType() {
-		// logic operators by definition resolve to booleans
-		return StandardBasicTypes.BOOLEAN;
-	}
-
-	public void setScalarColumnText(int i) throws SemanticException {
-		ColumnHelper.generateSingleScalarColumn( this, i );
-	}
-}
+package org.hibernate.cfg.annotations.reflection;

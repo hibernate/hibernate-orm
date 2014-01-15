@@ -2506,7 +2506,7 @@ public abstract class Loader {
 		return factory.getEntityPersister( entityType.getAssociatedEntityName() );
 	}
 
-	private void putResultInQueryCache(
+	protected void putResultInQueryCache(
 			final SessionImplementor session,
 			final QueryParameters queryParameters,
 			final Type[] resultTypes,

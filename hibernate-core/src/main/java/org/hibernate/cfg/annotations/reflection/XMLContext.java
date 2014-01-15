@@ -21,9 +21,6 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-
-// $Id$
-
 package org.hibernate.cfg.annotations.reflection;
 
 import java.io.Serializable;
@@ -37,21 +34,23 @@ import javax.persistence.AttributeConverter;
 import org.hibernate.AnnotationException;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
-
-import org.jboss.logging.Logger;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
 
 /**
+ * A helper for consuming orm.xml mappings.
+ *
  * @author Emmanuel Bernard
  * @author Brett Meyer
  */
 public class XMLContext implements Serializable {
-    private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, XMLContext.class.getName());
+    private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
+
 	private Default globalDefaults;
 	private Map<String, Element> classOverriding = new HashMap<String, Element>();
 	private Map<String, Default> defaultsOverriding = new HashMap<String, Default>();

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.AttributeConverter;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -45,49 +46,44 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 
 import org.hibernate.testing.TestForIssue;
+
 import org.junit.Test;
 
+import org.joda.time.LocalDate;
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-@TestForIssue( jiraKey = "HHH-8807" )
-public class ExplicitDateConvertersTest {
-
-	// NOTE : initially unable to reproduce the reported problem
-
+@TestForIssue( jiraKey = "HHH-8842" )
+public class BasicJodaTimeConversionTest {
 	static int callsToConverter = 0;
 
-	public static class LongToDateConverter implements AttributeConverter<Date,Long> {
-		@Override
-		public Long convertToDatabaseColumn(Date attribute) {
+	public static class JodaLocalDateConverter implements AttributeConverter<LocalDate, Date> {
+		public Date convertToDatabaseColumn(LocalDate localDate) {
 			callsToConverter++;
-			return attribute.getTime();
+			return localDate.toDate();
 		}
 
-		@Override
-		public Date convertToEntityAttribute(Long dbData) {
+		public LocalDate convertToEntityAttribute(Date date) {
 			callsToConverter++;
-			return new Date( dbData );
+			return LocalDate.fromDateFields( date );
 		}
 	}
 
-	@Entity( name = "Entity1" )
-	public static class Entity1 {
+	@Entity( name = "TheEntity" )
+	public static class TheEntity {
 		@Id
-		private Integer id;
-		private String name;
-		@Convert( converter = LongToDateConverter.class )
-		private Date theDate;
+		public Integer id;
+		@Convert( converter = JodaLocalDateConverter.class )
+		public LocalDate theDate;
 
-		public Entity1() {
+		public TheEntity() {
 		}
 
-		public Entity1(Integer id, String name, Date theDate) {
+		public TheEntity(Integer id, LocalDate theDate) {
 			this.id = id;
-			this.name = name;
 			this.theDate = theDate;
 		}
 	}
@@ -97,7 +93,7 @@ public class ExplicitDateConvertersTest {
 		final PersistenceUnitDescriptorAdapter pu = new PersistenceUnitDescriptorAdapter() {
 			@Override
 			public List<String> getManagedClassNames() {
-				return Arrays.asList( Entity1.class.getName() );
+				return Arrays.asList( TheEntity.class.getName() );
 			}
 		};
 
@@ -105,15 +101,15 @@ public class ExplicitDateConvertersTest {
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();
-		final EntityPersister ep = emf.unwrap( SessionFactoryImplementor.class ).getEntityPersister( Entity1.class.getName() );
+		final EntityPersister ep = emf.unwrap( SessionFactoryImplementor.class ).getEntityPersister( TheEntity.class.getName() );
 		final Type theDatePropertyType = ep.getPropertyType( "theDate" );
 		final AttributeConverterTypeAdapter type = assertTyping( AttributeConverterTypeAdapter.class, theDatePropertyType );
-		assertTyping( LongToDateConverter.class, type.getAttributeConverter() );
+		assertTyping( JodaLocalDateConverter.class, type.getAttributeConverter() );
 
 		try {
 			EntityManager em = emf.createEntityManager();
 			em.getTransaction().begin();
-			em.persist( new Entity1( 1, "1", new Date() ) );
+			em.persist( new TheEntity( 1, new LocalDate() ) );
 			em.getTransaction().commit();
 			em.close();
 
@@ -121,7 +117,7 @@ public class ExplicitDateConvertersTest {
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
-			em.find( Entity1.class, 1 );
+			em.find( TheEntity.class, 1 );
 			em.getTransaction().commit();
 			em.close();
 
@@ -129,7 +125,7 @@ public class ExplicitDateConvertersTest {
 
 			em = emf.createEntityManager();
 			em.getTransaction().begin();
-			em.createQuery( "delete Entity1" ).executeUpdate();
+			em.createQuery( "delete TheEntity" ).executeUpdate();
 			em.getTransaction().commit();
 			em.close();
 		}

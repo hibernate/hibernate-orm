@@ -514,6 +514,10 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	@Override
     protected void addColumnBinding(SimpleValue value) {
 		if ( StringHelper.isEmpty( mappedBy ) ) {
+			// was the column explicitly quoted in the mapping/annotation
+			// TODO: in metamodel, we need to better split global quoting and explicit quoting w/ respect to logical names
+			boolean isLogicalColumnQuoted = StringHelper.isQuoted( getLogicalColumnName() );
+			
 			final ObjectNameNormalizer nameNormalizer = getMappings().getObjectNameNormalizer();
 			final String logicalColumnName = nameNormalizer.normalizeIdentifierQuoting( getLogicalColumnName() );
 			final String referencedColumn = nameNormalizer.normalizeIdentifierQuoting( getReferencedColumn() );
@@ -521,7 +525,8 @@ public class Ejb3JoinColumn extends Ejb3Column {
 			final String unquotedRefColumn = StringHelper.unquote( referencedColumn );
 			String logicalCollectionColumnName = getMappings().getNamingStrategy()
 					.logicalCollectionColumnName( unquotedLogColName, getPropertyName(), unquotedRefColumn );
-			if ( StringHelper.isQuoted( logicalColumnName ) || StringHelper.isQuoted( referencedColumn ) ) {
+			
+			if ( isLogicalColumnQuoted ) {
 				logicalCollectionColumnName = StringHelper.quote( logicalCollectionColumnName );
 			}
 			getMappings().addColumnBinding( logicalCollectionColumnName, getMappingColumn(), value.getTable() );

@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.AttributeNode;
 import javax.persistence.Subgraph;
 import javax.persistence.metamodel.Attribute;
@@ -54,7 +55,6 @@ import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
-
 import org.jboss.logging.Logger;
 
 /**
@@ -106,12 +106,14 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	public void start() {
 		super.start();
 		graphStack.addLast( getRootEntityGraph() );
+		attributeNodeImplementorMap = buildAttributeNodeMap();
 	}
 
 	@Override
 	public void finish() {
 		super.finish();
 		graphStack.removeLast();
+		attributeNodeImplementorMap = Collections.emptyMap();
 		//applying a little internal stack checking
 		if ( !graphStack.isEmpty() || !attributeStack.isEmpty() || !attributeNodeImplementorMap.isEmpty() ) {
 			throw new WalkingException( "Internal stack error" );
@@ -122,7 +124,6 @@ public abstract class AbstractEntityGraphVisitationStrategy
 	public void startingEntity(final EntityDefinition entityDefinition) {
 		//TODO check if the passed in entity definition is the same as the root entity graph (a.k.a they are came from same entity class)?
 		//this maybe the root entity graph or a sub graph.
-		attributeNodeImplementorMap = buildAttributeNodeMap();
 		super.startingEntity( entityDefinition );
 	}
 
@@ -140,12 +141,6 @@ public abstract class AbstractEntityGraphVisitationStrategy
 			attributeNodeImplementorMap.put( attribute.getAttributeName(), attribute );
 		}
 		return attributeNodeImplementorMap;
-	}
-
-	@Override
-	public void finishingEntity(final EntityDefinition entityDefinition) {
-		attributeNodeImplementorMap = Collections.emptyMap();
-		super.finishingEntity( entityDefinition );
 	}
 
 	/**

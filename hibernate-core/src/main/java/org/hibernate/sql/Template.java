@@ -58,6 +58,7 @@ public final class Template {
 		KEYWORDS.add("or");
 		KEYWORDS.add("not");
 		KEYWORDS.add("like");
+		KEYWORDS.add("escape");
 		KEYWORDS.add("is");
 		KEYWORDS.add("in");
 		KEYWORDS.add("between");

@@ -81,7 +81,6 @@ public class HibernatePersistence extends HibernatePersistenceProvider implement
 
 	@Override
 	public ProviderUtil getProviderUtil() {
-		logDeprecation();
 		return super.getProviderUtil();
 	}
 

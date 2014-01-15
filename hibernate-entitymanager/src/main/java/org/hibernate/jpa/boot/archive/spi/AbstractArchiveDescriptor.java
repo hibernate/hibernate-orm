@@ -74,7 +74,7 @@ public abstract class AbstractArchiveDescriptor implements ArchiveDescriptor {
 
 	protected String extractRelativeName(ZipEntry zipEntry) {
 		final String entryName = extractName( zipEntry );
-		return entryBasePrefix == null ? entryName : entryName.substring( entryBasePrefix.length() );
+		return entryBasePrefix != null && entryName.contains( entryBasePrefix ) ? entryName.substring( entryBasePrefix.length() ) : entryName;
 	}
 
 	protected String extractName(ZipEntry zipEntry) {

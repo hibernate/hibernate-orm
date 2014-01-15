@@ -1411,7 +1411,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void usingDriver(String driverClassName,
 					 String url);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = WARN)
 	@Message(value = "Using Hibernate built-in connection pool (not for production use!)", id = 402)
 	void usingHibernateBuiltInConnectionPool();
 

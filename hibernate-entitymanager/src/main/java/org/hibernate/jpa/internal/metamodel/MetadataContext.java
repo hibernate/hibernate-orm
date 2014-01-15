@@ -428,10 +428,8 @@ class MetadataContext {
 					? metamodelClass.getField( name )
 					: metamodelClass.getDeclaredField( name );
 			try {
-				if ( ! field.isAccessible() ) {
-					// should be public anyway, but to be sure...
-					field.setAccessible( true );
-				}
+				// should be public anyway, but to be sure...
+				field.setAccessible( true );
 				field.set( null, attribute );
 			}
 			catch ( IllegalAccessException e ) {

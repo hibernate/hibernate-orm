@@ -963,177 +963,366 @@ hibernate.dialect = org.hibernate.dialect.PostgreSQL82Dialect</programlisting>
             </row>
           </thead>
 
-          <tbody>
-            <row>
-              <entry>DB2</entry>
-
-              <entry><literal>org.hibernate.dialect.DB2Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>DB2 AS/400</entry>
-
-              <entry><literal>org.hibernate.dialect.DB2400Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>DB2 OS390</entry>
-
-              <entry><literal>org.hibernate.dialect.DB2390Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>PostgreSQL 8.1</entry>
-
-              <entry><literal>org.hibernate.dialect.PostgreSQL81Dialect</literal></entry>
-            </row>
-              <row>
-                  <entry>PostgreSQL 8.2 and later</entry>
-
-                  <entry><literal>org.hibernate.dialect.PostgreSQL82Dialect</literal></entry>
-              </row>
-            <row>
-              <entry>MySQL5</entry>
-
-              <entry><literal>org.hibernate.dialect.MySQL5Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>MySQL5 with InnoDB</entry>
-
-              <entry><literal>org.hibernate.dialect.MySQL5InnoDBDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>MySQL with MyISAM</entry>
-
-              <entry><literal>org.hibernate.dialect.MySQLMyISAMDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Oracle (any version)</entry>
-
-              <entry><literal>org.hibernate.dialect.OracleDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Oracle 9i</entry>
-
-              <entry><literal>org.hibernate.dialect.Oracle9iDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Oracle 10g</entry>
-
-              <entry><literal>org.hibernate.dialect.Oracle10gDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Oracle 11g</entry>
-
-              <entry><literal>org.hibernate.dialect.Oracle10gDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Sybase ASE 15.5</entry>
-
-              <entry><literal>org.hibernate.dialect.SybaseASE15Dialect</literal></entry>
-            </row>
-
-              <row>
-                  <entry>Sybase ASE 15.7</entry>
-
-                  <entry><literal>org.hibernate.dialect.SybaseASE157Dialect</literal></entry>
-              </row>
-            <row>
-              <entry>Sybase Anywhere</entry>
-
-              <entry><literal>org.hibernate.dialect.SybaseAnywhereDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Microsoft SQL Server 2000</entry>
-
-              <entry><literal>org.hibernate.dialect.SQLServerDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Microsoft SQL Server 2005</entry>
-
-              <entry><literal>org.hibernate.dialect.SQLServer2005Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Microsoft SQL Server 2008</entry>
-
-              <entry><literal>org.hibernate.dialect.SQLServer2008Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>SAP DB</entry>
-
-              <entry><literal>org.hibernate.dialect.SAPDBDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Informix</entry>
-
-              <entry><literal>org.hibernate.dialect.InformixDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>HypersonicSQL</entry>
-
-              <entry><literal>org.hibernate.dialect.HSQLDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>H2 Database</entry>
-
-              <entry><literal>org.hibernate.dialect.H2Dialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Ingres</entry>
-
-              <entry><literal>org.hibernate.dialect.IngresDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Progress</entry>
-
-              <entry><literal>org.hibernate.dialect.ProgressDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Mckoi SQL</entry>
-
-              <entry><literal>org.hibernate.dialect.MckoiDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Interbase</entry>
-
-              <entry><literal>org.hibernate.dialect.InterbaseDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Pointbase</entry>
-
-              <entry><literal>org.hibernate.dialect.PointbaseDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>FrontBase</entry>
-
-              <entry><literal>org.hibernate.dialect.FrontbaseDialect</literal></entry>
-            </row>
-
-            <row>
-              <entry>Firebird</entry>
-
-              <entry><literal>org.hibernate.dialect.FirebirdDialect</literal></entry>
-            </row>
+		  <tbody>
+			<row>
+				<entry>CUBRID 8.3 and later</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.CUBRIDDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>DB2</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.DB2Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>DB2 AS/400</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.DB2400Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>DB2 OS390</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.DB2390Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Firebird</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.FirebirdDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>FrontBase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.FrontbaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>H2</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.H2Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>HyperSQL (HSQL)</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.HSQLDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Informix</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.InformixDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Ingres</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.IngresDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Ingres 9</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Ingres9Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Ingres 10</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Ingres10Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Interbase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.InterbaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>InterSystems Cache 2007.1</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Cache71Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>JDataStore</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.JDataStoreDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Mckoi SQL</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MckoiDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2000</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServerDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2005</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServer2005Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2008</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServer2008Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Microsoft SQL Server 2012</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SQLServer2012Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Mimer SQL</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MimerSQLDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQLDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL with InnoDB</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQLInnoDBDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL with MyISAM</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQLMyISAMDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL5</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQL5Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>MySQL5 with InnoDB</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.MySQL5InnoDBDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle 8i</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Oracle8iDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle 9i</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Oracle9iDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle 10g and later</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Oracle10gDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Oracle TimesTen</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.TimesTenDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Pointbase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PointbaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>PostgreSQL 8.1</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PostgreSQL81Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>PostgreSQL 8.2</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PostgreSQL82Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>PostgreSQL 9 and later</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.PostgreSQL9Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Progress</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.ProgressDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>SAP DB</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SAPDBDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>SAP HANA (column store)</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.HANAColumnStoreDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>SAP HANA (row store)</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.HANARowStoreDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase 11</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.Sybase11Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase ASE 15.5</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseASE15Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase ASE 15.7</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseASE157Dialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Sybase Anywhere</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.SybaseAnywhereDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Teradata</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.TeradataDialect</literal>
+				</entry>
+			</row>
+		
+			<row>
+				<entry>Unisys OS 2200 RDMS</entry>
+		
+				<entry>
+					<literal>org.hibernate.dialect.RDMSOS2200Dialect</literal>
+				</entry>
+			</row>
           </tbody>
         </tgroup>
       </table>

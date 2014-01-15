@@ -53,8 +53,9 @@ public @interface Filter {
 	String condition() default "";
 
 	/**
-	 * Do we need to determine all points within the condition fragment that are alias injection points?  Or
-	 * are injection points already marked?
+	 * If true, automatically determine all points within the condition fragment that an alias should be injected.
+	 * Otherwise, injection will only replace instances of explicit "{alias}" instances or
+	 * @SqlFragmentAlias descriptors.
 	 */
 	boolean deduceAliasInjectionPoints() default true;
 

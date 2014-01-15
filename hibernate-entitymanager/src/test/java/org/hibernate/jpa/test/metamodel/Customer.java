@@ -62,6 +62,12 @@ public class Customer implements java.io.Serializable {
 		this.name = name;
 	}
 
+	// Used by test case for HHH-8699.
+	public Customer(String id, String name, String greeting, Boolean something) {
+		this.id = id;
+		this.name = name;
+	}
+
 	public Customer(String id, String name, Country country) {
 		this.id = id;
 		this.name = name;

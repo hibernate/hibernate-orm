@@ -23,24 +23,19 @@ for example,  if you have both JBoss LogManager and Slf4j available your classpa
 as it has the "higher precedence".
 
 This can sometimes lead to an unwanted logging set up to be used.  In such cases, JBoss Logging provides for you to
-tell it specifically which provider to use.
+tell it specifically which provider to use and circumvent the discovery process just described.  It allows 2 different
+mechanisms for this:
 
+. First, JBoss Logging will look for a *System* setting with the key `org.jboss.logging.provider`, which can be set to
+one of the following values:
 
-=== Provider setting
+    * jboss
+    * jdk
+    * log4j2
+    * log4j
+    * slf4j
 
-JBoss Logging will first look for a setting with the key `org.jboss.logging.provider`, which can be set to one of the
-following values:
-
-. jboss
-. jdk
-. log4j2
-. log4j
-. slf4j
-
-
-=== JDK Service
-
-Next, JBoss Logging will look for a JDK service (see javadocs for +java.util.ServiceLoader+ for details) for its
+. Next, JBoss Logging will look for a JDK service (see javadocs for +java.util.ServiceLoader+ for details) for its
 "provider" contract (+org.jboss.logging.Provider+).  If multiple are available, it will use the first one returned by
 the ClassLoader.
 

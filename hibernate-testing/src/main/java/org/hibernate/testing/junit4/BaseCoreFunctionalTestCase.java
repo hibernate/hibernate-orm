@@ -143,6 +143,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory = ( SessionFactoryImplementor ) metadataImplementor.buildSessionFactory();
 		}
 		else {
+			beforeConfiguration();
 			// this is done here because Configuration does not currently support 4.0 xsd
 			afterConstructAndConfigureConfiguration( configuration );
 			sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
@@ -163,6 +164,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		buildSessionFactory();
 	}
 
+	protected void beforeConfiguration() {
+
+	}
 
 	protected void afterConstructAndConfigureMetadata(MetadataImplementor metadataImplementor) {
 

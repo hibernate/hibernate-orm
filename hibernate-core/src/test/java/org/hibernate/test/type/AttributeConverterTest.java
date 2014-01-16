@@ -41,22 +41,19 @@ import javax.persistence.Id;
 
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 /**
@@ -64,11 +61,31 @@ import org.junit.Test;
  *
  * @author Steve Ebersole
  */
-public class AttributeConverterTest extends BaseUnitTestCase {
+public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
+	public Class[] getAnnotatedClasses() {
+		return new Class[] {
+				EntityWithConvertibleField.class,
+				Tester.class,
+				Tester2.class,
+				Tester3.class,
+				Tester4.class,
+				IrrelevantInstantEntity.class
+		};
+	}
+
+	protected void beforeConfiguration() {
+		configuration().addAttributeConverter( NotAutoAppliedConverter.class, false );
+		configuration().addAttributeConverter( EnumConverter.class, true );
+		configuration().addAttributeConverter( StringClobConverter.class, true );
+		configuration().addAttributeConverter( IntegerToVarcharConverter.class, false );
+		configuration().addAttributeConverter( InstantConverter.class, false );
+		configuration().setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
+				.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+	}
+
 	@Test
 	public void testBasicOperation() {
-		Configuration cfg = new Configuration();
-		SimpleValue simpleValue = new SimpleValue( cfg.createMappings() );
+		SimpleValue simpleValue = new SimpleValue( configuration().createMappings() );
 		simpleValue.setJpaAttributeConverterDefinition(
 				new AttributeConverterDefinition( new StringClobConverter(), true )
 		);
@@ -86,12 +103,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testNonAutoApplyHandling() {
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( NotAutoAppliedConverter.class, false );
-		cfg.addAnnotatedClass( Tester.class );
-		cfg.buildMappings();
-
-		PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
+		PersistentClass tester = configuration().getClassMapping( Tester3.class.getName() );
 		Property nameProp = tester.getProperty( "name" );
 		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 		Type type = nameValue.getType();
@@ -103,154 +115,142 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicConverterApplication() {
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( StringClobConverter.class, true );
-		cfg.addAnnotatedClass( Tester.class );
-		cfg.buildMappings();
-
-		{
-			PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
-			assertNotNull( type );
-			assertTyping( BasicType.class, type );
-			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+		PersistentClass tester = configuration().getClassMapping( Tester.class.getName() );
+		Property nameProp = tester.getProperty( "name" );
+		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+		Type type = nameValue.getType();
+		assertNotNull( type );
+		assertTyping( BasicType.class, type );
+		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			fail( "AttributeConverter not applied" );
 		}
+		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8462")
 	public void testBasicOrmXmlConverterApplication() {
-		Configuration cfg = new Configuration();
-		cfg.addAnnotatedClass( Tester.class );
-		cfg.addURL( ConfigHelper.findAsResource( "org/hibernate/test/type/orm.xml") );
-		cfg.buildMappings();
-
-		{
-			PersistentClass tester = cfg.getClassMapping( Tester.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
-			assertNotNull( type );
-			if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter not applied" );
-			}
-			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+		PersistentClass tester = configuration().getClassMapping( Tester.class.getName() );
+		Property nameProp = tester.getProperty( "name" );
+		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+		Type type = nameValue.getType();
+		assertNotNull( type );
+		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			fail( "AttributeConverter not applied" );
 		}
+		AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
+		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
 	@Test
 	public void testBasicConverterDisableApplication() {
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( StringClobConverter.class, true );
-		cfg.addAnnotatedClass( Tester2.class );
-		cfg.buildMappings();
-
-		{
-			PersistentClass tester = cfg.getClassMapping( Tester2.class.getName() );
-			Property nameProp = tester.getProperty( "name" );
-			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
-			Type type = nameValue.getType();
-			assertNotNull( type );
-			if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-				fail( "AttributeConverter applied (should not have been)" );
-			}
-			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
+		PersistentClass tester = configuration().getClassMapping( Tester2.class.getName() );
+		Property nameProp = tester.getProperty( "name" );
+		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+		Type type = nameValue.getType();
+		assertNotNull( type );
+		if ( AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+			fail( "AttributeConverter applied (should not have been)" );
 		}
+		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+		assertEquals( Types.VARCHAR, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
 	@Test
 	public void testBasicUsage() {
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( IntegerToVarcharConverter.class, false );
-		cfg.addAnnotatedClass( Tester4.class );
-		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( new Tester4( 1L, "steve", 200 ) );
+		session.getTransaction().commit();
+		session.close();
 
-		SessionFactory sf = cfg.buildSessionFactory();
+		sessionFactory().getStatistics().clear();
+		session = openSession();
+		session.beginTransaction();
+		session.get( Tester4.class, 1L );
+		session.getTransaction().commit();
+		session.close();
+		assertEquals( 0, sessionFactory().getStatistics().getEntityUpdateCount() );
 
-		try {
-			Session session = sf.openSession();
-			session.beginTransaction();
-			session.save( new Tester4( 1L, "steve", 200 ) );
-			session.getTransaction().commit();
-			session.close();
+		session = openSession();
+		session.beginTransaction();
+		Tester4 t4 = (Tester4) session.get( Tester4.class, 1L );
+		t4.code = 300;
+		session.getTransaction().commit();
+		session.close();
 
-			sf.getStatistics().clear();
-			session = sf.openSession();
-			session.beginTransaction();
-			session.get( Tester4.class, 1L );
-			session.getTransaction().commit();
-			session.close();
-			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
-
-			session = sf.openSession();
-			session.beginTransaction();
-			Tester4 t4 = (Tester4) session.get( Tester4.class, 1L );
-			t4.code = 300;
-			session.getTransaction().commit();
-			session.close();
-
-			session = sf.openSession();
-			session.beginTransaction();
-			t4 = (Tester4) session.get( Tester4.class, 1L );
-			assertEquals( 300, t4.code.longValue() );
-			session.delete( t4 );
-			session.getTransaction().commit();
-			session.close();
-		}
-		finally {
-			sf.close();
-		}
+		session = openSession();
+		session.beginTransaction();
+		t4 = (Tester4) session.get( Tester4.class, 1L );
+		assertEquals( 300, t4.code.longValue() );
+		session.delete( t4 );
+		session.getTransaction().commit();
+		session.close();
 	}
 
 	@Test
 	public void testBasicTimestampUsage() {
-		Configuration cfg = new Configuration();
-		cfg.addAttributeConverter( InstantConverter.class, false );
-		cfg.addAnnotatedClass( IrrelevantInstantEntity.class );
-		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
+		Session session = openSession();
+		session.beginTransaction();
+		session.save( new IrrelevantInstantEntity( 1L ) );
+		session.getTransaction().commit();
+		session.close();
 
-		SessionFactory sf = cfg.buildSessionFactory();
+		sessionFactory().getStatistics().clear();
+		session = openSession();
+		session.beginTransaction();
+		IrrelevantInstantEntity e = (IrrelevantInstantEntity) session.get( IrrelevantInstantEntity.class, 1L );
+		session.getTransaction().commit();
+		session.close();
+		assertEquals( 0, sessionFactory().getStatistics().getEntityUpdateCount() );
 
-		try {
-			Session session = sf.openSession();
-			session.beginTransaction();
-			session.save( new IrrelevantInstantEntity( 1L ) );
-			session.getTransaction().commit();
-			session.close();
-
-			sf.getStatistics().clear();
-			session = sf.openSession();
-			session.beginTransaction();
-			IrrelevantInstantEntity e = (IrrelevantInstantEntity) session.get( IrrelevantInstantEntity.class, 1L );
-			session.getTransaction().commit();
-			session.close();
-			assertEquals( 0, sf.getStatistics().getEntityUpdateCount() );
-
-			session = sf.openSession();
-			session.beginTransaction();
-			session.delete( e );
-			session.getTransaction().commit();
-			session.close();
-		}
-		finally {
-			sf.close();
-		}
+		session = openSession();
+		session.beginTransaction();
+		session.delete( e );
+		session.getTransaction().commit();
+		session.close();
 	}
-	
-	
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8866")
+	public void testEnumConverter() {
+		Session s = openSession();
+		s.getTransaction().begin();
+		EntityWithConvertibleField entity = new EntityWithConvertibleField();
+		entity.setId( "ID" );
+		entity.setTestEnum( ConvertibleEnum.VALUE );
+		String entityID = entity.getId();
+
+		s.persist( entity );
+		s.flush();
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+
+		s.beginTransaction();
+		entity = (EntityWithConvertibleField) s.load( EntityWithConvertibleField.class, entityID );
+		assertEquals( ConvertibleEnum.VALUE, entity.getTestEnum() );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-8866")
+	public void testHqlQueryEnumConverter() {
+		Session s = openSession();
+		s.beginTransaction();
+		s.createQuery(
+				"SELECT ewcf " +
+				"FROM EntityWithConvertibleField ewcf " +
+						"WHERE ewcf.testEnum = org.hibernate.test.type.ConvertibleEnum.VALUE"
+		);
+		s.getTransaction().commit();
+		s.close();
+	}
+
 
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -258,6 +258,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	public static class Tester {
 		@Id
 		private Long id;
+		@Convert(converter = StringClobConverter.class)
 		private String name;
 
 		public Tester() {

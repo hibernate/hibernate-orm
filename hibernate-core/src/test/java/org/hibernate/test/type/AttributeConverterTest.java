@@ -54,6 +54,7 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
 import org.junit.Test;
 
 /**
@@ -93,7 +94,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 
 		Type type = simpleValue.getType();
 		assertNotNull( type );
-		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+		if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 			fail( "AttributeConverter not applied" );
 		}
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
@@ -121,7 +122,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 		Type type = nameValue.getType();
 		assertNotNull( type );
 		assertTyping( BasicType.class, type );
-		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+		if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 			fail( "AttributeConverter not applied" );
 		}
 		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
@@ -137,7 +138,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 		SimpleValue nameValue = (SimpleValue) nameProp.getValue();
 		Type type = nameValue.getType();
 		assertNotNull( type );
-		if ( ! AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+		if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
 			fail( "AttributeConverter not applied" );
 		}
 		AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
@@ -244,7 +245,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		s.createQuery(
 				"SELECT ewcf " +
-				"FROM EntityWithConvertibleField ewcf " +
+						"FROM EntityWithConvertibleField ewcf " +
 						"WHERE ewcf.testEnum = org.hibernate.test.type.ConvertibleEnum.VALUE"
 		);
 		s.getTransaction().commit();
@@ -282,7 +283,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 	public static class Tester3 {
 		@Id
 		private Long id;
-		@org.hibernate.annotations.Type( type = "string" )
+		@org.hibernate.annotations.Type(type = "string")
 		@Convert(disableConversion = true)
 		private String name;
 	}
@@ -292,7 +293,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Long id;
 		private String name;
-		@Convert( converter = IntegerToVarcharConverter.class )
+		@Convert(converter = IntegerToVarcharConverter.class)
 		private Integer code;
 
 		public Tester4() {
@@ -367,7 +368,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 	// Converter declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Converter(autoApply = false)
-	public static class NotAutoAppliedConverter implements AttributeConverter<String,String> {
+	public static class NotAutoAppliedConverter implements AttributeConverter<String, String> {
 		@Override
 		public String convertToDatabaseColumn(String attribute) {
 			throw new IllegalStateException( "AttributeConverter should not have been applied/called" );
@@ -379,8 +380,8 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Converter( autoApply = true )
-	public static class IntegerToVarcharConverter implements AttributeConverter<Integer,String> {
+	@Converter(autoApply = true)
+	public static class IntegerToVarcharConverter implements AttributeConverter<Integer, String> {
 		@Override
 		public String convertToDatabaseColumn(Integer attribute) {
 			return attribute == null ? null : attribute.toString();
@@ -393,7 +394,7 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 	}
 
 
-	@Converter( autoApply = true )
+	@Converter(autoApply = true)
 	public static class InstantConverter implements AttributeConverter<Instant, Timestamp> {
 		@Override
 		public Timestamp convertToDatabaseColumn(Instant attribute) {

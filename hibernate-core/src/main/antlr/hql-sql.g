@@ -636,6 +636,7 @@ constant
 	| TRUE { processBoolean(#constant); } 
 	| FALSE { processBoolean(#constant); }
 	| JAVA_CONSTANT
+	| ENUM
 	;
 
 literal

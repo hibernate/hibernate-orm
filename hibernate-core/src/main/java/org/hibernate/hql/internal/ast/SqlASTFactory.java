@@ -39,6 +39,7 @@ import org.hibernate.hql.internal.ast.tree.ConstructorNode;
 import org.hibernate.hql.internal.ast.tree.CountNode;
 import org.hibernate.hql.internal.ast.tree.DeleteStatement;
 import org.hibernate.hql.internal.ast.tree.DotNode;
+import org.hibernate.hql.internal.ast.tree.EnumNode;
 import org.hibernate.hql.internal.ast.tree.FromClause;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.IdentNode;
@@ -159,6 +160,8 @@ public class SqlASTFactory extends ASTFactory implements HqlSqlTokenTypes {
 				return BooleanLiteralNode.class;
 			case JAVA_CONSTANT:
 				return JavaConstantNode.class;
+			case ENUM:
+				return EnumNode.class;
 			case ORDER:
 				return OrderByClause.class;
 			case PLUS:

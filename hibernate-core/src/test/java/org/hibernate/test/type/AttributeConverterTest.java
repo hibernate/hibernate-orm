@@ -40,6 +40,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.IrrelevantEntity;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.AvailableSettings;
@@ -236,6 +237,8 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 		s.beginTransaction();
 		entity = (EntityWithConvertibleField) s.load( EntityWithConvertibleField.class, entityID );
 		assertEquals( ConvertibleEnum.VALUE, entity.getTestEnum() );
+		s.getTransaction().commit();
+		s.close();
 	}
 
 	@Test
@@ -243,11 +246,13 @@ public class AttributeConverterTest extends BaseCoreFunctionalTestCase {
 	public void testHqlQueryEnumConverter() {
 		Session s = openSession();
 		s.beginTransaction();
-		s.createQuery(
+		Query q = s.createQuery(
 				"SELECT ewcf " +
 						"FROM EntityWithConvertibleField ewcf " +
 						"WHERE ewcf.testEnum = org.hibernate.test.type.ConvertibleEnum.VALUE"
 		);
+		EntityWithConvertibleField entity = (EntityWithConvertibleField) q.list().iterator().next();
+		assertEquals( ConvertibleEnum.VALUE, entity.getTestEnum() );
 		s.getTransaction().commit();
 		s.close();
 	}

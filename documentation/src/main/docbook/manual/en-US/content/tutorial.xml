@@ -553,7 +553,7 @@ public class Event {
 
         </section>
 
-        <section xml:id="tutorial-firstapp-helpers" revision="3">
+        <section xml:id="tutorial-firstapp-helpers" revision="4">
             <title>Startup and helpers</title>
 
             <para>
@@ -579,6 +579,7 @@ public class Event {
             <programlisting role="JAVA"><![CDATA[package org.hibernate.tutorial.util;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 
 public class HibernateUtil {
@@ -588,7 +589,9 @@ public class HibernateUtil {
     private static SessionFactory buildSessionFactory() {
         try {
             // Create the SessionFactory from hibernate.cfg.xml
-            return new Configuration().configure().buildSessionFactory();
+            Configuration configuration = new Configuration();
+            return configuration.configure().buildSessionFactory(new StandardServiceRegistryBuilder()
+                    .applySettings(configuration.getProperties()).build());
         }
         catch (Throwable ex) {
             // Make sure you log the exception, as it might be swallowed

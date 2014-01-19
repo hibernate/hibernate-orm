@@ -24,10 +24,12 @@
 package org.hibernate.jpa.test.graphs;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityGraph;
@@ -36,6 +38,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Subgraph;
 
 import org.hibernate.Hibernate;
@@ -93,7 +96,76 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-	/**
+    @Test
+   	public void loadCollection() {
+   		EntityManager em = getOrCreateEntityManager();
+   		em.getTransaction().begin();
+
+   		Bar bar = new Bar();
+   		em.persist( bar );
+
+   		Foo foo = new Foo();
+   		foo.bar = bar;
+        bar.foos.add(foo);
+   		em.persist( foo );
+
+   		em.getTransaction().commit();
+   		em.clear();
+
+   		em.getTransaction().begin();
+
+   		EntityGraph<Bar> barGraph = em.createEntityGraph( Bar.class );
+   		barGraph.addAttributeNodes("foos");
+
+   		Map<String, Object> properties = new HashMap<String, Object>();
+   		properties.put( "javax.persistence.loadgraph", barGraph);
+
+   		Bar result = em.find( Bar.class, bar.id, properties );
+
+   		assertTrue( Hibernate.isInitialized( result ) );
+   		assertTrue( Hibernate.isInitialized( result.foos ) );
+
+   		em.getTransaction().commit();
+   		em.close();
+   	}
+
+    @Test
+   	public void loadInverseCollection() {
+   		EntityManager em = getOrCreateEntityManager();
+   		em.getTransaction().begin();
+
+   		Bar bar = new Bar();
+   		em.persist( bar );
+
+   		Foo foo = new Foo();
+   		foo.bar = bar;
+        bar.foos.add(foo);
+   		em.persist( foo );
+
+   		em.getTransaction().commit();
+   		em.clear();
+
+   		em.getTransaction().begin();
+
+   		EntityGraph<Foo> fooGraph = em.createEntityGraph( Foo.class );
+   		fooGraph.addAttributeNodes("bar");
+        Subgraph barGraph = fooGraph.addSubgraph("bar");
+        barGraph.addAttributeNodes("foos");
+
+   		Map<String, Object> properties = new HashMap<String, Object>();
+   		properties.put( "javax.persistence.loadgraph", fooGraph );
+
+   		Foo result = em.find( Foo.class, foo.id, properties );
+
+   		assertTrue( Hibernate.isInitialized( result ) );
+   		assertTrue( Hibernate.isInitialized( result.bar ) );
+        assertTrue( Hibernate.isInitialized( result.bar.foos) );
+
+   		em.getTransaction().commit();
+   		em.close();
+   	}
+
+    /**
 	 * JPA 2.1 spec: "Add a node to the graph that corresponds to a managed type with inheritance. This allows for
 	 * multiple subclass subgraphs to be defined for this node of the entity graph. Subclass subgraphs will
 	 * automatically include the specified attributes of superclass subgraphs."
@@ -146,7 +218,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
-	private static class Foo {
+    public static class Foo {
 
 		@Id
 		@GeneratedValue
@@ -160,19 +232,23 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Entity
-	private static class Bar {
+	public static class Bar {
 
 		@Id
 		@GeneratedValue
-		private Integer id;
+		public Integer id;
+
+        @OneToMany(mappedBy = "bar")
+        public Set<Foo> foos = new HashSet<Foo>();
 	}
 
 	@Entity
-	private static class Baz {
+    public static class Baz {
 
 		@Id
 		@GeneratedValue
-		private Integer id;
+        public Integer id;
+
 	}
 
 }

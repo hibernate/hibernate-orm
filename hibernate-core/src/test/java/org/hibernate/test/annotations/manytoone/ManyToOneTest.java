@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -369,6 +368,52 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		tx.rollback();
 		s.close();
 	}
+	
+	
+	@Test
+	public void testMapWithCompositeKey() throws Exception {
+		Session s;
+		Transaction tx;
+		s = openSession();
+		tx = s.beginTransaction();
+		Currency currency1= new Currency();
+		Currency currency2= new Currency();
+		s.persist( currency1 );
+		s.persist( currency2 );
+		Integer id1 = currency1.getId();
+		Integer id2 = currency2.getId();
+		ExchangeRateKey cq = new ExchangeRateKey(20140101, currency1, currency2);
+
+		ExchangeRate m = new ExchangeRate();
+		m.key = cq;
+		s.persist( m );
+		ExchangeOffice wm = new ExchangeOffice();
+		s.persist( wm );
+		
+		wm.exchangeRates.put(cq, m);
+		m.parent = wm;
+		Integer id = wm.getId();
+		s.flush();
+		tx.commit();
+		s.close();
+		
+		s = openSession();
+		tx = s.beginTransaction();
+		wm = (ExchangeOffice) s.byId(ExchangeOffice.class).load(id);
+		assertNotNull(wm);
+		currency1 = (Currency) s.byId(Currency.class).load(id1);
+		assertNotNull(currency1);
+		currency2 = (Currency) s.byId(Currency.class).load(id2);
+		assertNotNull(currency2);
+		cq = new ExchangeRateKey(20140101, currency1, currency2);
+		
+		
+	    m = wm.exchangeRates.get(cq);
+	    assertNotNull(m);
+	    tx.commit();
+		s.close();
+		
+	}
 
 
 	@Override
@@ -378,6 +423,9 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 				org.hibernate.test.annotations.manytoone.Customer.class,
 				Car.class,
 				Color.class,
+				Currency.class,
+				ExchangeOffice.class,
+				ExchangeRate.class,
 				Flight.class,
 				Company.class,
 				Customer.class,
@@ -392,7 +440,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 				Order.class,
 				OrderLine.class,
 				Frame.class,
-				Lens.class
+				Lens.class,	
 		};
 	}
 

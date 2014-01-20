@@ -23,19 +23,21 @@
  */
 package org.hibernate.jpa.test.criteria;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.persistence.metamodel.EntityType;
 
-import org.junit.Test;
-
 import org.hibernate.jpa.criteria.CriteriaBuilderImpl;
 import org.hibernate.jpa.criteria.predicate.ComparisonPredicate;
+import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Alias;
 import org.hibernate.jpa.test.metamodel.Country;
@@ -44,17 +46,13 @@ import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Info;
 import org.hibernate.jpa.test.metamodel.LineItem;
-import org.hibernate.jpa.internal.metamodel.MetamodelImpl;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.ShelfLife;
 import org.hibernate.jpa.test.metamodel.Spouse;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.TestForIssue;
-
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 /**
  * @author Steve Ebersole
@@ -127,7 +125,7 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 		Phone phone3 = new Phone( "3", "555", "0003", address );
 		Phone phone4 = new Phone( "4", "555", "0004" );
 
-		Collection<Phone> phones = new ArrayList<Phone>( 3 );
+		List<Phone> phones = new ArrayList<Phone>( 3 );
 		phones.add( phone1 );
 		phones.add( phone2 );
 		phones.add( phone3 );

@@ -22,12 +22,14 @@
  * Boston, MA  02110-1301  USA
  */
 package org.hibernate.jpa.test.metamodel;
-import java.util.Collection;
+import java.util.List;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
 /**
@@ -43,7 +45,7 @@ public class Address implements java.io.Serializable {
 	private String city;
 	private String state;
 	private String zip;
-	private Collection<Phone> phones = new java.util.ArrayList<Phone>();
+	private List<Phone> phones = new java.util.ArrayList<Phone>();
 
 	public Address() {
 	}
@@ -57,7 +59,7 @@ public class Address implements java.io.Serializable {
 	}
 
 	public Address(String id, String street, String city, String state, String zip,
-				   Collection<Phone> phones) {
+			List<Phone> phones) {
 		this.id = id;
 		this.street = street;
 		this.city = city;
@@ -113,11 +115,12 @@ public class Address implements java.io.Serializable {
 	}
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "address")
-	public Collection<Phone> getPhones() {
+	@OrderColumn
+	public List<Phone> getPhones() {
 		return phones;
 	}
 
-	public void setPhones(Collection<Phone> phones) {
+	public void setPhones(List<Phone> phones) {
 		this.phones = phones;
 	}
 }

@@ -26,6 +26,21 @@ package org.hibernate.test.quote;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
@@ -34,6 +49,7 @@ import org.junit.Test;
 
 /**
  * @author Emmanuel Bernard
+ * @author Brett Meyer
  */
 public class QuoteTest extends BaseCoreFunctionalTestCase {
 	
@@ -80,6 +96,32 @@ public class QuoteTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().commit();
 		s.close();
 	}
+	
+	@Test
+	@TestForIssue(jiraKey = "HHH-2988")
+	public void testUnionSubclassEntityQuoting() {
+		Session s = openSession();
+		s.beginTransaction();
+		Container container1 = new Container();
+		Container container2 = new Container();
+		SimpleItem simpleItem = new SimpleItem();
+		
+		container1.items.add( container2 );
+		container1.items.add( simpleItem );
+		container2.parent = container1;
+		simpleItem.parent = container1;
+		
+		s.persist( simpleItem );
+		s.persist( container2 );
+		s.persist( container1 );
+		s.getTransaction().commit();
+		s.clear();
+		
+		Container result = (Container) s.get( Container.class, container1.id );
+		assertNotNull( result );
+		assertNotNull( result.items );
+		assertEquals( 2, result.items.size() );
+	}
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -87,7 +129,35 @@ public class QuoteTest extends BaseCoreFunctionalTestCase {
 				User.class,
 				Role.class,
 				Phone.class,
-				House.class
+				House.class,
+				Container.class,
+				SimpleItem.class
 		};
+	}
+	
+	@Entity
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	private static abstract class Item {
+
+		@Id @GeneratedValue
+		@Column(name = "`ID`")
+		protected long id;
+		
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "`ParentID`")
+		protected Container parent;
+	}
+
+	@Entity
+	@Table(name = "`CoNTaiNeR`")
+	private static class Container extends Item {
+
+		@OneToMany(mappedBy = "parent", targetEntity = Item.class)
+		private Set<Item> items = new HashSet<Item>( 0 );
+	}
+
+	@Entity
+	@Table(name = "`SimpleItem`")
+	private static class SimpleItem extends Item {
 	}
 }

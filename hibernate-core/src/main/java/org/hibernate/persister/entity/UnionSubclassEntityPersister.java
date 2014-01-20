@@ -459,7 +459,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 						buf.append( dialect.getSelectClauseNullString(sqlType) )
 							.append(" as ");
 					}
-					buf.append( col.getName() );
+					buf.append( col.getQuotedName(dialect) );
 					buf.append(", ");
 				}
 				buf.append( clazz.getSubclassId() )

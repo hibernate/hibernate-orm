@@ -27,6 +27,7 @@ package org.hibernate.hql.internal.ast.tree;
 import java.util.List;
 
 import org.hibernate.QueryException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.hql.internal.antlr.HqlSqlTokenTypes;
 import org.hibernate.hql.internal.antlr.SqlTokenTypes;
@@ -173,10 +174,14 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 			}
 		}
 
-		final boolean isInNonDistinctCount = getWalker().isInCount() && ! getWalker().isInCountDistinct();
+		final Dialect dialect = getWalker().getSessionFactoryHelper().getFactory().getDialect();
+		final boolean isInCount = getWalker().isInCount();
+		final boolean isInDistinctCount = isInCount && getWalker().isInCountDistinct();
+		final boolean isInNonDistinctCount = isInCount && ! getWalker().isInCountDistinct();
 		final boolean isCompositeValue = columnExpressions.length > 1;
 		if ( isCompositeValue ) {
-			if ( isInNonDistinctCount && ! getWalker().getSessionFactoryHelper().getFactory().getDialect().supportsTupleCounts() ) {
+			if ( isInNonDistinctCount && ! dialect.supportsTupleCounts() ) {
+				// TODO: #supportsTupleCounts currently false for all Dialects -- could this be cleaned up?
 				setText( columnExpressions[0] );
 			}
 			else {
@@ -184,7 +189,8 @@ public class IdentNode extends FromReferenceNode implements SelectExpression {
 				// avoid wrapping in parenthesis (explicit tuple treatment) if possible due to varied support for
 				// tuple syntax across databases..
 				final boolean shouldSkipWrappingInParenthesis =
-						getWalker().isInCount()
+						(isInDistinctCount && ! dialect.requiresParensForTupleDistinctCounts())
+						|| isInNonDistinctCount
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.ORDER
 						|| getWalker().getCurrentTopLevelClauseType() == HqlSqlTokenTypes.GROUP;
 				if ( ! shouldSkipWrappingInParenthesis ) {

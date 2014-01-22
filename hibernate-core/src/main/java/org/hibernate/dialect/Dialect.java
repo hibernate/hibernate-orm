@@ -2575,6 +2575,15 @@ public abstract class Dialect implements ConversionContext {
 		// oddly most database in fact seem to, so true is the default.
 		return true;
 	}
+	
+	/**
+	 * If {@link #supportsTupleDistinctCounts()} is true, does the Dialect require the tuple to be wrapped with parens?
+	 * 
+	 * @return boolean
+	 */
+	public boolean requiresParensForTupleDistinctCounts() {
+		return false;
+	}
 
 	/**
 	 * Return the limit that the underlying database places on the number elements in an {@code IN} predicate.

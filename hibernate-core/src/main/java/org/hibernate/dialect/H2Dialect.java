@@ -381,8 +381,8 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
+	public boolean requiresParensForTupleDistinctCounts() {
+		return true;
 	}
 
 	@Override

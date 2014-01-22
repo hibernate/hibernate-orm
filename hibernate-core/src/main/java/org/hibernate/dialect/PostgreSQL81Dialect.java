@@ -336,8 +336,9 @@ public class PostgreSQL81Dialect extends Dialect {
 		return "select now()";
 	}
 
-	public boolean supportsTupleDistinctCounts() {
-		return false;
+
+	public boolean requiresParensForTupleDistinctCounts() {
+		return true;
 	}
 
 	public String toBooleanValueString(boolean bool) {

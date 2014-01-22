@@ -155,6 +155,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		}
 		try {
 			sessionFactory.close();
+			sessionFactory = null;
+			configuration = null;
+			serviceRegistry.destroy();
+			serviceRegistry = null;
 		}
 		catch (Exception ignore) {
 		}

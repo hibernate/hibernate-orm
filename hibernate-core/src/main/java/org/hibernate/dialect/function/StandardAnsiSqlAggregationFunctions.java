@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.StandardBasicTypes;
@@ -58,15 +59,16 @@ public class StandardAnsiSqlAggregationFunctions {
 		public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor factory) {
 			if ( arguments.size() > 1 ) {
 				if ( "distinct".equalsIgnoreCase( arguments.get( 0 ).toString() ) ) {
-					return renderCountDistinct( arguments );
+					return renderCountDistinct( arguments, factory.getDialect() );
 				}
 			}
 			return super.render( firstArgumentType, arguments, factory );
 		}
 
-		private String renderCountDistinct(List arguments) {
+		private String renderCountDistinct(List arguments, Dialect dialect) {
 			final StringBuilder buffer = new StringBuilder();
 			buffer.append( "count(distinct " );
+			if (dialect.requiresParensForTupleDistinctCounts()) buffer.append("(");
 			String sep = "";
 			final Iterator itr = arguments.iterator();
 			// intentionally skip first
@@ -75,6 +77,7 @@ public class StandardAnsiSqlAggregationFunctions {
 				buffer.append( sep ).append( itr.next() );
 				sep = ", ";
 			}
+			if (dialect.requiresParensForTupleDistinctCounts()) buffer.append(")");
 			return buffer.append( ")" ).toString();
 		}
 	}

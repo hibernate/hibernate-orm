@@ -260,7 +260,10 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	private void initText() {
 		String[] cols = getColumns();
 		String text = StringHelper.join( ", ", cols );
-		if ( cols.length > 1 && getWalker().isComparativeExpressionClause() ) {
+		boolean countDistinct = getWalker().isInCountDistinct()
+				&& getWalker().getSessionFactoryHelper().getFactory().getDialect().requiresParensForTupleDistinctCounts();
+		if ( cols.length > 1 &&
+				( getWalker().isComparativeExpressionClause() || countDistinct ) ) {
 			text = "(" + text + ")";
 		}
 		setText( text );

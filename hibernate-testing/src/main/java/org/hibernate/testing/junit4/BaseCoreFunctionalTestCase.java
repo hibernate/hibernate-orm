@@ -401,7 +401,10 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			return;
 		}
 		sessionFactory.close();
+		sessionFactory = null;
+		configuration = null;
 		serviceRegistry.destroy();
+		serviceRegistry = null;
 
 		serviceRegistry = buildServiceRegistry( configuration );
 		if ( isMetadataUsed ) {

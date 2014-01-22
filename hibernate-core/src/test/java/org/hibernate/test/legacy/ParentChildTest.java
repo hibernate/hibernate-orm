@@ -1203,11 +1203,7 @@ public class ParentChildTest extends LegacyTestCase {
 		s.close();
 	}
 
-	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			comment = "1st transaction locks table and hangs 2nd transaction"
-	)
+	 @Test
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
 		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {
@@ -1228,6 +1224,10 @@ public class ParentChildTest extends LegacyTestCase {
 			fail();
 		}
 		catch(ObjectNotFoundException onfe) {
+			if (  getDialect() instanceof TeradataDialect ){
+				session.getTransaction().rollback();
+				session.getTransaction().begin();
+			}
 			// this is correct
 		}
 

@@ -1088,15 +1088,6 @@ public class Configuration implements Serializable {
 					while ( subIter.hasNext() ) {
 						ForeignKey fk = (ForeignKey) subIter.next();
 						if ( fk.isPhysicalConstraint() ) {
-							if (dialect.constraintRequiresFunction()) {
-								String alterCmd = fk.sqlCreateString(dialect, mapping, defaultCatalog, defaultSchema);
-								String[] cmds = dialect.generateConstraintFunctionSql(alterCmd, fk.getTable().getName(), fk.getName());
-								for (int i = 0; i < cmds.length; i++)
-									script.add(cmds[i]);
-							} else {
-
-
-
 							script.add(
 									fk.sqlCreateString(
 											dialect, mapping,
@@ -1104,7 +1095,6 @@ public class Configuration implements Serializable {
 											defaultSchema
 										)
 								);
-						}
 					}
 				}
 				}

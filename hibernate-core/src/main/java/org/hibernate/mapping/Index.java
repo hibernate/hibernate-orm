@@ -94,21 +94,8 @@ public class Index implements RelationalModel, Serializable {
 						StringHelper.unqualify( name ) ) ;
 
 		Iterator iter = columns;
-		if (dialect.doesIndexNameRequireColumnNames()) {
-			buf.append(" (");
-			while (iter.hasNext()) {
-				buf.append(((Column) iter.next()).getQuotedName(dialect));
-				if (iter.hasNext()) {
-					buf.append(", ");
-				}
-			}
-			buf.append(")");
-		}
 		buf.append(" on ");
 		buf.append(table.getQualifiedName(dialect, defaultCatalog, defaultSchema));
-
-		if (dialect.doesIndexNameRequireColumnNames())
-			return buf.toString();
 		buf.append(" (");
 
 		while ( columns.hasNext() ) {

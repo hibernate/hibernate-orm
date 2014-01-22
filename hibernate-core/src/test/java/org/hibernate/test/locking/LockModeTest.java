@@ -56,8 +56,6 @@ import static org.junit.Assert.fail;
 @SkipForDialects( {
 @SkipForDialect(value=SybaseASE15Dialect.class, strictMatching=true,
 		comment = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820"),
-		@SkipForDialect(value=TeradataDialect.class,
-		comment = "hangs")
 })
 public class LockModeTest extends BaseCoreFunctionalTestCase {
 	private Long id;

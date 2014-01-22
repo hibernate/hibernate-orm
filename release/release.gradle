@@ -254,8 +254,12 @@ task uploadReleaseArtifacts(type: Task, dependsOn: [uploadDocumentation, uploadB
 
 task announce(type: Task) { doFirst { println 'Hear ye, hear ye...' } }
 
-task release(type: Task, dependsOn: [cleanAllSubProjects, buildAllSubProjects, uploadReleaseArtifacts, announce]) {
-    description = "Coordinates all release tasks"
+task cleanAndRelease(type: Task, dependsOn: [cleanAllSubProjects, release]) {
+	description = "Coordinates all release tasks *including clean*"
+}
+
+task release(type: Task, dependsOn: [buildAllSubProjects, uploadReleaseArtifacts, announce]) {
+    description = "Coordinates all release tasks; does not perform a clean first (see cleanAndRelease task)"
 }
 
 

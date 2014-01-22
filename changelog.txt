@@ -5,6 +5,60 @@ match the actual issue resolution (i.e. a bug might not be a bug). Please
 refer to the particular case on JIRA using the issue tracking number to learn
 more about each case.
 
+Changes in version 4.3.1.Final (2014.01.22)
+------------------------------------------------------------------------------------------------------------------------
+https://hibernate.atlassian.net/browse/HHH/fixforversion/15351
+
+** Sub-task
+    * [HHH-8640] - SubgraphImpl fails with inheritance
+    * [HHH-8865] - Create topical guide for logging
+
+** Bug
+    * [HHH-2188] - Query metadata gives NPE for polymorphic queries
+    * [HHH-2988] - UnionSubclassEntityPersister.generateSubquery() does not use column.getQuotedName()
+    * [HHH-3051] - NPE while query.list on a Native SQL, using L2 cache
+    * [HHH-3453] - mess in a list of supported dialects (OracleDialect, H2Dialect, etc.)
+    * [HHH-3541] - wrong xml tags in documentation examples
+    * [HHH-3604] - Creation of  table for HiLoGenerator fails to create table of the correct to for MySQL InnoDB
+    * [HHH-7630] - JOINED classes cause exception when referenced as a Collection and using @OrderBy
+    * [HHH-8404] - ListIndexExpression seems to be rendered incorrectly
+    * [HHH-8638] - Unable to create unique key constraint on foreign key annotated with @UniqueConstraint
+    * [HHH-8655] - Classloader conflicts with embedded OSGi frameworks
+    * [HHH-8699] - Criteria API multiselect not working with Predicates
+    * [HHH-8730] - uploadDocumentation task needs to stage aggregated javadocs before rsync
+    * [HHH-8735] - Do not log deprecation warning from org.hibernate.ejb.HibernatePersistence#getProviderUtil
+    * [HHH-8756] - Exception on lock mode when setting lock mode NONE for named query
+    * [HHH-8763] - OsgiServiceUtil#getServiceImpls broken
+    * [HHH-8765] - Column not found in Turkish locale because of toLowerCase()
+    * [HHH-8783] - @javax.persistence.Foreignkey#name does not change contraint name
+    * [HHH-8784] - @Generated( GenerationTime.ALWAYS ) w/ @ColumnDefault not generating on insert
+    * [HHH-8790] - The "ESCAPE" key word is not recognized by a Hibernate filter.
+    * [HHH-8794] - Annotating collection with @OrderBy without specifying attribute does nothing
+    * [HHH-8811] - Collectionread causes open cursors
+    * [HHH-8812] - JPAOverriddenAnnotationReader and @Convert annotations
+    * [HHH-8821] - Scanning for META-INF/orm.xml does not work on Windows in jpa mode
+    * [HHH-8827] - @SortNatural and @SortComparator not working.
+    * [HHH-8850] - UnsupportedOperationException when using addScalar on querys created via NamedSQLQueryDefinition
+    * [HHH-8855] - Multiple @ManyToOnes in load/fetch graph aren't loaded
+    * [HHH-8863] - org.hibernate.engine.internal.StatisticalLoggingSessionEventListener not displaying properly time for partial flushes
+    * [HHH-8884] - SelectStatement cleanRestrictions misses the space in the search clause
+
+** Improvement
+    * [HHH-2298] - Hibernate only uses info level on logger message to disencourage Hibernate Pool Manager. This should be a warning.
+    * [HHH-5289] - Remove unnecessary security checks in property accessors
+    * [HHH-6911] - Read/write DiscriminatorValue from/to DiscriminatorColumn when combined with InheritanceType#JOINED
+    * [HHH-8772] - PutFromLoadValidatorUnitTestCase.testRemovalCleanup intermittent failure
+    * [HHH-8773] - Remove cleaning as release task dep
+    * [HHH-8831] - Give a better message about where a problem with a mapping could be
+
+** Patch
+    * [HHH-4638] - Allow hibernate connect to Firebird database without set "hibernate.dialect" property
+
+** Task
+    * [HHH-8741] - More checkstyle cleanups
+
+
+
 Changes in version 4.3.0.Final (2013.12.16)
 ------------------------------------------------------------------------------------------------------------------------
 - 4.3.0.Final was a re-tagging of 4.3.0.CR2

@@ -346,7 +346,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			else {
 				Object id = getIdentifier( original, session );
 				if ( id == null ) {
-					throw new AssertionFailure("non-transient entity has a null id");
+					throw new AssertionFailure("non-transient entity has a null id: "+original.getClass().getName());
 				}
 				id = getIdentifierOrUniqueKeyType( session.getFactory() )
 						.replace(id, null, session, owner, copyCache);

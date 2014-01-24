@@ -57,10 +57,7 @@ public final class BasicMetadataGenerator {
 				final boolean addNestedType = (value instanceof SimpleValue)
 						&& ((SimpleValue) value).getTypeParameters() != null;
 
-				String typeName = type.getName();
-				if ( typeName == null ) {
-					typeName = type.getClass().getName();
-				}
+				final String typeName = resolveType( value );
 
 				final Element propMapping = MetadataTools.addProperty(
 						parent,
@@ -104,6 +101,21 @@ public final class BasicMetadataGenerator {
 		}
 
 		return true;
+	}
+
+	private String resolveType(Value value) {
+		final Type type = value.getType();
+		String typeName = null;
+		if ( value instanceof SimpleValue ) {
+			typeName = ( (SimpleValue) value ).getTypeName();
+		}
+		if ( typeName == null ) {
+			typeName = type.getName();
+		}
+		if ( typeName == null ) {
+			typeName = type.getClass().getName();
+		}
+		return typeName;
 	}
 
 	private void mapEnumerationType(Element parent, Type type, Properties parameters) {

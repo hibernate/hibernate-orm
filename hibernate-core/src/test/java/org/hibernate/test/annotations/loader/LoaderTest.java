@@ -87,5 +87,19 @@ public class LoaderTest extends BaseCoreFunctionalTestCase {
 			s.close();
 		}
 	}
+
+	@Test
+	public void testGetNotExisting() {
+		Session s = openSession();
+
+		try {
+			long notExistingId = 3l;
+			s.load( Team.class, notExistingId );
+			s.get( Team.class, notExistingId );
+		}
+		finally {
+			s.close();
+		}
+	}
 }
 
